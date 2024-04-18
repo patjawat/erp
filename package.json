@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "autoprefixer": "^10.4.16",
+    "daisyui": "^3.9.4",
+    "tailwindcss": "^3.3.5"
+  },
+  "name": "erp2",
+  "description": "<p align=\"center\">     <h1 align=\"center\">Office ERP</h1>     <br> </p>",
+  "version": "1.0.0",
+  "main": "postcss.config.js",
+  "directories": {
+    "test": "tests"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tw-watch": "npx tailwindcss -i ./web/css/site.css -o ./web/css/tw.css --watch"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,22 @@
+{
+    "name": "muhsamsul/yii2-treeimage",
+    "description": "View tree with organizational chart. Dependencies with kartik tree manager",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","treeimage","tree"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Muh. Samsul Huda",
+            "email": "samsulhuda461@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*",
+        "kartik-v/yii2-tree-manager": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "muhsamsul\\treeimage\\": ""
+        }
+    }
+}

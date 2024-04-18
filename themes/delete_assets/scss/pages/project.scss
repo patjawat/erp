@@ -1,0 +1,35 @@
+.project-title {
+    @include margin-padding(0 0 5px, null);
+    a {
+        color: $__gray;
+    }
+}
+.team-members {
+    flex-wrap: $__wrap;
+    @extend %ul_reset;
+    @extend %inline-flex;
+    img {
+        width: $__full__width;
+    }
+    a {
+        border: 2px solid $__white;
+        display: $__block;
+        height: 30px;
+        overflow: $__hidden;
+        width: 30px;
+        @include rounded(100%);
+    }
+    .all-users {
+        background-color: $__fire__red;
+        color: $__white;
+        font-size: $__font__size__10;
+        font-weight: $__bold;
+        line-height: 30px;
+        text-align: $__center;
+    }
+    
+}
+.profile-action {
+    text-align: $__right;
+    @include position($__absolute,10px,5px,null,null);
+}

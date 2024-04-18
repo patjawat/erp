@@ -1,0 +1,171 @@
+version: '2'
+services:
+  php_demo:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../demo.hospital-erp.org:/app:delegated
+    ports:
+      - '8001:80'
+    links:
+      - mysqlDB_pro:db
+  # โรงพยาบาลสมเด็จพระยุพราชด่านซ้าย
+  php_dansai:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ./:/app:delegated
+    ports:
+      - '11447:80'
+    links:
+      - mysqlDB_pro:db
+
+  # โรงพยาบาลอุบลรัตน์
+  php_ubonrat:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../ubonrat/:/app:delegated
+    ports:
+      - '11001:80'
+    links:
+      - mysqlDB_pro:db
+
+# โรงพยาบาลน้ำพอง
+  php_nampong:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../nampong.hospital-erp.org/:/app:delegated
+    ports:
+      - '11000:80'
+    links:
+      - mysqlDB_pro:db
+
+  # โรงพยาบาลสมเด็จพระยุุพราชธาตุพนม
+  php_thatphanom:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../thatphanom/:/app:delegated
+    ports:
+      - '11451:80'
+    links:
+      - mysqlDB_pro:db
+
+  # โรงพยาบาลอุ้มผาง
+  php_umphang:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../umphang.hospital-erp.org/:/app:delegated
+    ports:
+      - '11243:80'
+    links:
+      - mysqlDB_pro:db
+
+  # โรงพยาบาลสมเด็จพระยุพราชหล่มเก่า
+  php_lomkao:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../lomkao.hospital-erp.org/:/app:delegated
+    ports:
+      - '11457:80'
+    links:
+      - mysqlDB_pro:db
+  
+  # โรงพยาบาลสมเด็จพระยุพราชปัว
+  php_pua:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../pua.hospital-erp.org/:/app:delegated
+    ports:
+      - '11453:80'
+    links:
+      - mysqlDB_pro:db
+  
+  # โรงพยาบาลสมเด็จพระยุพราชยะหา
+  php_yaha:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../yaha.hospital-erp.org/:/app:delegated
+    ports:
+      - '11461:80'
+    links:
+      - mysqlDB_pro:db
+
+  # โรงพยาบาลสมเด็จพระยุพราชเด่นชัย
+  php_denchai:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../denchai.hospital-erp.org/:/app:delegated
+    ports:
+      - '11452:80'
+    links:
+      - mysqlDB_pro:db
+
+  # โรงพยาบาลผาขาว
+  php_phakhao:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../phakhao.hospital-erp.org/:/app:delegated
+    ports:
+      - '11039:80'
+    links:
+      - mysqlDB_pro:db
+
+# โรงพยาบาลท่าวังผา
+  php_thawangpha:
+    image: yiisoftware/yii2-php:8.2-apache
+    volumes:
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../thawangpha.hospital-erp.org/:/app:delegated
+    ports:
+      - '11176:80'
+    links:
+      - mysqlDB_pro:db
+
+# Database กลาง
+  mysqlDB_pro:
+    image: mysql:5.7
+    hostname: mysqlDB_pro
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - TZ=Asia/Bangkok
+      - MYSQL_ROOT_PASSWORD=docker
+      # - MYSQL_USER=root
+      - MYSQL_PASSWORD=docker
+      - MYSQL_ROOT_HOST=%
+    command:
+      [
+        'mysqld',
+        '--character-set-server=utf8',
+        '--collation-server=utf8_general_ci',
+        '--max-allowed-packet=1G'
+      ]
+    ports:
+      - '3310:3306'
+    volumes:
+      - /Users/patjawat/Downloads/:/home/
+      - ./docker/ubonrat/mysql5.7/data:/var/lib/mysql
+      - ./docker/ubonrat/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin_mysql_ubonrat:
+    image: phpmyadmin
+    restart: always
+    links:
+      - mysqlDB_pro:db
+    ports:
+      - 8000:80
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: docker
+      PMA_HOST: mysqlDB_pro
+      UPLOAD_LIMIT: 300M

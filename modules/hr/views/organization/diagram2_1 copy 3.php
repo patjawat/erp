@@ -1,0 +1,206 @@
+<?php
+use yii\helpers\Html;
+use app\modules\hr\models\Organization;
+use app\models\Categorise;
+$this->title = "ผังโครงสร้างองค์กร";
+
+$this->params['breadcrumbs'][] = $this->title;
+?>
+<style>
+#tree {
+    display: inline-block;
+    padding: 10px;
+}
+
+#tree * {
+    box-sizing: border-box;
+}
+
+#tree .branch {
+    padding: 5px 0 5px 20px;
+}
+
+/* Edit */
+#tree .branch:not(:first-child) {
+    /* margin-left: 170px; */
+    margin-left: 300px;
+}
+
+/* edit  */
+#tree .branch:not(:first-child):after {
+    content: "";
+    /* width: 20px; */
+    width: 13%;
+    border-top: 1px solid #ccc;
+    position: absolute;
+    left: 221px;
+    top: 59%;
+    margin-top: 1px;
+}
+
+/* edit  */
+.entry {
+    position: relative;
+    /* min-height: 42px; */
+    min-height: 150px;
+
+    display: block;
+}
+
+.entry:before {
+    content: "";
+    height: 100%;
+    border-left: 1px solid #ccc;
+    position: absolute;
+    left: -20px;
+}
+
+.entry:first-child:after {
+    height: 10px;
+    border-radius: 10px 0 0 0;
+}
+
+.entry:first-child:before {
+    width: 10px;
+    height: 50%;
+    top: 50%;
+    margin-top: 1px;
+    border-radius: 10px 0 0 0;
+}
+
+.entry:after {
+    content: "";
+    width: 20px;
+    transition: border 0.5s;
+    border-top: 1px solid #ccc;
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    margin-top: 1px;
+}
+
+.entry:last-child:before {
+    width: 10px;
+    height: 50%;
+    border-radius: 0 0 0 10px;
+}
+
+.entry:last-child:after {
+    height: 10px;
+    border-top: none;
+    transition: border 0.5s;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0 0 0 10px;
+    margin-top: -9px;
+}
+
+.entry:only-child:after {
+    width: 10px;
+    height: 0px;
+    margin-top: 1px;
+    border-radius: 0px;
+}
+
+.entry:only-child:before {
+    display: none;
+}
+
+.entry span {
+    border: 1px solid #ccc;
+    display: block;
+    min-width: 150px;
+    padding: 5px 10px;
+    line-height: 20px;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    margin-top: -15px;
+    color: #666;
+    font-family: arial, verdana, tahoma;
+    font-size: 14px;
+    display: inline-block;
+    border-radius: 5px;
+    transition: all 0.5s;
+}
+
+#tree .entry span:hover,
+#tree .entry span:hover+.branch .entry span {
+    background: #e6e6e6;
+    color: #000;
+    border-color: #a6a6a6;
+}
+
+#tree .entry span:hover+.branch .entry::after,
+#tree .entry span:hover+.branch .entry::before,
+#tree .entry span:hover+.branch::before,
+#tree .entry span:hover+.branch .branch::before {
+    border-color: #a6a6a6;
+}
+</style>
+
+
+<div class="card">
+    <div class="card-body d-flex justify-content-between">
+        <h4 class="card-title"><?=$this->title?></h4>
+
+        <!-- cta -->
+        <div class="row">
+            <div class="col-12">
+                <div class="float-sm-end">
+                    <?=Html::a('<i class="bi bi-diagram-3"></i>  ผังองค์กร',['/hr/organization/diagram2'],['class' => 'btn btn-primary'])?>
+                    <?=Html::a('<i class="fa-solid fa-gear"></i> ตั้งค่าผังองค์กร',['/hr/organization/setting'],['class' => 'btn btn-primary'])?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+$branchs = Categorise::find()->where(['name' => 'organization','level' => '1'])->all();
+
+?>
+<?php
+$lvl = Categorise::find()->where(['name' => 'organization'])->max('level');
+// echo $lvl;
+?>
+
+
+<?php if(!$branchs):?>
+<?=app\components\AppHelper::Btn([
+                'url' => ['/hr/organization/create'],
+                'modal' => true,
+                'size' => 'lg',
+                ])?>
+<?php else:?>
+
+<div id="tree">
+    <div class="branch">
+        <!-- Root entry -->
+        <?php
+      $subNumber = 1;
+      ?>
+
+<div class="entry">
+            <?php for ($x = 0; $x <= 10; $x++):?>
+                <div class="entry"><span>Father</span>
+          <div class="branch">
+            <div class="entry"><span>Grandfather</span>
+              <div class="branch">
+                <div class="entry"><span>Great Grandfather</span></div>
+                <div class="entry"><span>Great Grandmother</span></div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+<?php endfor;?>
+
+          
+        </div>
+        <!-- End Root entry -->
+    </div>
+    <!-- End Branch -->
+</div>
+<!-- End tree -->
+<?php endif;?>
+</div>

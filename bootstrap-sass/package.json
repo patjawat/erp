@@ -1,0 +1,16 @@
+{
+  "name": "bootstrap-sass",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "sass --watch ./scss/custom.scss ../web/css/custom.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tkrotoff/bootstrap-floating-label": "^0.12.2",
+    "bootstrap": "^5.3.2"
+  }
+}

@@ -1,0 +1,142 @@
+<?php
+
+namespace app\components;
+use app\models\Categorise;
+use app\models\VisitCounter;
+use PHPUnit\Framework\Constraint\IsEmpty;
+use Yii;
+use yii\base\Component;
+use yii\bootstrap5\Html;
+use app\models\SiteSetting;
+
+
+class SiteHelper extends Component{
+
+
+
+      public static function getInfo(){
+            $model =  Categorise::findOne(['name' => 'site']);
+            $siteUrl =   isset($model->data_json['website']) ? $model->data_json['website'] : '-';
+            $siteName =   isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
+            return [
+                  'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
+                  'address' => isset($model->data_json['address']) ? $model->data_json['address'] : null,
+                  'website' => Html::a($siteName,$siteUrl)
+            ];
+      }
+
+      public static function getCategoriseByname($name){
+            return Categorise::findOne(['name' => $name]);
+      }
+
+      public static function getVisitCounter(){
+            return [
+                  'daily' => VisitCounter::find()->where(['vdate' => date('Y-m-d')])->sum('counter'),
+                  'mount' => VisitCounter::find()->where(['like', 'vdate',  date('Y-m') . '%', false])->sum('counter'),
+                  'lastmount' => VisitCounter::find()->where(['like', 'vdate',  date('Y-m',strtotime('-1 months')) . '%', false])->sum('counter'),
+                  'total' => VisitCounter::find()->sum('counter'),
+
+            ];
+       
+      }
+      public static function visitorCounter(){
+       $detect =  self::detectServerVisitInfo();
+      $check =  VisitCounter::find()->where(['ip' => $detect['serv_ip'],'device' => $detect['device'],'vdate' => date('Y-m-d')])->one();
+      
+      if(!$check){
+            $model = new VisitCounter([
+                  'ip' => $detect['serv_ip'],
+                  'device' => $detect['device'],
+                  'vdate' => date('Y-m-d'),
+                  'counter' => 1
+                  
+            ]);
+           $model->save(false);
+      }else{
+            $check->ip = $detect['serv_ip'];
+            $check->device = $detect['device'];
+            $check->counter  = $check->counter+1;
+            $check->save(false);
+      }
+ }
+
+ private static function detectServerVisitInfo()
+    {
+        $request = Yii::$app->request;
+        $data = [];
+        //Common user data
+        $data['serv_ip']             = $request->getUserIP();
+        $data['serv_user_agent']     = $request->getUserAgent();
+        $data['serv_referer_url']    = $request->getReferrer();
+        $data['serv_server_name']    = $request->getServerName();
+        $data['serv_auth_user_id']   = \Yii::$app->user->isGuest ? null : Yii::$app->user->identity->id;
+        $data['serv_port']           = $request->getPort();
+        $data['serv_cookies']        = \yii\helpers\Json::encode($request->getCookies());
+        $data['device'] = Yii::getAlias('@device');
+
+        return $data;
+        
+    }
+
+      public static function SiteSetting(){
+            $model = self::getCategoriseByname('site');
+            return $model;
+      }
+
+      
+      // public static function btnCreate(string $text = null, string $url = null, string $class = null){
+      //       return Html::a('<i class="fa fa-plus"></i> '.($text  ? $text : 'Add New'), [ $url ? $url : 'create'], ['class' => $class ? $class : 'btn btn-add-gradient open-modal']);
+      // }
+      public static function btnSave(){
+            return Html::submitButton('<i class="fa-regular fa-circle-check"></i> บันทึก', ['class' => 'btn btn-primary submit-btn']);
+      }
+
+      public static function btnCancel($url){
+            return Html::a('<i class="fa-solid fa-rotate-right"></i> ยกเลิก',[$url],['class' => 'btn btn-secondary']);
+      }
+
+      public static function actionView($model){
+            return Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']).'&nbsp;'.
+                  Html::a('<i class="fa-solid fa-trash"></i> ลบทิ้ง', ['delete', 'id' => $model->id], [
+                'class' => 'btn btn-danger',
+                'data' => [
+                    'confirm' => 'Are you sure you want to delete this item?',
+                    'method' => 'post',
+                ],
+            ]) ;
+      }
+
+      public static function ActionColumn($action,$id){
+            return '<div class="dropdown dropdown-action text-center">
+            <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
+            <div class="dropdown-menu dropdown-menu-right">'.Html::a('<i class="fa fa-pencil m-r-5"></i> Edit',['update', 'id' => $id],['class' => 'dropdown-item open-modal']).
+            Html::a('<i class="fa fa-trash-o m-r-5"></i> delete', ['delete', 'id' => $id], [
+            'class' => 'dropdown-item',
+            'data' => [
+                'confirm' => 'Are you sure you want to delete this item?',
+                'method' => 'post',
+            ],
+        ]).'
+            </div>
+      </div>';
+      }
+
+      public static function setDisplay($data){
+            \Yii::$app->session->set('display',$data);
+      }
+      public static function setDisplayList(){
+            \Yii::$app->session->set('display','list');
+      }
+
+
+      public static function setDisplayGrid(){
+            \Yii::$app->session->set('display','grid');
+      }
+      public static function getDisplay(){
+           return  \Yii::$app->session->get('display');
+
+      }
+
+      
+     
+}

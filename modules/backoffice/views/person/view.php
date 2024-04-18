@@ -1,0 +1,151 @@
+<?php
+
+use yii\helpers\Html;
+use yii\widgets\DetailView;
+
+/** @var yii\web\View $this */
+/** @var app\modules\backoffice\models\Person $model */
+
+$this->title = $model->ID;
+$this->params['breadcrumbs'][] = ['label' => 'People', 'url' => ['index']];
+$this->params['breadcrumbs'][] = $this->title;
+\yii\web\YiiAsset::register($this);
+?>
+<div class="person-view">
+
+    <h1><?= Html::encode($this->title) ?></h1>
+
+    <p>
+        <?= Html::a('Update', ['update', 'ID' => $model->ID], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('Delete', ['delete', 'ID' => $model->ID], [
+            'class' => 'btn btn-danger',
+            'data' => [
+                'confirm' => 'Are you sure you want to delete this item?',
+                'method' => 'post',
+            ],
+        ]) ?>
+    </p>
+
+    <?= DetailView::widget([
+        'model' => $model,
+        'attributes' => [
+            'ID',
+            'FINGLE_ID',
+            'HR_CID',
+            'HR_PREFIX_ID',
+            'HR_FNAME',
+            'HR_LNAME',
+            'HR_EN_NAME',
+            'PAY',
+            'SEX',
+            'HR_BLOODGROUP_ID',
+            'HR_MARRY_STATUS_ID',
+            'HR_BIRTHDAY',
+            'HR_PHONE',
+            'HR_EMAIL:email',
+            'HR_FACEBOOK',
+            'HR_LINE',
+            'HR_HOME_NUMBER',
+            'HR_VILLAGE_NO',
+            'HR_ROAD_NAME',
+            'HR_SOI_NAME',
+            'PROVINCE_ID',
+            'AMPHUR_ID',
+            'TUMBON_ID',
+            'HR_VILLAGE_NAME',
+            'HR_ZIPCODE',
+            'HR_RELIGION_ID',
+            'HR_NATIONALITY_ID',
+            'HR_CITIZENSHIP_ID',
+            'HR_DEPARTMENT_ID',
+            'HR_DEPARTMENT_SUB_ID',
+            'HR_POSITION_ID',
+            'HR_FARTHER_NAME',
+            'HR_FARTHER_CID',
+            'HR_MATHER_NAME',
+            'HR_MATHER_CID',
+            'HR_STATUS_ID',
+            'HR_LEVEL_ID',
+            'HR_IMAGE',
+            'HR_USERNAME',
+            'HR_PASSWORD',
+            'DATE_TIME_UPDATE',
+            'DATE_TIME_CREATE',
+            'HR_STARTWORK_DATE',
+            'HR_WORK_REGISTER_DATE',
+            'HR_WORK_END_DATE',
+            'HR_PIC',
+            'HR_POSITION_NUM',
+            'HR_SALARY',
+            'MONEY_POSITION',
+            'IP_INSERT',
+            'IP_UPDATE',
+            'PCODE',
+            'PERSON_TYPE',
+            'PCODE_MAIN',
+            'USER_TYPE',
+            'HR_HIGH',
+            'HR_WEIGHT',
+            'PERMIS_ID',
+            'VCODE',
+            'VCODE_DATE',
+            'VGROUP_ID',
+            'NICKNAME',
+            'HR_PERSON_TYPE_ID',
+            'POSITION_IN_WORK',
+            'BOOK_BANK_NUMBER',
+            'BOOK_BANK_NAME',
+            'BOOK_BANK',
+            'BOOK_BANK_BRANCH',
+            'HR_DATE_PUT',
+            'HR_HOME_NUMBER_1',
+            'HR_HOME_NUMBER_2',
+            'HR_ROAD_NAME_1',
+            'HR_ROAD_NAME_2',
+            'HR_VILLAGE_NO_1',
+            'HR_VILLAGE_NO_2',
+            'HR_VILLAGE_NAME_1',
+            'HR_VILLAGE_NAME_2',
+            'PROVINCE_ID_1',
+            'PROVINCE_ID_2',
+            'AMPHUR_ID_1',
+            'AMPHUR_ID_2',
+            'TUMBON_ID_1',
+            'TUMBON_ID_2',
+            'HR_ZIPCODE_1',
+            'HR_ZIPCODE_2',
+            'HR_HOME_PHONE_1',
+            'HR_HOME_PHONE_2',
+            'SAME_ADDR_1',
+            'SAME_ADDR_2',
+            'HR_BANK_ID',
+            'HR_FINGLE1',
+            'HR_FINGLE2',
+            'HR_FINGLE3',
+            'LICEN',
+            'BOOK_BANK_OT_NUMBER',
+            'BOOK_BANK_OT_NAME',
+            'HR_BANK_OT_ID',
+            'BOOK_BANK_OT',
+            'BOOK_BANK_OT_BRANCH',
+            'MARRY_CID',
+            'MARRY_NAME',
+            'HR_DEPARTMENT_SUB_SUB_ID',
+            'HOS_USE_CODE',
+            'HR_KIND_ID',
+            'HR_KIND_TYPE_ID',
+            'LINE_NAME',
+            'LINE_TOKEN',
+            'LINE_TOKEN1',
+            'LINE_TOKEN2',
+            'updated_at',
+            'HR_IMAGE_NAME',
+            'created_at',
+            'HR_AGENCY_ID',
+            'LEAVEDAY_ACTIVE',
+            'HR_SOI_NAME_1',
+            'HR_SOI_NAME_2',
+        ],
+    ]) ?>
+
+</div>
