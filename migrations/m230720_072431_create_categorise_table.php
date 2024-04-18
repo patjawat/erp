@@ -769,6 +769,7 @@ class m230720_072431_create_categorise_table extends Migration
         // กำหนด FSN
         
         $this->insert('categorise', ['code' => '00', 'name' => 'vendor', 'title' => 'บริษัทตัวอย่างทดสอบ']);
+        $this->insert('categorise', ['code' => '', 'name' => 'asset_type', 'title' => 'บริษัทตัวอย่างทดสอบ']);
 
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_type.sql'));
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_group.sql'));

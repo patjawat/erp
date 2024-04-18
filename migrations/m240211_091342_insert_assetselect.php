@@ -87,12 +87,19 @@ class m240211_091342_insert_assetselect extends Migration
 
         $sql8 = Yii::$app->db->createCommand("select * from categorise where name = 'asset_group'")->queryAll();
         if(count($sql8) < 1){
-        $this->insert('categorise', ['code' => 4, 'name' => 'asset_group', 'title' => 'วัสดุ']);
-        $this->insert('categorise', ['code' => 1, 'name' => 'asset_group', 'title' => 'ที่ดิน']);
-        $this->insert('categorise', ['code' => 2, 'name' => 'asset_group', 'title' => 'สิ่งปลูกสร้าง']);
-        $this->insert('categorise', ['code' => 3, 'name' => 'asset_group', 'title' => 'ครุภัณฑ์']);
-        $this->insert('categorise', ['code' => 5, 'name' => 'asset_group', 'title' => 'จ้างเหมา']);
-        $this->insert('categorise', ['code' => 6, 'name' => 'asset_group', 'title' => 'อาหารสด']);
+            $this->insert('categorise', ['code' => 4, 'name' => 'asset_group', 'title' => 'วัสดุ']);
+            $this->insert('categorise', ['code' => 1, 'name' => 'asset_group', 'title' => 'ที่ดิน']);
+            $this->insert('categorise', ['code' => 2, 'name' => 'asset_group', 'title' => 'สิ่งปลูกสร้าง']);
+            $this->insert('categorise', ['code' => 3, 'name' => 'asset_group', 'title' => 'ครุภัณฑ์']);
+            $this->insert('categorise', ['code' => 5, 'name' => 'asset_group', 'title' => 'จ้างเหมา']);
+            $this->insert('categorise', ['code' => 6, 'name' => 'asset_group', 'title' => 'อาหารสด']);
+        }
+        
+        //ประเภททรัพสิน
+        $sqlAssetType = Yii::$app->db->createCommand("select * from categorise where name = 'asset_group'")->queryAll();
+        if(count($sqlAssetType) < 1){
+            $this->insert('categorise', ['code' => 4, 'name' => 'asset_group', 'title' => 'วัสดุ']);
+            
         }
 
     }
