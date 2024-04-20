@@ -26,7 +26,7 @@ $this->title = "การรับโทษทางวินัย";
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($model->benefits as $key => $item): ?>
+                    <?php foreach ($model->blames as $key => $item): ?>
                     <tr class="">
                         <td><?=$key+1?></td>
                         <td scope="row">
