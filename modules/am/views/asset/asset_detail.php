@@ -2,7 +2,6 @@
 use yii\helpers\Url;
 ?>
 <div class="card">
-
     <div class="card-body">
 
         <!-- Nav pills -->
@@ -39,11 +38,11 @@ use yii\helpers\Url;
                         </button>
                         <ul class="dropdown-menu" style="">
 
-                            <a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items"
+                            <a class="dropdown-item open-modal" href=<?="/am/asset-detail?name=calibration_items&title=เพิ่มการบำรุงรักษา&id=" . $model->id ?>
                                 data-size="modal-lg">
                                 <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a>
                 </li>
-                <li><a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items" data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
+                <li><a class="dropdown-item open-modal" href=<?= "/am/asset-detail?name=calibration_items_system&title=ตั้งค่าการบำรุงรักษา&id=" . $model->id ?> data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
             </ul>
         </div>
         </li>
@@ -116,7 +115,6 @@ use yii\helpers\Url;
 
 </div>
 </div>
-
 <?php
 $url = Url::to(['/am/asset-detail']);
 $js = <<< JS
