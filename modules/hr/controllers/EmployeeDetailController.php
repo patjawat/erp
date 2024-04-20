@@ -107,7 +107,6 @@ class EmployeeDetailController extends Controller
         
 
         $model = new EmployeeDetail([
-            // 'data_json' => $last ? $last->data_json : '',
             'emp_id' => $emp_id,
             'name' => $name,
         ]);

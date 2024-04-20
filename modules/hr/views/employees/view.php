@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 col-sx-12">
         <?= $this->render('avatar',['model' => $model])?>
-        
+
         <?php //  $this->render('member_on_dep',['model' => $model])?>
 
         <?=Html::a('<i class="bi bi-cloud-plus-fill fs-3"></i> แบบสารสนเทศเบื้องต้น', ['upload-basic-doc', 'id' => $model->id], ['class' => 'w-100 mb-3 btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']])?>
@@ -68,42 +68,44 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php else :?>
         <?php echo $this->render('general',['model' => $model])?>
         <?php echo $this->render('@app/views/profile/estimate_chart')?>
-       
-     
 
 
+        <div class="card">
+            <div class="card-body">
 
 
-<div class="card">
-    <div class="card-body">
+                <div class="d-flex flex-column flex-sm-row justify-content-between mb-4 text-center text-sm-left">
+                    <h5>หน้าที่รับมอบหมาย</h5>
+
+                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill"
+                                data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home"
+                                aria-selected="true"> คณะกรรมการทีมประสาน (อยู่ระหว่างพัฒนา)</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill"
+                                data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile"
+                                aria-selected="false" tabindex="-1">ครุภัณฑ์ที่รับผิดชอบ</button>
+                        </li>
 
 
-<div class="d-flex flex-column flex-sm-row justify-content-between mb-4 text-center text-sm-left">
-  <h5>หน้าที่รับมอบหมาย</h5>
+                    </ul>
+                </div>
 
-  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true"> คณะกรรมการทีมประสาน (อยู่ระหว่างพัฒนา)</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false" tabindex="-1">ครุภัณฑ์ที่รับผิดชอบ</button>
-    </li>
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade active show" id="pills-home" role="tabpanel"
+                        aria-labelledby="pills-home-tab" tabindex="0">
+                        <?php // $this->render('@app/modules/hr/views/employees/team',['model' => $model])?>
+                    </div>
+                    <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab"
+                        tabindex="0">
+                        <?php //$this->render('@app/modules/hr/views/employees/assets',['model' => $model])?>
+                    </div>
 
-
-  </ul>
-  </div>
-
-  <div class="tab-content" id="pills-tabContent">
-    <div class="tab-pane fade active show" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
-    <?php // $this->render('@app/modules/hr/views/employees/team',['model' => $model])?>
-    </div>
-    <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
-    <?php //$this->render('@app/modules/hr/views/employees/assets',['model' => $model])?>
-    </div>
-
-  </div>
-  </div>
-</div>
+                </div>
+            </div>
+        </div>
 
 
 
@@ -111,7 +113,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <!-- <br> -->
         <?php // $this->render('company',['model' => $model])?>
         <?php endif;?>
-       
+
     </div>
 
 </div>
