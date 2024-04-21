@@ -9,6 +9,7 @@ use kartik\select2\Select2;
 /** @var app\modules\am\models\Fsn $model */
 /** @var yii\widgets\ActiveForm $form */
 use app\models\Categorise;
+use unclead\multipleinput\MultipleInput;
 ?>
 <?php
 echo "<pre>";
@@ -22,6 +23,9 @@ echo "</pre>";
     'enableAjaxValidation'=> true,//เปิดการใช้งาน AjaxValidation
     'validationUrl' =>['/sm/asset-item/validator']
     ]); ?>
+
+
+
 
 <?php $form->field($model, 'data_json[title]')->textInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput(['value'=>'asset_item','maxlength' => true])->label(false) ?>
@@ -87,6 +91,37 @@ echo "</pre>";
         </div>
     </div>
 </div>
+
+<!-- ตัวอน่าง -->
+<?php
+$model->ma = isset($model->data_json['ma_items']) ? $model->data_json['ma_items'] : '';
+    echo $form->field($model,'ma')->widget(MultipleInput::className(), [
+        
+        'allowEmptyList'    => false,
+        'enableGuessTitle'  => true,
+        'min'               => 1, // should be at least 2 rows
+        'addButtonPosition' => MultipleInput::POS_HEADER,
+        'addButtonOptions' => [
+            'class' => 'btn btn-success',
+            'label' => 'add' // also you can use html code
+        ],
+        'removeButtonOptions' => [
+            'label' => 'remove'
+        ],
+        'columns' => [
+            [
+                'name'  => 'title',
+                'title' => 'แผนบำรุงรักษา',
+                'enableError' => true,
+                'options' => [
+                    'class' => 'input-priority'
+                ]
+            ],
+        ]
+    ])
+    ->label(false);
+?>
+<!-- จบตัวอย่าง -->
 <div class="form-group mt-3 d-flex justify-content-center">
             <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
         </div>

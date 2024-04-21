@@ -7,6 +7,7 @@ use yii\helpers\ArrayHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\models\Categorise;
+use yii\helpers\Json;
 /**
  * This is the model class for table "categorise".
  *
@@ -28,6 +29,7 @@ class AssetItem extends \yii\db\ActiveRecord
      */
     public $fsn_auto; //กำหนดการให้หมายเลขอัตโนมัติถ้า true;
     public $asset_type_id;
+    public $ma;
     public static function tableName()
     {
         return 'categorise';
@@ -40,7 +42,7 @@ class AssetItem extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json','fsn_auto'], 'safe'],
+            [['data_json','fsn_auto','ma'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -66,8 +68,23 @@ class AssetItem extends \yii\db\ActiveRecord
         ];
     }
 
+    public function afterFind() {
+        parent::afterFind();
+        // $this->ma = Json::encode($this->data_json['ma_items']);
+    }
+
+
     public function beforeSave($insert)
     {
+
+        try {
+            $ma_items = [
+                'ma_items' => $this->ma
+            ];
+            $this->data_json = ArrayHelper::merge($this->data_json, $ma_items);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
 
         // $this->receive_date = AppHelper::DateToDb($this->receive_date);
         if($this->name == 'asset_type'){
@@ -75,12 +92,15 @@ class AssetItem extends \yii\db\ActiveRecord
             $array2 = [
                 'asset_group' => $group 
             ];
+            
             $this->data_json = ArrayHelper::merge($this->data_json, $array2);
 
             if($this->fsn_auto == "1")
             {
                 $this->code = \mdm\autonumber\AutoNumber::generate('G'.$this->category_id.'AT'.'?');
             }
+
+          
 
             
 
