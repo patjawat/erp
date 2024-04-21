@@ -288,6 +288,16 @@ class CategoriseHelper extends Component
     {
         return Categorise::find()->where(["name" => $name,'title' => $title]);
     }
+
+    public static function Id($id)
+    {
+        return Categorise::find()->where(["id" => $id]);
+    }
+
+    public static function CategoryAndName($code, $name)
+    {
+        return Categorise::find()->where(["category_id" => $code, 'name'=>$name])->orderBy(['id' => SORT_DESC]);
+    }
     
     // code ตัวสุดท้าย
     public static function CodePurchase()

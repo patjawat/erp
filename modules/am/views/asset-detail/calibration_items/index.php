@@ -4,15 +4,25 @@ use yii\helpers\ArrayHelper;
 use kartik\select2\Select2;
 use unclead\multipleinput\MultipleInput;
 use unclead\multipleinput\MultipleInputColumn;
+use app\modules\am\models\Asset;
+use app\components\CategoriseHelper;
+use yii\helpers\Html;
+use app\modules\am\models\AssetItem;
+use yii\helpers\Url;
+use yii\widgets\Pjax;
+$model_form = new AssetItem()
 ?>
+<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
 
-<?php $form = ActiveForm::begin(); ?>
+<?php $form = ActiveForm::begin(['id' => 'form-ma']); ?>
 <div class="card-body">
-                <div class="table-responsive">
+      <div class="table-responsive">
+      <?= $form->field($model_form, 'name')->hiddenInput(['value'=>'ma'])->label(false) ?>
+      <?= $form->field($model_form, 'category_id')->hiddenInput(['value'=>$model->code])->label(false) ?>
 
                 <?php
 
-echo $form->field($model,'schedule')->widget(MultipleInput::class,[
+echo $form->field($model_form,'data_json')->widget(MultipleInput::class,[
     'allowEmptyList'    => false,
     'enableGuessTitle'  => true,
     'addButtonPosition' => MultipleInput::POS_HEADER,
@@ -26,120 +36,63 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
     ],
     'columns' => [
         [
-            'name' => 'id',
-            'title' => 'ID',
-            'enableError' => true,
-            'type' => MultipleInputColumn::TYPE_HIDDEN_INPUT,
-            
+            'name'  => 'date',
+            'type'  => \kartik\date\DatePicker::className(),
+            'headerOptions' => [
+                'class' => 'table-light', 
+            ],
+            'title' => 'วันที่',
         ],
         [
-            'name'  => 'product_id',
-            'type' => Select2::class,
-            'title' => 'รายการ',
-            'headerOptions' => [
-                'class' => 'table-light',// กำหนดสไตล์ให้กับพื้นหลังของ label
-            ],
-            'options' => [
-                'data' => ArrayHelper::map(array_map(function ($asset) {
-                    $data = json_decode($asset['data_json'], true);
-                    // return ['id' => $asset['id'], 'name' => $data['name']];
-                }, Asset::find()->asArray()->all()), 'id', 'name'),
-                'pluginEvents' => [
-                    'change' => 'function() { 
-                        var id = $(this).val();
-                        fetch("deteil?id=" + id)
-                            .then(res => res.json())
-                            .then(json => {
-                                console.log($(this).closest("tr").find("input[name*=\'amount\']").val());
-                                //$("#Inventory-schedule-" + id + "-detail").text(json.description);
-                                //$("#Inventory-schedule-" + id + "-price").text(json.price);
-                                $(this).closest("tr").find("input[name*=\'price\']").val(json.price);
-                                $(this).closest("tr").find("input[name*=\'detail\']").val(json.data_json.detail);
-                                $(this).closest("tr").find("input[name*=\'total\']").val($(this).closest("tr").find("input[name*=\'amount\']").val() * json.price);
-                            });
-                    }',
-                ],
-                'pluginOptions' => [
-                    'allowClear' => true, 
-                    'placeholder' => 'เลือกสินค้า......',
-                    'style' => 'width: 150px;'
-                ],
-            ]
- /*            'options' => [
-                'prompt' => 'เลือกสินค้า',
-                'style' => 'width:150px;',
-                'onchange' => <<< JS
-                var id = $(this).closest("select").val()
-                fetch('deteil?id=' + id)
-                .then(res=>res.json())
-                .then(json=> {
-                    console.log(json);
-                    //$("#Inventory-schedule-" + id + "-detail").text(json.description);
-                    //$("#Inventory-schedule-" + id + "-price").text(json.price);
-                    $(this).closest("tr").find("input[name*=\'price\']").val(json.price)
-                   $(this).closest("tr").find("input[name*=\'detail\']").val(json.data_json.detail)
-                    $(this).closest("tr").find("input[name*=\'total\']").val($(this).closest("tr").find("input[name*=\'qty\']").val() * json.price);
-
-
-
-                    
-                })
-                JS, 
-            ] */
-        ],
-        [
-            'name'  => 'detail',
-            'options' => [
-                'readonly' => true,
-                'style' => 'background: none; border: none; width:400px;',
-                'disabled' => 'disabled' // กำหนดให้ input field เป็น readonly
-            ],
-            'headerOptions' => [
-                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
-            ],
-            'title' => 'รายละเอียดเพิ่มเติม',
-        ],
-        [	
-            'name'  => 'price',
-            'title' => 'ราคา',
-            'options' => [
-                'readonly' => true,
-                'style' => 'background: none; border: none; width: 100px;', // กำหนดให้ input field เป็น readonly
-            ],
-            'headerOptions' => [
-                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
-            ],
-        ],
-        [
-            'name'  => 'amount',
-            'title' => 'จำนวน',
-            'defaultValue' => 1,
-            'options' => [
-                'type' => 'number',
-                'class' => 'input-priority ',
-                'onchange' => <<< JS
-                    $(this).closest("tr").find("input[name*=\'total\']").val($(this).closest("tr").find("input[name*=\'amount\']").val() * $(this).closest("tr").find("input[name*=\'price\']").val());
-                JS,
-            ],
+            'name'  => 'checker',
             'headerOptions' => [
                 'class' => 'table-light',
-                'style' => 'width: 150px;', // กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
-            'inputTemplate' => '<div class="input-group"><button class="btn btn-primary decrement-btn" type="button">-</button>{input}<button class="btn btn-primary increment-btn" type="button">+</button></div>',
+            'title' => 'ผู้ตรวจเช็คอุปกรณ์',
         ],
         [
-            'name'  => 'total',
-            'title' => 'Total',
-            'options' => [
-                'readonly' => true, 
-                'style' => 'background: none; border: none;',
-                'disabled' => 'disabled'// กำหนดให้ input field เป็น readonly
-            ],
+            'name'  => 'endorsee',
             'headerOptions' => [
-                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
+                'class' => 'table-light',
             ],
-            'enableError' => true,
+            'title' => 'หัวหน้ารับรอง',
         ],
+        [
+            'name'  => 'items',
+            'type' => Select2::class,
+            'headerOptions' => [
+                'class' => 'table-light', 
+            ],
+            'title' => 'รายการที่ตรวจเช็ค',
+            'options' => [
+                'data' => CategoriseHelper::Id($id_category)->one()->data_json["ma_items"]
+            ]
+        ],
+        [
+            'name'  => 'ma_status',
+            'type'  => 'dropDownList',
+            'headerOptions' => [
+                'class' => 'table-light',
+                'style' => 'width: 70px;',
+            ],
+            'defaultValue' => 1,
+            'items' => [
+                0 => 'สูง',
+                1 => 'ปกติ',
+                2 => 'ต่ำ'
+            ],
+            'title' => 'สถานะ',
+        ], 
+        [
+            'name'  => 'comment',
+            'headerOptions' => [
+                'class' => 'table-light', 
+            ],
+            'title' => 'หมายเหตุ',
+        ], 
+        
+ 	
+        
         
     ]
 
@@ -147,6 +100,39 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
 
 ?>
                 </div>
-            </div>
+                    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ดำเนินการต่อ', ['class' => 'btn btn-success waves-effect waves-light',"id"=>"summit"]) ?>
+
+                </div>
 
 <?php ActiveForm::end(); ?>
+<?php Pjax::end();?>
+<?php
+
+$url = Url::to(['/am/asset-detail']);
+
+$js = <<< JS
+
+
+$('#form-ma').on('beforeSubmit', function (e) {
+    var form = $(this);
+    return 
+    $.ajax({
+        url: "$url" + "/test",
+        type: 'post',
+        data: form.serialize(),
+        dataType: 'json',
+        success: async function (response) {
+            form.yiiActiveForm('updateMessages', response, true);
+            if(response.status == 'success') {
+                console.log(response.data);
+                //closeModal()
+                success()
+                await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+            }
+        }
+    });
+    return false;
+});
+JS;
+$this->registerJs($js);
+?>

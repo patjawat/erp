@@ -27,6 +27,7 @@ class AssetItem extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $fsn_auto; //กำหนดการให้หมายเลขอัตโนมัติถ้า true;
+    public $schedule;
     public static function tableName()
     {
         return 'categorise';

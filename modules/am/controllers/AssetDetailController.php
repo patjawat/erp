@@ -60,7 +60,8 @@ class AssetDetailController extends Controller
                     'id' => $id,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'model' => $id == '' ? '' : AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()
+                    'model' => $id == '' ? '' : AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one(),
+                    'id_category' => $id == '' ? '' : AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()->id
                 ]),
             ];
         } else {
@@ -282,6 +283,33 @@ class AssetDetailController extends Controller
             'index' => $maItems == null ? 0 : max(array_keys($maItems))
         ];
         }
+    }
+
+
+    public function actionTest()
+    {
+        $model = new AssetItem();
+        $test = 0;
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) ) {
+                $data_json = $model->data_json;
+                foreach ($data_json as $index => $item) {
+                    $item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
+                    $model->data_json = $item;
+                    #$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
+                    $model->save();
+                }
+                return [
+                    'status' => 'success',
+                    'container' => '#am-container',
+                ];
+            }
+        }
+        return [
+            'status' => 'success',
+            'container' => '#am-container',
+        ];
     }
     /**
      * Finds the AssetDetail model based on its primary key value.
