@@ -39,7 +39,7 @@ use yii\helpers\Url;
                         <ul class="dropdown-menu" style="">
 
                             <a class="dropdown-item open-modal" href=<?="/am/asset-detail?name=calibration_items&title=เพิ่มการบำรุงรักษา&id=" . $model->id ?>
-                                data-size="modal-lg">
+                                data-size="modal-xl">
                                 <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a>
                 </li>
                 <li><a class="dropdown-item open-modal" href=<?= "/am/asset-detail?name=calibration_items_system&title=ตั้งค่าการบำรุงรักษา&id=" . $model->id ?> data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
@@ -162,7 +162,8 @@ function  loadMa(){
         url: "$url",
         data:{
             "title":"การบำรุงรักษา",
-            "name":"ma"
+            "name":"ma",
+            "id" : $model->id
         },
         dataType: "json",
         success: function (res) {
