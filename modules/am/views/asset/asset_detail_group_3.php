@@ -19,7 +19,7 @@ use yii\helpers\Html;
                                  </a>
                               </div>
                            </div>
-                           <div class="card mt--45" style="margin-left: -8px;">
+                           <div class="card mt--45 border-0" style="margin-left: -8px;">
                             <div class="card-body">
                                 <?=Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto', 'style' => 'max-width:100%;min-width: 320px;'])?>
 
