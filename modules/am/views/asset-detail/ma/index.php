@@ -1,6 +1,5 @@
 <div class="d-flex justify-content-between">
     <h3><i class="fa-solid fa-brush"></i> การบำรุงรักษา</h3>
-    
 </div>
 <div
     class="table-responsive"

@@ -10,7 +10,9 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
-
+use app\modules\am\models\AssetItem;
+use app\modules\am\models\Asset;
+use app\components\CategoriseHelper;
 /**
  * AssetDetailController implements the CRUD actions for AssetDetail model.
  */
@@ -48,8 +50,8 @@ class AssetDetailController extends Controller
         $searchModel = new AssetDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['name' => $name]);
-   
-
+        #Yii::$app->response->format = Response::FORMAT_JSON;
+        #return AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>421])->one()->asset_item])->one();
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -58,6 +60,7 @@ class AssetDetailController extends Controller
                     'id' => $id,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'model' => $id == '' ? '' : AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()
                 ]),
             ];
         } else {
@@ -210,6 +213,76 @@ class AssetDetailController extends Controller
         return $this->redirect(['index']);
     }
 
+
+    public function actionDeleteMaItem()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $id_row = $this->request->get('id_row');
+        $model = AssetItem::findOne(['id' => $id]);
+        $dataJson = $model->data_json;
+        unset($dataJson["ma_items"][$id_row]);
+        $model->data_json = $dataJson;
+        if($model->save()){  
+        return [
+            'status' => 'success',
+            'container' => '#am-container',
+        ];
+        }
+    }
+
+    public function actionUpdateMaItem()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $id_row = $this->request->get('id_row');
+        $value = $this->request->get('value');
+        $model = AssetItem::findOne(['id' => $id]);
+        $dataJson = $model->data_json;
+        $dataJson["ma_items"][$id_row] = $value;
+        $model->data_json = $dataJson;
+        if($model->save()){  
+        return [
+            'status' => 'success',
+            'container' => '#am-container',
+            'value' => $value
+        ];
+        }
+    }
+
+
+    public function actionPushMaItem()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $id_row = $this->request->get('id_row');
+        $value = $this->request->get('value');
+        $model = AssetItem::findOne(['id' => $id]);
+        $dataJson = $model->data_json;
+        if ($dataJson == null){
+            $dataJson = [
+                "ma_items" => null
+            ];
+        }
+        $maItems = $dataJson["ma_items"];
+        if ($maItems == null){
+            $dataJson["ma_items"] = [
+                0 => $value
+            ];
+        }else{
+            $maItems[] = $value; 
+            $dataJson["ma_items"] = $maItems;
+        }
+        $model->data_json = $dataJson;
+        if($model->save()){  
+        return [
+            'status' => 'success',
+            'container' => '#am-container',
+            'value' => $value,
+            'index' => $maItems == null ? 0 : max(array_keys($maItems))
+        ];
+        }
+    }
     /**
      * Finds the AssetDetail model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
