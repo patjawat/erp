@@ -1,27 +1,28 @@
-select *,
-        ROUND(((price - 0)-1) /  (DATEDIFF(DATE_FORMAT(date + INTERVAL life YEAR,'%Y-%m-%d'),date)),2) as price_days,
-         ROUND(((((price - 0)-1) /  (DATEDIFF(DATE_FORMAT(date + INTERVAL life YEAR,'%Y-%m-%d'),date))*30) * date_number),2)  as price_days_X_datenum,
-                (date_number * month_price) as sum_price_month,
-                ROUND((xx.month_price * date_number),2) as total_month_price,
-                ROUND(IF(xx.price -(xx.month_price * date_number) <= 1,1,(xx.price -(xx.month_price * date_number))),2) as total,
-                DATE_FORMAT(xx.date,'%d') as days
-                FROM (
-                SELECT 
-                    a.id,
-                i.title,
-                a.code,
-                asset_type.title as type_name,
-                asset_type.code as type_code,
-                a.data_json->'$.service_life' as life,
-                CAST(a.data_json->'$.depreciation'as DECIMAL(4,2)) as depreciation,
-                asset_group,
-                receive_date as date,
-                price,
-                ((TIMESTAMPDIFF(MONTH,receive_date,LAST_DAY('2023-01-30'))+1)) as date_number,
-                (DATEDIFF(DATE_FORMAT(receive_date + INTERVAL JSON_EXTRACT(a.data_json, '$.service_life') YEAR,'%Y-%m-%d'),receive_date)) as day_number,
-                (price/CAST(a.data_json->'$.service_life' as UNSIGNED)) as price_year,
-                (price/CAST(a.data_json->'$.service_life' as UNSIGNED) / 12) as month_price
-                FROM asset a
-                LEFT JOIN categorise i ON i.code = a.asset_item
-                LEFT JOIN categorise asset_type ON i.category_id = asset_type.code AND asset_type.name = 'asset_type'
-                ) as xx WHERE (price - (date_number * month_price)) > 0 AND (xx.date_number >=1)
+select x1.*
+    from (select 
+    LAST_DAY(m1) as date,
+    IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(now(),'%Y-%m'), 'Y', 'N') as active,
+    (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = 63) ,LAST_DAY(m1))+1)  as date_number,
+    DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) as days_of_month,
+    DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
+    (select price FROM asset where id =63) as price,
+    (SELECT receive_date FROM asset WHERE id = 63) as receive_date,
+    (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) as service_life,
+    (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = 63) as month_price,
+    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = 63) as depreciation
+    from
+    (
+    select ((SELECT receive_date FROM asset WHERE id = 63) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = 63))-1 DAY) 
+    +INTERVAL m MONTH as m1
+    from
+    (
+    select @rownum:=@rownum+1 as m from
+    (select 1 union select 2 union select 3 union select 4) t1,
+    (select 1 union select 2 union select 3 union select 4) t2,
+    (select 1 union select 2 union select 3 union select 4) t3,
+    (select 1 union select 2 union select 3 union select 4) t4,
+    (select @rownum:=-1) t0
+    ) d1
+    ) d2 
+    where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = 63) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
+    order by m1)as x1;
