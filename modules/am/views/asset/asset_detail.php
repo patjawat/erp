@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use yii\helpers\Html;
 ?>
 <div class="card">
     <div class="card-body">
@@ -42,7 +43,9 @@ use yii\helpers\Url;
                                 data-size="modal-xl">
                                 <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a>
                 </li>
-                <li><a class="dropdown-item open-modal" href=<?= "/am/asset-detail?name=calibration_items_system&title=ตั้งค่าการบำรุงรักษา&id=" . $model->id ?> data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
+                <li>
+                <?=Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า',['/sm/asset-item/update','id' => $model->assetItem->id,'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                <!-- <a class="dropdown-item open-modal" href=<?= "/am/asset-detail?name=calibration_items_system&title=ตั้งค่าการบำรุงรักษา&id=" . $model->id ?> data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li> -->
             </ul>
         </div>
         </li>

@@ -396,6 +396,10 @@ class AssetItemController extends Controller
             //     ],
             //     "asset_group" => null,
             // ];
+            // $ma_items = [
+            //     'ma_items' => $model->ma
+            // ];
+            // $model->data_json = ArrayHelper::merge($model->data_json, $ma_items);
             $model->save();
             return [
                 'status' => 'success',

@@ -91,9 +91,9 @@ echo "</pre>";
         </div>
     </div>
 </div>
-
-<!-- ตัวอน่าง -->
+<hr>
 <?php
+
 $model->ma = isset($model->data_json['ma_items']) ? $model->data_json['ma_items'] : '';
     echo $form->field($model,'ma')->widget(MultipleInput::className(), [
         
@@ -102,26 +102,36 @@ $model->ma = isset($model->data_json['ma_items']) ? $model->data_json['ma_items'
         'min'               => 1, // should be at least 2 rows
         'addButtonPosition' => MultipleInput::POS_HEADER,
         'addButtonOptions' => [
-            'class' => 'btn btn-success',
-            'label' => 'add' // also you can use html code
+            'class' => 'btn btn-sm btn-primary',
+            'label' => '<i class="fa-solid fa-circle-plus"></i>' // also you can use html code
         ],
         'removeButtonOptions' => [
-            'label' => 'remove'
+            'class' => 'btn btn-sm btn-danger',
+            'label' => '<i class="fa-solid fa-trash"></i>'
         ],
         'columns' => [
             [
-                'name'  => 'title',
+                'name'  => 'code',
+                'title' => 'รหัส',
+                'enableError' => true,
+                'options' => [
+                    'class' => 'input-priority'
+                ]
+            ],
+            [
+                'name'  => 'item_name',
                 'title' => 'แผนบำรุงรักษา',
                 'enableError' => true,
                 'options' => [
                     'class' => 'input-priority'
                 ]
             ],
+            
         ]
     ])
     ->label(false);
 ?>
-<!-- จบตัวอย่าง -->
+
 <div class="form-group mt-3 d-flex justify-content-center">
             <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
         </div>

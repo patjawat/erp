@@ -36,11 +36,12 @@ use yii\helpers\Html;
 
                     <div class="d-flex justify-content-between align-item-middle">
                         <div>
-
                             <h5 class="card-title mb-0">
-                                <?=isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-'?></h5>
+                                <?=Html::a(isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-',['/sm/asset-item/view','id' => $model->assetItem->id],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                                </h5>
                             <i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">รหัส</span>
                             <span class="text-danger"><?=$model->code?><span>
+                              
                         </div>
                         <div>
 
