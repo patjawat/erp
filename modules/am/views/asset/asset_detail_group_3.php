@@ -9,29 +9,27 @@ use yii\helpers\Html;
             <div class="position-relative p-2 d-flex">
                 <?php // Html::img('@web/images/imac.png',['class' => 'img-fluid rounded-start p-5']);?>
                 <div class="dropdown edit-field-half-left">
-                              <div class="btn-icon btn-icon-sm btn-icon-soft-primary dropdown-toggle me-0 edit-field-icon" data-bs-toggle="dropdown" aria-expanded="false">
-                              <i class="fa-solid fa-ellipsis"></i>
-                              </div>
-                              <div class="dropdown-menu dropdown-menu-right" style="">
-                                 <a href="#" class="dropdown-item select-photo">
-                                    <i class="fa-solid fa-file-image me-2 fs-5"></i>
-                                    <span>อัพโหลดภาพ</span>
-                                 </a>
-                              </div>
-                           </div>
-                           <div class="card mt--45 border-0" style="margin-left: -8px;">
-                            <div class="card-body">
-                                <?=Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto', 'style' => 'max-width:100%;min-width: 320px;'])?>
+                    <div class="btn-icon btn-icon-sm btn-icon-soft-primary dropdown-toggle me-0 edit-field-icon"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </div>
+                    <div class="dropdown-menu dropdown-menu-right" style="">
+                        <a href="#" class="dropdown-item select-photo">
+                            <i class="fa-solid fa-file-image me-2 fs-5"></i>
+                            <span>อัพโหลดภาพ</span>
+                        </a>
+                    </div>
+                </div>
 
-                            </div>
-                           </div>
-                           
+                <?=Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto', 'style' => 'max-width:100%;min-width: 320px;'])?>
 
 
-                           <input type="file" id="my_file" style="display: none;" />
-                           <a href="#" class="select-photo">
 
-            </a>
+
+                <input type="file" id="my_file" style="display: none;" />
+                <a href="#" class="select-photo">
+
+                </a>
             </div>
         </div>
         <div class="col-md-8">
@@ -44,10 +42,10 @@ use yii\helpers\Html;
                         <div>
                             <h5 class="card-title mb-0">
                                 <?=Html::a(isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-',['/sm/asset-item/view','id' => $model->assetItem->id],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
-                                </h5>
+                            </h5>
                             <i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">รหัส</span>
                             <span class="text-danger"><?=$model->code?><span>
-                              
+
                         </div>
                         <div>
 
@@ -86,8 +84,6 @@ use yii\helpers\Html;
                                     </span>
                                     บาท
                                 </li>
-
-                                <?=$model->type_name?></li>
                                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span
                                         class="fw-semibold">วันเดือนปีทีซื้อ</span> :
                                     <?=Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium')?></li>
