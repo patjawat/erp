@@ -91,17 +91,17 @@ use yii\helpers\Html;
     from (select 
     LAST_DAY(m1) as date,
     IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(now(),'%Y-%m'), 'Y', 'N') as active,
-    (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1)  as date_number,
+    (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) ,LAST_DAY(m1))+1)  as date_number,
     DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) as days_of_month,
-    DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
-    (select price FROM asset where id =:id) as price,
-    (SELECT receive_date FROM asset WHERE id = :id) as receive_date,
-    (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) as service_life,
-    (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = :id) as month_price,
-    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id) as depreciation
+    DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id AND asset_status  = 1) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
+    (select price FROM asset where id =:id AND asset_status  = 1) as price,
+    (SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) as receive_date,
+    (SELECT data_json->'$.service_life' FROM asset WHERE id = :id AND asset_status  = 1) as service_life,
+    (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = :id AND asset_status  = 1) as month_price,
+    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id AND asset_status  = 1) as depreciation
     from
     (
-    select ((SELECT receive_date FROM asset WHERE id = :id) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id))-1 DAY) 
+    select ((SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1))-1 DAY) 
     +INTERVAL m MONTH as m1
     from
     (
@@ -113,7 +113,7 @@ use yii\helpers\Html;
     (select @rownum:=-1) t0
     ) d1
     ) d2 
-    where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
+    where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id AND asset_status  = 1) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
     order by m1)as xx;";
 
 
