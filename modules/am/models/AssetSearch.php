@@ -18,7 +18,7 @@ class AssetSearch extends Asset
     {
         return [
             [['id', 'life', 'department', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','asset_item','asset_group','asset_type','q','purchase','on_year','owner','price1','price2','q_department'.'q_date','q_receive_date','q_month','q_year','budget_type','method_get','asset_status'], 'safe'],
+            [['ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','asset_item','asset_group','asset_type','q','purchase','on_year','owner','price1','price2','q_department'.'q_date','q_receive_date','q_month','q_year','budget_type','method_get','asset_status','q_lastDay'], 'safe'],
             [['price'], 'number'],
         ];
     }

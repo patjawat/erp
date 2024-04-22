@@ -7,11 +7,13 @@ return [
     [
         'attribute' => 'code',
         'vAlign' => 'middle',
+        'width' => '200px',
         'header' => '<span class="fw-semibold">รหัสทรัพย์สิน</span>',
     ],
     [
         'attribute' => 'date',
         'vAlign' => 'middle',
+        'width' => '150px',
         'header' => '<span class="fw-semibold">วันที่ส่งมอบ</span>',
         'value' => function($model){
             return Yii::$app->thaiFormatter->asDate($model['date'], 'medium');

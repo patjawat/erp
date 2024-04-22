@@ -4,7 +4,6 @@ use yii\helpers\Html;
 use kartik\grid\GridView;
 use app\models\Categorise;
 use app\modules\am\models\AssetDetail;
-use yii\widgets\Pjax;
 
 $this->title = 'รายงานค่าเสื่อม';
 $this->params['breadcrumbs'][] = ['label' => 'บริหารทรัพย์สิน', 'url' => ['/am']];
@@ -24,8 +23,8 @@ $this->params['breadcrumbs'][] = $this->title;
         font-weight: 500;
     }
 </style>
-<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
 <?php
+
 echo GridView::widget([
     'id' => 'kv-grid-demo',
     'dataProvider' => $dataProvider,
@@ -35,7 +34,7 @@ echo GridView::widget([
     'floatHeader' => true, // table header floats when you scroll
     'floatPageSummary' => true, // table page summary floats when you scroll
     'floatFooter' => false, // disable floating of table footer
-    'pjax' => false, // pjax is set to always false for this demo
+    'pjax' => true, // pjax is set to always false for this demo
     // parameters from the demo form
     'responsive' => false,
     'bordered' => true,
@@ -47,7 +46,7 @@ echo GridView::widget([
         'after' => '<div class="float-right float-end"><button type="button" class="btn btn-primary"><i class="fas fa-download"></i> ดาวน์โหลด </button></div><div style="padding-top: 5px;"><em>* สรุปค่าสื่อมทรัพย์สินประจำเดือน เมษายน 2565 ปีงบประมาณ 2556.</em></div><div class="clearfix"></div>',
         'heading' => '<i class="fa-solid fa-chart-line"></i>  ค่าเสื่อมทรัพย์สิน',
         'type' => 'light',
-        'before' => '<div style="padding-top: 7px;"><em>*</em></div>',
+        'before' => '<div style="padding-top: 7px;"><em>* Resize table columns just like a spreadsheet by dragging the column edges.</em></div>',
     ],
     // set export properties
     'export' => [
@@ -67,6 +66,8 @@ echo GridView::widget([
             'content' => $this->render('_search',['model' => $searchModel]), 
             'options' => ['class' => 'btn-group mr-2 me-2']
         ],
+        '{export}',
+        '{toggleData}',
     ],
     'toggleDataContainer' => ['class' => 'btn-group mr-2 me-2'],
     'persistResize' => false,
@@ -75,4 +76,3 @@ echo GridView::widget([
     'itemLabelPlural' => 'books'
 ]);
 ?>
-<?php Pjax::end();?>

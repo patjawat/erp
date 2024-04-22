@@ -17,19 +17,19 @@ use yii\helpers\Html;
     // from (select 
     // LAST_DAY(m1) as date,
     // IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(now(),'%Y-%m'), 'Y', 'N') as active,
-    // (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = 63) ,LAST_DAY(m1))+1)  as date_number,
+    // (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1)  as date_number,
           
     // DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) as days_of_month,  
-    //  IF((TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = 63) ,LAST_DAY(m1))+1) = 1, (DATEDIFF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m-%d'),(SELECT receive_date FROM asset WHERE id = 63))),DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) ) as sum_days,
-    // DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
-    // (select price FROM asset where id =63) as price,
-    // (SELECT receive_date FROM asset WHERE id = 63) as receive_date,
-    // (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) as service_life,
-    // (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = 63) as month_price,
-    // (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = 63) as depreciation
+    //  IF((TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1) = 1, (DATEDIFF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m-%d'),(SELECT receive_date FROM asset WHERE id = :id))),DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) ) as sum_days,
+    // DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
+    // (select price FROM asset where id =:id) as price,
+    // (SELECT receive_date FROM asset WHERE id = :id) as receive_date,
+    // (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) as service_life,
+    // (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = :id) as month_price,
+    // (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id) as depreciation
     // from
     // (
-    // select ((SELECT receive_date FROM asset WHERE id = 63) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = 63))-1 DAY) 
+    // select ((SELECT receive_date FROM asset WHERE id = :id) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id))-1 DAY) 
     // +INTERVAL m MONTH as m1
     // from
     // (
@@ -41,7 +41,7 @@ use yii\helpers\Html;
     // (select @rownum:=-1) t0
     // ) d1
     // ) d2 
-    // where m1<= DATE_FORMAT((SELECT receive_date FROM asset WHERE id = 63) + INTERVAL 3 YEAR,'%Y-%m-%d')
+    // where m1<= DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL 3 YEAR,'%Y-%m-%d')
     // order by m1)as xx;;";
 
 
@@ -91,17 +91,17 @@ use yii\helpers\Html;
     from (select 
     LAST_DAY(m1) as date,
     IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(now(),'%Y-%m'), 'Y', 'N') as active,
-    (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1)  as date_number,
+    (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) ,LAST_DAY(m1))+1)  as date_number,
     DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) as days_of_month,
-    DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
-    (select price FROM asset where id =:id) as price,
-    (SELECT receive_date FROM asset WHERE id = :id) as receive_date,
-    (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) as service_life,
-    (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = :id) as month_price,
-    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id) as depreciation
+    DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id AND asset_status  = 1) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS days_of_year,
+    (select price FROM asset where id =:id AND asset_status  = 1) as price,
+    (SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) as receive_date,
+    (SELECT data_json->'$.service_life' FROM asset WHERE id = :id AND asset_status  = 1) as service_life,
+    (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = :id AND asset_status  = 1) as month_price,
+    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id AND asset_status  = 1) as depreciation
     from
     (
-    select ((SELECT receive_date FROM asset WHERE id = :id) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id))-1 DAY) 
+    select ((SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1))-1 DAY) 
     +INTERVAL m MONTH as m1
     from
     (
@@ -113,18 +113,8 @@ use yii\helpers\Html;
     (select @rownum:=-1) t0
     ) d1
     ) d2 
-    where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
+    where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id AND asset_status  = 1) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id AND asset_status  = 1) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
     order by m1)as xx;";
-
-    $querys = Yii::$app->db->createCommand($sql)
-    ->bindValue(':id', $model->id)
-    ->bindValue(':receive_date', $model->receive_date)
-    // ->getRawSql();
-    ->queryAll();
-    // $depre = 50;
-    // $price = 10000
-    // print_r($querys);
-
 
 
     $new_sql = "SELECT x3.*,
@@ -140,17 +130,17 @@ use yii\helpers\Html;
     select x1.*
         from (select LAST_DAY(m1) as date,
         IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(now(),'%Y-%m'), 'Y', 'N') as active,
-        (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = 63) ,LAST_DAY(m1))+1)  as date_number,
+        (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1)  as date_number,
         DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) as days_of_month,
-        DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS all_days,
-        ((select price FROM asset where id =63)-1) as price,
-        (SELECT receive_date FROM asset WHERE id = 63) as receive_date,
-        (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) as service_life,
-        (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = 63) as month_price,
-        (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = 63) as depreciation
+        DATEDIFF(DATE_FORMAT(DATE_FORMAT(m1, '%Y-%m-%d') + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d'),DATE_FORMAT(m1, '%Y-%m-%d')) AS all_days,
+        ((select price FROM asset where id =:id)-1) as price,
+        (SELECT receive_date FROM asset WHERE id = :id) as receive_date,
+        (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) as service_life,
+        (SELECT (price/CAST(data_json->'$.service_life' as UNSIGNED) / 12) FROM asset WHERE id = :id) as month_price,
+        (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id) as depreciation
         from
         (
-        select ((SELECT receive_date FROM asset WHERE id = 63) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = 63))-1 DAY) 
+        select ((SELECT receive_date FROM asset WHERE id = :id) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id))-1 DAY) 
         +INTERVAL m MONTH as m1
         from
         (
@@ -162,8 +152,20 @@ use yii\helpers\Html;
         (select @rownum:=-1) t0
         ) d1
         ) d2 
-        where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = 63) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 63) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
+        where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
         order by m1)as x1) as x2) as x3;";
+
+    $querys = Yii::$app->db->createCommand($new_sql)
+    ->bindValue(':id', $model->id)
+    ->bindValue(':receive_date', $model->receive_date)
+    // ->getRawSql();
+    ->queryAll();
+    // $depre = 50;
+    // $price = 10000
+    // print_r($querys);
+
+
+
     ?>
 
 
@@ -197,7 +199,7 @@ use yii\helpers\Html;
                         <?=number_format($model->price,2)?></span> บาท
                 </li>
                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">จำนวนวัน</span> :
-                    <?=$querys[0]['days_of_year']?> วัน
+                    <?php // $querys[0]['days_of_year']?> วัน
                 </li>
                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span
                         class="fw-semibold">ค่าเสื่อมราคาประจำปี</span> :
@@ -220,6 +222,9 @@ use yii\helpers\Html;
                     <?php foreach ($querys as $data1):?>
                     <?=$data1['active'] == 'Y' ?  number_format(($data1['total']),2) : ''?>
                     <?php endforeach?></span> บาท</h4>
+                    <?php
+                    
+                    ?>
         </div>
 
     </div>
@@ -252,12 +257,12 @@ use yii\helpers\Html;
             </td>
             <td class="text-center">
             <span class="<?=$data['active'] == 'Y' ? 'fs-6  fw-semibold' : ''?>">
-            <?=$data['sum_days']?>
+            <?= $data['total_days']?>
         </span>
         </td>
             <td class="text-end">
                 <span class="<?=$data['active'] == 'Y' ? 'fs-6  fw-semibold' : ''?>">
-                    <?= number_format($data['total_month_price'],2) ?>
+                    <?=  number_format($data['total_price2'],2) ?>
                 </span>
             </td>
             <td class="text-end">
