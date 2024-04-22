@@ -2,6 +2,8 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 ?>
+
+
 <div class="card">
     <div class="card-body">
 
@@ -38,10 +40,10 @@ use yii\helpers\Html;
                             <i class="bi bi-caret-down-fill"></i>
                         </button>
                         <ul class="dropdown-menu" style="">
-
-                            <a class="dropdown-item open-modal" href=<?="/am/asset-detail?name=calibration_items&title=เพิ่มการบำรุงรักษา&id=" . $model->id ?>
+<?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/asset-detail','id' => $model->id,'name' =>'ma_form','code' => $model->code ],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                            <!-- <a class="dropdown-item open-modal" href=<?="/am/asset-detail?name=ma&title=เพิ่มการบำรุงรักษา&id=" . $model->id ?>
                                 data-size="modal-xl">
-                                <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a>
+                                 </a> -->
                 </li>
                 <li>
                 <?=Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า',['/sm/asset-item/update','id' => $model->assetItem->id,'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
@@ -166,7 +168,7 @@ function  loadMa(){
         data:{
             "title":"การบำรุงรักษา",
             "name":"ma",
-            "id" : $model->id
+            "id" : "$model->code"
         },
         dataType: "json",
         success: function (res) {

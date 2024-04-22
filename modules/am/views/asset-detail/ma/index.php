@@ -1,9 +1,10 @@
 <?php
-use app\components\CategoriseHelper;
+
+use app\modules\am\models\AssetDetail;
 
 ?>
 
-<?php $list = CategoriseHelper::CategoryAndName($model->code,"ma")->all() ?>
+<?php $list = AssetDetail::find()->where(['code'=>$id])->orderBy(['date_start' => SORT_DESC])->all() ?>
 <div class="d-flex justify-content-between">
     <h3><i class="fa-solid fa-brush"></i> การบำรุงรักษา</h3>
 </div>
@@ -25,15 +26,17 @@ use app\components\CategoriseHelper;
         </thead>
         <tbody>
             <?php foreach($list as $item){ ?>
-            <tr class="">
-                <td scope="row"><?= $item->data_json["date"] ?></td>
-                <td><?= $item->data_json["checker"] ?></td>
-                <td><?= $item->data_json["endorsee"] ?></td>
-                <td><?= $item->data_json["items"] ?></td>
-                <td><?= $item->data_json["ma_status"] ?></td>
-                <td><?= $item->data_json["comment"] ?></td>
-            </tr>
-           <?php } ?>
+                <?php foreach($item->data_json["items"] as $x){ ?>
+                    <tr class="">
+                        <td scope="row"><?= Yii::$app->formatter->asDate($item->date_start, 'long') ?></td>
+                        <td><?= $item->data_json["checker"] ?></td>
+                        <td><?= $item->data_json["endorsee"] ?></td>
+                        <td><?= $x["item"] ?></td>
+                        <td><?= $x["ma_status"] ?></td>
+                        <td><?= $x["comment"] ?></td>
+                    </tr>
+                <?php } ?>
+            <?php } ?>
         </tbody>
     </table>
 </div>

@@ -13,6 +13,7 @@ use yii\web\Response;
 use app\modules\am\models\AssetItem;
 use app\modules\am\models\Asset;
 use app\components\CategoriseHelper;
+use yii\helpers\ArrayHelper;
 /**
  * AssetDetailController implements the CRUD actions for AssetDetail model.
  */
@@ -60,8 +61,13 @@ class AssetDetailController extends Controller
                     'id' => $id,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'model' => $id == '' ? '' : AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one(),
-                    'id_category' => $id == '' ? '' : AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()->id
+                    'model' => $id == '' ? '' : 
+                        (Asset::find()->where(['id'=>$id])->one() ? AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one() : ""
+                        
+                    ),
+                    'model_asset' => $id == '' ? '' : Asset::find()->where(['id'=>$id])->one(),
+                    'id_category' => $id == '' ? '' :  
+                    (Asset::find()->where(['id'=>$id])->one() ?  AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()->id : ""),
                 ]),
             ];
         } else {
@@ -288,27 +294,20 @@ class AssetDetailController extends Controller
 
     public function actionTest()
     {
-        $model = new AssetItem();
-        $test = 0;
+        $model = new AssetDetail();
         Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) ) {
-                $data_json = $model->data_json;
-                foreach ($data_json as $index => $item) {
-                    $item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
-                    $model->data_json = $item;
+                    #$item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
+                    #$model->data_json = $item;
                     #$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
                     $model->save();
-                }
-                return [
-                    'status' => 'success',
-                    'container' => '#am-container',
-                ];
             }
         }
         return [
             'status' => 'success',
             'container' => '#am-container',
+            'data' => $model
         ];
     }
     /**

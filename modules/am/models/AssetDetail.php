@@ -4,6 +4,7 @@ namespace app\modules\am\models;
 
 use Yii;
 use app\modules\filemanager\components\FileManagerHelper;
+use yii\helpers\ArrayHelper;
 /**
  * This is the model class for table "asset_detail".
  *
@@ -21,9 +22,12 @@ use app\modules\filemanager\components\FileManagerHelper;
  */
 class AssetDetail extends \yii\db\ActiveRecord
 {
+
+
     /**
      * {@inheritdoc}
      */
+    public $ma;
     public static function tableName()
     {
         return 'asset_detail';
@@ -36,7 +40,7 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['data_json', 'updated_at', 'created_at','date_start','date_end'], 'safe'],
+            [['data_json', 'updated_at', 'created_at','date_start','date_end','ma'], 'safe'],
             [['ref', 'code', 'name'], 'string', 'max' => 255],
         ];
     }
@@ -66,5 +70,17 @@ class AssetDetail extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
+    public function beforeSave($insert)
+    {
 
+        try {
+            $items = [
+                "items" => $this->ma
+            ];
+            $this->data_json = ArrayHelper::merge($this->data_json, $items);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }    
+        return parent::beforeSave($insert);
+    }
 }
