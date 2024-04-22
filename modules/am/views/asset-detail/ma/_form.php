@@ -1,33 +1,26 @@
 <?php
+
+use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use app\components\CategoriseHelper;
+
 use yii\helpers\ArrayHelper;
 use kartik\select2\Select2;
 use unclead\multipleinput\MultipleInput;
 use unclead\multipleinput\MultipleInputColumn;
-use app\modules\am\models\Asset;
-use app\components\CategoriseHelper;
-use yii\helpers\Html;
-use app\modules\am\models\AssetDetail;
-use yii\helpers\Url;
-use yii\widgets\Pjax;
+/** @var yii\web\View $this */
+/** @var app\modules\am\models\AssetDetail $model */
+/** @var yii\widgets\ActiveForm $form */
 
-$model_form = new AssetDetail()
+
+
+
 ?>
-<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
-
 
 <?php 
-$category = CategoriseHelper::Id($id_category)->one();
+$category = CategoriseHelper::CategoriseByCodeName(substr($model->code, 0, strpos($model->code, '/')),"asset_item");
 $items = $category->data_json["ma_items"];
 ?>
-
-<?php 
-     $list = array_map(function ($asset) use ($items) {
-        return $items[$asset]["item_name"];
-    },range(0, count($items) - 1));
- ?>
-<?php $form = ActiveForm::begin(['id' => 'form-ma']); ?>
-<?= $form->field($model_form, 'code')->textInput(['maxlength' => true])->label("หัวหน้ารับรอง") ?>
 
 <div class="row">
     <div class="col-xs-6 col-sm-4 col-md-4">
@@ -40,19 +33,19 @@ $items = $category->data_json["ma_items"];
                             'format' => 'yyyy-mm-dd',
                         ]
                         ])->label(false); */ ?>
-      <?=$form->field($model_form, 'date_start')->widget(\yii\widgets\MaskedInput::className(), [
+      <?=$form->field($model, 'date_start')->widget(\yii\widgets\MaskedInput::className(), [
         'mask' => '99/99/9999',
     ])->label('วันที่');             ?>  
     </div>
     <div class="col-xs-6 col-sm-4 col-md-4">
-        <?= $form->field($model_form, 'data_json[checker]')->textInput(['maxlength' => true])->label("ผู้ตรวจเช็คอุปกรณ์") ?>
+        <?= $form->field($model, 'data_json[checker]')->textInput(['maxlength' => true])->label("ผู้ตรวจเช็คอุปกรณ์") ?>
     </div>
     <div class="col-xs-12 col-sm-4 col-md-4">
-        <?= $form->field($model_form, 'data_json[endorsee]')->textInput(['maxlength' => true])->label("หัวหน้ารับรอง") ?>
+        <?= $form->field($model, 'data_json[endorsee]')->textInput(['maxlength' => true])->label("หัวหน้ารับรอง") ?>
     </div>
 </div>
-      <?= $form->field($model_form, 'name')->hiddenInput(['value'=>'ma'])->label(false) ?>
-      <?= $form->field($model_form, 'code')->hiddenInput(['value'=>$model_asset->code])->label(false) ?>
+      <?= $form->field($model, 'name')->hiddenInput(['value'=>'ma'])->label(false) ?>
+      <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
 <div class="card-body mt-3">
       <div class="table-responsive">
       
@@ -60,7 +53,7 @@ $items = $category->data_json["ma_items"];
       
                 <?php
 
-echo $form->field($model_form,'ma')->widget(MultipleInput::class,[
+echo $form->field($model,'ma')->widget(MultipleInput::class,[
     'allowEmptyList'    => false,
     'enableGuessTitle'  => true,
     'addButtonPosition' => MultipleInput::POS_HEADER,
@@ -127,39 +120,6 @@ echo $form->field($model_form,'ma')->widget(MultipleInput::class,[
 
 ?>
                 </div>
-<div class="d-flex justify-content-center">
-       <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ดำเนินการต่อ', ['class' => 'btn btn-success waves-effect waves-light',"id"=>"summit"]) ?>
-</div>
                 </div>
+  
 
-<?php ActiveForm::end(); ?>
-<?php Pjax::end();?>
-<?php
-
-$url = Url::to(['/am/asset-detail']);
-
-$js = <<< JS
-
-
-$('#form-ma').on('beforeSubmit', function (e) {
-    var form = $(this);
-    $.ajax({
-        url: "$url" + "/test",
-        type: 'post',
-        data: form.serialize(),
-        dataType: 'json',
-        success: async function (response) {
-            form.yiiActiveForm('updateMessages', response, true);
-            if(response.status == 'success') {
-                console.log(response.data);
-                closeModal()
-                success()
-                await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-            }
-        }
-    });
-    return false;
-});
-JS;
-$this->registerJs($js);
-?>

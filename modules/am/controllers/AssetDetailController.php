@@ -47,6 +47,7 @@ class AssetDetailController extends Controller
         $title = $this->request->get('title');
         $name = $this->request->get('name');
         $id = $this->request->get('id');
+        $code = $this->request->get('code');
 
         $searchModel = new AssetDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -59,6 +60,7 @@ class AssetDetailController extends Controller
                 'title' => $title,
                 'content' => $this->renderAjax($name.'/index', [
                     'id' => $id,
+                    'code' => $code,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                     'model' => $id == '' ? '' : 
@@ -120,12 +122,13 @@ class AssetDetailController extends Controller
         $name = $this->request->get('name');
         $category_id = $this->request->get('category_id');
         $title = $this->request->get('title');
-        $name = $this->request->get('name');
+        $code = $this->request->get('code');
+        $id = $this->request->get('id');
 
         $model = new AssetDetail([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'name' => $name,
-            // 'code' => $name == "asset_name" ? $category_id : null,
+            'code' => $code,
             // 'data_json' => ['title' => $title],
         ]);
         if ($this->request->isPost) {
@@ -150,13 +153,14 @@ class AssetDetailController extends Controller
         }
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax($name.'/create', [
+            'content' => $this->renderAjax('create', [
                 'model' => $model,
                 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             ]),
         ];
         return $this->render('create', [
             'model' => $model,
+            'id' => $id,
         ]);
     }
 
@@ -191,10 +195,13 @@ class AssetDetailController extends Controller
         }
 
         if ($this->request->isAjax) {
+            if ($this->request->get('name') == "ma"){
+                $model->ma = $model->data_json["items"];
+            }
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i>'.$this->request->get('title'),
-                'content' => $this->renderAjax($model->name.'/update', [
+                'content' => $this->renderAjax('update', [
                     'model' => $model,
                     'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]),
@@ -221,7 +228,7 @@ class AssetDetailController extends Controller
     }
 
 
-    public function actionDeleteMaItem()
+/*     public function actionDeleteMaItem()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
@@ -310,6 +317,54 @@ class AssetDetailController extends Controller
             'data' => $model
         ];
     }
+
+    public function actionViewHistoryMa()
+    {
+        
+        $title = $this->request->get('title');
+        $name = $this->request->get('name');
+        $id_category = $this->request->get('id_category');
+        $id = $this->request->get('id');
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = AssetDetail::findOne(['id' => $id]);
+        return [
+            'title' => $title,
+            'content' => $this->renderAjax($name.'/view', [
+                'model' => $model,
+                'id_category' => $id_category
+            ]),
+        ];
+    }
+
+    public function actionUpdateHistoryMa($id)
+    {
+        $model = $this->findModel($id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $id_category = $this->request->get('id_category');
+        $title = $this->request->get('title');
+        $name = $this->request->get('name');
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if($model->save()){   
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                    'container' => '#am-container',
+                    'data' => $model
+                ];
+            }
+        }
+        #$model = AssetDetail::findOne(['id' => $id]);
+        $model->ma = $model->data_json["items"];
+        $model->date_start = date_format(date_create_from_format('Y-m-d', $model->date_start), 'd/m/Y');
+        return [
+            'title' => $title,
+            'content' => $this->renderAjax($name.'/update', [
+                'model_form' => $model,
+                'id_category' => $id_category
+            ]),
+        ];
+    } */
     /**
      * Finds the AssetDetail model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

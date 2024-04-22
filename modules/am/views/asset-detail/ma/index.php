@@ -1,10 +1,10 @@
 <?php
 
 use app\modules\am\models\AssetDetail;
+use yii\helpers\Html;
 
 ?>
-
-<?php $list = AssetDetail::find()->where(['code'=>$id])->orderBy(['date_start' => SORT_DESC])->all() ?>
+<?php $list = AssetDetail::find()->where(['code'=>$code])->orderBy(['date_start' => SORT_DESC])->all() ?>
 <div class="d-flex justify-content-between">
     <h3><i class="fa-solid fa-brush"></i> การบำรุงรักษา</h3>
 </div>
@@ -28,11 +28,13 @@ use app\modules\am\models\AssetDetail;
             <?php foreach($list as $item){ ?>
                 <?php foreach($item->data_json["items"] as $x){ ?>
                     <tr class="">
-                        <td scope="row"><?= Yii::$app->formatter->asDate($item->date_start, 'long') ?></td>
+                        <td scope="row">
+                            <?=Html::a('<i class="bi bi-calendar-event-fill text-primary fs-5" style="margin-right:5px;"></i>'.Yii::$app->formatter->asDate($item->date_start, 'long'),['/am/asset-detail/update','name'=>'ma', "title"=>"ประวัติการบำรุงรักษา","id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                        </td>
                         <td><?= $item->data_json["checker"] ?></td>
                         <td><?= $item->data_json["endorsee"] ?></td>
                         <td><?= $x["item"] ?></td>
-                        <td><?= $x["ma_status"] ?></td>
+                        <td><?php $x["ma_status"] ?></td>
                         <td><?= $x["comment"] ?></td>
                     </tr>
                 <?php } ?>
