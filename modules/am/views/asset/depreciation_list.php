@@ -222,6 +222,9 @@ use yii\helpers\Html;
                     <?php foreach ($querys as $data1):?>
                     <?=$data1['active'] == 'Y' ?  number_format(($data1['total']),2) : ''?>
                     <?php endforeach?></span> บาท</h4>
+                    <?php
+                    
+                    ?>
         </div>
 
     </div>

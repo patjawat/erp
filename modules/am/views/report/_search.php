@@ -45,26 +45,26 @@ $listYear = [
     ]); ?>
 
 <div class="row">
-    <div class="col-2">
+    <div class="col-6">
         <?= $form->field($model, 'q_month')->widget(Select2::classname(), [
                                         'data' => $listMonth,
+                                        
                                         'options' => ['placeholder' => 'เลือกเดือน'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
                                         ],
                                     ])->label('เดือน');
-                                    
                                     ?>
     </div>
-    <div class="col-2">
+    <div class="col-3">
         <?=$form->field($model, 'q_year')->textInput(['placeholder' => 'ระบุปี พ.ศ.'])->label('ปี');?>
     </div>
-    <div class="col-2">        
+    <div class="col-3">
         <div class="form-group mt-4">
             <?=AppHelper::BtnSave('ค้นหา')?>
         </div>
 
-</div>
+    </div>
 </div>
 
 
