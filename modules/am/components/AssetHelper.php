@@ -58,11 +58,11 @@ class AssetHelper extends Component
         ) d1
         ) d2 
         where m1<= DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
-        order by m1)as x1) as x2) as x3 WHERE x3.date_number <= 10";
+        order by m1)as x1) as x2) as x3 WHERE x3.date_number <= :number";
 
     $querys = Yii::$app->db->createCommand($sql)
     ->bindValue(':id', $id)
-    // ->bindValue(':number', $number)
+    ->bindValue(':number', $number)
     ->queryAll();
       
     if($querys){

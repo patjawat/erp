@@ -21,16 +21,6 @@ class MsWordController extends \yii\web\Controller
         return $this->render('index');
     }
 
-    // public function actionView()
-    // {
-    //     $filename = 'asset_result';
-    //     \Yii::$app->response->format = yii\web\Response::FORMAT_JSON;
-    //     return [
-    //         'title' => 'show',
-    //         'content' => $this->renderAjax('word',['filename' => $filename])
-    //     ];
-
-    // }
 
     protected function findModel($id)
     {
@@ -48,11 +38,10 @@ class MsWordController extends \yii\web\Controller
         \Yii::$app->response->headers->add('content-type', 'text/html');
 
         $id = $this->request->get('id');
-        $filename = 'asset_result';
         $user = Yii::$app->user->id;
-
+        
         $comanyName = SiteHelper::getInfo()['company_name'] != '' ? (' | ' . SiteHelper::getInfo()['company_name']) : '';
-        // Settings::setTempDir(Yii::getAlias('@webroot').'/msword/temp/'); //กำหนด folder temp สำหรับ windows server ที่ permission denied temp (อย่ายลืมสร้างใน project ล่ะ)
+        Settings::setTempDir(Yii::getAlias('@webroot').'/msword/temp/'); //กำหนด folder temp สำหรับ windows server ที่ permission denied temp (อย่ายลืมสร้างใน project ล่ะ)
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/asset.docx'); //เลือกไฟล์ template ที่เราสร้างไว้
         
         //ถ้ามี ID ส่งมาให้แสดงจาก Database
@@ -75,14 +64,14 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('vendor_tel', $venrorPhone); //หมายเลขโทรศัพท์ของผู้ขาย
             $templateProcessor->setValue('budget_type', $model->budget_type); //ประเภทเงิน
             $templateProcessor->setValue('method', $model->method_get); //วิธีการได้มา
-
+            
             $datas = AssetHelper::Depreciation($model->id, $number);
-
-            // $templateProcessor->cloneRow('price', count($datas));
-            $templateProcessor->cloneRow('price', 10);
+            
+            $templateProcessor->cloneRow('price', count($datas));
+            // $templateProcessor->cloneRow('price', 10);
             $i = 1;
             foreach ($datas as $data) {
-                $templateProcessor->setValue('recive_date#' . $i, Yii::$app->thaiFormatter->asDate($data['receive_date'], 'medium')); //วันที่รับเข้า
+                $templateProcessor->setValue('recive_date#' . $i, Yii::$app->thaiFormatter->asDate($data['date'], 'medium')); //วันที่รับเข้า
                 $templateProcessor->setValue('doc_number#' . $i, ''); //เลขที่เอกสารแสดงการได้มาของทรัพย์สิน
                 $templateProcessor->setValue('asset_name#' . $i, $model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
                 $templateProcessor->setValue('amount#' . $i, ''); //จำนวน
@@ -96,31 +85,32 @@ class MsWordController extends \yii\web\Controller
                 $templateProcessor->setValue('remart#' . $i, ''); //หมายเหตุ
                 $i++;
             }
-        // } else {
-        //     // ถ้าไม่มี ID ส่งมาให้แสดงข้อมูลตัวอย่าง
-        //     $templateProcessor->setValue('title', 'ทะเบียนคุมทรัพย์สิน');
-        //     $templateProcessor->setValue('org_name', '');
-        //     $templateProcessor->setValue('department', $comanyName);
-        //     $templateProcessor->setValue('asset_type', 'ประเภทของทรัพย์สิน'); // ประเภท
-        //     $templateProcessor->setValue('asset_fsn', 'หมายเลขครุภัณฑ์'); // หมายเลขครุภัณฑ์
-        //     $templateProcessor->setValue('feature', 'ลักษณะ/คุณสมบัติ'); //ลักษณะ/คุณสมบัติ
-        //     $templateProcessor->setValue('design', 'รุ่น/แบบ');
-        //     $templateProcessor->setValue('asset_add', 'สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ'); //สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ
-        //     $templateProcessor->setValue('vendor', 'สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ'); //c/ผู้รับจ้าง/ผู้บริจาค
-        //     $templateProcessor->setValue('vendor_add', 'ที่อยู่'); //ที่อยู่ของผู้ขาย
-        //     $templateProcessor->setValue('vendor_tel', 'หมายเลขโทรศัพท์'); //หมายเลขโทรศัพท์ของผู้ขาย
-        //     $templateProcessor->setValue('budget_type', 'ประเภทเงิน'); //ประเภทเงิน
-        //     $templateProcessor->setValue('method', 'วิธีการได้มา'); //วิธีการได้มา
-        // }
-
-        
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/asset_result-'.$number.'.docx'); //สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-            if ($this->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'title' =>Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/'.$filename.'.docx'), ['class' => 'btn btn-primary text-center mb-3','target' => '_blank','onclick' =>'return closeModal()']),
-                    'content' => $this->renderAjax('word', ['filename' => $filename,'number' => $number]),
+            // } else {
+                //     // ถ้าไม่มี ID ส่งมาให้แสดงข้อมูลตัวอย่าง
+                //     $templateProcessor->setValue('title', 'ทะเบียนคุมทรัพย์สิน');
+                //     $templateProcessor->setValue('org_name', '');
+                //     $templateProcessor->setValue('department', $comanyName);
+                //     $templateProcessor->setValue('asset_type', 'ประเภทของทรัพย์สิน'); // ประเภท
+                //     $templateProcessor->setValue('asset_fsn', 'หมายเลขครุภัณฑ์'); // หมายเลขครุภัณฑ์
+                //     $templateProcessor->setValue('feature', 'ลักษณะ/คุณสมบัติ'); //ลักษณะ/คุณสมบัติ
+                //     $templateProcessor->setValue('design', 'รุ่น/แบบ');
+                //     $templateProcessor->setValue('asset_add', 'สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ'); //สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ
+                //     $templateProcessor->setValue('vendor', 'สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ'); //c/ผู้รับจ้าง/ผู้บริจาค
+                //     $templateProcessor->setValue('vendor_add', 'ที่อยู่'); //ที่อยู่ของผู้ขาย
+                //     $templateProcessor->setValue('vendor_tel', 'หมายเลขโทรศัพท์'); //หมายเลขโทรศัพท์ของผู้ขาย
+                //     $templateProcessor->setValue('budget_type', 'ประเภทเงิน'); //ประเภทเงิน
+                //     $templateProcessor->setValue('method', 'วิธีการได้มา'); //วิธีการได้มา
+                // }
+                
+                $filename = 'asset_result-'.$number.'.docx';
+                
+                $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/'.$filename); //สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+                
+                if ($this->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                    'title' =>Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/'.$filename), ['class' => 'btn btn-primary text-center mb-3','target' => '_blank','onclick' =>'return closeModal()']),
+                    'content' => $this->renderAjax('word', ['filename' => $filename]),
                 ];
             } else {
                 echo '<p>';
