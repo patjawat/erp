@@ -80,8 +80,8 @@ class MsWordController extends \yii\web\Controller
                 $templateProcessor->setValue('asset_life#' . $i, $data['service_life']); //อายุการใช้งาน
                 $templateProcessor->setValue('deprate#' . $i, $data['depreciation']); //ระบุอัตราค่าเสื่อมราคาของทรัพย์สิน
                 $templateProcessor->setValue('deprate_year#' . $i, $model->price / $model->data_json['service_life']); //ค่าเสื่อมราคาประจำปี
-                $templateProcessor->setValue('accdep#' . $i, $data['total_price2']); //จำนวนเงินค่าเสื่อมราคาที่สะสม
-                $templateProcessor->setValue('pro_value#' . $i, $data['total']); //มูลค่าสุทธิ
+                $templateProcessor->setValue('accdep#' . $i, number_format($data['total_price2']),2); //จำนวนเงินค่าเสื่อมราคาที่สะสม
+                $templateProcessor->setValue('pro_value#' . $i, number_format($data['total']),2); //มูลค่าสุทธิ
                 $templateProcessor->setValue('remart#' . $i, ''); //หมายเหตุ
                 $i++;
             }
