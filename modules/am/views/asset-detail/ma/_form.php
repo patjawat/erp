@@ -44,6 +44,14 @@ $items = $category->data_json["ma_items"];
         <?= $form->field($model, 'data_json[endorsee]')->textInput(['maxlength' => true])->label("หัวหน้ารับรอง") ?>
     </div>
 </div>
+<div class="mt-2">
+    <?= $form->field($model, 'data_json[status]')->radioList(['ผ่าน' => 'ผ่าน', 'ไม่ผ่าน' => 'ไม่ผ่าน','รอการตวรจสอบ'=>'รอการตวรจสอบ'])->label("ผลการตรวจ") ?>
+
+</div>
+<div class="mt-2">
+    <?= $form->field($model, 'data_json[description]')->textarea(['rows' => '3'])->label("หมายเหตุ") ?>
+</div>
+
       <?= $form->field($model, 'name')->hiddenInput(['value'=>'ma'])->label(false) ?>
       <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
 <div class="card-body mt-3">
@@ -122,4 +130,3 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
                 </div>
                 </div>
   
-

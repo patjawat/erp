@@ -19,25 +19,21 @@ use yii\helpers\Html;
                 <th scope="col">วันที่</th>
                 <th scope="col">ผู้ตรวจเช็คอุปกรณ์</th>
                 <th scope="col">หัวหน้ารับรอง</th>
-                <th scope="col">รายการที่ตรวจเช็ค</th>
                 <th scope="col">ผลการตรวจ</th>
                 <th scope="col">หมายเหตุ</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach($list as $item){ ?>
-                <?php foreach($item->data_json["items"] as $x){ ?>
                     <tr class="">
                         <td scope="row">
-                            <?=Html::a('<i class="bi bi-calendar-event-fill text-primary fs-5" style="margin-right:5px;"></i>'.Yii::$app->formatter->asDate($item->date_start, 'long'),['/am/asset-detail/update','name'=>'ma', "title"=>"ประวัติการบำรุงรักษา","id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                            <?=Html::a('<i class="bi bi-calendar-event-fill text-primary fs-5" style="margin-right:5px;"></i>'.Yii::$app->formatter->asDate($item->date_start, 'long'),['/am/asset-detail/view-history-ma','name'=>'ma', "title"=>"ประวัติการบำรุงรักษา","id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                         </td>
                         <td><?= $item->data_json["checker"] ?></td>
                         <td><?= $item->data_json["endorsee"] ?></td>
-                        <td><?= $x["item"] ?></td>
-                        <td><?php $x["ma_status"] ?></td>
-                        <td><?= $x["comment"] ?></td>
+                        <td><?= $item->data_json["status"] ?></td>
+                        <td><?= $item->data_json["description"] ?></td>
                     </tr>
-                <?php } ?>
             <?php } ?>
         </tbody>
     </table>

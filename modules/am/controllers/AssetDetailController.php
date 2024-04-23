@@ -318,23 +318,7 @@ class AssetDetailController extends Controller
         ];
     }
 
-    public function actionViewHistoryMa()
-    {
-        
-        $title = $this->request->get('title');
-        $name = $this->request->get('name');
-        $id_category = $this->request->get('id_category');
-        $id = $this->request->get('id');
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = AssetDetail::findOne(['id' => $id]);
-        return [
-            'title' => $title,
-            'content' => $this->renderAjax($name.'/view', [
-                'model' => $model,
-                'id_category' => $id_category
-            ]),
-        ];
-    }
+
 
     public function actionUpdateHistoryMa($id)
     {
@@ -365,6 +349,25 @@ class AssetDetailController extends Controller
             ]),
         ];
     } */
+
+
+    public function actionViewHistoryMa()
+    {
+        
+        $title = $this->request->get('title');
+        $name = $this->request->get('name');
+        $id_category = $this->request->get('id_category');
+        $id = $this->request->get('id');
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = AssetDetail::findOne(['id' => $id]);
+        return [
+            'title' => $title,
+            'content' => $this->renderAjax($name.'/view', [
+                'model' => $model,
+                'id_category' => $id_category
+            ]),
+        ];
+    }
     /**
      * Finds the AssetDetail model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

@@ -20,7 +20,8 @@ use yii\widgets\Pjax;
 <?php substr($model->code, 0, strpos($model->code, '/')) ?>
     
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?php #Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= app\components\AppHelper::BtnSave() ?>
     </div>
 
     <?php ActiveForm::end(); ?>

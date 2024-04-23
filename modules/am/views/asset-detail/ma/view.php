@@ -21,8 +21,20 @@ use yii\helpers\Html;
 <i class="bi bi-person-lines-fill text-primary fs-5"></i><span class="fw-semibold"> ผู้ตรวจเช็คอุปกรณ์ </span><?= $model->data_json["checker"] ?>
 </div>
 <div class="mt-1">
-<i class="bi bi-person-video2 text-primary fs-5"></i><span class="fw-semibold"> หัวหน้ารับรอง </span><?= $model->data_json["endorsee"] ?>
-</div>
+
+<div class="d-flex justify-content-between">
+        <!-- <h5 class="alert-heading"><i class="fa-solid fa-tag"></i> พ.ร.บ./ต่อภาษี</h5> -->
+        <span class="fw-semibold">
+        <i class="bi bi-person-video2 text-primary fs-5"></i><span class="fw-semibold"> หัวหน้ารับรอง </span><?= $model->data_json["endorsee"] ?>
+        </span>
+        <span>
+                        <i class="bi bi-clipboard-check text-primary fs-5"></i><span class="fw-semibold"> ผลการตรวจ </span><?= $model->data_json["status"] ?>
+
+                </span>
+    </div>
+<i class="text-primary fs-5">*</i><span class="fw-semibold"> หมายเหตุ </span><?= $model->data_json["description"] ?>
+
+
 
 
 <div
@@ -35,7 +47,6 @@ use yii\helpers\Html;
             <tr>
                 <th scope="col">รายการที่ตรวจเช็ค</th>
                 <th scope="col">สถานะ</th>
-                <th scope="col">ผลการตรวจ</th>
                 <th scope="col">หมายเหตุ</th>
             </tr>
         </thead>
@@ -44,7 +55,6 @@ use yii\helpers\Html;
                     <tr class="">
                         <td><?= $x["item"] ?></td>
                         <td><?= $x["ma_status"] ?></td>
-                        <td></td>
                         <td><?= $x["comment"] ?></td>
                     </tr>
                 <?php } ?>
@@ -53,7 +63,8 @@ use yii\helpers\Html;
 </div>
 <hr>
 <div class="d-flex gap-2  justify-content-center">
-    <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/am/asset-detail/update-history-ma', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข',"name"=>"ma","id_category"=>$id_category], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-lg']])?>
+                                                                                         <?php #   ['/am/asset-detail/update','name'=>'ma', "title"=>"<i class="fa-regular fa-pen-to-square"></i> แก้ไข","id"=>$model->id] ?>
+    <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/am/asset-detail/update','name'=>'ma', "title"=>'<i class="fa-regular fa-pen-to-square"></i> แก้ไข',"id"=>$model->id], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-lg']])?>
     <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/am/asset-detail/delete', 'id' => $model->id], [
     'class' => 'btn btn-danger  delete-item',
 ])?>
