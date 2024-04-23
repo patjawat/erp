@@ -272,8 +272,8 @@ use yii\helpers\Html;
               </span>
             </td>
             <td class="text-center">
-                <?=Html::a('<i class="fa-solid fa-print"></i>',['/ms-word/asset','id' => $model->id,'number' => $data['date_number']], ['target'=>'_blank'])?>
-                <?=Html::a('<i class="fa-solid fa-print"></i>',['/ms-word/asset','id' => $model->id,'number' => $data['date_number']], ['class'=> 'open-modal','data' => ['size' => 'modal-xl']])?>
+                <?php // Html::a('<i class="fa-solid fa-print"></i>',['/ms-word/asset','id' => $model->id,'number' => $data['date_number']], ['target'=>'_blank'])?>
+                <?=Html::a('<i class="fa-solid fa-print"></i>',['/ms-word/asset','id' => $model->id,'number' => $data['date_number'],'date' => $data['date']], ['class'=> 'open-modal','data' => ['size' => 'modal-xl']])?>
             </td>
         </tr>
         <?php endforeach ?>
