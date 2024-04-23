@@ -108,28 +108,28 @@ class MsWordController extends \yii\web\Controller
 
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/asset_result.docx'); //สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
 
-        if ($this->request->isAjax) {
-        $user = Yii::$app->user->id;
-        $filename = 'ทะเบียนทรัพย์สิน';
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/registration_asset.docx'); //เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ทะเบียนทรัพย์สินด');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/'. $filename . '.docx'); //สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-       
-        if ($this->request->isAjax){
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            echo '<p>';
-            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx'), ['class' => 'btn btn-info']); //สร้าง link download
-            echo '</p>';
-            // echo '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src='.Url::to(Yii::getAlias('@web').'/msword/temp/asset_result.docx', true).'&embedded=true"  style="position: absolute;width:99%; height: 90%;border: none;"></iframe>';
-            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
-        }
+      
+            $user = Yii::$app->user->id;
+            $filename = 'ทะเบียนทรัพย์สิน';
+            $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/asset.docx'); //เลือกไฟล์ template ที่เราสร้างไว้
+            $templateProcessor->setValue('title', 'ทะเบียนทรัพย์สินด');
+            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx'); //สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'title' => '',
+                    'content' => $this->renderAjax('word', ['filename' => $filename]),
+                ];
+            } else {
+                echo '<p>';
+                echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx'), ['class' => 'btn btn-info']); //สร้าง link download
+                echo '</p>';
+                // echo '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src='.Url::to(Yii::getAlias('@web').'/msword/temp/asset_result.docx', true).'&embedded=true"  style="position: absolute;width:99%; height: 90%;border: none;"></iframe>';
+                echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+            }
+        
     }
-}
 
     public function actionPurchase_1()
     {
