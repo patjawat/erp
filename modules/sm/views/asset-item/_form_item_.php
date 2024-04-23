@@ -131,7 +131,6 @@ $model->ma = isset($model->data_json['ma_items']) ? $model->data_json['ma_items'
     ])
     ->label(false);
 ?>
-
 <div class="form-group mt-3 d-flex justify-content-center">
             <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
         </div>

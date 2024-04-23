@@ -19,7 +19,7 @@ use yii\widgets\Pjax;
     <?= $this->render($model->name.'/_form',['model' => $model,'form' => $form])?>
 <?php substr($model->code, 0, strpos($model->code, '/')) ?>
     
-    <div class="form-group">
+    <div class="form-group d-flex justify-content-center">
         <?php #Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
         <?= app\components\AppHelper::BtnSave() ?>
     </div>

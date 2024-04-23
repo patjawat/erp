@@ -19,7 +19,17 @@ use unclead\multipleinput\MultipleInputColumn;
 
 <?php 
 $category = CategoriseHelper::CategoriseByCodeName(substr($model->code, 0, strpos($model->code, '/')),"asset_item");
-$items = $category->data_json["ma_items"];
+if (isset($category->data_json["ma_items"])){
+    $items = $category->data_json["ma_items"];
+    $items = array_combine(array_map(function ($asset) use ($items) {
+        return $items[$asset]["item_name"];
+    },range(0, count($items) - 1)),
+    array_map(function ($asset) use ($items) {
+        return $items[$asset]["item_name"];
+    },range(0, count($items) - 1)));
+}else{
+    $items = [];
+}
 ?>
 
 <div class="row">
@@ -69,12 +79,12 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
     'enableGuessTitle'  => true,
     'addButtonPosition' => MultipleInput::POS_HEADER,
     'addButtonOptions' => [
-        'class' => ' btn-sm btn btn-success',
-        'label' => '<i class="bi bi-plus fw-bold" ></i>',
+        'class' => 'btn btn-sm btn-primary',
+        'label' => '<i class="fa-solid fa-circle-plus"></i>' // also you can use html code
     ],
     'removeButtonOptions' => [
-        'class' => 'btn-sm btn btn-danger',
-        'label' => '<i class="bi bi-x fs-5 fw-bold"></i>' // also you can use html code
+        'class' => 'btn btn-sm btn-danger',
+        'label' => '<i class="fa-solid fa-trash"></i>'
     ],
     'columns' => [
         [
@@ -86,12 +96,7 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
             ],
             'title' => 'รายการที่ตรวจเช็ค',
             'options' => [
-                'data' => array_combine(array_map(function ($asset) use ($items) {
-                    return $items[$asset]["item_name"];
-                },range(0, count($items) - 1)),
-                array_map(function ($asset) use ($items) {
-                    return $items[$asset]["item_name"];
-                },range(0, count($items) - 1)))
+                'data' => $items
 /*                array_map(function ($asset) {
                     return CategoriseHelper::Id($id_category)->one()->data_json["ma_items"][$asset]["item_name"];
                 },range(0, count(CategoriseHelper::Id($id_category)->one()->data_json["ma_items"])-1)) */
