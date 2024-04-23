@@ -40,7 +40,7 @@ use yii\helpers\Html;
                             <i class="bi bi-caret-down-fill"></i>
                         </button>
                         <ul class="dropdown-menu" style="">
-<?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/asset-detail/create','id' => $model->id,'name' =>'ma','code' => $model->code ],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+<?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/asset-detail/create','id' => $model->id,'name' =>'ma','code' => $model->code,"title"=>'เพิ่มการบำรุงรักษา' ],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                             <!-- <a class="dropdown-item open-modal" href=<?="/am/asset-detail?name=ma&title=เพิ่มการบำรุงรักษา&id=" . $model->id ?>
                                 data-size="modal-xl">
                                  </a> -->

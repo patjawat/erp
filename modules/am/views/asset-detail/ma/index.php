@@ -25,13 +25,22 @@ use yii\helpers\Html;
         </thead>
         <tbody>
             <?php foreach($list as $item){ ?>
+                <?php $date = Yii::$app->formatter->asDate($item->date_start, 'long') ?>
                     <tr class="">
                         <td scope="row">
-                            <?=Html::a('<i class="bi bi-calendar-event-fill text-primary fs-5" style="margin-right:5px;"></i>'.Yii::$app->formatter->asDate($item->date_start, 'long'),['/am/asset-detail/view-history-ma','name'=>'ma', "title"=>"ประวัติการบำรุงรักษา","id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                            <?=Html::a('<i class="bi bi-calendar-event-fill text-primary fs-5" style="margin-right:5px;"></i>'.Yii::$app->formatter->asDate($item->date_start, 'long'),['/am/asset-detail/view-history-ma','name'=>'ma', "title"=>' <div style="display:flex; margin:0;padding:0; flex-direction: column; align-items: flex-end;">
+    <span class="fw-semibold">
+        <i class="bi bi-list-check text-primary fs-5"></i> ข้อมูลการบำรุงรักษา
+        </span >
+        <div style="margin:0;padding:0; font-size: 15px;">
+            <i class="bi bi-calendar-check text-primary"></i><span class="fw-semibold"> วันที่ </span>'.$date. '<br>
+        </div>
+    </div>'
+    ,"id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                         </td>
                         <td><?= $item->data_json["checker"] ?></td>
                         <td><?= $item->data_json["endorsee"] ?></td>
-                        <td><?= $item->data_json["status"] ?></td>
+                        <td><?= isset($item->data_json["status"]) ? $item->data_json["status"] : '' ?></td>
                         <td><?= $item->data_json["description"] ?></td>
                     </tr>
             <?php } ?>

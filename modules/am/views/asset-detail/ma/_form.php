@@ -45,8 +45,11 @@ $items = $category->data_json["ma_items"];
     </div>
 </div>
 <div class="mt-2">
-    <?= $form->field($model, 'data_json[status]')->radioList(['ผ่าน' => 'ผ่าน', 'ไม่ผ่าน' => 'ไม่ผ่าน','รอการตวรจสอบ'=>'รอการตวรจสอบ'])->label("ผลการตรวจ") ?>
-
+    <?php if($model->isNewRecord):?>
+    <?= $form->field($model, 'data_json[status]')->hiddenInput(['value'=>'รอการตวรจสอบ'])->label(false) ?>
+    <?php else:?>
+        <?= $form->field($model, 'data_json[status]')->radioList(['ผ่าน' => 'ผ่าน', 'ไม่ผ่าน' => 'ไม่ผ่าน','รอการตวรจสอบ'=>'รอการตวรจสอบ'])->label("ผลการตรวจ") ?>
+    <?php endif;?>
 </div>
 <div class="mt-2">
     <?= $form->field($model, 'data_json[description]')->textarea(['rows' => '3'])->label("หมายเหตุ") ?>
