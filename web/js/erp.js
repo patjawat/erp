@@ -40,7 +40,7 @@ function beforLoadModal() {
   $('#main-modal').modal('show');
   // $('#modal-dialog').modal('show');
     $('#main-modal-label').html('กำลังโหลด');
-    $(".modal-dialog").removeClass('modal-sm modal-md modal-lg');
+    $(".modal-dialog").removeClass('modal-sm modal-md modal-lg modal-xl');
     $(".modal-dialog").addClass('modal-sm');
     $('#modal-dialog').removeClass('fade');
     $('.modal-body').html('<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>');
@@ -110,7 +110,7 @@ beforLoadModal()
          $('#main-modal-label').html(response.title);
           $('.modal-body').html(response.content);
           $('.modal-footer').html(response.footer);
-          $(".modal-dialog").removeClass('modal-sm modal-md modal-lg');
+          $(".modal-dialog").removeClass('modal-sm modal-md modal-lg modal-xl');
           $(".modal-dialog").addClass(size);
           $('.modal-content').addClass('card-outline card-primary');
       },

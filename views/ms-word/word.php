@@ -5,8 +5,8 @@ use yii\web\View;
 ?>
 
 
-<?=Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/temp/'.$filename.'.docx'), ['class' => 'btn btn-primary text-center mb-3','target' => '_blank','onclick' =>'return closeModal()'])?>
-<iframe src='https://view.officeapps.live.com/op/embed.aspx?src=<?=Url::to(Yii::getAlias('@web') . '/msword/temp/'.$filename.'.docx', true);?>' width='100%' height='1000px' frameborder='0'>
+<?php // Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/'.$filename.'.docx'), ['class' => 'btn btn-primary text-center mb-3','target' => '_blank','onclick' =>'return closeModal()'])?>
+<iframe src='https://view.officeapps.live.com/op/embed.aspx?src=<?=Url::to(Yii::getAlias('@web') . '/msword/results/asset_result.docx', true);?>' width='100%' height='1000px' frameborder='0'>
 </iframe>
 
 
