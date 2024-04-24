@@ -411,7 +411,7 @@ class EmployeeDetailController extends Controller
     public function actionDelete($id)
     {
         $item = $this->findModel($id);
-        $this->findModel($id)->delete();
+        // $this->findModel($id)->delete();
 
         if ($item->name == 'position') {
             $this->UpdatePosition($item);
