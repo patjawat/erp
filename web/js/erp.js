@@ -164,6 +164,7 @@ $('body').on('click', '.delete-item', function (e) {
               dataType: "json",
               success: async function (response) {
                   if(response.status == 'success'){
+                      // await  $.pjax.reload({container:response.container, history:false,url:response.url});  
                       await  $.pjax.reload({container:response.container, history:false,url:response.url});  
                       await success('ดำเนินการลบสำเร็จ!.');
                       if(response.close){
