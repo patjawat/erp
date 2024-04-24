@@ -134,13 +134,13 @@ $("body").on("click", ".open-modal", function (e) {
   });
 });
 
-$("body").on("click", ".delete-item", function (e) {
+$("body").on("click", ".delete-item", async function (e) {
   e.preventDefault();
   var url = $(this).attr("href");
   // console.log('delete',url);
   // $('#main-modal').modal('show');
 
-  Swal.fire({
+  await Swal.fire({
     title: "คุณแน่ใจไหม?",
     text: "ลบรายการที่เลือก!",
     icon: "warning",
@@ -157,17 +157,17 @@ $("body").on("click", ".delete-item", function (e) {
         type: "post",
         url: url,
         dataType: "json",
-        success:  function (response) {
+        success:  async function (response) {
           if (response.status == "success") {
             // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-             $.pjax.reload({
+            await $.pjax.reload({
               container: response.container,
               history: false,
               url: response.url,
             });
-             success("ดำเนินการลบสำเร็จ!.");
+              success("ดำเนินการลบสำเร็จ!.");
             if (response.close) {
-              $("#main-modal").modal("hide");
+             await  $("#main-modal").modal("hide");
             }
           }
         },
