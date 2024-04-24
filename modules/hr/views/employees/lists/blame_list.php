@@ -5,7 +5,7 @@ use yii\widgets\Pjax;
 use app\components\AppHelper;
 $this->title = "การรับโทษทางวินัย";
 ?>
-<?php Pjax::begin(['id' => 'award']);?>
+<?php // Pjax::begin(['id' => 'blame']);?>
 
 <div class="card border-0">
     <div class="card-body">
@@ -66,4 +66,4 @@ $this->title = "การรับโทษทางวินัย";
     </div>
 </div>
 
-<?php Pjax::end();?>
+<?php // Pjax::end();?>
