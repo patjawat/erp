@@ -34,9 +34,6 @@ use yii\widgets\Pjax;
     <span class="fw-semibold">
         <i class="bi bi-list-check text-primary fs-5"></i> ข้อมูลการบำรุงรักษา
         </span >
-        <div style="margin:0;padding:0; font-size: 15px;">
-            <i class="bi bi-calendar-check text-primary"></i><span class="fw-semibold"> วันที่ </span>'.$date. '<br>
-        </div>
     </div>'
     ,"id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                         </td>

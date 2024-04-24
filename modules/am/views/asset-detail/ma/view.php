@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use app\components\UserHelper;
 ?>
+      <i class="bi bi-check2-circle text-primary fs-5"></i><span class="fw-semibold"> วันที่ </span><?= Yii::$app->formatter->asDate($model->date_start, 'long') ?>
 
 <div class="row">
     <div class="col-sm-6 col-md-6">
@@ -64,7 +65,7 @@ use app\components\UserHelper;
 </div>
 <div class="d-flex gap-2  justify-content-center">
                                                                                          <?php #   ['/am/asset-detail/update','name'=>'ma', "title"=>"<i class="fa-regular fa-pen-to-square"></i> แก้ไข","id"=>$model->id] ?>
-    <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/am/asset-detail/update','name'=>'ma', "title"=>'แก้ไข โดย '. UserHelper::GetEmployee()->fullname,"id"=>$model->id], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-lg']])?>
+    <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/am/asset-detail/update','name'=>'ma', "title"=>'แก้ไข',"id"=>$model->id], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-lg']])?>
     <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/am/asset-detail/delete', 'id' => $model->id], [
     'class' => 'btn btn-danger  delete-item',
 ])?>

@@ -38,22 +38,6 @@ if (isset($category->data_json["ma_items"])){
     $items = [];
 }
 ?>
-
-<div class="row">
-    <div class="col-xs-6 col-sm-4 col-md-4">
-    <?php /* echo '<label class="control-label">วันที่</label>';
-      echo $form->field($model_form, 'date_start')->widget(\kartik\date\DatePicker::class, [
-                        'type' => \kartik\date\DatePicker::TYPE_COMPONENT_PREPEND,
-                        'options' => ['placeholder' => 'เลือกวันที่'],
-                        'pluginOptions' => [
-                            'autoclose' => true,
-                            'format' => 'yyyy-mm-dd',
-                        ]
-                        ])->label(false); */ ?>
-      <?=$form->field($model, 'date_start')->widget(\yii\widgets\MaskedInput::className(), [
-        'mask' => '99/99/9999',
-    ])->label('วันที่');             ?>  
-    </div>
     <div class="col-xs-6 col-sm-4 col-md-4">
         </div>
         <div class="col-xs-12 col-sm-4 col-md-4">
@@ -65,16 +49,29 @@ if (isset($category->data_json["ma_items"])){
                 <?php }?>
         </div>
     </div>
-    <div class="mt-2">
-        <?php if($model->isNewRecord):?>
+    <?php if($model->isNewRecord){?>
             <?= $form->field($model, 'data_json[checker]')->hiddenInput(['value' => $emp->user_id])->label(false) ?>
             <?= $form->field($model, 'data_json[checker_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
-    <?= $form->field($model, 'data_json[status]')->hiddenInput(['value'=>'รอการตวรจสอบ'])->label(false) ?>
-    <?php else:?>
-        <?= $form->field($model, 'data_json[status]')->radioList(['ผ่าน' => 'ผ่าน', 'ไม่ผ่าน' => 'ไม่ผ่าน','รอการตวรจสอบ'=>'รอการตวรจสอบ'])->label("ผลการตรวจ") ?>
-    <?php endif;?>
+            <?= $form->field($model, 'data_json[status]')->hiddenInput(['value'=>'รอการตวรจสอบ'])->label(false) ?>
+        <?php }?>
+<div class="row">
+<div class="col-sm-6 col-md-6">
+    <?=$form->field($model, 'date_start')->widget(\yii\widgets\MaskedInput::className(), [
+            'mask' => '99/99/9999',
+        ])->label('วันที่');             ?>  
+        <?php if(!($model->isNewRecord)){?>
+            <?= $form->field($model, 'data_json[status]')->radioList(['ผ่าน' => 'ผ่าน', 'ไม่ผ่าน' => 'ไม่ผ่าน','รอการตวรจสอบ'=>'รอการตวรจสอบ'],['inline' => true])->label("ผลการตรวจ") ?>
+        <?php }?>
+    </div>
+    <div class="col-sm-6 col-md-6 d-flex justify-content-center align-items-center">
+        <?php if($model->isNewRecord){?>
+            <i class="bi bi-check2-circle text-primary fs-5" style="margin-right:5px;"></i><span class="fw-semibold" style="margin-right:5px;"> ผู้ตรวจเช็คอุปกรณ์ </span><?= $emp->fullname ?>
+        <?php }else{?>
+            <i class="bi bi-check2-circle text-primary fs-5" style="margin-right:5px;"></i><span class="fw-semibold" style="margin-right:5px;"> หัวหน้ารับรอง </span><?= $emp->fullname ?>
+        <?php }?>
+    </div>
 </div>
-<div class="mt-2">
+<div >
     <?= $form->field($model, 'data_json[description]')->textarea(['rows' => '3'])->label("หมายเหตุ") ?>
 </div>
 
