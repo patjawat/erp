@@ -162,7 +162,7 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                         <div class="col-6">
                                         <?=$form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
         'mask' => '99/99/9999',
-    ])->label('วันที่รับข้า');
+    ])->label('วันที่รับเข้า');
                         ?>
                                         </div>
                                         <div class="col-6">
@@ -200,7 +200,7 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
 </div>
 <div class="col-6">
 
-<?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคามากสุด') ?>
+<?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
 </div>
 </div>
 

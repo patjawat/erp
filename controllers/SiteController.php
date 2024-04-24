@@ -98,7 +98,7 @@ class SiteController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             // return $this->goBack();
-            return $this->redirect(['/profile']);
+            return $this->redirect(['/site/index']);
             // return $this->asJson([
             //     'success' => true,
             //     'model' => $model,
