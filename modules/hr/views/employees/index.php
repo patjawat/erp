@@ -101,7 +101,7 @@ $('#hr-container').on('pjax:success', function() {
     // Your code goes here ...
     console.log('success',$('#totalCount').text());
     $('#showTotalCount').text($('#totalCount').text())
-    $.pjax.reload({ container:'#title-container', history:false,replace: false});         
+    // $.pjax.reload({ container:'#title-container', history:false,replace: false});         
 });
 
 JS;
