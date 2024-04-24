@@ -149,15 +149,14 @@ $("body").on("click", ".delete-item", async function (e) {
     cancelButtonColor: "#d33",
     confirmButtonText: "ใช่, ลบเลย!",
     cancelButtonText: "ยกเลิก",
-  }).then((result) => {
+  }).then(async (result) => {
     console.log("result", result.value);
     if (result.value == true) {
-      console.log("ok");
-      $.ajax({
+      await $.ajax({
         type: "post",
         url: url,
         dataType: "json",
-        success:  async function (response) {
+        success: async function (response) {
           if (response.status == "success") {
             // await  $.pjax.reload({container:response.container, history:false,url:response.url});
             await $.pjax.reload({
@@ -165,9 +164,9 @@ $("body").on("click", ".delete-item", async function (e) {
               history: false,
               url: response.url,
             });
-              success("ดำเนินการลบสำเร็จ!.");
+            success("ดำเนินการลบสำเร็จ!.");
             if (response.close) {
-             await  $("#main-modal").modal("hide");
+              await $("#main-modal").modal("hide");
             }
           }
         },
