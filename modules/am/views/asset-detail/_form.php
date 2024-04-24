@@ -1,17 +1,23 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
-use yii\widgets\Pjax;
+use kartik\form\ActiveForm; // or kartik\widgets\ActiveForm
+
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetDetail $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
+
 <div class="asset-detail-form">
 
-    <?php $form = ActiveForm::begin(['id' => 'form-asset-detail']); ?>
+    <?php 
+    $form = ActiveForm::begin([
+        'id' => 'form-asset-detail',
+        'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
+        'validationUrl' =>['/am/asset-detail/validator']
+    ]); 
+?>
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
@@ -27,13 +33,16 @@ use yii\widgets\Pjax;
     <?php ActiveForm::end(); ?>
 
 </div>
-<?php Pjax::end();?>
 
 <?php
 
 $js = <<< JS
 
 
+$('#loadMa').click(function (e) { 
+    e.preventDefault();
+    loadMa();
+});
 $('#form-asset-detail').on('beforeSubmit', function (e) {
     var form = $(this);
     $.ajax({
@@ -47,6 +56,7 @@ $('#form-asset-detail').on('beforeSubmit', function (e) {
                 console.log(response.data);
                 closeModal()
                 success()
+                loadMa();
                 await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
             }
         }

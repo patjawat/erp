@@ -37,6 +37,41 @@ class AssetDetailController extends Controller
         );
     }
 
+
+    
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new AssetDetail();
+        
+        
+        if ($this->request->isPost && $model->load($this->request->post()))
+         { 
+            // return $model;
+        $requiredName = "ต้องระบุ"; 
+            //ตรวจสอบการบำรุงรักษา MA
+        if($model->name == "ma"){
+            $model->data_json['status'] == "" ? $model->addError('data_json[status]', 'สถานะต้องไม่ว่าง') : null;
+            $model->date_start == "" ? $model->addError('date_start',$requiredName) : null;
+            if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500 ){
+                $model->addError('date_start',"รูปแบบ พ.ศ.");
+            }
+            foreach ($model->ma as $index => $item){ 
+                $model->ma[$index]["item"] == "" ? $model->addError('ma['.$index.'][item]',$requiredName) : null;
+                $model->ma[$index]["ma_status"] == "" ? $model->addError('ma['.$index.'][ma_status]',$requiredName) : null;
+            }
+        }
+    
+             foreach ($model->getErrors() as $attribute => $errors) {
+                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+                }
+                if (!empty($result)) {
+                    return $this->asJson($result);
+                }
+            }
+        }
+
     /**
      * Lists all AssetDetail models.
      *

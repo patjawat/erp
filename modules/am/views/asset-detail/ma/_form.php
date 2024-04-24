@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use app\components\CategoriseHelper;
-
+use app\components\UserHelper;
 use yii\helpers\ArrayHelper;
 use kartik\select2\Select2;
 use unclead\multipleinput\MultipleInput;
@@ -15,6 +15,13 @@ use unclead\multipleinput\MultipleInputColumn;
 
 
 
+?>
+<?php
+$user =  UserHelper::getUser();
+$emp =  UserHelper::GetEmployee();
+/* echo $user->id;
+echo '<br>';
+echo $emp->fullname; */
 ?>
 
 <?php 
@@ -48,14 +55,20 @@ if (isset($category->data_json["ma_items"])){
     ])->label('วันที่');             ?>  
     </div>
     <div class="col-xs-6 col-sm-4 col-md-4">
-        <?= $form->field($model, 'data_json[checker]')->textInput(['maxlength' => true])->label("ผู้ตรวจเช็คอุปกรณ์") ?>
+        </div>
+        <div class="col-xs-12 col-sm-4 col-md-4">
+            <?php if(!($model->isNewRecord)){?>
+                <?= $form->field($model, 'data_json[endorsee]')->hiddenInput(['value' => $emp->user_id])->label(false) ?>
+                <?= $form->field($model, 'data_json[endorsee_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
+                <?= $form->field($model, 'data_json[checker]')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'data_json[checker_name]')->hiddenInput()->label(false) ?>
+                <?php }?>
+        </div>
     </div>
-    <div class="col-xs-12 col-sm-4 col-md-4">
-        <?= $form->field($model, 'data_json[endorsee]')->textInput(['maxlength' => true])->label("หัวหน้ารับรอง") ?>
-    </div>
-</div>
-<div class="mt-2">
-    <?php if($model->isNewRecord):?>
+    <div class="mt-2">
+        <?php if($model->isNewRecord):?>
+            <?= $form->field($model, 'data_json[checker]')->hiddenInput(['value' => $emp->user_id])->label(false) ?>
+            <?= $form->field($model, 'data_json[checker_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
     <?= $form->field($model, 'data_json[status]')->hiddenInput(['value'=>'รอการตวรจสอบ'])->label(false) ?>
     <?php else:?>
         <?= $form->field($model, 'data_json[status]')->radioList(['ผ่าน' => 'ผ่าน', 'ไม่ผ่าน' => 'ไม่ผ่าน','รอการตวรจสอบ'=>'รอการตวรจสอบ'])->label("ผลการตรวจ") ?>
@@ -110,7 +123,7 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
                 'class' => 'table-light',
                 'style' => 'width: 10%;',
             ],
-            'defaultValue' => 1,
+            'defaultValue' => 'ปกติ',
             'items' => [
                 'สูง'=> 'สูง',
                 'ปกติ' => 'ปกติ',

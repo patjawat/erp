@@ -2,8 +2,10 @@
 
 use app\modules\am\models\AssetDetail;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 
 ?>
+<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
 <?php $list = AssetDetail::find()->where(['code'=>$code])->orderBy(['date_start' => SORT_DESC])->all() ?>
 <div class="d-flex justify-content-between">
     <h3><i class="fa-solid fa-brush"></i> การบำรุงรักษา</h3>
@@ -38,8 +40,8 @@ use yii\helpers\Html;
     </div>'
     ,"id"=>$item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                         </td>
-                        <td><?= $item->data_json["checker"] ?></td>
-                        <td><?= $item->data_json["endorsee"] ?></td>
+                        <td><?= isset($item->data_json["checker_name"]) ? $item->data_json["checker_name"] : '' ?></td>
+                        <td><?= isset($item->data_json["endorsee_name"]) ? $item->data_json["endorsee_name"]  : '' ?></td>
                         <td><?= isset($item->data_json["status"]) ? $item->data_json["status"] : '' ?></td>
                         <td><?= $item->data_json["description"] ?></td>
                     </tr>
@@ -47,3 +49,5 @@ use yii\helpers\Html;
         </tbody>
     </table>
 </div>
+
+<?php Pjax::end();?>
