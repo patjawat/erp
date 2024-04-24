@@ -157,18 +157,17 @@ $("body").on("click", ".delete-item", async function (e) {
         url: url,
         dataType: "json",
         success: async function (response) {
-          if (response.status == "success") {
-            // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            await $.pjax.reload({
-              container: response.container,
-              history: false,
-              url: response.url,
-            });
-            success("ดำเนินการลบสำเร็จ!.");
-            if (response.close) {
-              await $("#main-modal").modal("hide");
-            }
-          }
+          await $.pjax.reload({
+            container: response.container,
+            history: false,
+            url: response.url,
+          });
+          // if (response.status == "success") {
+          //   success("ดำเนินการลบสำเร็จ!.");
+          //   if (response.close) {
+          //     await $("#main-modal").modal("hide");
+          //   }
+          // }
         },
       });
     }
