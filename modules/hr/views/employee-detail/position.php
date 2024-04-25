@@ -66,9 +66,16 @@ JS;
 
 <div class="row">
     <div class="col-3">
-    <?= $form->field($model, 'data_json[date_start]')->widget(\yii\widgets\MaskedInput::className(), [
-        'mask' => '99/99/9999',
-    ])->label('ตั้งแต่วันที่') ?>
+    <?= $form->field($model, 'data_json[date_start]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ตั้งแต่วันที่') ?>
 
     </div>
     <div class="col-9">
@@ -279,43 +286,30 @@ $js = <<<JS
 // });
 // $('body','#selectPositionGroup').text('dddd');
 // // $('#selectPositionGroup').text('xxx');
-//     var thaiYear = function (ct) {
-//         var leap=3;
-//         var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
-//         if(ct){
-//             var yearL=new Date(ct).getFullYear()-543;
-//             leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
-//             if(leap==2){
-//                 dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
-//             }
-//         }
-//         this.setOptions({
-//             i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
-//         })
-//     };
+    var thaiYear = function (ct) {
+        var leap=3;
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
+        if(ct){
+            var yearL=new Date(ct).getFullYear()-543;
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
+            if(leap==2){
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
+            }
+        }
+        this.setOptions({
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
+        })
+    };
 
-//     $("#employeedetail-data_json-education_begin").datetimepicker({
-//         timepicker:false,
-//         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-//         lang:'th',  // แสดงภาษาไทย
-//         onChangeMonth:thaiYear,
-//         onShow:thaiYear,
-//         yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-//         closeOnDateSelect:true,
-//     });
-
-//     $("#employeedetail-data_json-education_end").datetimepicker({
-//         timepicker:false,
-//         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-//         lang:'th',  // แสดงภาษาไทย
-//         onChangeMonth:thaiYear,
-//         onShow:thaiYear,
-//         yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-//         closeOnDateSelect:true,
-//     });
-
-
-
+    $("#employeedetail-data_json-date_start").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,
+        onShow:thaiYear,
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });
 JS;
 $this->registerJS($js, View::POS_END)
 ?>

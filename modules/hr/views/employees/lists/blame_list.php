@@ -3,6 +3,8 @@
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\AppHelper;
+
+
 $this->title = "การรับโทษทางวินัย";
 ?>
 <?php  Pjax::begin(['id' => 'blame']);?>

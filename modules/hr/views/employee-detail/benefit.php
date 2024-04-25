@@ -9,15 +9,29 @@ use yii\widgets\MaskedInput;
 ?>
 <div class="row">
 <div class="col-lg-6 col-md-6 col-sm-6">
-<?= $form->field($model, 'data_json[date_start]')->widget(yii\widgets\MaskedInput::className(), [
-        'mask' => '99/99/9999',
-    ])->label('วันที่ได้รับโทษ') ?>
+<?= $form->field($model, 'data_json[date_start]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่ได้รับโทษ') ?>
     <?= $form->field($model, 'data_json[blame_type]')->textInput(['autofocus' => true])->label('ประเภทความผิด') ?>
     </div>
 <div class="col-lg-6 col-md-6 col-sm-6">
-<?= $form->field($model, 'data_json[date_end]')->widget(yii\widgets\MaskedInput::className(), [
-        'mask' => '99/99/9999',
-    ])->label('วันที่สิ้นสุดโทษ') ?>
+<?= $form->field($model, 'data_json[date_end]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่สิ้นสุดโทษ') ?>
 <?= $form->field($model, 'data_json[blame]')->textInput(['autofocus' => true])->label('การลงโทษ') ?>
 
                 </div>

@@ -73,7 +73,8 @@
         "unclead/yii2-multiple-input": "dev-master",
         "phpoffice/phpword": "dev-master",
         "yurkinx/yii2-image": "dev-master",
-        "yiisoft/yii2-imagine": "~2.2.0"
+        "yiisoft/yii2-imagine": "~2.2.0",
+        "karatae99/yii2-date-picker-thai-widget" : "~1.0"
         
     },
     "require-dev": {

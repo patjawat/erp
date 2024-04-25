@@ -89,6 +89,7 @@ use app\modules\hr\models\Employees;
 
                 <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
     'name' => 'department',
+    'id' => 'treeID',
     'query' => Organization::find()->addOrderBy('root, lft'),
     'value' => 1,
     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
@@ -96,7 +97,10 @@ use app\modules\hr\models\Employees;
     'fontAwesome' => true,
     'asDropdown' => true,
     'multiple' => false,
-    'options' => ['disabled' => false],
+    'options' => ['disabled' => false, 'allowClear' => true,'class' => 'close'],
+    'pluginOptions' => [
+        'allowClear' => true
+    ],
 ])->label('หน่วยงานภายในตามโครงสร้าง');?>
 
 
@@ -132,6 +136,70 @@ use app\modules\hr\models\Employees;
 
 <?php
 $js = <<< JS
+
+
+// $("#w0-tree-input").treeview("expandAll");
+// $("#treeID").treeview("collapseAll");
+$("#w0-tree-input").treeview("uncheckAll");
+$("#w0-tree").treeview("uncheckAll");
+$("#w0-tree-input-menu").treeview("uncheckAll");
+
+ 
+$("#treeID").on('treeview:selected', function(event, key, data, textStatus, jqXHR) {
+    console.log('treeview:selected');
+});
+
+
+$("#treeID").on('treeview:beforeselect', function(event, key, jqXHR, settings) {
+    console.log('treeview:beforeselect');
+});
+
+$("#treeID").on('treeview:selecterror', function(event, key, data, textStatus, jqXHR) {
+    console.log('treeview:selecterror');
+});
+
+$("#treeID").on('treeview:selectajaxerror', function(event, key, jqXHR, textStatus, errorThrown) {
+    console.log('treeview:selectajaxerror');
+});
+
+$("#treeID").on('treeview:selectcomplete', function(event, jqXHR) {
+    console.log('treeview:selectcomplete');
+});
+
+$("#treeID").on('treeview:expand', function(event, nodeKey) {
+    console.log('treeview:expand');
+});
+
+$("#treeID").on('treeview:collapse', function(event, key) {
+    console.log('treeview:collapse');
+});
+
+$("#treeID").on('treeview:expandall', function(event) {
+    console.log('treeview:expandall');
+});
+
+$("#treeID").on('treeview:collapseall', function(event) {
+    console.log('treeview:collapseall');
+});
+
+$("#treeID").on('treeview:search', function(event) {
+    console.log('treeview:search');
+});
+
+$("#treeID").on('treeview:checked', function(event, key) {
+    console.log('treeview:checked');
+    $("#treeID").treeview("uncheckAll");
+});
+
+$("#treeID").on('treeview:unchecked', function(event, key) {
+    console.log('treeview:unchecked');
+});
+
+$("#treeID").on('treeview:change', function(event, key, name) {
+    console.log('treeview:change');
+});
+
+
 $('#show').val(localStorage.getItem('right-setting'))
 console.log(localStorage.getItem('right-setting'));
 $("#filter-emp").addClass(localStorage.getItem('right-setting'));
