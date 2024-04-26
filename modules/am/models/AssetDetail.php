@@ -74,10 +74,17 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
 
         try {
+            if (is_string($this->ma)) {
+                $this->ma = explode(",", $this->ma);
+            };
             $items = [
                 "items" => $this->ma
             ];
-            $this->data_json = ArrayHelper::merge($this->data_json, $items);
+            if ($this->name != "asset_item"){
+                $this->data_json = ArrayHelper::merge($this->data_json, $items);
+            }else{
+                $this->data_json = $items;
+            }
         } catch (\Throwable $th) {
             //throw $th;
         }    

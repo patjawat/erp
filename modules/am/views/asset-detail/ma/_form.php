@@ -143,7 +143,6 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
     ]
 
 ])->label(false);
-
 ?>
                 </div>
                 </div>

@@ -104,7 +104,6 @@ use app\components\UserHelper;
         <!-- ถ้าเป็นรถยนต์  -->
         <?php if ($model->isCar()): ?>
         <div id="assetItems" class="tab-pane">
-            <span> https://github.com/softark/yii2-dual-listbox</span>
 
             <div id="viewAssetItems" class="mt-4"></div>
 
@@ -127,7 +126,7 @@ $js = <<< JS
 loadCalibration();
 loadRepairHostory()
 loadMa()
-
+assetItems()
 //สอบเทียบ
 function  loadCalibration(){
     $.ajax({
@@ -175,6 +174,25 @@ function  loadMa(){
         dataType: "json",
         success: function (res) {
             $('#viewMa').html(res.content);
+            console.log(res.content);
+        }
+    });
+}
+
+//ครุภัณฑ์ภายใน
+function assetItems(){
+    $.ajax({
+        type: "get",
+        url: "$url",
+        data:{
+            "title":"ครุภัณฑ์ภายใน",
+            "name":"assetItems",
+            "id" : "$model->id",
+            "code" : "$model->code",
+        },
+        dataType: "json",
+        success: function (res) {
+            $('#viewAssetItems').html(res.content);
             console.log(res.content);
         }
     });

@@ -105,6 +105,7 @@ class AssetDetailController extends Controller
                     'model_asset' => $id == '' ? '' : Asset::find()->where(['id'=>$id])->one(),
                     'id_category' => $id == '' ? '' :  
                     (Asset::find()->where(['id'=>$id])->one() ?  AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()->id : ""),
+
                 ]),
             ];
         } else {
@@ -175,6 +176,7 @@ class AssetDetailController extends Controller
                     return [
                         'status' => 'success',
                         'container' => '#am-container',
+                        'data'=>$model
                     ];
                 }else{
                     return [
@@ -220,6 +222,7 @@ class AssetDetailController extends Controller
                 return [
                     'status' => 'success',
                     'container' => '#am-container',
+                    'res' => $model
                 ];
             }else{
                 return [
@@ -384,6 +387,27 @@ class AssetDetailController extends Controller
             ]),
         ];
     } */
+
+    public function actionTest()
+    {
+        $model = new AssetDetail();
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) ) {
+                    #$item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
+                    #$model->data_json = $item;
+                    #$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
+                return [
+                    "res" => $model
+            ];
+            }
+        }
+        return [
+            'status' => 'success',
+            'container' => '#am-container',
+            'data' => $model
+        ];
+    }
 
 
     public function actionViewHistoryMa()

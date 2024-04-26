@@ -73,8 +73,9 @@
         "unclead/yii2-multiple-input": "dev-master",
         "phpoffice/phpword": "dev-master",
         "yurkinx/yii2-image": "dev-master",
-        "yiisoft/yii2-imagine": "~2.2.0"
-        
+        "yiisoft/yii2-imagine": "~2.2.0",
+        "istvan-ujjmeszaros/bootstrap-duallistbox": "~4.0.0",
+        "softark/yii2-dual-listbox": "dev-master"    
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
