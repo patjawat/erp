@@ -234,16 +234,27 @@ function addlist(path, id, name){
     checkbox.classList.add('form-check-input');
 
     // สร้าง element label
-    var label = document.createElement('label');
-    label.setAttribute('for', id);
-    label.classList.add('form-check-label');
-    label.innerText = name;
+    var label1 = document.createElement('label');
+    var label2 = document.createElement('label');
+    var subDiv = document.createElement('div');
+
+    label1.setAttribute('for', id);
+    label1.classList.add('form-check-label');
+    label1.innerText = name;
+    label2.setAttribute('for', id);
+    label2.classList.add('form-check-label');
+    label2.style.marginRight = '20px';
+    label2.innerText = id;
+    subDiv.appendChild(label1);
+    subDiv.appendChild(label2);
+    subDiv.classList.add('d-flex');
+    subDiv.classList.add('justify-content-between');
 
     // สร้าง element div เพื่อห่อ checkbox และ label
     var div = document.createElement('div');
     div.classList.add('form-check');
     div.appendChild(checkbox);
-    div.appendChild(label);
+    div.appendChild(subDiv);
 
     // เพิ่ม element div ลงใน div ที่มี id เป็น 'list-accept'
     var listAccept = document.getElementById(path);
