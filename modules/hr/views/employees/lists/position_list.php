@@ -26,20 +26,12 @@ $items = [
 }
 </style>
 
-<?php
-//  $model1 = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $model->id])
-//  ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc"))->createCommand()->sql;
-
-// echo $model1;
-?>
-<?php // Pjax::begin(['id' => 'position']);?>
+<?php  Pjax::begin(['id' => 'position']);?>
 
 <div class="card border-0">
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h5 class="card-title"><i class="fa-solid fa-people-group"></i> ตำแหน่ง</h5>
-
-
             <div class="btn-group dropup">
                 <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/hr/employee-detail/create', 'emp_id' => $model->id, 'name' => 'position', 'title' => '<i class="fa-solid fa-user-tag"></i> ตำแหน่ง'], ['class' => 'btn btn-primary rounded-start-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
                 <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
@@ -56,8 +48,6 @@ $items = [
                     </li>
                 </ul>
             </div>
-
-            <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/hr/employee-detail/create', 'emp_id' => $model->id, 'name' => 'position', 'title' => '<i class="fa-solid fa-user-tag"></i> ตำแหน่ง'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
         </div>
         <div class="table-responsive" style="min-height:468px">
             <table class="table table-striped mt-4">
@@ -75,34 +65,35 @@ $items = [
                     <tr class="">
                         <td class="align-middle">
                             <div class="d-flex flex-column">
-                            <div>
+                                <div>
 
-                                <i class="bi bi-calendar-event"></i>
-                                <?=isset($item->data_json['date_start']) ? AppHelper::DateFormDb($item->data_json['date_start']) : ''?>
-                            </div>
-                            <div>
-                            <?php if($item->status == 2):?>
-                            <label
-                    class="badge rounded-pill text-primary-emphasis bg-danger-subtle p-2 fs-6 text-truncate float-start">
-                    <i class="bi bi-clipboard-check"></i> <?php echo $item->GetStatusName()?>
-                
-                </label>
-                <?php else:?>
-                    <label
-                    class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate float-start">
-                    <i class="bi bi-clipboard-check"></i> <?php echo $item->GetStatusName()?>
-                
-                </label>
-                    <?php endif;?>
-                            </div>
-                                
+                                    <i class="bi bi-calendar-event"></i>
+                                    <?=isset($item->data_json['date_start']) ? AppHelper::DateFormDb($item->data_json['date_start']) : ''?>
+                                </div>
+                                <div>
+                                    <?php if($item->status == 2):?>
+                                    <label
+                                        class="badge rounded-pill text-primary-emphasis bg-danger-subtle p-2 fs-6 text-truncate float-start">
+                                        <i class="bi bi-clipboard-check"></i> <?php echo $item->GetStatusName()?>
+
+                                    </label>
+                                    <?php else:?>
+                                    <label
+                                        class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate float-start">
+                                        <i class="bi bi-clipboard-check"></i> <?php echo $item->GetStatusName()?>
+
+                                    </label>
+                                    <?php endif;?>
+                                </div>
+
                             </div>
                         </td>
                         <td class="align-middle">
                             <div class="d-flex flex-column">
                                 <div class="fw-normal">
                                     <i class="bi bi-check2-circle text-primary"></i>
-                                    <span class="text-danger"><?=isset($item->data_json['statuslist']) ? $item->data_json['statuslist'] : null?></span>
+                                    <span
+                                        class="text-danger"><?=isset($item->data_json['statuslist']) ? $item->data_json['statuslist'] : null?></span>
                                 </div>
                                 <div>
                                     <i class="bi bi-check2-circle text-primary"></i> <span
@@ -114,17 +105,17 @@ $items = [
                                     <div class="d-flex flex-row gap-3">
 
                                         <div>
-                                            <i class="bi bi-check2-circle text-primary"></i> 
-                                            
-                                            <span
-                                                class="fw-semibold"><?=$item->positionName()?> |<?=$item->positionGroupName()?> | <?=$item->positionTypeName()?> | ตำแหน่งเลขที่</span> : <span
+                                            <i class="bi bi-check2-circle text-primary"></i>
+
+                                            <span class="fw-semibold"><?=$item->positionName()?>
+                                                |<?=$item->positionGroupName()?> | <?=$item->positionTypeName()?> |
+                                                ตำแหน่งเลขที่</span> : <span
                                                 class="badge rounded-pill text-primary-emphasis bg-warning"><?=isset($item->data_json['position_number']) ? $item->data_json['position_number'] : null?></span>
                                         </div>
-                                        
+
                                         <div>
                                             <i class="bi bi-wallet2"></i> เงินเดือน :
-                                            <code
-                                                class="">
+                                            <code class="">
                                                 <?php echo $item->salary?>
                                                 <?php // number_format($item->salary);?> </code>
                                             บาท
@@ -145,10 +136,7 @@ $items = [
                                         class="bx bx-dots-vertical-rounded fw-bold"></i></button>
                                 <div class="dropdown-menu" style="">
                                     <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/hr/employee-detail/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-user-tag"></i> ตำแหน่ง'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
-
-                                    <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], [
-    'class' => 'dropdown-item delete-item',
-])?>
+                                    <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item'])?>
                                 </div>
                             </div>
                         </td>
@@ -160,8 +148,8 @@ $items = [
 
         <div class="d-flex justify-content-center">
 
-    <div class="text-muted">
-        <?= LinkPager::widget([
+            <div class="text-muted">
+                <?= LinkPager::widget([
                     'pagination' => $dataProvider->pagination,
                     'firstPageLabel' => 'หน้าแรก',
                     'lastPageLabel' => 'หน้าสุดท้าย',
@@ -170,11 +158,11 @@ $items = [
                         'class' => 'pagination-sm',
                     ],
                 ]); ?>
-    </div>
-</div>
+            </div>
+        </div>
 
 
     </div>
 </div>
 
-<?php // Pjax::end();?>
+<?php  Pjax::end();?>

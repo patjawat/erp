@@ -599,9 +599,13 @@ class Employees extends \yii\db\ActiveRecord
     public function joinDate()
     {
         try {
-            $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $this->id])->all();
+            // $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $this->id])->all();
             // return count($model);
-            if (count($model) > 1) {
+            $queryCheck = Yii::$app->db->createCommand("SELECT count(id) FROM employee_detail WHERE emp_id = :emp_id AND name = 'position'")
+            ->bindValue(':emp_id',$this->id)
+            ->queryScalar();
+            // return count($model);
+            if ($queryCheck >= 2) {
 
                 $sql = "SELECT CAST(JSON_UNQUOTE(JSON_EXTRACT(e.data_json,'$.date_start'))  AS DATE) as date_start FROM employee_detail e WHERE e.emp_id = $this->id AND JSON_EXTRACT(e.data_json,'$.date_start') > (SELECT e2.data_json->'$.date_start' as date_start FROM employee_detail e2 WHERE e2.emp_id =  $this->id AND JSON_EXTRACT(e2.data_json,'$.status') = '2' ORDER BY date_start desc limit 1) limit 1;";
                 $query = Yii::$app->db->createCommand($sql)
@@ -617,8 +621,6 @@ class Employees extends \yii\db\ActiveRecord
                             new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') asc"),
                             'id' => SORT_DESC,
                         ])->one();
-                    // return 'No query';
-
                     return $data->data_json['date_start'];
                 }
             } else {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ab21d49cc39024ccebc9d77b542492a",
+    "content-hash": "c1064aa27b9cf7987f0d829068f5c33b",
     "packages": [
         {
             "name": "alexandernst/yii2-device-detect",
@@ -165,6 +165,27 @@
                 "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
             },
             "type": "bower-asset"
+        },
+        {
+            "name": "bower-asset/bootstrap-datepicker",
+            "version": "v1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/uxsolutions/bootstrap-datepicker.git",
+                "reference": "d364be5b066b38f3675a5a1dc174ce1ab1f3360e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uxsolutions/bootstrap-datepicker/zipball/d364be5b066b38f3675a5a1dc174ce1ab1f3360e",
+                "reference": "d364be5b066b38f3675a5a1dc174ce1ab1f3360e"
+            },
+            "require": {
+                "bower-asset/jquery": ">=1.7.1,<4.0.0"
+            },
+            "type": "bower-asset",
+            "license": [
+                "Apache-2.0"
+            ]
         },
         {
             "name": "bower-asset/flatpickr",
@@ -1328,34 +1349,36 @@
         },
         {
             "name": "google/auth",
-            "version": "v1.37.1",
+            "version": "v1.38.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "1a7de77b72e6ac60dccf0e6478c4c1005bb0ff46"
+                "reference": "5d0c47368fc644d98d0a6299362d4ce03a0ef250"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/1a7de77b72e6ac60dccf0e6478c4c1005bb0ff46",
-                "reference": "1a7de77b72e6ac60dccf0e6478c4c1005bb0ff46",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/5d0c47368fc644d98d0a6299362d4ce03a0ef250",
+                "reference": "5d0c47368fc644d98d0a6299362d4ce03a0ef250",
                 "shasum": ""
             },
             "require": {
                 "firebase/php-jwt": "^6.0",
-                "guzzlehttp/guzzle": "^6.5.8||^7.4.5",
+                "guzzlehttp/guzzle": "^7.4.5",
                 "guzzlehttp/psr7": "^2.4.5",
-                "php": "^7.4||^8.0",
-                "psr/cache": "^1.0||^2.0||^3.0",
+                "php": "^8.0",
+                "psr/cache": "^2.0||^3.0",
                 "psr/http-message": "^1.1||^2.0"
             },
             "require-dev": {
                 "guzzlehttp/promises": "^2.0",
                 "kelvinmo/simplejwt": "0.7.1",
-                "phpseclib/phpseclib": "^3.0",
-                "phpspec/prophecy-phpunit": "^2.0",
-                "phpunit/phpunit": "^9.0.0",
+                "phpseclib/phpseclib": "^3.0.35",
+                "phpspec/prophecy-phpunit": "^2.1",
+                "phpunit/phpunit": "^9.6",
                 "sebastian/comparator": ">=1.2.3",
-                "squizlabs/php_codesniffer": "^3.5"
+                "squizlabs/php_codesniffer": "^3.5",
+                "symfony/process": "^6.0||^7.0",
+                "webmozart/assert": "^1.11"
             },
             "suggest": {
                 "phpseclib/phpseclib": "May be used in place of OpenSSL for signing strings or for token management. Please require version ^2."
@@ -1380,9 +1403,9 @@
             "support": {
                 "docs": "https://googleapis.github.io/google-auth-library-php/main/",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.37.1"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.38.0"
             },
-            "time": "2024-04-03T18:41:12+00:00"
+            "time": "2024-04-24T18:36:53+00:00"
         },
         {
             "name": "graham-campbell/result-type",
@@ -2133,6 +2156,7 @@
             "time": "2021-08-12T10:31:23+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "istvan-ujjmeszaros/bootstrap-duallistbox",
             "version": "4.0.2",
             "source": {
@@ -2175,6 +2199,64 @@
                 "source": "https://github.com/istvan-ujjmeszaros/bootstrap-duallistbox/tree/v4.0.2"
             },
             "time": "2020-04-25T00:19:39+00:00"
+=======
+            "name": "karatae99/yii2-date-picker-thai-widget",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/karatae99/yii2-date-picker-thai-widget.git",
+                "reference": "2a4931bea348860e1777919586c365cc2f621ac7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/karatae99/yii2-date-picker-thai-widget/zipball/2a4931bea348860e1777919586c365cc2f621ac7",
+                "reference": "2a4931bea348860e1777919586c365cc2f621ac7",
+                "shasum": ""
+            },
+            "require": {
+                "bower-asset/bootstrap-datepicker": "1.7.0",
+                "yiisoft/yii2": ">=2.0.9",
+                "yiisoft/yii2-bootstrap": "*"
+            },
+            "type": "yii2-extension",
+            "extra": {
+                "asset-installer-paths": {
+                    "bower-asset-library": "vendor/bower"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "karatae99\\datepicker\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Akaranan Naree",
+                    "email": "karatae99@hotmail.com",
+                    "role": "Beginner Developer"
+                }
+            ],
+            "description": "Bootstrap DatePicker Thai Buddhist-Era (B.E.) widget for Yii2.",
+            "keywords": [
+                "buddhist",
+                "calendar",
+                "datepicker",
+                "extension",
+                "thai",
+                "widget",
+                "yii 2",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://github.com/karatae99/yii2-date-picker-thai-widget/issues",
+                "source": "https://github.com/karatae99/yii2-date-picker-thai-widget/tree/1.0.2"
+            },
+            "time": "2021-06-26T07:19:36+00:00"
+>>>>>>> 274715945bd6ec6212371b245143e8a23a9178c2
         },
         {
             "name": "kartik-v/bootstrap-checkbox-x",
