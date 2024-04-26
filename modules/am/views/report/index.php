@@ -25,6 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
     }
 </style>
 <?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
+
 <?php
 echo GridView::widget([
     'id' => 'kv-grid-demo',
@@ -44,7 +45,7 @@ echo GridView::widget([
     'hover' => true,
     'showPageSummary' => true,
     'panel' => [
-        'after' => '<div class="float-right float-end"><button type="button" class="btn btn-primary"><i class="fas fa-download"></i> ดาวน์โหลด </button></div><div style="padding-top: 5px;"><em>* สรุปค่าเสื่อมทรัพย์สิน  เมษายน 2565.</em></div><div class="clearfix"></div>',
+        'after' => '<div class="float-right float-end"><button type="button" class="btn btn-primary"><i class="fas fa-download"></i> ดาวน์โหลด </button></div><div style="padding-top: 5px;"><em>* สรุปค่าเสื่อมทรัพย์สิน '.Yii::$app->thaiFormatter->asDate($searchModel->q_lastDay, 'long').'</em></div><div class="clearfix"></div>',
         'heading' => '<i class="fa-solid fa-chart-line"></i>  ค่าเสื่อมทรัพย์สิน',
         'type' => 'light',
         'before' => '<div style="padding-top: 7px;"><em>*</em></div>',

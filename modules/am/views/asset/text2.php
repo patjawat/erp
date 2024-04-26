@@ -12,22 +12,22 @@ IF(x1.date_number = 1, DATEDIFF(x1.end_date,receive_date),x1.days_of_month) as c
 
 FROM(
 select 
-(TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1)  as date_number,
-    (SELECT receive_date FROM asset WHERE id = :id) as receive_date,
+(TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = 1519) ,LAST_DAY(m1))+1)  as date_number,
+    (SELECT receive_date FROM asset WHERE id = 1519) as receive_date,
     DATE_FORMAT(m1, '%Y-%m-%d') as start_date,
     LAST_DAY(m1) as end_date,
      DAYOFMONTH(LAST_DAY(DATE_FORMAT(m1, '%Y-%m-%d'))) as days_of_month,
 IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(now(),'%Y-%m'), 'Y', 'N') as active,
 
-DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d') as begin_date,
-    (SELECT price FROM asset where id =:id) as price,
-    (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) as service_life,
-    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id) as dep
+DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = 1519) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 1519) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d') as begin_date,
+    (SELECT price FROM asset where id =1519) as price,
+    (SELECT data_json->'$.service_life' FROM asset WHERE id = 1519) as service_life,
+    (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = 1519) as dep
     
 
 from
 (
-select ((SELECT receive_date FROM asset WHERE id = :id) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id))-1 DAY) + INTERVAL m MONTH as m1
+select ((SELECT receive_date FROM asset WHERE id = 1519) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = 1519))-1 DAY) + INTERVAL m MONTH as m1
 from
 (
 select @rownum:=@rownum+1 as m from
@@ -38,5 +38,5 @@ select @rownum:=@rownum+1 as m from
 (select @rownum:=-1) t0
 ) d1
 ) d2 
-where m1<=DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
+where m1<=DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = 1519) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = 1519) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
 order by m1) as x1) as x2) as x3;

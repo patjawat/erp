@@ -151,9 +151,14 @@ order by m1) as x1) as x2) as x3";
     <div class="d-flex justify-content-between">
         <div>
             <h4 class="alert-heading">มูลค่าสุทธิ <span class="text-white bg-danger badge rounded-pill fs-6">
-                    <?php foreach ($querys as $data1):?>
-                    <?=$data1['active'] == 'Y' ?  number_format(($data1['total']),2) : ''?>
-                    <?php endforeach?></span> บาท</h4>
+                    <?php if($querys[0]['begin_date'] <= date('Y-m-d')):?>
+                            1
+                    <?php else:?>
+                        <?php foreach ($querys as $data1):?>
+                        <?=$data1['active'] == 'Y' ?  number_format(($data1['total']),2) : ''?>
+                        <?php endforeach?>
+                    <?php endif;?>
+                </span> บาท</h4>
                     <?php
                     ?>
         </div>

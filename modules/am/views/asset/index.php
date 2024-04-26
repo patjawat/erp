@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php Pjax::end(); ?>
 <?php Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
-    
+
 <div class="asset-index">
 
     <div class="card">
