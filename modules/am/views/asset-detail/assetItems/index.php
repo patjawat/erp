@@ -67,18 +67,7 @@ $list =json_encode($selectedData);
       </div>
       <div class="card-body">
             <div class="card-subtitle">
-                  <div id="search-name-box">
-                    <div class="d-flex">
-                      <input type="text" name="" id="search-select" class="w-100 form-control" placeholder="search..(ชื่อ)">
-                      <div class="btn btn-primary"  id="btn-search-change"><i class="bi bi-arrow-clockwise"></i></div>
-                    </div>
-                  </div>
-                  <div  id="search-code-box"  style="display: none;">
-                    <div class="d-flex">
-                      <input type="text" name="" id="search-select-code" class="w-100 form-control" placeholder="search..(รหัส)">
-                      <div class="btn btn-primary" id="btn-search-change-return"><i class="bi bi-arrow-counterclockwise"></i></div>
-                    </div>
-                  </div>
+              <input type="text" name="" id="search-select" class="w-100 form-control" placeholder="search">
             </div>
             <div id="list-select" class="mt-3 overflow-auto" style="height: 250px;">
             </div>
@@ -111,16 +100,7 @@ $list =json_encode($selectedData);
       <div class="card-body">
             <div class="card-subtitle">
               <div id="search-name-box-selected">
-                <div class="d-flex">
-                  <input type="text" name="" id="search-selected" class="w-100 form-control" placeholder="search..(ชื่อ)" >
-                    <div class="btn btn-primary"  id="btn-search-change-selected"><i class="bi bi-arrow-clockwise"></i></div>
-                </div>
-              </div>
-              <div id="search-code-box-selected" style="display: none;">
-                <div class="d-flex">
-                  <input type="text" name="" id="search-selected-code" class="w-100 form-control" placeholder="search..(รหัส)" >
-                  <div class="btn btn-primary" id="btn-search-change-selected-return"><i class="bi bi-arrow-counterclockwise"></i></div>
-                </div>
+                  <input type="text" name="" id="search-selected" class="w-100 form-control" placeholder="search" >
               </div>
             </div>
             <div id="list-selected"  class="mt-2 overflow-auto"  style="height: 250px;">
@@ -323,15 +303,13 @@ function addlist(path, id, name){
 
 function search(keyword) {
     let filteredData = Object.values(data).filter((item) => {
+      if(item.name.toLowerCase().includes(keyword.toLowerCase())){
         return item.name.toLowerCase().includes(keyword.toLowerCase());
-    });
-
-    return filteredData;
-}
-
-function search_code(keyword) {
-    let filteredData = Object.values(data).filter((item) => {
+      }
+      if(item.code.toLowerCase().includes(keyword.toLowerCase())){
         return item.code.toLowerCase().includes(keyword.toLowerCase());
+      }
+      return false
     });
 
     return filteredData;
@@ -349,17 +327,6 @@ $('#search-select').on('input', function() {
     AddAllListSub(data, 1)
 });
 
-$('#search-select-code').on('input', function() {
-    selected_data.splice(0,selected_data.length)
-    selected_data_2.splice(0,selected_data_2.length)
-    let newValue = $(this).val();
-    current_data = search_code(newValue)
-    removeAll("#list-select")
-    removeAll("#list-selected")
-    AddAllList(current_data)
-    AddAllListSub(data, 1)
-});
-
 $('#search-selected').on('input', function() {
     selected_data.splice(0,selected_data.length)
     selected_data_2.splice(0,selected_data_2.length)
@@ -371,16 +338,6 @@ $('#search-selected').on('input', function() {
     AddAllListSub(data, 2)
 });
 
-$('#search-selected-code').on('input', function() {
-    selected_data.splice(0,selected_data.length)
-    selected_data_2.splice(0,selected_data_2.length)
-    let newValue = $(this).val();
-    current_data = search_code(newValue)
-    removeAll("#list-select")
-    removeAll("#list-selected")
-    AddAllList(current_data)
-    AddAllListSub(data, 2)
-});
 $('#btn-submit').click(function() {
   console.log($('#data_json-input').val());
 });
