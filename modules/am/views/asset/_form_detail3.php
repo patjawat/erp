@@ -209,7 +209,7 @@ use app\modules\am\models\AssetItem;
                                             $('#asset-data_json-purchase_text').val(data.text)
                                         }",
                                         ]
-                                        ])->label('การจัดซื้อ');
+                                        ])->label('วิธีการได้มา');
                                         ?>
 
                         </div>
@@ -234,7 +234,7 @@ use app\modules\am\models\AssetItem;
 
 
                         <div class="col-3">
-                            <?= $form->field($model, 'price')->textInput(['type' => 'number']) ?>
+                            <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('ราคาแรกรับ') ?>
                         </div>
                         <div class="col-3">
                             <?= $form->field($model, 'on_year')->widget(MaskedInput::className(),['mask'=>'9999'])->label('ปีงบประมาณ') ?>
