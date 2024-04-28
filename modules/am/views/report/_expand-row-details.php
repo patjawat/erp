@@ -41,7 +41,7 @@ use yii\helpers\Html;
 
 
 $sql = "SELECT x5.*,
-(x5.total+x5.month_price) as price_last_month
+IF(x5.date_number > (x5.service_life * 12),1,(x5.total+x5.month_price)) as price_last_month
 FROM(
 SELECT x4.*,
 IF((x4.price - total_price) < 1,1,ROUND((x4.price - total_price),2)) as total

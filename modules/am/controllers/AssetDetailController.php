@@ -109,8 +109,9 @@ class AssetDetailController extends Controller
                 ]),
             ];
         } else {
-            return $this->render('index', [
+            return $this->render($name.'/index', [
                 'id' => $id,
+                'code' => $code,
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
 
@@ -154,18 +155,17 @@ class AssetDetailController extends Controller
     // }
     public function actionCreate()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
         $name = $this->request->get('name');
         $category_id = $this->request->get('category_id');
         $title = $this->request->get('title');
-        $code = $this->request->get('code');
         $id = $this->request->get('id');
+
+        $asset = Asset::findOne($id);
 
         $model = new AssetDetail([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'name' => $name,
-            'code' => $code,
-            // 'data_json' => ['title' => $title],
+            'code' => $asset->code,
         ]);
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) ) {
@@ -188,18 +188,27 @@ class AssetDetailController extends Controller
         } else {
             $model->loadDefaultValues();
         }
+
+        if ($this->request->isAjax) {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+            
         return [
             'title' => $this->request->get('title'),
             'content' => $this->renderAjax('create', [
+                'asset' => $asset,
                 'model' => $model,
                 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             ]),
         ];
+    }else{
+
         return $this->render('create', [
+            'asset' => $asset,
             'model' => $model,
-            'id' => $id,
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
     }
+}
 
     /**
      * Updates an existing AssetDetail model.

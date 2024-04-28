@@ -64,7 +64,7 @@ class ReportController extends \yii\web\Controller
 
 
                                                $sql = "SELECT x5.*,
-                                               SUM(x5.x_total+x5.month_price) as price_last_month,
+                                               SUM(IF(x5.date_number > (x5.service_life * 12),1,(x5.x_total + x5.month_price))) as price_last_month,
                                                SUM(x5.x_total) as total
                                                FROM(
                                                SELECT x4.*,
