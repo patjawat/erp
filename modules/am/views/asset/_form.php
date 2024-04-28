@@ -5,6 +5,7 @@ use kartik\form\ActiveForm;
 use app\components\AppHelper;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
+use unclead\multipleinput\MultipleInput;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Organization;
