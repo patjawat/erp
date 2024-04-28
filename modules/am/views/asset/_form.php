@@ -128,7 +128,7 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
             ],
             'title' => 'รายการที่ตรวจเช็ค',
             'options' => [
-                'data' => $items
+                // 'data' => $items
 /*                array_map(function ($asset) {
                     return CategoriseHelper::Id($id_category)->one()->data_json["ma_items"][$asset]["item_name"];
                 },range(0, count(CategoriseHelper::Id($id_category)->one()->data_json["ma_items"])-1)) */
