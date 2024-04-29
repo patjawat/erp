@@ -18,7 +18,7 @@ use kartik\form\ActiveForm;
     width: 130px;
 }
 </style>
-
+<?= $model->code ?>
 <div class="form-tax">
 
     <?php $form = ActiveForm::begin([
@@ -97,7 +97,7 @@ use kartik\form\ActiveForm;
         <div class="form-group mb-1 mr-2 me-2 highlight-addon row field-assetdetail-data_json-phone">
             <label class="col-form-label has-star col-md-2"></label>
             <div class="col-md-10">
-                <div class="form-group">
+                <div class="form-group d-flex justify-content-center">
                     <?=AppHelper::btnSave();?>
                 </div>
 

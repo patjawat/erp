@@ -87,6 +87,9 @@ class AssetDetailController extends Controller
         $searchModel = new AssetDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['name' => $name]);
+        if($name == "tax_car"){
+            $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+        }
         #Yii::$app->response->format = Response::FORMAT_JSON;
         #return AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>421])->one()->asset_item])->one();
         if ($this->request->isAjax) {
@@ -176,7 +179,6 @@ class AssetDetailController extends Controller
                     return [
                         'status' => 'success',
                         'container' => '#am-container',
-                        'data'=>$model
                     ];
                 }else{
                     return [
@@ -187,6 +189,15 @@ class AssetDetailController extends Controller
             }
         } else {
             $model->loadDefaultValues();
+        }
+        if ($name == "tax_car"){
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax($name.'/create', [
+                    'model' => $model,
+                    'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+                ]),
+            ];
         }
         return [
             'title' => $this->request->get('title'),
@@ -211,6 +222,7 @@ class AssetDetailController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $name = $this->request->get('name');
         $model->date_start = AppHelper::DateFormDb($model->date_start);
         $model->date_end = AppHelper::DateFormDb($model->date_end);
 
@@ -231,7 +243,16 @@ class AssetDetailController extends Controller
                 ];
             }
         }
-
+        if ($name == "tax_car"){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax($name.'/update', [
+                    'model' => $model,
+                    'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+                ]),
+            ];
+        }
         if ($this->request->isAjax) {
             if ($this->request->get('name') == "ma"){
                 $model->ma = $model->data_json["items"];
