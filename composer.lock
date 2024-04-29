@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c1064aa27b9cf7987f0d829068f5c33b",
+    "content-hash": "5e0c9da138cd97a8ca5a0b9727016de4",
     "packages": [
         {
             "name": "alexandernst/yii2-device-detect",
@@ -211,12 +211,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/RobinHerbots/Inputmask.git",
-                "reference": "0209a69c22c485de02ad88775d2810bfa4a77449"
+                "reference": "9d73d6649002b30f1551bd4577761ed7516bc99e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/0209a69c22c485de02ad88775d2810bfa4a77449",
-                "reference": "0209a69c22c485de02ad88775d2810bfa4a77449"
+                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/9d73d6649002b30f1551bd4577761ed7516bc99e",
+                "reference": "9d73d6649002b30f1551bd4577761ed7516bc99e"
             },
             "require": {
                 "bower-asset/jquery": ">=1.7"
@@ -2156,7 +2156,6 @@
             "time": "2021-08-12T10:31:23+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "istvan-ujjmeszaros/bootstrap-duallistbox",
             "version": "4.0.2",
             "source": {
@@ -2199,7 +2198,8 @@
                 "source": "https://github.com/istvan-ujjmeszaros/bootstrap-duallistbox/tree/v4.0.2"
             },
             "time": "2020-04-25T00:19:39+00:00"
-=======
+        },
+        {
             "name": "karatae99/yii2-date-picker-thai-widget",
             "version": "1.0.2",
             "source": {
@@ -2256,7 +2256,6 @@
                 "source": "https://github.com/karatae99/yii2-date-picker-thai-widget/tree/1.0.2"
             },
             "time": "2021-06-26T07:19:36+00:00"
->>>>>>> 274715945bd6ec6212371b245143e8a23a9178c2
         },
         {
             "name": "kartik-v/bootstrap-checkbox-x",

@@ -41,7 +41,7 @@ use app\components\UserHelper;
                             <i class="bi bi-caret-down-fill"></i>
                         </button>
                         <ul class="dropdown-menu" style="">
-<?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/asset-detail/create','id' => $model->id,'name' =>'ma','code' => $model->code,"title"=>'เพิ่มการบำรุงรักษา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+<?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/asset-detail/create','id' => $model->id,'name' =>'ma',"title"=>'เพิ่มการบำรุงรักษา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                             <!-- <a class="dropdown-item open-modal" href=<?="/am/asset-detail?name=ma&title=เพิ่มการบำรุงรักษา โดย ". UserHelper::GetEmployee()->fullname ." &id=" . $model->id ?>
                                 data-size="modal-xl">
                                  </a> -->
@@ -105,7 +105,7 @@ use app\components\UserHelper;
         <?php if ($model->isCar()): ?>
         <div id="assetItems" class="tab-pane">
 
-            <div id="viewAssetItems" class="mt-4"></div>
+         <?=Html::img('@web/images/demo_asset_list.png')?>
 
         </div>
         <?php endif;?>
@@ -126,7 +126,7 @@ $js = <<< JS
 loadCalibration();
 loadRepairHostory()
 loadMa()
-assetItems()
+// assetItems()
 //สอบเทียบ
 function  loadCalibration(){
     $.ajax({
@@ -180,23 +180,23 @@ function  loadMa(){
 }
 
 //ครุภัณฑ์ภายใน
-function assetItems(){
-    $.ajax({
-        type: "get",
-        url: "$url",
-        data:{
-            "title":"ครุภัณฑ์ภายใน",
-            "name":"assetItems",
-            "id" : "$model->id",
-            "code" : "$model->code",
-        },
-        dataType: "json",
-        success: function (res) {
-            $('#viewAssetItems').html(res.content);
-            console.log(res.content);
-        }
-    });
-}
+// function assetItems(){
+//     $.ajax({
+//         type: "get",
+//         url: "$url",
+//         data:{
+//             "title":"ครุภัณฑ์ภายใน",
+//             "name":"assetItems",
+//             "id" : "$model->id",
+//             "code" : "$model->code",
+//         },
+//         dataType: "json",
+//         success: function (res) {
+//             $('#viewAssetItems').html(res.content);
+//             console.log(res.content);
+//         }
+//     });
+// }
 
 JS;
 $this->registerJS($js, yii\web\View::POS_END);

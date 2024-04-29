@@ -10,28 +10,12 @@ use app\modules\hr\models\Organization;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use yii\widgets\MaskedInput;
+use unclead\multipleinput\MultipleInput;
 use yii\web\JsExpression;
 use app\modules\hr\models\Employees;
 use app\modules\am\models\AssetItem;
-// $assetType = Categorise::find()->where(['name' => 'asset_type','category_id' => $model->category_id])->one();
-// $AssetitemList = Categorise::find()->where(['name' => 'asset_item','asset_group' => 2])->all();
-// $Assetitems = Categorise::find()
-// ->select(['categorise.name'])
-// ->leftJoin('categorise t', 't.code=categorise.category_id')
-// ->where(['categorise.name' => 'asset_item'])
-// ->andWhere(['t.category_id' => $model->asset_group])
 
-// ->all();
-
-// $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
-
-/** @var yii\web\View $this */
-/** @var app\modules\am\models\Asset $model */
-/** @var yii\widgets\ActiveForm $form */
-// echo $model->asset_group;
-// print_r($listAssetitem);
 ?>
-
 
 <div class="card">
     <div class="card-body">
@@ -119,13 +103,20 @@ use app\modules\am\models\AssetItem;
                             <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
 
                         </div>
-                       
+
 
 
                         <div class="col-6">
-                            <?=$form->field($model, 'receive_date')->widget(\yii\widgets\MaskedInput::className(), [
-        'mask' => '99/99/9999',
-    ])->label('วันที่รับข้า');
+                            <?=$form->field($model, 'receive_date')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่รับข้า');
                         ?>
                         </div>
                         <div class="col-6">
@@ -135,7 +126,7 @@ use app\modules\am\models\AssetItem;
                         ?>
                         </div>
                         <div class="col-12">
-                        <?php
+                            <?php
                         $url = \yii\helpers\Url::to(['/depdrop/employee']);
                         $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
                                 echo $form->field($model, 'owner')->widget(Select2::classname(), [
@@ -209,7 +200,7 @@ use app\modules\am\models\AssetItem;
                                             $('#asset-data_json-purchase_text').val(data.text)
                                         }",
                                         ]
-                                        ])->label('การจัดซื้อ');
+                                        ])->label('วิธีการได้มา');
                                         ?>
 
                         </div>
@@ -234,7 +225,7 @@ use app\modules\am\models\AssetItem;
 
 
                         <div class="col-3">
-                            <?= $form->field($model, 'price')->textInput(['type' => 'number']) ?>
+                            <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('ราคาแรกรับ') ?>
                         </div>
                         <div class="col-3">
                             <?= $form->field($model, 'on_year')->widget(MaskedInput::className(),['mask'=>'9999'])->label('ปีงบประมาณ') ?>
@@ -277,49 +268,25 @@ use app\modules\am\models\AssetItem;
                         ?>
                         </div>
                         <div class="col-12">
-                        <?=$form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
-    'name' => 'department',
-    'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-    'value' => 1,
-    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-    'fontAwesome' => true,
-    'asDropdown' => true,
-    'multiple' => false,
-    'options' => ['disabled' => false],
-])->label('หน่วยงานภายในตามโครงสร้าง');?>
-                         <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
-                                            <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
-                                        <?php else:?>
-                                        <?php endif;?>
+                            <?=$form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
+                                'name' => 'department',
+                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
+                                'value' => 1,
+                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                'fontAwesome' => true,
+                                'asDropdown' => true,
+                                'multiple' => false,
+                                'options' => ['disabled' => false],
+                            ])->label('หน่วยงานภายในตามโครงสร้าง');?>
+                            <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
+                            <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
+                            <?php else:?>
+                            <?php endif;?>
                         </div>
-
-
                     </div>
                 </div>
             </div>
-
-
-            <div class="alert alert-primary" role="alert">
-                <strong>*</strong> รายละเอียดยี่ห้อครุภัณฑ์
-            </div>
-
-            <div class="col-sm-12">
-                <?= $form->field($model, 'data_json[asset_option]')->textArea(['rows' => 5])->label(false);
-                ?>
-                 <?php
-                //   $form->field($model, 'data_json[asset_option]')->widget(kartik\editors\Summernote::class, [
-                //     'useKrajeePresets' => true,
-                // ])->label(false);
-                ?>
-            </div>
-            <div class="col-sm-12">
-                <?=$model->Upload($model->ref,'asset_pic')?>
-            </div>
-
-
-
-
         </div>
     </div>
 </div>

@@ -31,7 +31,7 @@ return [
         'header' => '<span class="fw-semibold">ประเภททรัพย์สิน</span>',
     ],
     [
-        'attribute' => 'sum_price',
+        'attribute' => 'total',
         'vAlign' => 'middle',
         'header' => '<span class="fw-semibold">ราคาทุนทรัพย์สิน</span>',
         'width' => '150px',

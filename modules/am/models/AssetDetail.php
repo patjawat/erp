@@ -27,7 +27,8 @@ class AssetDetail extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public $ma;
+    public $ma; // การบำรุงรักษา
+    public $accessories_item; //ครุภัณฑ์ภายใน
     public static function tableName()
     {
         return 'asset_detail';
@@ -40,7 +41,7 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['data_json', 'updated_at', 'created_at','date_start','date_end','ma'], 'safe'],
+            [['data_json', 'updated_at', 'created_at','date_start','date_end','ma','accessories_item'], 'safe'],
             [['ref', 'code', 'name'], 'string', 'max' => 255],
         ];
     }
@@ -74,9 +75,11 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
 
         try {
+            //บันทึกการบำรุงรักษา
             if (is_string($this->ma)) {
                 $this->ma = explode(",", $this->ma);
             };
+
             $items = [
                 "items" => $this->ma
             ];
@@ -85,6 +88,9 @@ class AssetDetail extends \yii\db\ActiveRecord
             }else{
                 $this->data_json = $items;
             }
+            //บันทึกอุปกรภายใน
+
+
         } catch (\Throwable $th) {
             //throw $th;
         }    

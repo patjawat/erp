@@ -43,7 +43,7 @@ return [
 
     ],
     [
-        'attribute' => 'total',
+        'attribute' => 'price_last_month',
         'vAlign' => 'middle',
         'header' => '<span class="fw-semibold">ค่าเสื่อมยกมา</span>',
         'width' => '150px',
@@ -103,7 +103,7 @@ return [
 
     ],
     [
-        'attribute' => 'total_month_price',
+        'attribute' => 'total_price',
         'vAlign' => 'middle',
         'header' => '<span class="fw-semibold">ค่าเสื่อมาคาเดือนนี้</span>',
         'width' => '150px',
