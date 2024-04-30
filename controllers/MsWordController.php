@@ -40,7 +40,7 @@ class MsWordController extends \yii\web\Controller
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
         
-        $comanyName = SiteHelper::getInfo()['company_name'] != '' ? (' | ' . SiteHelper::getInfo()['company_name']) : '';
+        $comanyName = SiteHelper::getInfo()['company_name'] != '' ? (SiteHelper::getInfo()['company_name']) : '';
         Settings::setTempDir(Yii::getAlias('@webroot').'/msword/temp/'); //กำหนด folder temp สำหรับ windows server ที่ permission denied temp (อย่ายลืมสร้างใน project ล่ะ)
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/asset.docx'); //เลือกไฟล์ template ที่เราสร้างไว้
         
@@ -58,36 +58,52 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('asset_type', $model->AssetTypeName()); // ประเภท
             $templateProcessor->setValue('asset_fsn', $model->code); // หมายเลขครุภัณฑ์
             $templateProcessor->setValue('feature', $model->asset_option); //ลักษณะ/คุณสมบัติ
-            $templateProcessor->setValue('design', 'รุ่น/แบบ');
+            $templateProcessor->setValue('design', '-');
             $templateProcessor->setValue('asset_add', $model->department_name); //สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ
+            //คำนามชื่อผู้ขาย/ผู้รับจ้าง/ผู้บริจาค
+            switch ($model->method_get) {
+                case 'บริจาค':
+                    $vendor_prefix = 'ผู้บริจาค';
+                    break;
+                case 'ซื้อ':
+                    $vendor_prefix = 'ผู้ขาย';
+                    break;
+                case 'จ้างก่อสร้าง':
+                    $vendor_prefix = 'ผู้รับจ้าง';
+                    break;
+                case 'เช่า':
+                    $vendor_prefix = 'ผู้ให้เช่า';
+                    break;
+                default:
+                $vendor_prefix = 'ชื่อผู้ขาย/ผู้รับจ้าง/ผู้บริจาค';
+                    break;
+            }
+            $templateProcessor->setValue('vendor_prefix', $vendor_prefix); //ำนามชื่อผู้ขาย/ผู้รับจ้าง/ผู้บริจาค
             $templateProcessor->setValue('vendor', $model->vendor_name); //ชื่อผู้ขาย/ผู้รับจ้าง/ผู้บริจาค
             $templateProcessor->setValue('vendor_add', $venrorAddress); //ที่อยู่ของผู้ขาย
             $templateProcessor->setValue('vendor_tel', $venrorPhone); //หมายเลขโทรศัพท์ของผู้ขาย
             $templateProcessor->setValue('budget_type', $model->budget_type); //ประเภทเงิน
             $templateProcessor->setValue('method', $model->method_get); //วิธีการได้มา
-            $templateProcessor->setValue('date',  Yii::$app->thaiFormatter->asDate($model->receive_date,'short')); //วิธีการได้มา
+            $templateProcessor->setValue('r_date',  Yii::$app->thaiFormatter->asDate($model->receive_date,'short')); //วิธีการได้มา
             $templateProcessor->setValue('asset_name1',$model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
-            $templateProcessor->setValue('amount1','1'); //จำนวน
-            $templateProcessor->setValue('price1', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
-            $templateProcessor->setValue('life1', $model->data_json['service_life']); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
-            $templateProcessor->setValue('dep_year1', number_format($model->price / $model->data_json['service_life'],2));
-            $templateProcessor->setValue('total1', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
+            $templateProcessor->setValue('amount','1'); //จำนวน
+            $templateProcessor->setValue('price_unit', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
+            $templateProcessor->setValue('price', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
+            $templateProcessor->setValue('life', $model->data_json['service_life']); //อายุการใช้งาน
+            $templateProcessor->setValue('dep_year', number_format($model->price / $model->data_json['service_life'],2));//ค่าเสื่อมต่อปี
             
             $datas = AssetHelper::Depreciation($model->id, $number);
             
-            $templateProcessor->cloneRow('price', count($datas));
+            $templateProcessor->cloneRow('asset_name', count($datas));
             $i = 1;
             foreach ($datas as $data) {
-                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['date'], 'short')); //วันที่รับเข้า
+                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['end_date'], 'short')); //วันที่รับเข้า
                 $templateProcessor->setValue('doc_number#' . $i, ''); //เลขที่เอกสารแสดงการได้มาของทรัพย์สิน
                 $templateProcessor->setValue('asset_name#' . $i, $model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
-                $templateProcessor->setValue('amount#' . $i, '1'); //จำนวน
                 $templateProcessor->setValue('price_unit#' . $i, number_format($data['price'], 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
-                $templateProcessor->setValue('price#' . $i, number_format($data['price'], 2)); //จำนวนเงินรวมของทรัพย์
                 $templateProcessor->setValue('asset_life#' . $i, $data['service_life']); //อายุการใช้งาน
-                $templateProcessor->setValue('deprate#' . $i, $data['depreciation']); //ระบุอัตราค่าเสื่อมราคาของทรัพย์สิน
-                $templateProcessor->setValue('dep_year#' . $i, number_format($model->price / $model->data_json['service_life'],2)); //ค่าเสื่อมราคาประจำปี
-                $templateProcessor->setValue('accdep#' . $i, number_format($data['total_price2'],2)); //จำนวนเงินค่าเสื่อมราคาที่สะสม
+                $templateProcessor->setValue('deprate#' . $i, $data['price_month']); //ระบุอัตราค่าเสื่อมราคาของทรัพย์สิน
+                $templateProcessor->setValue('accdep#' . $i, number_format($data['total_price'],2)); //จำนวนเงินค่าเสื่อมราคาที่สะสม
                 $templateProcessor->setValue('total#' . $i, number_format($data['total'],2)); //มูลค่าสุทธิ
                 $templateProcessor->setValue('remart#' . $i, ''); //หมายเหตุ
                 $i++;
