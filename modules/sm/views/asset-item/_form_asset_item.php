@@ -1,13 +1,9 @@
 <?php
 use app\components\AppHelper;
 use yii\helpers\Html;
-// use yii\bootstrap5\ActiveForm;
 use kartik\form\ActiveForm;
 use yii\widgets\MaskedInput;
 use kartik\select2\Select2;
-/** @var yii\web\View $this */
-/** @var app\modules\am\models\Fsn $model */
-/** @var yii\widgets\ActiveForm $form */
 use app\models\Categorise;
 ?>
 <?php
@@ -51,7 +47,8 @@ echo "</pre>";
                     'data' => $unitData,
                     'options' => ['placeholder' => 'ระบุ...'],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label("หน่วยนับ")
                 ?>
@@ -63,7 +60,8 @@ echo "</pre>";
                     'data' => ['3' => 'ครุภัณฑ์','4' => 'วัสดุ'],
                     'options' => ['placeholder' => 'ระบุ...'],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label("ประเภท")
                 ?>

@@ -41,12 +41,14 @@ use kartik\select2\Select2;
                                 <?php
                 echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                     'data' => [
+                        2 => "สิ่งปลูกสร้าง",
                         3 => "ครุภัณฑ์",
                         4 => "วัสดุ"
                     ],
                     'options' => ['placeholder' => 'ระบุ...'],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label("ประเภท")
                 ?>

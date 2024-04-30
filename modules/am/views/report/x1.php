@@ -1,32 +1,4 @@
-<?php
-
-namespace app\modules\am\controllers;
-
-use app\modules\am\models\AssetSearch;
-use Yii;
-use yii\data\SqlDataProvider;
-
-class ReportController extends \yii\web\Controller
-
-{
-    public function actionIndex()
-    {
-
-        $searchModel = new AssetSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        if ($searchModel->q_year != '' && $searchModel->q_month != '') {
-            $d1 = ($searchModel->q_year - 543) . '-' . $searchModel->q_month . '-01';
-            $queryMonth = Yii::$app->db->createCommand('SELECT LAST_DAY(:d1)')
-                ->bindValue(':d1', $d1)
-                ->queryScalar();
-            $searchModel->q_lastDay = $queryMonth;
-        } else {
-            $queryMonth = Yii::$app->db->createCommand('SELECT LAST_DAY(now())')
-                ->queryScalar();
-            $searchModel->q_lastDay = $queryMonth;
-        }
-        $sql = "SELECT x5.*,
+SELECT x5.*,
                                                SUM(IF(x5.date_number > (x5.service_life * 12),1,(x5.x_total + x5.month_price))) as price_last_month,
                                                SUM(x5.x_total) as total
                                                FROM(
@@ -58,7 +30,7 @@ class ReportController extends \yii\web\Controller
                                                                           CAST(a.data_json->'$.depreciation'as DECIMAL(4,2)) as depreciation,
                                                                           asset_group,
                                                                           receive_date,
-                                                                          ('" . $searchModel->q_lastDay . "') as date,
+                                                                          ('2024-04-30') as date,
                                                                           price,
                                                   asset_status,
                                                                           (DATEDIFF(DATE_FORMAT(receive_date + INTERVAL JSON_EXTRACT(a.data_json, '$.service_life') YEAR,'%Y-%m-%d'),receive_date)) as all_days,
@@ -68,31 +40,4 @@ class ReportController extends \yii\web\Controller
                                                                           FROM asset a
                                                                           LEFT JOIN categorise i ON i.code = a.asset_item
                                                                           LEFT JOIN categorise asset_type ON i.category_id = asset_type.code AND asset_type.name = 'asset_type'
-                                                                          WHERE asset_type.code IS NOT NULL ) as x1) as x2) as x3 WHERE   x3.receive_date <= x3.date AND x3.receive_date <= x3.date AND x3.asset_status = 1) as x4) as x5 GROUP BY x5.type_code";
-        $querys = Yii::$app->db->createCommand($sql)->queryAll();
-        // ->bindValue(':q_date',$d1)
-        // ->queryScalar();
-        $data = [];
-        foreach ($querys as $query) {
-            $data[] = [
-                'total' => $query['total'],
-            ];
-        }
-        $count = count(Yii::$app->db->createCommand($sql)->queryAll());
-
-        $dataProvider = new SqlDataProvider([
-            'sql' => $sql,
-            'totalCount' => $count,
-        ]);
-
-        $totalPrice = 0;
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            // 'querys' => $querys,
-            'queryMonth' => $queryMonth,
-            'totalPrice' => $totalPrice,
-        ]);
-    }
-
-}
+                                                                          ) as x1) as x2) as x3 WHERE   x3.receive_date <= x3.date AND x3.receive_date <= x3.date AND x3.asset_status = 1) as x4) as x5 GROUP BY x5.type_code
