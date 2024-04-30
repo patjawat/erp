@@ -71,7 +71,7 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->cloneRow('price', count($datas));
             $i = 1;
             foreach ($datas as $data) {
-                $templateProcessor->setValue('recive_date#' . $i, Yii::$app->thaiFormatter->asDate($data['date'], 'medium')); //วันที่รับเข้า
+                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['date'], 'medium')); //วันที่รับเข้า
                 $templateProcessor->setValue('doc_number#' . $i, ''); //เลขที่เอกสารแสดงการได้มาของทรัพย์สิน
                 $templateProcessor->setValue('asset_name#' . $i, $model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
                 $templateProcessor->setValue('amount#' . $i, ''); //จำนวน
