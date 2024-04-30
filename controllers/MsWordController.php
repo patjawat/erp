@@ -84,7 +84,7 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('vendor_tel', $venrorPhone); //หมายเลขโทรศัพท์ของผู้ขาย
             $templateProcessor->setValue('budget_type', $model->budget_type); //ประเภทเงิน
             $templateProcessor->setValue('method', $model->method_get); //วิธีการได้มา
-            $templateProcessor->setValue('r_date',  Yii::$app->thaiFormatter->asDate($model->receive_date,'short')); //วิธีการได้มา
+            $templateProcessor->setValue('r_date',  Yii::$app->thaiFormatter->asDate($model->receive_date,'php:d/m/Y')); //วิธีการได้มา
             $templateProcessor->setValue('asset_name1',$model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
             $templateProcessor->setValue('amount','1'); //จำนวน
             $templateProcessor->setValue('price_unit', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
@@ -97,7 +97,7 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->cloneRow('asset_name', count($datas));
             $i = 1;
             foreach ($datas as $data) {
-                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['end_date'], 'short')); //วันที่รับเข้า
+                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['end_date'], 'php:d/m/Y')); //วันที่รับเข้า
                 $templateProcessor->setValue('doc_number#' . $i, ''); //เลขที่เอกสารแสดงการได้มาของทรัพย์สิน
                 $templateProcessor->setValue('asset_name#' . $i, $model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
                 $templateProcessor->setValue('price_unit#' . $i, number_format($data['price'], 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
