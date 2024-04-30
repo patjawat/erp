@@ -65,23 +65,30 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('vendor_tel', $venrorPhone); //หมายเลขโทรศัพท์ของผู้ขาย
             $templateProcessor->setValue('budget_type', $model->budget_type); //ประเภทเงิน
             $templateProcessor->setValue('method', $model->method_get); //วิธีการได้มา
+            $templateProcessor->setValue('date',  Yii::$app->thaiFormatter->asDate($model->receive_date,'short')); //วิธีการได้มา
+            $templateProcessor->setValue('asset_name1',$model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
+            $templateProcessor->setValue('amount1','1'); //จำนวน
+            $templateProcessor->setValue('price1', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
+            $templateProcessor->setValue('life1', $model->data_json['service_life']); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
+            $templateProcessor->setValue('dep_year1', number_format($model->price / $model->data_json['service_life'],2));
+            $templateProcessor->setValue('total1', number_format($model->price, 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
             
             $datas = AssetHelper::Depreciation($model->id, $number);
             
             $templateProcessor->cloneRow('price', count($datas));
             $i = 1;
             foreach ($datas as $data) {
-                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['date'], 'medium')); //วันที่รับเข้า
+                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['date'], 'short')); //วันที่รับเข้า
                 $templateProcessor->setValue('doc_number#' . $i, ''); //เลขที่เอกสารแสดงการได้มาของทรัพย์สิน
                 $templateProcessor->setValue('asset_name#' . $i, $model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
-                $templateProcessor->setValue('amount#' . $i, ''); //จำนวน
+                $templateProcessor->setValue('amount#' . $i, '1'); //จำนวน
                 $templateProcessor->setValue('price_unit#' . $i, number_format($data['price'], 2)); //จำนวนเงินที่แสดงถึงราคาต่อหน่วย
                 $templateProcessor->setValue('price#' . $i, number_format($data['price'], 2)); //จำนวนเงินรวมของทรัพย์
                 $templateProcessor->setValue('asset_life#' . $i, $data['service_life']); //อายุการใช้งาน
                 $templateProcessor->setValue('deprate#' . $i, $data['depreciation']); //ระบุอัตราค่าเสื่อมราคาของทรัพย์สิน
-                $templateProcessor->setValue('deprate_year#' . $i, number_format($model->price / $model->data_json['service_life'],2)); //ค่าเสื่อมราคาประจำปี
+                $templateProcessor->setValue('dep_year#' . $i, number_format($model->price / $model->data_json['service_life'],2)); //ค่าเสื่อมราคาประจำปี
                 $templateProcessor->setValue('accdep#' . $i, number_format($data['total_price2'],2)); //จำนวนเงินค่าเสื่อมราคาที่สะสม
-                $templateProcessor->setValue('pro_value#' . $i, number_format($data['total'],2)); //มูลค่าสุทธิ
+                $templateProcessor->setValue('total#' . $i, number_format($data['total'],2)); //มูลค่าสุทธิ
                 $templateProcessor->setValue('remart#' . $i, ''); //หมายเหตุ
                 $i++;
             }
@@ -103,7 +110,11 @@ class MsWordController extends \yii\web\Controller
                     $templateProcessor->setValue('method', 'วิธีการได้มา'); //วิธีการได้มา
                     $filename = 'asset_result-test.docx';
                 }
-                
+                // try {
+                    @unlink(Yii::getAlias('@webroot') . '/msword/results/'.$filename);
+                // } catch (\Throwable $th) {
+                //     //throw $th;
+                // }
                 
                 $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/'.$filename); //สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
                 
