@@ -64,13 +64,7 @@ class AssetDetailController extends Controller
         }
         if($model->name == "tax_car"){
             $model->date_end == "" ? $model->addError('date_end', $requiredName) : null;
-            if (\DateTime::createFromFormat('d/m/Y', $model->date_end)->format('Y') < 2500 ){
-                $model->addError('date_end',"รูปแบบ พ.ศ.");
-            }
             $model->date_start == "" ? $model->addError('date_start',$requiredName) : null;
-            if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500 ){
-                $model->addError('date_start',"รูปแบบ พ.ศ.");
-            }
             $model->data_json["price"] == "" ? $model->addError('data_json[price]',$requiredName) : null;
             if (!is_numeric($model->data_json["price"])) {
                 $model->addError('data_json[price]', "ต้องเป็นตัวเลข");
