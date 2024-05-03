@@ -286,7 +286,9 @@ class AssetController extends Controller
     {
         $model = $this->findModel($id);
         $model->receive_date = AppHelper::DateFormDb($model->receive_date);
-        $model->item_options = $model->data_json["item_options"];
+        if(isset($model->data_json["item_options"])){
+            $model->item_options = $model->data_json["item_options"];
+        }
         $model_old_data_json = $model->data_json;
 
         if ($this->request->isPost && $model->load($this->request->post()) ) {

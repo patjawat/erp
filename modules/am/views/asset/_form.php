@@ -9,6 +9,7 @@ use unclead\multipleinput\MultipleInput;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Organization;
+use app\modules\am\models\Asset;
 $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
 /** @var yii\web\View $this */
