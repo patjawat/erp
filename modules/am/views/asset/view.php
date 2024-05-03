@@ -3,6 +3,7 @@ use yii;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\base\ErrorException;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Asset $model */
@@ -27,7 +28,7 @@ $group = Yii::$app->request->get('group');
 }
 </style>
 
-
+<?php Pjax::begin(['id' => 'view-container','timeout' => 50000 ]); ?>
 
 <div class="asset-view">
     <?php if($model->asset_group == 1):?>
@@ -45,3 +46,5 @@ $group = Yii::$app->request->get('group');
 
     <?php endif?>
 </div>
+
+<?php Pjax::end(); ?>
