@@ -24,9 +24,10 @@ use app\components\UserHelper;
                         </button>
                         <ul class="dropdown-menu" style="">
 
-                            <a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items"
+                            <!-- <a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items"
                                 data-size="modal-lg">
-                                <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a>
+                                <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a> -->
+                                <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/repair/create','id' => $model->id,"title"=>'ส่งซ่อม'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                 </li>
                 <li><a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items" data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
             </ul>

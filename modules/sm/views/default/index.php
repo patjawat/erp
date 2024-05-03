@@ -19,203 +19,225 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <body>
-  
-<div class="row">
-  <div class="col-8">
+
     <div class="row">
-<div class="col-lg-4 col-md-4 col-sm-12 col-sx-12">
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex align-items-center">
-                <div class="flex-grow-1">
-                        <span class="text-muted text-uppercase fs-6">รายการขอซื้อ/ขอจ้าง</span>
-                    <h2 class="text-muted text-uppercase fs-4">5 รายการ</h2>
-                </div>
-                <div class="text-center" style="position: relative;">
-                    <div id="t-rev" style="min-height: 45px;">
-                        <div id="apexchartsdlqwjkgl"
-                            class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
-                            style="width: 90px; height: 45px;">
-                            <i class="fa-solid fa fa-list-ul fs-1"></i>
-                            <div class="apexcharts-legend"></div>
-                            
-                        </div>
-                    </div>
-                    <div class="resize-triggers">
-                        <div class="expand-trigger">
-                            <div style="width: 91px; height: 70px;"></div>
-                        </div>
-                        <div class="contract-trigger"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End-col -->
-
-<div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
-      <div class="card">
-              <div class="card-body">
-                  <div class="d-flex align-items-center">
-                      <div class="flex-grow-1">
-                      <span class="text-muted text-uppercase fs-6">กำลังดำเนินการ</span>
-                          <h2 class="text-muted text-uppercase fs-4">4 รายการ</h2>
-                      </div>
-                      <div class="text-center" style="position: relative;">
-                          <div id="t-rev" style="min-height: 45px;">
-                              <div id="apexchartsdlqwjkgl"
-                                  class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
-                                  style="width: 90px; height: 45px;">
-                                  <i class="fa-solid fa fa-undo fs-1"></i>
-                                  <div class="apexcharts-legend"></div>
-                                  
-                              </div>
-                          </div>
-                        
-                          <div class="resize-triggers">
-                              <div class="expand-trigger">
-                                  <div style="width: 91px; height: 70px;"></div>
-                              </div>
-                              <div class="contract-trigger"></div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-        </div>         
-</div>
-<!-- End-col -->
-
-<!-- End-col -->
-<div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
-<div class="card">
-        <div class="card-body">
-            <div class="d-flex align-items-center">
-                <div class="flex-grow-1">
-                <a href="#">
-                        <span class="text-muted text-uppercase fs-6">ดำเนินการเรียบร้อย</span>
-                    </a>
-                    <h2 class="text-muted text-uppercase fs-4">1 รายการ</h2>
-                </div>
-                
-                <div class="text-center" style="position: relative;">
-                    <div id="t-rev" style="min-height: 45px;">
-                        <div id="apexchartsdlqwjkgl"
-                            class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
-                            style="width: 90px; height: 45px;">
-                            <i class="fa-solid fa-check-square fs-1"></i>
-                            <div class="apexcharts-legend"></div>
-                            
-                        </div>
-                    </div>
-                   
-                    <div class="resize-triggers">
-                        <div class="expand-trigger">
-                            <div style="width: 91px; height: 70px;"></div>
-                        </div>
-                        <div class="contract-trigger"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-            <div class="card">
-                <div class="card-body">
-                มูลค่าการจัดซื้อจัดจ้าง (ย้อนหลัง 10 ปี)
-                    <div id="line-chart-container" style="width:100%;height:340px;"></div>
-                </div>
-            </div>
-                <div class="row">
-                      <div class="col-6">
-                                <div class="card rounded-4 border-0 h-100">
-                                    <div class="card-body">
-                                        <div id="chart01" style="width:100%;height:300px;"></div>
-                                        <center><div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทวัสดุ <br>(เปอร์เซ็นต์การจัดซื้อตามแผนวัสดุ)</div></center>
-                                    </div>
+        <div class="col-8">
+            <div class="row">
+                <div class="col-lg-4 col-md-4 col-sm-12 col-sx-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <span class="text-muted text-uppercase fs-6">รายการขอซื้อ/ขอจ้าง</span>
+                                    <h2 class="text-muted text-uppercase fs-4">5 รายการ</h2>
                                 </div>
-                        </div>
-                        <div class="col-6">
-                                <div class="card rounded-4 border-0 h-100">
-                                    <div class="card-body">
-                                        <div id="chart02" style="width:100%;height:300px;"></div>
-                                        <center><div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทครุภัณฑ์ <br>(เปอร์เซ็นต์การจัดซื้อตามแผนครุภัณฑ์)</div></center>
-                                    </div>
-                                </div>
-                        </div>
-                  </div>
-                  <div class="row">&nbsp;</div>
-                 
-                  <div class="row">
-                      <div class="col-6">
-                              <div class="card rounded-4 border-0 h-100">
-                                  <div class="card-body">
-                                      <div id="chart03" style="width:100%;height:300px;"></div>
-                                      <center><div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทงานจ้างเหมาทั่วไป' <br>(เปอร์เซ็นต์การจัดซื้อตามแผนงานจ้างเหมาทั่วไป)</div></center>
-                                  </div>
-                              </div>
-                      </div>
-                      <div class="col-6">
-                              <div class="card rounded-4 border-0 h-100">
-                                  <div class="card-body">
-                                      <div id="chart04" style="width:100%;height:300px;"></div>
-                                      <center><div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทงานก่อสร้าง <br>(เปอร์เซ็นต์การจัดซื้อตามแผนงานก่อสร้าง)</div></center>
-                                  </div>
-                              </div>
-                      </div>
-                   </div> 
-              </div>
-<!-- End-col -->
-</div>
+                                <div class="text-center" style="position: relative;">
+                                    <div id="t-rev" style="min-height: 45px;">
+                                        <div id="apexchartsdlqwjkgl"
+                                            class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
+                                            style="width: 90px; height: 45px;">
+                                            <i class="fa-solid fa fa-list-ul fs-1"></i>
+                                            <div class="apexcharts-legend"></div>
 
-        <div class="col-4">
-                <div class="card rounded-4 border-0 h-30">
-                    <div class="card-body">
-                  อัตราส่วนมูลค่าการจัดซื้อจัดจ้าง
-                        <div id="pie-chart-container" style="width:100%;height:100%;"></div>
-                    </div>
-                </div>
-                <div class="card">
-                            <div class="card-body">
-                                <div class="list-group border-0">
-                                      <a href="<?=Url::to(['/sm/sup-request'])?>" class="list-group-item list-group-item-action d-flex gap-3 py-3">
-                                          <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><i class="fa-solid fa-server avatar-title text-primary"></i> </div>
-                                          <div class="d-flex gap-2 w-100 justify-content-between">
-                                              <div>
-                                                  <h6 class="mb-0 text-primary">ขอซื้อขอจ้าง</h6>
-                                                  <p class="mb-0 opacity-75 fw-light">0 รายการ</p>
-                                              </div>
-                                          </div>
-                                      </a>
-                                      <a href="<?=Url::to(['/sm/supregister'])?>" class="list-group-item list-group-item-action d-flex gap-3 py-3">
-                                          <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><i class="fa-solid fa-server avatar-title text-primary"></i> </div>
-                                          <div class="d-flex gap-2 w-100 justify-content-between">
-                                              <div>
-                                                  <h6 class="mb-0 text-primary">ทะเบียนคุม</h6>
-                                                  <p class="mb-0 opacity-75 fw-light">5 รายการ</p>
-                                              </div>
-                                          </div>
-                                      </a>
-                                      <a href="<?=Url::to(['/sm/sup-vendor'])?>" class="list-group-item list-group-item-action d-flex gap-3 py-3">
-                                          <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><i class="fa-solid fa-server avatar-title text-primary"></i> </div>
-                                          <div class="d-flex gap-2 w-100 justify-content-between">
-                                              <div>
-                                                  <h6 class="mb-0 text-primary">ผู้แทนจำหน่าย</h6>
-                                                  <p class="mb-0 opacity-75 fw-light">0 ร้าน</p>
-                                              </div>
-                                          </div>
-                                      </a>
-                                     
-                                     
-                                  </div>
+                                        </div>
+                                    </div>
+                                    <div class="resize-triggers">
+                                        <div class="expand-trigger">
+                                            <div style="width: 91px; height: 70px;"></div>
+                                        </div>
+                                        <div class="contract-trigger"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <!-- End-col -->
+
+                <div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <span class="text-muted text-uppercase fs-6">กำลังดำเนินการ</span>
+                                    <h2 class="text-muted text-uppercase fs-4">4 รายการ</h2>
+                                </div>
+                                <div class="text-center" style="position: relative;">
+                                    <div id="t-rev" style="min-height: 45px;">
+                                        <div id="apexchartsdlqwjkgl"
+                                            class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
+                                            style="width: 90px; height: 45px;">
+                                            <i class="fa-solid fa fa-undo fs-1"></i>
+                                            <div class="apexcharts-legend"></div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="resize-triggers">
+                                        <div class="expand-trigger">
+                                            <div style="width: 91px; height: 70px;"></div>
+                                        </div>
+                                        <div class="contract-trigger"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End-col -->
+
+                <!-- End-col -->
+                <div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <a href="#">
+                                        <span class="text-muted text-uppercase fs-6">ดำเนินการเรียบร้อย</span>
+                                    </a>
+                                    <h2 class="text-muted text-uppercase fs-4">1 รายการ</h2>
+                                </div>
+
+                                <div class="text-center" style="position: relative;">
+                                    <div id="t-rev" style="min-height: 45px;">
+                                        <div id="apexchartsdlqwjkgl"
+                                            class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
+                                            style="width: 90px; height: 45px;">
+                                            <i class="fa-solid fa-check-square fs-1"></i>
+                                            <div class="apexcharts-legend"></div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="resize-triggers">
+                                        <div class="expand-trigger">
+                                            <div style="width: 91px; height: 70px;"></div>
+                                        </div>
+                                        <div class="contract-trigger"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        มูลค่าการจัดซื้อจัดจ้าง (ย้อนหลัง 10 ปี)
+                        <div id="line-chart-container" style="width:100%;height:340px;"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card rounded-4 border-0 h-100">
+                            <div class="card-body">
+                                <div id="chart01" style="width:100%;height:300px;"></div>
+                                <center>
+                                    <div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทวัสดุ
+                                        <br>(เปอร์เซ็นต์การจัดซื้อตามแผนวัสดุ)
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card rounded-4 border-0 h-100">
+                            <div class="card-body">
+                                <div id="chart02" style="width:100%;height:300px;"></div>
+                                <center>
+                                    <div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทครุภัณฑ์
+                                        <br>(เปอร์เซ็นต์การจัดซื้อตามแผนครุภัณฑ์)
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">&nbsp;</div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card rounded-4 border-0 h-100">
+                            <div class="card-body">
+                                <div id="chart03" style="width:100%;height:300px;"></div>
+                                <center>
+                                    <div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทงานจ้างเหมาทั่วไป'
+                                        <br>(เปอร์เซ็นต์การจัดซื้อตามแผนงานจ้างเหมาทั่วไป)
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card rounded-4 border-0 h-100">
+                            <div class="card-body">
+                                <div id="chart04" style="width:100%;height:300px;"></div>
+                                <center>
+                                    <div class="card-title">ข้อมูลจัดซื้อจัดจ้าง แยกตามประเภทงานก่อสร้าง
+                                        <br>(เปอร์เซ็นต์การจัดซื้อตามแผนงานก่อสร้าง)
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End-col -->
+        </div>
+
+        <div class="col-4">
+            <div class="card rounded-4 border-0 h-30">
+                <div class="card-body">
+                    อัตราส่วนมูลค่าการจัดซื้อจัดจ้าง
+                    <div id="pie-chart-container" style="width:100%;height:100%;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="list-group border-0">
+                        <a href="<?=Url::to(['/sm/sup-request'])?>"
+                            class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                            <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><i
+                                    class="fa-solid fa-server avatar-title text-primary"></i> </div>
+                            <div class="d-flex gap-2 w-100 justify-content-between">
+                                <div>
+                                    <h6 class="mb-0 text-primary">ขอซื้อขอจ้าง</h6>
+                                    <p class="mb-0 opacity-75 fw-light">0 รายการ</p>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="<?=Url::to(['/sm/supregister'])?>"
+                            class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                            <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><i
+                                    class="fa-solid fa-server avatar-title text-primary"></i> </div>
+                            <div class="d-flex gap-2 w-100 justify-content-between">
+                                <div>
+                                    <h6 class="mb-0 text-primary">ทะเบียนคุม</h6>
+                                    <p class="mb-0 opacity-75 fw-light">5 รายการ</p>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="<?=Url::to(['/sm/sup-vendor'])?>"
+                            class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                            <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><i
+                                    class="fa-solid fa-server avatar-title text-primary"></i> </div>
+                            <div class="d-flex gap-2 w-100 justify-content-between">
+                                <div>
+                                    <h6 class="mb-0 text-primary">ผู้แทนจำหน่าย</h6>
+                                    <p class="mb-0 opacity-75 fw-light">0 ร้าน</p>
+                                </div>
+                            </div>
+                        </a>
+
+
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-        <?php
+
+    <?php
                 use yii\web\View;
                 $js = <<< JS
                 var options = {
