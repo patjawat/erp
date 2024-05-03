@@ -152,49 +152,6 @@ echo $form->field($model, 'device_items')->widget(MultipleInput::className(), [
     ],
 ])
 ->label(false);
-
-// echo $form->field($model, 'item_options')->widget(MultipleInput::class, [
-//     'allowEmptyList' => false,
-//     'enableGuessTitle' => true,
-//     'addButtonPosition' => MultipleInput::POS_HEADER,
-//     'addButtonOptions' => [
-//         'class' => 'btn btn-sm btn-primary',
-//         'label' => '<i class="fa-solid fa-circle-plus"></i>', // also you can use html code
-//     ],
-//     'removeButtonOptions' => [
-//         'class' => 'btn btn-sm btn-danger',
-//         'label' => '<i class="fa-solid fa-trash"></i>',
-//     ],
-//     'columns' => [
-//         [
-//             'name' => 'item',
-//             'type' => Select2::class,
-//             'headerOptions' => [
-//                 'class' => 'table-light',
-//                 'style' => 'width: 100%;',
-//             ],
-//             'title' => 'รายการครุภัณฑ์ภายใน',
-
-//             'options' => [
-//                 'pluginOptions' => [
-//                     'allowClear' => true,
-//                     'placeholder' => 'Select a state ...',
-//                 ],
-//                 'pluginEvents' => [
-//                     'change' => 'function() {
-//                 var id = $(this).val();
-//                 var name = $(this).find("option:selected").text();
-//                 console.log(name)
-//                 $(this).closest("tr").find("input[name*=\'code\']").val(id);
-//                 $(this).closest("tr").find("input[name*=\'name\']").val(name);
-//             }',
-//                 ],
-//                 'data' => $itemsOption,
-//             ],
-//         ],
-//     ],
-
-// ])->label(false);
 ?>
     </div>
 
