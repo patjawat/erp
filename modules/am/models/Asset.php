@@ -376,6 +376,15 @@ class Asset extends \yii\db\ActiveRecord
         return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_item'])->all(), 'code', 'title');
     }
 
+        // แสดงรายการอาคารสิ่งก่อสร้าง
+        public function ListBuildingItems()
+        {
+            return ArrayHelper::map(AssetItem::find()
+            ->where(['name' => 'asset_item'])
+            ->andWhere(['category_id' => 8])
+            ->all(), 'code', 'title');
+        }
+
     public function ListVendor()
     {
         return CategoriseHelper::Vendor();
@@ -385,6 +394,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         return ArrayHelper::map(AssetItem::find()->where(['name' => 'method_get'])->all(), 'code', 'title');
     }
+
 
     public function ListPurchase()
     {

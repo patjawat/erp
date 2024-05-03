@@ -40,14 +40,9 @@ $title = Yii::$app->request->get('title');
             // 'itemType' => $itemType,
     ]);?>
     <?php endif;?>
-
-
-
-
         <div class="form-group mt-3 d-flex justify-content-center">
             <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
         </div>
-
         <?php ActiveForm::end(); ?>
 
         <?php
