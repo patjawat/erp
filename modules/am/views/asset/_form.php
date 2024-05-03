@@ -129,7 +129,7 @@ echo $form->field($model,'item_options')->widget(MultipleInput::class,[
             'type' => Select2::class,
             'headerOptions' => [
                 'class' => 'table-light', 
-                'style' => 'width: 45%;',
+                'style' => 'width: 100%;',
             ],
             'title' => 'รายการครุภัณฑ์ภายใน',
 
@@ -155,7 +155,7 @@ echo $form->field($model,'item_options')->widget(MultipleInput::class,[
                 },range(0, count(CategoriseHelper::Id($id_category)->one()->data_json["ma_items"])-1)) */
                 #CategoriseHelper::Id($id_category)->one()->data_json["ma_items"]
             //]
-        ],
+        ],/* 
 
         [
             'name'  => 'code',
@@ -180,7 +180,7 @@ echo $form->field($model,'item_options')->widget(MultipleInput::class,[
                 'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
             'title' => 'รายละเอียดชื่อครุภัณฑ์ภายใน',
-        ],
+        ], */
 /*         [
             'name'  => 'ma_status',
             'type'  => 'dropDownList',
