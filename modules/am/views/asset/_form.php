@@ -16,16 +16,14 @@ $group = Yii::$app->request->get('group');
 /** @var yii\widgets\ActiveForm $form */
 
 ?>
-
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock();?>
 <style>
 .modal-footer {
-    display: none !important;
+      display: none !important;
 }
 </style>
-
 <?php $form = ActiveForm::begin([
                      'id' => 'form-asset',
                      'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
@@ -37,76 +35,82 @@ $group = Yii::$app->request->get('group');
 
 
 <div class="row">
-    <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="dropdown edit-field-half-left ml-2">
-                    <div class="btn-icon btn-icon-sm btn-icon-soft-primary dropdown-toggle me-0 edit-field-icon"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa-solid fa-ellipsis"></i>
-                    </div>
-                    <div class="dropdown-menu dropdown-menu-right" style="">
-                        <a href="#" class="dropdown-item select-photo">
-                            <i class="fa-solid fa-file-image me-2 fs-5"></i>
-                            <span>อัพโหลดภาพ</span>
+      <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
+            <div class="card">
+                  <div class="card-body">
+                        <div class="dropdown edit-field-half-left ml-2">
+                              <div class="btn-icon btn-icon-sm btn-icon-soft-primary dropdown-toggle me-0 edit-field-icon"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                              </div>
+                              <div class="dropdown-menu dropdown-menu-right" style="">
+                                    <a href="#" class="dropdown-item select-photo">
+                                          <i class="fa-solid fa-file-image me-2 fs-5"></i>
+                                          <span>อัพโหลดภาพ</span>
+                                    </a>
+
+                              </div>
+                        </div>
+
+                        <input type="file" id="my_file" style="display: none;" />
+                        <a href="#" class="select-photo">
+                              <?= Html::img($model->showImg(),['class' => 'avatar-profile object-fit-cover rounded','style' =>'max-width:100%;']) ?>
                         </a>
-
-                    </div>
-                </div>
-
-                <input type="file" id="my_file" style="display: none;" />
-                <a href="#" class="select-photo">
-                    <?= Html::img($model->showImg(),['class' => 'avatar-profile object-fit-cover rounded','style' =>'max-width:100%;']) ?>
-                </a>
+                  </div>
             </div>
-        </div>
 
-    </div>
-    <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
-        <?= $this->render('_form_detail'.$model->asset_group .'.php',['model' => $model,'form' => $form])?>
+      </div>
+      <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
+            <?= $this->render('_form_detail'.$model->asset_group .'.php',['model' => $model,'form' => $form])?>
 
 
-    </div>
+      </div>
 
 </div>
 
 
 <ul class="nav nav-tabs justify-content-start" id="myTab" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" id="option-tab" data-bs-toggle="tab" href="#option" role="tab" aria-controls="option"
-            aria-selected="true">
-            รายละเอียดครุภัณฑ์
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="uploadFile-tab" data-bs-toggle="tab" href="#uploadFile" role="tab"
-            aria-controls="uploadFile" aria-selected="false">
-            อัพโหลดต่างๆ
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile"
-            aria-selected="false">
-            ครุภัณฑ์ภายใน
-        </a>
-    </li>
+      <li class="nav-item">
+            <a class="nav-link active" id="option-tab" data-bs-toggle="tab" href="#option" role="tab"
+                  aria-controls="option" aria-selected="true">
+                  รายละเอียดครุภัณฑ์
+            </a>
+      </li>
+      <li class="nav-item">
+            <a class="nav-link" id="uploadFile-tab" data-bs-toggle="tab" href="#uploadFile" role="tab"
+                  aria-controls="uploadFile" aria-selected="false">
+                  อัพโหลดต่างๆ
+            </a>
+      </li>
+      <li class="nav-item">
+            <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile"
+                  aria-selected="false">
+                  ครุภัณฑ์ภายใน
+            </a>
+      </li>
 </ul>
 <div class="tab-content mt-3" id="myTabContent">
-    <div class="tab-pane fade bg-white p-3 show active" id="option" role="tabpanel" aria-labelledby="option-tab">
-        <div class="alert alert-primary" role="alert">
-            <strong>*</strong> รายละเอียดครุภัณฑ์
-        </div>
-        <?= $form->field($model, 'data_json[asset_option]')->textArea(['rows' => 5])->label(false);?>
-    </div>
-    <div class="tab-pane fade bg-white p-3" id="uploadFile" role="tabpanel" aria-labelledby="uploadFile-tab">
-        <?=$model->Upload($model->ref,'asset_pic')?>
-    </div>
-    <div class="tab-pane fade bg-white p-3" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-        <h1 class="text-center">เพิ่มรายการคุภัณฑ์ภายใน</h1>
-        <?=Html::img('@web/images/demo_select_asset_list.png')?>
-        <?php
-
-echo $form->field($model,'ma')->widget(MultipleInput::class,[
+      <div class="tab-pane fade bg-white p-3 show active" id="option" role="tabpanel" aria-labelledby="option-tab">
+            <div class="alert alert-primary" role="alert">
+                  <strong>*</strong> รายละเอียดครุภัณฑ์
+            </div>
+            <?= $form->field($model, 'data_json[asset_option]')->textArea(['rows' => 5])->label(false);?>
+      </div>
+      <div class="tab-pane fade bg-white p-3" id="uploadFile" role="tabpanel" aria-labelledby="uploadFile-tab">
+            <?=$model->Upload($model->ref,'asset_pic')?>
+      </div>
+      <div class="tab-pane fade bg-white p-3" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <h1 class="text-center">เพิ่มรายการครุภัณฑ์ภายใน</h1>
+            <?=Html::img('@web/images/demo_select_asset_list.png')?>
+            <?php
+                $itemsOption =ArrayHelper::map(Asset::find()->where(['asset_group' => 3])->all(),'code',function($model){
+                    try {
+                        return $model->data_json['asset_name'];
+                    } catch (\Throwable $th) {
+                        return '-';
+                    }
+                });
+echo $form->field($model,'item_options')->widget(MultipleInput::class,[
     'allowEmptyList'    => false,
     'enableGuessTitle'  => true,
     'addButtonPosition' => MultipleInput::POS_HEADER,
@@ -126,16 +130,57 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
                 'class' => 'table-light', 
                 'style' => 'width: 45%;',
             ],
-            'title' => 'รายการที่ตรวจเช็ค',
-            'options' => [
+            'title' => 'รายการครุภัณฑ์ภายใน',
+
+    'options' => [
+        'pluginOptions' => [
+            'allowClear' => true,
+            'placeholder' => 'Select a state ...',
+        ],
+        'pluginEvents' => [
+            'change' => 'function() { 
+                var id = $(this).val();
+                var name = $(this).find("option:selected").text();
+                console.log(name)
+                $(this).closest("tr").find("input[name*=\'code\']").val(id);
+                $(this).closest("tr").find("input[name*=\'name\']").val(name);
+            }',
+        ],
+                'data' =>$itemsOption
+                ] //[
                 // 'data' => $items
 /*                array_map(function ($asset) {
                     return CategoriseHelper::Id($id_category)->one()->data_json["ma_items"][$asset]["item_name"];
                 },range(0, count(CategoriseHelper::Id($id_category)->one()->data_json["ma_items"])-1)) */
                 #CategoriseHelper::Id($id_category)->one()->data_json["ma_items"]
-            ]
+            //]
+        ],
+
+        [
+            'name'  => 'code',
+            'options' => [
+                'readonly' => true,
+                'style' => 'background: none; border: none; width:400px;',
+                'disabled' => 'disabled' // กำหนดให้ input field เป็น readonly
+            ],
+            'headerOptions' => [
+                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
+            ],
+            'title' => 'รายละเอียดรหัส',
         ],
         [
+            'name'  => 'name',
+            'options' => [
+                'readonly' => true,
+                'style' => 'background: none; border: none; width:400px;',
+                'disabled' => 'disabled' // กำหนดให้ input field เป็น readonly
+            ],
+            'headerOptions' => [
+                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
+            ],
+            'title' => 'รายละเอียดชื่อครุภัณฑ์ภายใน',
+        ],
+/*         [
             'name'  => 'ma_status',
             'type'  => 'dropDownList',
             'headerOptions' => [
@@ -149,30 +194,26 @@ echo $form->field($model,'ma')->widget(MultipleInput::class,[
                 'ต่ำ' => 'ต่ำ'
             ],
             'title' => 'สถานะ',
-        ], 
-        [
+        ],  */
+/*         [
             'name'  => 'comment',
             'headerOptions' => [
                 'class' => 'table-light', 
                 'style' => 'width: 45%;',
             ],
             'title' => 'หมายเหตุ',
-        ], 
-        
- 	
-        
-        
+        ],  */
     ]
 
 ])->label(false);
 ?>
-    </div>
+      </div>
 
 </div>
 </div>
 
 <div class="form-group mt-4 d-flex justify-content-center">
-    <?= AppHelper::BtnSave(); ?>
+      <?= AppHelper::BtnSave(); ?>
 </div>
 <?php ActiveForm::end(); ?>
 

@@ -74,6 +74,7 @@ class Asset extends \yii\db\ActiveRecord
     public $q_month;
     public $q_year;
     public $q_lastDay;
+    public $item_options;
     public $fsn_auto; //กำหนดการให้หมายเลขอัตโนมัติถ้า true;
     public static function tableName()
     {
@@ -87,7 +88,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status'], 'required'],
-            [['on_year', 'receive_date', 'data_json', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_department', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get','q_lastDay'], 'safe'],
+            [['on_year', 'receive_date', 'data_json', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_department', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get','q_lastDay', 'item_options'], 'safe'],
             [['price'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by'], 'integer'],
@@ -242,6 +243,7 @@ class Asset extends \yii\db\ActiveRecord
                 'budget_type_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title : '',
                 'method_get_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title : '',
                 'purchase_text' => isset(CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title) ? CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title : '',
+                'item_options' => $this->item_options
             ];
             $this->data_json = ArrayHelper::merge($this->data_json, $array2);
 

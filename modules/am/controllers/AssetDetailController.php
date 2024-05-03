@@ -158,6 +158,8 @@ class AssetDetailController extends Controller
     // }
     public function actionCreate()
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
         $name = $this->request->get('name');
         $category_id = $this->request->get('category_id');
         $title = $this->request->get('title');
@@ -191,7 +193,7 @@ class AssetDetailController extends Controller
             $model->loadDefaultValues();
         }
         if ($name == "tax_car"){
-            return [
+        return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax($name.'/create', [
                     'model' => $model,

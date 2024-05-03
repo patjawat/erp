@@ -286,14 +286,14 @@ class AssetController extends Controller
     {
         $model = $this->findModel($id);
         $model->receive_date = AppHelper::DateFormDb($model->receive_date);
+        $model->item_options = $model->data_json["item_options"];
         $model_old_data_json = $model->data_json;
 
         if ($this->request->isPost && $model->load($this->request->post()) ) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->receive_date = AppHelper::DateToDb($model->receive_date);
-            $model->data_json = ArrayHelper::merge($model_old_data_json,$model->data_json);
-
+            $model->data_json = ArrayHelper::merge($model_old_data_json,$model->data_json); 
             // return $model->data_json;
             // return $this->redirect(['index']);
             // return $model->fsn_auto;

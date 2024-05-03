@@ -18,7 +18,6 @@ use kartik\form\ActiveForm;
     width: 130px;
 }
 </style>
-<?= $model->code ?>
 <div class="form-tax">
 
     <?php $form = ActiveForm::begin([
@@ -135,7 +134,7 @@ $('#form-tax').on('beforeSubmit', function (e) {
             if(response.status == 'success') {
                 closeModal()
                 success()
-                // await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});
+                await  $.pjax.reload({ container:"#view-container", history:false,replace: false,timeout: false});
             }
         }
     });
