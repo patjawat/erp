@@ -293,9 +293,15 @@ class AssetController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post()) ) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
+            // return $model->item_options;
+            $model_old_data_json["item_options"] = [];
             $model->receive_date = AppHelper::DateToDb($model->receive_date);
-            $model->data_json = ArrayHelper::merge($model_old_data_json,$model->data_json); 
+            $new_obj = [
+                'item_options' => $model->item_options
+            ];
+            // return $new_obj;
+            $model->data_json = ArrayHelper::merge($new_obj,$model_old_data_json); 
+            // return $model_old_data_json["item_options"];
             // return $model->data_json;
             // return $this->redirect(['index']);
             // return $model->fsn_auto;

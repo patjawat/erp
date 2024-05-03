@@ -251,10 +251,9 @@ class Asset extends \yii\db\ActiveRecord
                 'budget_type_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title : '',
                 'method_get_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title : '',
                 'purchase_text' => isset(CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title) ? CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title : '',
-                'item_options' => $this->item_options
             ];
             $this->data_json = ArrayHelper::merge($this->data_json, $array2);
-
+                
             // สร้างรหัสอัตโนมัติ
             if ($this->fsn_auto == "1") {
                 $year = substr((date('Y') + 543), -2, 2);

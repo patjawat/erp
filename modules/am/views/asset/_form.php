@@ -106,7 +106,7 @@ $group = Yii::$app->request->get('group');
             <?php
                 $itemsOption =ArrayHelper::map(Asset::find()->where(['asset_group' => 3])->all(),'code',function($model){
                     try {
-                        return $model->data_json['asset_name'];
+                        return $model->data_json['asset_name'].' | '.$model->code;
                     } catch (\Throwable $th) {
                         return '-';
                     }
