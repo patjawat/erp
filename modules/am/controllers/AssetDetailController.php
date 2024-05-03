@@ -62,6 +62,44 @@ class AssetDetailController extends Controller
                 $model->ma[$index]["ma_status"] == "" ? $model->addError('ma['.$index.'][ma_status]',$requiredName) : null;
             }
         }
+        if($model->name == "tax_car"){
+            $model->date_end == "" ? $model->addError('date_end', $requiredName) : null;
+            if (\DateTime::createFromFormat('d/m/Y', $model->date_end)->format('Y') < 2500 ){
+                $model->addError('date_end',"รูปแบบ พ.ศ.");
+            }
+            $model->date_start == "" ? $model->addError('date_start',$requiredName) : null;
+            if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500 ){
+                $model->addError('date_start',"รูปแบบ พ.ศ.");
+            }
+            $model->data_json["price"] == "" ? $model->addError('data_json[price]',$requiredName) : null;
+            if (!is_numeric($model->data_json["price"])) {
+                $model->addError('data_json[price]', "ต้องเป็นตัวเลข");
+            }
+            $model->data_json["company"] == "" ? $model->addError('data_json[company]',$requiredName) : null;
+            $model->data_json["number"] == "" ? $model->addError('data_json[number]',$requiredName) : null;
+            $model->data_json["date_start"] == "" ? $model->addError('data_json[date_start]',$requiredName) : null;
+            $model->data_json["date_end"] == "" ? $model->addError('data_json[date_end]',$requiredName) : null;
+            $model->data_json["sale"] == "" ? $model->addError('data_json[sale]',$requiredName) : null;
+            if (!is_numeric($model->data_json["sale"])) {
+                $model->addError('data_json[sale]', "ต้องเป็นตัวเลข");
+            }
+            $model->data_json["phone"] == "" ? $model->addError('data_json[sale]',$requiredName) : null;
+            if (!is_numeric($model->data_json["phone"])) {
+                $model->addError('data_json[phone]', "ต้องเป็นตัวเลข");
+            }
+            $model->data_json["company2"] == "" ? $model->addError('data_json[company2]',$requiredName) : null;
+            $model->data_json["number2"] == "" ? $model->addError('data_json[number2]',$requiredName) : null;
+            $model->data_json["date_start2"] == "" ? $model->addError('data_json[date_start2]',$requiredName) : null;
+            $model->data_json["date_end2"] == "" ? $model->addError('data_json[date_end2]',$requiredName) : null;
+            $model->data_json["sale2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
+            if (!is_numeric($model->data_json["sale2"])) {
+                $model->addError('data_json[sale2]', "ต้องเป็นตัวเลข");
+            }
+            $model->data_json["phone2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
+            if (!is_numeric($model->data_json["phone2"])) {
+                $model->addError('data_json[phone2]', "ต้องเป็นตัวเลข");
+            }
+        }
     
              foreach ($model->getErrors() as $attribute => $errors) {
                  $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;

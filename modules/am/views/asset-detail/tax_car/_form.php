@@ -25,7 +25,8 @@ use kartik\form\ActiveForm;
     'type' => ActiveForm::TYPE_HORIZONTAL,
     'formConfig' => ['labelSpan' => 4, 'deviceSize' => ActiveForm::SIZE_X_LARGE],
     'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']],
-
+    'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
+    'validationUrl' =>['/am/asset-detail/validator']
 ]);?>
 
     <?=$form->field($model, 'ref')->hiddenInput()->label(false)?>
