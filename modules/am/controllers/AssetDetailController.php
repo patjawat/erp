@@ -62,13 +62,14 @@ class AssetDetailController extends Controller
                 $model->ma[$index]["ma_status"] == "" ? $model->addError('ma['.$index.'][ma_status]',$requiredName) : null;
             }
         }
+        return $model->name;
         if($model->name == "tax_car"){
             $model->date_end == "" ? $model->addError('date_end', $requiredName) : null;
             $model->date_start == "" ? $model->addError('date_start',$requiredName) : null;
             $model->data_json["price"] == "" ? $model->addError('data_json[price]',$requiredName) : null;
-            if (!is_numeric($model->data_json["price"])) {
-                $model->addError('data_json[price]', "ต้องเป็นตัวเลข");
-            }
+            // if (!is_numeric($model->data_json["price"])) {
+            //     $model->addError('data_json[price]', "ต้องเป็นตัวเลข");
+            // }
             $model->data_json["company"] == "" ? $model->addError('data_json[company]',$requiredName) : null;
             $model->data_json["number"] == "" ? $model->addError('data_json[number]',$requiredName) : null;
             $model->data_json["date_start"] == "" ? $model->addError('data_json[date_start]',$requiredName) : null;

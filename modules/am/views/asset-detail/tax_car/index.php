@@ -72,7 +72,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td class="align-middle"><?=$model->data_json['number']?></td>
                 <td class="align-middle">
                     <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/am/asset-detail/update','id'=> $model->id,'title' => 'แก้ไขพ.ร.บ./ต่อภาษี',"name"=>"tax_car"],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-xl']])?>
-                    <?=Html::a('<i class="fa-solid fa-trash"></i>',['/am/asset-detail/update','id'=> $model->id,'title' => 'แก้ไขพ.ร.บ./ต่อภาษี'],['class' => 'btn btn-sm btn-danger open-modal','data' => ['size' => 'modal-lg']])?>
+                    <?=Html::a('<i class="fa-solid fa-trash"></i>',['/am/asset-detail/delete','id'=> $model->id],['class' => 'btn btn-sm btn-danger open-modal delete-item'])?>
+                    <?php
+        //              Html::a('Delete', ['/am/asset-detail/delete', 'id' => $model->id], [
+        //     'class' => 'btn btn-danger',
+        //     'data' => [
+        //         'confirm' => 'Are you sure you want to delete this item?',
+        //         'method' => 'post',
+        //     ],
+        // ])
+        ?>
                 </td>
             </tr>
             <?php endforeach;?>
