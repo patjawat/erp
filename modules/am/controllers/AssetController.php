@@ -207,8 +207,23 @@ class AssetController extends Controller
      */
     public function actionView($id)
     {
+        // Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = $this->findModel($id);
+        // return $model->device_items;
+        // $ids = ArrayHelper::getColumn($model->device_items, 'id');
+        
+        
+        $searchModel = new AssetSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
+        // $dataProvider->query->andWhere(['in', 'asset.code', ['6630-056-0007/67.01','6530-008-0411/67.01']]);
+        $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items]);
+        
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
         ]);
     }
 

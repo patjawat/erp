@@ -25,10 +25,6 @@ use yii\helpers\Html;
                 </div>
 
                 <?=Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto', 'style' => 'max-width:100%;min-width: 320px;'])?>
-
-
-
-
                 <input type="file" id="my_file" style="display: none;" />
                 <a href="#" class="select-photo">
 

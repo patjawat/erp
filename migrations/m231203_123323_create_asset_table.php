@@ -31,6 +31,7 @@ class m231203_123323_create_asset_table extends Migration
             'budget_type' => $this->integer()->comment('ประเภทเงิน'),
             'asset_status' => $this->string(255)->comment('สถานะ'),
             'data_json' => $this->json(),
+            'device_items' => $this->json()->comment('ครุภัณฑ์ภายใน'),
             'updated_at' => $this->dateTime()->comment('วันเวลาแก้ไข'),
             'created_at' => $this->dateTime()->comment('วันเวลาสร้าง'), 
             'created_by' => $this->integer()->comment('ผู้สร้าง'),

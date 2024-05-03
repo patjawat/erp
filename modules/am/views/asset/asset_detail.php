@@ -106,7 +106,10 @@ use app\components\UserHelper;
         <?php if ($model->isCar()): ?>
         <div id="assetItems" class="tab-pane">
 
-         <?=Html::img('@web/images/demo_asset_list.png')?>
+        <?=$this->render('show/list', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);?>
 
         </div>
         <?php endif;?>
