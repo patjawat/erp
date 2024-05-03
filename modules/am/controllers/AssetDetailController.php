@@ -81,18 +81,18 @@ class AssetDetailController extends Controller
             if (!is_numeric($model->data_json["phone"])) {
                 $model->addError('data_json[phone]', "ต้องเป็นตัวเลข");
             }
-            $model->data_json["company2"] == "" ? $model->addError('data_json[company2]',$requiredName) : null;
-            $model->data_json["number2"] == "" ? $model->addError('data_json[number2]',$requiredName) : null;
-            $model->data_json["date_start2"] == "" ? $model->addError('data_json[date_start2]',$requiredName) : null;
-            $model->data_json["date_end2"] == "" ? $model->addError('data_json[date_end2]',$requiredName) : null;
-            $model->data_json["sale2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
-            if (!is_numeric($model->data_json["sale2"])) {
-                $model->addError('data_json[sale2]', "ต้องเป็นตัวเลข");
-            }
-            $model->data_json["phone2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
-            if (!is_numeric($model->data_json["phone2"])) {
-                $model->addError('data_json[phone2]', "ต้องเป็นตัวเลข");
-            }
+            // $model->data_json["company2"] == "" ? $model->addError('data_json[company2]',$requiredName) : null;
+            // $model->data_json["number2"] == "" ? $model->addError('data_json[number2]',$requiredName) : null;
+            // $model->data_json["date_start2"] == "" ? $model->addError('data_json[date_start2]',$requiredName) : null;
+            // $model->data_json["date_end2"] == "" ? $model->addError('data_json[date_end2]',$requiredName) : null;
+            // $model->data_json["sale2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
+            // if (!is_numeric($model->data_json["sale2"])) {
+            //     $model->addError('data_json[sale2]', "ต้องเป็นตัวเลข");
+            // }
+            // $model->data_json["phone2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
+            // if (!is_numeric($model->data_json["phone2"])) {
+            //     $model->addError('data_json[phone2]', "ต้องเป็นตัวเลข");
+            // }
         }
     
              foreach ($model->getErrors() as $attribute => $errors) {

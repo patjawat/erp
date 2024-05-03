@@ -13,10 +13,10 @@ use kartik\form\ActiveForm;
     text-align: end;
 }
 
-#assetdetail-data_json-date_start,
+/* #assetdetail-data_json-date_start,
 #assetdetail-data_json-date_start2 {
     width: 130px;
-}
+} */
 </style>
 <div class="form-tax">
 
@@ -32,31 +32,39 @@ use kartik\form\ActiveForm;
     <?=$form->field($model, 'ref')->hiddenInput()->label(false)?>
     <?=$form->field($model, 'name')->hiddenInput()->label(false)?>
 
+    <h5><i class="fa-solid fa-user-injured"></i> พรบ.</h5>
     <div class="row">
-    <div class="col-6">
-            <h5><i class="fa-solid fa-user-injured"></i> พรบ.</h5>
+        <div class="col-6">
             <?=$form->field($model, 'data_json[company]')->textInput(['maxlength' => true])->label('บริษัท')?>
             <?=$form->field($model, 'data_json[number]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
-            <div class="d-flex">
-                <div class="col-6">
-                    <?php echo $form->field($model, 'data_json[date_start]', ['labelSpan' => 8],
-                        )->widget(\yii\widgets\MaskedInput::className(), [
-                            'mask' => '99/99/9999 99:99',
-                        ])->label('วันที่') ?>
-                </div>
-                <div class="col-6">
-                    
-                    <?php echo $form->field($model, 'data_json[date_end]')->widget(\yii\widgets\MaskedInput::className(), [
-                            'mask' => '99/99/9999 99:99',
-                        ])->label('ถึง') ?>
-                </div>
-            </div>
             <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('เบี้ยประกัน')?>
             <?=$form->field($model, 'data_json[sale]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
-            <?=$form->field($model, 'data_json[phone]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('โทร')?>
         </div>
+        
         <div class="col-6">
-        <h5><i class="fa-solid fa-user-injured"></i> ข้อมูลต่อถาษี</h5>
+            <?php echo $form->field($model, 'data_json[date_start]', ['labelSpan' => 4],
+                        )->widget(\yii\widgets\MaskedInput::className(), [
+                            'mask' => '99/99/9999 99:99',
+                            ])->label('วันที่') ?>
+
+<?php echo $form->field($model, 'data_json[date_end]')->widget(\yii\widgets\MaskedInput::className(), [
+    'mask' => '99/99/9999 99:99',
+    ])->label('ถึง') ?>
+    <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('เบี้ยประกัน')?>
+    <?=$form->field($model, 'data_json[phone]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('โทร')?>
+    
+    </div>
+    </div>
+    <hr>
+
+
+    
+    <div class="row">
+
+
+
+    <div class="col-6">
+            <h5><i class="fa-solid fa-user-injured"></i> ข้อมูลการต่อภาษี</h5>
             <?php echo $form->field($model, 'date_start')->widget(\yii\widgets\MaskedInput::className(), [
                             'mask' => '99/99/9999',
                         ])->label('วันที่ต่อภาษี') ?>
@@ -65,11 +73,9 @@ use kartik\form\ActiveForm;
                         ])->label('วันที่ครบกำหนดชำระ') ?>
             <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('ค่าภาษี')?>
         </div>
-    </div>
-<hr>
 
-    <div class="row">
-       
+
+
         <div class="col-6">
             <h5><i class="fa-solid fa-car-burst"></i> ประกันภัย</h5>
             <?=$form->field($model, 'data_json[company2]')->textInput(['maxlength' => true])->label('บริษัท')?>
