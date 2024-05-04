@@ -2,18 +2,18 @@
 
 namespace app\modules\am\controllers;
 
-use Yii;
 use app\components\AppHelper;
+use app\modules\am\models\Asset;
 use app\modules\am\models\AssetDetail;
 use app\modules\am\models\AssetDetailSearch;
+use app\modules\am\models\AssetItem;
+use Yii;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
-use app\modules\am\models\AssetItem;
-use app\modules\am\models\Asset;
-use app\components\CategoriseHelper;
-use yii\helpers\ArrayHelper;
+
 /**
  * AssetDetailController implements the CRUD actions for AssetDetail model.
  */
@@ -37,73 +37,51 @@ class AssetDetailController extends Controller
         );
     }
 
-
-    
     // ตรวจสอบความถูกต้อง
     public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new AssetDetail();
-        
-        
-        if ($this->request->isPost && $model->load($this->request->post()))
-         { 
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
             // return $model;
-        $requiredName = "ต้องระบุ"; 
+            $requiredName = "ต้องระบุ";
             //ตรวจสอบการบำรุงรักษา MA
-        if($model->name == "ma"){
-            $model->data_json['status'] == "" ? $model->addError('data_json[status]', 'สถานะต้องไม่ว่าง') : null;
-            $model->date_start == "" ? $model->addError('date_start',$requiredName) : null;
-            if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500 ){
-                $model->addError('date_start',"รูปแบบ พ.ศ.");
-            }
-            foreach ($model->ma as $index => $item){ 
-                $model->ma[$index]["item"] == "" ? $model->addError('ma['.$index.'][item]',$requiredName) : null;
-                $model->ma[$index]["ma_status"] == "" ? $model->addError('ma['.$index.'][ma_status]',$requiredName) : null;
-            }
-        }
-        return $model->name;
-        if($model->name == "tax_car"){
-            $model->date_end == "" ? $model->addError('date_end', $requiredName) : null;
-            $model->date_start == "" ? $model->addError('date_start',$requiredName) : null;
-            $model->data_json["price"] == "" ? $model->addError('data_json[price]',$requiredName) : null;
-            // if (!is_numeric($model->data_json["price"])) {
-            //     $model->addError('data_json[price]', "ต้องเป็นตัวเลข");
-            // }
-            $model->data_json["company"] == "" ? $model->addError('data_json[company]',$requiredName) : null;
-            $model->data_json["number"] == "" ? $model->addError('data_json[number]',$requiredName) : null;
-            $model->data_json["date_start"] == "" ? $model->addError('data_json[date_start]',$requiredName) : null;
-            $model->data_json["date_end"] == "" ? $model->addError('data_json[date_end]',$requiredName) : null;
-            $model->data_json["sale"] == "" ? $model->addError('data_json[sale]',$requiredName) : null;
-            if (!is_numeric($model->data_json["sale"])) {
-                $model->addError('data_json[sale]', "ต้องเป็นตัวเลข");
-            }
-            $model->data_json["phone"] == "" ? $model->addError('data_json[sale]',$requiredName) : null;
-            if (!is_numeric($model->data_json["phone"])) {
-                $model->addError('data_json[phone]', "ต้องเป็นตัวเลข");
-            }
-            // $model->data_json["company2"] == "" ? $model->addError('data_json[company2]',$requiredName) : null;
-            // $model->data_json["number2"] == "" ? $model->addError('data_json[number2]',$requiredName) : null;
-            // $model->data_json["date_start2"] == "" ? $model->addError('data_json[date_start2]',$requiredName) : null;
-            // $model->data_json["date_end2"] == "" ? $model->addError('data_json[date_end2]',$requiredName) : null;
-            // $model->data_json["sale2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
-            // if (!is_numeric($model->data_json["sale2"])) {
-            //     $model->addError('data_json[sale2]', "ต้องเป็นตัวเลข");
-            // }
-            // $model->data_json["phone2"] == "" ? $model->addError('data_json[sale2]',$requiredName) : null;
-            // if (!is_numeric($model->data_json["phone2"])) {
-            //     $model->addError('data_json[phone2]', "ต้องเป็นตัวเลข");
-            // }
-        }
-    
-             foreach ($model->getErrors() as $attribute => $errors) {
-                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            if ($model->name == "ma") {
+                $model->data_json['status'] == "" ? $model->addError('data_json[status]', 'สถานะต้องไม่ว่าง') : null;
+                $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
+                if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500) {
+                    $model->addError('date_start', "รูปแบบ พ.ศ.");
                 }
-                if (!empty($result)) {
-                    return $this->asJson($result);
+                foreach ($model->ma as $index => $item) {
+                    $model->ma[$index]["item"] == "" ? $model->addError('ma[' . $index . '][item]', $requiredName) : null;
+                    $model->ma[$index]["ma_status"] == "" ? $model->addError('ma[' . $index . '][ma_status]', $requiredName) : null;
                 }
             }
+
+            //ตรวจสอบข้อมูล พรบ./การต่อภาษี
+            if ($model->name == "tax_car") {
+                $model->date_end == "__/__/____" ? $model->addError('date_end', $requiredName) : null;
+                $model->date_start == "__/__/____" ? $model->addError('date_start', $requiredName) : null;
+                $model->data_json["price"] == "" ? $model->addError('data_json[price]', $requiredName) : null;
+                $model->data_json["price1"] == "" ? $model->addError('data_json[price1]', $requiredName) : null;
+
+                $model->data_json["company1"] == "" ? $model->addError('data_json[company1]', $requiredName) : null;
+                $model->data_json["number1"] == "" ? $model->addError('data_json[number1]', $requiredName) : null;
+                $model->data_json["date_start1"] == "" ? $model->addError('data_json[date_start1]', $requiredName) : null;
+                $model->data_json["date_end1"] == "" ? $model->addError('data_json[date_end1]', $requiredName) : null;
+                $model->data_json["sale1"] == "" ? $model->addError('data_json[sale1]', $requiredName) : null;
+                $model->data_json["phone1"] == "" ? $model->addError('data_json[phone1]', $requiredName) : null;
+            }
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
         }
+    }
 
     /**
      * Lists all AssetDetail models.
@@ -120,7 +98,7 @@ class AssetDetailController extends Controller
         $searchModel = new AssetDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['name' => $name]);
-        if($name == "tax_car"){
+        if ($name == "tax_car") {
             $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
         }
         #Yii::$app->response->format = Response::FORMAT_JSON;
@@ -129,23 +107,23 @@ class AssetDetailController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $title,
-                'content' => $this->renderAjax($name.'/index', [
+                'content' => $this->renderAjax($name . '/index', [
                     'id' => $id,
                     'code' => $code,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'model' => $id == '' ? '' : 
-                        (Asset::find()->where(['id'=>$id])->one() ? AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one() : ""
-                        
+                    'model' => $id == '' ? '' :
+                    (Asset::find()->where(['id' => $id])->one() ? AssetItem::find()->where(["code" => Asset::find()->where(['id' => $id])->one()->asset_item])->one() : ""
+
                     ),
-                    'model_asset' => $id == '' ? '' : Asset::find()->where(['id'=>$id])->one(),
-                    'id_category' => $id == '' ? '' :  
-                    (Asset::find()->where(['id'=>$id])->one() ?  AssetItem::find()->where(["code"=>Asset::find()->where(['id'=>$id])->one()->asset_item])->one()->id : ""),
+                    'model_asset' => $id == '' ? '' : Asset::find()->where(['id' => $id])->one(),
+                    'id_category' => $id == '' ? '' :
+                    (Asset::find()->where(['id' => $id])->one() ? AssetItem::find()->where(["code" => Asset::find()->where(['id' => $id])->one()->asset_item])->one()->id : ""),
 
                 ]),
             ];
         } else {
-            return $this->render($name.'/index', [
+            return $this->render($name . '/index', [
                 'id' => $id,
                 'code' => $code,
                 'searchModel' => $searchModel,
@@ -206,16 +184,27 @@ class AssetDetailController extends Controller
             'code' => $asset->code,
         ]);
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) ) {
+            if ($model->load($this->request->post())) {
                 $model->date_start = AppHelper::DateToDb($model->date_start);
                 $model->date_end = AppHelper::DateToDb($model->date_end);
-                // $model->data_json = ArrayHelper::merge($model_old_data_json,$model->data_json);
-                if($model->save()){   
+                //ถ้าเป็นประการต่อภาษี
+                if ($model->name == "tax_car") {
+                    $carTaxObj = [
+                        'date_start1' => AppHelper::DateToDb($model->data_json['date_start1']),
+                        'date_end1' => AppHelper::DateToDb($model->data_json['date_end1']),
+                        'date_start2' => AppHelper::DateToDb($model->data_json['date_start2']),
+                        'date_end2' => AppHelper::DateToDb($model->data_json['date_end2']),
+                    ];
+                    $model->data_json = ArrayHelper::merge($carTaxObj, $model->data_json);
+                }
+
+
+                if ($model->save()) {
                     return [
                         'status' => 'success',
                         'container' => '#am-container',
                     ];
-                }else{
+                } else {
                     return [
                         'status' => 'error',
                         'container' => '#am-container',
@@ -225,10 +214,10 @@ class AssetDetailController extends Controller
         } else {
             $model->loadDefaultValues();
         }
-        if ($name == "tax_car"){
-        return [
+        if ($name == "tax_car") {
+            return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax($name.'/create', [
+                'content' => $this->renderAjax($name . '/create', [
                     'model' => $model,
                     'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]),
@@ -236,25 +225,25 @@ class AssetDetailController extends Controller
         }
 
         if ($this->request->isAjax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-            
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('create', [
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'asset' => $asset,
+                    'model' => $model,
+                    'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+                ]),
+            ];
+        } else {
+
+            return $this->render('create', [
                 'asset' => $asset,
                 'model' => $model,
                 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            ]),
-        ];
-    }else{
-
-        return $this->render('create', [
-            'asset' => $asset,
-            'model' => $model,
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-        ]);
+            ]);
+        }
     }
-}
 
     /**
      * Updates an existing AssetDetail model.
@@ -270,46 +259,67 @@ class AssetDetailController extends Controller
         $model->date_start = AppHelper::DateFormDb($model->date_start);
         $model->date_end = AppHelper::DateFormDb($model->date_end);
 
+        //ถ้าเป็นประการต่อภาษี
+        if ($model->name == "tax_car") {
+            $carTaxObj = [
+                "date_start1" => AppHelper::DateFormDb($model->data_json["date_start1"]),
+                "date_end1" => AppHelper::DateFormDb($model->data_json["date_end1"]),
+            ];
+            $model->data_json = ArrayHelper::merge($model->data_json, $carTaxObj);
+        }
+
+        //การบันทึก
         if ($this->request->isPost && $model->load($this->request->post())) {
             $model->date_start = AppHelper::DateToDb($model->date_start);
             $model->date_end = AppHelper::DateToDb($model->date_end);
-                if($model->save()){   
+
+            //ถ้าเป็นประการต่อภาษี
+            if ($model->name == "tax_car") {
+                $carTaxObj = [
+                    'date_start1' => AppHelper::DateToDb($model->data_json['date_start1']),
+                    'date_end1' => AppHelper::DateToDb($model->data_json['date_end1']),
+                ];
+                $model->data_json = ArrayHelper::merge($model->data_json, $carTaxObj);
+            }
+
+
+            if ($model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'status' => 'success',
                     'container' => '#am-container',
-                    'res' => $model
+                    'res' => $model,
                 ];
-            }else{
+            } else {
                 return [
                     'status' => 'error',
                     'container' => '#am-container',
                 ];
             }
         }
-        if ($name == "tax_car"){
+        if ($name == "tax_car") {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax($name.'/update', [
+                'content' => $this->renderAjax($name . '/update', [
                     'model' => $model,
                     'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]),
             ];
         }
         if ($this->request->isAjax) {
-            if ($this->request->get('name') == "ma"){
+            if ($this->request->get('name') == "ma") {
                 $model->ma = $model->data_json["items"];
             }
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-regular fa-pen-to-square me-1"></i>'.$this->request->get('title'),
+                'title' => '<i class="fa-regular fa-pen-to-square me-1"></i>' . $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                     'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]),
             ];
-        }else{
+        } else {
             return $this->render('update', [
                 'model' => $model,
             ]);
@@ -325,159 +335,160 @@ class AssetDetailController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id)->delete();
+        $container = $this->request->get('container');
 
-        return $this->redirect(['index']);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'status' => 'success',
+            'data' => $model,
+            'container' => '#' . $container,
+            'close' => true,
+        ];
     }
-
 
 /*     public function actionDeleteMaItem()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = $this->request->get('id');
-        $id_row = $this->request->get('id_row');
-        $model = AssetItem::findOne(['id' => $id]);
-        $dataJson = $model->data_json;
-        unset($dataJson["ma_items"][$id_row]);
-        $model->data_json = $dataJson;
-        if($model->save()){  
-        return [
-            'status' => 'success',
-            'container' => '#am-container',
-        ];
-        }
-    }
+{
+Yii::$app->response->format = Response::FORMAT_JSON;
+$id = $this->request->get('id');
+$id_row = $this->request->get('id_row');
+$model = AssetItem::findOne(['id' => $id]);
+$dataJson = $model->data_json;
+unset($dataJson["ma_items"][$id_row]);
+$model->data_json = $dataJson;
+if($model->save()){
+return [
+'status' => 'success',
+'container' => '#am-container',
+];
+}
+}
 
-    public function actionUpdateMaItem()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = $this->request->get('id');
-        $id_row = $this->request->get('id_row');
-        $value = $this->request->get('value');
-        $model = AssetItem::findOne(['id' => $id]);
-        $dataJson = $model->data_json;
-        $dataJson["ma_items"][$id_row] = $value;
-        $model->data_json = $dataJson;
-        if($model->save()){  
-        return [
-            'status' => 'success',
-            'container' => '#am-container',
-            'value' => $value
-        ];
-        }
-    }
+public function actionUpdateMaItem()
+{
+Yii::$app->response->format = Response::FORMAT_JSON;
+$id = $this->request->get('id');
+$id_row = $this->request->get('id_row');
+$value = $this->request->get('value');
+$model = AssetItem::findOne(['id' => $id]);
+$dataJson = $model->data_json;
+$dataJson["ma_items"][$id_row] = $value;
+$model->data_json = $dataJson;
+if($model->save()){
+return [
+'status' => 'success',
+'container' => '#am-container',
+'value' => $value
+];
+}
+}
 
+public function actionPushMaItem()
+{
+Yii::$app->response->format = Response::FORMAT_JSON;
+$id = $this->request->get('id');
+$id_row = $this->request->get('id_row');
+$value = $this->request->get('value');
+$model = AssetItem::findOne(['id' => $id]);
+$dataJson = $model->data_json;
+if ($dataJson == null){
+$dataJson = [
+"ma_items" => null
+];
+}
+$maItems = $dataJson["ma_items"];
+if ($maItems == null){
+$dataJson["ma_items"] = [
+0 => $value
+];
+}else{
+$maItems[] = $value;
+$dataJson["ma_items"] = $maItems;
+}
+$model->data_json = $dataJson;
+if($model->save()){
+return [
+'status' => 'success',
+'container' => '#am-container',
+'value' => $value,
+'index' => $maItems == null ? 0 : max(array_keys($maItems))
+];
+}
+}
 
-    public function actionPushMaItem()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = $this->request->get('id');
-        $id_row = $this->request->get('id_row');
-        $value = $this->request->get('value');
-        $model = AssetItem::findOne(['id' => $id]);
-        $dataJson = $model->data_json;
-        if ($dataJson == null){
-            $dataJson = [
-                "ma_items" => null
-            ];
-        }
-        $maItems = $dataJson["ma_items"];
-        if ($maItems == null){
-            $dataJson["ma_items"] = [
-                0 => $value
-            ];
-        }else{
-            $maItems[] = $value; 
-            $dataJson["ma_items"] = $maItems;
-        }
-        $model->data_json = $dataJson;
-        if($model->save()){  
-        return [
-            'status' => 'success',
-            'container' => '#am-container',
-            'value' => $value,
-            'index' => $maItems == null ? 0 : max(array_keys($maItems))
-        ];
-        }
-    }
+public function actionTest()
+{
+$model = new AssetDetail();
+Yii::$app->response->format = Response::FORMAT_JSON;
+if ($this->request->isPost) {
+if ($model->load($this->request->post()) ) {
+#$item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
+#$model->data_json = $item;
+#$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
+$model->save();
+}
+}
+return [
+'status' => 'success',
+'container' => '#am-container',
+'data' => $model
+];
+}
 
+public function actionUpdateHistoryMa($id)
+{
+$model = $this->findModel($id);
+Yii::$app->response->format = Response::FORMAT_JSON;
+$id = $this->request->get('id');
+$id_category = $this->request->get('id_category');
+$title = $this->request->get('title');
+$name = $this->request->get('name');
+if ($this->request->isPost && $model->load($this->request->post())) {
+if($model->save()){
+Yii::$app->response->format = Response::FORMAT_JSON;
+return [
+'status' => 'success',
+'container' => '#am-container',
+'data' => $model
+];
+}
+}
+#$model = AssetDetail::findOne(['id' => $id]);
+$model->ma = $model->data_json["items"];
+$model->date_start = date_format(date_create_from_format('Y-m-d', $model->date_start), 'd/m/Y');
+return [
+'title' => $title,
+'content' => $this->renderAjax($name.'/update', [
+'model_form' => $model,
+'id_category' => $id_category
+]),
+];
+} */
 
     public function actionTest()
     {
         $model = new AssetDetail();
         Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) ) {
-                    #$item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
-                    #$model->data_json = $item;
-                    #$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
-                    $model->save();
-            }
-        }
-        return [
-            'status' => 'success',
-            'container' => '#am-container',
-            'data' => $model
-        ];
-    }
-
-
-
-    public function actionUpdateHistoryMa($id)
-    {
-        $model = $this->findModel($id);
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = $this->request->get('id');
-        $id_category = $this->request->get('id_category');
-        $title = $this->request->get('title');
-        $name = $this->request->get('name');
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            if($model->save()){   
-                Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                #$item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
+                #$model->data_json = $item;
+                #$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
                 return [
-                    'status' => 'success',
-                    'container' => '#am-container',
-                    'data' => $model
+                    "res" => $model,
                 ];
             }
         }
-        #$model = AssetDetail::findOne(['id' => $id]);
-        $model->ma = $model->data_json["items"];
-        $model->date_start = date_format(date_create_from_format('Y-m-d', $model->date_start), 'd/m/Y');
-        return [
-            'title' => $title,
-            'content' => $this->renderAjax($name.'/update', [
-                'model_form' => $model,
-                'id_category' => $id_category
-            ]),
-        ];
-    } */
-
-    public function actionTest()
-    {
-        $model = new AssetDetail();
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) ) {
-                    #$item["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->data_json["ma_items"][$item["items"]];
-                    #$model->data_json = $item;
-                    #$model->data_json["items"] = CategoriseHelper::CategoriseByCodeName($model->category_id,"asset_item")->one()->data_json["ma_items"][$model->data_json["item"]];
-                return [
-                    "res" => $model
-            ];
-            }
-        }
         return [
             'status' => 'success',
             'container' => '#am-container',
-            'data' => $model
+            'data' => $model,
         ];
     }
 
-
     public function actionViewHistoryMa()
     {
-        
+
         $title = $this->request->get('title');
         $name = $this->request->get('name');
         $id_category = $this->request->get('id_category');
@@ -486,9 +497,9 @@ class AssetDetailController extends Controller
         $model = AssetDetail::findOne(['id' => $id]);
         return [
             'title' => $title,
-            'content' => $this->renderAjax($name.'/view', [
+            'content' => $this->renderAjax($name . '/view', [
                 'model' => $model,
-                'id_category' => $id_category
+                'id_category' => $id_category,
             ]),
         ];
     }

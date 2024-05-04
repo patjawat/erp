@@ -2,11 +2,9 @@
 
 use app\components\AppHelper;
 use kartik\form\ActiveForm;
-// use yii\widgets\ActiveForm;
+use iamsaint\datetimepicker\Datetimepicker;
+use yii\web\View;
 
-/** @var yii\web\View $this */
-/** @var app\modules\am\models\AssetDetail $model */
-/** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
 .col-form-label {
@@ -32,84 +30,118 @@ use kartik\form\ActiveForm;
     <?=$form->field($model, 'ref')->hiddenInput()->label(false)?>
     <?=$form->field($model, 'name')->hiddenInput()->label(false)?>
 
+    <h5><i class="fa-solid fa-tag"></i> ข้อมูลการต่อภาษี</h5>
+    <div class="row">
+        <div class="col-6">
+            <?php echo $form->field($model, 'date_start')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่ต่อภาษี') ?>
+           
+            <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('ค่าภาษี')?>
+        </div>
+        <div class="col-6">
+        <?php echo $form->field($model, 'date_end',['labelSpan' => 4])->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ครบกำหนด') ?>
+        </div>
+
+    </div>
+    <hr>
     <h5><i class="fa-solid fa-user-injured"></i> พรบ.</h5>
     <div class="row">
         <div class="col-6">
-            <?=$form->field($model, 'data_json[company]')->textInput(['maxlength' => true])->label('บริษัท')?>
-            <?=$form->field($model, 'data_json[number]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
-            <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('เบี้ยประกัน')?>
-            <?=$form->field($model, 'data_json[sale]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
-        </div>
+            <?=$form->field($model, 'data_json[company1]')->textInput(['maxlength' => true])->label('บริษัท')?>
+            <?=$form->field($model, 'data_json[number1]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
+            <?=$form->field($model, 'data_json[price1]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('เบี้ยประกัน')?>
 
+        </div>
         <div class="col-6">
-            <?php echo $form->field($model, 'data_json[date_start]', ['labelSpan' => 4],
-                        )->widget(\yii\widgets\MaskedInput::className(), [
-                            'mask' => '99/99/9999 99:99',
+            <?php echo $form->field($model, 'data_json[date_start1]', ['labelSpan' => 4],
+                        )->widget(Datetimepicker::className(),[
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y', 
+                            ],
                             ])->label('วันที่') ?>
 
-            <?php echo $form->field($model, 'data_json[date_end]')->widget(\yii\widgets\MaskedInput::className(), [
-    'mask' => '99/99/9999 99:99',
-    ])->label('ถึง') ?>
-            <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('เบี้ยประกัน')?>
-            <?=$form->field($model, 'data_json[phone]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('โทร')?>
+            <?php echo $form->field($model, 'data_json[date_end1]')->widget(Datetimepicker::className(),[
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y', 
+                            ],
+                            ])->label('ถึง') ?>
+            <?=$form->field($model, 'data_json[sale1]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
+            <?=$form->field($model, 'data_json[phone1]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('โทร')?>
 
         </div>
     </div>
+
     <hr>
-
-
-
+    <h5><i class="fa-solid fa-car-burst"></i> ประกันภัยรถ</h5>
     <div class="row">
 
-
-
         <div class="col-6">
-            <h5><i class="fa-solid fa-user-injured"></i> ข้อมูลการต่อภาษี</h5>
-            <?php echo $form->field($model, 'date_start')->widget(\yii\widgets\MaskedInput::className(), [
-                            'mask' => '99/99/9999',
-                        ])->label('วันที่ต่อภาษี') ?>
-            <?php echo $form->field($model, 'date_end')->widget(\yii\widgets\MaskedInput::className(), [
-                            'mask' => '99/99/9999',
-                        ])->label('วันที่ครบกำหนดชำระ') ?>
-            <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('ค่าภาษี')?>
-        </div>
-
-
-
-        <div class="col-6">
-            <h5><i class="fa-solid fa-car-burst"></i> ประกันภัย</h5>
             <?=$form->field($model, 'data_json[company2]')->textInput(['maxlength' => true])->label('บริษัท')?>
-            <?=$form->field($model, 'data_json[number2]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
-            <div class="d-flex">
-                <div class="col-6">
-                    <?php echo $form->field($model, 'data_json[date_start2]',['labelSpan' => 8],
-                        )->widget(\yii\widgets\MaskedInput::className(), [
-                            'mask' => '99/99/9999 99:99',
-                        ])->label('วันที่') ?>
-                </div>
-                <div class="col-6">
-                    <?php echo $form->field($model, 'data_json[date_end2]')->widget(\yii\widgets\MaskedInput::className(), [
-                    'mask' => '99/99/9999 99:99',
-                ])->label('ถึง') ?>
-                </div>
-            </div>
             <?=$form->field($model, 'data_json[price2]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('เบี้ยประกัน')?>
-            <?=$form->field($model, 'data_json[sale2]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
+            <?=$form->field($model, 'data_json[number2]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
+        </div>
+        <div class="col-6">
+
+            <?php echo $form->field($model, 'data_json[date_start2]',['labelSpan' => 4],
+                        )->widget(Datetimepicker::className(),[
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y', 
+                            ],
+                            ])->label('วันที่') ?>
+
+            <?php echo $form->field($model, 'data_json[date_end2]')->widget(Datetimepicker::className(),[
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y', 
+                            ],
+                            ])->label('ถึง') ?>
             <?=$form->field($model, 'data_json[phone2]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('โทร')?>
+            <?=$form->field($model, 'data_json[sale2]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
+
         </div>
     </div>
     <hr>
-    <div class="col-12">
-        <div class="form-group mb-1 mr-2 me-2 highlight-addon row field-assetdetail-data_json-phone">
-            <label class="col-form-label has-star col-md-2"></label>
-            <div class="col-md-10">
-                <div class="form-group d-flex justify-content-center">
+
+    <div class="form-group d-flex justify-content-center">
                     <?=AppHelper::btnSave();?>
                 </div>
 
-            </div>
-        </div>
-    </div>
 </div>
 <hr>
 <div class="col-sm-12">
@@ -136,13 +168,89 @@ $('#form-tax').on('beforeSubmit', function (e) {
             if(response.status == 'success') {
                 closeModal()
                 success()
-                await  $.pjax.reload({ container:"#view-container", history:false,replace: false,timeout: false});
+                await  $.pjax.reload({ container:"#am-container", history:false,replace: false,timeout: false});
             }
         }
     });
     return false;
 });
 
+    var thaiYear = function (ct) {
+        var leap=3;  
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+        if(ct){  
+            var yearL=new Date(ct).getFullYear()-543;  
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+            if(leap==2){  
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+            }  
+        }              
+        this.setOptions({  
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+        })                
+    };    
+     
+    $("#assetdetail-date_start").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+ 
+    $("#assetdetail-date_end").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+ 
+    $("#assetdetail-data_json-date_start1").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+    $("#assetdetail-data_json-date_end1").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+ 
+    $("#assetdetail-data_json-date_start2").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+    $("#assetdetail-data_json-date_end2").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+ 
+
+
+    
 JS;
-$this->registerJS($js)
+$this->registerJS($js, View::POS_END)
 ?>

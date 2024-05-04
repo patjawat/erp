@@ -28,7 +28,7 @@ $group = Yii::$app->request->get('group');
 }
 </style>
 
-<?php Pjax::begin(['id' => 'view-container','timeout' => 50000 ]); ?>
+<?php Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
 
 <div class="asset-view">
     <?php if($model->asset_group == 1):?>
