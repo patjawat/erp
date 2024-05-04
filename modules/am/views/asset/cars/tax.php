@@ -13,8 +13,8 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
         </span>
 
     </div>
-    <hr>
     <?php if(isset($model_detail->data_json['company1']) && $model_detail->data_json['company1'] != ""):?>
+        <hr>
     <strong><i class="fa-solid fa-user-injured"></i> พรบ.</strong>
     <div class="border-bottom">
         <div class="row">
@@ -67,9 +67,9 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
             </ul>
         </div>
     </div>
+    <hr class="mt-1">
 <?php endif;?>
 
-    <hr class="mt-1">
     <div class="d-flex justify-content-between align-items-center">
         <ul class="list-inline mb-0">
             <li><i class="fa-regular fa-calendar-check fs-5"></i> <span class="">วันที่ต่อภาษี</span> :
