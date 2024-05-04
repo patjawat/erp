@@ -14,8 +14,8 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
 
     </div>
     <hr>
-
-        <strong><i class="fa-solid fa-user-injured"></i> พรบ.</strong>
+    <?php if(isset($model_detail->data_json['company1']) && $model_detail->data_json['company1'] != ""):?>
+    <strong><i class="fa-solid fa-user-injured"></i> พรบ.</strong>
     <div class="border-bottom">
         <div class="row">
             <div class="col-6">
@@ -41,6 +41,7 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
     </div>
 </div>
 </div>
+<?php endif;?>
 <?php if(isset($model_detail->data_json['company2']) && $model_detail->data_json['company2'] != ""):?>
 
         <strong><i class="fa-solid fa-car-burst"></i> ประกันภัย</strong>
