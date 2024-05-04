@@ -55,6 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </td>
             <td>
+            <?php if(isset($model_detail->data_json['company2']) && $model_detail->data_json['company2'] != ""):?>
                 <div class="d-flex flex-column">
                 <?=isset($model->data_json['company2']) ? $model->data_json['company2'] : '-'?>
                     <div>
@@ -63,10 +64,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                     </div>
                 </div>
+                <?php endif;?>
             </td>
             <td class="align-middle">
                 <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/am/asset-detail/update', 'id' => $model->id, 'title' => 'แก้ไขพ.ร.บ./ต่อภาษี', "name" => "tax_car"], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']])?>
-                <?=Html::a('<i class="fa-solid fa-trash"></i>', ['/am/asset-detail/delete', 'id' => $model->id,'container' => 'tax-container'], [
+                <?=Html::a('<i class="fa-solid fa-trash"></i>', ['/am/asset-detail/delete', 'id' => $model->id,'container' => 'am-container'], [
                                         'class' => 'btn btn-sm btn-danger delete-item',
                                         ])?>
             </td>

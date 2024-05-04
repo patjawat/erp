@@ -99,6 +99,7 @@ class AssetDetailController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['name' => $name]);
         if ($name == "tax_car") {
+            $dataProvider->query->andWhere(['code' => $code]);
             $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
         }
         #Yii::$app->response->format = Response::FORMAT_JSON;
@@ -342,7 +343,7 @@ class AssetDetailController extends Controller
         return [
             'status' => 'success',
             'data' => $model,
-            'container' => '#' . $container,
+            'container' => '#'.$container,
             'close' => true,
         ];
     }

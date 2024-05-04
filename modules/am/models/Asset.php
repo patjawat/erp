@@ -181,6 +181,7 @@ class Asset extends \yii\db\ActiveRecord
             $this->serial_number = isset($this->data_json['serial_number']) ? $this->data_json['serial_number'] : '';
             $this->type_name = isset($this->data_json['item']['data_json']['asset_type']['title']) ? $this->data_json['item']['data_json']['asset_type']['title'] : '';
             $this->vendor_name = isset($this->data_json['vendor']) ? $this->data_json['vendor']['title'] : '';
+            $this->asset_type = isset($this->data_json['asset_type']) ? $this->data_json['asset_type'] : '';
             $this->purchase_text = isset($this->data_json['purchase_text']) ? $this->data_json['purchase_text'] : '';
             $this->department_name = isset($this->data_json['department_name']) ? $this->data_json['department_name'] : '';
         } catch (\Throwable $th) {
@@ -582,7 +583,14 @@ class Asset extends \yii\db\ActiveRecord
     // ตรวจสอบว่าเป็นรถครุภัณฑ์ยานพาหนะและขนส่ง
     public function isCar()
     {
-        return $this->asset_item == '2310-001-0003' ? true : false;
+        $sql = "SELECT count(a.id) FROM asset a
+        INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item'
+        INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type'
+        WHERE asset_type.code = 6";
+        $query = Yii::$app->db->createCommand($sql)->queryScalar();
+        // return $this->asset_item == '2310-001-0003' ? true : false;
+        return $query > 0 ? true : false;
+    // }
     }
 
     //ตรวจสอบว่าเป็นครุภัณฑ์วิทยาศาสตร์และการแพทย์
