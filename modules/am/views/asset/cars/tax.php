@@ -67,8 +67,8 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
             </ul>
         </div>
     </div>
+    <?php endif;?>
     <hr class="mt-1">
-<?php endif;?>
 
     <div class="d-flex justify-content-between align-items-center">
         <ul class="list-inline mb-0">
