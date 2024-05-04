@@ -586,8 +586,10 @@ class Asset extends \yii\db\ActiveRecord
         $sql = "SELECT count(a.id) FROM asset a
         INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item'
         INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type'
-        WHERE asset_type.code = 6";
-        $query = Yii::$app->db->createCommand($sql)->queryScalar();
+        WHERE asset_type.code = 6 AND a.code = :code";
+        $query = Yii::$app->db->createCommand($sql)
+        ->bindValue(':code',$this->code)
+        ->queryScalar();
         // return $this->asset_item == '2310-001-0003' ? true : false;
         return $query > 0 ? true : false;
     // }
