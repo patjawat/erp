@@ -32,7 +32,7 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
                 <ul class="list-inline">
                     <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เริ่มต้น</span>
                     <?php
-                    print_r($model->data_json["date_start1"])
+                    print_r($model->data_json)
                     ?>
                     <?php // isset($model_detail->data_json["date_start1"]) ? Yii::$app->thaiFormatter->asDate($model_detail->data_json["date_start1"],'medium') : '-' ?>
                 </li>
