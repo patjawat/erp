@@ -38,6 +38,8 @@ $this->params['breadcrumbs'][] = $this->title;
             $endDate = AppHelper::DateFormDb($model->date_end);
             $startDate1 = isset($model->data_json['date_start1']) ? $model->data_json['date_start1'] : '-';
             $endDate1 = isset($model->data_json['date_end1']) ? $model->data_json['date_end1'] : '-';
+            $startDate2 = isset($model->data_json['date_start2']) ? $model->data_json['date_start2'] : '-';
+            $endDate2 = isset($model->data_json['date_end2']) ? $model->data_json['date_end2'] : '-';
             ?>
 
         <tr class="">
@@ -47,17 +49,17 @@ $this->params['breadcrumbs'][] = $this->title;
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    <?=$model->data_json['company1']?>
+                    <?=isset($model->data_json['company1']) ? $model->data_json['company1'] : '-'?>
                     <br>
                     <?=$startDate1?> ถึง <?=$endDate1?>
                 </div>
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    <?=$model->data_json['company1']?>
+                <?=isset($model->data_json['company2']) ? $model->data_json['company2'] : '-'?>
                     <div>
                         <div>
-                            <?=$startDate1?> ถึง <?=$endDate1?>
+                            <?=$startDate2?> ถึง <?=$endDate2?>
                         </div>
                     </div>
                 </div>
