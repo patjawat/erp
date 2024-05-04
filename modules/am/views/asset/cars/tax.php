@@ -31,10 +31,10 @@ $model_detail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->
             <div class="col-6">
                 <ul class="list-inline">
                     <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เริ่มต้น</span>
-                    <?= isset($model_detail->data_json["date_start1"]) ? Yii::$app->thaiFormatter->asDate($model_detail->data_json["date_start1"],'medium') : '-' ?>
+                    <?php // isset($model_detail->data_json["date_start1"]) ? Yii::$app->thaiFormatter->asDate($model_detail->data_json["date_start1"],'medium') : '-' ?>
                 </li>
                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">สิ้นสุด</span>
-                <?= isset($model_detail->data_json["date_end1"]) ? Yii::$app->thaiFormatter->asDate($model_detail->data_json["date_end1"],'medium') : '-' ?>
+                <?php //  isset($model_detail->data_json["date_end1"]) ? Yii::$app->thaiFormatter->asDate($model_detail->data_json["date_end1"],'medium') : '-' ?>
             </li>
             
         </ul>
