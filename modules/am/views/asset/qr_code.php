@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Html;
 use chillerlan\QRCode\QRCode;
- $data = 'https://programmerthailand.com';
+ $data = $model->code.'|'.isset($model->data_json['asset_type_text']) ? $model->data_json['asset_type_text'] : '-'.'|'.number_format($model->price, 2).'|'.Yii::$app->thaiFormatter->asDate($model->receive_date, 'short').'|'.(isset($model->data_json['department_name']) ? $model->data_json['department_name'] : '-');
  $qr = new QRCode();
 ?>
 <div class="d-flex align-items-center">
