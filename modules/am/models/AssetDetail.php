@@ -5,6 +5,7 @@ namespace app\modules\am\models;
 use Yii;
 use app\modules\filemanager\components\FileManagerHelper;
 use yii\helpers\ArrayHelper;
+use app\models\Categorise;
 /**
  * This is the model class for table "asset_detail".
  *
@@ -102,4 +103,9 @@ class AssetDetail extends \yii\db\ActiveRecord
       {
           return $this->hasOne(Asset::class, ['code' => 'code']);
       }
+
+              public function getAssetItem()
+              {
+                  return $this->hasOne(Categorise::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
+              }
 }

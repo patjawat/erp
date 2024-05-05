@@ -25,11 +25,11 @@ use kartik\form\ActiveForm; // or kartik\widgets\ActiveForm
     <?php echo $this->render($model->name.'/_form',['model' => $model,'form' => $form])?>
 <?php substr($model->code, 0, strpos($model->code, '/')) ?>
     
+<?php if($model->name == "ma" && isset($model->asset->assetItem->ma_items)):?>
     <div class="form-group d-flex justify-content-center">
-        <?php #Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
         <?= app\components\AppHelper::BtnSave() ?>
     </div>
-
+<?php endif?>
     <?php ActiveForm::end(); ?>
 
 </div>
