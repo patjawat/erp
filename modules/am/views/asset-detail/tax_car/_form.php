@@ -43,11 +43,11 @@ use yii\web\View;
                         'format' => 'd/m/Y', 
                     ],
                     ])->label('วันที่ต่อภาษี') ?>
-           
-            <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('ค่าภาษี')?>
+
+            <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('ค่าภาษี')?>
         </div>
         <div class="col-6">
-        <?php echo $form->field($model, 'date_end',['labelSpan' => 4])->widget(Datetimepicker::className(),[
+            <?php echo $form->field($model, 'date_end',['labelSpan' => 4])->widget(Datetimepicker::className(),[
                     'options' => [
                         'timepicker' => false,
                         'datepicker' => true,
@@ -66,7 +66,7 @@ use yii\web\View;
         <div class="col-6">
             <?=$form->field($model, 'data_json[company1]')->textInput(['maxlength' => true])->label('บริษัท')?>
             <?=$form->field($model, 'data_json[number1]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
-            <?=$form->field($model, 'data_json[price1]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('เบี้ยประกัน')?>
+            <?=$form->field($model, 'data_json[price1]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('เบี้ยประกัน')?>
 
         </div>
         <div class="col-6">
@@ -93,7 +93,7 @@ use yii\web\View;
                             ],
                             ])->label('ถึง') ?>
             <?=$form->field($model, 'data_json[sale1]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
-            <?=$form->field($model, 'data_json[phone1]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('โทร')?>
+            <?=$form->field($model, 'data_json[phone1]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('โทร')?>
 
         </div>
     </div>
@@ -104,7 +104,7 @@ use yii\web\View;
 
         <div class="col-6">
             <?=$form->field($model, 'data_json[company2]')->textInput(['maxlength' => true])->label('บริษัท')?>
-            <?=$form->field($model, 'data_json[price2]', ['labelSpan' => 4])->textInput(['type' => 'number'])->label('เบี้ยประกัน')?>
+            <?=$form->field($model, 'data_json[price2]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('เบี้ยประกัน')?>
             <?=$form->field($model, 'data_json[number2]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
         </div>
         <div class="col-6">
@@ -137,11 +137,9 @@ use yii\web\View;
         </div>
     </div>
     <hr>
-
     <div class="form-group d-flex justify-content-center">
-                    <?=AppHelper::btnSave();?>
-                </div>
-
+        <?=AppHelper::btnSave();?>
+    </div>
 </div>
 <hr>
 <div class="col-sm-12">

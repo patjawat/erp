@@ -19,10 +19,10 @@ use kartik\form\ActiveForm; // or kartik\widgets\ActiveForm
     ]); 
 ?>
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'code')->textInput()->label(false) ?>
-    <?= $form->field($model, 'name')->textInput()->label(false) ?>
+    <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
-    <?php echo $this->render($model->name.'/_form',['model' => $model,'form' => $form,'asset' => $asset])?>
+    <?php echo $this->render($model->name.'/_form',['model' => $model,'form' => $form])?>
 <?php substr($model->code, 0, strpos($model->code, '/')) ?>
     
     <div class="form-group d-flex justify-content-center">

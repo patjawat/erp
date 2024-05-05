@@ -234,51 +234,6 @@ class AssetItemController extends Controller
         ]);
     }
 
-
-    /**
-     * Creates a new Assetitem model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
-     */
-/*     public function actionCreate()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $name = $this->request->get('name');
-        $type_code = $this->request->get('type_code');
-        $group = $this->request->get('group');
-        $category_id = $this->request->get('category_id');
-        $title = $this->request->get('title');
-
-        $group = Categorise::findOne(['name' => 'asset_group','code' => $group]);
-       
-        $model = new Assetitem([
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'name' => $name,
-            'category_id' => $group->code,
-        ]);
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return [
-                    'status' => 'success',
-                    'container' => '#sm-container',
-                ];
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-        return [
-            'title' => $title ,
-            'content' => $this->renderAjax('create', [
-                'model' => $model,
-                'title' => $title ,
-                'itemType' => null,
-                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            ]),
-        ];
-       
-    } */
-
-
     public function actionCreate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -379,27 +334,7 @@ class AssetItemController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        // $assetType = Categorise::findOne(['code' => $model->category_id,"category_id"=> $model->data_json["asset_type"]["category_id"]]);
-        // $model->data_json =  ['asset_type' => '2','asset_type_text' => 'ครุภัณฑ์'];
-// return $assetType;
         if ($this->request->isPost && $model->load($this->request->post())) {
-            // return $model->save();
-            // $data = Categorise::findOne(["id" => $model->data_json["id"]]);
-            // $model->category_id = $data->category_id;
-            // $model->data_json = [
-            //     "unit" => $model->data_json["unit"],
-            //     "asset_type" => [
-            //         'code' => $data->code,
-            //         'name' => 'asset_type',
-            //         'title' => $data->title,
-            //         'category_id' => $data->category_id
-            //     ],
-            //     "asset_group" => null,
-            // ];
-            // $ma_items = [
-            //     'ma_items' => $model->ma
-            // ];
-            // $model->data_json = ArrayHelper::merge($model->data_json, $ma_items);
             $model->save();
             return [
                 'status' => 'success',
@@ -408,10 +343,7 @@ class AssetItemController extends Controller
         } else {
             $model->loadDefaultValues();
         }
-/*         $model->data_json = [
-            "unit"=>$model->data_json["unit"],
-            "id" => $assetType->id
-        ]; */
+
         return [
             'title' => $this->request->get('title'),
             'content' => $this->renderAjax('update', [

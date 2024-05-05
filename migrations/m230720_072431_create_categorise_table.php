@@ -23,6 +23,7 @@ class m230720_072431_create_categorise_table extends Migration
             'title' => $this->string()->comment('ชื่อ'),
             'description' => $this->string()->comment('รายละเอียดเพิ่มเติม'),
             'data_json' => $this->json(),
+            'ma_items' => $this->json()->comment('รายการบำรุงรักษา'),
             'active' => $this->boolean()->defaultValue(true),
         ]);
 

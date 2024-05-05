@@ -48,15 +48,15 @@ class AssetDetailController extends Controller
             $requiredName = "ต้องระบุ";
             //ตรวจสอบการบำรุงรักษา MA
             if ($model->name == "ma") {
-                $model->data_json['status'] == "" ? $model->addError('data_json[status]', 'สถานะต้องไม่ว่าง') : null;
-                $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
-                if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500) {
-                    $model->addError('date_start', "รูปแบบ พ.ศ.");
-                }
-                foreach ($model->ma as $index => $item) {
-                    $model->ma[$index]["item"] == "" ? $model->addError('ma[' . $index . '][item]', $requiredName) : null;
-                    $model->ma[$index]["ma_status"] == "" ? $model->addError('ma[' . $index . '][ma_status]', $requiredName) : null;
-                }
+                // $model->data_json['status'] == "" ? $model->addError('data_json[status]', 'สถานะต้องไม่ว่าง') : null;
+                // $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
+                // if (\DateTime::createFromFormat('d/m/Y', $model->date_start)->format('Y') < 2500) {
+                //     $model->addError('date_start', "รูปแบบ พ.ศ.");
+                // }
+                // foreach ($model->ma as $index => $item) {
+                //     $model->ma[$index]["item"] == "" ? $model->addError('ma[' . $index . '][item]', $requiredName) : null;
+                //     $model->ma[$index]["ma_status"] == "" ? $model->addError('ma[' . $index . '][ma_status]', $requiredName) : null;
+                // }
             }
 
             //ตรวจสอบข้อมูล พรบ./การต่อภาษี
@@ -184,6 +184,7 @@ class AssetDetailController extends Controller
             'name' => $name,
             'code' => $asset->code,
         ]);
+        $old_data_json = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $model->date_start = AppHelper::DateToDb($model->date_start);
@@ -198,7 +199,10 @@ class AssetDetailController extends Controller
                     ];
                     $model->data_json = ArrayHelper::merge($carTaxObj, $model->data_json);
                 }
-
+                
+                // return $model->data_json['ma'];
+                $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
+          
 
                 if ($model->save()) {
                     return [
@@ -231,7 +235,6 @@ class AssetDetailController extends Controller
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
-                    'asset' => $asset,
                     'model' => $model,
                     'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]),
@@ -239,7 +242,6 @@ class AssetDetailController extends Controller
         } else {
 
             return $this->render('create', [
-                'asset' => $asset,
                 'model' => $model,
                 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             ]);
@@ -309,9 +311,7 @@ class AssetDetailController extends Controller
             ];
         }
         if ($this->request->isAjax) {
-            if ($this->request->get('name') == "ma") {
-                $model->ma = $model->data_json["items"];
-            }
+
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i>' . $this->request->get('title'),

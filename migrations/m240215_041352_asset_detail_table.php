@@ -23,6 +23,7 @@ class m240215_041352_asset_detail_table extends Migration
             'date_start' => $this->date(),   
             'date_end' => $this->date(),   
             'data_json' => $this->json(),
+            'ma_items' => $this->json()->comment('การบำรุงรักษา'),
             'updated_at' => $this->dateTime(),
             'created_at' => $this->dateTime(),   
             'created_by' => $this->integer()->comment('ผู้สร้าง'),

@@ -20,8 +20,8 @@ echo "</pre>";
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-fsn',
-    'enableAjaxValidation'=> true,//เปิดการใช้งาน AjaxValidation
-    'validationUrl' =>['/sm/asset-item/validator']
+    // 'enableAjaxValidation'=> true,//เปิดการใช้งาน AjaxValidation
+    // 'validationUrl' =>['/sm/asset-item/validator']
     ]); ?>
 
 
@@ -93,9 +93,7 @@ echo "</pre>";
 </div>
 <hr>
 <?php
-
-$model->ma = isset($model->data_json['ma_items']) ? $model->data_json['ma_items'] : '';
-    echo $form->field($model,'ma')->widget(MultipleInput::className(), [
+    echo $form->field($model,'ma_items')->widget(MultipleInput::className(), [
         
         'allowEmptyList'    => false,
         'enableGuessTitle'  => true,
@@ -110,16 +108,16 @@ $model->ma = isset($model->data_json['ma_items']) ? $model->data_json['ma_items'
             'label' => '<i class="fa-solid fa-trash"></i>'
         ],
         'columns' => [
+            // [
+            //     'name'  => 'code',
+            //     'title' => 'รหัส',
+            //     'enableError' => true,
+            //     'options' => [
+            //         'class' => 'input-priority'
+            //     ]
+            // ],
             [
-                'name'  => 'code',
-                'title' => 'รหัส',
-                'enableError' => true,
-                'options' => [
-                    'class' => 'input-priority'
-                ]
-            ],
-            [
-                'name'  => 'item_name',
+                'name'  => 'ma_items',
                 'title' => 'แผนบำรุงรักษา',
                 'enableError' => true,
                 'options' => [

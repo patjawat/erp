@@ -37,7 +37,6 @@ $title = Yii::$app->request->get('title');
             'form' => $form,
             'model' => $model,
             'title' => $title,
-            // 'itemType' => $itemType,
     ]);?>
     <?php endif;?>
         <div class="form-group mt-3 d-flex justify-content-center">

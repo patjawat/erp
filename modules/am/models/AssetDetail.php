@@ -76,18 +76,18 @@ class AssetDetail extends \yii\db\ActiveRecord
 
         try {
             //บันทึกการบำรุงรักษา
-            if (is_string($this->ma)) {
-                $this->ma = explode(",", $this->ma);
-            };
+            // if (is_string($this->ma)) {
+            //     $this->ma = explode(",", $this->ma);
+            // };
 
-            $items = [
-                "items" => $this->ma
-            ];
-            if ($this->name != "asset_item"){
-                $this->data_json = ArrayHelper::merge($this->data_json, $items);
-            }else{
-                $this->data_json = $items;
-            }
+            // $items = [
+            //     "item" => $this->ma
+            // ];
+            // if ($this->name != "asset_item"){
+            //     $this->data_json = ArrayHelper::merge($this->data_json, $items);
+            // }else{
+            //     $this->data_json = $items;
+            // }
             //บันทึกอุปกรภายใน
 
 
@@ -96,4 +96,10 @@ class AssetDetail extends \yii\db\ActiveRecord
         }    
         return parent::beforeSave($insert);
     }
+
+      //Relationships
+      public function getAsset()
+      {
+          return $this->hasOne(Asset::class, ['code' => 'code']);
+      }
 }
