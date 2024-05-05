@@ -18,6 +18,7 @@ use ruskid\csvimporter\MultipleImportStrategy;
 use app\components\CategoriseHelper;
 use yii\helpers\Json;
 use yii\db\Expression;
+use chillerlan\QRCode\QRCode;
 use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
 use app\modules\hr\models\Organization;
@@ -307,16 +308,6 @@ class AssetController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post()) ) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-          
-            // //บันทึกรุภัณฑ?ภายใน
-            // $model_old_data_json["item_options"] = [];
-            // $model->receive_date = AppHelper::DateToDb($model->receive_date);
-            // $new_obj = [
-            //     'item_options' => $model->item_options
-            // ];
-            // // รวม array เก่าเข้าใหม่
-            // $model->data_json = ArrayHelper::merge($model->data_json,$new_obj); 
-            // //จบบันทึกรุภัณฑ?ภายใน
 
             if($model->save()){
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -325,11 +316,26 @@ class AssetController extends Controller
                 return $model->getErrors();
             }
         }
-
+        
         return $this->render('update', [
             'model' => $model,
             // 'group' => $model->asset_group 
         ]);
+    }
+    
+    public function actionQrcode(){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $model = $this->findModel($id);
+        $data = 'https://programmerthailand.com';
+        $qr = new QRCode();
+
+        // echo '<img src="'.$qr->render($data).'" />';
+        return [
+            'title' => '<i class="fa-solid fa-qrcode"></i> QR-Code',
+            'content' => $this->renderAjax('qr_code',['model' => $model])
+        ];
+
     }
 
     /**
