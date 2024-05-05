@@ -32,5 +32,5 @@ use chillerlan\QRCode\QRCode;
 <div class="flex gap-2 mt-3">
     <?=Html::a('<i class="fa-solid fa-print"></i> QR-Code',['#'],['class' => 'btn btn-primary'])?>
     <?=Html::a('<i class="fa-solid fa-print"></i> Barcode',['#'],['class' => 'btn btn-primary'])?>
-    <?=Html::a('<i class="fa-solid fa-sliders"></i> ตั้งค่าหน้ากระดาษ',['#'],['class' => 'btn btn-secondary'])?>
+    <?=Html::a('<i class="fa-solid fa-sliders"></i> ตั้งค่าหน้ากระดาษ',['/am/asset/qrcode-setting','title' => '<i class="fa-solid fa-sliders"></i> กำหนดขนาดกระดาษา'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-lg']])?>
 </div>

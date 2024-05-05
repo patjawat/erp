@@ -353,16 +353,22 @@ class AssetController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         $model = $this->findModel($id);
-        $data = 'https://programmerthailand.com';
-        $qr = new QRCode();
-
-        // echo '<img src="'.$qr->render($data).'" />';
         return [
             'title' => '<i class="fa-solid fa-qrcode"></i> QR-Code',
-            'content' => $this->renderAjax('qr_code',['model' => $model])
+            'content' => $this->renderAjax('qr-code/view_qrcode',['model' => $model])
         ];
-
     }
+//ตั้งค่าขนาดกระดาษ qr-code
+    public function actionQrcodeSetting(){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $title = $this->request->get('title');
+        return [
+            'title' => $title,
+            'content' => $this->renderAjax('qr-code/setting_qrcode')
+        ];
+    }
+
 
     /**
      * Deletes an existing Asset model.
