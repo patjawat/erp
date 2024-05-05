@@ -323,6 +323,32 @@ class AssetController extends Controller
         ]);
     }
     
+//update Spect ที่เป็น Cmputer
+    public function actionUpdateComputer($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $title = $this->request->get('title');
+        $model = $this->findModel($id);
+
+        $old_data_json = $model->data_json;
+
+        if ($this->request->isPost && $model->load($this->request->post()) ) {
+            $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
+            // return $model->data_json;
+            if($model->save()){
+                return $this->redirect(['view', 'id' => $model->id]);
+            }else{
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return $model->getErrors();
+            }
+        }
+        return [
+            'title' => $title,
+            'content' => $this->renderAjax('is_computer/_form_computer',['model' => $model])
+        ];
+    }
+
+
     public function actionQrcode(){
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');

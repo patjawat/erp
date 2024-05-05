@@ -152,7 +152,8 @@ use yii\helpers\Html;
                         <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
 
                             <!-- ถ้าเป็นรถ -->
-                            <?=$model->isCar() ? $this->render('./cars/tax', ['model' => $model]) : ''?>
+                            <?=$model->isCar() ? $this->render('./is_cars/tax', ['model' => $model]) : ''?>
+                            <?=$model->isComputer() ? $this->render('./is_computer/spec', ['model' => $model]) : ''?>
 
                             <div class="alert alert-primary bprder-0 d-flex justify-content-between" role="alert">
                                 <span><i class="fa-solid fa-hourglass-end"></i> อัตราค่าเสื่อม

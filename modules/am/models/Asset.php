@@ -564,6 +564,20 @@ class Asset extends \yii\db\ActiveRecord
     // }
     }
 
+        //ตรวจสอบว่าเป็นคอมพิวเตอร์
+        public function isComputer()
+        {
+            try {
+    
+                $data = explode('-', $this->asset_item);
+                $code = $data[0].'-'.$data[1];
+                return $code == '7440-001' ? true : false;
+                
+            } catch (\Throwable $th) {
+                return false;
+            }
+        }
+
     //ตรวจสอบว่าเป็นครุภัณฑ์วิทยาศาสตร์และการแพทย์
     public function isMedical()
     {
