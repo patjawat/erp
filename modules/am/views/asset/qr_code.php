@@ -4,7 +4,7 @@ use chillerlan\QRCode\QRCode;
  $data = $model->code.'|'.isset($model->data_json['asset_type_text']) ? $model->data_json['asset_type_text'] : '-'.'|'.number_format($model->price, 2).'|'.Yii::$app->thaiFormatter->asDate($model->receive_date, 'short').'|'.(isset($model->data_json['department_name']) ? $model->data_json['department_name'] : '-');
  $qr = new QRCode();
 ?>
-<div class="d-flex align-items-center">
+<div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded">
     <div class="flex-shrink-0">
         <img src="<?=$qr->render($data)?>" width="140">
     </div>
@@ -29,7 +29,8 @@ use chillerlan\QRCode\QRCode;
             <ul>
     </div>
 </div>
-<div class="flex gap-2">
+<div class="flex gap-2 mt-3">
     <?=Html::a('<i class="fa-solid fa-print"></i> QR-Code',['#'],['class' => 'btn btn-primary'])?>
     <?=Html::a('<i class="fa-solid fa-print"></i> Barcode',['#'],['class' => 'btn btn-primary'])?>
+    <?=Html::a('<i class="fa-solid fa-sliders"></i> ตั้งค่าหน้ากระดาษ',['#'],['class' => 'btn btn-secondary'])?>
 </div>

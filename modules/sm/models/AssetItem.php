@@ -29,6 +29,7 @@ class AssetItem extends \yii\db\ActiveRecord
      */
     public $fsn_auto; //กำหนดการให้หมายเลขอัตโนมัติถ้า true;
     public $asset_type_id;
+    public $ma;
     public static function tableName()
     {
         return 'categorise';
@@ -69,11 +70,21 @@ class AssetItem extends \yii\db\ActiveRecord
 
     public function afterFind() {
         parent::afterFind();
+        // $this->ma = Json::encode($this->data_json['ma_items']);
     }
 
 
     public function beforeSave($insert)
     {
+
+        // try {
+        //     $ma_items = [
+        //         'ma_items' => $this->ma
+        //     ];
+        //     $this->data_json = ArrayHelper::merge($this->data_json, $ma_items);
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        // }
 
         // $this->receive_date = AppHelper::DateToDb($this->receive_date);
         if($this->name == 'asset_type'){

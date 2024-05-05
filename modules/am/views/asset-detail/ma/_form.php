@@ -1,13 +1,13 @@
 <?php
-use yii\helpers\Html;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\am\models\Asset;
 use iamsaint\datetimepicker\Datetimepicker;
 use kartik\select2\Select2;
 use unclead\multipleinput\MultipleInput;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\web\View;
-use app\modules\am\models\Asset;
 
 ?>
 
@@ -31,7 +31,7 @@ $emp = UserHelper::GetEmployee();
 <?=$form->field($model, 'data_json[status]')->hiddenInput(['value' => 'รอการตวรจสอบ'])->label(false)?>
 <?php }?>
 
-<?php if(isset($model->asset->assetItem->ma_items)):?>
+<?php if (isset($model->asset->assetItem->ma_items)): ?>
 <div class="row">
     <div class="col-sm-6 col-md-6">
         <?=$form->field($model, 'date_start')->widget(Datetimepicker::className(), [
@@ -66,15 +66,16 @@ $emp = UserHelper::GetEmployee();
 <?=$form->field($model, 'code')->hiddenInput()->label(false)?>
 <div class="card-body mt-3">
     <div class="table-responsive">
-        
+
         <?php
+print_r($model->asset->assetItem->ma_items);
 $items = [];
-    foreach ($model->asset->assetItem->ma_items as $value) {
-        $items[] = [
-            'id' => $value,
-            'name' => $value,
-        ];
-    }
+foreach ($model->asset->assetItem->ma_items as $value) {
+    $items[] = [
+        'id' => $value,
+        'name' => $value,
+    ];
+}
 
 $listIems = ArrayHelper::map($items, 'id', 'name');
 
@@ -132,13 +133,13 @@ echo $form->field($model, 'data_json[ma]')->widget(MultipleInput::class, [
     </div>
 </div>
 
-<?php else:?>
+<?php else: ?>
 
     <?php $asset = Asset::findOne(['code' => $model->code]);?>
     <div class="alert alert-warning" role="alert">
-        <?=AppHelper::MsgWarning('ยังไม่มีแผนบำรุงรักษา'.' => '. Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า',['/sm/asset-item/update','id' => $asset->assetItem->id,'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'],['class' => 'btn btn-primary open-modal text-cener','data' => ['size' => 'modal-lg']]))?>
+        <?=AppHelper::MsgWarning('ยังไม่มีแผนบำรุงรักษา' . ' => ' . Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า', ['/sm/asset-item/update', 'id' => $asset->assetItem->id, 'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'], ['class' => 'btn btn-primary open-modal text-cener', 'data' => ['size' => 'modal-lg']]))?>
     </div>
-    
+
 <?php endif;?>
 
 <?php

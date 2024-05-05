@@ -82,7 +82,8 @@ echo "</pre>";
                     'data' => $model->AssetType(),
                     'options' => ['placeholder' => 'ระบุ...'],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label("ทรัพย์สิน")
                 ?>
@@ -107,25 +108,17 @@ echo "</pre>";
             'class' => 'btn btn-sm btn-danger',
             'label' => '<i class="fa-solid fa-trash"></i>'
         ],
-        'columns' => [
-            // [
-            //     'name'  => 'code',
-            //     'title' => 'รหัส',
-            //     'enableError' => true,
-            //     'options' => [
-            //         'class' => 'input-priority'
-            //     ]
-            // ],
-            [
-                'name'  => 'ma_items',
-                'title' => 'แผนบำรุงรักษา',
-                'enableError' => true,
-                'options' => [
-                    'class' => 'input-priority'
-                ]
-            ],
+        // 'columns' => [
+        //     [
+        //         'name'  => 'ma_items',
+        //         'title' => 'แผนบำรุงรักษา',
+        //         'enableError' => true,
+        //         'options' => [
+        //             'class' => 'input-priority'
+        //         ]
+        //     ],
             
-        ]
+        // ]
     ])
     ->label(false);
 ?>
