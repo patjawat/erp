@@ -105,7 +105,7 @@ return [
     [
         'attribute' => 'total_price',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">ค่าเสื่อมาคาเดือนนี้</span>',
+        'header' => '<span class="fw-semibold">ค่าเสื่อราคาเดือนนี้</span>',
         'width' => '150px',
         'vAlign' => 'middle',
         'hAlign' => 'right',
