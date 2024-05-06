@@ -1,4 +1,6 @@
 <?php
+use yii\helpers\Url;
+use yii\helpers\Html;
 use bs\Flatpickr\FlatpickrWidget;
 use app\components\SiteHelper;
 $this->title = 'Dashbroad';
@@ -14,32 +16,6 @@ $companyName = SiteHelper::getInfo()["company_name"];
 
 <?php $this->beginBlock('page-action'); ?>
 
-<!-- <form class="d-flex justify-content-sm-end">
-    <div class="d-inline-flex me-2 input-date input-date-sm">
-        <input class="form-control flatpickr-input" type="text" id="dashdaterange" placeholder="03-10-19 To 04-06-20"
-            readonly="readonly">
-        <div class="date-icon">
-            <i class="bx bx-calendar fs-sm"></i>
-        </div>
-    </div>
-    <div class="btn-group dropdown">
-        <button type="button" data-bs-toggle="dropdown" class="btn btn-light dropdown-toggle">
-            <i class="bx bx-download me-1"></i> Download <i class="bx bx-chevron-down"></i>
-        </button>
-        <div class="dropdown-menu-right dropdown-menu">
-            <a href="javascript: void(0);" class="dropdown-item">
-                <i class="bx bx-mail-send me-1"></i> Email
-            </a>
-            <a href="javascript: void(0);" class="dropdown-item">
-                <i class="bx bx-printer me-1"></i> Print
-            </a>
-            <a href="javascript: void(0);" class="dropdown-item">
-                <i class="bx bx-file me-1"></i> Re-Generate
-            </a>
-        </div>
-    </div>
-</form> -->
-
 <?php $this->endBlock(); ?>
 
 
@@ -50,8 +26,8 @@ $companyName = SiteHelper::getInfo()["company_name"];
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <span class="text-muted text-uppercase fs-6">ปฎิบัติหน้าที่วันนี้</span>
-                        <h2 class="mb-0 mt-1">210</h2>
+                        <?=Html::a('บุคลกร',['/hr'],['class' => 'text-muted text-uppercase fs-6'])?>
+                        <h2 class="mb-0 mt-1" id="totalEmployees"></h2>
                     </div>
                     <div class="text-center" style="position: relative;">
                         <div id="t-rev" style="min-height: 45px;">
@@ -198,8 +174,8 @@ $companyName = SiteHelper::getInfo()["company_name"];
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <span class="text-muted text-uppercase fs-6">ขอซื้อพัสดุ</span>
-                        <h2 class="mb-0 mt-1">10</h2>
+                        <span class="text-muted text-uppercase fs-6">พัสดุ</span>
+                        <h2 class="mb-0 mt-1">0</h2>
                     </div>
                     <div class="text-center" style="position: relative;">
                         <div id="t-order" style="min-height: 45px;">
@@ -328,7 +304,7 @@ $companyName = SiteHelper::getInfo()["company_name"];
                             </div>
                         </div>
                         <span class="text-danger fw-bold fs-13">
-                            <i class="bx bx-down-arrow-alt"></i> 5.05%
+                            <i class="bx bx-down-arrow-alt"></i> 1234,443,344.50 บาท
                         </span>
                         <div class="resize-triggers">
                             <div class="expand-trigger">
@@ -341,162 +317,14 @@ $companyName = SiteHelper::getInfo()["company_name"];
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    
+    <div class="col-md-6 col-xl-6">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <span class="text-muted text-uppercase fs-12 fw-bold">new
-                            users</span>
-                        <h2 class="mb-0 mt-1">800</h2>
-                    </div>
-                    <div class="text-center" style="position: relative;">
-                        <div id="t-user" style="min-height: 45px;">
-                            <div id="apexcharts64e2noq4"
-                                class="apexcharts-canvas apexcharts64e2noq4 apexcharts-theme-light"
-                                style="width: 90px; height: 45px;"><svg id="SvgjsSvg1081" width="90" height="45"
-                                    xmlns="http://www.w3.org/2000/svg" version="1.1"
-                                    xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs"
-                                    class="apexcharts-svg" xmlns:data="ApexChartsNS" transform="translate(0, 0)"
-                                    style="background: transparent;">
-                                    <g id="SvgjsG1083" class="apexcharts-inner apexcharts-graphical"
-                                        transform="translate(0, 0)">
-                                        <defs id="SvgjsDefs1082">
-                                            <clipPath id="gridRectMask64e2noq4">
-                                                <rect id="SvgjsRect1088" width="96" height="47" x="-3" y="-1" rx="0"
-                                                    ry="0" fill="#ffffff" opacity="1" stroke-width="0" stroke="none"
-                                                    stroke-dasharray="0"></rect>
-                                            </clipPath>
-                                            <clipPath id="gridRectMarkerMask64e2noq4">
-                                                <rect id="SvgjsRect1089" width="92" height="47" x="-1" y="-1" rx="0"
-                                                    ry="0" fill="#ffffff" opacity="1" stroke-width="0" stroke="none"
-                                                    stroke-dasharray="0"></rect>
-                                            </clipPath>
-                                            <linearGradient id="SvgjsLinearGradient1095" x1="0" y1="0" x2="0" y2="1">
-                                                <stop id="SvgjsStop1096" stop-opacity="0.45"
-                                                    stop-color="rgba(67,211,158,0.45)" offset="0.45"></stop>
-                                                <stop id="SvgjsStop1097" stop-opacity="0.05"
-                                                    stop-color="rgba(255,255,255,0.05)" offset="1"></stop>
-                                                <stop id="SvgjsStop1098" stop-opacity="0.05"
-                                                    stop-color="rgba(255,255,255,0.05)" offset="1"></stop>
-                                            </linearGradient>
-                                        </defs>
-                                        <line id="SvgjsLine1087" x1="0" y1="0" x2="0" y2="45" stroke="#b6b6b6"
-                                            stroke-dasharray="3" class="apexcharts-xcrosshairs" x="0" y="0" width="1"
-                                            height="45" fill="#b1b9c4" filter="none" fill-opacity="0.9"
-                                            stroke-width="1"></line>
-                                        <g id="SvgjsG1101" class="apexcharts-xaxis" transform="translate(0, 0)">
-                                            <g id="SvgjsG1102" class="apexcharts-xaxis-texts-g"
-                                                transform="translate(0, 2.75)"></g>
-                                        </g>
-                                        <g id="SvgjsG1104" class="apexcharts-grid">
-                                            <g id="SvgjsG1105" class="apexcharts-gridlines-horizontal"
-                                                style="display: none;">
-                                                <line id="SvgjsLine1107" x1="0" y1="0" x2="90" y2="0" stroke="#e0e0e0"
-                                                    stroke-dasharray="0" class="apexcharts-gridline"></line>
-                                                <line id="SvgjsLine1108" x1="0" y1="9" x2="90" y2="9" stroke="#e0e0e0"
-                                                    stroke-dasharray="0" class="apexcharts-gridline"></line>
-                                                <line id="SvgjsLine1109" x1="0" y1="18" x2="90" y2="18" stroke="#e0e0e0"
-                                                    stroke-dasharray="0" class="apexcharts-gridline"></line>
-                                                <line id="SvgjsLine1110" x1="0" y1="27" x2="90" y2="27" stroke="#e0e0e0"
-                                                    stroke-dasharray="0" class="apexcharts-gridline"></line>
-                                                <line id="SvgjsLine1111" x1="0" y1="36" x2="90" y2="36" stroke="#e0e0e0"
-                                                    stroke-dasharray="0" class="apexcharts-gridline"></line>
-                                                <line id="SvgjsLine1112" x1="0" y1="45" x2="90" y2="45" stroke="#e0e0e0"
-                                                    stroke-dasharray="0" class="apexcharts-gridline"></line>
-                                            </g>
-                                            <g id="SvgjsG1106" class="apexcharts-gridlines-vertical"
-                                                style="display: none;"></g>
-                                            <line id="SvgjsLine1114" x1="0" y1="45" x2="90" y2="45" stroke="transparent"
-                                                stroke-dasharray="0"></line>
-                                            <line id="SvgjsLine1113" x1="0" y1="1" x2="0" y2="45" stroke="transparent"
-                                                stroke-dasharray="0"></line>
-                                        </g>
-                                        <g id="SvgjsG1091" class="apexcharts-area-series apexcharts-plot-series">
-                                            <g id="SvgjsG1092" class="apexcharts-series" seriesName="seriesx1"
-                                                data:longestSeries="true" rel="1" data:realIndex="0">
-                                                <path id="SvgjsPath1099"
-                                                    d="M0 45L0 33.75C3.1500000000000004 33.75 5.85 15.3 9 15.3C12.15 15.3 14.85 26.55 18 26.55C21.15 26.55 23.85 6.75 27 6.75C30.15 6.75 32.85 16.650000000000002 36 16.650000000000002C39.15 16.650000000000002 41.85 33.75 45 33.75C48.15 33.75 50.85 25.2 54 25.2C57.15 25.2 59.85 39.6 63 39.6C66.15 39.6 68.85 28.8 72 28.8C75.15 28.8 77.85 40.95 81 40.95C84.15 40.95 86.85 20.700000000000003 90 20.700000000000003C90 20.700000000000003 90 20.700000000000003 90 45M90 20.700000000000003C90 20.700000000000003 90 20.700000000000003 90 20.700000000000003 "
-                                                    fill="url(#SvgjsLinearGradient1095)" fill-opacity="1"
-                                                    stroke-opacity="1" stroke-linecap="butt" stroke-width="0"
-                                                    stroke-dasharray="0" class="apexcharts-area" index="0"
-                                                    clip-path="url(#gridRectMask64e2noq4)"
-                                                    pathTo="M 0 45L 0 33.75C 3.15 33.75 5.85 15.3 9 15.3C 12.15 15.3 14.85 26.55 18 26.55C 21.15 26.55 23.85 6.75 27 6.75C 30.15 6.75 32.85 16.650000000000002 36 16.650000000000002C 39.15 16.650000000000002 41.85 33.75 45 33.75C 48.15 33.75 50.85 25.2 54 25.2C 57.15 25.2 59.85 39.6 63 39.6C 66.15 39.6 68.85 28.8 72 28.8C 75.15 28.8 77.85 40.95 81 40.95C 84.15 40.95 86.85 20.700000000000003 90 20.700000000000003C 90 20.700000000000003 90 20.700000000000003 90 45M 90 20.700000000000003z"
-                                                    pathFrom="M -1 45L -1 45L 9 45L 18 45L 27 45L 36 45L 45 45L 54 45L 63 45L 72 45L 81 45L 90 45">
-                                                </path>
-                                                <path id="SvgjsPath1100"
-                                                    d="M0 33.75C3.1500000000000004 33.75 5.85 15.3 9 15.3C12.15 15.3 14.85 26.55 18 26.55C21.15 26.55 23.85 6.75 27 6.75C30.15 6.75 32.85 16.650000000000002 36 16.650000000000002C39.15 16.650000000000002 41.85 33.75 45 33.75C48.15 33.75 50.85 25.2 54 25.2C57.15 25.2 59.85 39.6 63 39.6C66.15 39.6 68.85 28.8 72 28.8C75.15 28.8 77.85 40.95 81 40.95C84.15 40.95 86.85 20.700000000000003 90 20.700000000000003C90 20.700000000000003 90 20.700000000000003 90 20.700000000000003 "
-                                                    fill="none" fill-opacity="1" stroke="#43d39e" stroke-opacity="1"
-                                                    stroke-linecap="butt" stroke-width="2" stroke-dasharray="0"
-                                                    class="apexcharts-area" index="0"
-                                                    clip-path="url(#gridRectMask64e2noq4)"
-                                                    pathTo="M 0 33.75C 3.15 33.75 5.85 15.3 9 15.3C 12.15 15.3 14.85 26.55 18 26.55C 21.15 26.55 23.85 6.75 27 6.75C 30.15 6.75 32.85 16.650000000000002 36 16.650000000000002C 39.15 16.650000000000002 41.85 33.75 45 33.75C 48.15 33.75 50.85 25.2 54 25.2C 57.15 25.2 59.85 39.6 63 39.6C 66.15 39.6 68.85 28.8 72 28.8C 75.15 28.8 77.85 40.95 81 40.95C 84.15 40.95 86.85 20.700000000000003 90 20.700000000000003"
-                                                    pathFrom="M -1 45L -1 45L 9 45L 18 45L 27 45L 36 45L 45 45L 54 45L 63 45L 72 45L 81 45L 90 45">
-                                                </path>
-                                                <g id="SvgjsG1093" class="apexcharts-series-markers-wrap">
-                                                    <g class="apexcharts-series-markers">
-                                                        <circle id="SvgjsCircle1120" r="0" cx="0" cy="0"
-                                                            class="apexcharts-marker wljv31u2j no-pointer-events"
-                                                            stroke="#ffffff" fill="#43d39e" fill-opacity="1"
-                                                            stroke-width="2" stroke-opacity="0.9"
-                                                            default-marker-size="0"></circle>
-                                                    </g>
-                                                </g>
-                                            </g>
-                                            <g id="SvgjsG1094" class="apexcharts-datalabels"></g>
-                                        </g>
-                                        <line id="SvgjsLine1115" x1="0" y1="0" x2="90" y2="0" stroke="#b6b6b6"
-                                            stroke-dasharray="0" stroke-width="1" class="apexcharts-ycrosshairs"></line>
-                                        <line id="SvgjsLine1116" x1="0" y1="0" x2="90" y2="0" stroke-dasharray="0"
-                                            stroke-width="0" class="apexcharts-ycrosshairs-hidden"></line>
-                                        <g id="SvgjsG1117" class="apexcharts-yaxis-annotations"></g>
-                                        <g id="SvgjsG1118" class="apexcharts-xaxis-annotations"></g>
-                                        <g id="SvgjsG1119" class="apexcharts-point-annotations"></g>
-                                    </g>
-                                    <rect id="SvgjsRect1086" width="0" height="0" x="0" y="0" rx="0" ry="0"
-                                        fill="#fefefe" opacity="1" stroke-width="0" stroke="none" stroke-dasharray="0">
-                                    </rect>
-                                    <g id="SvgjsG1103" class="apexcharts-yaxis" rel="0" transform="translate(-21, 0)">
-                                    </g>
-                                </svg>
-                                <div class="apexcharts-legend"></div>
-                                <div class="apexcharts-tooltip apexcharts-theme-dark">
-                                    <div class="apexcharts-tooltip-series-group"><span class="apexcharts-tooltip-marker"
-                                            style="background-color: rgb(67, 211, 158);"></span>
-                                        <div class="apexcharts-tooltip-text"
-                                            style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">
-                                            <div class="apexcharts-tooltip-y-group"><span
-                                                    class="apexcharts-tooltip-text-label"></span><span
-                                                    class="apexcharts-tooltip-text-value"></span></div>
-                                            <div class="apexcharts-tooltip-z-group"><span
-                                                    class="apexcharts-tooltip-text-z-label"></span><span
-                                                    class="apexcharts-tooltip-text-z-value"></span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-success fw-bold fs-13">
-                            <i class="bx bx-up-arrow-alt"></i> 25.21%
-                        </span>
-                        <div class="resize-triggers">
-                            <div class="expand-trigger">
-                                <div style="width: 91px; height: 70px;"></div>
-                            </div>
-                            <div class="contract-trigger"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <span class="text-muted text-uppercase fs-6">เข้าช้งานวันนี้</span>
-                        <h2 class="mb-0 mt-1">15</h2>
+                        <?=Html::a('ทรัพย์สินย์',['/am'],['class' => 'text-muted text-uppercase fs-6'])?>
+                        <h2 class="mb-0 mt-1" id="totalAsset"></h2>
                     </div>
                     <div class="text-center" style="position: relative;">
                         <div id="t-visitor" style="min-height: 45px;">
@@ -625,7 +453,7 @@ $companyName = SiteHelper::getInfo()["company_name"];
                             </div>
                         </div>
                         <span class="text-danger fw-bold fs-13">
-                            <i class="bx bx-down-arrow-alt"></i> 5.16%
+                            <i class="bx bx-down-arrow-alt"></i> 234,443,344.50
                         </span>
                         <div class="resize-triggers">
                             <div class="expand-trigger">
@@ -639,8 +467,28 @@ $companyName = SiteHelper::getInfo()["company_name"];
         </div>
     </div>
 </div>
-
 <?=$this->render('./row2')?>
 <?=$this->render('./row3')?>
-<?=$this->render('./row4')?>
 <?=$this->render('./row5')?>
+<?php
+use yii\web\View;
+
+$urlSummary = Url::to(['/summary']);
+$js = <<< JS
+loadSummary()
+
+async function loadSummary(){
+    await $.ajax({
+        type: "get",
+        url: "$urlSummary",
+        dataType: "json",
+        success: function (res) {
+            console.log(res);
+            $('#totalEmployees').text(res.totalEmployee.total);
+            $('#totalAsset').text(res.totalAssetPrice.total);
+        }
+    });
+}
+JS;
+$this->registerJS($js,View::POS_END);
+?>

@@ -178,6 +178,7 @@ $config = [
             // '*',
             // 'liff/*',
             'me/*',
+            'summary/*',
             'debug/*',
             'filemanager/*',
             'usermanager/*',
