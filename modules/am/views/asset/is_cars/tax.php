@@ -57,10 +57,22 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
         <div class="col-6">
             <ul class="list-inline">
                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เริ่มต้น</span>
-                    <?=  isset($modelDetail->data_json["date_start2"]) ? Yii::$app->thaiFormatter->asDate($modelDetail->data_json["date_start2"], 'medium') : ''?>
+                    <?php
+                    try {
+                        echo isset($modelDetail->data_json["date_start2"]) ? Yii::$app->thaiFormatter->asDate($modelDetail->data_json["date_start2"], 'medium') : '';
+                    } catch (\Throwable $th) {
+                       echo '-';
+                    }
+                    ?>
                 </li>
                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">สิ้นสุด</span>
-                    <?= isset($modelDetail->data_json["date_end"]) ? Yii::$app->thaiFormatter->asDate($modelDetail->data_json["date_end2"], 'medium') : ''?>
+                <?php
+                    try {
+                        echo isset($modelDetail->data_json["date_end2"]) ? Yii::$app->thaiFormatter->asDate($modelDetail->data_json["date_end2"], 'medium') : '';
+                    } catch (\Throwable $th) {
+                       echo '-';
+                    }
+                    ?>
                 </li>
             </ul>
         </div>
