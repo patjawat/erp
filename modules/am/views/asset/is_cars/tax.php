@@ -11,10 +11,10 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
             <i class="fa-solid fa-car-on fs-4"></i> ข้อมูลการต่อภาษี
         </span>
     </div>
+    <?php if(isset($modelDetail->data_json['company1']) && $modelDetail->data_json['company1'] != ""):?>
     <strong><i class="fa-solid fa-user-injured"></i> พรบ.</strong>
     <table class="table border-0 table-striped-columns">
         <tbody>
-            <?php if(isset($modelDetail->data_json['company1']) && $modelDetail->data_json['company1'] != ""):?>
             <tr class="">
                 <td class="text-end"><span class="fw-semibold">บริษัท :</span></td>
                 <td colspan="3"> <?=isset($modelDetail->data_json['company1']) ? $modelDetail->data_json['company1'] : '-'?></td>
@@ -44,14 +44,14 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
                     }
                     ?></td>
             </tr>
-            <?php endif;?>
         </tbody>
     </table>
-
+    <?php endif;?>
+    <?php if(isset($modelDetail->data_json['company2']) && $modelDetail->data_json['company2'] != ""):?>
     <strong><i class="fa-solid fa-car-burst"></i> ประกันภัย</strong>
     <table class="table border-0 table-striped-columns">
         <tbody>
-            <?php if(isset($modelDetail->data_json['company2']) && $modelDetail->data_json['company2'] != ""):?>
+          
             <tr class="">
                 <td class="text-end"><span class="fw-semibold">บริษัท :</span></td>
                 <td colspan="3"><?=isset($modelDetail->data_json['company2']) ? $modelDetail->data_json['company2'] : '-'?></td>
@@ -80,10 +80,10 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
                     }
                     ?></td>
             </tr>
-            <?php endif;?>
         </tbody>
     </table>
-
+    <?php endif;?>
+    
     <div class="d-flex justify-content-between align-items-center bg-primary bg-opacity-10  p-3 rounded">
         <ul class="list-inline mb-0">
             <li><i class="fa-regular fa-calendar-check fs-5"></i> <span class="">วันที่ต่อภาษี</span> :

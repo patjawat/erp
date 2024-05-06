@@ -104,8 +104,8 @@ use yii\web\View;
 
         <div class="col-6">
             <?=$form->field($model, 'data_json[company2]')->textInput(['maxlength' => true])->label('บริษัท')?>
-            <?=$form->field($model, 'data_json[price2]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('เบี้ยประกัน')?>
             <?=$form->field($model, 'data_json[number2]')->textInput(['maxlength' => true])->label('กรมธรรม์เลขที่')?>
+            <?=$form->field($model, 'data_json[price2]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('เบี้ยประกัน')?>
         </div>
         <div class="col-6">
 
