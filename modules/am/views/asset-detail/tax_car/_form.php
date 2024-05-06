@@ -131,8 +131,8 @@ use yii\web\View;
                                 'format' => 'd/m/Y', 
                             ],
                             ])->label('ถึง') ?>
-            <?=$form->field($model, 'data_json[phone2]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('โทร')?>
             <?=$form->field($model, 'data_json[sale2]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
+            <?=$form->field($model, 'data_json[phone2]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('โทร')?>
 
         </div>
     </div>
