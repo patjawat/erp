@@ -178,10 +178,9 @@ class AssetDetailController extends Controller
                     ];
                     $model->data_json = ArrayHelper::merge($carTaxObj, $model->data_json);
                 }
-                
+
                 // return $model->data_json['ma'];
                 $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
-          
 
                 if ($model->save()) {
                     return [
@@ -244,8 +243,10 @@ class AssetDetailController extends Controller
         //ถ้าเป็นประการต่อภาษี
         if ($model->name == "tax_car") {
             $carTaxObj = [
-                "date_start1" => AppHelper::DateFormDb($model->data_json["date_start1"]),
-                "date_end1" => AppHelper::DateFormDb($model->data_json["date_end1"]),
+                'date_start1' => AppHelper::DateToDb($model->data_json['date_start1']),
+                'date_end1' => AppHelper::DateToDb($model->data_json['date_end1']),
+                'date_start2' => AppHelper::DateToDb($model->data_json['date_start2']),
+                'date_end2' => AppHelper::DateToDb($model->data_json['date_end2']),
             ];
             $model->data_json = ArrayHelper::merge($model->data_json, $carTaxObj);
         }
@@ -263,7 +264,6 @@ class AssetDetailController extends Controller
                 ];
                 $model->data_json = ArrayHelper::merge($model->data_json, $carTaxObj);
             }
-
 
             if ($model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -322,7 +322,7 @@ class AssetDetailController extends Controller
         return [
             'status' => 'success',
             'data' => $model,
-            'container' => '#'.$container,
+            'container' => '#' . $container,
             'close' => true,
         ];
     }
