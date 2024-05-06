@@ -35,7 +35,10 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
             <tr class="">
                 <td><span class="fw-semibold">OS : </span></td>
                 <td colspan="5"><?=isset($model->data_json['os']) ? $model->data_json['os'] : '-'?></td>
-
+            </tr>
+            <tr class="">
+                <td><span class="fw-semibold">IP: </span></td>
+                <td colspan="5"><?=isset($model->data_json['ip_address']) ? $model->data_json['ip_address'] : '-'?></td>
             </tr>
         </tbody>
     </table>
