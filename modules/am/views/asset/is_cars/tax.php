@@ -17,9 +17,12 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
             <?php if(isset($modelDetail->data_json['company1']) && $modelDetail->data_json['company1'] != ""):?>
             <tr class="">
                 <td class="text-end"><span class="fw-semibold">บริษัท :</span></td>
-                <td> <?=isset($modelDetail->data_json['company1']) ? $modelDetail->data_json['company1'] : '-'?></td>
-                <td class="text-end"><span class="fw-semibold">กรมธรรม์เลขที่ :</span></td>
-                <td><?=isset($modelDetail->data_json['number1']) ? $modelDetail->data_json['number1'] : '-'?></td>
+                <td colspan="3"> <?=isset($modelDetail->data_json['company1']) ? $modelDetail->data_json['company1'] : '-'?></td>
+               
+            </tr>
+            <tr>
+            <td class="text-end"><span class="fw-semibold">กรมธรรม์เลขที่ :</span></td>
+            <td colspan="3"><?=isset($modelDetail->data_json['number1']) ? $modelDetail->data_json['number1'] : '-'?></td>
             </tr>
             <tr>
                 <td class="text-end"><span class="fw-semibold">เริ่มต้น :</span></td>
@@ -51,9 +54,11 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
             <?php if(isset($modelDetail->data_json['company2']) && $modelDetail->data_json['company2'] != ""):?>
             <tr class="">
                 <td class="text-end"><span class="fw-semibold">บริษัท :</span></td>
-                <td> <?=isset($modelDetail->data_json['company2']) ? $modelDetail->data_json['company2'] : '-'?></td>
+                <td colspan="3"><?=isset($modelDetail->data_json['company2']) ? $modelDetail->data_json['company2'] : '-'?></td>
+            </tr>
+            <tr>
                 <td class="text-end"><span class="fw-semibold">กรมธรรม์เลขที่ :</span></td>
-                <td><?=isset($modelDetail->data_json['number2']) ? $modelDetail->data_json['number2'] : '-'?></td>
+                <td colspan="3"><?=isset($modelDetail->data_json['number2']) ? $modelDetail->data_json['number2'] : '-'?></td>
             </tr>
             <tr>
                 <td class="text-end"><span class="fw-semibold">เริ่มต้น :</span></td>
