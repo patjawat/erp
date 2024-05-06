@@ -84,8 +84,7 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
         </tbody>
     </table>
 
-    <hr class="mt-1">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center bg-primary bg-opacity-10  p-3 rounded">
         <ul class="list-inline mb-0">
             <li><i class="fa-regular fa-calendar-check fs-5"></i> <span class="">วันที่ต่อภาษี</span> :
                 <span class="text-danger fw-semibold">
