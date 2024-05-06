@@ -198,7 +198,7 @@ class Asset extends \yii\db\ActiveRecord
 
         try {
 
-        $this->receive_date = AppHelper::DateToDb($this->receive_date);
+        
 
         if ($this->asset_group == 2) {
             // try {

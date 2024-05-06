@@ -129,9 +129,7 @@ $('#btnSave').click(function (e) {
                 // validation succeeded
             }
             if(res.status == 'success') {
-                // alert(data.status)
-                console.log(res.container);
-                // $('#main-modal').modal('toggle');
+                $('#main-modal').modal('toggle');
                 success()
                  $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
             }
@@ -139,9 +137,6 @@ $('#btnSave').click(function (e) {
     });
     
 });
-function formSave(){
-   
-}
 
 $('#form-asset').on('beforeSubmit', function (e) {
     e.preventDefault;

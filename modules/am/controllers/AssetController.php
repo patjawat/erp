@@ -291,11 +291,13 @@ class AssetController extends Controller
         if (isset($model->data_json["item_options"])) {
             $model->item_options = $model->data_json["item_options"];
         }
-        $model_old_data_json = $model->data_json;
+        $old_data_json = $model->data_json;
 
         if ($this->request->isPost && $model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
 
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->receive_date = AppHelper::DateToDb($model->receive_date);
+            $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
             if ($model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -325,8 +327,12 @@ class AssetController extends Controller
             if ($model->save()) {
 
                 $this->CheckUpdateData($model);
+                    return [
+                        'status' => 'success',
+                        'container' => '#am-container',
+                        'close' => true
+                    ];
 
-                return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return $model->getErrors();
