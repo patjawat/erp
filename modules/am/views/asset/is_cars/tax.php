@@ -29,13 +29,26 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
             </div>
             
             <div class="col-6">
-                <ul class="list-inline">
-                    <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เริ่มต้น</span>
+            <ul class="list-inline">
+                <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เริ่มต้น</span>
+                    <?php
+                    try {
+                        echo isset($modelDetail->data_json["date_start1"]) ? Yii::$app->thaiFormatter->asDate($modelDetail->data_json["date_start1"], 'medium') : '';
+                    } catch (\Throwable $th) {
+                       echo '-';
+                    }
+                    ?>
                 </li>
                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">สิ้นสุด</span>
-            </li>
-            
-        </ul>
+                <?php
+                    try {
+                        echo isset($modelDetail->data_json["date_end1"]) ? Yii::$app->thaiFormatter->asDate($modelDetail->data_json["date_end1"], 'medium') : '';
+                    } catch (\Throwable $th) {
+                       echo '-';
+                    }
+                    ?>
+                </li>
+            </ul>
     </div>
 </div>
 </div>

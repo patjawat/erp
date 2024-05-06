@@ -240,16 +240,17 @@ class AssetDetailController extends Controller
         $model->date_start = AppHelper::DateFormDb($model->date_start);
         $model->date_end = AppHelper::DateFormDb($model->date_end);
 
-        //ถ้าเป็นประการต่อภาษี
+        //ถ้าเป็นประการต่อภาษีแปลงวันที่ให้อยู่ในรูปแบบ thai format ก่อน
         if ($model->name == "tax_car") {
-            $carTaxObj = [
-                'date_start1' => AppHelper::DateToDb($model->data_json['date_start1']),
-                'date_end1' => AppHelper::DateToDb($model->data_json['date_end1']),
-                'date_start2' => AppHelper::DateToDb($model->data_json['date_start2']),
-                'date_end2' => AppHelper::DateToDb($model->data_json['date_end2']),
+            $findCartex = [
+                'date_start1' => AppHelper::DateFormDb($model->data_json['date_start1']),
+                'date_end1' => AppHelper::DateFormDb($model->data_json['date_end1']),
+                'date_start2' => AppHelper::DateFormDb($model->data_json['date_start2']),
+                'date_end2' => AppHelper::DateFormDb($model->data_json['date_end2']),
             ];
-            $model->data_json = ArrayHelper::merge($model->data_json, $carTaxObj);
+            $model->data_json = ArrayHelper::merge($model->data_json,$findCartex);
         }
+        
 
         //การบันทึก
         if ($this->request->isPost && $model->load($this->request->post())) {
@@ -261,6 +262,8 @@ class AssetDetailController extends Controller
                 $carTaxObj = [
                     'date_start1' => AppHelper::DateToDb($model->data_json['date_start1']),
                     'date_end1' => AppHelper::DateToDb($model->data_json['date_end1']),
+                    'date_start2' => AppHelper::DateToDb($model->data_json['date_start2']),
+                    'date_end2' => AppHelper::DateToDb($model->data_json['date_end2']),
                 ];
                 $model->data_json = ArrayHelper::merge($model->data_json, $carTaxObj);
             }
