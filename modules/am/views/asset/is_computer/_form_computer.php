@@ -7,7 +7,7 @@ use yii\web\JsExpression;
 <?php $form = ActiveForm::begin([
     'id' => 'form-asset',
     'type' => ActiveForm::TYPE_HORIZONTAL,
-    'formConfig' => ['labelSpan' => 5],
+    'formConfig' => ['labelSpan' => 4],
     // 'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
     // 'validationUrl' => ['/am/asset/validator'],
 ]);?>
@@ -17,7 +17,7 @@ use yii\web\JsExpression;
 }
 </style>
 <div class="row">
-    <div class="col-9">
+    <div class="col-10">
         <?php
 echo $form->field($model, 'data_json[brand]')->widget(Select2::classname(), [
     'data' => $model->listBrand(),
