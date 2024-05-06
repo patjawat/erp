@@ -99,6 +99,7 @@ echo $form->field($model, 'data_json[storage_type]')->widget(Select2::classname(
 ])->label('Storage');
 ?>
         <?=$form->field($model, 'data_json[storage_size]')->textInput(['maxlength' => true])->label('ขนาดพื้นที่เก็บ')?>
+        <?=$form->field($model, 'data_json[ip_address]')->textInput(['maxlength' => true])->label('IP Address')?>
 
     </div>
 </div>
