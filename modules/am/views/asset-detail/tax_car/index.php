@@ -36,10 +36,10 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php
             $startDate = AppHelper::DateFormDb($model->date_start);
             $endDate = AppHelper::DateFormDb($model->date_end);
-            $startDate1 = isset($model->data_json['date_start1']) ? $model->data_json['date_start1'] : '-';
-            $endDate1 = isset($model->data_json['date_end1']) ? $model->data_json['date_end1'] : '-';
-            $startDate2 = isset($model->data_json['date_start2']) ? $model->data_json['date_start2'] : '-';
-            $endDate2 = isset($model->data_json['date_end2']) ? $model->data_json['date_end2'] : '-';
+            // $startDate1 = isset($model->data_json['date_start1']) ? $model->data_json['date_start1'] : '-';
+            // $endDate1 = isset($model->data_json['date_end1']) ? $model->data_json['date_end1'] : '-';
+            // $startDate2 = isset($model->data_json['date_start2']) ? AppHelper::DateFormDb($model->data_json['date_start2']) : '-';
+            // $endDate2 = isset($model->data_json['date_end2']) ? AppHelper::DateFormDb($model->data_json['date_end2']) : '-';
             ?>
 
         <tr class="">
@@ -51,16 +51,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex flex-column">
                     <?=isset($model->data_json['company1']) ? $model->data_json['company1'] : '-'?>
                     <br>
-                    <?=$startDate1?> ถึง <?=$endDate1?>
+                    <?php
+                    try {
+                        $dateStart1 =  isset($model->data_json["date_start1"]) ? Yii::$app->thaiFormatter->asDate($model->data_json["date_start1"], 'medium') : '';
+                        $dateEnd1=  isset($model->data_json["date_end1"]) ? Yii::$app->thaiFormatter->asDate($model->data_json["date_end1"], 'medium') : '';
+                        echo $dateStart1.' ถึง '.$dateEnd1;
+                    } catch (\Throwable $th) {
+                       echo '-';
+                    }
+                    ?>
                 </div>
             </td>
             <td>
-            <?php if(isset($model_detail->data_json['company2']) && $model_detail->data_json['company2'] != ""):?>
+            <?php if(isset($model->data_json['company2']) && $model->data_json['company2'] != ""):?>
                 <div class="d-flex flex-column">
                 <?=isset($model->data_json['company2']) ? $model->data_json['company2'] : '-'?>
                     <div>
                         <div>
-                            <?=$startDate2?> ถึง <?=$endDate2?>
+                        <?php
+                    try {
+                        $dateStart2 =  isset($model->data_json["date_start2"]) ? Yii::$app->thaiFormatter->asDate($model->data_json["date_start2"], 'medium') : '';
+                        $dateEnd2=  isset($model->data_json["date_end2"]) ? Yii::$app->thaiFormatter->asDate($model->data_json["date_end2"], 'medium') : '';
+                        echo $dateStart2.' ถึง '.$dateEnd2;
+                    } catch (\Throwable $th) {
+                       echo '-';
+                    }
+                    ?>
                         </div>
                     </div>
                 </div>
