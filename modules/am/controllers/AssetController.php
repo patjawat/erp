@@ -2,28 +2,28 @@
 
 namespace app\modules\am\controllers;
 
-use yii;
+use app\components\AppHelper;
+use app\components\CategoriseHelper;
+use app\components\SiteHelper;
+use app\models\Categorise;
 use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
-use yii\web\Response;
+use app\modules\hr\models\Organization;
 use app\modules\hr\models\UploadCsv;
-use app\components\AppHelper;
-use yii\web\UploadedFile;
+use app\modules\sm\models\Vendor;
 use ruskid\csvimporter\CSVImporter;
 use ruskid\csvimporter\CSVReader;
 use ruskid\csvimporter\MultipleImportStrategy;
-use app\components\CategoriseHelper;
-use yii\helpers\Json;
+use yii;
 use yii\db\Expression;
-use chillerlan\QRCode\QRCode;
+use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use app\components\SiteHelper;
-use app\modules\hr\models\Organization;
-use app\modules\sm\models\Vendor;
-use app\modules\sm\models\AseetItem;
+use yii\helpers\Json;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
+use yii\web\UploadedFile;
+
 /**
  * AssetController implements the CRUD actions for Asset model.
  */
@@ -68,27 +68,27 @@ class AssetController extends Controller
         // ค้นหาคามกลุ่มโครงสร้าง
         $org1 = Organization::findOne($searchModel->q_department);
         //ถ้ามรกลุ่มย่อย
-        if(isset($searchModel->q_department) && isset($org1) && $org1->lvl == 1){
+        if (isset($searchModel->q_department) && isset($org1) && $org1->lvl == 1) {
             $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
             WHERE t2.name = :name;";
             $querys = Yii::$app->db->createCommand($sql)
-            ->bindValue(':name', $org1->name)
-            ->queryAll();
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
             $arrDepartment = [];
             foreach ($querys as $tree) {
                 $arrDepartment[] = $tree['id'];
             }
-            if(count($arrDepartment) > 0){
+            if (count($arrDepartment) > 0) {
                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
             }
 
-        }else{
+        } else {
             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         }
         // จบการค้นหา
-        
+
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -97,21 +97,20 @@ class AssetController extends Controller
         ]);
 
         //ค้นหาตามอายุ
-        if($searchModel->price1 && !$searchModel->price2){
-            $dataProvider->query->andWhere(new \yii\db\Expression('price = '.$searchModel->price1));
+        if ($searchModel->price1 && !$searchModel->price2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
         }
-         //ค้นหาระหว่างช่วงอายุ
-        if($searchModel->price1 && $searchModel->price2){
-            $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN '.$searchModel->price1.' AND '.$searchModel->price2));
+        //ค้นหาระหว่างช่วงอายุ
+        if ($searchModel->price1 && $searchModel->price2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
         }
-        
+
         $dataProvider->setSort([
             'defaultOrder' => [
                 'receive_date' => SORT_DESC,
                 // 'service_start_time' => SORT_DESC
-            ]
+            ],
         ]);
-
 
         if ($this->request->get('view')) {
             SiteHelper::setDisplay($this->request->get('view'));
@@ -124,81 +123,76 @@ class AssetController extends Controller
         ]);
     }
 
-
-     // ตรวจสอบความถูกต้อง
-     public function actionValidator()
-     {
-         Yii::$app->response->format = Response::FORMAT_JSON;
-         $model = new Asset();
-         $requiredName = "ต้องระบุ"; 
-         if ($this->request->isPost && $model->load($this->request->post()))
-          { 
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Asset();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
             $fsnAuto = $this->request->post('Asset');
-             // ตรวจระหัสซ้ำ
-             $checkCode = Asset::find()->where(['code' => $model->code])
-             ->andWhere(['<>','ref',$model->ref])
-             ->andWhere(['not', ['code' => null]])
-             ->andWhere(['not', ['code' => ""]])
-             ->one();
+            // ตรวจระหัสซ้ำ
+            $checkCode = Asset::find()->where(['code' => $model->code])
+                ->andWhere(['<>', 'ref', $model->ref])
+                ->andWhere(['not', ['code' => null]])
+                ->andWhere(['not', ['code' => ""]])
+                ->one();
             //  return $checkCode;
 
-         if ($checkCode) {
-                 $codeStatus = true;
-         } else {
-             $codeStatus = false;
-         }
+            if ($checkCode) {
+                $codeStatus = true;
+            } else {
+                $codeStatus = false;
+            }
 
-        //  return $model;
-         //ตรวจสอลการลงปีงบประมาณ
-        // return $model;
+            //  return $model;
+            //ตรวจสอลการลงปีงบประมาณ
+            // return $model;
 
+            if ($model->asset_group != 1 && $model->asset_group != 2) { // ถ้าเป็นที่ดินไม่ต้องตรวจสอบปีงบประมาณ
+                $model->data_json['budget_type'] == "" ? $model->addError('data_json[budget_type]', $requiredName) : null;
+                $model->on_year == "" ? $model->addError('on_year', $requiredName) : null;
+                $model->purchase == "" ? $model->addError('purchase', $requiredName) : null;
+                $model->data_json['method_get'] == "" ? $model->addError('data_json[method_get]', $requiredName) : null;
+                $model->data_json['vendor_id'] == "" ? $model->addError('data_json[vendor_id]', $requiredName) : null;
 
-            if($model->asset_group != 1 && $model->asset_group != 2){ // ถ้าเป็นที่ดินไม่ต้องตรวจสอบปีงบประมาณ
-                $model->data_json['budget_type'] == "" ? $model->addError('data_json[budget_type]',$requiredName) : null;
-                $model->on_year == "" ? $model->addError('on_year',$requiredName) : null;
-                $model->purchase == "" ? $model->addError('purchase',$requiredName) : null;
-                $model->data_json['method_get'] == "" ? $model->addError('data_json[method_get]',$requiredName) : null;
-                $model->data_json['vendor_id'] == "" ? $model->addError('data_json[vendor_id]',$requiredName) : null;
-        
-                $codeStatus ? $model->addError('code','หมายเลขครุภัณฑ์ซ้ำ') : null;
+                $codeStatus ? $model->addError('code', 'หมายเลขครุภัณฑ์ซ้ำ') : null;
 
                 // ถ้าสร้างรหัสอัตโนมัติ
-                if(!isset($fsnAuto['fsn_auto']) || $fsnAuto['fsn_auto'] == "1"){
+                if (!isset($fsnAuto['fsn_auto']) || $fsnAuto['fsn_auto'] == "1") {
                 }
                 // ถ้ากำหนดรหัวเอง
-                if(isset($fsnAuto['fsn_auto']) && $fsnAuto['fsn_auto'] == "0"){
+                if (isset($fsnAuto['fsn_auto']) && $fsnAuto['fsn_auto'] == "0") {
                     $model->code == "" ? $model->addError('code', $requiredName) : null;
                 }
 
             }
 
-        //     if($model->data_json['budget_year']){
-        //         $strYear = $model->data_json['budget_year'];
-        //        //  แยกอักขะออก     
-        //        $strYearResult = preg_replace('/[^A-Za-z0-9ก-ฮ\-]/', '', $strYear);
-        //        //ต้องไม่น้อยกว่า 4 หลัก
-        //        if(strlen($strYearResult) < 4){
-        //            $model->addError('data_json[budget_year]','ปี พ.ศ. ต้องไม่น้อยกว่า 4 หลัก');
-        //        }else{
-        //            // ระบุให้ไม่เกินจริง
-        //            $year = ($strYearResult - 543);
-        //            if($year > date('Y')){
-        //                $model->addError('data_json[budget_year]','ปี พ.ศ.ต้องไม่เกิน '.(date('Y')+543));
-        //            }
-        //        }
-   
-        //    }
+            //     if($model->data_json['budget_year']){
+            //         $strYear = $model->data_json['budget_year'];
+            //        //  แยกอักขะออก
+            //        $strYearResult = preg_replace('/[^A-Za-z0-9ก-ฮ\-]/', '', $strYear);
+            //        //ต้องไม่น้อยกว่า 4 หลัก
+            //        if(strlen($strYearResult) < 4){
+            //            $model->addError('data_json[budget_year]','ปี พ.ศ. ต้องไม่น้อยกว่า 4 หลัก');
+            //        }else{
+            //            // ระบุให้ไม่เกินจริง
+            //            $year = ($strYearResult - 543);
+            //            if($year > date('Y')){
+            //                $model->addError('data_json[budget_year]','ปี พ.ศ.ต้องไม่เกิน '.(date('Y')+543));
+            //            }
+            //        }
 
-            
-                foreach ($model->getErrors() as $attribute => $errors) {
-                    $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-                }
-                if (!empty($result)) {
-                    return $this->asJson($result);
-                }
+            //    }
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
             }
         }
-     
+    }
 
     /**
      * Displays a single Asset model.
@@ -213,13 +207,12 @@ class AssetController extends Controller
         $model = $this->findModel($id);
         // return $model->device_items;
         // $ids = ArrayHelper::getColumn($model->device_items, 'id');
-        
-        
+
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
-        $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items !=NULL ? $model->device_items : '']);
-        
+        $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
+
         return $this->render('view', [
             'model' => $model,
             'searchModel' => $searchModel,
@@ -230,27 +223,23 @@ class AssetController extends Controller
     public function actionDepreciation($id)
     {
         $model = $this->findModel($id);
-        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา'.$model->data_json['asset_name'] : '-';
-        $title = $this->request->get('title').isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-';
-        if($this->request->isAjax)
-        {
+        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา' . $model->data_json['asset_name'] : '-';
+        $title = $this->request->get('title') . isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-';
+        if ($this->request->isAjax) {
 
-        
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' =>  '<i class="fa-solid fa-chart-line"></i> '.$asset_name,
-            'content' => $this->renderAjax('depreciation_list', [
-            'model' => $model,
-        ])
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-chart-line"></i> ' . $asset_name,
+                'content' => $this->renderAjax('depreciation_list', [
+                    'model' => $model,
+                ]),
             ];
-        }else{
+        } else {
             return $this->render('depreciation_list', [
                 'model' => $model,
             ]);
         }
     }
-
-    
 
     /**
      * Creates a new Asset model.
@@ -258,24 +247,23 @@ class AssetController extends Controller
      * @return string|\yii\web\Response
      */
     public function actionCreate()
-    {   $group = $this->request->get('group');
+    {$group = $this->request->get('group');
         $model = new Asset([
             'asset_group' => $group,
             'asset_item' => 0,
             'asset_status' => 0,
             'price' => 0,
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(),10)
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
         if ($this->request->isPost) {
-            
+
             if ($model->load($this->request->post())) {
                 $model->receive_date = AppHelper::DateToDb($model->receive_date);
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                if($model->save())
-                {
+                if ($model->save()) {
                     return $this->redirect(['view', 'id' => $model->id]);
-                }else{
+                } else {
                     return $model->getErrors();
                 }
                 // return $this->redirect(['index']);
@@ -287,8 +275,7 @@ class AssetController extends Controller
 
         return $this->render('create', [
             'model' => $model,
-        ]);
-    }
+        ]);}
 
     /**
      * Updates an existing Asset model.
@@ -301,28 +288,28 @@ class AssetController extends Controller
     {
         $model = $this->findModel($id);
         $model->receive_date = AppHelper::DateFormDb($model->receive_date);
-        if(isset($model->data_json["item_options"])){
+        if (isset($model->data_json["item_options"])) {
             $model->item_options = $model->data_json["item_options"];
         }
         $model_old_data_json = $model->data_json;
 
-        if ($this->request->isPost && $model->load($this->request->post()) ) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
-            if($model->save()){
+            if ($model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
-            }else{
+            } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return $model->getErrors();
             }
         }
-        
+
         return $this->render('update', [
             'model' => $model,
-            // 'group' => $model->asset_group 
+            // 'group' => $model->asset_group
         ]);
     }
-    
+
 //update Spect ที่เป็น Cmputer
     public function actionUpdateComputer($id)
     {
@@ -332,43 +319,82 @@ class AssetController extends Controller
 
         $old_data_json = $model->data_json;
 
-        if ($this->request->isPost && $model->load($this->request->post()) ) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
             // return $model->data_json;
-            if($model->save()){
+            if ($model->save()) {
+
+                $this->CheckUpdateData($model);
+
                 return $this->redirect(['view', 'id' => $model->id]);
-            }else{
+            } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return $model->getErrors();
             }
         }
         return [
             'title' => $title,
-            'content' => $this->renderAjax('is_computer/_form_computer',['model' => $model])
+            'content' => $this->renderAjax('is_computer/_form_computer', ['model' => $model]),
         ];
     }
 
+    private static function CheckUpdateData($model)
+    {
 
-    public function actionQrcode(){
+        //บึนทึกยี่ห้ออัตโนมัติ
+        $brand = $model->data_json['brand'];
+        $modelBrand = Categorise::findOne(['name' => 'brand', 'title' => $brand]);
+        if (!$modelBrand) {
+            $modelBrandNew = new Categorise(['name' => 'brand', 'code' => $brand, 'title' => $brand]);
+            $modelBrandNew->save();
+        }
+
+        //บึนทึกรุ่นอัตโนมัติ
+        $asset_model = $model->data_json['asset_model'];
+        $assetModel = Categorise::findOne(['name' => 'asset_model', 'title' => $asset_model]);
+        if (!$assetModel) {
+            $assetModel = new Categorise(['name' => 'asset_model', 'code' => $asset_model, 'title' => $asset_model]);
+            $assetModel->save();
+        }
+
+        //บึนทึกรุ่นอัตโนมัติ
+        $os = $model->data_json['os'];
+        $osModel = Categorise::findOne(['name' => 'os', 'title' => $os]);
+        if (!$osModel) {
+            $osModel = new Categorise(['name' => 'os', 'code' => $os, 'title' => $os]);
+            $osModel->save();
+        }
+
+                //บึนทึก CPU
+                $cpu = $model->data_json['cpu'];
+                $cpuModel = Categorise::findOne(['name' => 'cpu', 'title' => $cpu]);
+                if (!$cpuModel) {
+                    $cpuModel = new Categorise(['name' => 'cpu', 'code' => $cpu, 'title' => $cpu]);
+                    $cpuModel->save();
+                }
+    }
+
+    public function actionQrcode()
+    {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         $model = $this->findModel($id);
         return [
             'title' => '<i class="fa-solid fa-qrcode"></i> QR-Code',
-            'content' => $this->renderAjax('qr-code/view_qrcode',['model' => $model])
+            'content' => $this->renderAjax('qr-code/view_qrcode', ['model' => $model]),
         ];
     }
 //ตั้งค่าขนาดกระดาษ qr-code
-    public function actionQrcodeSetting(){
+    public function actionQrcodeSetting()
+    {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         $title = $this->request->get('title');
         return [
             'title' => $title,
-            'content' => $this->renderAjax('qr-code/setting_qrcode')
+            'content' => $this->renderAjax('qr-code/setting_qrcode'),
         ];
     }
-
 
     /**
      * Deletes an existing Asset model.
@@ -406,25 +432,21 @@ class AssetController extends Controller
 
         $name = $this->request->get('name');
         $data = $this->request->get('val');
-        return $name.$data;
+        return $name . $data;
 
     }
-    
 
     //เลือกการบันทึกทรัพย์สิน
     public function actionSelectType()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-       return [
-        'title' => 'เลือกกลุ่ม',
-        'content' => $this->renderAjax('select_type')
-       ];
-       
+        return [
+            'title' => 'เลือกกลุ่ม',
+            'content' => $this->renderAjax('select_type'),
+        ];
 
     }
-    
-
 
     public function actionImportCsv()
     {
@@ -439,7 +461,7 @@ class AssetController extends Controller
         $error = [];
         if ($model->load(Yii::$app->request->post())) {
             $model->file = UploadedFile::getInstance($model, 'file');
-            $model->file->saveAs($basePath. $model->file->name);
+            $model->file->saveAs($basePath . $model->file->name);
 
             $importer = new CSVImporter();
             $filename = $basePath . $model->file->name;
@@ -451,63 +473,63 @@ class AssetController extends Controller
                 ],
             ]));
 /*         Yii::$app->response->format = Response::FORMAT_JSON;
-        $list = explode(',', $importer->getData()[3][0]);
-        $list[10] = preg_replace('/[^0-9.]/', '', explode(',', $importer->getData()[3][0])[10] . explode(',', $importer->getData()[3][0])[11] . explode(',', $importer->getData()[3][0])[12]);
-        unset($list[11]);
-        unset($list[12]);
-        return explode(',', implode(",",$list)); */
-        for ($x = 1; $x <= count($importer->getData()); $x++) {
+$list = explode(',', $importer->getData()[3][0]);
+$list[10] = preg_replace('/[^0-9.]/', '', explode(',', $importer->getData()[3][0])[10] . explode(',', $importer->getData()[3][0])[11] . explode(',', $importer->getData()[3][0])[12]);
+unset($list[11]);
+unset($list[12]);
+return explode(',', implode(",",$list)); */
+            for ($x = 1; $x <= count($importer->getData()); $x++) {
                 $data_check_error = $importer->getData()[$x][0];
                 $data_check_error = AppHelper::GetDataCsv(explode(',', $data_check_error));
-                
-                if (CategoriseHelper::TitleAndName($data_check_error[10],"purchase")->one() == null){
-                    $codeP =CategoriseHelper::CodePurchase();
+
+                if (CategoriseHelper::TitleAndName($data_check_error[10], "purchase")->one() == null) {
+                    $codeP = CategoriseHelper::CodePurchase();
                     $model_assetItemx = new Vendor([
                         "code" => (string) $codeP,
                         "name" => "purchase",
-                        "title" => $data_check_error[10]
+                        "title" => $data_check_error[10],
                     ]);
                     $model_assetItemx->save();
                 }
-                if (CategoriseHelper::TitleAndName($data_check_error[1],"asset_item")->one() == null){
-                    
+                if (CategoriseHelper::TitleAndName($data_check_error[1], "asset_item")->one() == null) {
+
                     $model_assetItem = new Vendor([
                         "code" => substr($data_check_error[2], 0, 13),
                         "name" => "asset_item",
-                        "title" => $data_check_error[1]
+                        "title" => $data_check_error[1],
                     ]);
                     $model_assetItem->save();
                 }
-                if ($data_check_error[4] != "ไม่ระบุ"){
-                    if (CategoriseHelper::TitleAndName($data_check_error[4],"vendor")->one() == null){
+                if ($data_check_error[4] != "ไม่ระบุ") {
+                    if (CategoriseHelper::TitleAndName($data_check_error[4], "vendor")->one() == null) {
 
                         $model_Vendor = new Vendor([
                             "code" => $data_check_error[5],
                             "name" => "vendor",
-                            "title" => $data_check_error[4]
+                            "title" => $data_check_error[4],
                         ]);
                         $model_Vendor->save();
                     }
                 }
 /*                 if (count($data_check_error) != 17) {
-                    array_push($error, 'ข้อมูลไม่ครบถ้วน');
-                }  */
+array_push($error, 'ข้อมูลไม่ครบถ้วน');
+}  */
 /*                 if (null != Vendor::findOne(['code' => $data_check_error[0]])) {
-                    array_push($error, 'มีเลขประจำตัวผู้เสียภาษี ' . $data_check_error[0] . ' อยู่ในระบบแล้ว');
-                }  */
+array_push($error, 'มีเลขประจำตัวผู้เสียภาษี ' . $data_check_error[0] . ' อยู่ในระบบแล้ว');
+}  */
 /*                  if (empty(CategoriseHelper::Title($data_check_error[1])->one())) {
-                    array_push($error, 'ไม่พบผู้แทนจำหน่าย ' . $data_check_error[1]);
-                } */
+array_push($error, 'ไม่พบผู้แทนจำหน่าย ' . $data_check_error[1]);
+} */
 /*                 if (!is_numeric($data_check_error[10])) {
-                    array_push($error, 'ช่อง ' . $data_check_error[10] . ' ต้องใส่ข้อมูลเป็นตัวเลข');
-                }
-                if (!is_numeric($data_check_error[11])) {
-                    array_push($error, 'ช่อง ' . $data_check_error[11] . ' ต้องใส่ข้อมูลเป็นตัวเลข');
-                } */
-            }  
+array_push($error, 'ช่อง ' . $data_check_error[10] . ' ต้องใส่ข้อมูลเป็นตัวเลข');
+}
+if (!is_numeric($data_check_error[11])) {
+array_push($error, 'ช่อง ' . $data_check_error[11] . ' ต้องใส่ข้อมูลเป็นตัวเลข');
+} */
+            }
 /*             Yii::$app->response->format = Response::FORMAT_JSON;
-            $list = explode(',', $importer->getData()[1][0]);
-            return AppHelper::GetDataCsv($list); */
+$list = explode(',', $importer->getData()[1][0]);
+return AppHelper::GetDataCsv($list); */
             if (empty($error)) {
                 $numberRowsAffected = $importer->import(new MultipleImportStrategy([
                     'tableName' => Asset::tableName(), // change your model names accordingly
@@ -545,22 +567,22 @@ class AssetController extends Controller
                                 return $data[2];
                             },
                         ],
-                         [
+                        [
                             'attribute' => 'purchase',
                             'allowEmptyValues' => false,
                             'value' => function ($data) {
                                 $data = explode(',', $data[0]);
                                 $data = AppHelper::GetDataCsv($data);
-                                if ($data[10] == "เฉพาะเจาะจง"){
+                                if ($data[10] == "เฉพาะเจาะจง") {
                                     return 1;
-                                }elseif ($data[10] == "บริจาค"){
+                                } elseif ($data[10] == "บริจาค") {
                                     return 2;
-                                }elseif ($data[10] == "ตกลงราคา"){
+                                } elseif ($data[10] == "ตกลงราคา") {
                                     return 3;
                                 }
-                                return ;
-                            }
-                        ], 
+                                return;
+                            },
+                        ],
                         [
                             //วันที่รับเข้า
                             'attribute' => 'receive_date',
@@ -601,7 +623,7 @@ class AssetController extends Controller
                                 $organization = Organization::find()->where(['name' => $data[7]])->one();
                                 return $organization ? $organization->id : null;
                             },
-                        ], 
+                        ],
                         [
                             //สถานะ
                             'attribute' => 'asset_status',
@@ -636,7 +658,7 @@ class AssetController extends Controller
                                     //'method_get' => "test_method_get_code",
                                     //วิธีได้มา
                                     'method_get' => $method_get ? $method_get->code : null,
-                                    'method_get_text' =>  $method_get ? $data[9] : null,
+                                    'method_get_text' => $method_get ? $data[9] : null,
                                     //'budget_type' => "budget_type",
                                     //ประเภทเงิน
                                     'budget_type' => $budget_type ? $budget_type->code : null,
@@ -644,7 +666,7 @@ class AssetController extends Controller
                                     //ปีงบประมาณ
                                     'on_year' => $data[8],
                                     //รายละเอียดยี่ห้อครุภัณฑ์
-                                    'detail'=> $data[14],
+                                    'detail' => $data[14],
                                     //S/N
                                     'serial_number' => $data[15],
                                     //หน่วยนับ
@@ -662,11 +684,11 @@ class AssetController extends Controller
 
                                     'asset_type_text' => $data[0],
                                 ];
-                                
+
                                 return Json::encode($jsonData);
                             },
                         ],
-                        
+
                     ],
 
                 ]));
@@ -685,7 +707,7 @@ class AssetController extends Controller
                 return $this->redirect(['import-status']);
             }
 
-        // return var_dump($importer->getData());
+            // return var_dump($importer->getData());
         } else {
             return $this->render('import_csv',
                 ['model' => $model,
@@ -699,16 +721,17 @@ class AssetController extends Controller
         $data = Yii::$app->session->getFlash('data', []);
         $status = isset($data['status']) ? $data['status'] : false;
         $error = isset($data['error']) ? $data['error'] : [];
-        return $this->render('import-status',[
+        return $this->render('import-status', [
             'status' => $status,
-            'error' => $error
+            'error' => $error,
         ]);
     }
 
-    public function actionGetTableDprice(){
-        return $this->render("extableDprice",[
-                                                //ปี ราคา ค่าเสื่อม
-            "data"=> AppHelper::GetDepreciation(5,10000,40)
+    public function actionGetTableDprice()
+    {
+        return $this->render("extableDprice", [
+            //ปี ราคา ค่าเสื่อม
+            "data" => AppHelper::GetDepreciation(5, 10000, 40),
         ]);
     }
 }

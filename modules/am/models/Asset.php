@@ -375,8 +375,32 @@ class Asset extends \yii\db\ActiveRecord
     public function ListPurchase()
     {
         return ArrayHelper::map(AssetItem::find()->where(['name' => 'purchase'])->all(), 'code', 'title');
-
     }
+
+//รายการยี่ห้อ
+    public function ListBrand()
+    {
+        return ArrayHelper::map(AssetItem::find()->where(['name' => 'brand'])->all(), 'code', 'title');
+    }
+
+    //รายการรุ่น
+    public function ListAssetModel()
+    {
+        return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_model'])->all(), 'code', 'title');
+    }
+
+        //รายการระบบปฏิบัติการ
+        public function ListOs()
+        {
+            return ArrayHelper::map(AssetItem::find()->where(['name' => 'os'])->all(), 'code', 'title');
+        }
+
+                //รายการ CPU
+                public function ListCpu()
+                {
+                    return ArrayHelper::map(AssetItem::find()->where(['name' => 'cpu'])->all(), 'code', 'title');
+                }
+    
 
     public function ListOnYear()
     {
