@@ -66,6 +66,49 @@ use yii\helpers\Html;
                 </div>
             </div>
         </div>
+
+        <div class="card overflow-hidden">
+            <div class="card-header border-0">
+                <h5 class="card-title">มูลค่าทรัพย์สิน</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item py-4">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-2 fs-14">มูลค่าครุภัณฑ์</p>
+                                <h4 class="mb-0">1,625</h4>
+                            </div>
+                            <div class="avatar avatar-md bg-info me-0 align-self-center">
+                                <i class="bx bx-layer fs-lg"></i>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item py-4">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-2 fs-14">มูลค่าสิ่งก่อสร้าง</p>
+                                <h4 class="mb-0">$ 42,235</h4>
+                            </div>
+                            <div class="avatar avatar-md bg-primary me-0 align-self-center">
+                                <i class="bx bx-bar-chart-alt fs-lg"></i>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item py-4">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-2 fs-14">ครุภัณฑ์</p>
+                                <h4 class="mb-0">8,235</h4>
+                            </div>
+                            <div class="avatar avatar-md bg-success me-0 align-self-center">
+                                <i class="bx bx-chart fs-lg"></i>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
