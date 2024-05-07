@@ -357,7 +357,7 @@ class Asset extends \yii\db\ActiveRecord
         {
             return ArrayHelper::map(AssetItem::find()
             ->where(['name' => 'asset_item'])
-            ->andWhere(['category_id' => 8])
+            ->andWhere(['category_id' => 1])
             ->all(), 'code', 'title');
         }
 

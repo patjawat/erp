@@ -21,7 +21,6 @@ class ProfileController extends \yii\web\Controller
     public function actionIndex()
     {
         $name = $this->request->get('name');
-        // $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
         $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
         // if($model){
         return $this->render('@app/modules/hr/views/employees/view', [

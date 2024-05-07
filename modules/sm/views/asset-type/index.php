@@ -7,6 +7,8 @@ use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use yii\widgets\Pjax;
 use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use app\models\Categorise;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\AssetTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -100,19 +102,25 @@ $this->params['breadcrumbs'][] = $this->title;
                 'hAlign' => 'center',
                 'vAlign' => 'middle',
                 'width' => '150px',
-                'filter' => Select2::widget([
-                    'model' => $searchModel,
-                    'attribute' => 'category_id',
-                    'data' => ['3' => 'ครุภัณฑ์', '4' => 'วัสดุ'],
-                    'options' => ['placeholder' => 'เลือกประเภท...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                ]),
+                // 'filter' => Select2::widget([
+                //     'model' => $searchModel,
+                //     'attribute' => 'category_id',
+                //     'data' => ['3' => 'ครุภัณฑ์', '4' => 'วัสดุ'],
+                //     'options' => ['placeholder' => 'เลือกประเภท...'],
+                //     'pluginOptions' => [
+                //         'allowClear' => true,
+                //     ],
+                // ]),
                 'value' => function($model){
-                        return $model->category_id == 3 ? "ครุภัณฑ์" : "วัสดุ";
-                }
-            ],
+                        return $model->id;
+                },
+                'filter' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->asArray()->all(), 'code', 'title'),
+                'filterType' => GridView::FILTER_SELECT2,
+                'filterWidgetOptions' => [
+                    'options' => ['prompt' => ''],
+                    'pluginOptions' => ['allowClear' => true],
+                ],
+                ],
 /*             [
                 'format' => 'raw',
                 'header' => 'ดำเนินการ',

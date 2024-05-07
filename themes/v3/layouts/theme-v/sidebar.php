@@ -28,7 +28,12 @@ use yii\helpers\Html;
                         </li>
                     </ul> -->
                 </li>
-             
+                <li>
+                    <a class="side-nav-link" href="<?=Url::to(['/me'])?>">
+                    <i class="fa-solid fa-user-tie fs-4"></i>
+                        <span> My Dashboard</span>
+                    </a>
+                </li>
                 <li class="side-nav-title side-nav-item menu-title">Apps</li>
                 <li>
                     <a class="side-nav-link" href="<?=Url::to(['/hr'])?>">
