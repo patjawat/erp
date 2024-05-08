@@ -41,11 +41,11 @@ use kartik\grid\GridView;
         [
             'attribute' => 'code',
             'format' => 'raw',
-            'header' => 'รหัส',
+            'header' => 'รหัส FSN',
             'hAlign' => 'center',
             'vAlign' => 'middle',
             'value' => function ($model) {
-                return $model->code;
+                return '<code>'.$model->code.'</code>';
             },
         ],
        
