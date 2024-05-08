@@ -16,7 +16,7 @@ use kartik\grid\GridView;
                 </div>
                 <?php echo GridView::widget([
     'dataProvider' => $dataProvider,
-    // 'filterModel' => $searchModel,
+    'filterModel' => $searchModel,
     'hover' => true,
     'layout' => '{items}',
     'columns' => [
