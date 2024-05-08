@@ -87,12 +87,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ])?>
             </div>
         </div>
-
-
-
     </div>
-
-
     <div class="col-xl-8 col-lg-8 col-md-6 col-sm-12">
         <?=$this->render('list_items', ['model' => $model, 'dataProvider' => $dataProvider]);?>
     </div>
