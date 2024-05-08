@@ -12,19 +12,24 @@ $this->params['breadcrumbs'][] = ['label' => 'Fsns', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-
+<?php Pjax::begin(['id' => 'title-container','timeout' => 50000 ]); ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check"></i> <?=$this->title;?>
+<i class="bi bi-folder-check"></i> <span class="page-title"><?=$model->title?></span>
 <?php $this->endBlock();?>
 <?php $this->beginBlock('sub-title');?>
 <?php $this->endBlock();?>
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock()?>
-
+<?php Pjax::end(); ?>
 <?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
+<!-- <span class="btn btn-success" id="demo">click</span> -->
+<span style="display:none" id="page-title">
+<span class="fs-5">
+    <i class="bi bi-folder-check"></i> <?=$model->title?></span>
+</span>
 <div class="row">
-    <div class="col-4">
+    <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex gap-2  justify-content-start mb-3">
@@ -88,9 +93,28 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
 
-    <div class="col-8">
+    <div class="col-xl-8 col-lg-8 col-md-6 col-sm-12">
         <?=$this->render('list_items', ['model' => $model, 'dataProvider' => $dataProvider]);?>
     </div>
 </div>
+
+<?php
+$js = <<<JS
+
+
+// $("body").on("click", "#demo", function (e) {
+//     console.log('Cloci');
+//     // alert();
+//     $.pjax.reload({ container:'#title-container', history:false,replace: false}); 
+// });
+$('#am-container').on("pjax:end", function () {
+    console.log('success');
+    $('.page-title').html($('#page-title').html())
+    $.pjax.reload({ container:'#title-container', history:false,replace: false}); 
+    
+});
+JS;
+$this->registerJS($js)
+?>
 
 <?php Pjax::end();?>

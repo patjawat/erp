@@ -13,15 +13,23 @@ use yii\widgets\Pjax;
 $this->title = 'ตั้งค่าประเภททรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-
+<?php Pjax::begin(['id' => 'title-container','timeout' => 500 ]); ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check"></i> <?=$this->title;?>
+<i class="bi bi-folder-check"></i> <span class="page-title"><?=$this->title?></span>
 <?php $this->endBlock();?>
 <?php $this->beginBlock('sub-title');?>
 <?php $this->endBlock();?>
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock()?>
+<?php Pjax::end(); ?>
+<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
+
+<span style="display:none" id="page-title">
+<span class="fs-5">
+    <i class="bi bi-folder-check"></i> <?=$this->title?></span>
+</span>
+
 <style>
     .grid-expanded-row-details{
         background-color: white;
@@ -30,7 +38,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="" style="background-color:eee;">
 
-<?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
 
         <div class="card mb-0">
             <div class="card-body">
