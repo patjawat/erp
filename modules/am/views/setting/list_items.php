@@ -10,7 +10,7 @@ use kartik\grid\GridView;
             <div class="card-body">
                 <div class="mb-3">
                     <?=app\components\AppHelper::Btn([
-                        'title' => "<i class='fa-solid fa-circle-plus'></i> สร้าใหม่",
+                        'title' => "<i class='fa-solid fa-circle-plus'></i> สร้างใหม่",
                         'url' => ['/am/setting/create', 'name' => 'asset_item', 'id' => $model->id],
                         'modal' => true, 'size' => 'lg'])?>
                 </div>

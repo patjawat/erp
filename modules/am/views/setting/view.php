@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
         [
             'label' => 'ประเภท',
             'value' => function ($model) {
-                switch ($model->code) {
+                switch ($model->category_id) {
                 case 1:
                     return 'ที่ดิน';
                     break;
