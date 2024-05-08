@@ -107,14 +107,20 @@ class SettingController extends \yii\web\Controller
         $name = $this->request->get('name');
         $assetType = AssetType::findOne(['id' => $id]);
 
-        $model = new AssetType([
-            'name' => $name,
-            'category_id' => $assetType->code,
-            'data_json' => [
-                'service_life' => $assetType->data_json['service_life'],
-                'depreciation' => $assetType->data_json['depreciation'],
-            ]
-        ]);
+        if($name == 'asset_type'){
+            $model = new AssetType([
+                'name' => $name,
+                ]);
+        }else{
+            $model = new AssetType([
+                'name' => $name,
+                'category_id' => $assetType->code,
+                'data_json' => [
+                    'service_life' => $assetType->data_json['service_life'],
+                    'depreciation' => $assetType->data_json['depreciation'],
+                    ]
+                ]);
+            }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -177,16 +183,21 @@ class SettingController extends \yii\web\Controller
 
     public function actionDelete($id)
     {
-        $model = $this->findModel($id)->delete();
         $container = $this->request->get('container');
-
+        $cache = $this->findModel($id);
+        $model = $this->findModel($id)->delete();
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'status' => 'success',
-            'data' => $model,
-            'container' => '#am-container',
-            'close' => true,
-        ];
+        // return $cache;
+        if($cache->name == "asset_type"){
+            return $this->redirect(['/am/setting']);
+        }else{
+            return [
+                'status' => 'success',
+                'data' => $model,
+                'container' => '#am-container',
+                'close' => true,
+            ];
+        }
     }
 
 
