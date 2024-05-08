@@ -55,9 +55,7 @@ class SettingController extends \yii\web\Controller
         $model = $this->findModel($id);
         $searchModel = new AssetTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'asset_item', 'active' => true, 'category_id' => $model->code]);
-        $dataProviderGroup = $searchModel->search($this->request->queryParams);
-        $dataProviderGroup->query->where(['name' => 'asset_type','category_id' => $model->category_id, 'active' => true]);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item', 'active' => true, 'category_id' => $model->code]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
