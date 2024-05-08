@@ -11,7 +11,7 @@ use kartik\select2\Select2;
 
 <div class="asset-type-form">
                     <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อครุภัณฑ์'])->label("ชื่อรายการ") ?>
-                    <?= $form->field($model, 'code')->textInput(['maxlength' => true,'placeholder'=>'ระบุรหัส'])->label("รหัส") ?>
+                    <?= $form->field($model, 'code')->textInput(['maxlength' => true,'placeholder'=>'ระบุรหัส'])->label("รหัส FSN") ?>
                     <?= $form->field($model, 'category_id')->textInput()->label("หมวดหมู่") ?>
                     <?= $form->field($model, 'data_json[service_life]')->textInput(['placeholder' => "ระบุจำนวน ปี"])->label("อายุการใช้งาน (ปี)") ?>        
                     <?= $form->field($model, 'data_json[depreciation]')->textInput(['placeholder' => "ตัวอยย่าง 00.00"])->label("อัตราค่าเสื่อม") ?>
