@@ -1,6 +1,7 @@
 <?php
 
-use app\modules\sm\models\AssetType;
+use app\modules\am\models\AssetType;
+use app\modules\am\models\AssetItem;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -16,34 +17,30 @@ use app\models\Categorise;
 $this->title = 'Asset Types';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<style>
+    .grid-expanded-row-details{
+        background-color: white;
+    }
+</style>
 
-<div class="asset-type-index">
-<div class="card">
-    <div class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-    <h4>ตั้งค่ากลุ่ม </h4> 
-    <div class="d-flex gap-2">  
-                <?=Html::a('<i class="fa-solid fa-chevron-left me-1"></i> ย้อนกลับ',['/sm/asset-item'],['class' => 'btn btn-light'])?>
-        </div>
-    </div>
-    </div>
-</div>
-<?php Pjax::begin(['id' => 'sm-container', 'enablePushState' => true, 'timeout' => 5000]); ?>
+<div class="" style="background-color:eee;">
+
+<?php  Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]); ?>
 
         <div class="card mb-0">
             <div class="card-body">
             <?=app\components\AppHelper::Btn([
                     'title' =>"<i class='fa-solid fa-circle-plus'></i> สร้างกลุ่มครุภัณฑ์หรือวัสดุ",
-                    'url' =>['/sm/asset-type/create','name' => 'asset_type'],
+                    'url' =>['/am/setting/create','name' => 'asset_type'],
                     'modal' => true, 'size' => 'lg' ])?>
             </div>
         </div>
-
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
     <?= GridView::widget([
+        'id' => 'demo-container',
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'hover' => true,
+        'pjax'=>false,
         'layout' => '{items}',
         'columns' => [
             [
@@ -59,17 +56,20 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => 'kartik\grid\ExpandRowColumn',
                 'width' => '50px',
                 'value' => function ($model, $key, $index, $column) {
+                    // $assetItem = AssetItem::find()->where(['category_id' => $model->code])->count('id');
+                    // if($assetItem > 0){
+                    //     return GridView::ROW_EXPANDED;
+                    // }else{
+                    // }
                     return GridView::ROW_COLLAPSED;
-                    // return GridView::ROW_EXPANDED;
 
                 },
-                // uncomment below and comment detail if you need to render via ajax
-                // 'detailUrl' => Url::to(['/site/book-details']),
-                'detail' => function ($model, $key, $index, $column) {
-                    return Yii::$app->controller->renderPartial('_expand-row-details', ['model' => $model]);
-                },
+                'detailUrl' => Url::to(['/am/setting/items-detail']),
                 'headerOptions' => ['class' => 'kartik-sheet-style'],
                 'expandOneOnly' => true,
+                'expandIcon' => '<i class="fa-solid fa-folder-plus"></i>',
+                'collapseIcon' => '<i class="fa-regular fa-folder-open"></i>',
+                'detailRowCssClass' => 'grid-expanded-row-details',
             ],
             [
                 'attribute' => 'title',
@@ -77,16 +77,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 'header' => 'ชื่อ',
                 'value' => function($model){
                         return $this->render('type_item',['model' => $model]);
-                }
-            ],
-            [
-                'attribute' => 'code',
-                'format' => 'raw',
-                'header' => 'รหัส',
-                'hAlign' => 'center',
-                'vAlign' => 'middle',
-                'value' => function($model){
-                        return $model->code;
                 }
             ],
             [
