@@ -1,12 +1,6 @@
 <?php 
 use yii\helpers\Html;
 ?>
-<div class="card">
-    <div class="card-body">
-        <h4 class="card-title">ที่ยังไม่ระบุประเภท</h4>
-    </div>
-</div>
-
 <div
     class="table-responsive"
 >
