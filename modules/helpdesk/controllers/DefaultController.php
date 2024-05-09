@@ -2,8 +2,13 @@
 
 namespace app\modules\helpdesk\controllers;
 
+use Yii;
+use app\modules\helpdesk\models\Repair;
+use app\modules\helpdesk\models\RepairSearch;
 use yii\web\Controller;
-
+use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
+use yii\web\Response;
 /**
  * Default controller for the `helpdesk` module
  */
@@ -15,6 +20,23 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $searchModel = new RepairSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        if($this->request->isAjax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '',
+                'content' => $this->renderAjax('index', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        }else{
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
     }
 }

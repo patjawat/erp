@@ -56,47 +56,18 @@ use yii\helpers\Html;
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title"><i class="fa-solid fa-bell text-danger"></i> การแจ้งซ่อมรอดำเนินการ</h4>
-                <div class="d-flex">
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">เปิดเครื่องไม่ติด</h6>
+                <?php foreach($dataProvider->getModels() as $model):?>
+                <div class="d-flex bg-primary bg-opacity-10 py-2 px-3 rounded mt-2">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1"><i class="fa-solid fa-circle-exclamation text-danger"></i> <?=$model->data_json['title']?></h6>
                         <div class="d-flex justify-content-between">
                             <span class="text-muted text-uppercase" style="font-size:small"><i class="bi bi-clock"></i> 13/02/2556 13:00
                             </span>
                             <span class="text-muted text-uppercase fs-6">งานผู้ป่วยใน</span>
-
-                        </div>
-                    </div>
-                    <!-- <div class="flex-shrink-0">
-                        <title>Placeholder</title>
-                        <rect width="100%" height="100%" fill="#e5e5e5"></rect><text x="50%" y="50%" fill="#999"
-                            dy=".3em">Image</text>
-                        </svg>
-                    </div> -->
-                </div>
-                <hr>
-                <div class="d-flex mt-2">
-                    <div class="flex-grow-1 ms-3">
-                        <h6>แอร์ไม่เย็น</h6>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted text-uppercase" style="font-size:small"><i class="bi bi-clock"></i> 20/05/2556 11:00
-                            </span>
-                            <span class="text-muted text-uppercase fs-6">งานผู้ป่วยใน</span>
                         </div>
                     </div>
                 </div>
-
-                <hr>
-                <div class="d-flex mt-2">
-                    <div class="flex-grow-1 ms-3">
-                        <h6>ไฟเปิดไม่ติด</h6>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted text-uppercase" style="font-size:small"><i class="bi bi-clock"></i> 20/05/2556 11:00
-                            </span>
-                            <span class="text-muted text-uppercase fs-6">งานผู้ป่วยใน</span>
-                        </div>
-                    </div>
-                </div>
-
+                <?php endforeach;?>
             </div>
         </div>
 
