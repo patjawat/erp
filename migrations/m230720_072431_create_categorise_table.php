@@ -27,7 +27,10 @@ class m230720_072431_create_categorise_table extends Migration
             'active' => $this->boolean()->defaultValue(true),
         ]);
 
-        $this->insert('categorise', ['name' => 'site', 'title' => 'ตั้งค่าระบบ', 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)]);
+        $this->insert('categorise', ['name' => 'site', 'title' => 'ตั้งค่าระบบ', 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+        'data_json' => [
+            'company_name' => 'ระบุชื่อองค์กร'
+        ]]);
 
         //ระดับ
         $this->insert('categorise', ['code' => 1, 'name' => 'position_level', 'title' => 'ปฏิบัติการ']);
@@ -770,7 +773,34 @@ class m230720_072431_create_categorise_table extends Migration
         // กำหนด FSN
         
         $this->insert('categorise', ['code' => '00', 'name' => 'vendor', 'title' => 'บริษัทตัวอย่างทดสอบ']);
-        $this->insert('categorise', ['code' => '', 'name' => 'asset_type', 'title' => 'บริษัทตัวอย่างทดสอบ']);
+
+        // ประเภททรัพย์สิน
+        $this->insert('categorise', ['category_id' => '2', 'code' => '1', 'name' => 'asset_type','title' => 'อาคารถาวร','data_json' => ['depreciation' => '4','service_life' => '25'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '2', 'code' => '2.1', 'name' => 'asset_type','title' => 'สิ่งปลูกสร้าง อาคารชั่วคราว/โรงเรือน','data_json' => ['depreciation' => '10','service_life' => '10'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '2', 'code' => '2.2', 'name' => 'asset_type','title' => 'สิ่งปลูกสร้าง ใช้คอนกรีตเสริมเหล็กหรือโครงเหล็กเป็นส่วนประกอบหลัก','data_json' => ['depreciation' => '6.66','service_life' => '15'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '2', 'code' => '2.3', 'name' => 'asset_type','title' => 'สิ่งปลูกสร้าง ใช้ไม้หรือวัสดุอื่นๆ เป็นส่วนประกอบหลัก','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '3', 'name' => 'asset_type','title' => 'ครุภัณฑ์สำนักงาน','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '4', 'name' => 'asset_type','title' => 'ครุภัณฑ์ยานพาหนะและขนส่ง','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '5.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์ไฟฟ้าและวิทยุ ','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '5.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์ไฟฟ้าและวิทยุ (เครื่องกำเนิดไฟฟ้า)','data_json' => ['depreciation' => '6.5','service_life' => '15'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '6', 'name' => 'asset_type','title' => 'ครุภัณฑ์โฆษณาและเผยแพร่','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '7.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์การเกษตร (เครื่องมือและอุปกรณ์)','data_json' => ['depreciation' => '50.00','service_life' => '2'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '7.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์การเกษตร (เครื่องจักรกล)','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '8.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์โรงงาน (เครื่องมือและอุปกรณ์)','data_json' => ['depreciation' => '50.00','service_life' => '2'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '8.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์โรงงาน (เครื่องจักรกล)','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '9.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์ก่อสร้าง (เครื่องมือและอุปกรณ์)','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '9.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์ก่อสร้าง (เครื่องจักกล)','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '10', 'name' => 'asset_type','title' => 'ครุภัณฑ์สำรวจ','data_json' => ['depreciation' => '12.5','service_life' => '8'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '11', 'name' => 'asset_type','title' => 'ครุภัณฑ์วิทยาศาสตร์และการแพทย์','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '12', 'name' => 'asset_type','title' => 'ครุภัณฑ์คอมพิวเตอร์','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '13', 'name' => 'asset_type','title' => 'ครุภัณฑ์การศึกษา','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '14', 'name' => 'asset_type','title' => 'ครุภัณฑ์งานบ้านงานครัว','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '15', 'name' => 'asset_type','title' => 'ครุภัณฑ์กีฬา/กายภาพ','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '16', 'name' => 'asset_type','title' => 'ครุภัณฑ์ดนตรี/นาฎศิลป์','data_json' => ['depreciation' => '20.0','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '17', 'name' => 'asset_type','title' => 'ครุภัณฑ์อาวุธ','data_json' => ['depreciation' => '10','service_life' => '10'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' =>  '18', 'name' => 'asset_type','title' => 'ครุภัณฑ์สนาม','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '' , 'code' =>  '19', 'name' => 'asset_type','title' => 'ครุภัณฑ์อื่นๆ','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
+        $this->insert('categorise', ['category_id' => '' , 'code' =>  '20', 'name' => 'asset_type','title' => 'สินทรัพย์ไม่มีตัวตัน','data_json' => ['depreciation' => '33.3','service_life' => '3'],'active' => 1]);
 
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_type.sql'));
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_group.sql'));

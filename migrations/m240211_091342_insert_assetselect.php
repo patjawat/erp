@@ -96,11 +96,14 @@ class m240211_091342_insert_assetselect extends Migration
         }
         
         //ประเภททรัพสิน
-        $sqlAssetType = Yii::$app->db->createCommand("select * from categorise where name = 'asset_group'")->queryAll();
+        $sqlAssetType = Yii::$app->db->createCommand("select * from categorise where name = 'asset_type'")->queryAll();
         if(count($sqlAssetType) < 1){
             $this->insert('categorise', ['code' => 4, 'name' => 'asset_group', 'title' => 'วัสดุ']);
             
+            
         }
+
+        
 
     }
 
