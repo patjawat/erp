@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Html;
+use yii\helpers\Url;
 ?>
 <style>
 .card.custom-card {
@@ -49,10 +50,11 @@ use yii\helpers\Html;
 
         </div>
         <?=$this->render('task')?>
+        <div id="viewJob"></div>
+
 
     </div>
     <div class="col-4">
-
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title"><i class="fa-solid fa-bell text-danger"></i> การแจ้งซ่อมรอดำเนินการ</h4>
@@ -70,7 +72,27 @@ use yii\helpers\Html;
                 <?php endforeach;?>
             </div>
         </div>
-
-
     </div>
 </div>
+
+<?php
+$url = Url::to(['/helpdesk/repair']);
+$js = <<<JS
+ getJob();
+
+function getJob()
+{
+    $.ajax({
+        type: "get",
+        url: "$url",
+        data: "data",
+        dataType: "json",
+        success: function (res) {
+            $('#viewJob').html(res.content);
+        }
+    });
+}
+
+JS;
+$this->registerJS($js)
+?>
