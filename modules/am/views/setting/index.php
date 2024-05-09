@@ -37,14 +37,21 @@ $this->params['breadcrumbs'][] = $this->title;
 </style>
 
 <div class="" style="background-color:eee;">
-
-
         <div class="card mb-0">
             <div class="card-body">
             <?=app\components\AppHelper::Btn([
     'title' => "<i class='fa-solid fa-circle-plus'></i> สร้างประเภททรัพย์สิน",
     'url' => ['/am/setting/create', 'name' => 'asset_type'],
     'modal' => true, 'size' => 'lg'])?>
+
+<?=app\components\AppHelper::Btn([
+    'title' => "<i class='fa-solid fa-circle-plus'></i> ยังไม่ระบุประเภท",
+    'url' => ['/am/setting/omit'],
+    'modal' => true, 
+    'size' => 'lg',
+    'class' => 'btn btn-danger'
+    ]
+    )?>
             </div>
         </div>
     <?=GridView::widget([

@@ -92,9 +92,34 @@ class SettingController extends \yii\web\Controller
         } else {
             return $this->render('view_item', [
                 'model' => $model,
-
             ]);
         }
+    }
+
+    public function actionOmit()
+    {
+         $sql_old = "SELECT i.id,g.title as group_name,a.code as asset_code,a.data_json->>'$.asset_name' as asset_name,t.code as type_code,t.title as type_title,i.code as item_code,i.title as item_title FROM asset a
+         LEFT JOIN categorise i ON i.code = a.asset_item AND i.name = 'asset_item'
+         LEFT JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
+         LEFT JOIN categorise g ON g.code = a.asset_group AND g.name = 'asset_group'
+         WHERE a.asset_group <> 1 AND t.code IS NULL
+         LIMIT 10000;";
+
+         $sql = "SELECT asset_item.id as asset_item_id,asset_item.code as asset_code,asset_item.title as asset_title,asset_type.code,asset_type.code as asset_code FROM categorise as asset_item
+         LEFT JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type'
+         WHERE  asset_item.name = 'asset_item' AND asset_type.code is NULL";
+         
+         $models = Yii::$app->db->createCommand($sql)->queryAll();
+         if($this->request->isAjax)
+         {
+             Yii::$app->response->format = Response::FORMAT_JSON;
+             return [
+                 'title' => 'รายการที่ยังไม่ระบุประเภท',
+                 'content' => $this->renderAjax('omit',['models' => $models])
+                ];
+            }else{
+                return $this->render('omit',['models' => $models]);
+            }
     }
 
 

@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card">
         <div
             class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-            <div class="d-flex justify-content-start">
+            <div class="d-flex justify-content-start gap-3">
             <?=app\components\AppHelper::Btn([
                     'title' => '<i class="fa-solid fa-circle-plus"></i> ลงทะเบียน'.$title,
                     'url' =>['select-type','group' => $group,'title' => $title],
@@ -56,6 +56,15 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php else:?>
     <!-- <a class="btn btn-outline-warning text-primary" href="#" data-pjax="0" onclick="return alert('กรุณาเลือกประเภททรัพย์สินก่อนสร้างรายการใหม่')"><i class="fa-solid fa-circle-exclamation text-danger"></i> เลือกประเภททรัพย์สินเพื่อสร้างรายการ</a> -->
                 <?php endif;?>
+
+                <?=app\components\AppHelper::Btn([
+    'title' => '<i class="fa-solid fa-circle-exclamation"></i> รายการไม่สมบูรณ์',
+    'url' => ['/am/asset/omit'],
+    'modal' => true, 
+    'size' => 'lg',
+    'class' => 'btn btn-danger'
+    ]
+    )?>
             </div>
 
             <div class="d-flex gap-2">

@@ -167,24 +167,6 @@ class AssetController extends Controller
                 }
 
             }
-
-            //     if($model->data_json['budget_year']){
-            //         $strYear = $model->data_json['budget_year'];
-            //        //  แยกอักขะออก
-            //        $strYearResult = preg_replace('/[^A-Za-z0-9ก-ฮ\-]/', '', $strYear);
-            //        //ต้องไม่น้อยกว่า 4 หลัก
-            //        if(strlen($strYearResult) < 4){
-            //            $model->addError('data_json[budget_year]','ปี พ.ศ. ต้องไม่น้อยกว่า 4 หลัก');
-            //        }else{
-            //            // ระบุให้ไม่เกินจริง
-            //            $year = ($strYearResult - 543);
-            //            if($year > date('Y')){
-            //                $model->addError('data_json[budget_year]','ปี พ.ศ.ต้องไม่เกิน '.(date('Y')+543));
-            //            }
-            //        }
-
-            //    }
-
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
             }
@@ -415,6 +397,30 @@ class AssetController extends Controller
 
         return $this->redirect(['index']);
     }
+
+    //รายการที่ตกค้างหรือข้อมูลไม่ครบ
+    public function actionOmit()
+    {
+         $sql = "SELECT a.id,g.title as group_name,a.code as asset_code,a.data_json->>'$.asset_name' as asset_name,t.code as type_code,t.title as type_title,i.code as item_code,i.title as item_title FROM asset a
+         LEFT JOIN categorise i ON i.code = a.asset_item AND i.name = 'asset_item'
+         LEFT JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
+         LEFT JOIN categorise g ON g.code = a.asset_group AND g.name = 'asset_group'
+         WHERE a.asset_group <> 1 AND t.code IS NULL
+         LIMIT 10000;";
+         
+         $models = Yii::$app->db->createCommand($sql)->queryAll();
+         if($this->request->isAjax)
+         {
+             Yii::$app->response->format = Response::FORMAT_JSON;
+             return [
+                 'title' => 'รายการที่ยังไม่สมบรูณ์หรือข้อมูลไม่ครบ',
+                 'content' => $this->renderAjax('omit',['models' => $models])
+                ];
+            }else{
+                return $this->render('omit',['models' => $models]);
+            }
+    }
+
 
     /**
      * Finds the Asset model based on its primary key value.
