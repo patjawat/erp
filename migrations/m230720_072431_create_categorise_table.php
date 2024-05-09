@@ -801,6 +801,20 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['category_id' => '3', 'code' =>  '18', 'name' => 'asset_type','title' => 'ครุภัณฑ์สนาม','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
         $this->insert('categorise', ['category_id' => '' , 'code' =>  '19', 'name' => 'asset_type','title' => 'ครุภัณฑ์อื่นๆ','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
         $this->insert('categorise', ['category_id' => '' , 'code' =>  '20', 'name' => 'asset_type','title' => 'สินทรัพย์ไม่มีตัวตัน','data_json' => ['depreciation' => '33.3','service_life' => '3'],'active' => 1]);
+        
+        // ประเถทวัสดุ
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '1', 'name' => 'material_type','title' => 'วัสดุสำนักงาน','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '2', 'name' => 'material_type','title' => 'วัสดุไฟฟูาและวิทยุ','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '3', 'name' => 'material_type','title' => 'วัสดุงานบ้านงานครัว','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '4', 'name' => 'material_type','title' => 'วัสดุก่อสร้าง','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '5', 'name' => 'material_type','title' => 'วัสดุยานพาหนะและขนส่ง','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '6', 'name' => 'material_type','title' => 'วัสดุเชื้อเพลิงและหล่อลื่น','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '7', 'name' => 'material_type','title' => 'วัสดุวิทยาศาสตร์หรือการแพทย์','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '8', 'name' => 'material_type','title' => 'วัสดุการเกษตร','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '9', 'name' => 'material_type','title' => 'วัสดุโฆษณาและเผยแพร่','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '10', 'name' => 'material_type','title' => 'วัสดุเครื่องแต่งกาย','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '11', 'name' => 'material_type','title' => 'วัสดุกีฬา','active' => 1]);
+        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '12', 'name' => 'material_type','title' => 'วัสดุคอมพิวเตอร์','active' => 1]);
 
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_type.sql'));
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_group.sql'));

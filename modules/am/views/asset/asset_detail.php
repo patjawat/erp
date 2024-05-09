@@ -2,12 +2,12 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\UserHelper;
+$assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-').' รหัส : <code>'.$model->code.'</code>';
 ?>
 
 
 <div class="card">
     <div class="card-body">
-
         <!-- Nav pills -->
         <div class="d-flex justify-content-between">
 
@@ -27,7 +27,8 @@ use app\components\UserHelper;
                             <!-- <a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items"
                                 data-size="modal-lg">
                                 <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a> -->
-                                <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/repair/create','id' => $model->id,"title"=>'ส่งซ่อม'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                                
+                                <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/helpdesk/repair/create','code' => $model->code,"title"=>'<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'.$assetName],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                 </li>
                 <li><a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items" data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
             </ul>

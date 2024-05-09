@@ -40,7 +40,7 @@ use yii\helpers\Html;
                     <div class="d-flex justify-content-between align-item-middle">
                         <div>
                             <h5 class="card-title mb-0 position-relative" style="margin-left: 26px;">
-                            <i class="fa-solid fa-circle-info" style="
+                                <i class="fa-solid fa-circle-info" style="
       position: absolute;
     font-size: 47px;
     margin-left: -32px;
@@ -49,8 +49,6 @@ use yii\helpers\Html;
 "></i>
                                 <?=Html::a('&nbsp;'.(isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-'),['/sm/asset-item/view','id' => $model->assetItem->id],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
                             </h5>
-                            
-
                         </div>
                         <div>
 
@@ -80,10 +78,10 @@ use yii\helpers\Html;
                     <div class="row">
                         <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
                             <ul class="list-inline">
-                            <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span
-                                        class="fw-semibold">รหัส </span>
-                                        <span class="text-danger"><?=$model->code?><span>
-</li>
+                                <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">รหัส
+                                    </span>
+                                    <span class="text-danger"><?=$model->code?><span>
+                                </li>
                                 <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span
                                         class="fw-semibold">ประเภท </span>
                                     <?=isset($model->data_json['asset_type_text']) ? $model->data_json['asset_type_text'] : '-'?>
