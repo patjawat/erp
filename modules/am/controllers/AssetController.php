@@ -413,7 +413,7 @@ class AssetController extends Controller
          {
              Yii::$app->response->format = Response::FORMAT_JSON;
              return [
-                 'title' => 'รายการที่ยังไม่สมบรูณ์หรือข้อมูลไม่ครบ',
+                 'title' => 'รายการที่ยังไม่สมบรูณ์หรือข้อมูลไม่ครบ <code>'.count($models).'</code> รายการ',
                  'content' => $this->renderAjax('omit',['models' => $models])
                 ];
             }else{
