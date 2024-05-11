@@ -21,9 +21,8 @@ use kartik\select2\Select2;
     <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
 
 <?php if($model->isNewRecord):?>
-<h1>isNewRecord</h1>
-<?= $form->field($model, 'data_json[title]')->textInput()->label(false) ?>
-    <?= $form->field($model, 'data_json[note]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('อาการเสีย') ?>
+    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
     <?php else:?>
 
 

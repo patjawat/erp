@@ -6,6 +6,9 @@ use yii\helpers\Html;
     max-height: 320px;
     min-height: 320px;
 }
+.card-img-top{
+
+}
 </style>
 
 <div class="row row-cols-1 row-cols-xl-4 row-cols-lg-3 row-cols-md-4">
@@ -25,7 +28,7 @@ use yii\helpers\Html;
                     <h5 class="card-title text-truncate"><?=Html::a($model->AssetitemName(), ['view','id' => $model->id],['class' => '', ])?></h5>
                     <p class="text-muted mb-4"><?=$model->AssetTypeName();?></p>
                 </div>
-                <?= Html::a(Html::img($model->showImg(),['class' => 'card-img-top p-2']), ['view','id' => $model->id],['class' => '', ]) ?>
+                <?= Html::a(Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-primary-subtle']), ['view','id' => $model->id],['class' => '', ]) ?>
                 <div>
                     <ul class="list-inline">
                         <li>
