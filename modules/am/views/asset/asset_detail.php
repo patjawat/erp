@@ -19,10 +19,8 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                             <i class="bi bi-caret-down-fill"></i>
                         </button>
                         <ul class="dropdown-menu" style="">
-                            <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/helpdesk/repair/create','code' => $model->code,"title"=>'<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'.$assetName],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                            <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i> แจ้งซ่อม',['/helpdesk/repair/create','code' => $model->code,"title"=>'<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'.$assetName],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
                 </li>
-                <li><a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items"
-                        data-size="modal-lg"><i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า</a> </li>
             </ul>
         </div>
         </li>
