@@ -13,12 +13,6 @@ use yii\helpers\Url;
     width: 100%;
 }
 
-/* .img-bg {
-    background: url(../images/media/media-66.png);
-    background-position: right;
-    background-size: auto;
-    background-repeat: no-repeat;
-} */
 .card-box img {
     position: absolute;
     inset-block-end: -3px;
@@ -57,15 +51,21 @@ use yii\helpers\Url;
     <div class="col-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title"><i class="fa-solid fa-bell text-danger"></i> การแจ้งซ่อมรอดำเนินการ</h4>
-                <?php foreach($dataProvider->getModels() as $model):?>
+                <h4 class="card-title"><i class="fa-solid fa-bell text-danger"></i> สถานะร้องขอ</h4>
+                <?php foreach ($dataProvider->getModels() as $model): ?>
                 <div class="d-flex bg-primary bg-opacity-10 py-2 px-3 rounded mt-2">
                     <div class="flex-grow-1">
-                        <h6 class="mb-1"><i class="fa-solid fa-circle-exclamation text-danger"></i> <?=$model->data_json['title']?></h6>
                         <div class="d-flex justify-content-between">
-                            <span class="text-muted text-uppercase" style="font-size:small"><i class="bi bi-clock"></i> 13/02/2556 13:00
-                            </span>
+                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                            <label
+                                class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
+                                <i class="fa-regular fa-hourglass-half"></i> รอดำเนินการ</label>
+                        </div>
+                        <div class="d-flex flex-column">
                             <span class="text-muted text-uppercase fs-6">งานผู้ป่วยใน</span>
+                            <span class="text-muted text-uppercase" style="font-size:small">ผู้แจ้ง นายปัจวัฒน์
+                                ศรีบุญเรือง | <i class="bi bi-clock"></i> 13/02/2556 13:00
+                            </span>
                         </div>
                     </div>
                 </div>

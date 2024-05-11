@@ -1,6 +1,6 @@
 <?php
 
-use app\modules\helpdesk\models\Repair;
+use app\modules\helpdesk\models\Helpdesk;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -48,7 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'updated_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Repair $model, $key, $index, $column) {
+                'urlCreator' => function ($action, Helpdesk $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

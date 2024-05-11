@@ -181,10 +181,8 @@ use yii\helpers\Html;
                             </div>
                             <?php endif;?>
 
-                            <div
-                                class="d-flex justify-content-between total font-weight-bold mt-4 bg-secondary-subtle rounded p-2">
+                            <div class="d-flex justify-content-between total font-weight-bold mt-4 bg-secondary-subtle rounded p-2">
                                 <?=$model->getOwner()?>
-
                             </div>
 
                         </div>

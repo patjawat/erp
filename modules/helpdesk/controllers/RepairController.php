@@ -3,11 +3,12 @@
 namespace app\modules\helpdesk\controllers;
 
 use Yii;
-use app\modules\helpdesk\models\Repair;
-use app\modules\helpdesk\models\RepairSearch;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\helpdesk\models\HelpdeskSearch;
+use app\modules\am\models\Asset;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
 
 /**
@@ -40,20 +41,43 @@ class RepairController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new RepairSearch();
+        $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
 
-        if($this->request->isAjax){
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '',
                 'content' => $this->renderAjax('index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                ])
+                ]),
             ];
-        }else{
+        } else {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+    public function actionHistory()
+    {
+        $searchModel = new HelpdeskSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'repair', 'code' => $this->request->get('code')]);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '',
+                'content' => $this->renderAjax('history', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
             return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
@@ -69,9 +93,40 @@ class RepairController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $title = $this->request->get('title');
+        $model = $this->findModel($id);
+        $asset = Asset::findOne(['code' => $model->code]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $title,
+                'content' => $this->renderAjax('view_ajax', ['model' => $model]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+                'asset' => $asset
+            ]);
+        }
+    }
+
+    public function actionViewTask($id)
+    {
+        $title = $this->request->get('title');
+        $model = $this->findModel($id);
+        $asset = Asset::findOne(['code' => $model->code]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $title,
+                'content' => $this->renderAjax('view_task', ['model' => $model]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+                'asset' => $asset
+            ]);
+        }
     }
 
     /**
@@ -82,10 +137,11 @@ class RepairController extends Controller
     public function actionCreate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Repair([
+        $model = new Helpdesk([
             'name' => 'repair',
-            'code' => $this->request->get('code')
+            'code' => $this->request->get('code'),
         ]);
+        
         $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
 
         if ($this->request->isPost) {
@@ -101,10 +157,10 @@ class RepairController extends Controller
 
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('create',[
+            'content' => $this->renderAjax('create', [
                 'model' => $model,
-                
-            ])
+
+            ]),
         ];
     }
 
@@ -117,15 +173,36 @@ class RepairController extends Controller
      */
     public function actionUpdate($id)
     {
+        
         $model = $this->findModel($id);
-
+        
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         }
+        
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return [
+                    'status' => 'success',
+                    'container' => '#repair-container',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('update', [
+                'model' => $model,
+
+            ]),
+        ];
+    }else{
+        return $this->render('update', ['model' => $model]);
+    }
     }
 
     /**
@@ -151,7 +228,7 @@ class RepairController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Repair::findOne(['id' => $id])) !== null) {
+        if (($model = Helpdesk::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

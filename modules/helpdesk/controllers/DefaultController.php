@@ -3,8 +3,8 @@
 namespace app\modules\helpdesk\controllers;
 
 use Yii;
-use app\modules\helpdesk\models\Repair;
-use app\modules\helpdesk\models\RepairSearch;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\helpdesk\models\HelpdeskSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -20,7 +20,7 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new RepairSearch();
+        $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         if($this->request->isAjax){
