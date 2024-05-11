@@ -94,7 +94,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="tab-pane fade show active" id="Description">
                             <h2>รายการเบิกอะไหล่</h2>
                             <p>รายการที่ต้องเบอกอะไหล่เพื่อช้ในการเปลี่ยนเพื่อให้ใช้งานได้</p>
-                            <? Html::a('ลงบันทึกซ่อม', ['/helpdesk/repair/update', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                            <?php //  Html::a('ลงบันทึกซ่อม', ['/helpdesk/repair/update', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
                             <?php // isset($model->data_json['repair_note']) ? $model->data_json['repair_note'] : '-'?>
                         </div>
 
