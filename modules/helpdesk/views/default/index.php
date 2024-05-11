@@ -56,10 +56,10 @@ use yii\helpers\Url;
                 <div class="d-flex bg-primary bg-opacity-10 py-2 px-3 rounded mt-2">
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between">
-                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modalx','data' => ['size' => 'modal-lg']])?>
                             <label
                                 class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
-                                <i class="fa-regular fa-hourglass-half"></i> รอดำเนินการ</label>
+                                <i class="fa-regular fa-hourglass-half"></i> ร้องขอ</label>
                         </div>
                         <div class="d-flex flex-column">
                             <span class="text-muted text-uppercase fs-6">งานผู้ป่วยใน</span>

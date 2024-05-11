@@ -15,14 +15,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'repair-container','timeout' => 5000 ]); ?>
 <div class="" style="background-color:eee;">
-    <div class="card mb-0">
-        <div class="card-body">
-            <?=app\components\AppHelper::Btn([
-    'title' => "<i class='fa-solid fa-circle-plus'></i> สร้างใหม่",
-    'url' => ['/helpdesk/repair/create', 'name' => 'repair','title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> บันทึกแจ้งซ่อม'],
-    'modal' => true, 'size' => 'lg'])?>
-        </div>
-    </div>
 
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -32,20 +24,12 @@ $this->params['breadcrumbs'][] = $this->title;
         'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            'ref',
-            'code',
-            'date_start',
-            'date_end',
-            //'name',
-            //'user_id',
-            //'emp_id',
-            //'data_json',
-            //'updated_at',
-            //'created_at',
-            //'created_by',
-            //'updated_by',
+            [
+                'header' => 'อาการ',
+                'value' => function($model){
+                    return $model->data_json['title'];
+                }
+            ],
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Helpdesk $model, $key, $index, $column) {

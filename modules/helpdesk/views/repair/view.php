@@ -13,7 +13,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <style>
-
 #ath_tabs_accordion .tab-style3 .nav-tabs .nav-item a.active {
     border-bottom-color: #4f30f9;
     color: #4f30f9;
@@ -47,14 +46,18 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="row">
             <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
-                <?=Html::img($model->asset->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto mb-3', 'style' => 'max-width:100%;min-width: 320px;'])?>
+                <?=Html::img($model->asset->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])?>
             </div>
             <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
                 <div class="d-flex justify-content-between">
                     <div></div>
                     <div>
                         <p>
-                            <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                            <?php if($model->data_json['repair_status'] == 'ร้องขอ'):?>
+                                <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                <?php else:?>
+                                    <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                    <?php endif?>
                             <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
@@ -78,27 +81,28 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <h4 class="card-title text-center"><i class="fa-regular fa-clipboard"></i> บันทึกซ่อม</h4>
 
-<div class="row" id="ath_tabs_accordion">
-    <div class="col-md-12 p-3">
-        <div class="tab-style3">
-            <ul class="nav nav-tabs text-uppercase">
-                <li class="nav-item">
-                    <a class="nav-link active" id="Description-tab" data-bs-toggle="tab"
-                        href="#Description"><i class="fa-solid fa-handshake-simple"></i> เบิกอะไหล่</a>
-                </li>
-            </ul>
-            <div class="tab-content shop_info_tab entry-main-content">
-                <div class="tab-pane fade show active" id="Description">
-                    <h2>รายการเบิกอะไหล่</h2>
-                    <p>รายการที่ต้องเบอกอะไหล่เพื่อช้ในการเปลี่ยนเพื่อให้ใช้งานได้</p>
-                        <?= Html::a('ลงบันทึกซ่อม', ['/helpdesk/repair/update', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
-                        <?=isset($model->data_json['repair_note']) ? $model->data_json['repair_note'] : '-'?>   
+        <div class="row" id="ath_tabs_accordion">
+            <div class="col-md-12 p-3">
+                <div class="tab-style3">
+                    <ul class="nav nav-tabs text-uppercase">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="Description-tab" data-bs-toggle="tab" href="#Description"><i
+                                    class="fa-solid fa-handshake-simple"></i> เบิกอะไหล่</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content shop_info_tab entry-main-content">
+                        <div class="tab-pane fade show active" id="Description">
+                            <h2>รายการเบิกอะไหล่</h2>
+                            <p>รายการที่ต้องเบอกอะไหล่เพื่อช้ในการเปลี่ยนเพื่อให้ใช้งานได้</p>
+                            <?= Html::a('ลงบันทึกซ่อม', ['/helpdesk/repair/update', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                            <?=isset($model->data_json['repair_note']) ? $model->data_json['repair_note'] : '-'?>
+                        </div>
+
                     </div>
+                </div>
 
             </div>
+
         </div>
-
-    </div>
-
     </div>
 </div>
