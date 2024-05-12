@@ -11,6 +11,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
+
 /**
  * RepairController implements the CRUD actions for Repair model.
  */
@@ -137,6 +138,7 @@ class RepairController extends Controller
     public function actionCreate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        $container  =  $this->request->get('container');
         $model = new Helpdesk([
             'name' => 'repair',
             'code' => $this->request->get('code'),
@@ -146,9 +148,10 @@ class RepairController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
+                $this->changAssetStatus($model->code);
                 return [
                     'status' => 'success',
-                    'container' => '#repair-container',
+                    'container' =>  '#am-container',
                 ];
             }
         } else {
@@ -182,6 +185,7 @@ class RepairController extends Controller
         
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
+               
                 return [
                     'status' => 'success',
                     'container' => '#repair-container',
@@ -233,5 +237,14 @@ class RepairController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function changAssetStatus($code)
+    {
+       $model = Asset::findOne(['code' => $code]);
+        if($model){
+            $model->asset_status = 5;
+            $model->save();
+        }
     }
 }

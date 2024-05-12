@@ -10,7 +10,7 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <ul class="nav nav-pills gap-2" role="tablist">
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <div class="btn-group">
                         <a class="nav-link active" data-bs-toggle="pill" href="#repairHistory">
                             <i class="fa-solid fa-screwdriver-wrench"></i> ประวัติการซ่อม</a>
@@ -23,10 +23,10 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                 </li>
             </ul>
         </div>
-        </li>
+        </li> -->
         <li class="nav-item">
             <div class="btn-group">
-                <a class="nav-link" data-bs-toggle="pill" href="#ma">
+                <a class="nav-link active" data-bs-toggle="pill" href="#ma">
                     <i class="fa-solid fa-brush"></i> การบำรุงรักษา</a>
                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
@@ -78,12 +78,12 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
 <!-- Tab panes -->
 <div class="tab-content border-top mt-3">
 
-    <div id="repairHistory" class="tab-pane active">
+    <!-- <div id="repairHistory" class="tab-pane active">
 
         <div id="viewRepairHistory" class="mt-4"></div>
 
-    </div>
-    <div id="ma" class="tab-pane">
+    </div> -->
+    <div id="ma" class="tab-pane active">
         <div id="viewMa" class="mt-4"></div>
 
     </div>

@@ -8,6 +8,7 @@ use app\models\Categorise;
 use app\modules\am\models\AssetItem;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
+use app\modules\helpdesk\models\Helpdesk;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use Yii;
@@ -609,10 +610,21 @@ class Asset extends \yii\db\ActiveRecord
 
             $data = explode('-', $this->asset_item);
             return $data[0] == '6515' ? true : false;
-            
         } catch (\Throwable $th) {
             return false;
         }
     }
+
+        //ตรวจสอบว่าเป็นครุภัณฑ์วิทยาศาสตร์และการแพทย์
+        public function isRepair()
+        {
+            try {
+    
+                $data = explode('-', $this->asset_item);
+                return $data[0] == '6515' ? true : false;
+            } catch (\Throwable $th) {
+                return false;
+            }
+        }
 
 }

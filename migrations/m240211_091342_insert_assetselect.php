@@ -62,6 +62,7 @@ class m240211_091342_insert_assetselect extends Migration
             $this->insert('categorise',['name'=>'asset_status','code' =>'2','title'=>'จำหน่ายแล้ว','active' => 1]);
             $this->insert('categorise',['name'=>'asset_status','code' =>'3','title'=>'รอจำหน่าย','active' => 1]);
             $this->insert('categorise',['name'=>'asset_status','code' =>'4','title'=>'ถูกยืม','active' => 1]);
+            $this->insert('categorise',['name'=>'asset_status','code' =>'5','title'=>'ส่งซ่อม','active' => 1]);
         }
 
         $sql5 = Yii::$app->db->createCommand("select * from categorise where name = 'maintain_pm'")->queryAll();

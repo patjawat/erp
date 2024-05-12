@@ -1,4 +1,3 @@
-
 <?php
 use yii\helpers\Html;
 use app\modules\helpdesk\models\Helpdesk;
@@ -14,13 +13,16 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
             <td class="text-end"><span class="fw-semibold">ชื่อครุภัณฑ์ : </span></td>
             <td colspan="3"><?=(isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-')?></td>
             <td class="text-end"><span class="fw-semibold"> ประเภท : </span></td>
-            <td colspan="3"><?=isset($model->data_json['asset_type_text']) ? $model->data_json['asset_type_text'] : '-'?></td>
+            <td colspan="3">
+                <?=isset($model->data_json['asset_type_text']) ? $model->data_json['asset_type_text'] : '-'?></td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">เลขครุภัณฑ์ : </span></td>
             <td colspan="3"><code><?=$model->code?></code></td>
             <td class="text-end"><span class="fw-semibold"> มูลค่า : </span></td>
-            <td colspan="3"><span class="text-white bg-primary badge rounded-pill fs-6"><?=number_format($model->price, 2)?></span> บาท</td>
+            <td colspan="3"><span
+                    class="text-white bg-primary badge rounded-pill fs-6"><?=number_format($model->price, 2)?></span>
+                บาท</td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">วันเดือนปีทีซื้อ : </span></td>
@@ -43,17 +45,26 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
             <td class="text-end"><span class="fw-semibold">ผู้ขาย/ผู้จำหน่าย/ผู้บริจาค : </span></td>
             <td colspan="3"><?=$model->vendor_name?></td>
         </tr>
-        <tr>
+        <tr class="align-middle">
             <td class="text-end"><span class="fw-semibold">สถานะ : </span></td>
             <td colspan="5">
-            <label class="badge rounded-pill text-primary-emphasis bg-success-subtle p-1 fs-6 text-truncate">
-                    <i class="bi bi-check2-circle fs-5"></i> <?=$model->statusName()?>               </label>
-                </td>  
-            </tr>
+                <?php if($model->asset_status == 1):?>
+                <label class="badge rounded-pill text-primary-emphasis bg-success-subtle py-2 fs-6 align-middle">
+                    <i class="bi bi-check2-circle fs-5"></i> <?=$model->statusName()?> </label>
+                <?php endif;?>
+
+                <?php if($model->asset_status == 5):?>
+                <label class="badge rounded-pill text-danger-emphasis bg-danger-subtle py-2 fs-6 align-middle">
+                <i class="fa-solid fa-triangle-exclamation fs-5"></i> <?=$model->statusName()?> </label>
+                <?php endif;?>
+
+            </td>
+        </tr>
         <!-- ถ้ามีการส่งซ่อม -->
         <?php if($repair):?>
-            <tr>
-            <td colspan="6" class="text-center bg-warning-subtle"><i class="fa-solid fa-car-on"></i> บันทึกการแจ้งซ่อม</td>
+        <tr>
+            <td colspan="6" class="text-center bg-warning-subtle"><i class="fa-solid fa-car-on"></i> บันทึกการแจ้งซ่อม
+            </td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">อาการแจ้งซ่อม : </span></td>

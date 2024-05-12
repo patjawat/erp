@@ -42,7 +42,9 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                             </h5>
                         </div>
                         <div>
-                            <?=Html::a('<i class="fa-solid fa-triangle-exclamation"></i> แจ้งซ่อม', ['/helpdesk/repair/create','code' => $model->code,"title"=>'<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'.$assetName],['class' => 'open-modal btn btn-danger rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
+                        <?php if($model->asset_status != 5):?>
+                            <?=Html::a('<i class="fa-solid fa-triangle-exclamation"></i> แจ้งซ่อม', ['/helpdesk/repair/create','code' => $model->code,'container' => 'ma-container',"title"=>'<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'.$assetName],['class' => 'open-modal btn btn-danger rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
+                            <?php endif;?>
                             <?=Html::a('<i class="fa-solid fa-qrcode"></i> QR-Code', ['qrcode', 'id' => $model->id], ['class' => 'open-modal btn btn-success rounded-pill shadow', 'data' => ['size' => 'modal-md']])?>
                             <?=Html::a('<i class="fa-solid fa-chart-line"></i> ค่าเสื่อม', ['depreciation', 'id' => $model->id], ['class' => 'open-modal btn btn-primary rounded-pill shadow', 'data' => ['size' => 'modal-lg']])?>
                             <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow'])?>
@@ -88,18 +90,12 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                                 <?=$model->getOwner()?>
                             </div>
                         </div>
-
                     </div>
-
-
                 </div>
                 <!-- End Card body -->
-
             </div>
             <!-- End card -->
         </div>
-
-
     </div>
 </div>
 
