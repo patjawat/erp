@@ -6,9 +6,8 @@ use yii\helpers\Html;
     max-height: 320px;
     min-height: 320px;
 }
-.card-img-top{
 
-}
+.card-img-top {}
 </style>
 
 <div class="row row-cols-1 row-cols-xl-4 row-cols-lg-3 row-cols-md-4">
@@ -25,7 +24,8 @@ use yii\helpers\Html;
 
             <div class="card-body">
                 <div class="text-center">
-                    <h5 class="card-title text-truncate"><?=Html::a($model->AssetitemName(), ['view','id' => $model->id],['class' => '', ])?></h5>
+                    <h5 class="card-title text-truncate">
+                        <?=Html::a($model->AssetitemName(), ['view','id' => $model->id],['class' => '', ])?></h5>
                     <p class="text-muted mb-4"><?=$model->AssetTypeName();?></p>
                 </div>
                 <?= Html::a(Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']), ['view','id' => $model->id],['class' => '', ]) ?>
@@ -38,7 +38,8 @@ use yii\helpers\Html;
                         </li>
                         <li>
                             <i class="bi bi-check2-circle text-primary fs-5"></i>
-                            <span class="fw-semibold">วันเดือนปีทีซื้อ</span> <?=Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium')?>
+                            <span class="fw-semibold">วันเดือนปีทีซื้อ</span>
+                            <?=Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium')?>
                         </li>
                         <li>
                             <i class="bi bi-check2-circle text-primary fs-5"></i>
@@ -50,7 +51,8 @@ use yii\helpers\Html;
                             <?=$model->budget_type?>
                         </li>
 
-                        <li class="text-truncate"><i class="bi bi-check2-circle text-primary fs-5 text-truncate"></i> <span class="fw-semibold">ประจำหน่วยงาน</span>
+                        <li class="text-truncate"><i class="bi bi-check2-circle text-primary fs-5 text-truncate"></i>
+                            <span class="fw-semibold">ประจำหน่วยงาน</span>
                             <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
                             <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
                             <?php else:?>
@@ -58,19 +60,37 @@ use yii\helpers\Html;
                             <?php endif;?>
                         </li>
                         <li>
-                            <i class="bi bi-check2-circle text-primary fs-5"></i>
-                            <span class="fw-semibold">มูลค่า</span> :
-                            <span
-                                    class="text-white bg-primary badge rounded-pill fs-6 fw-semibold shadow"><?=isset($model->price) ? number_format($model->price,2) : ''?></span> บาท
-                        </li>
+                            <div class="d-flex justify-content-between">
 
+                                <div>
+                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
+                                <span class="fw-semibold">มูลค่า</span> :
+                                <span
+                                class="text-white bg-primary badge rounded-pill fs-6 fw-semibold shadow"><?=isset($model->price) ? number_format($model->price,2) : ''?></span>
+                                บาท
+                            </div>
+                            <div>
+                                <?php if($model->asset_status == 1):?>
+                                <label
+                                    class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate float-end">
+                                    <i class="bi bi-clipboard-check"></i> <?=$model->statusName()?> </label>
+                                    <?php endif;?>
+
+                                    <?php if($model->asset_status == 5):?>
+                                <label
+                                    class="badge rounded-pill text-danger-emphasis bg-danger-subtle p-2 fs-6 text-truncate float-end">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> <?=$model->statusName()?> </label>
+                                    <?php endif;?>
+                                </div>
+                            </div>
+                        </li>
 
 
                     </ul>
 
                 </div>
                 <div class="d-flex justify-content-between total font-weight-bold mt-4 bg-secondary-subtle rounded p-2">
-                <?=$model->getOwner()?>
+                    <?=$model->getOwner()?>
                 </div>
             </div>
         </div>

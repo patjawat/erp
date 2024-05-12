@@ -6,16 +6,6 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
 
 ?>
 
-<div class="alert alert-success" role="alert">
-    <div class="d-flex justify-content-between">
-        <span class="fw-semibold">
-            <i class="fa-solid fa-computer fs-4"></i> Spec Computer
-        </span>
-    </div>
-    <hr class="p-1">
-
-    <table class="table border-0 table-striped-columns">
-        <tbody>
             <tr class="">
                 <td class="text-end"><span class="fw-semibold">ยี่ห้อ :</span></td>
                 <td><?=isset($model->data_json['brand']) ? $model->data_json['brand'] : '-'?></td>
@@ -40,13 +30,9 @@ $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->c
                 <td class="text-end"><span class="fw-semibold">IP-Address: </span></td>
                 <td colspan="5"><?=isset($model->data_json['ip_address']) ? $model->data_json['ip_address'] : '-'?></td>
             </tr>
-        </tbody>
-    </table>
 
-    <div class="d-flex justify-content-between align-items-center">
+
+    <!-- <div class="d-flex justify-content-between align-items-center">
         <?=Html::a('<i class="fa-solid fa-gear"></i> ดำเนินการ',['/am/asset/update-computer','id'=> $model->id,'title' => ' <i class="fa-solid fa-computer fs-4"></i> Spec Computer'],['class' => 'btn btn-primary rounded-pill border border-white open-modal','data' => ['size' => 'modal-md']])?>
 
-    </div>
-
-
-</div>
+    </div> -->
