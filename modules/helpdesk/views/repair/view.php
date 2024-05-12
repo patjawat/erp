@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </p>
                     </div>
                 </div>
-                <?=$this->render('@app/modules/am/views/asset/asset_detail_table',['model' => $asset,'repair' => $model])?>
+                <?=$this->render('@app/modules/am/views/asset/asset_detail_table',['model' => $asset])?>
             </div>
         </div>
 
