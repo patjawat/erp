@@ -7,6 +7,7 @@ $repair = Helpdesk::findOne(['code' => $model->code]);
 $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code])->orderBy(['date_start' => SORT_DESC])->one();
 ?>
 
+<?php if($model->isCar() | $model->isComputer()):?>
 <!-- Nav pills -->
 <ul class="nav nav-pills" role="tablist">
     <li class="nav-item">
@@ -43,4 +44,6 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
 </div>
 <?php endif;?>
   </div>
-
+<?php else:?>
+    <?=$this->render('general_detail',['model' => $model])?>
+  <?php endif;?>
