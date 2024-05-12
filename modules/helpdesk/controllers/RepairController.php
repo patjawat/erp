@@ -6,10 +6,12 @@ use Yii;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
 use app\modules\am\models\Asset;
+use app\components\UserHelper;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\helpers\ArrayHelper;
 
 
 /**
@@ -178,14 +180,19 @@ class RepairController extends Controller
     {
         
         $model = $this->findModel($id);
-        
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-        
+        $oldObj = $model->data_json;
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-               
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                // $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
+            //    return $model->data_json;
+                if($model->data_json['repair_status'] == "เสร็จสิ้น"){
+                    $asset = Asset::findOne(['code' => $model->code]);
+                    $asset->asset_status = 1;
+                    $asset->save();
+                }
+                $model->save();
                 return [
                     'status' => 'success',
                     'container' => '#repair-container',
@@ -207,6 +214,25 @@ class RepairController extends Controller
     }else{
         return $this->render('update', ['model' => $model]);
     }
+    }
+
+    public function actionAcceptJob($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $user = UserHelper::GetEmployee();
+        $model->updated_by = $user->id;
+        $newObj = [
+            'technician_name' => $user->fullname,
+            'repair_status' => 'รับเรื่อง'
+        ];
+        $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
+        $model->save();
+        
+        return [
+            'status' => 'success',
+            'container' => '#helpdesk-container',
+        ];
     }
 
     /**

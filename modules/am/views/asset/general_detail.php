@@ -63,8 +63,9 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
         <!-- ถ้ามีการส่งซ่อม -->
         <?php if($repair):?>
         <tr>
-            <td colspan="6" class="text-center bg-warning-subtle"><i class="fa-solid fa-car-on"></i> บันทึกการแจ้งซ่อม
-            </td>
+            <td colspan="6" class="text-center bg-warning-subtle">
+            <span class="fw-semibold"> <i class="fa-solid fa-file-pen"></i> บันทึกการแจ้งซ่อม : </span>
+                <?=Yii::$app->thaiFormatter->asDateTime($model->created_at,'medium')?></td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">อาการแจ้งซ่อม : </span></td>
@@ -74,7 +75,7 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
             <td class="text-end"><span class="fw-semibold">สภานะงานซ่อม : </span></td>
             <td colspan="3">
                 <?php if($repair->data_json['repair_status'] == 'ร้องขอ'):?>
-                <label class="badge rounded-pill text-danger-emphasis bg-danger-subtle p-2 text-truncate">
+                <label class="badge rounded-pill text-danger-emphasis bg-danger-subtle py-2 fs-6 align-middle">
                     <i class="fa-regular fa-hourglass-half"></i> ร้องขอ</label>
                 <?php else:?>
                 <?=$repair->data_json['repair_status']?>
@@ -89,6 +90,12 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
                 </span>
             </td>
         </tr>
+        <?php if(isset($repair->data_json['technician_name'])):?>
+        <tr>
+            <td class="text-end"><span class="fw-semibold">ช่างผู้รับเรื่อง : </span></td>
+            <td colspan="5"><?=$repair->data_json['technician_name'];?></td>
+        </tr>
+        <?php endif;?>
         <?php  endif;?>
         <!-- จบแสดงสถนะสงซ่อม -->
     </tbody>

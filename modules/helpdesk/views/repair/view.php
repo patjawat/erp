@@ -2,6 +2,8 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\widgets\Pjax;
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\Repair $model */
@@ -41,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
     margin-left: 0 !important;
 }
 </style>
-
+<?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 <div class="card">
     <div class="card-body">
         <div class="row">
@@ -50,21 +52,21 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
                 <div class="d-flex justify-content-between">
-                    <div></div>
+                    <h4><i class="fa-solid fa-screwdriver-wrench"></i> ข้อมูลแจ้งซ่อม</h4>
                     <div>
                         <p>
                             <?php if($model->data_json['repair_status'] == 'ร้องขอ'):?>
-                                <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job','data' => ['size' => 'modal-lg']]) ?>
                                 <?php else:?>
                                     <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
                                     <?php endif?>
                             <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
+                            'class' => 'btn btn-danger',
+                            'data' => [
+                                'confirm' => 'Are you sure you want to delete this item?',
+                                'method' => 'post',
+                            ],
+                        ]) ?>
                         </p>
                     </div>
                 </div>
@@ -106,3 +108,49 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+<?php
+$js = <<< JS
+
+
+$("body").on("click", ".accept-job", async function (e) {
+  e.preventDefault();
+  var url = $(this).attr("href");
+  await Swal.fire({
+    title: "ยืนยันรับเรื่อง?",
+    text: "รับเรื่องเพื่อบันทึกงานซ่อมต่อไป!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ลบเลย!",
+    cancelButtonText: "ยกเลิก",
+  }).then(async (result) => {
+    console.log("result", result.value);
+    if (result.value == true) {
+      await $.ajax({
+        type: "post",
+        url: url,
+        dataType: "json",
+        success: async function (response) {
+          if (response.status == "success") {
+            await $.pjax.reload({
+              container: response.container,
+              history: false,
+              url: response.url,
+            });
+            success("ดำเนินการลบสำเร็จ!.");
+            if (response.close) {
+              await $("#main-modal").modal("hide");
+            }
+          }
+        },
+      });
+    }
+  });
+});
+
+JS;
+$this->registerJS($js);
+?>
+    <?php Pjax::end(); ?>

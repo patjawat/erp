@@ -13,7 +13,7 @@ use yii\widgets\Pjax;
 $this->title = 'Repairs';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php Pjax::begin(['id' => 'repair-container','timeout' => 5000 ]); ?>
+<?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 <div class="" style="background-color:eee;">
 
 
