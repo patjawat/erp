@@ -38,7 +38,7 @@ use kartik\select2\Select2;
         'รับเรื่อง' => 'รับเรื่อง',
         'เสร็จสิ้น' => 'เสร็จสิ้น'
     ],
-    'options' => ['placeholder' => 'Select a state ...'],
+    'options' => ['placeholder' => 'ระบุสถานะการซ่อม ...'],
     'pluginOptions' => [
         'allowClear' => true
     ],

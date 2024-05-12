@@ -46,6 +46,7 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
             <td colspan="3"><?=$model->vendor_name?></td>
         </tr>
         <?=$model->isComputer() ? $this->render('./is_computer/spec', ['model' => $model]) : ''?>
+     
         <tr class="align-middle">
             <td class="text-end"><span class="fw-semibold">สถานะ : </span></td>
             <td colspan="5">

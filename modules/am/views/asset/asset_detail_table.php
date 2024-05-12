@@ -7,7 +7,7 @@ $repair = Helpdesk::findOne(['code' => $model->code]);
 $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code])->orderBy(['date_start' => SORT_DESC])->one();
 ?>
 
-<?php if($model->isCar() | $model->isComputer()):?>
+<?php if($model->isCar()):?>
 <!-- Nav pills -->
 <ul class="nav nav-pills" role="tablist">
     <li class="nav-item">

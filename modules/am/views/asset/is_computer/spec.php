@@ -5,7 +5,14 @@ use app\modules\am\models\AssetDetail;
 $modelDetail = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code])->orderBy(['date_start' => SORT_DESC])->one();
 
 ?>
-
+   <tr>
+            <td>
+            <!-- <span class="fw-semibold"><i class="fa-solid fa-computer fs-4"></i> Spec Computer</span> -->
+            </td>
+            <td colspan="5">
+            <?=Html::a('<span class="fw-semibold"><i class="fa-solid fa-computer fs-5"></i> Computer Spec</span>',['/am/asset/update-computer','id'=> $model->id,'title' => ' <i class="fa-solid fa-computer fs-4"></i> Spec Computer'],['class' => 'btn btn-primary rounded-pill border border-white open-modal','data' => ['size' => 'modal-md']])?>
+            </td>
+        </tr>
             <tr class="">
                 <td class="text-end"><span class="fw-semibold">ยี่ห้อ :</span></td>
                 <td><?=isset($model->data_json['brand']) ? $model->data_json['brand'] : '-'?></td>

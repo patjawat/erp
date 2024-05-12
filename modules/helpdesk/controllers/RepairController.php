@@ -99,18 +99,10 @@ class RepairController extends Controller
         $title = $this->request->get('title');
         $model = $this->findModel($id);
         $asset = Asset::findOne(['code' => $model->code]);
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $title,
-                'content' => $this->renderAjax('view_ajax', ['model' => $model]),
-            ];
-        } else {
             return $this->render('view', [
                 'model' => $model,
                 'asset' => $asset
             ]);
-        }
     }
 
     public function actionViewTask($id)
@@ -181,12 +173,9 @@ class RepairController extends Controller
         
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
-
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                // $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
-            //    return $model->data_json;
                 if($model->data_json['repair_status'] == "เสร็จสิ้น"){
                     $asset = Asset::findOne(['code' => $model->code]);
                     $asset->asset_status = 1;
@@ -216,6 +205,71 @@ class RepairController extends Controller
     }
     }
 
+
+    // ตรวจสอบความถูกต้อง
+    public function actionCancelJobValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Helpdesk();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $requiredName = "ต้องระบุ";
+                $model->data_json['repair_note'] == "" ? $model->addError('data_json[repair_note]', 'ต้องระบุเหตุผล...') : null;
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
+    //ยกเลิกงานซ่อม
+    public function actionCancelJob($id)
+    {
+        $model = $this->findModel($id);
+        $user = UserHelper::GetEmployee();
+        $oldObj = $model->data_json;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $newObj = [
+                    'cancel_name' => $user->fullname,
+                    'repair_status' => 'ยกเลิกซ่อม'
+                ];
+                $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
+
+                    $asset = Asset::findOne(['code' => $model->code]);
+                    $asset->asset_status = 1;
+                    $asset->save();
+
+                $model->save();
+                return [
+                    'status' => 'success',
+                    'container' => '#repair-container',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'title' => 'ยกเลิกงานซ่อม',
+            'content' => $this->renderAjax('_cancel_job', [
+                'model' => $model,
+
+            ]),
+        ];
+    }else{
+        return $this->render('_cancel_job', ['model' => $model]);
+    }
+    }
+
+
+    //รับเรื่อง
     public function actionAcceptJob($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
