@@ -184,7 +184,7 @@ class RepairController extends Controller
                 $model->save();
                 return [
                     'status' => 'success',
-                    'container' => '#repair-container',
+                    'container' => '#helpdesk-container',
                 ];
             }
         } else {
@@ -247,7 +247,7 @@ class RepairController extends Controller
                 $model->save();
                 return [
                     'status' => 'success',
-                    'container' => '#repair-container',
+                    'container' => '#helpdesk-container',
                 ];
             }
         } else {
