@@ -63,7 +63,7 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
             </td>
         </tr>
         <!-- ถ้ามีการส่งซ่อม -->
-        <?php if($model->asset_status == 5):?>
+        <?php if($model->asset_status == 5 && isset($repair)):?>
         <tr>
             <td colspan="6" class="text-center bg-warning-subtle">
             <span class="fw-semibold"> <i class="fa-solid fa-file-pen"></i> บันทึกการแจ้งซ่อม : </span>
