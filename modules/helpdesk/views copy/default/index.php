@@ -20,8 +20,6 @@ use yii\helpers\Url;
     width: inherit;
 }
 </style>
-
-
 <div class="row">
 <div class="col-4">
         <div class="card">
@@ -70,7 +68,7 @@ use yii\helpers\Url;
 
 
         </div>
-        <?php // $this->render('task')?>
+        <?=$this->render('task')?>
         <div id="viewJob"></div>
 
 

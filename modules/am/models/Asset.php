@@ -450,7 +450,6 @@ class Asset extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return null;
         }
-
     }
     public function Retire()
     {

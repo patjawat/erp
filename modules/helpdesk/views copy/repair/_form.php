@@ -3,13 +3,12 @@
 use yii\helpers\Html;
 use kartik\widgets\ActiveForm;
 use kartik\select2\Select2;
-use softark\duallistbox\DualListbox;
-use yii\helpers\ArrayHelper;
-use app\modules\hr\models\Employees;
+
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+
 <div class="repair-form">
 
     <?php $form = ActiveForm::begin([
@@ -20,7 +19,6 @@ use app\modules\hr\models\Employees;
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'data_json[technician_name]')->hiddenInput()->label(false) ?>
 
 <?php if($model->isNewRecord):?>
 <?= $form->field($model, 'data_json[repair_status]')->hiddenInput(['value' => 'ร้องขอ'])->label(false) ?>
@@ -31,17 +29,9 @@ use app\modules\hr\models\Employees;
 
     <div class="row">
         <div class="col-6">
-
-    
-    <div class="bg-danger-subtle p-4 rounded d-flex justify-content-between">
-        
-        <?= $form->field($model, 'data_json[send_type]')->radioList(['ทั่วไป' => 'ทั่วไป','ครุภัณฑ์' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label('ส่งซ่อม') ?>
-        <i class="fa-solid fa-triangle-exclamation fs-1 text-danger"></i>
-            </div>
-           
+            <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทการส่งซ่อม') ?>
         </div>
         <div class="col-6">
-        <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทารซ่อม') ?>
             <?= $form->field($model, 'data_json[repair_status]')->widget(Select2::classname(), [
     'data' => [
         'ร้องขอ' => 'ร้องขอ',
@@ -57,33 +47,6 @@ use app\modules\hr\models\Employees;
     </div>
 
     <?= $form->field($model, 'data_json[repair_note]')->textArea(['rows' => 6,'placeholder' => 'ระบุการแก้ไข/อื่นๆ...'])->label('การแก้ไข') ?>
-
-
-
-    <?php
-    $options = [
-        'multiple' => true,
-        'size' => 8,
-    ];
-    // $items = ['1' => 'Item1', '2' => 'Item2', '3' => 'Item3',];
-    $items = ArrayHelper::map(Employees::find()->limit(10)->all(),'fullname',function($model){
-        return $model->fullname;
-    });
-
-
-    echo DualListbox::widget([
-        'model' => $model,
-        'attribute' => 'data_json[join]',
-        'items' => $model->listTecName(),
-        'options' => $options,
-        'clientOptions' => [
-            'moveOnSelect' => false,
-            'selectedListLabel' => 'ช่างผู้ร่วมงาน',
-            'nonSelectedListLabel' => 'ช่างเทคนิค',
-        ],
-    ]);
-?>
-
     <div class="row">
         <div class="col-6">
             <?= $form->field($model, 'data_json[price]')->textInput(['placeholder' => 'ระบุมูลค่าการซ่อมถ้ามี','type' => 'number'])->label('มูลค่าการซ่อม') ?>
@@ -96,8 +59,6 @@ use app\modules\hr\models\Employees;
     <?= $form->field($model, 'data_json[note]')->hiddenInput()->label(false) ?>
     <?php endif;?>
     
-
-
     <div class="form-group mt-3 d-flex justify-content-center">
         <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
     </div>

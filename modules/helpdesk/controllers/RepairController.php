@@ -12,6 +12,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\helpers\ArrayHelper;
+use app\modules\hr\models\Employees;
 
 
 /**
@@ -181,6 +182,10 @@ class RepairController extends Controller
                     $asset->asset_status = 1;
                     $asset->save();
                 }
+                
+                // $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
+                // return $model->data_json;
+
                 $model->save();
                 return [
                     'status' => 'success',

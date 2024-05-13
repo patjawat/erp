@@ -815,6 +815,12 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['category_id' => '4' , 'code' =>  '10', 'name' => 'material_type','title' => 'วัสดุเครื่องแต่งกาย','active' => 1]);
         $this->insert('categorise', ['category_id' => '4' , 'code' =>  '11', 'name' => 'material_type','title' => 'วัสดุกีฬา','active' => 1]);
         $this->insert('categorise', ['category_id' => '4' , 'code' =>  '12', 'name' => 'material_type','title' => 'วัสดุคอมพิวเตอร์','active' => 1]);
+       
+       
+        $this->insert('categorise', ['category_id' => '' , 'code' =>  '1', 'name' => 'urgency','title' => 'ปกติ','active' => 1]);
+        $this->insert('categorise', ['category_id' => '' , 'code' =>  '2', 'name' => 'urgency','title' => 'ด่วน','active' => 1]);
+        $this->insert('categorise', ['category_id' => '' , 'code' =>  '3', 'name' => 'urgency','title' => 'ด่วนมาก','active' => 1]);
+        $this->insert('categorise', ['category_id' => '' , 'code' =>  '4', 'name' => 'urgency','title' => 'ด่วนที่สุด','active' => 1]);
 
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_type.sql'));
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_group.sql'));

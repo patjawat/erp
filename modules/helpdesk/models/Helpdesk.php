@@ -6,8 +6,10 @@ use Yii;
 use yii\db\Expression;
 use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
+use yii\helpers\ArrayHelper;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\am\models\Asset;
+use app\modules\hr\models\Employees;
 
 /**
  * This is the model class for table "helpdesk".
@@ -118,4 +120,25 @@ public function afterFind()
         return $this->hasOne(Asset::class, ['code' => 'code']);
     }
 
+
+     //ผู้รับผิดชอบ
+     public function getUserReq()
+     {
+         try {
+             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+             return $employee->getAvatar(false);
+         } catch (\Throwable $th) {
+             return null;
+         }
+     }
+
+     // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
+     public function listTecName(){
+        $sql = "SELECT concat(emp.fname,' ',emp.lname) as fullname,emp.user_id FROM employees emp
+        INNER JOIN user ON user.id = emp.user_id
+        INNER JOIN auth_assignment auth ON auth.user_id = user.id;";
+        $querys = Yii::$app->db->createCommand($sql)->queryAll();
+        return ArrayHelper::map($querys, 'user_id','fullname');
+        
+     }
 }
