@@ -84,13 +84,13 @@ use app\components\UserHelper;
                         <h6 class="text-center mt-3"><i class="fa-solid fa-grip"></i> บริการ</h6>
 
                         <!-- App Service -->
-                        <div class="row mt-3 p-3">
+                        <div class="row p-3">
                         <div class="col-4 mt-1">
                                 <a href="<?=Url::to(['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-square-check"></i> เลือกประเภทการซ่อม']);?>"
                                     class="open-modal" data-title="xxx">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
-                                        <i class="fa-solid fa-triangle-exclamation fs-1"></i>
+                                        <i class="fa-solid fa-triangle-exclamation fs-3"></i>
                                         <div>แจ้งซ่อม</div>
                                     </div>
                                 </a>
@@ -139,12 +139,12 @@ use app\components\UserHelper;
 
 
                         <h6 class="text-center mt-3"><i class="fa-solid fa-grip"></i> ระบบงาน</h6>
-                        <div class="row mt-3 p-3">
+                        <div class="row p-3">
                         <div class="col-4 mt-1">
                                 <a href="<?=Url::to(['/helpdesk/default']);?>">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
-                                        <i class="fa-solid fa-screwdriver-wrench fs-1"></i>
+                                        <i class="fa-solid fa-screwdriver-wrench fs-3"></i>
                                         <div>ระบบงานซ่อม</div>
                                     </div>
                                 </a>
