@@ -33,7 +33,8 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label('สถานที่') ?>
         <?= $form->field($model, 'data_json[urgency]')->radioList($model->listUrgency(),['inline'=>true,'custom' => true])->label('ความเร่งด่วน') ?>
         <?php else:?>
-        <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
+            <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
+            <?= $form->field($model, 'data_json[location]')->hiddenInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label(false) ?>
             
 
             <div class="row">
