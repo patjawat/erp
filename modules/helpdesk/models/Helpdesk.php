@@ -147,4 +147,10 @@ public function afterFind()
     {
         return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'title', 'title');
     }
+
+         //สถานะงานซ่อม
+         public static function listRepairStatus()
+         {
+             return ArrayHelper::map(CategoriseHelper::Categorise('repair_status'), 'title', 'title');
+         }
 }

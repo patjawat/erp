@@ -47,7 +47,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="row">
-            <div class="col-xl-12 col-lg-12 col-md-1 col-sm-12">
+            <div class="col-4">
+                
+</div>
+            <div class="col-xl-8 col-lg-8 col-md-1 col-sm-12">
                 <div class="d-flex justify-content-between">
                     <h4><i class="fa-solid fa-screwdriver-wrench"></i> ข้อมูลแจ้งซ่อม</h4>
                     <div>

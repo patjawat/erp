@@ -32,6 +32,8 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
         <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label('สถานที่') ?>
         <?= $form->field($model, 'data_json[urgency]')->radioList($model->listUrgency(),['inline'=>true,'custom' => true])->label('ความเร่งด่วน') ?>
+       <?=$model->upload('req_repair')?>
+       
         <?php else:?>
             <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
             <?= $form->field($model, 'data_json[location]')->hiddenInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label(false) ?>
@@ -48,12 +50,8 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                 </div>
                 <div class="col-6">
         <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทารซ่อม') ?>
-            <?= $form->field($model, 'data_json[repair_status]')->widget(Select2::classname(), [
-    'data' => [
-        'ร้องขอ' => 'ร้องขอ',
-        'รับเรื่อง' => 'รับเรื่อง',
-        'เสร็จสิ้น' => 'เสร็จสิ้น'
-    ],
+           <?= $form->field($model, 'data_json[repair_status]')->widget(Select2::classname(), [
+    'data' => $model->listRepairStatus(),
     'options' => ['placeholder' => 'ระบุสถานะการซ่อม ...'],
     'pluginOptions' => [
         'allowClear' => true
@@ -62,7 +60,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         </div>
     </div>
 
-    <?= $form->field($model, 'data_json[repair_note]')->textArea(['rows' => 6,'placeholder' => 'ระบุการแก้ไข/อื่นๆ...'])->label('การแก้ไข') ?>
+    <?= $form->field($model, 'data_json[repair_note]')->textArea(['rows' => 6,'placeholder' => 'ระบุการแก้ไข/อื่นๆ...'])->label('วิธีการแก้ไข/แนวทางแก้ไข') ?>
 
 
 
