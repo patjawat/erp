@@ -18,7 +18,7 @@ class HelpdeskSearch extends Helpdesk
     {
         return [
             [['id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json', 'ma_items', 'created_at', 'updated_at'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at'], 'safe'],
         ];
     }
 
@@ -71,8 +71,7 @@ class HelpdeskSearch extends Helpdesk
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'ma_items', $this->ma_items]);
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

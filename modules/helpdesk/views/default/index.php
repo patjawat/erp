@@ -1,7 +1,9 @@
 <?php
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\widgets\Pjax;
 ?>
+    <?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 <style>
 .card.custom-card {
     border-radius: .688rem;
@@ -20,7 +22,6 @@ use yii\helpers\Url;
     width: inherit;
 }
 </style>
-
 
 <div class="row">
 <div class="col-4">
@@ -99,3 +100,4 @@ function getJob()
 JS;
 $this->registerJS($js)
 ?>
+<?php Pjax::end(); ?>

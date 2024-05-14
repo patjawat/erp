@@ -21,12 +21,39 @@ class m240510_123044_create_helpdesk_table extends Migration
             'name' => $this->string(255)->comment('ชื่อการเก็บข้อมูล'),
             'title' => $this->string(255)->comment('รายการ'),
             'data_json' => $this->json()->comment('การเก็บข้อมูลชนิด JSON'),
-            'ma_items' => $this->json()->comment('การบำรุงรักษา'),
+            'status' => $this->string(255)->comment('สถานะ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),   
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),
             'updated_by' => $this->integer()->comment('ผู้แก้ไข')
         ]);
+
+        $sqlUrgency = Yii::$app->db->createCommand("select * from categorise where name = 'urgency'")->queryAll();
+        $sqlStatus = Yii::$app->db->createCommand("select * from categorise where name = 'repair_status'")->queryAll();
+        $sqlSendType = Yii::$app->db->createCommand("select * from categorise where name = 'send_type'")->queryAll();
+
+        if(count($sqlUrgency) < 1){
+            //ความเร่งด่วน
+            $this->insert('categorise', ['category_id' => '' , 'code' =>  '1', 'name' => 'urgency','title' => 'ปกติ','active' => 1]);
+            $this->insert('categorise', ['category_id' => '' , 'code' =>  '2', 'name' => 'urgency','title' => 'ด่วน','active' => 1]);
+            $this->insert('categorise', ['category_id' => '' , 'code' =>  '3', 'name' => 'urgency','title' => 'ด่วนมาก','active' => 1]);
+            $this->insert('categorise', ['category_id' => '' , 'code' =>  '4', 'name' => 'urgency','title' => 'ด่วนที่สุด','active' => 1]);
+        }
+
+        if(count($sqlStatus) < 1){
+        // สถานะงานซ่อม
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '1', 'name' => 'repair_status','title' => 'ร้องขอ','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '2', 'name' => 'repair_status','title' => 'รับเรื่อง','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '3', 'name' => 'repair_status','title' => 'ดำเนินการ','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '4', 'name' => 'repair_status','title' => 'เสร็จสิ้น','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '5', 'name' => 'repair_status','title' => 'จำหน่่าย','active' => 1]);
+    }
+
+    if(count($sqlSendType) < 1){
+        // ประเภทการแจ้งซ่อม
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  'general', 'name' => 'send_type','title' => 'ซ่อมทั่วไป','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  'asset', 'name' => 'send_type','title' => 'ซ่อมครุภัณฑ์','active' => 1]);
+    }
     }
 
     /**

@@ -9,38 +9,43 @@ use app\modules\hr\models\Employees;
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
+$emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 ?>
 <div class="repair-form">
 
     <?php $form = ActiveForm::begin([
         'id' => 'form-repair',
-        // 'type' => ActiveForm::TYPE_HORIZONTAL,
+        'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
+        'validationUrl' =>['/helpdesk/repair/create-validator']
     ]); ?>
 
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[technician_name]')->hiddenInput()->label(false) ?>
-
-<?php if($model->isNewRecord):?>
-<?= $form->field($model, 'data_json[repair_status]')->hiddenInput(['value' => 'ร้องขอ'])->label(false) ?>
-<?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('อาการเสีย') ?>
-    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
-    <?php else:?>
-
-
-    <div class="row">
-        <div class="col-6">
-
     
-    <div class="bg-danger-subtle p-4 rounded d-flex justify-content-between">
-        
-        <?= $form->field($model, 'data_json[send_type]')->radioList(['ทั่วไป' => 'ทั่วไป','ครุภัณฑ์' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label('ส่งซ่อม') ?>
-        <i class="fa-solid fa-triangle-exclamation fs-1 text-danger"></i>
-            </div>
-           
-        </div>
-        <div class="col-6">
+    <?php if($model->isNewRecord):?>
+        <?= $form->field($model, 'data_json[create_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
+        <?= $form->field($model, 'data_json[repair_status]')->hiddenInput(['value' => 'ร้องขอ'])->label(false) ?>
+        <?= $form->field($model, 'data_json[send_type]')->hiddenInput(['general' => 'ทั่วไป','asset' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label(false) ?>
+        <?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('อาการเสีย') ?>
+        <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
+        <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label('สถานที่') ?>
+        <?= $form->field($model, 'data_json[urgency]')->radioList($model->listUrgency(),['inline'=>true,'custom' => true])->label('ความเร่งด่วน') ?>
+        <?php else:?>
+        <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
+            
+
+            <div class="row">
+                <div class="col-6">
+                    <div class="bg-danger-subtle p-4 rounded d-flex justify-content-between">
+                        <?= $form->field($model, 'data_json[send_type]')->radioList(['general' => 'ทั่วไป','asset' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label('ส่งซ่อม') ?>
+                        
+                        <i class="fa-solid fa-triangle-exclamation fs-1 text-danger"></i>
+                    </div>
+                    
+                </div>
+                <div class="col-6">
         <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทารซ่อม') ?>
             <?= $form->field($model, 'data_json[repair_status]')->widget(Select2::classname(), [
     'data' => [

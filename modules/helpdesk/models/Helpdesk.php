@@ -10,6 +10,8 @@ use yii\helpers\ArrayHelper;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
+use app\models\Categorise;
+use app\components\CategoriseHelper;
 
 /**
  * This is the model class for table "helpdesk".
@@ -22,7 +24,6 @@ use app\modules\hr\models\Employees;
  * @property string|null $name ชื่อการเก็บข้อมูล
  * @property string|null $title รายการ
  * @property string|null $data_json การเก็บข้อมูลชนิด JSON
- * @property string|null $ma_items การบำรุงรักษา
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
@@ -47,7 +48,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json', 'ma_items', 'created_at', 'updated_at'], 'safe'],
+            [['date_start', 'date_end', 'data_json','created_at', 'updated_at'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -67,7 +68,6 @@ class Helpdesk extends \yii\db\ActiveRecord
             'name' => 'Name',
             'title' => 'Title',
             'data_json' => 'Data Json',
-            'ma_items' => 'Ma Items',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'created_by' => 'Created By',
@@ -141,4 +141,10 @@ public function afterFind()
         return ArrayHelper::map($querys, 'user_id','fullname');
         
      }
+
+     //ความเร่งด่วน
+    public static function listUrgency()
+    {
+        return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'title', 'title');
+    }
 }

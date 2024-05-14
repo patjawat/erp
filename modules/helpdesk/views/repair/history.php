@@ -15,9 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php // Pjax::begin(['id' => 'repair-container','timeout' => 5000 ]); ?>
 <?php if($dataProvider->getTotalCount() > 0):?>
-<div class="" style="background-color:eee;">
-    <div class="card mb-0">
-        <div class="card-body">
+
             <table class="table table-primary">
                 <thead>
                     <tr>
@@ -50,21 +48,6 @@ $this->params['breadcrumbs'][] = $this->title;
             </table>
 
 
-            <?php
-     GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            'id',
-            'ref',
-            'code',
-            'date_start',
-            'date_end',
-
-        ],
-    ]);
-     ?>
             <?php else:?>
             <div
                 class="d-flex flex-column justify-content-center align-items-center bg-success bg-opacity-10  p-5 rounded">

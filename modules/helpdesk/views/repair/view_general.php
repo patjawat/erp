@@ -47,10 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="row">
-            <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
-                <?=Html::img($model->asset->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])?>
-            </div>
-            <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
+            <div class="col-xl-12 col-lg-12 col-md-1 col-sm-12">
                 <div class="d-flex justify-content-between">
                     <h4><i class="fa-solid fa-screwdriver-wrench"></i> ข้อมูลแจ้งซ่อม</h4>
                     <div>
@@ -62,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
                                     <?php endif?>
 
-                                    <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['/helpdesk/repair/cancel-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม'], ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                    <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['/helpdesk/repair/cancel-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-circle-minus text-danger"></i> ยกเลิกงานซ่อม'], ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-lg']]) ?>
 
                             <?php  Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['delete', 'id' => $model->id], [
                             'class' => 'btn btn-danger',
@@ -74,7 +71,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         </p>
                     </div>
                 </div>
-                <?=$this->render('@app/modules/am/views/asset/asset_detail_table',['model' => $asset])?>
+                <table class="table table-striped-columns">
+    <tbody>
+        <?= $this->render('repair_detail',['repair' => $model])?>
+        <?php
+    // echo "<pre>";
+    // print_r($model->data_json);
+    // echo "</pre>";
+
+        ?>
+        <tbody>
+                        </table>
             </div>
         </div>
 
@@ -146,7 +153,7 @@ $("body").on("click", ".accept-job", async function (e) {
               history: false,
               url: response.url,
             });
-            success("ดำเนินการสำเร็จ!.");
+            success("ดำเนินการลบสำเร็จ!.");
             // location.reload();
             if (response.close) {
                $("#main-modal").modal("hide");

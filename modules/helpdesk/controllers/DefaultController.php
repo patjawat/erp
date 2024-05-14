@@ -23,6 +23,7 @@ class DefaultController extends Controller
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        $dataProvider->query->andFilterWhere(['in', new \yii\db\Expression("JSON_EXTRACT(data_json, '$.repair_status')"), ["ร้องขอ"]]);
         if($this->request->isAjax){
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -37,6 +38,20 @@ class DefaultController extends Controller
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
+        }
+    }
+
+    //เลือกประเภทการซ่อม
+    public function actionRepairSelect()
+    {
+        if($this->request->isAjax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('repair_select')
+            ];
+        }else{
+            return $this->render('repair_select');
         }
     }
 }

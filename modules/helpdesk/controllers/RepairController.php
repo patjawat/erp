@@ -48,6 +48,7 @@ class RepairController extends Controller
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        $dataProvider->query->andFilterWhere(['in', new \yii\db\Expression("JSON_EXTRACT(data_json, '$.repair_status')"), ["รับเรื่อง"]]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -68,9 +69,15 @@ class RepairController extends Controller
 
     public function actionHistory()
     {
+        $code = $this->request->get('code');
+        $userId = $this->request->get('user_id');
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair', 'code' => $this->request->get('code')]);
+        if(isset($userId)){
+            $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
+        }else{
+            $dataProvider->query->andFilterWhere(['name' => 'repair', 'code' => $code]);
+        }
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -100,10 +107,16 @@ class RepairController extends Controller
         $title = $this->request->get('title');
         $model = $this->findModel($id);
         $asset = Asset::findOne(['code' => $model->code]);
+        if($asset){
             return $this->render('view', [
                 'model' => $model,
                 'asset' => $asset
             ]);
+        }else{
+            return $this->render('view_general', [
+                'model' => $model
+            ]);
+        }
     }
 
     public function actionViewTask($id)
@@ -118,10 +131,16 @@ class RepairController extends Controller
                 'content' => $this->renderAjax('view_task', ['model' => $model]),
             ];
         } else {
-            return $this->render('view', [
-                'model' => $model,
-                'asset' => $asset
-            ]);
+            if($asset){
+                return $this->render('view', [
+                    'model' => $model,
+                    'asset' => $asset
+                ]);
+            }else{
+                return $this->render('view_general', [
+                    'model' => $model
+                ]);
+            }
         }
     }
 
@@ -137,6 +156,9 @@ class RepairController extends Controller
         $model = new Helpdesk([
             'name' => 'repair',
             'code' => $this->request->get('code'),
+            'data_json' => [
+                'send_type' => $this->request->get('send_type')
+            ]
         ]);
         
         $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
@@ -211,6 +233,27 @@ class RepairController extends Controller
     }
 
 
+        // ตรวจสอบความถูกต้อง
+        public function actionCreateValidator()
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = new Helpdesk();
+    
+            if ($this->request->isPost && $model->load($this->request->post())) {
+                $requiredName = "ต้องระบุ";
+                    $model->data_json['title'] == "" ? $model->addError('data_json[title]', 'ต้องระบุอาการ...') : null;
+                    $model->data_json['urgency'] == "" ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
+                    $model->data_json['location'] == "" ? $model->addError('data_json[location]', 'ต้องระบุสถานะที่...') : null;
+    
+                foreach ($model->getErrors() as $attribute => $errors) {
+                    $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+                }
+                if (!empty($result)) {
+                    return $this->asJson($result);
+                }
+            }
+        }
+
     // ตรวจสอบความถูกต้อง
     public function actionCancelJobValidator()
     {
@@ -243,11 +286,15 @@ class RepairController extends Controller
                     'cancel_name' => $user->fullname,
                     'repair_status' => 'ยกเลิกซ่อม'
                 ];
-                $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
-
+                $model->data_json = ArrayHelper::merge($oldObj, $newObj);
+                try {
                     $asset = Asset::findOne(['code' => $model->code]);
                     $asset->asset_status = 1;
                     $asset->save();
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+
 
                 $model->save();
                 return [
@@ -262,7 +309,7 @@ class RepairController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
 
         return [
-            'title' => 'ยกเลิกงานซ่อม',
+            'title' => $this->request->get('title'),
             'content' => $this->renderAjax('_cancel_job', [
                 'model' => $model,
 

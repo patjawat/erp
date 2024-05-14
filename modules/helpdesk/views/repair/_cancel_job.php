@@ -9,6 +9,8 @@ use kartik\select2\Select2;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
+<span class="badge text-bg-primary">ระบุประเภทงานซ่อมไม่ถูกต้อง</span>
+
 <div class="repair-form">
 
     <?php $form = ActiveForm::begin([

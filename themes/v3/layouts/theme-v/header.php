@@ -91,43 +91,45 @@ use app\components\UserHelper;
                         <!-- App Service -->
                         <div class="row mt-3 p-3">
                             <div class="col-4">
-                                <div
-                                    class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
+                                <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
                                     <?=html::img('@web/images/svg-icons/leave.svg',['width' => '50px'])?>
                                     <div>ระบบลา</div>
                                 </div>
                             </div>
                             <div class="col-4">
-                                <div
-                                    class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
+                                <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
                                     <?=html::img('@web/images/svg-icons/booking.svg',['width' => '50px'])?>
                                     <div>ระบบจองรถ</div>
                                 </div>
                             </div>
 
                             <div class="col-4">
-                                <div
-                                    class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
+                                <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
                                     <?=html::img('@web/images/svg-icons/meeting.svg',['width' => '50px'])?>
                                     <div>ระบบจองห้องประชุม</div>
                                 </div>
                             </div>
 
                             <div class="col-4 mt-3">
-                                <div
-                                    class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
+                                <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
                                     <?=html::img('@web/images/svg-icons/document.svg',['width' => '50px'])?>
                                     <div>ระบบสารบัญ</div>
                                 </div>
                             </div>
                             <div class="col-4 mt-3">
-                                <div
-                                    class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
+                                <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
                                     <?=html::img('@web/images/svg-icons/check-list.svg',['width' => '50px'])?>
                                     <div>ระบบความเสี่ยง</div>
                                 </div>
                             </div>
-
+                            <div class="col-4 mt-3">
+                                <a href="<?=Url::to(['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-square-check"></i> เลือกประเภทการซ่อม']);?>" class="open-modal" data-title="xxx">
+                                    <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
+                                        <i class="fa-solid fa-triangle-exclamation fs-1"></i>
+                                        <div>แจ้งซ่อม</div>
+                                    </div>
+                                </div>
+                            </a>
 
                         </div>
 
@@ -139,68 +141,7 @@ use app\components\UserHelper;
                     <i class="bx bx-fullscreen"></i>
                 </button>
             </div>
-            <div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="300">
-                <button data-bs-toggle="dropdown" aria-haspopup="true" type="button"
-                    id="page-header-notification-dropdown" aria-expanded="false"
-                    class="btn header-item notify-icon position-relative">
-                    <i class="bx bx-bell bx-tada"></i>
-                    <span class="badge bg-danger badge-pill notify-icon-badge bg-danger rounded-pill">2</span>
-                </button>
-                <div aria-labelledby="page-header-notification-dropdown"
-                    class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu" style="width: 350px;">
-                    <div class="notify-title p-3">
-                        <h5 class="fs-14 fw-semibold mb-0">
-                            <span>Notification</span>
-                            <a class="text-primary" href="javascript: void(0);">
-                                <small>Clear All</small>
-                            </a>
-                        </h5>
-                    </div>
-                    <div class="notify-scroll">
-                        <div class="scroll-content" id="notify-scrollbar" data-scrollbar="true" tabindex="-1"
-                            style="overflow: hidden; outline: none;">
-                            <div class="scroll-content">
-                                <div class="scroll-content">
-                                    <a href="javascript:void(0);" class="dropdown-item notification-item">
-                                        <div class="d-flex">
-                                            <div class="avatar avatar-xs bg-primary">
-                                                <i class="bx bx-user-plus"></i>
-                                            </div>
-                                            <p class="media-body">
-                                            ปัจวัฒน์ ศรีบุญเรือง 
-                                                <small class="text-muted">5 hours ago | ขออนุญาติ อบรม/สัมนา</small>
-                                            </p>
-                                        </div>
-                                    </a>
-                                    <a href="javascript:void(0);" class="dropdown-item notification-item">
-                                        <div class="d-flex">
-                                            <div class="avatar avatar-xs">
-                                                <?=Html::img('@web/img/patjwat2.png', ['class' => 'img-fluid rounded-circle'])?>
-                                            </div>
-                                            <p class="media-body">
-                                                ปัจวัฒน์ ศรีบุญเรือง
-                                                <small class="text-muted">5 hours ago |  ขอลากิจธุระ</small>
-                                            </p>
-                                        </div>
-                                    </a>
-                                    
-                                </div>
-                            </div>
-                            <div class="scrollbar-track scrollbar-track-x" style="display: none;">
-                                <div class="scrollbar-thumb scrollbar-thumb-x"></div>
-                            </div>
-                            <div class="scrollbar-track scrollbar-track-y" style="display: none;">
-                                <div class="scrollbar-thumb scrollbar-thumb-y"></div>
-                            </div>
-                        </div>
-                        <div class="notify-all">
-                            <a href="javascript: void(0);" class="text-primary text-center p-3">
-                                <small>View All</small>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?=$this->render('notification');?>
             <div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="400">
                 <?php if(!Yii::$app->user->isGuest):?>
                 <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-profile-dropdown"
