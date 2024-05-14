@@ -9,15 +9,7 @@ use yii\helpers\Url;
 </div>
 
 <div class="row">
-    <div class="col-6">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Title</h4>
-                <div id="viewJob"></div>
-            </div>
-        </div>
-
-    </div>
+    
     <div class="col-3">
         <div class="card">
             <div class="card-body">
@@ -27,6 +19,15 @@ use yii\helpers\Url;
 <?php endfor;?>
 
 
+            </div>
+        </div>
+
+    </div>
+    <div class="col-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Title</h4>
+                <div id="viewJob"></div>
             </div>
         </div>
 
