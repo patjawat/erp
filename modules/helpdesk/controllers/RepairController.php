@@ -70,13 +70,13 @@ class RepairController extends Controller
     public function actionHistory()
     {
         $code = $this->request->get('code');
-        $userId = $this->request->get('user_id');
+        $userId = Yii::$app->user->id;
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        if(isset($userId)){
-            $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
-        }else{
+        if(isset($code)){
             $dataProvider->query->andFilterWhere(['name' => 'repair', 'code' => $code]);
+        }else{
+            $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
         }
 
         if ($this->request->isAjax) {

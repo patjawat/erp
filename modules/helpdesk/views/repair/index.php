@@ -27,14 +27,14 @@ $this->params['breadcrumbs'][] = $this->title;
         'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
-            [
-                'header' => 'ผู้แจ้ง',
-                'format' => 'raw',
-                'width' => '350px',
-                'value' => function($model){
-                    return $model->getUserReq();
-                }
-            ],
+            // [
+            //     'header' => 'ผู้แจ้ง',
+            //     'format' => 'raw',
+            //     'width' => '350px',
+            //     'value' => function($model){
+            //         return $model->getUserReq();
+            //     }
+            // ],
             [
                 'header' => 'อาการ',
                 'format' => 'raw',

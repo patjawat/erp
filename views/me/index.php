@@ -50,7 +50,6 @@ function  loadRepairHostory(){
         data:{
             "title":"ประวัติการซ่อม",
             "name":"repair",
-            "user_id":"$model->created_by"
         },
         dataType: "json",
         success: function (res) {

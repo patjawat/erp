@@ -59,7 +59,7 @@ var options = {
             radialBar: {
                 hollow: {
                     margin: 15,
-                    size: '85%' // bar 굵기
+                    size: '85%' // 
                 },
                 track: {
                 dropShadow: {
