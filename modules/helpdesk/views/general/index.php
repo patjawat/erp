@@ -179,6 +179,7 @@ $this->title = "งานซ่อมบำรุง";
                 <?php endfor;?>
             </div>
         </div>
+        <?=$this->render('../default/ratring')?>
     </div>
 </div>
 
