@@ -104,8 +104,8 @@ $this->title = "งานซ่อมบำรุง";
         <?=$this->render('progress')?>
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">ปริมาณการรับงาน</h4>
-                <?php for ($x = 0; $x <= 3; $x++):?>
+                <h4 class="card-title">ปริมาณการทำงาน</h4>
+                <?php for ($x = 0; $x <= 7; $x++):?>
                 <?=$this->render('../default/technician_item')?>
                 <?php endfor;?>
             </div>
@@ -218,4 +218,3 @@ function getJob()
 JS;
 $this->registerJS($js);
 ?>
-<?php Pjax::end()?>

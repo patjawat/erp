@@ -22,7 +22,32 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card">
         <div class="card-body">
 
-    <?= GridView::widget([
+            <table
+                class="table table-primary"
+            >
+                <thead>
+                    <tr>
+                        <th scope="col">รายการ</th>
+                        <th scope="col">Column 2</th>
+                        <th scope="col">Column 3</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($dataProvider->getModels() as $model):?>
+                    <tr>
+                        <td>
+                            <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
+                        </td>
+                        <td>R1C2</td>
+                        <td>R1C3</td>
+                    </tr>
+                    <?php endforeach;?>
+                </tbody>
+            </table>
+        
+<?php // $this->render('req_item',['model' => $model])?>
+
+    <?php GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'columns' => [

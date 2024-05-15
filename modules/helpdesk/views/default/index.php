@@ -3,28 +3,11 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
 ?>
-    <?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
-<style>
-.card.custom-card {
-    border-radius: .688rem;
-    border: 0;
-    /* background-color: var(--custom-white); */
-    box-shadow: 0 10px 30px 0 var(--primary005);
-    position: relative;
-    margin-block-end: 1.25rem;
-    width: 100%;
-}
+<?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 
-.card-box img {
-    position: absolute;
-    inset-block-end: -3px;
-    inset-inline-start: -17px;
-    width: inherit;
-}
-</style>
 
 <div class="row">
-<div class="col-4">
+    <div class="col-4">
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title"><i class="fa-solid fa-bell text-danger"></i> สถานะร้องขอ</h4>
@@ -32,7 +15,7 @@ use yii\widgets\Pjax;
                 <div class="d-flex bg-primary bg-opacity-10 py-2 px-3 rounded mt-2">
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between">
-                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modalx','data' => ['size' => 'modal-lg']])?>
+                            <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modalx','data' => ['size' => 'modal-lg']])?>
                             <label
                                 class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
                                 <i class="fa-regular fa-hourglass-half"></i> ร้องขอ</label>
@@ -50,7 +33,6 @@ use yii\widgets\Pjax;
         </div>
     </div>
     <div class="col-8">
-
         <div class="row row-sm banner-img">
             <div class="col-sm-12 col-lg-12 col-xl-12">
                 <div class="card custom-card card-box">
@@ -68,17 +50,12 @@ use yii\widgets\Pjax;
                     </div>
                 </div>
             </div>
-
-
         </div>
-        <?php // $this->render('task')?>
         <div id="viewJob"></div>
-
-
     </div>
-    
 </div>
 
+<?php //  $this->render('task')?>
 <?php
 $url = Url::to(['/helpdesk/repair']);
 $js = <<<JS

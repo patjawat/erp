@@ -55,7 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h4><i class="fa-solid fa-screwdriver-wrench"></i> ข้อมูลแจ้งซ่อม</h4>
                     <div>
                         <p>
-                        <?=Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/helpdesk/default/index'],['class' => 'btn btn-light'])?>
+                        <?=Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/helpdesk/general/index'],['class' => 'btn btn-light'])?>
                             <?php if($model->data_json['repair_status'] == 'ร้องขอ'):?>
                                 <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job','data' => ['size' => 'modal-lg']]) ?>
                                 <?php else:?>

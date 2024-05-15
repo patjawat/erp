@@ -5,6 +5,7 @@ use yii\helpers\Html;
 <div class="d-flex gap-2">
     <?=Html::a('<i class="fa-solid fa-chart-simple me-1"></i> Dashbroad',['/sm'],['class' => 'btn btn-light'])?>
     <?php // Html::a('<i class="fa-solid fa-box-open me-1"></i> ขอซื้อขอจ้าง',['/sm/sup-request'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-box-open me-1"></i> ขอซื้อขอจ้าง',['/sm/order'],['class' => 'btn btn-light'])?>
     <?=Html::a('<i class="fa-solid fa-box-open me-1"></i> ทะเบียนคุม',['/sm/inventory'],['class' => 'btn btn-light'])?>
     
     <div class="btn-group">
