@@ -39,23 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <i class="fa-solid fa-circle-check text-primary"></i>
                             <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
                         </td>
-                        <td>
-                            <div class="avatar-stack">
-                                <?php if(isset($model->data_json['join']) && $model->data_json['join'] != ""):?>
-                                <?php foreach($model->data_json['join'] as $key => $avatar):?>
-                                <?php 
-                               $emp = Employees::findOne(['user_id' => $avatar]);
-                                ?>
-
-                                <a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip"
-                                    data-bs-placement="top" title="" data-bs-title="<?=$emp->fullname?>">
-                                    <?=Html::img($emp->ShowAvatar(),['class' => 'avatar-sm rounded-circle'])?>
-
-                                </a>
-                                <?php endforeach;?>
-                                <?php endif;?>
-                            </div>
-                        </td>
+                        <td><?=$model->avatarStack()?></td>
                         <td>
                             <?=isset( $model->data_json['urgency'])  ? $model->data_json['urgency'] : ''?>
                         </td>

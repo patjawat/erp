@@ -4,6 +4,7 @@ namespace app\modules\helpdesk\models;
 
 use Yii;
 use yii\db\Expression;
+use yii\helpers\Html;
 use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
 use yii\helpers\ArrayHelper;
@@ -107,8 +108,6 @@ public function afterFind()
 
     }
 
-    // $this->asset_name = isset($this->data_json['name']) ? $this->data_json['name'] : '-';
-
     parent::afterFind();
 }
 
@@ -152,5 +151,24 @@ public function afterFind()
          public static function listRepairStatus()
          {
              return ArrayHelper::map(CategoriseHelper::Categorise('repair_status'), 'title', 'title');
+         }
+
+        //  ทีม
+         public function avatarStack()
+         {
+            try {
+                $data = '';
+                $data .='<div class="avatar-stack">';
+                              foreach($this->data_json['join'] as $key => $avatar){
+                                  $emp = Employees::findOne(['user_id' => $avatar]);
+                                  $data.= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="'.$emp->fullname.'">';
+                                  $data.= Html::img($emp->ShowAvatar(),['class' => 'avatar-sm rounded-circle shadow']);
+                                  $data.='</a>';
+                                }
+                                $data.='</div>';
+                                return $data;
+            } catch (\Throwable $th) {
+
+            }
          }
 }

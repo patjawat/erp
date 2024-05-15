@@ -46,26 +46,6 @@ use app\modules\hr\models\Employees;
             <td class="text-end"><span class="fw-semibold">ผู้รับเรื่อง : </span></td>
             <td colspan="3"><?=$repair->data_json['technician_name'];?></td>
             <td class="text-end"><span class="fw-semibold">ช่างผู้ร่วมงาน : </span></td>
-            <td colspan="3">
-
-                <div class="avatar-stack">
-                    <?php if(isset($repair->data_json['join']) && $repair->data_json['join'] != ""):?>
-                    <?php foreach($repair->data_json['join'] as $key => $avatar):?>
-                    <?php 
-                                // print_r($avatar);
-                               $emp = Employees::findOne(['user_id' => $avatar]);
-                            //    print_r($emp->fullname);
-
-                                ?>
-
-                    <a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                        title="" data-bs-title="<?=$emp->fullname?>">
-                        <?=Html::img($emp->ShowAvatar(),['class' => 'avatar-sm rounded-circle'])?>
-
-                    </a>
-                    <?php endforeach;?>
-                    <?php endif;?>
-                </div>
-            </td>
+            <td colspan="3"><?=$repair->avatarStack()?></td>
         </tr>
         <?php endif;?>

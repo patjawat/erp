@@ -3,7 +3,7 @@ use yii\helpers\Html;
 ?>
 <div class="d-flex justify-content-between total font-weight-bold mt-1 bg-secondary-subtle rounded p-2">
     <div class="d-flex">
-        <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
+        <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white border border-1 border-white'])?>
         <div class="avatar-detail">
             <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top"
                 data-bs-custom-class="custom-tooltip" data-bs-title="ดูเพิ่มเติม..."><a class=""

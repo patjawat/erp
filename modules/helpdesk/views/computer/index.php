@@ -100,6 +100,7 @@ $this->title = "ศูนย์คอมพิวเตอร์";
             </div>
         </div>
         <div id="viewJob"></div>
+        <?=$this->render('list_item_summery')?>
 
     </div>
     <div class="col-4">
@@ -110,7 +111,7 @@ $this->title = "ศูนย์คอมพิวเตอร์";
             <div class="card-body">
 
                 <div class="d-flex justify-content-between">
-                    <h4 class="card-title">ร้องขอ</h4>
+                    <h4 class="card-title"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ร้องขอ</h4>
                     <?=Html::a('ดูทั้งหมด',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
                 </div>
                 <table class="table  m-b-0 transcations mt-2">
@@ -118,7 +119,7 @@ $this->title = "ศูนย์คอมพิวเตอร์";
                         <tr>
                             <td style="width:20px;">
                                 <div class="main-img-user avatar-md">
-                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
+                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white shadow'])?>
                                 </div>
                             </td>
                             <td>
@@ -139,7 +140,7 @@ $this->title = "ศูนย์คอมพิวเตอร์";
                         <tr>
                             <td>
                                 <div class="main-img-user avatar-md">
-                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
+                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white shadow'])?>
                                 </div>
                             </td>
                             <td>
@@ -157,12 +158,8 @@ $this->title = "ศูนย์คอมพิวเตอร์";
                                 </div>
                             </td>
                         </tr>
-
-
                     </tbody>
                 </table>
-
-
             </div>
         </div>
         <?=$this->render('../default/progress')?>

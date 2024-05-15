@@ -23,7 +23,7 @@ $this->title = "งานซ่อมบำรุง";
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <a href="/hr/organization/diagram"><span
-                                        class="text-muted text-uppercase fs-6">ร้องขอ</span></a>
+                                        class="text-muted text-uppercase fs-6">ยกเลิก</span></a>
                                 <h6 class="mb-0 mt-1">35</h6>
                             </div>
                             <div class="text-center" style="position: relative;">
@@ -103,15 +103,15 @@ $this->title = "งานซ่อมบำรุง";
 
     </div>
     <div class="col-4">
-
-
+        <?php
+        $reqSummary = Yii::$app->db->createCommand('SELECT count(id) as total FROM `helpdesk` WHERE JSON_EXTRACT(data_json, "$.repair_status") IN ("ร้องขอ")')->queryScalar();
+        ?>
         <div class="card">
-
             <div class="card-body">
-
                 <div class="d-flex justify-content-between">
-                    <h4 class="card-title">ร้องขอ</h4>
-                    <?=Html::a('ดูทั้งหมด',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
+                    <h4 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> ร้องขอ </h4>
+                    <?=Html::a('ดูทั้งหมด <span class="badge text-bg-secondary">'. $reqSummary.'</span>',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
+
                 </div>
                 <table class="table  m-b-0 transcations mt-2">
                     <tbody>
@@ -119,7 +119,7 @@ $this->title = "งานซ่อมบำรุง";
                         <tr>
                             <td style="width:20px;">
                                 <div class="main-img-user avatar-md">
-                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
+                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white border border-primary'])?>
                                 </div>
                             </td>
                             <td>
