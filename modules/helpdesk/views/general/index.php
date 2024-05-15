@@ -115,6 +115,7 @@ $this->title = "งานซ่อมบำรุง";
                 </div>
                 <table class="table  m-b-0 transcations mt-2">
                     <tbody>
+                    <?php foreach ($dataProvider->getModels() as $model): ?>
                         <tr>
                             <td style="width:20px;">
                                 <div class="main-img-user avatar-md">
@@ -124,7 +125,7 @@ $this->title = "งานซ่อมบำรุง";
                             <td>
                                 <div class="d-flex align-middle ms-3">
                                     <div class="d-inline-block">
-                                        <h6 class="mb-1">เครื่องคอมพิวเตอร์ขัดข้อง</h6>
+                                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1'])?>
                                         <p class="mb-0 fs-13 text-muted">OPD1</p>
                                     </div>
                                 </div>
@@ -136,29 +137,7 @@ $this->title = "งานซ่อมบำรุง";
                                 </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <div class="main-img-user avatar-md">
-                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-middle ms-3">
-                                    <div class="d-inline-block">
-                                        <h6 class="mb-1">น้ำไม่ไหล</h6>
-                                        <p class="mb-0 fs-13 text-muted">IPD2</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-end">
-                                <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold">ด่วนที่สุด</h6>
-                                    <p class="mb-0 fs-11 text-muted">23 ม.ค. 2567</p>
-                                </div>
-                            </td>
-                        </tr>
-
-
+                    <?php endforeach?>
                     </tbody>
                 </table>
 
