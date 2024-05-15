@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use yii\helpers\Html;
 $this->title = "งานซ่อมบำรุง";
 ?>
 
@@ -99,8 +100,76 @@ $this->title = "งานซ่อมบำรุง";
             </div>
         </div>
         <div id="viewJob"></div>
+
     </div>
     <div class="col-4">
+
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+                    <h4 class="card-title">ร้องขอ</h4>
+                    <?=Html::a('ดูทั้งหมด',['/sm/order'],['class' => 'btn btn-primary'])?>
+                </div>
+                <table class="table  m-b-0 transcations mt-2">
+                    <tbody>
+                        <tr>
+                            <td style="width:20px;">
+                                <div class="main-img-user avatar-md">
+                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-middle ms-3">
+                                    <div class="d-inline-block">
+                                        <h6 class="mb-1">เครื่องคอมพิวเตอร์ขัดข้อง</h6>
+                                        <p class="mb-0 fs-13 text-muted">OPD1</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-block">
+                                    <h6 class="mb-2 fs-15 fw-semibold">ด่วน</h6>
+                                    <p class="mb-0 fs-11 text-muted">12 ม.ค. 2567</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="main-img-user avatar-md">
+                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white'])?>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-middle ms-3">
+                                    <div class="d-inline-block">
+                                        <h6 class="mb-1">น้ำไม่ไหล</h6>
+                                        <p class="mb-0 fs-13 text-muted">IPD2</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-block">
+                                    <h6 class="mb-2 fs-15 fw-semibold">ด่วนที่สุด</h6>
+                                    <p class="mb-0 fs-11 text-muted">23 ม.ค. 2567</p>
+                                </div>
+                            </td>
+                        </tr>
+
+
+                    </tbody>
+                </table>
+
+
+            </div>
+        </div>
+
+
+
+
+
         <?=$this->render('progress')?>
         <div class="card">
             <div class="card-body">
