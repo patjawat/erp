@@ -11,49 +11,130 @@ $this->title = "งานซ่อมบำรุง";
 
 <?php $this->endBlock(); ?>
 
-<div class="row">
-    <div class="col-3">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">ร้องขอ</h4>
-            </div>
-        </div>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title"><i class="fa-solid fa-screwdriver-wrench fs-2"></i> <?=$this->title;?></h4>
     </div>
-    <div class="col-2">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">รับเรื่อง</h4>
-            </div>
-        </div>
-    </div>
+</div>
 
-    <div class="col-2">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">ดำเนินการ</h4>
-            </div>
-        </div>
-    </div>
-    <div class="col-2">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">เสร็จสิ้น</h4>
-            </div>
-        </div>
-    </div>
+
+
+<div class="row">
+
     <div class="col-3">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">ยกเลิก</h4>
+    <div class="col-12">
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+                <a href="/hr/organization/diagram"><span
+                        class="text-muted text-uppercase fs-6">ร้องขอ</span></a>
+                <h6 class="mb-0 mt-1">35</h6>
+            </div>
+            <div class="text-center" style="position: relative;">
+                <div>
+                    <div class="bg-danger-subtle rounded p-3">
+                    <i class="fa-solid fa-triangle-exclamation text-danger fs-4"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
+</div>
+        <?=$this->render('progress')?>
 
 
-    <div class="col-3">
+
+
+        <div class="row">
+            
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <a href="/hr/organization/diagram"><span
+                                        class="text-muted text-uppercase fs-6">รับเรื่อง</span></a>
+                                <h6 class="mb-0 mt-1">35</h6>
+                            </div>
+                            <div class="text-center" style="position: relative;">
+                                <div>
+                                    <div class="bg-warning-subtle rounded p-3">
+                                        <i class="fa-solid fa-file-circle-check text-warning fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <a href="/hr/organization/diagram"><span
+                                        class="text-muted text-uppercase fs-6">ดำเนินการ</span></a>
+                                <h6 class="mb-0 mt-1">35</h6>
+                            </div>
+                            <div class="text-center" style="position: relative;">
+                                <div>
+                                    <div class="bg-primary-subtle rounded p-3">
+                                        <i class="fa-solid fa-person-digging text-primary fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <a href="/hr/organization/diagram"><span
+                                        class="text-muted text-uppercase fs-6">ยกเลิก</span></a>
+                                <h6 class="mb-0 mt-1">35</h6>
+                            </div>
+                            <div class="text-center" style="position: relative;">
+                                <div>
+                                    <div class="bg-danger-subtle rounded p-3">
+                                        <i class="fa-solid fa-circle-exclamation text-danger fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <a href="/hr/organization/diagram"><span
+                                        class="text-muted text-uppercase fs-6">เสร็จสิ้น</span></a>
+                                <h6 class="mb-0 mt-1">35</h6>
+                            </div>
+                            <div class="text-center" style="position: relative;">
+                                <div>
+                                    <div class="bg-success-subtle rounded p-3">
+                                        <i class="fa-regular fa-circle-check text-success fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div class="card">
             <div class="card-body">
 
@@ -86,8 +167,9 @@ $this->title = "งานซ่อมบำรุง";
             <?=$this->render('../default/ratring')?>
         </div>
     </div>
+</div>
 
-    <?php
+<?php
 $url = Url::to(['/helpdesk/repair']);
 $js = <<< JS
 
@@ -186,10 +268,6 @@ function getJob()
 
         var chart = new ApexCharts(document.querySelector("#workChart"), options);
         chart.render();
-       
-
-
-
 JS;
 $this->registerJS($js);
 ?>

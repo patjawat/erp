@@ -484,12 +484,7 @@ class AssetController extends Controller
                     'delimiter' => ';',
                 ],
             ]));
-/*         Yii::$app->response->format = Response::FORMAT_JSON;
-$list = explode(',', $importer->getData()[3][0]);
-$list[10] = preg_replace('/[^0-9.]/', '', explode(',', $importer->getData()[3][0])[10] . explode(',', $importer->getData()[3][0])[11] . explode(',', $importer->getData()[3][0])[12]);
-unset($list[11]);
-unset($list[12]);
-return explode(',', implode(",",$list)); */
+
             for ($x = 1; $x <= count($importer->getData()); $x++) {
                 $data_check_error = $importer->getData()[$x][0];
                 $data_check_error = AppHelper::GetDataCsv(explode(',', $data_check_error));
@@ -523,25 +518,7 @@ return explode(',', implode(",",$list)); */
                         $model_Vendor->save();
                     }
                 }
-/*                 if (count($data_check_error) != 17) {
-array_push($error, 'ข้อมูลไม่ครบถ้วน');
-}  */
-/*                 if (null != Vendor::findOne(['code' => $data_check_error[0]])) {
-array_push($error, 'มีเลขประจำตัวผู้เสียภาษี ' . $data_check_error[0] . ' อยู่ในระบบแล้ว');
-}  */
-/*                  if (empty(CategoriseHelper::Title($data_check_error[1])->one())) {
-array_push($error, 'ไม่พบผู้แทนจำหน่าย ' . $data_check_error[1]);
-} */
-/*                 if (!is_numeric($data_check_error[10])) {
-array_push($error, 'ช่อง ' . $data_check_error[10] . ' ต้องใส่ข้อมูลเป็นตัวเลข');
-}
-if (!is_numeric($data_check_error[11])) {
-array_push($error, 'ช่อง ' . $data_check_error[11] . ' ต้องใส่ข้อมูลเป็นตัวเลข');
-} */
-            }
-/*             Yii::$app->response->format = Response::FORMAT_JSON;
-$list = explode(',', $importer->getData()[1][0]);
-return AppHelper::GetDataCsv($list); */
+
             if (empty($error)) {
                 $numberRowsAffected = $importer->import(new MultipleImportStrategy([
                     'tableName' => Asset::tableName(), // change your model names accordingly
@@ -678,15 +655,15 @@ return AppHelper::GetDataCsv($list); */
                                     //ปีงบประมาณ
                                     'on_year' => $data[8],
                                     //รายละเอียดยี่ห้อครุภัณฑ์
-                                    'detail' => $data[14],
+                                    'detail' => $data[13],
                                     //S/N
-                                    'serial_number' => $data[15],
+                                    'serial_number' => $data[14],
                                     //หน่วยนับ
-                                    'unit' => $data[16],
+                                    'unit' => $data[15],
                                     //วันหมดประกัน
-                                    'expire_date' => $data[17],
+                                    'expire_date' => $data[16],
                                     //สถานะ
-                                    'status_name' => $data[18],
+                                    'status_name' => $data[17],
                                     //ชื่อครุภัณฑ์
                                     'asset_name' => $data[1],
                                     //ประเภท
