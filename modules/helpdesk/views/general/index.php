@@ -111,7 +111,7 @@ $this->title = "งานซ่อมบำรุง";
 
                 <div class="d-flex justify-content-between">
                     <h4 class="card-title">ร้องขอ</h4>
-                    <?=Html::a('ดูทั้งหมด',['/sm/order'],['class' => 'btn btn-primary'])?>
+                    <?=Html::a('ดูทั้งหมด',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
                 </div>
                 <table class="table  m-b-0 transcations mt-2">
                     <tbody>
@@ -173,7 +173,7 @@ $this->title = "งานซ่อมบำรุง";
         <?=$this->render('progress')?>
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">ปริมาณการรับงาน</h4>
+                <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
                 <?php for ($x = 0; $x <= 3; $x++):?>
                 <?=$this->render('../default/technician_item')?>
                 <?php endfor;?>
