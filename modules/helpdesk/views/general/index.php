@@ -1,22 +1,67 @@
 <?php
 use yii\helpers\Url;
+$this->title = "งานซ่อมบำรุง";
 ?>
 
-<div class="card">
-    <div class="card-body">
-        <h4 class="card-title"><i class="fa-solid fa-screwdriver-wrench fs-2"></i> งานซ่อมบำรุง</h4>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-screwdriver-wrench fs-2"></i> <?=$this->title;?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+ระบบงานซ่อมบำรุง
+
+<?php $this->endBlock(); ?>
+
+<div class="row">
+    <div class="col-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">ร้องขอ</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">รับเรื่อง</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-2">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">ดำเนินการ</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">เสร็จสิ้น</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">ยกเลิก</h4>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row">
-    
+
+
     <div class="col-3">
         <div class="card">
             <div class="card-body">
+
+
                 <h4 class="card-title">ช่างเทคนิค</h4>
-<?php for ($x = 0; $x <= 7; $x++):?>
-<?=$this->render('../default/technician_item')?>
-<?php endfor;?>
+                <?php for ($x = 0; $x <= 7; $x++):?>
+                <?=$this->render('../default/technician_item')?>
+                <?php endfor;?>
 
 
             </div>
@@ -24,20 +69,25 @@ use yii\helpers\Url;
 
     </div>
     <div class="col-6">
-      <div id="viewJob"></div>
+        <div id="viewJob"></div>
     </div>
     <div class="col-3">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">ปริมางานซ่อม</h4>
-                <div id="workChart"></div>
-            </div>
-        </div>
-<?=$this->render('../default/ratring')?>
-    </div>
-</div>
+        <div class="row">
 
-<?php
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">ปริมางานซ่อม</h4>
+                    <div id="workChart"></div>
+                </div>
+            </div>
+
+
+
+            <?=$this->render('../default/ratring')?>
+        </div>
+    </div>
+
+    <?php
 $url = Url::to(['/helpdesk/repair']);
 $js = <<< JS
 
@@ -143,5 +193,3 @@ function getJob()
 JS;
 $this->registerJS($js);
 ?>
-
-
