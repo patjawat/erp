@@ -518,7 +518,7 @@ class AssetController extends Controller
                         $model_Vendor->save();
                     }
                 }
-
+            }
             if (empty($error)) {
                 $numberRowsAffected = $importer->import(new MultipleImportStrategy([
                     'tableName' => Asset::tableName(), // change your model names accordingly
