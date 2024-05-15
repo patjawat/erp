@@ -165,12 +165,7 @@ $this->title = "งานซ่อมบำรุง";
 
             </div>
         </div>
-
-
-
-
-
-        <?=$this->render('progress')?>
+        <?=$this->render('../default/progress')?>
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
