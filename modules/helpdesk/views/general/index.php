@@ -2,6 +2,7 @@
 use yii\helpers\Url;
 use yii\widgets\Pjax;
 use yii\helpers\Html;
+use yii\web\View;
 $this->title = "งานซ่อมบำรุง";
 ?>
 
@@ -99,7 +100,7 @@ $this->title = "งานซ่อมบำรุง";
                 </div>
             </div>
         </div>
-        <div id="viewJob"></div>
+        <div id="viewJob"><h6 class="text-center mt-5">กำลังโหลด...</h6></div>
 
     </div>
     <div class="col-4">
@@ -115,7 +116,7 @@ $this->title = "งานซ่อมบำรุง";
                 </div>
                 <table class="table  m-b-0 transcations mt-2">
                     <tbody>
-                    <?php foreach ($dataProvider->getModels() as $model): ?>
+                    <?php foreach ($dataProviderStatus1->getModels() as $model): ?>
                         <tr>
                             <td style="width:20px;">
                                 <div class="main-img-user avatar-md">
@@ -125,14 +126,14 @@ $this->title = "งานซ่อมบำรุง";
                             <td>
                                 <div class="d-flex align-middle ms-3">
                                     <div class="d-inline-block">
-                                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1'])?>
+                                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1','data' => ['pjax' => false]])?>
                                         <p class="mb-0 fs-13 text-muted">OPD1</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold">ด่วน</h6>
+                                    <h6 class="mb-2 fs-15 fw-semibold"><?=$model->viewUrgency()?></h6>
                                     <p class="mb-0 fs-11 text-muted">12 ม.ค. 2567</p>
                                 </div>
                             </td>
@@ -159,19 +160,25 @@ $this->title = "งานซ่อมบำรุง";
 
 
 <?php // $this->render('barchart')?>
+<?php Pjax::end()?>
 
 <?php
-$url = Url::to(['/helpdesk/repair']);
+$urlAccept = Url::to(['/helpdesk/repair/list-accept']);
 $js = <<< JS
 
 getJob();
+
+jQuery(document).on("pjax:end", function () {
+    getJob();
+});
+
+
 
 function getJob()
 {
     $.ajax({
         type: "get",
-        url: "$url",
-        data: "data",
+        url: "$urlAccept",
         dataType: "json",
         success: function (res) {
             $('#viewJob').html(res.content);
@@ -184,9 +191,6 @@ function getJob()
           series: [44, 55, 41, 17],
     chart: {
       type: 'donut',
-      // height: 150,
-      // width: '100%',
-      // offsetX: 50
     },
     plotOptions: {
       pie: {
@@ -209,22 +213,7 @@ function getJob()
               fontFamily: 'Open Sans',
               fontWeight: 500,
               color: '#ffffff',
-              // offsetY: -10
             },
-            // total: {
-            //   show: true,
-            //   showAlways: true,
-            //   color: '#BCC1C8',
-            //   fontFamily: 'Open Sans',
-            //   fontWeight: 600,
-            //   formatter: (w) => {
-            //     const total = w.globals.seriesTotals.reduce(
-            //       (a, b) => a + b,
-            //       0
-            //     );
-            //     return total;
-            //   }
-            // }
           }
         }
       },
@@ -234,18 +223,6 @@ function getJob()
     },
     labels: ['ร้องขอ', 'รับเรื่อง', 'ดำเนินการ', 'เสร็จสิ้น'],
     legend: {
-      // show: false,
-      // position: 'right',
-      // offsetX: -30,
-      // offsetY: 70,
-      // formatter: (value, opts) => {
-      //   return value + ' - ' + opts.w.globals.series[opts.seriesIndex];
-      // },
-      // markers: {
-      //   onClick: undefined,
-      //   offsetX: 0,
-      //   offsetY: 25
-      // }
     },
     fill: {
       type: 'solid',
@@ -260,6 +237,5 @@ function getJob()
         var chart = new ApexCharts(document.querySelector("#workChart"), options);
         chart.render();
 JS;
-$this->registerJS($js);
+$this->registerJS($js,View::POS_READY);
 ?>
-<?php Pjax::end()?>

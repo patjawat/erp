@@ -19,51 +19,55 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         'validationUrl' =>['/helpdesk/repair/create-validator']
     ]); ?>
 
-<?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+<!-- เอาเก็บข้อมูล auto -->
+    <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[technician_name]')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'data_json[status_name]')->hiddenInput(['value' => 'ร้องขอ'])->label(false) ?>
+    <!-- ## End ## -->
     
+    <!-- ถ้าเป็นการสร้างใหม่ -->
     <?php if($model->isNewRecord):?>
         <?= $form->field($model, 'data_json[create_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
-        <?= $form->field($model, 'data_json[repair_status]')->hiddenInput(['value' => 'ร้องขอ'])->label(false) ?>
+        <?= $form->field($model, 'status')->textInput(['value' => 1])->label(false) ?>
         <?= $form->field($model, 'data_json[send_type]')->hiddenInput(['general' => 'ทั่วไป','asset' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label(false) ?>
         <?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('อาการเสีย') ?>
         <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
         <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label('สถานที่') ?>
         <?= $form->field($model, 'data_json[urgency]')->radioList($model->listUrgency(),['inline'=>true,'custom' => true])->label('ความเร่งด่วน') ?>
-       <?=$model->upload('req_repair')?>
+        <?=$model->upload('req_repair')?>
+        <!-- ## End ## -->
        
         <?php else:?>
+            <!-- ถ้าเป็นการแก้ไข -->
             <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
-            <?= $form->field($model, 'data_json[location]')->hiddenInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label(false) ?>
-            
-
+            <?= $form->field($model, 'data_json[location]')->hiddenInput()->label(false) ?>
+            <?= $form->field($model, 'data_json[send_type]')->hiddenInput()->label(false) ?>
+        
             <div class="row">
+
                 <div class="col-6">
-                    <div class="bg-danger-subtle p-4 rounded d-flex justify-content-between">
-                        <?= $form->field($model, 'data_json[send_type]')->radioList(['general' => 'ทั่วไป','asset' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label('ส่งซ่อม') ?>
-                        
-                        <i class="fa-solid fa-triangle-exclamation fs-1 text-danger"></i>
-                    </div>
-                    
-                </div>
-                <div class="col-6">
-        <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทารซ่อม') ?>
-           <?= $form->field($model, 'data_json[repair_status]')->widget(Select2::classname(), [
-    'data' => $model->listRepairStatus(),
-    'options' => ['placeholder' => 'ระบุสถานะการซ่อม ...'],
-    'pluginOptions' => [
-        'allowClear' => true
-    ],
-])->label('สถานะ') ?>
+            <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทารซ่อม') ?>
         </div>
+            <div class="col-6">
+                  
+                
+                <?= $form->field($model, 'status')->widget(Select2::classname(), [
+                    'data' => $model->listRepairStatus(),
+                    'options' => ['placeholder' => 'ระบุสถานะการซ่อม ...'],
+                    'pluginEvents' => [
+                        "select2:select" => "function() {
+                           $('#helpdesk-data_json-status_name').val($(this).select2('data')[0].text)
+                        }"
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                    ])->label('สถานะ') ?>
+                    </div>
     </div>
-
     <?= $form->field($model, 'data_json[repair_note]')->textArea(['rows' => 6,'placeholder' => 'ระบุการแก้ไข/อื่นๆ...'])->label('วิธีการแก้ไข/แนวทางแก้ไข') ?>
-
-
-
     <?php
     $options = [
         'multiple' => true,

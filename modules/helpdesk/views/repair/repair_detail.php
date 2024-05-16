@@ -14,9 +14,7 @@ use app\modules\hr\models\Employees;
                 <span class="text-danger"><?=isset($repair->data_json['create_name']) ? $repair->data_json['create_name'] : ''?></span>
             </td>
             <td class="text-end"><span class="fw-semibold">ความเร่งด่วน : </span></td>
-            <td colspan="3">
-                <span class="text-danger"><?=isset( $repair->data_json['urgency'])  ? $repair->data_json['urgency'] : ''?></span>
-            </td>
+            <td colspan="3"><?=$repair->viewUrgency()?></td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">อาการแจ้งซ่อม : </span></td>
@@ -24,14 +22,7 @@ use app\modules\hr\models\Employees;
                 <span class="text-danger"><?=$repair->data_json['title']?></span>
             </td>
             <td class="text-end"><span class="fw-semibold">สภานะงานซ่อม : </span></td>
-            <td colspan="3">
-                <?php if($repair->data_json['repair_status'] == 'ร้องขอ'):?>
-                <label class="badge rounded-pill text-danger-emphasis bg-danger-subtle py-2 fs-6 align-middle">
-                    <i class="fa-regular fa-hourglass-half"></i> ร้องขอ</label>
-                <?php else:?>
-                <?=$repair->data_json['repair_status']?>
-                <?php endif;?>
-            </td>
+            <td colspan="3"><?=$repair->viewStatus()?></td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">ข้อมูลเพิ่มเติม : </span></td>

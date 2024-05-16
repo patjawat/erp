@@ -34,11 +34,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?=Yii::$app->thaiFormatter->asDateTime($model->created_at,'short')?></p>
                         </td>
                         <td class="align-middle">
-                            <?php if($model->data_json['repair_status'] == 'ร้องขอ'):?>
-                            <label class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate"><i class="fa-regular fa-hourglass-half"></i> <?=$model->data_json['repair_status']?></label>
+                            <?php if($model->data_json['status_name'] == 'ร้องขอ'):?>
+                            <label class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate"><i class="fa-regular fa-hourglass-half"></i> <?=$model->data_json['status_name']?></label>
                         <?php endif?>
-                        <?php if($model->data_json['repair_status'] == 'เสร็จสิ้น'):?>
-                            <label class="badge rounded-pill text-success-emphasis bg-success-subtle p-2 text-truncate"><i class="bi bi-check2-circle fs-6"></i> <?=$model->data_json['repair_status']?></label>
+                        <?php if($model->data_json['status_name'] == 'เสร็จสิ้น'):?>
+                            <label class="badge rounded-pill text-success-emphasis bg-success-subtle p-2 text-truncate"><i class="bi bi-check2-circle fs-6"></i> <?=$model->data_json['status_name']?></label>
                         <?php endif?>
                         </td>
 

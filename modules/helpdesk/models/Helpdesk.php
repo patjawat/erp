@@ -49,7 +49,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json','created_at', 'updated_at'], 'safe'],
+            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -144,16 +144,16 @@ public function afterFind()
      //ความเร่งด่วน
     public static function listUrgency()
     {
-        return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'title', 'title');
+        return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'code', 'title');
     }
 
          //สถานะงานซ่อม
          public static function listRepairStatus()
          {
-             return ArrayHelper::map(CategoriseHelper::Categorise('repair_status'), 'title', 'title');
+             return ArrayHelper::map(CategoriseHelper::Categorise('repair_status'), 'code', 'title');
          }
 
-        //  ทีม
+        //  ภาพทีม
          public function avatarStack()
          {
             try {
@@ -169,6 +169,56 @@ public function afterFind()
                                 return $data;
             } catch (\Throwable $th) {
 
+            }
+         }
+
+        //แสดงสถานะ
+         public function viewStatus()
+         {
+            if(isset($this->data_json['urgency'])){
+                $model = Categorise::findOne(['name' => 'repair_status','code' => $this->status]);
+               
+                if($model->code == 1)
+                {
+                    return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-triangle-exclamation"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 2)
+                {
+                    return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-user-check"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 3)
+                {
+                    return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-person-digging text-primary"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 4)
+                {
+                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-circle-check text-success"></i> '.$model->title.'</span>';
+                }
+            }
+         }
+
+         //แสดงความเร่งด่วน
+         public function viewUrgency()
+         {
+            if(isset($this->data_json['urgency'])){
+                $model = Categorise::findOne(['name' => 'urgency','code' => $this->data_json['urgency']]);
+               
+                if($model->code == 1)
+                {
+                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-face-smile"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 2)
+                {
+                    return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-exclamation"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 3)
+                {
+                    return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-circle-exclamation text-danger"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 4)
+                {
+                    return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-bomb text-danger"></i> '.$model->title.'</span>';
+                }
             }
          }
 }

@@ -23,7 +23,8 @@ class DefaultController extends Controller
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
-        $dataProvider->query->andFilterWhere(['in', new \yii\db\Expression("JSON_EXTRACT(data_json, '$.repair_status')"), ["ร้องขอ"]]);
+        // $dataProvider->query->andFilterWhere(['status' => 1]);
+       
         if($this->request->isAjax){
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [

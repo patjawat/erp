@@ -48,7 +48,7 @@ class RepairController extends Controller
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
-        $dataProvider->query->andFilterWhere(['in', new \yii\db\Expression("JSON_EXTRACT(data_json, '$.repair_status')"), ["รับเรื่อง"]]);
+        $dataProvider->query->andFilterWhere(['status' => 1]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -66,6 +66,31 @@ class RepairController extends Controller
             ]);
         }
     }
+
+    public function actionListAccept()
+    {
+        $searchModel = new HelpdeskSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        $dataProvider->query->andFilterWhere(['in', 'status', [2,3]]);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '',
+                'content' => $this->renderAjax('index', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
 
     public function actionHistory()
     {
@@ -168,7 +193,7 @@ class RepairController extends Controller
                 $this->changAssetStatus($model->code);
                 return [
                     'status' => 'success',
-                    'container' =>  '#am-container',
+                    'container' =>  '#helpdesk-container',
                 ];
             }
         } else {
@@ -199,11 +224,16 @@ class RepairController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                if($model->data_json['repair_status'] == "เสร็จสิ้น"){
+                
+            try {
+                if($model->status == 4){
                     $asset = Asset::findOne(['code' => $model->code]);
                     $asset->asset_status = 1;
                     $asset->save();
                 }
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
                 
                 // $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
                 // return $model->data_json;
@@ -330,11 +360,13 @@ class RepairController extends Controller
         $model->updated_by = $user->id;
         $newObj = [
             'technician_name' => $user->fullname,
-            'repair_status' => 'รับเรื่อง'
+            'status_name' => 'รับเรื่อง'
         ];
         $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
+        $model->status = 2;
         $model->save();
-        
+        // return $model;
+
         return [
             'status' => 'success',
             'container' => '#helpdesk-container',

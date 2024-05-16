@@ -16,8 +16,11 @@ class GeneralController extends \yii\web\Controller
     {
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair']);
-        $dataProvider->query->andFilterWhere(['in', new \yii\db\Expression("JSON_EXTRACT(data_json, '$.repair_status')"), ["ร้องขอ"]]);
+        $dataProvider->query->andFilterWhere(['in', 'status', [2,3]]);
+
+        $dataProviderStatus1 = $searchModel->search($this->request->queryParams);
+        $dataProviderStatus1->query->andFilterWhere(['name' => 'repair']);
+        $dataProviderStatus1->query->andFilterWhere(['status' => 1]);
 
         if($this->request->isAjax){
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -25,13 +28,15 @@ class GeneralController extends \yii\web\Controller
                 'title' => '',
                 'content' => $this->renderAjax('index', [
                     'searchModel' => $searchModel,
+                    'dataProviderStatus1' => $dataProviderStatus1,
                     'dataProvider' => $dataProvider,
-                ])
-            ];
-        }else{
-            return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
+                    ])
+                ];
+            }else{
+                return $this->render('index', [
+                    'searchModel' => $searchModel,
+                    'dataProviderStatus1' => $dataProviderStatus1,
+                    'dataProvider' => $dataProvider,
             ]);
         }
     }

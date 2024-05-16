@@ -6,6 +6,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use yii\widgets\Pjax;
+use yii\bootstrap5\LinkPager;
 use app\modules\hr\models\Employees;
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\RepairSearch $searchModel */
@@ -15,80 +16,45 @@ $this->title = 'Repairs';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
-<div class="" style="background-color:eee;">
 
-
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <div class="card">
-        <div class="card-body">
-
-            <table class="table table-primary">
-                <thead>
-                    <tr>
-                        <th scope="col">รายการ</th>
-                        <th scope="col">ผู้ร่วมงาน </th>
-                        <th scope="col">ความเร่งด่วน</th>
-                        <th scope="col">สถานะ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach($dataProvider->getModels() as $model):?>
-                    <tr>
-                        <td>
-                            <i class="fa-solid fa-circle-check text-primary"></i>
-                            <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
-                        </td>
-                        <td><?=$model->avatarStack()?></td>
-                        <td>
-                            <?=isset( $model->data_json['urgency'])  ? $model->data_json['urgency'] : ''?>
-                        </td>
-                        <td>ดำเนินการ</td>
-                    </tr>
-                    <?php endforeach;?>
-                </tbody>
-            </table>
-
-            <?php // $this->render('req_item',['model' => $model])?>
-
-            <?php GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            // [
-            //     'header' => 'ผู้แจ้ง',
-            //     'format' => 'raw',
-            //     'width' => '350px',
-            //     'value' => function($model){
-            //         return $model->getUserReq();
-            //     }
-            // ],
-            [
-                'header' => 'อาการ',
-                'format' => 'raw',
-                'value' => function($model){
-                    return $this->render('title',['model' => $model]);
-                }
-            ],
-            [
-                'header' => 'สถานะ',
-                'format' => 'raw',
-                'width' => '100px',
-                'value' => function($model){
-                    return $this->render('status',['model' => $model]);
-                }
-            ],
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Helpdesk $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
-
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">รายการ</th>
+                    <th style="width:300px">ผู้ร่วมงาน </th>
+                    <th class="text-center" style="width:200px">ความเร่งด่วน</th>
+                    <th class="text-center" style="width:150px">สถานะ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($dataProvider->getModels() as $model):?>
+                <tr class="align-middle">
+                    <td>
+                        <i class="fa-solid fa-circle-check text-primary"></i>
+                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
+                    </td>
+                    <td><?=$model->avatarStack()?></td>
+                    <td class="text-center"><?=$model->viewUrgency()?></td>
+                    <td class="text-center"> <?=$model->viewStatus()?></td>
+                </tr>
+                <?php endforeach;?>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-center">
+            <div class="text-muted">
+                <?= LinkPager::widget([
+                    'pagination' => $dataProvider->pagination,
+                    'firstPageLabel' => 'หน้าแรก',
+                    'lastPageLabel' => 'หน้าสุดท้าย',
+                    'options' => [
+                        'listOptions' => 'pagination pagination-sm',
+                        'class' => 'pagination-sm',
+                    ],
+                ]); ?>
+            </div>
         </div>
     </div>
-
-    <?php Pjax::end(); ?>
+</div>
+<?php Pjax::end(); ?>
