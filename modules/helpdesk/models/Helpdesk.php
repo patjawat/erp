@@ -221,4 +221,9 @@ public function afterFind()
                 }
             }
          }
+
+         public function viewCreateDate()
+         {
+            return Yii::$app->thaiFormatter->asDate($this->created_at, 'short');
+         }
 }

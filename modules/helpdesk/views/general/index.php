@@ -18,26 +18,7 @@ $this->title = "งานซ่อมบำรุง";
 <div class="row">
     <div class="col-8">
         <div class="row">
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="/hr/organization/diagram"><span
-                                        class="text-muted text-uppercase fs-6">ยกเลิก</span></a>
-                                <h6 class="mb-0 mt-1">35</h6>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div>
-                                    <div class="bg-danger-subtle rounded p-3">
-                                        <i class="fa-solid fa-triangle-exclamation text-danger fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
             <div class="col-3">
                 <div class="card">
                     <div class="card-body">
@@ -45,12 +26,12 @@ $this->title = "งานซ่อมบำรุง";
                             <div class="flex-grow-1">
                                 <a href="/hr/organization/diagram"><span
                                         class="text-muted text-uppercase fs-6">รับเรื่อง</span></a>
-                                <h6 class="mb-0 mt-1">35</h6>
+                                <h6 class="mb-0 mt-1" id="status2">0</h6>
                             </div>
                             <div class="text-center" style="position: relative;">
                                 <div>
                                     <div class="bg-warning-subtle rounded p-3">
-                                        <i class="fa-solid fa-file-circle-check text-warning fs-4"></i>
+                                        <i class="fa-solid fa-user-check text-warning fs-4"></i>
                                     </div>
                                 </div>
                             </div>
@@ -66,7 +47,7 @@ $this->title = "งานซ่อมบำรุง";
                             <div class="flex-grow-1">
                                 <a href="/hr/organization/diagram"><span
                                         class="text-muted text-uppercase fs-6">ดำเนินการ</span></a>
-                                <h6 class="mb-0 mt-1">35</h6>
+                                <h6 class="mb-0 mt-1" id="status3">0</h6>
                             </div>
                             <div class="text-center" style="position: relative;">
                                 <div>
@@ -85,8 +66,28 @@ $this->title = "งานซ่อมบำรุง";
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <a href="/hr/organization/diagram"><span
+                                        class="text-muted text-uppercase fs-6">ยกเลิก</span></a>
+                                <h6 class="mb-0 mt-1" id="status5">0</h6>
+                            </div>
+                            <div class="text-center" style="position: relative;">
+                                <div>
+                                    <div class="bg-danger-subtle rounded p-3">
+                                        <i class="fa-solid fa-triangle-exclamation text-danger fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <a href="/hr/organization/diagram"><span
                                         class="text-muted text-uppercase fs-6">เสร็จสิ้น</span></a>
-                                <h6 class="mb-0 mt-1">35</h6>
+                                <h6 class="mb-0 mt-1" id="status4">0</h6>
                             </div>
                             <div class="text-center" style="position: relative;">
                                 <div>
@@ -127,22 +128,20 @@ $this->title = "งานซ่อมบำรุง";
                                 <div class="d-flex align-middle ms-3">
                                     <div class="d-inline-block">
                                         <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1','data' => ['pjax' => false]])?>
-                                        <p class="mb-0 fs-13 text-muted">OPD1</p>
+                                        <p class="mb-0 fs-13 text-muted"><?=$model->data_json['location']?></p>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
                                     <h6 class="mb-2 fs-15 fw-semibold"><?=$model->viewUrgency()?></h6>
-                                    <p class="mb-0 fs-11 text-muted">12 ม.ค. 2567</p>
+                                    <p class="mb-0 fs-11 text-muted"><?=$model->viewCreateDate()?></p>
                                 </div>
                             </td>
                         </tr>
                     <?php endforeach?>
                     </tbody>
                 </table>
-
-
             </div>
         </div>
         <?=$this->render('../default/progress')?>
@@ -158,25 +157,25 @@ $this->title = "งานซ่อมบำรุง";
     </div>
 </div>
 
-
 <?php // $this->render('barchart')?>
 <?php Pjax::end()?>
 
 <?php
 $urlAccept = Url::to(['/helpdesk/repair/list-accept']);
+$urlSummary = Url::to(['/helpdesk/general/summary']);
 $js = <<< JS
 
 getJob();
+getSummary();
 
 jQuery(document).on("pjax:end", function () {
     getJob();
+    getSummary()
 });
 
-
-
-function getJob()
+async function getJob()
 {
-    $.ajax({
+    await $.ajax({
         type: "get",
         url: "$urlAccept",
         dataType: "json",
@@ -186,8 +185,26 @@ function getJob()
     });
 }
 
+async function getSummary()
+{
+    await $.ajax({
+        type: "get",
+        url: "$urlSummary",
+        dataType: "json",
+        success: function (res) {
+            console.log(res);
+            $.each( res, function( key, i ) {
+                // console.log(value.code);
+                $('#status'+i.code).text(i.total)
+                // alert( key + ": " + value );
+                });
+            // $('#viewJob').html(res.content);
+        }
+    });
+}
 
-        const options = {
+
+const options = {
           series: [44, 55, 41, 17],
     chart: {
       type: 'donut',

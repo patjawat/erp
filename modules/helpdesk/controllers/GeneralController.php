@@ -41,4 +41,16 @@ class GeneralController extends \yii\web\Controller
         }
     }
 
+    public function actionSummary()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $sql = "SELECT c.code,c.title,count(h.id) as total FROM helpdesk h
+        LEFT JOIN categorise c ON c.code = h.status AND c.name = 'repair_status'
+        where JSON_EXTRACT(h.data_json,'$.send_type') = 'general'
+        GROUP BY c.id";
+
+        $query = Yii::$app->db->createCommand($sql)->queryAll();
+        return $query;
+    }
+
 }

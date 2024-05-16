@@ -46,7 +46,8 @@ class m240510_123044_create_helpdesk_table extends Migration
                 $this->insert('categorise', ['category_id' => '' , 'code' =>  '2', 'name' => 'repair_status','title' => 'รับเรื่อง','active' => 1]);
                 $this->insert('categorise', ['category_id' => '' , 'code' =>  '3', 'name' => 'repair_status','title' => 'ดำเนินการ','active' => 1]);
                 $this->insert('categorise', ['category_id' => '' , 'code' =>  '4', 'name' => 'repair_status','title' => 'เสร็จสิ้น','active' => 1]);
-                $this->insert('categorise', ['category_id' => '' , 'code' =>  '5', 'name' => 'repair_status','title' => 'จำหน่่าย','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '5', 'name' => 'repair_status','title' => 'ยกเลิก','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  '6', 'name' => 'repair_status','title' => 'จำหน่่าย','active' => 1]);
     }
 
     if(count($sqlSendType) < 1){
