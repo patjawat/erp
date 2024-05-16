@@ -1,7 +1,7 @@
 <?php
 use app\modules\helpdesk\models\Helpdesk;
 
-$status3 = Helpdesk::find()->where(['status' => 3])->count();
+$status2 = Helpdesk::find()->where(['in','status',[2,3]])->count();
 $status4 = Helpdesk::find()->where(['status' => 4])->count();
 ?>
 
@@ -13,8 +13,8 @@ $status4 = Helpdesk::find()->where(['status' => 4])->count();
                         <div class="d-flex flex-column align-items-center justify-content-start">
                             <div class="position-relative">
                             <div class="d-flex flex-column">
-                                <span class="h5">ดำเนินการ</span>
-                                <span class="text-center text-muted mb-0"><?=$status3;?></span>
+                                <span class="h5">รับเรื่อง/ดำเนินการ</span>
+                                <span class="text-center text-muted mb-0"><?=$status2;?></span>
                             </div>
                             </div>
                         </div>

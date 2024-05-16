@@ -224,7 +224,7 @@ class RepairController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                
+
             try {
                 if($model->status == 4){
                     $asset = Asset::findOne(['code' => $model->code]);
@@ -325,7 +325,7 @@ class RepairController extends Controller
                     //throw $th;
                 }
 
-
+                $model->status  = 5;
                 $model->save();
                 return [
                     'status' => 'success',
