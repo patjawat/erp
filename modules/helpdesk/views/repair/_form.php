@@ -30,7 +30,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     <!-- ถ้าเป็นการสร้างใหม่ -->
     <?php if($model->isNewRecord):?>
         <?= $form->field($model, 'data_json[create_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
-        <?= $form->field($model, 'status')->textInput(['value' => 1])->label(false) ?>
+        <?= $form->field($model, 'status')->hiddenInput(['value' => 1])->label(false) ?>
         <?= $form->field($model, 'data_json[send_type]')->hiddenInput(['general' => 'ทั่วไป','asset' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label(false) ?>
         <?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('อาการเสีย') ?>
         <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
