@@ -106,7 +106,7 @@ $this->title = "งานซ่อมบำรุง";
     </div>
     <div class="col-4">
         <?php
-        $reqSummary = Yii::$app->db->createCommand('SELECT count(id) as total FROM `helpdesk` WHERE JSON_EXTRACT(data_json, "$.repair_status") IN ("ร้องขอ")')->queryScalar();
+        $reqSummary = Yii::$app->db->createCommand('SELECT count(id) as total FROM `helpdesk` WHERE status = 1')->queryScalar();
         ?>
         <div class="card">
             <div class="card-body">
