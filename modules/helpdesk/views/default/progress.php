@@ -1,5 +1,8 @@
 <?php
+use app\modules\helpdesk\models\Helpdesk;
 
+$status3 = Helpdesk::find()->where(['status' => 3])->count();
+$status4 = Helpdesk::find()->where(['status' => 4])->count();
 ?>
 
 <div class="card">
@@ -9,22 +12,20 @@
                     <div class="flex-fill border-primary border-end" style="width: 129px;">
                         <div class="d-flex flex-column align-items-center justify-content-start">
                             <div class="position-relative">
-                                <span class="h5">
-                                    ดำเนินการ
-                                </span>
-                                <br>
-                                <span class="text-muted mb-0">30 เรื่อง</span>
+                            <div class="d-flex flex-column">
+                                <span class="h5">ดำเนินการ</span>
+                                <span class="text-center text-muted mb-0"><?=$status3;?></span>
+                            </div>
                             </div>
                         </div>
                     </div>
                     <div class="flex-fill">
                         <div class="d-flex flex-column align-items-center justify-content-start">
                             <div class="position-relative">
-                                <span class="h5">
-                                    เสร็จสิ้น
-                                </span>
-                                <br>
-                                <span class="text-muted mb-0">70 เรื่อง</span>
+                                <div class="d-flex flex-column">
+                                    <span class="h5">เสร็จสิ้น</span>
+                                    <span class="text-muted mb-0 text-center"><?=$status4;?></span>
+                                </div>
                             </div>
                         </div>
                     </div>

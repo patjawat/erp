@@ -118,11 +118,9 @@ $this->title = "งานซ่อมบำรุง";
                 <table class="table  m-b-0 transcations mt-2">
                     <tbody>
                     <?php foreach ($dataProviderStatus1->getModels() as $model): ?>
-                        <tr>
-                            <td style="width:20px;">
-                                <div class="main-img-user avatar-md">
-                                    <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white border border-primary'])?>
-                                </div>
+                        <tr class="align-middle">
+                            <td class="align-middle" style="width:15px;">
+                                    <?=$model->showAvatarCreate();?>
                             </td>
                             <td>
                                 <div class="d-flex align-middle ms-3">

@@ -32,8 +32,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php foreach($dataProvider->getModels() as $model):?>
                 <tr class="align-middle">
                     <td>
-                        <i class="fa-solid fa-circle-check text-primary"></i>
-                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
+                        <div class="d-flex flex-row gap-3">
+                        <?=$model->showAvatarCreate();?>
+                            <div class="d-flex flex-column">
+                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
+                                <div>
+                                    <span class="mb-0 fs-13 text-muted"><?=$model->data_json['location']?></span> | <?=$model->viewCreateDate()?>
+                                </div>
+                            </div>
+                        </div>
+
                     </td>
                     <td><?=$model->avatarStack()?></td>
                     <td class="text-center"><?=$model->viewUrgency()?></td>

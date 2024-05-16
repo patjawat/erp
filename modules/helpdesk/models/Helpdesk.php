@@ -150,7 +150,9 @@ public function afterFind()
          //สถานะงานซ่อม
          public static function listRepairStatus()
          {
-             return ArrayHelper::map(CategoriseHelper::Categorise('repair_status'), 'code', 'title');
+            $model = Categorise::find()->where(['name' => 'repair_status'])
+            ->andWhere(['<>','code',5])->all();
+             return ArrayHelper::map($model, 'code', 'title');
          }
 
         //  ภาพทีม
@@ -170,6 +172,12 @@ public function afterFind()
             } catch (\Throwable $th) {
 
             }
+         }
+
+         public function showAvatarCreate()
+         {
+            $emp = Employees::findOne(['user_id' => $this->created_by]);
+            return  Html::img($emp->ShowAvatar(),['class' => 'avatar-sm rounded-circle shadow']);
          }
 
         //แสดงสถานะ
