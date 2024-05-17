@@ -6,7 +6,7 @@ use yii\helpers\Url;
                 <?=$this->render('@app/modules/hr/views/employees/avatar',['model' => $model])?>
 <div class="card">
     <div class="card-body">
-        <h4>การแจ้งซ่อม</h4>
+        <h6>บันทึกการแจ้งซ่อม</h6>
         <div id="viewRepairHistory" class="mt-4"></div>
     </div>
 </div>

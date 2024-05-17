@@ -22,6 +22,7 @@ class m240510_123044_create_helpdesk_table extends Migration
             'title' => $this->string(255)->comment('รายการ'),
             'data_json' => $this->json()->comment('การเก็บข้อมูลชนิด JSON'),
             'status' => $this->string(255)->comment('สถานะ'),
+            'rating' => $this->string(255)->comment('คะแนน'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),   
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),
@@ -31,6 +32,7 @@ class m240510_123044_create_helpdesk_table extends Migration
         $sqlUrgency = Yii::$app->db->createCommand("select * from categorise where name = 'urgency'")->queryAll();
         $sqlStatus = Yii::$app->db->createCommand("select * from categorise where name = 'repair_status'")->queryAll();
         $sqlSendType = Yii::$app->db->createCommand("select * from categorise where name = 'send_type'")->queryAll();
+        $sqlRating = Yii::$app->db->createCommand("select * from categorise where name = 'rating'")->queryAll();
 
         if(count($sqlUrgency) < 1){
             //ความเร่งด่วน
@@ -54,6 +56,15 @@ class m240510_123044_create_helpdesk_table extends Migration
         // ประเภทการแจ้งซ่อม
                 $this->insert('categorise', ['category_id' => '' , 'code' =>  'general', 'name' => 'send_type','title' => 'ซ่อมทั่วไป','active' => 1]);
                 $this->insert('categorise', ['category_id' => '' , 'code' =>  'asset', 'name' => 'send_type','title' => 'ซ่อมครุภัณฑ์','active' => 1]);
+    }
+
+    if(count($sqlRating) < 1){
+        // การให้คะแนน
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  1, 'name' => 'rating','title' => 'ควรปรับปรุง','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  2, 'name' => 'rating','title' => 'พอใช้','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  3, 'name' => 'rating','title' => 'ปานกลาง','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  4, 'name' => 'rating','title' => 'ดี','active' => 1]);
+                $this->insert('categorise', ['category_id' => '' , 'code' =>  5, 'name' => 'rating','title' => 'ดีมาก','active' => 1]);
     }
     }
 

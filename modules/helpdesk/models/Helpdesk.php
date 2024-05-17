@@ -49,7 +49,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status'], 'safe'],
+            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -94,6 +94,16 @@ class Helpdesk extends \yii\db\ActiveRecord
     ];
 }
 
+
+// public function beforeSave($insert)
+// {
+//     // if ($insert) {  // only for Save (No Update)
+//         if (!empty($this->rating)) {
+//             $this->setAttribute('rating', $this->rating-3.75);
+//         }
+//     // }
+//     return parent::beforeSave($insert);
+// }
 public function Upload($name)
 {
     return FileManagerHelper::FileUpload($this->ref, $name);
@@ -146,6 +156,12 @@ public function afterFind()
     {
         return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'code', 'title');
     }
+
+         //การใช้คะแนน
+         public static function listRating()
+         {
+             return ArrayHelper::map(CategoriseHelper::Categorise('rating'), 'code', 'title');
+         }
 
          //สถานะงานซ่อม
          public static function listRepairStatus()
@@ -260,14 +276,23 @@ public function afterFind()
                   //throw $th;
               }
            }
+        //แสดงวันที่แล้วสร็จ
+        public function viewEndJob()
+            {
+                try {
+                        return Yii::$app->thaiFormatter->asDateTime($this->data_json['end_job'], 'medium');
+                    } catch (\Throwable $th) {
 
-                      //แสดงวันที่แล้วสร็จ
-                      public function viewEndJob()
-                      {
-                          try {
-                             return Yii::$app->thaiFormatter->asDateTime($this->data_json['end_job'], 'medium');
-                         } catch (\Throwable $th) {
-                             //throw $th;
-                         }
-                      }
+             }
+        }
+        
+                //วันที่แสดงความคิดเห็น
+                public function viewCommentDate()
+                {
+                    try {
+                            return Yii::$app->thaiFormatter->asDateTime($this->data_json['comment_date'], 'medium');
+                        } catch (\Throwable $th) {
+    
+                 }
+            }
 }

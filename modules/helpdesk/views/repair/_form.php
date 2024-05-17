@@ -195,7 +195,7 @@ $("#helpdesk-data_json-end_job").change(function() {
         if($("#helpdesk-data_json-start_job").is(":checked")) {
 
         }else{
-alert('ดำเนินหาร');
+alert('ระุบดำเนินการก่อน');
 $(this).prop('checked', false)
         }
     }else{

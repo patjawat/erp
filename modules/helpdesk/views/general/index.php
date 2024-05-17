@@ -16,6 +16,56 @@ $this->title = "งานซ่อมบำรุง";
 <?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 
 <div class="row">
+    
+    <div class="col-4">
+        <?php
+        $reqSummary = Yii::$app->db->createCommand('SELECT count(id) as total FROM `helpdesk` WHERE status = 1')->queryScalar();
+        ?>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h4 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> ร้องขอ </h4>
+                    <?=Html::a('ดูทั้งหมด <span class="badge text-bg-secondary">'. $reqSummary.'</span>',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
+
+                </div>
+                <table class="table  m-b-0 transcations mt-2">
+                    <tbody>
+                    <?php foreach ($dataProviderStatus1->getModels() as $model): ?>
+                        <tr class="align-middle">
+                            <td class="align-middle" style="width:15px;">
+                                    <?=$model->showAvatarCreate();?>
+                            </td>
+                            <td>
+                                <div class="d-flex align-middle ms-3">
+                                    <div class="d-inline-block">
+                                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1','data' => ['pjax' => false]])?>
+                                        <p class="mb-0 fs-13 text-muted"><?=$model->data_json['location']?></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-block">
+                                    <h6 class="mb-2 fs-15 fw-semibold"><?=$model->viewUrgency()?></h6>
+                                    <p class="mb-0 fs-11 text-muted"><?=$model->viewCreateDate()?></p>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?=$this->render('../default/progress')?>
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
+                <?php for ($x = 0; $x <= 3; $x++):?>
+                <?=$this->render('../default/technician_item')?>
+                <?php endfor;?>
+            </div>
+        </div>
+        <?=$this->render('../default/ratring')?>
+    </div>
     <div class="col-8">
         <div class="row">
             
@@ -103,55 +153,6 @@ $this->title = "งานซ่อมบำรุง";
         </div>
         <div id="viewJob"><h6 class="text-center mt-5">กำลังโหลด...</h6></div>
 
-    </div>
-    <div class="col-4">
-        <?php
-        $reqSummary = Yii::$app->db->createCommand('SELECT count(id) as total FROM `helpdesk` WHERE status = 1')->queryScalar();
-        ?>
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h4 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> ร้องขอ </h4>
-                    <?=Html::a('ดูทั้งหมด <span class="badge text-bg-secondary">'. $reqSummary.'</span>',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
-
-                </div>
-                <table class="table  m-b-0 transcations mt-2">
-                    <tbody>
-                    <?php foreach ($dataProviderStatus1->getModels() as $model): ?>
-                        <tr class="align-middle">
-                            <td class="align-middle" style="width:15px;">
-                                    <?=$model->showAvatarCreate();?>
-                            </td>
-                            <td>
-                                <div class="d-flex align-middle ms-3">
-                                    <div class="d-inline-block">
-                                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1','data' => ['pjax' => false]])?>
-                                        <p class="mb-0 fs-13 text-muted"><?=$model->data_json['location']?></p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-end">
-                                <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold"><?=$model->viewUrgency()?></h6>
-                                    <p class="mb-0 fs-11 text-muted"><?=$model->viewCreateDate()?></p>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <?=$this->render('../default/progress')?>
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
-                <?php for ($x = 0; $x <= 3; $x++):?>
-                <?=$this->render('../default/technician_item')?>
-                <?php endfor;?>
-            </div>
-        </div>
-        <?=$this->render('../default/ratring')?>
     </div>
 </div>
 

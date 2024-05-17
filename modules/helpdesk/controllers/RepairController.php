@@ -253,10 +253,6 @@ class RepairController extends Controller
             } catch (\Throwable $th) {
                 //throw $th;
             }
-                
-                // $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
-                // return $model->data_json;
-
                 $model->save();
                 return [
                     'status' => 'success',
@@ -385,13 +381,49 @@ class RepairController extends Controller
         $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
         $model->status = 2;
         $model->save();
-        // return $model;
 
         return [
             'status' => 'success',
             'container' => '#helpdesk-container',
         ];
     }
+
+    //การให้คะแนน
+    public function actionRating($id)
+    {
+        $model = $this->findModel($id);
+        $oldObj = $model->data_json;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                // return $model;
+                $model->save();
+                return [
+                    'status' => 'success',
+                    'container' => '#helpdesk-container',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('rating', [
+                'model' => $model,
+
+            ]),
+        ];
+    }else{
+        return $this->render('rating', ['model' => $model]);
+    }
+    }
+
+
 
     /**
      * Deletes an existing Repair model.

@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Html;
+use kartik\widgets\StarRating;
 $this->registerCssFile('@web/css/timeline.css');
 ?>
 <style>
@@ -12,7 +13,54 @@ $this->registerCssFile('@web/css/timeline.css');
         <div class="row justify-content-center">
             <div class="col-10 col-md-8 col-xl-8">
                 <ul class="timeline">
-                <?php if(isset($model->data_json['end_job']) && $model->data_json['end_job'] !==""):?>
+
+                <?php if($model->rating != ''):?>
+                    <li class="timeline-item">
+                        <div class="timeline-body">
+                            <div class="timeline-content">
+                                <div class="card border-0 shadow-none">
+                                    <div class="card-body p-2">
+                                  <div class="d-flex justify-content-between">
+                                      <h6 class="card-subtitle text-dark py-2">ข้อเสนอแนะและการให้คะแนน</h6>
+                                        
+                                  </div>
+                                        <div class="col-12 text-truncate px-2">
+                                            <p class="text-muted mb-0">
+                                                <i class="bi bi-check2-circle text-primary me-1"></i><?=isset($model->data_json['comment']) ? $model->data_json['comment'] : ''?>
+                                            </p>
+                                     
+                                                <?php
+                                                echo kartik\widgets\StarRating::widget([
+                                                    'name' => 'rating',
+                                                    'value' => $model->rating,
+                                                    'disabled' => true,
+                                                    'pluginOptions' => [
+                                                        'step' => 1,
+                                                        'size' => 'sm',
+                                                        'starCaptions' => $model->listRating(),
+                                                        'starCaptionClasses' => [
+                                                            1 => 'text-danger',
+                                                            2 => 'text-warning',
+                                                            3 => 'text-info',
+                                                            4 => 'text-success',
+                                                            5 => 'text-success',
+                                                        ],
+                                                    ],
+                                                ]);
+                                                ?>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer py-1">
+                                        <i class="fa-regular fa-clock"></i>
+                                        <span class="fw-lighter"><?=$model->viewCommentDate()?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <?php endif;?>
+
+                <?php if(isset($model->data_json['end_job']) && $model->data_json['end_job'] !=0):?>
                     <li class="timeline-item">
                         <div class="timeline-body">
                             <div class="timeline-content">
@@ -20,7 +68,7 @@ $this->registerCssFile('@web/css/timeline.css');
                                     <div class="card-body p-2">
                                   <div class="d-flex justify-content-between">
                                       <h6 class="card-subtitle text-dark py-2">เสร็จสิ้น</h6>
-                    <?=Html::a('<i class="fa-solid fa-star text-warning"></i> ให้คะแนน',['/helpdesk/repair'],['class' => 'btn btn-success'])?>
+                                      <?=$model->rating == '' ? Html::a('<i class="fa-solid fa-star text-warning"></i> ให้คะแนน', ['/helpdesk/repair/rating', 'id' => $model->id,'title' => '<i class="fa-solid fa-star text-warning"></i> ให้คะแนนการทำงาน'], ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-lg']]) : '' ?>
                                   </div>
                                         <div class="col-12 text-truncate px-2">
                                             <p class="text-muted mb-0">
@@ -41,7 +89,7 @@ $this->registerCssFile('@web/css/timeline.css');
                     </li>
                     <?php endif;?>
                     
-                    <?php if(isset($model->data_json['start_job']) && $model->data_json['start_job'] !==""):?>
+                    <?php if(isset($model->data_json['start_job']) && $model->data_json['start_job'] !=0):?>
                     <li class="timeline-item">
                         <div class="timeline-body">
                             <div class="timeline-content">
