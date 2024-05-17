@@ -18,6 +18,12 @@ class DefaultController extends Controller
      * Renders the index view for the module
      * @return string
      */
+
+     public function actionDatetimeNow()
+     {
+         Yii::$app->response->format = Response::FORMAT_JSON;
+        return date("d/m/Y H:i:s");
+     }
     public function actionIndex()
     {
         $searchModel = new HelpdeskSearch();

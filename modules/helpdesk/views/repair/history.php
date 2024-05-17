@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td>
                             <p class="mb-0"><i class="fa-solid fa-circle-exclamation text-danger"></i>
-                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view-task','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/timeline','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                             </p>
                             <p class="mb-0">ผู้แจ้ง นายปัจวัฒน์ ศรีบุญเรือง | <i class="bi bi-clock"></i>
                                 <?=Yii::$app->thaiFormatter->asDateTime($model->created_at,'short')?></p>

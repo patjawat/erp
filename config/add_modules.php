@@ -10,7 +10,7 @@ $modules['datecontrol'] = [
     'displaySettings' => [
         Module::FORMAT_DATE => 'dd/MM/yyyy',
         Module::FORMAT_TIME => 'hh:mm:ss a',
-        Module::FORMAT_DATETIME => 'yyyy-MM-dd hh:i:ss',
+        Module::FORMAT_DATETIME => 'mm/dd/yyyy H:i:s',
     ],
     'saveSettings' => [
         Module::FORMAT_DATE => 'php:Y-m-d',
@@ -24,7 +24,7 @@ $modules['datecontrol'] = [
         Module::FORMAT_DATETIME => ['type' => 2, 'pluginOptions' => [
                 'autoclose' => true,
                 'todayHighlight' => true,
-                'class' => 'xx'
+                'todayBtn' => true,
             ]],
         Module::FORMAT_TIME => [],
     ],]; //Oh

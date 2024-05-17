@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97d7520ceac4723ca5329b82657a072d",
+    "content-hash": "3565e29403170fa5af21ad0e2043202c",
     "packages": [
         {
             "name": "alexandernst/yii2-device-detect",
@@ -12867,7 +12867,9 @@
         "unclead/yii2-multiple-input": 20,
         "phpoffice/phpword": 20,
         "yurkinx/yii2-image": 20,
-        "softark/yii2-dual-listbox": 20
+        "softark/yii2-dual-listbox": 20,
+        "chillerlan/php-qrcode": 20,
+        "kartik-v/php-date-formatter": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

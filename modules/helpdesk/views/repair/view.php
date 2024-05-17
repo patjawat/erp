@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php if($model->data_json['status_name'] == 'ร้องขอ'):?>
                                 <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job','data' => ['size' => 'modal-lg']]) ?>
                                 <?php else:?>
-                                    <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                    <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']]) ?>
                                     <?php endif?>
 
                                     <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['/helpdesk/repair/cancel-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม'], ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-lg']]) ?>

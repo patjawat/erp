@@ -190,6 +190,7 @@ $config = [
             'site/conditions-register',
             'site/forgot-password',
             'site/reset-password',
+            'datecontrol/parse/convert',
             'depdrop/*',
             'auth/*',
             'gii/*',

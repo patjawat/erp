@@ -77,7 +77,8 @@
         "karatae99/yii2-date-picker-thai-widget" : "~1.0",
         "istvan-ujjmeszaros/bootstrap-duallistbox": "~4.0.0",
         "softark/yii2-dual-listbox": "dev-master",
-        "chillerlan/php-qrcode": "dev-main"
+        "chillerlan/php-qrcode": "dev-main",
+        "kartik-v/php-date-formatter": "dev-master"
         
     },
     "require-dev": {

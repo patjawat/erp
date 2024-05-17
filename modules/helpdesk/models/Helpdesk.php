@@ -230,8 +230,44 @@ public function afterFind()
             }
          }
 
+         //แสดงวันที่ส่งซ่อม
          public function viewCreateDate()
          {
             return Yii::$app->thaiFormatter->asDate($this->created_at, 'short');
          }
+
+         public function viewCreateDateTime()
+         {
+            return Yii::$app->thaiFormatter->asDateTime($this->created_at, 'medium');
+         }
+
+         //แสดงวันที่รับเรื่อง
+         public function viewAccetpTime()
+         {
+             return Yii::$app->thaiFormatter->asDateTime($this->data_json['accept_time'], 'medium');
+             try {
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+         }
+
+           //แสดงวันที่รับเรื่อง
+           public function viewStartJob()
+           {
+               try {
+                  return Yii::$app->thaiFormatter->asDateTime($this->data_json['start_job'], 'medium');
+              } catch (\Throwable $th) {
+                  //throw $th;
+              }
+           }
+
+                      //แสดงวันที่แล้วสร็จ
+                      public function viewEndJob()
+                      {
+                          try {
+                             return Yii::$app->thaiFormatter->asDateTime($this->data_json['end_job'], 'medium');
+                         } catch (\Throwable $th) {
+                             //throw $th;
+                         }
+                      }
 }

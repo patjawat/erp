@@ -91,6 +91,25 @@ class RepairController extends Controller
         }
     }
 
+    public function actionTimeline()
+    {
+
+        $id = $this->request->get('id');
+        $model = HelpDesk::findOne($id);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('timeline', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('timeline', [
+                'model' => $model,
+            ]);
+        }
+    }
 
     public function actionHistory()
     {
@@ -360,6 +379,7 @@ class RepairController extends Controller
         $model->updated_by = $user->id;
         $newObj = [
             'technician_name' => $user->fullname,
+            'accept_time' => date("Y-m-d H:i:s"),
             'status_name' => 'รับเรื่อง'
         ];
         $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
