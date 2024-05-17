@@ -51,7 +51,7 @@ $('#form-repair').on('beforeSubmit', function (e) {
             if(response.status == 'success') {
                 closeModal()
                 Swal.fire({
-                    title: "ขอคุณสำหรับการให้คะแนนกับเรา!",
+                    title: "ขอบคุณสำหรับการให้คะแนนกับเรา!",
                     text: "เราจะนำข้อเสนอแนะไปปรุงแก้ไขให้ดียิ่งขึ้น!",
                     icon: "success"
                     });
