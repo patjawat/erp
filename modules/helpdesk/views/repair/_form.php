@@ -49,6 +49,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
     <?php else:?>
     <!-- ถ้าเป็นการแก้ไข -->
+    <?= $form->field($model, 'data_json[create_name]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[location]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[send_type]')->hiddenInput()->label(false) ?>
