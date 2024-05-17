@@ -17,7 +17,7 @@ use app\components\UserHelper;
                         <!-- App Service -->
                         <div class="row p-3">
                         <div class="col-4 mt-1">
-                                <a href="<?=Url::to(['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-square-check"></i> เลือกประเภทการซ่อม']);?>"
+                                <a href="<?=Url::to(['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม']);?>"
                                     class="open-modal" data-title="xxx">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
@@ -28,7 +28,7 @@ use app\components\UserHelper;
                             </div>
 
                             <div class="col-4 mt-1">
-                                <a href="<?=Url::to(['/sm/product','title' => '<i class="fa-regular fa-square-check"></i> เลือกประเภทการซ่อม']);?>"
+                                <a href="<?=Url::to(['/sm/product','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม']);?>"
                                     class="" data-title="xxx">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
