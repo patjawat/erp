@@ -49,27 +49,11 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
     <?php else:?>
     <!-- ถ้าเป็นการแก้ไข -->
-    <?= $form->field($model, 'data_json[create_name]')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'data_json[create_name]')->textInput()->label(false) ?>
     <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[location]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[send_type]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
-    <?php
-        //  echo $form->field($model, 'status')->widget(Select2::classname(), [
-        //             'data' => $model->listRepairStatus(),
-        //             'options' => ['placeholder' => 'ระบุสถานะการซ่อม ...'],
-        //             'pluginEvents' => [
-        //                 "select2:select" => "function() {
-        //                    $('#helpdesk-data_json-status_name').val($(this).select2('data')[0].text)
-        //                 }"
-        //             ],
-        //             'pluginOptions' => [
-        //                 'allowClear' => true
-        //             ],
-        //             ])->label('สถานะ') 
-                    ?>
-
-
 
     <div class="d-flex bg-primary justify-content-between bg-opacity-10 p-3 rounded mb-3">
         <div><i class="bi bi-check2-circle fs-5"></i> <span class="text-primary">การประเมินงานซ่อมและมอบหมายงาน</span></div>
