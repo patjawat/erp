@@ -70,7 +70,7 @@ class AppHelper extends Component
         <div class="progress w-50" style="height: 5px;">
                <div class="progress-bar '.$color.'" role="progressbar" aria-label="Example with label" style="width: '.$val.'%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
-        <span class="text-muted mb-0 fs-13">20%</span>
+        <span class="badge rounded-pill '.$color.' text-white">'.$val.'%</span>
         </div>';
       }else{
          return  '<div class="progress w-50">
