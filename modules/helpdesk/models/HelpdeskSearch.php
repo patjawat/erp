@@ -18,7 +18,7 @@ class HelpdeskSearch extends Helpdesk
     {
         return [
             [['id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status'], 'safe'],
         ];
     }
 
@@ -59,6 +59,8 @@ class HelpdeskSearch extends Helpdesk
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'repair_group' => $this->repair_group,
+            'status' => $this->status,
             'date_start' => $this->date_start,
             'date_end' => $this->date_end,
             'created_at' => $this->created_at,

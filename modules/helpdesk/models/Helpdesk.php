@@ -13,6 +13,8 @@ use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
 use app\models\Categorise;
 use app\components\CategoriseHelper;
+use app\modules\filemanager\models\Uploads;
+use yii\helpers\Json;
 
 /**
  * This is the model class for table "helpdesk".
@@ -49,7 +51,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating'], 'safe'],
+            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating','repair_group'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -121,6 +123,22 @@ public function afterFind()
     parent::afterFind();
 }
 
+// แสดงรูปภาพ
+public function ShowImg()
+{
+    try {
+        $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'repair'])->one();
+        if ($model) {
+            return FileManagerHelper::getImg($model->id);
+        } else {
+            return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+        }
+    } catch (\Throwable $th) {
+        return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+    }
+
+}
+
 
 // relation
     //Relationships
@@ -163,6 +181,22 @@ public function afterFind()
              return ArrayHelper::map(CategoriseHelper::Categorise('rating'), 'code', 'title');
          }
 
+                  //หน่วยงานที่ส่งซ่อม
+                  public static function listRepairGroup()
+                  {
+                      return ArrayHelper::map(CategoriseHelper::Categorise('repair_group'), 'code', 'title');
+                  }
+
+                                    //หน่วยงานที่ส่งซ่อม
+                                    public  function viewRepairGroup()
+                                    {
+                                        $model =  Categorise::findOne(['name' => 'repair_group','code' => $this->repair_group]);
+                                        if($model){
+                                            return $model->title;
+                                        }else{
+                                            return null;
+                                        }
+                                    }
          //สถานะงานซ่อม
          public static function listRepairStatus()
          {
@@ -217,6 +251,10 @@ public function afterFind()
                 if($model->code == 4)
                 {
                     return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-circle-check text-success"></i> '.$model->title.'</span>';
+                }
+                if($model->code == 5)
+                {
+                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-solid fa-circle-minus text-danger"></i> '.$model->title.'</span>';
                 }
             }
          }

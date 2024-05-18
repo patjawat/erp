@@ -45,10 +45,13 @@ class RepairController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new HelpdeskSearch();
+        $searchModel = new HelpdeskSearch([
+            'repair_group' => $this->request->get('repair_group'),
+            'status' => $this->request->get('status')
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
-        $dataProvider->query->andFilterWhere(['status' => 1]);
+        // $dataProvider->query->andFilterWhere(['status' => 1]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -69,9 +72,11 @@ class RepairController extends Controller
 
     public function actionListAccept()
     {
+        $repairGroup = $this->request->get('repair_group');
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        $dataProvider->query->andFilterWhere(['repair_group' => $repairGroup]);
         $dataProvider->query->andFilterWhere(['in', 'status', [2,3]]);
 
         if ($this->request->isAjax) {
@@ -289,6 +294,7 @@ class RepairController extends Controller
                     $model->data_json['title'] == "" ? $model->addError('data_json[title]', 'ต้องระบุอาการ...') : null;
                     $model->data_json['urgency'] == "" ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
                     $model->data_json['location'] == "" ? $model->addError('data_json[location]', 'ต้องระบุสถานะที่...') : null;
+                    $model->repair_group == "" ? $model->addError('repair_group', 'ต้องระบุ...') : null;
     
                 foreach ($model->getErrors() as $attribute => $errors) {
                     $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
@@ -364,6 +370,39 @@ class RepairController extends Controller
         return $this->render('_cancel_job', ['model' => $model]);
     }
     }
+
+     //ย้ายกลุ่มงาน
+     public function actionSwitchGroup($id)
+     {
+         $model = $this->findModel($id);
+         $oldObj = $model->data_json;
+         if ($this->request->isPost) {
+             if ($model->load($this->request->post())) {
+                 Yii::$app->response->format = Response::FORMAT_JSON;
+                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                 $model->save();
+                 return [
+                     'status' => 'success',
+                     'container' => '#helpdesk-container',
+                 ];
+             }
+         } else {
+             $model->loadDefaultValues();
+         }
+         if ($this->request->isAjax) {
+             Yii::$app->response->format = Response::FORMAT_JSON;
+ 
+         return [
+             'title' => $this->request->get('title'),
+             'content' => $this->renderAjax('_switch_group', [
+                 'model' => $model,
+ 
+             ]),
+         ];
+     }else{
+         return $this->render('_switch_group', ['model' => $model]);
+     }
+     }
 
 
     //รับเรื่อง

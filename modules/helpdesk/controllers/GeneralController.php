@@ -16,11 +16,13 @@ class GeneralController extends \yii\web\Controller
     {
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        // $dataProvider->query->andFilterWhere(['repair_group' => 1]);
         $dataProvider->query->andFilterWhere(['in', 'status', [2,3]]);
-
+        
         $dataProviderStatus1 = $searchModel->search($this->request->queryParams);
         $dataProviderStatus1->query->andFilterWhere(['name' => 'repair']);
         $dataProviderStatus1->query->andFilterWhere(['status' => 1]);
+        $dataProviderStatus1->query->andFilterWhere(['repair_group' => 1]);
 
         if($this->request->isAjax){
             Yii::$app->response->format = Response::FORMAT_JSON;

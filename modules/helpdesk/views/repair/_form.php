@@ -40,23 +40,49 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     <?= $form->field($model, 'data_json[create_name]')->hiddenInput(['value' => $emp->fullname])->label(false) ?>
     <?= $form->field($model, 'status')->hiddenInput(['value' => 1])->label(false) ?>
     <?= $form->field($model, 'data_json[send_type]')->hiddenInput(['general' => 'ทั่วไป','asset' => 'ครุภัณฑ์'],['inline'=>false,'custom' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('อาการเสีย') ?>
-    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('เพิ่มเติม') ?>
-    <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label('สถานที่') ?>
-    <?= $form->field($model, 'data_json[urgency]')->radioList($model->listUrgency(),['inline'=>true,'custom' => true])->label('ความเร่งด่วน') ?>
-    <?=$model->upload('req_repair')?>
+
+    <div class="row">
+        <div class="col-8">
+            <?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('<i class="fa-solid fa-exclamation"></i> ระบุอาการเสีย/ความต้องการ') ?>
+        </div>
+        <div class="col-4">
+            <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่เกิดเหตุ...'])->label('<i class="fa-solid fa-location-dot"></i> สถานที่') ?>
+
+        </div>
+        <div class="col-12">
+            <?= $form->field($model, 'data_json[urgency]')->radioList($model->listUrgency(),['inline'=>true,'custom' => true])->label('<i class="fa-solid fa-hourglass-half"></i> ความเร่งด่วน') ?>
+            <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5,'placeholder' => 'ระบุรายละเอียดเพิ่มเติมของอาการเสีย...'])->label('<i class="fa-regular fa-comment-dots"></i> เพิ่มเติม') ?>
+        </div>
+        <div class="col-6">
+            <div class="border border-1 border-primary p-3 rounded">
+                <?= $form->field($model, 'repair_group')->radioList($model->listRepairGroup(),['inline'=>false,'custom' => true])->label('<i class="fa-regular fa-paper-plane"></i> แจ้งไปยัง') ?>
+            </div>
+        </div>
+        <div class="col-6">
+            <a href="#" class="select-img">
+                <?=Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])?>
+            </a>
+            <input type="file" id="req_file" style="display: none;" />
+            <a href="#" class="select-photo-req"></a>
+        </div>
+    </div>
+
+
+
+    <?php // $model->upload('req_repair')?>
     <!-- ## End ## -->
 
     <?php else:?>
     <!-- ถ้าเป็นการแก้ไข -->
-    <?= $form->field($model, 'data_json[create_name]')->textInput()->label(false) ?>
+    <?= $form->field($model, 'data_json[create_name]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(),['inline'=>true,'custom' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[location]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[send_type]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
 
     <div class="d-flex bg-primary justify-content-between bg-opacity-10 p-3 rounded mb-3">
-        <div><i class="bi bi-check2-circle fs-5"></i> <span class="text-primary">การประเมินงานซ่อมและมอบหมายงาน</span></div>
+        <div><i class="bi bi-check2-circle fs-5"></i> <span class="text-primary">การประเมินงานซ่อมและมอบหมายงาน</span>
+        </div>
         <div>ขั้นตอนที่ <span class="badge rounded-pill bg-primary text-white">1</span> </div>
     </div>
 
@@ -80,10 +106,10 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                 <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน','ซ่อมภายนอก' => 'ซ่อมภายนอก'],['inline'=>true,'custom' => true])->label('ประเภทารซ่อม') ?>
             </div>
         </div>
-ิ
+        ิ
         <div class="col-12">
             <div class="my-3">
-            <?php
+                <?php
             $items = ArrayHelper::map(Employees::find()->limit(10)->all(),'fullname',function($model){
                 return $model->fullname;
             });
@@ -102,13 +128,14 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                 ],
             ]);
         ?>
-                 </div>
+            </div>
         </div>
     </div>
 
 
     <div class="d-flex bg-primary justify-content-between bg-opacity-10 p-3 rounded mb-3">
-        <div><i class="bi bi-check2-circle fs-5"></i> <span class="text-primary">สรุปผลดำเนินงานและวิธีแก้ไข</span></div>
+        <div><i class="bi bi-check2-circle fs-5"></i> <span class="text-primary">สรุปผลดำเนินงานและวิธีแก้ไข</span>
+        </div>
         <div>ขั้นตอนที่ <span class="badge rounded-pill bg-primary text-white">2</span> </div>
     </div>
 
@@ -133,14 +160,14 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
             <?= $form->field($model, 'data_json[repair_note]')->textArea(['style' => 'height: 127px;','placeholder' => 'ระบุวิธีการแก้ไข/แนวทางแก้ไข/อื่นๆ...'])->label(false) ?>
         </div>
 
-        <?=$model->Upload('repair')?>
+        <?=$model->Upload('repair_success')?>
 
         <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
         <?= $form->field($model, 'data_json[note]')->hiddenInput()->label(false) ?>
         <?= $form->field($model, 'data_json[accept_time]')->hiddenInput()->label(false) ?>
         <?php endif;?>
 
-       
+
 
         <div class="form-group mt-3 d-flex justify-content-center">
             <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
@@ -215,6 +242,76 @@ $('#form-repair').on('beforeSubmit', function (e) {
     });
     return false;
 });
+
+
+$(".select-img").click(function() {
+    $("input[id='req_file']").click();
+});
+
+$("input[id='req_file']").on("change", function() {
+    var fileInput = $(this)[0];
+    if (fileInput.files && fileInput.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+        $(".repair-photo").attr("src", e.target.result);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+        uploadImg()
+    }
+
+});
+
+function uploadImg()
+{
+    formdata = new FormData();
+    if($("input[id='req_file']").prop('files').length > 0)
+    {
+		file = $("input[id='req_file']").prop('files')[0];
+        formdata.append("repair", file);
+        formdata.append("id", 1);
+        formdata.append("ref", '$model->ref');
+        formdata.append("name", 'repair');
+
+        console.log(file);
+		$.ajax({
+			url: '/filemanager/uploads/single',
+			type: "POST",
+			data: formdata,
+			processData: false,
+			contentType: false,
+			success: function (res) {
+                success('แก้ไขภาพสำเร็จ')
+                console.log(res)
+			}
+		});
+    }
+}
+
+// $("button[id='summit']").on('click', function() {
+//     formdata = new FormData();
+//     if($("input[id='req_file']").prop('files').length > 0)
+//     {
+// 		file = $("input[id='req_file']").prop('files')[0];
+//         formdata.append("avatar", file);
+//         formdata.append("id", 1);
+//         formdata.append("ref", '$model->ref');
+//         formdata.append("name", 'req_repair');
+
+//         console.log(file);
+// 		$.ajax({
+// 			url: '/filemanager/uploads/single',
+// 			type: "POST",
+// 			data: formdata,
+// 			processData: false,
+// 			contentType: false,
+// 			success: function (res) {
+//                 // success('แก้ไขภาพ')
+//                 console.log(res)
+// 			}
+// 		});
+//     }
+// })
+
 
 JS;
 $this->registerJS($js)

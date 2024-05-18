@@ -1,8 +1,11 @@
 <?php
 use app\modules\helpdesk\models\Helpdesk;
 
-$status2 = Helpdesk::find()->where(['in','status',[2,3]])->count();
-$status4 = Helpdesk::find()->where(['status' => 4])->count();
+$total = Helpdesk::find()->where(['in','status',[1,2,3,4]])->andWhere(['repair_group' => $repair_group])->count();
+$status2 = Helpdesk::find()->where(['in','status',[1,2,3]])->andWhere(['repair_group' => $repair_group])->count();
+$status4 = Helpdesk::find()->where(['status' => 4])->andWhere(['repair_group' => $repair_group])->count();
+
+$percen = ROUND(((($total - $status2) / $total)* 100),0);
 ?>
 
 <div class="card">
@@ -13,7 +16,7 @@ $status4 = Helpdesk::find()->where(['status' => 4])->count();
                         <div class="d-flex flex-column align-items-center justify-content-start">
                             <div class="position-relative">
                             <div class="d-flex flex-column">
-                                <span class="h5">รับเรื่อง/ดำเนินการ</span>
+                                <span class="h5">อยู่ในกระบวนการ</span>
                                 <span class="text-center text-muted mb-0"><?=$status2;?></span>
                             </div>
                             </div>
@@ -35,13 +38,16 @@ $status4 = Helpdesk::find()->where(['status' => 4])->count();
 
 
 <?php
+
 use yii\helpers\Url;
+
+
 $url = Url::to(['/helpdesk/repair']);
 $js = <<< JS
 
 
         var optionsleaveChart = {
-          series: [70],
+          series: [$percen],
           chart: {
           height: 250,
           fontFamily: 'Prompt, sans-serif',

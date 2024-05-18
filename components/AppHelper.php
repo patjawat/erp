@@ -44,6 +44,30 @@ class AppHelper extends Component
        return;
    }
 
+   public static function viewProgressBar($val)
+   {
+
+      switch (true) {
+         case $val <= 20:
+             $color = 'bg-danger';
+             break;
+     
+         case $val <= 40:
+             $color = 'bg-warning';
+             break;
+     
+         case $val <= 60:
+             $color = 'bg-primary';
+             break;
+     
+         default:
+             $color = 'bg-success';
+             break;
+     }
+      return  '<div class="progress w-50">
+      <div class="progress-bar '.$color.'" role="progressbar" aria-label="Example with label" style="width: '.$val.'%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100">'.$val.'%</div>
+  </div>';
+   }
 
    public static function cidFormat($text = '', $pattern = '', $ex = '') {
       $cid = ( $text == '' ) ? '0000000000000' : $text;

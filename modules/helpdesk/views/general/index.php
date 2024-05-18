@@ -16,95 +16,9 @@ $this->title = "งานซ่อมบำรุง";
 <?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 
 <div class="row">
-    
-    
     <div class="col-8">
-        <div class="row">
-            
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="/hr/organization/diagram"><span
-                                        class="text-muted text-uppercase fs-6">รับเรื่อง</span></a>
-                                <h6 class="mb-0 mt-1" id="status2">0</h6>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div>
-                                    <div class="bg-warning-subtle rounded p-3">
-                                        <i class="fa-solid fa-user-check text-warning fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="/hr/organization/diagram"><span
-                                        class="text-muted text-uppercase fs-6">ดำเนินการ</span></a>
-                                <h6 class="mb-0 mt-1" id="status3">0</h6>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div>
-                                    <div class="bg-primary-subtle rounded p-3">
-                                        <i class="fa-solid fa-person-digging text-primary fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="/hr/organization/diagram"><span
-                                        class="text-muted text-uppercase fs-6">ยกเลิก</span></a>
-                                <h6 class="mb-0 mt-1" id="status5">0</h6>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div>
-                                    <div class="bg-danger-subtle rounded p-3">
-                                        <i class="fa-solid fa-triangle-exclamation text-danger fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="/hr/organization/diagram"><span
-                                        class="text-muted text-uppercase fs-6">เสร็จสิ้น</span></a>
-                                <h6 class="mb-0 mt-1" id="status4">0</h6>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div>
-                                    <div class="bg-success-subtle rounded p-3">
-                                        <i class="fa-regular fa-circle-check text-success fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?=$this->render('../default/box_summary',['group' => 1])?>
         <div id="viewJob"><h6 class="text-center mt-5">กำลังโหลด...</h6></div>
-
     </div>
     <div class="col-4">
         <?php
@@ -114,7 +28,7 @@ $this->title = "งานซ่อมบำรุง";
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h4 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> ร้องขอ </h4>
-                    <?=Html::a('ดูทั้งหมด <span class="badge text-bg-secondary">'. $reqSummary.'</span>',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
+                    <?php // Html::a('ดูทั้งหมด <span class="badge text-bg-secondary">'. $reqSummary.'</span>',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
 
                 </div>
                 <table class="table  m-b-0 transcations mt-2">
@@ -144,7 +58,7 @@ $this->title = "งานซ่อมบำรุง";
                 </table>
             </div>
         </div>
-        <?=$this->render('../default/progress')?>
+        <?=$this->render('../default/progress',['repair_group' => 1])?>
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
@@ -153,7 +67,7 @@ $this->title = "งานซ่อมบำรุง";
                 <?php endfor;?>
             </div>
         </div>
-        <?=$this->render('../default/ratring')?>
+        <?=$this->render('../default/rating',['repair_group' => 1])?>
     </div>
 </div>
 
@@ -161,7 +75,7 @@ $this->title = "งานซ่อมบำรุง";
 <?php Pjax::end()?>
 
 <?php
-$urlAccept = Url::to(['/helpdesk/repair/list-accept']);
+$urlAccept = Url::to(['/helpdesk/repair/list-accept','repair_group' => 1]);
 $urlSummary = Url::to(['/helpdesk/general/summary']);
 $js = <<< JS
 

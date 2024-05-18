@@ -40,3 +40,9 @@ use app\modules\hr\models\Employees;
             <td colspan="3"><?=$repair->avatarStack()?></td>
         </tr>
         <?php endif;?>
+        <tr class="align-middle">
+            <td class="text-end"><span class="fw-semibold">หน่วยงานรับซ่อม : </span></td>
+            <td colspan="5"><?=$repair->viewRepairGroup();?>
+            <?=html::a('แก้ไข',['/helpdesk/repair/switch-group','id' => $repair->id,'title' => '<i class="fa-solid fa-wrench"></i> หน่วยงานรับซ่อม'],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-sm']])?>
+        </td>
+        </tr>
