@@ -4,8 +4,11 @@ use app\modules\helpdesk\models\Helpdesk;
 $total = Helpdesk::find()->where(['in','status',[1,2,3,4]])->andWhere(['repair_group' => $repair_group])->count();
 $status2 = Helpdesk::find()->where(['in','status',[1,2,3]])->andWhere(['repair_group' => $repair_group])->count();
 $status4 = Helpdesk::find()->where(['status' => 4])->andWhere(['repair_group' => $repair_group])->count();
-
-$percen = ROUND(((($total - $status2) / $total)* 100),0);
+try {
+    $percen = ROUND(((($total - $status2) / $total)* 100),0);
+} catch (\Throwable $th) {
+    $percen = 100;
+}
 ?>
 
 <div class="card">
