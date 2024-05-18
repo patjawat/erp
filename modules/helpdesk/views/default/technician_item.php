@@ -22,7 +22,7 @@ use app\modules\hr\models\Employees;
 ?>
 <?php foreach($querys as $model):?>
 
-<div class="d-flex flex-column total font-weight-bold mt-1 bg-sucondary-subtle rounded p-2 gap-2">
+<div class="d-flex flex-column total font-weight-bold mt-1 bg-secondary-subtle rounded p-2 gap-2">
     <?php 
          $employee = Employees::find()->where(['user_id' => $model['id']])->one();
          if($employee){
