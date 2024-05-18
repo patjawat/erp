@@ -62,9 +62,9 @@ $this->title = "งานซ่อมบำรุง";
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
-                <?php for ($x = 0; $x <= 3; $x++):?>
-                <?=$this->render('../default/technician_item')?>
-                <?php endfor;?>
+                
+                <?=$this->render('../default/technician_item',['repair_group' => 1])?>
+             
             </div>
         </div>
         <?=$this->render('../default/rating',['repair_group' => 1])?>

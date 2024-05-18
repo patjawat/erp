@@ -1,21 +1,35 @@
 <?php
 use yii\helpers\Html;
+use app\modules\hr\models\Employees;
+
+// $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as pp FROM (SELECT x1.*,
+// (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'$.join',CONCAT('"',x1.id,'"'))) as rating_user
+// FROM (SELECT DISTINCT e.id, concat(e.fname,' ',e.lname) as fullname,
+// (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
+// FROM employees e
+// INNER JOIN auth_assignment a ON a.user_id = e.user_id) as x1
+// GROUP BY x1.id) as x3;";
+ $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as p FROM (SELECT x1.*,
+ (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'$.join',CONCAT('" . '"' . "',x1.id,'" . '"' . "'))) as rating_user
+ FROM (SELECT DISTINCT e.id, concat(e.fname,' ',e.lname) as fullname,
+ (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
+ FROM employees e
+ INNER JOIN auth_assignment a ON a.user_id = e.user_id) as x1
+ GROUP BY x1.id) as x3;";
+ $querys  = Yii::$app->db->createCommand($sql)
+ ->bindValue('repair_group',$repair_group)
+ ->queryAll();
 ?>
-<div class="d-flex justify-content-between total font-weight-bold mt-1 bg-secondary-subtle rounded p-2">
-    <div class="d-flex">
-        <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar avatar-md bg-primary text-white border border-1 border-white'])?>
-        <div class="avatar-detail">
-            <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top"
-                data-bs-custom-class="custom-tooltip" data-bs-title="ดูเพิ่มเติม..."><a class=""
-                    href="/hr/employees/view?id=152">นายปัจวัฒน์ ศรีบุญเรือง</a>
-            </h6>
-            <p class="text-muted mb-0 fs-13">นักวิชาการคอมพิวเตอร์ (ระดับปฏิบัติการ)
-                <code>(ข้าราชการ)</code>
-            </p>
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" aria-label="Example with label" style="width: 14%;"
-                    aria-valuenow="14" aria-valuemin="0" aria-valuemax="100">25%</div>
-            </div>
-        </div>
-    </div>
+<?php foreach($querys as $model):?>
+
+<div class="d-flex flex-column total font-weight-bold mt-1 bg-primary-subtle rounded p-2 gap-2">
+    <?php 
+         $employee = Employees::find()->where(['user_id' => $model['id']])->one();
+         if($employee){
+             echo $employee->getAvatar(false);
+
+         }
+        ?>
+            <?=app\components\AppHelper::viewProgressBar($model['p'])?>
 </div>
+<?php endforeach;?>
