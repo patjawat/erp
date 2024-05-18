@@ -24,10 +24,9 @@ use app\modules\hr\models\Employees;
 
 <div class="d-flex flex-column total font-weight-bold mt-1 bg-secondary-subtle rounded p-2 gap-2">
     <?php 
-         $employee = Employees::find()->where(['user_id' => $model['id']])->one();
+         $employee = Employees::find()->where(['user_id' => (int) $model['id']])->one();
          if($employee){
              echo $employee->getAvatar(false);
-
          }
         ?>
             <?=app\components\AppHelper::viewProgressBar($model['p'])?>
