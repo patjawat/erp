@@ -64,9 +64,16 @@ class AppHelper extends Component
              $color = 'bg-success';
              break;
      }
-      return  '<div class="progress w-50">
-      <div class="progress-bar '.$color.'" role="progressbar" aria-label="Example with label" style="width: '.$val.'%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100">'.$val.'%</div>
+     if($val){
+
+        return  '<div class="progress w-50">
+               <div class="progress-bar '.$color.'" role="progressbar" aria-label="Example with label" style="width: '.$val.'%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100">'.$val.'%</div>
+        </div>';
+      }else{
+         return  '<div class="progress w-50">
+         <div class="progress-bar" role="progressbar" aria-label="Example with label" style="width:0%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
   </div>';
+      }
    }
 
    public static function cidFormat($text = '', $pattern = '', $ex = '') {
