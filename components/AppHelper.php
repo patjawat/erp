@@ -66,7 +66,7 @@ class AppHelper extends Component
      }
      if($val){
 
-        return  '<div class="progress w-50">
+        return  '<div class="progress w-50" style="height: 15px;">
                <div class="progress-bar '.$color.'" role="progressbar" aria-label="Example with label" style="width: '.$val.'%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100">'.$val.'%</div>
         </div>';
       }else{
