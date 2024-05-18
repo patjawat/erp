@@ -73,7 +73,7 @@ class AppHelper extends Component
         <span class="badge rounded-pill bg-primary text-white shadow">'.$val.'%</span>
         </div>';
       }else{
-         return  '<div class="progress w-50">
+         return  '<div class="progress w-50" style="height: 5px;">
          <div class="progress-bar" role="progressbar" aria-label="Example with label" style="width:0%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
   </div>';
       }
