@@ -316,9 +316,9 @@ class RepairController extends Controller
         // return $checkAssetType['code'];
         $repair_group = '';
         try {
-        if(isset($checkAssetType) && $checkAssetType['code'] == "17"){
+        if(isset($checkAssetType) && $checkAssetType['code'] == 11){
             $repair_group = 3;
-        }elseif($checkAssetType['code'] == "18"){
+        }elseif($checkAssetType['code'] == 12){
             $repair_group = 2;
         }else{
             $repair_group = 1;
