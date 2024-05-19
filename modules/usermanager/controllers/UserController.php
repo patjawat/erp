@@ -11,6 +11,7 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 use \dominus77\sweetalert2\Alert;
 use dektrium\user\models\RegistrationForm;
+use yii\db\Expression;
 use dektrium\user\models\User as BaseUser;
 
 /**
@@ -41,12 +42,13 @@ class UserController extends Controller
     {
         $searchModel = new UserSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $dataProvider->query->joinWith(['employee']);
         $dataProvider->pagination = ['pageSize' => 20];
         // $dataProvider->query->andFilterWhere(['username' => $searchModel->q]);
         $dataProvider->query->andFilterWhere(['or',
         ['like', 'username', $searchModel->q],
-        ['like', 'fullname', $searchModel->q],
-        ['like', 'email', $searchModel->q]
+        ['like', new Expression("concat(employees.fname,' ',employees.lname)"), $searchModel->q],
+        ['like', 'user.email', $searchModel->q]
 
     ]);
         if (Yii::$app->request->isAjax) {

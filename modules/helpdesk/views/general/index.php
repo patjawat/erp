@@ -13,78 +13,60 @@ $this->title = "งานซ่อมบำรุง";
 ระบบงานซ่อมบำรุง
 
 <?php $this->endBlock(); ?>
-<?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
+<?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000,'enablePushState' => true ]); ?>
 
 <div class="row">
     <div class="col-8">
         <?=$this->render('../default/box_summary',['group' => 1])?>
-        <div id="viewJob"><h6 class="text-center mt-5">กำลังโหลด...</h6></div>
+        <div id="viewJob">
+            <h6 class="text-center mt-5">กำลังโหลด...</h6>
+        </div>
     </div>
     <div class="col-4">
-        <?php
-        $reqSummary = Yii::$app->db->createCommand('SELECT count(id) as total FROM `helpdesk` WHERE status = 1')->queryScalar();
-        ?>
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h4 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> ร้องขอ </h4>
-                    <?php // Html::a('ดูทั้งหมด <span class="badge text-bg-secondary">'. $reqSummary.'</span>',['/helpdesk/repair'],['class' => 'btn btn-primary'])?>
-
                 </div>
-                <table class="table  m-b-0 transcations mt-2">
-                    <tbody>
-                    <?php foreach ($dataProviderStatus1->getModels() as $model): ?>
-                        <tr class="align-middle">
-                            <td class="align-middle" style="width:15px;">
-                                    <?=$model->showAvatarCreate();?>
-                            </td>
-                            <td>
-                                <div class="d-flex align-middle ms-3">
-                                    <div class="d-inline-block">
-                                        <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'h6 mb-1','data' => ['pjax' => false]])?>
-                                        <p class="mb-0 fs-13 text-muted"><?=$model->data_json['location']?></p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-end">
-                                <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold"><?=$model->viewUrgency()?></h6>
-                                    <p class="mb-0 fs-11 text-muted"><?=$model->viewCreateDate()?></p>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach?>
-                    </tbody>
-                </table>
+                <div id="viewUserRequestOrder"></div>
             </div>
         </div>
-        <?=$this->render('../default/progress',['repair_group' => 1])?>
+
+        <?= $this->render('../default/progress',['repair_group' => 1])?>
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
-                
-                <?=$this->render('../default/technician_item',['repair_group' => 1])?>
-             
+                <div id="viewUserJob"></div>
             </div>
         </div>
-        <?=$this->render('../default/rating',['repair_group' => 1])?>
+        <div id="ViewRating"></div>
+        <?php echo $this->render('../repair/view_rating',['repair_group' => 1])?>
     </div>
 </div>
-
-<?php // $this->render('barchart')?>
 <?php Pjax::end()?>
+<?php // $this->render('barchart')?>
+
 
 <?php
 $urlAccept = Url::to(['/helpdesk/repair/list-accept','repair_group' => 1]);
-$urlSummary = Url::to(['/helpdesk/general/summary']);
+$urlSummary = Url::to(['/helpdesk/repair/summary','repair_group' => 1]);
+$urlUserRequestOrder = Url::to(['/helpdesk/repair/user-request-order','repair_group' => 1,'status' => 1]);
+$urlUserJob = Url::to(['/helpdesk/repair/user-job','repair_group' => 1,'auth_item' => 'technician']);
+
 $js = <<< JS
 
-getJob();
 getSummary();
+loadUserRequestOrder();
+loadUserJob();
+
+getJob();
 
 jQuery(document).on("pjax:end", function () {
     getJob();
     getSummary()
+    loadUserRequestOrder();
+    loadUserJob();
+
 });
 
 async function getJob()
@@ -95,9 +77,38 @@ async function getJob()
         dataType: "json",
         success: function (res) {
             $('#viewJob').html(res.content);
+            console.log('load-job');
         }
     });
 }
+
+
+ //แสดงรายการแจ้งซ่อม (ร้องขอ)
+async function loadUserRequestOrder()
+{
+    await $.ajax({
+        type: "get",
+        url: "$urlUserRequestOrder ",
+        dataType: "json",
+        success: function (res) {
+            $('#viewUserRequestOrder ').html(res.content);
+        }
+    });
+}
+
+ //แสดงปริมาณการมอบหมายงาน
+ async function loadUserJob()
+{
+    await $.ajax({
+        type: "get",
+        url: "$urlUserJob",
+        dataType: "json",
+        success: function (res) {
+            $('#viewUserJob ').html(res.content);
+        }
+    });
+}
+
 
 async function getSummary()
 {
@@ -110,9 +121,7 @@ async function getSummary()
             $.each( res, function( key, i ) {
                 // console.log(value.code);
                 $('#status'+i.code).text(i.total)
-                // alert( key + ": " + value );
                 });
-            // $('#viewJob').html(res.content);
         }
     });
 }

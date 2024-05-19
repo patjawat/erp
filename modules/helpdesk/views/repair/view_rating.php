@@ -48,13 +48,10 @@ $model = new Helpdesk();
 
 
 <div class="">
-
     <div class="card p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
-        <?php
-                                                echo kartik\widgets\StarRating::widget([
-                                                    'name' => 'view_rating',
-                                                    'id' => 'list_rating',
+        <?=kartik\widgets\StarRating::widget([
+                                                    'name' => 'rating',
                                                     'value' => $querysAvg,
                                                     'disabled' => true,
                                                     'pluginOptions' => [
@@ -71,16 +68,9 @@ $model = new Helpdesk();
                                                     ],
                                                 ]);
                                                 ?>
-            <!-- <div class="ratings">
-                <i class="fa fa-star rating-color"></i>
-                <i class="fa fa-star rating-color"></i>
-                <i class="fa fa-star rating-color"></i>
-                <i class="fa fa-star rating-color"></i>
-                <i class="fa fa-star"></i>
-            </div> -->
             <h5 class="review-count">5 การให้คะแนน</h5>
         </div>
-<?php foreach($querys as $model):?>
+        <?php foreach($querys as $model):?>
 
         <div class="mt-1 d-flex justify-content-between align-items-center">
             <h5 class="review-stat"><?=$model['title']?></h5>

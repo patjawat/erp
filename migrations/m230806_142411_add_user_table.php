@@ -57,8 +57,15 @@ class m230806_142411_add_user_table extends Migration
         );
 
         // กำหนดกลุ่มใช้งาน
-        $this->insert('auth_item', ['name' => 'admin', 'type' => 1, 'created_at' => $time]);
-        $this->insert('auth_item', ['name' => 'user', 'type' => 1, 'created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'admin', 'type' => 1, 'description' => 'ผู้ดูแลระบบ','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'user', 'type' => 1, 'description' => 'ผู้ใช้งานทั่วไป','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'hr', 'type' => 1,'description' => 'เจ้าหน้าที่ HR','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'computer', 'type' => 1,'description' => 'ศูนย์คอมพิวเตอร์','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'computer_ma', 'type' => 1,'description' => 'หัวหน้าศูนย์คอมพิวเตอร์','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'medical', 'type' => 1,'description' => 'ศูนย์เครื่องมือแพทย์','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'medical_ma', 'type' => 1,'description' => 'หัวหน้าศูนย์เครื่องมือแพทย์','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'technician', 'type' => 1,'description' => 'งานซ่อมบำรุง','created_at' => $time]);
+        $this->insert('auth_item', ['name' => 'technician_ma', 'type' => 1,'description' => 'หัวหน้างานซ่อมบำรุง','created_at' => $time]);
 
         // กำหนด route
         $this->insert('auth_item', ['name' => '*', 'type' => 2]);

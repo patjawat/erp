@@ -70,6 +70,90 @@ class RepairController extends Controller
         }
     }
 
+    //แสดงรายการแจ้งซ่อม (ร้องขอ)
+    public function actionUserRequestOrder()
+    {
+        $searchModel = new HelpdeskSearch([
+            'repair_group' => $this->request->get('repair_group'),
+            'status' => $this->request->get('status')
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'repair']);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '',
+                'content' => $this->renderAjax('_user_request_order', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('_user_request_order', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+//ปริมาณงานต่อคน
+    public function actionUserJob()
+    {
+        $repair_group = $this->request->get('repair_group');
+        $auth_item = $this->request->get('auth_item');
+
+
+        $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as p FROM ( SELECT x1.*,
+            (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'$.join',CONCAT('" . '"' . "',x1.user_id,'" . '"' . "'))) as rating_user
+            FROM (SELECT DISTINCT e.user_id, concat(e.fname,' ',e.lname) as fullname,
+            (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
+            FROM employees e
+            INNER JOIN auth_assignment a ON a.user_id = e.user_id  where a.item_name = :auth_item) as x1
+            GROUP BY x1.user_id) as x3;";
+            $querys  = Yii::$app->db->createCommand($sql)
+            ->bindValue(':repair_group',$repair_group)
+            ->bindValue(':auth_item',$auth_item)
+            ->queryAll();
+
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('user_job', [
+                    'querys' => $querys,
+                ]),
+            ];
+        } else {
+            return $this->render('user_job', [
+                'querys' => $querys,
+            ]);
+        }
+    }
+
+    //แสดงการให้คะแนน
+    public function actionViewRating()
+    {
+        $repair_group = $this->request->get('repair_group');
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view_rating', [
+                    'repair_group' => $repair_group,
+                ]),
+            ];
+        } else {
+            return $this->render('view_rating', [
+                'repair_group' => $repair_group,
+            ]);
+        }
+    }
+
+
+
+//รายการที่รับเรื่องแล้ว
     public function actionListAccept()
     {
         $repairGroup = $this->request->get('repair_group');
@@ -82,7 +166,7 @@ class RepairController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '',
+                'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
@@ -168,6 +252,25 @@ class RepairController extends Controller
         }
     }
 
+//นับจำนวน
+    public function actionSummary()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $repairGroup = $this->request->get('repair_group');
+        $sql_old = "SELECT c.code,c.title,count(h.id) as total FROM helpdesk h
+        LEFT JOIN categorise c ON c.code = h.status AND c.name = 'repair_status'
+        where JSON_EXTRACT(h.data_json,'$.send_type') = 'general'
+        GROUP BY c.id";
+              $sql = "SELECT c.code,c.title,count(h.id) as total FROM helpdesk h
+              LEFT JOIN categorise c ON c.code = h.status AND c.name = 'repair_status'
+              where h.repair_group = :repair_group
+              GROUP BY c.id";
+        $query = Yii::$app->db->createCommand($sql)
+        ->bindValue(':repair_group',$repairGroup)
+        ->queryAll();
+        return $query;
+    }
+
     public function actionViewTask($id)
     {
         $title = $this->request->get('title');
@@ -202,9 +305,33 @@ class RepairController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $container  =  $this->request->get('container');
+        $code  =  $this->request->get('code');
+
+        //ตรวจสอบว่าเป็นครุภัณ์หรืแไม่
+        $sqlCheckAssetType = "SELECT asset_item.title,asset_type.title,asset_type.code FROM asset a INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item' INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type' WHERE a.code = :code;";
+        $checkAssetType  = Yii::$app->db->createCommand($sqlCheckAssetType)
+        ->bindValue(':code',$code)
+        ->queryOne();
+
+        // return $checkAssetType['code'];
+        $repair_group = '';
+        try {
+        if(isset($checkAssetType) && $checkAssetType['code'] == "17"){
+            $repair_group = 3;
+        }elseif($checkAssetType['code'] == "18"){
+            $repair_group = 2;
+        }else{
+            $repair_group = 1;
+        }
+                    //code...
+        } catch (\Throwable $th) {
+                    $repair_group = '';
+        }
+
         $model = new Helpdesk([
             'name' => 'repair',
-            'code' => $this->request->get('code'),
+            'code' => $code,
+            'repair_group' => $repair_group,
             'data_json' => [
                 'send_type' => $this->request->get('send_type')
             ]

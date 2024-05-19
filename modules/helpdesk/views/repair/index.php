@@ -15,7 +15,7 @@ use app\modules\hr\models\Employees;
 $this->title = 'Repairs';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
+<?php // Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 
 <div class="card">
     <div class="card-body">
@@ -65,4 +65,4 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>

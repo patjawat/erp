@@ -30,7 +30,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     <!-- เอาเก็บข้อมูล auto -->
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
+    <?php //  $form->field($model, 'code')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[technician_name]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[status_name]')->hiddenInput(['value' => 'ร้องขอ'])->label(false) ?>
     <!-- ## End ## -->
@@ -55,7 +55,36 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         </div>
         <div class="col-6">
             <div class="border border-1 border-primary p-3 rounded">
-                <?= $form->field($model, 'repair_group')->radioList($model->listRepairGroup(),['inline'=>false,'custom' => true])->label('<i class="fa-regular fa-paper-plane"></i> แจ้งไปยัง') ?>
+                <?php if($model->code):?>
+                    <?php if($model->repair_group == 1):?>
+                        <div class="d-flex flex-column align-items-center justify-content-center text-bg-light p-5 rounded-2">
+                        <div class="d-flex justify-content-between gap-5 mb-3">
+                            <i class="fa-solid fa-right-left fs-2"></i> <i class="fa-solid fa-screwdriver-wrench fs-2 text-primary"></i>
+                        </div>
+                            <div class="h5">ส่งงานซ่อมบำรุง</div>
+                        </div>
+                    <?php endif;?>
+
+                   <?php if($model->repair_group == 2):?>
+                    <div class="d-flex flex-column align-items-center justify-content-center text-bg-light p-5 rounded-2">
+                        <div class="d-flex justify-content-between gap-5 mb-3">
+                            <i class="fa-solid fa-right-left fs-2"></i> <i class="fa-solid fa-computer fs-2 text-primary"></i>
+
+                        </div>
+                            <div class="h5">ส่งศูนย์คอมพิวเตอร์</div>
+                        </div>
+                    <?php endif;?>
+                    <?php if($model->repair_group == 3):?>
+                        <div class="d-flex flex-column align-items-center justify-content-center text-bg-light p-5 rounded-2">
+                        <div class="d-flex justify-content-between gap-5 mb-3">
+                            <i class="fa-solid fa-right-left fs-2"></i> <i class="fa-solid fa-briefcase-medical fs-2 text-primary"></i>
+                        </div>
+                            <div class="h5">ส่งศูนย์เครื่องมือแพทย์</div>
+                        </div>
+                    <?php endif;?>
+                    <?php else:?>
+                        <?= $form->field($model, 'repair_group')->radioList($model->listRepairGroup(),['inline'=>false,'custom' => true])->label('<i class="fa-regular fa-paper-plane"></i> แจ้งไปยัง') ?>
+                        <?php endif;?>
             </div>
         </div>
         <div class="col-6">
@@ -71,7 +100,6 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
     <?php // $model->upload('req_repair')?>
     <!-- ## End ## -->
-
     <?php else:?>
     <!-- ถ้าเป็นการแก้ไข -->
     <?= $form->field($model, 'data_json[create_name]')->hiddenInput()->label(false) ?>
@@ -110,9 +138,6 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         <div class="col-12">
             <div class="my-3">
                 <?php
-            $items = ArrayHelper::map(Employees::find()->limit(10)->all(),'fullname',function($model){
-                return $model->fullname;
-            });
             echo DualListbox::widget([
                 'model' => $model,
                 'attribute' => 'data_json[join]',

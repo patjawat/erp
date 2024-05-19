@@ -161,10 +161,28 @@ public function ShowImg()
 
      // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
      public function listTecName(){
+        
+        $item_name = '';
+        //ซ่อมบำรุง
+        if($this->repair_group == 1){
+            $item_name = 'technician';
+            // 2 คือศูนย์คอมพิวเตอร์
+        }elseif($this->repair_group == 2){
+            $item_name = 'computer';
+            // 3 คือศูนย์เครื่องมือแพทย์
+        }elseif($this->repair_group == 3){
+            $item_name = 'medical';
+        }else{
+            $item_name = 'technician';
+        }
+
         $sql = "SELECT concat(emp.fname,' ',emp.lname) as fullname,emp.user_id FROM employees emp
         INNER JOIN user ON user.id = emp.user_id
-        INNER JOIN auth_assignment auth ON auth.user_id = user.id;";
-        $querys = Yii::$app->db->createCommand($sql)->queryAll();
+        INNER JOIN auth_assignment auth ON auth.user_id = user.id
+        where auth.item_name = :item_name";
+        $querys = Yii::$app->db->createCommand($sql)
+        ->bindValue(':item_name',$item_name)
+        ->queryAll();
         return ArrayHelper::map($querys, 'user_id','fullname');
         
      }

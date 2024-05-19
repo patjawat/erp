@@ -48,21 +48,31 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="row">
             <div class="col-4">
-            <?=Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])?>
+                <?=Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])?>
             </div>
             <div class="col-xl-8 col-lg-8 col-md-1 col-sm-12">
                 <div class="d-flex justify-content-between">
                     <h4><i class="fa-solid fa-screwdriver-wrench"></i> ข้อมูลแจ้งซ่อม</h4>
                     <div>
                         <p>
-                        <?=Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/helpdesk/general/index'],['class' => 'btn btn-light'])?>
-                            <?php if($model->status == 1):?>
-                                <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job','data' => ['size' => 'modal-lg']]) ?>
-                                <?php else:?>
-                                    <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
-                                    <?php endif?>
+                            <!-- การกำหนด Url กลับ -->
+                            <?php if($model->repair_group == 1):?>
+                            <?=Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/helpdesk/general/index'],['class' => 'btn btn-light'])?>
+                            <?php elseif($model->repair_group == 2):?>
+                            <?=Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/helpdesk/computer/index'],['class' => 'btn btn-light'])?>
+                            <?php elseif($model->repair_group == 3):?>
+                            <?=Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/helpdesk/medical/index'],['class' => 'btn btn-light'])?>
+                            <?php else:?>
+                            <?php endif;?>
 
-                                    <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['/helpdesk/repair/cancel-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-circle-minus text-danger"></i> ยกเลิกงานซ่อม'], ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-lg']]) ?>
+
+                            <?php if($model->status == 1):?>
+                            <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job','data' => ['size' => 'modal-lg']]) ?>
+                            <?php else:?>
+                            <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id,'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                            <?php endif?>
+
+                            <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['/helpdesk/repair/cancel-job', 'id' => $model->id,'title' => '<i class="fa-solid fa-circle-minus text-danger"></i> ยกเลิกงานซ่อม'], ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-lg']]) ?>
 
                             <?php  Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['delete', 'id' => $model->id], [
                             'class' => 'btn btn-danger',
@@ -75,16 +85,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
                 <table class="table table-striped-columns">
-    <tbody>
-        <?= $this->render('repair_detail',['repair' => $model])?>
-        <?php
+                    <tbody>
+                        <?= $this->render('repair_detail',['repair' => $model])?>
+                        <?php
     // echo "<pre>";
     // print_r($model->data_json);
     // echo "</pre>";
 
         ?>
-        <tbody>
-                        </table>
+                    <tbody>
+                </table>
             </div>
         </div>
 
@@ -108,10 +118,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     </ul>
                     <div class="tab-content shop_info_tab entry-main-content">
                         <div class="tab-pane fade show active" id="Description">
-                                <div class="d-flex flex-row align-middle align-items-center gap-2">
+                            <div class="d-flex flex-row align-middle align-items-center gap-2">
 
-                                    <h2>รายการเบิกอะไหล่</h2> <?=  Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มใหม่', ['/helpdesk/repair/add-part', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
-                                </div>
+                                <h2>รายการเบิกอะไหล่</h2>
+                                <?=  Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มใหม่', ['/helpdesk/repair/add-part', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
+                            </div>
                             <p>รายการที่ต้องเบอกอะไหล่เพื่อช้ในการเปลี่ยนเพื่อให้ใช้งานได้</p>
                             <?php //  Html::a('ลงบันทึกซ่อม', ['/helpdesk/repair/update', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
                             <?php // isset($model->data_json['repair_note']) ? $model->data_json['repair_note'] : '-'?>
