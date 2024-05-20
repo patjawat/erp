@@ -48,7 +48,13 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="row">
             <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
-                <?=Html::img($model->asset->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])?>
+                <?php
+                try {
+                        echo Html::img($model->asset->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+                ?>
             </div>
             <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
                 <div class="d-flex justify-content-between">

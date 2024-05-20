@@ -303,10 +303,18 @@ public function ShowImg()
          }
 
          //แสดงวันที่ส่งซ่อม
-         public function viewCreateDate()
+         public function viewCreateUser()
          {
-            return Yii::$app->thaiFormatter->asDate($this->created_at, 'short');
+            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+            return $employee->fullname;
          }
+
+                  //แสดงวันที่ส่งซ่อม
+                  public function viewCreateDate()
+                  {
+                     return Yii::$app->thaiFormatter->asDate($this->created_at, 'short');
+                  }
+
 
          public function viewCreateDateTime()
          {

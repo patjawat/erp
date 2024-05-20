@@ -9,7 +9,7 @@ use kartik\select2\Select2;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<span class="badge text-bg-primary">ระบุประเภทงานซ่อมไม่ถูกต้อง</span>
+
 
 <div class="repair-form">
 
@@ -18,6 +18,7 @@ use kartik\select2\Select2;
         'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
         'validationUrl' =>['/helpdesk/repair/cancel-job-validator']
     ]); ?>
+     <?=$form->field($model, 'move_out')->checkbox(['custom' => true, 'switch' => true])->label('ดำเนินการวันที่');?>
     <?= $form->field($model, 'data_json[repair_note]')->textArea(['rows' => 6,'placeholder' => 'ระบุเหตุผล...'])->label('เหตุผล') ?>
 
     <div class="form-group mt-3 d-flex justify-content-center">

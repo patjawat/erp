@@ -14,6 +14,10 @@ $this->title = 'Repairs';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php // Pjax::begin(['id' => 'repair-container','timeout' => 5000 ]); ?>
+<div class="card">
+    <div class="card-body">
+        <h6>การแจ้งซ่อม</h6>
+
 <?php if($dataProvider->getTotalCount() > 0):?>
 
             <table class="table table-primary">
@@ -31,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <p class="mb-0"><i class="fa-solid fa-circle-exclamation text-danger"></i>
                                 <?=Html::a($model->data_json['title'],['/helpdesk/repair/timeline','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                             </p>
-                            <p class="mb-0">ผู้แจ้ง นายปัจวัฒน์ ศรีบุญเรือง | <i class="bi bi-clock"></i>
+                            <p class="mb-0">ผู้แจ้ง <?=$model->ViewCreateUser?> | <i class="bi bi-clock"></i>
                                 <?=Yii::$app->thaiFormatter->asDateTime($model->created_at,'short')?></p>
                         </td>
                         <td class="align-middle">
@@ -75,3 +79,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <?php endif;?>
             <?php // Pjax::end(); ?>
+
+            </div>
+</div>

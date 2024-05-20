@@ -3,6 +3,7 @@
 namespace app\modules\am\controllers;
 
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\CategoriseHelper;
 use app\components\SiteHelper;
 use app\models\Categorise;
@@ -56,14 +57,20 @@ class AssetController extends Controller
     {
         $assetType = $this->request->get('asset_group');
         $group = $this->request->get('group');
+        $x = $this->request->queryParams;
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
+
+        if(!isset($this->request->queryParams['AssetSearch'])){
+
+              //หายังไม่มีการค้นหาใดๆ ให้ แสดงเฉพาะทรัพสินที่ตัวเองรับผิดชอบ
+              $user  = UserHelper::GetEmployee();
+              $dataProvider->query->andFilterWhere(['owner' => $user->cid]); 
+    } else{
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '$.budget_type')"), $searchModel->budget_type]);
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '$.method_get')"), $searchModel->method_get]);
-        // $dataProvider->query->andFilterWhere(['receive_date' => $searchModel->q_date]);
         $dataProvider->query->andFilterWhere(['receive_date' => AppHelper::DateToDb($searchModel->q_receive_date)]);
-        // $dataProvider->query->andFilterWhere(['data_json' => $searchModel->asset_type]);
 
         // ค้นหาคามกลุ่มโครงสร้าง
         $org1 = Organization::findOne($searchModel->q_department);
@@ -116,10 +123,11 @@ class AssetController extends Controller
             SiteHelper::setDisplay($this->request->get('view'));
         }
 
+      
+    }
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-
         ]);
     }
 

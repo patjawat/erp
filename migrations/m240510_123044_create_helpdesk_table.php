@@ -23,6 +23,7 @@ class m240510_123044_create_helpdesk_table extends Migration
             'data_json' => $this->json()->comment('การเก็บข้อมูลชนิด JSON'),
             'status' => $this->string(255)->comment('สถานะ'),
             'rating' => $this->string(255)->comment('คะแนน'),
+            'move_out' => $this->boolean()->comment('จำหน่าย'),
             'repair_group' => $this->string(255)->comment('หน่วยงานที่ส่งซ่่อม'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),   
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),

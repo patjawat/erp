@@ -216,6 +216,7 @@ class RepairController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '',
+                'summary' => count($dataProvider->getModels()),
                 'content' => $this->renderAjax('history', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,

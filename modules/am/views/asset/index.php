@@ -84,8 +84,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
-
-
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
     <?php if(SiteHelper::getDisplay() == 'list'):?>
 <?=$this->render('show/list', [

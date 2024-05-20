@@ -3,13 +3,18 @@ use yii\helpers\Url;
 ?>
 <div class="row">
     <div class="col-xl-8 col-lg-8 col-md-6 col-sm-12 col-sx-12">
-                <?=$this->render('@app/modules/hr/views/employees/avatar',['model' => $model])?>
-<div class="card">
+        <?=$this->render('@app/modules/hr/views/employees/avatar',['model' => $model])?>
+        <!-- <div class="card">
     <div class="card-body">
-        <h6>บันทึกการแจ้งซ่อม</h6>
-        <div id="viewRepairHistory" class="mt-4"></div>
-    </div>
-</div>
+        <h6>บันทึกการแจ้งซ่อม</h6> -->
+        <!-- </div>
+    </div> -->
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div id="viewRepairHistory" class="mt-4"></div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12"></div>
+        </div>
 
     </div>
     <div class="col-4">
@@ -53,8 +58,9 @@ function  loadRepairHostory(){
         },
         dataType: "json",
         success: function (res) {
-            $('#viewRepairHistory').html(res.content);
-            console.log(res.content);
+            if(res.summary > 0){
+                $('#viewRepairHistory').html(res.content);
+            }
         }
     });
 }
