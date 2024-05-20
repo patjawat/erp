@@ -84,8 +84,32 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
+
+    <?php if(count(($dataProvider->getModels())) == 0):?>
+
+        <div class="row d-flex justify-content-center">
+        <div class="col-6">
+        <div class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
+            <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i> ไม่มีทรัพสินย์ที่ได้รับผิดชอบ</h4>
+            <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
+</div>
+        </div>
+        </div>
+
+
+        <div class="">
+        <div class="row d-flex flex-column">
+<div class="col-lg-6 col-md-8 col-sm-12">
+
+</div>
+        </div>
+        </div>
+    <?php endif;?>
+
+
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
     <?php if(SiteHelper::getDisplay() == 'list'):?>
+
 <?=$this->render('show/list', [
     'searchModel' => $searchModel,
     'dataProvider' => $dataProvider,
