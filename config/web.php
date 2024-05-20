@@ -29,7 +29,7 @@ $config = [
     ],
     'language'=>'th_TH', // เปิดใช้งานภาษาไทย
     'components' => [
-        'UserHelper' => 'app\components\UserHelper',
+        'employee' => 'app\components\UserHelper',
         'image' => [  
             'class' => 'yii\image\ImageDriver',
             'driver' => 'GD',  //GD or Imagick

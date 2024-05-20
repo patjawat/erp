@@ -57,17 +57,23 @@ class SiteController extends Controller
     /**
      * {@inheritdoc}
      */
-    public function actions()
+    // public function actions()
+    // {
+    //     return [
+    //         'error' => [
+    //             'class' => 'yii\web\ErrorAction',
+    //         ],
+    //         'captcha' => [
+    //             'class' => 'yii\captcha\CaptchaAction',
+    //             'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
+    //         ],
+    //     ];
+    // }
+
+    public function actionError()
     {
-        return [
-            'error' => [
-                'class' => 'yii\web\ErrorAction',
-            ],
-            'captcha' => [
-                'class' => 'yii\captcha\CaptchaAction',
-                'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
-            ],
-        ];
+        $this->layout = 'error_404';
+        return $this->render('error');
     }
 
     public function actionIndex()
