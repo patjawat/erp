@@ -5,7 +5,7 @@ use yii\helpers\Html;
 <div class="row align-items-stretch">
 
     <!-- Begin total revenue chart -->
-    <div class="col-md-8 col-lg-9">
+    <div class="col-md-12 col-lg-12">
         <div class="card">
             <div class="card-header border-0">
                 <h5 class="card-title">ปริมาณการใช้เงินงบประมาณ</h5>
@@ -16,57 +16,7 @@ use yii\helpers\Html;
         </div>
     </div> <!-- End total revenue chart -->
 
-    <div class="col-md-4 col-lg-3">
-        <div class="row">
-            <div class="col-6">
-                <a href="<?=Url::to(['/hr'])?>">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex flex-column align-items-center justify-content-center">
-                                <?=Html::img('@web/images/hr.png', ['width' => 70])?>
-                                <div>บุคลกร</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6">
-                <a href="<?=Url::to(['/am'])?>">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex flex-column align-items-center justify-content-center">
-                                <?=Html::img('@web/images/asset-allocation.png', ['width' => 50])?>
-                                <div>ทรัพย์สิน</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6">
-                <a href="<?=Url::to(['/helpdesk'])?>">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex flex-column align-items-center justify-content-center">
-                                <?=Html::img('@web/images/customer_service.png', ['width' => 100])?>
-                                <div>งานซ่อมบำรุง</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex flex-column align-items-center justify-content-center">
-                            <?=Html::img('@web/images/stethoscope.png', ['width' => 50])?>
-                            <div>ศูนย์เครื่องมือแพทย์</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 </div>
 
 
