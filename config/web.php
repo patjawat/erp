@@ -11,6 +11,7 @@ $config = [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log','devicedetect'],
     'homeUrl' => ['/site'],
+    'timeZone' => 'Asia/Bangkok',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
