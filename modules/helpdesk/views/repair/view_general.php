@@ -50,8 +50,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="col-4">
             <?php
                 try {
-                echo Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;'])
-                } catch (\Throwable $th) {
+                    
+                echo Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']);
+               
+            } catch (\Throwable $th) {
 
                 }
             ?>                
