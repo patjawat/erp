@@ -51,16 +51,7 @@ $modelCar = AssetDetail::find()->where(['name' => "tax_car",'code'=>$model->code
         <tr class="align-middle">
             <td class="text-end"><span class="fw-semibold">สถานะ : </span></td>
             <td colspan="5">
-                <?php if($model->asset_status == 1):?>
-                <label class="badge rounded-pill text-primary-emphasis bg-success-subtle py-2 fs-6 align-middle">
-                    <i class="bi bi-check2-circle fs-5"></i> <?=$model->statusName()?> </label>
-                <?php endif;?>
-
-                <?php if($model->asset_status == 5):?>
-                <label class="badge rounded-pill text-danger-emphasis bg-danger-subtle py-2 fs-6 align-middle">
-                    <i class="fa-solid fa-triangle-exclamation fs-5"></i> <?=$model->statusName()?> </label>
-                <?php endif;?>
-
+                <?=$model->viewStatus()?>
             </td>
         </tr>
         <!-- ถ้ามีการส่งซ่อม -->

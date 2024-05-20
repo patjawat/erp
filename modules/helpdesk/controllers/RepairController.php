@@ -386,7 +386,7 @@ class RepairController extends Controller
             } catch (\Throwable $th) {
                 //throw $th;
             }
-                $model->save();
+            $model->save();
                 return [
                     'status' => 'success',
                     'container' => '#helpdesk-container',
@@ -468,12 +468,13 @@ class RepairController extends Controller
                 $model->data_json = ArrayHelper::merge($oldObj, $newObj);
                 try {
                     $asset = Asset::findOne(['code' => $model->code]);
-                    $asset->asset_status = 1;
+                    // 3 คือ รอจำหน่าย
+                    $asset->asset_status = $model->move_out == 1 ? 3 : 1;
                     $asset->save();
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-
+                // return $model;
                 $model->status  = 5;
                 $model->save();
                 return [

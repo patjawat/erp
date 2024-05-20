@@ -70,17 +70,7 @@ use yii\helpers\Html;
                                 บาท
                             </div>
                             <div>
-                                <?php if($model->asset_status == 1):?>
-                                <label
-                                    class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate float-end">
-                                    <i class="bi bi-clipboard-check"></i> <?=$model->statusName()?> </label>
-                                    <?php endif;?>
-
-                                    <?php if($model->asset_status == 5):?>
-                                <label
-                                    class="badge rounded-pill text-danger-emphasis bg-danger-subtle p-2 fs-6 text-truncate float-end">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> <?=$model->statusName()?> </label>
-                                    <?php endif;?>
+                             <?=$model->viewstatus()?>
                                 </div>
                             </div>
                         </li>

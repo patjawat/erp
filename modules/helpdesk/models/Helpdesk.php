@@ -51,7 +51,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating','repair_group'], 'safe'],
+            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating','repair_group','move_out'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -70,6 +70,7 @@ class Helpdesk extends \yii\db\ActiveRecord
             'date_end' => 'Date End',
             'name' => 'Name',
             'title' => 'Title',
+            'move_out' => 'จำหน่าย',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',

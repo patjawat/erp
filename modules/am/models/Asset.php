@@ -328,6 +328,23 @@ class Asset extends \yii\db\ActiveRecord
             return $model->title;
         }
     }
+
+    public function viewStatus()
+    {
+        $status = $this->asset_status;
+        // $data = ['icon' => '','color' => ''];
+        switch ($status) {
+            case $status == 1: $data = ['icon' => '<i class="bi bi-clipboard-check"></i>','color' => 'success']; break;
+            case $status == 2: $data = ['icon' => '<i class="fa-solid fa-circle-xmark"></i>','color' => 'secondary']; break;
+            case $status == 3: $data = ['icon' => '<i class="fa-regular fa-circle-pause"></i>','color' => 'danger']; break;
+            case $status == 4: $data = ['icon' => '<i class="fa-solid fa-right-left"></i>','color' => 'info']; break;
+            case $status == 5: $data = ['icon' => '<i class="fa-solid fa-triangle-exclamation"></i>','color' => 'warning']; break;
+        
+            default: $data = ['icon' => '','color' => '']; break;
+        }
+
+            return '<label class="badge rounded-pill text-primary-emphasis bg-'.$data['color'].'-subtle p-2 fs-6 text-truncate">'.$data['icon'].' '.$this->statusName().'</label>';
+    }
     // หน่วยงาน
     public function ListDepartment()
     {
