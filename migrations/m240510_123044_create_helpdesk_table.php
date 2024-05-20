@@ -47,7 +47,7 @@ class m240510_123044_create_helpdesk_table extends Migration
             $this->insert('categorise', ['category_id' => '' , 'code' =>  '3', 'name' => 'repair_status','title' => 'ดำเนินการ','active' => 1]);
             $this->insert('categorise', ['category_id' => '' , 'code' =>  '4', 'name' => 'repair_status','title' => 'เสร็จสิ้น','active' => 1]);
             $this->insert('categorise', ['category_id' => '' , 'code' =>  '5', 'name' => 'repair_status','title' => 'ยกเลิก','active' => 1]);
-            $this->insert('categorise', ['category_id' => '' , 'code' =>  '6', 'name' => 'repair_status','title' => 'จำหน่่าย','active' => 1]);
+            $this->insert('categorise', ['category_id' => '' , 'code' =>  '6', 'name' => 'repair_status','title' => 'จำหน่าย','active' => 1]);
         }
         $sqlSendType = Yii::$app->db->createCommand("select * from categorise where name = 'send_type'")->queryAll();
         if(count($sqlSendType) < 1){

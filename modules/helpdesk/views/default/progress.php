@@ -7,7 +7,7 @@ $status4 = Helpdesk::find()->where(['status' => 4])->andWhere(['repair_group' =>
 try {
     $percen = ROUND(((($total - $status2) / $total)* 100),0);
 } catch (\Throwable $th) {
-    $percen = 100;
+    $percen = 0;
 }
 ?>
 
