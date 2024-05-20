@@ -18,7 +18,7 @@ use kartik\select2\Select2;
         'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
         'validationUrl' =>['/helpdesk/repair/cancel-job-validator']
     ]); ?>
-     <?=isset($model->code) ? $form->field($model, 'move_out')->checkbox(['custom' => true, 'switch' => true])->label('จำหน่าย') : '';?>
+     <?=$model->code !="" ? $form->field($model, 'move_out')->checkbox(['custom' => true, 'switch' => true])->label('จำหน่าย') : '';?>
     <?= $form->field($model, 'data_json[repair_note]')->textArea(['rows' => 6,'placeholder' => 'ระบุเหตุผล...'])->label('เหตุผล') ?>
 
     <div class="form-group mt-3 d-flex justify-content-center">
