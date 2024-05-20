@@ -343,7 +343,7 @@ class Asset extends \yii\db\ActiveRecord
             default: $data = ['icon' => '','color' => '']; break;
         }
 
-            return '<label class="badge rounded-pill text-primary-emphasis bg-'.$data['color'].'-subtle p-2 fs-6 text-truncate">'.$data['icon'].' '.$this->statusName().'</label>';
+            return '<label class="badge rounded-pill text-primary-emphasis bg-'.$data['color'].'-subtle p-2 fs-6 text-truncate fw-semibold">'.$data['icon'].' '.$this->statusName().'</label>';
     }
     // หน่วยงาน
     public function ListDepartment()
