@@ -238,10 +238,11 @@ class RepairController extends Controller
      */
     public function actionView($id)
     {
+        // Yii::$app->response->format = Response::FORMAT_JSON;
         $title = $this->request->get('title');
         $model = $this->findModel($id);
         $asset = Asset::findOne(['code' => $model->code]);
-        if($asset){
+        if($model->code && isset($asset)){
             return $this->render('view', [
                 'model' => $model,
                 'asset' => $asset
