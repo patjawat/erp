@@ -12,6 +12,7 @@ use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
 use app\models\Categorise;
+use app\components\AppHelper;
 use app\components\CategoriseHelper;
 use app\modules\filemanager\models\Uploads;
 use yii\helpers\Json;
@@ -51,7 +52,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating','repair_group','move_out'], 'safe'],
+            [['date_start', 'date_end', 'data_json','created_at', 'updated_at','status','rating','repair_group','move_out','year_budget'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -70,6 +71,7 @@ class Helpdesk extends \yii\db\ActiveRecord
             'date_end' => 'Date End',
             'name' => 'Name',
             'title' => 'Title',
+            'year_budget' => 'ปีงบประมาณ',
             'move_out' => 'จำหน่าย',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
@@ -98,15 +100,11 @@ class Helpdesk extends \yii\db\ActiveRecord
 }
 
 
-// public function beforeSave($insert)
-// {
-//     // if ($insert) {  // only for Save (No Update)
-//         if (!empty($this->rating)) {
-//             $this->setAttribute('rating', $this->rating-3.75);
-//         }
-//     // }
-//     return parent::beforeSave($insert);
-// }
+public function beforeSave($insert)
+{
+    $this->year_budget = AppHelper::YearBudget();
+    return parent::beforeSave($insert);
+}
 public function Upload($name)
 {
     return FileManagerHelper::FileUpload($this->ref, $name);

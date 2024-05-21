@@ -3,7 +3,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use app\modules\helpdesk\models\Helpdesk;
 
-$helpdesks  = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])
+$helpdesks  = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])->andWhere(['in','status',[1,2,3]])
 // ->andWhere(new \yii\db\Expression("JSON_EXTRACT(data_json, '$.repair_status') IN ("ร้องขอ",""รับเรื่อง','ดำเนินการ')"))
 ->all();
 ?>
@@ -31,13 +31,13 @@ $helpdesks  = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])
                             <div class="scroll-content">
                                 <div class="scroll-content">
                                     <?php foreach($helpdesks as $helpdesk):?>
-                                    <a href="<?=Url::to(['/helpdesk/repair/view-task','id' => $helpdesk->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'])?>" class="dropdown-item notification-item open-modal">
+                                    <a href="<?=Url::to(['/helpdesk/repair/timeline','id' => $helpdesk->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'])?>" class="dropdown-item notification-item open-modal">
                                         <div class="d-flex">
                                             <div class="avatar avatar-xs bg-primary">
                                                 <i class="bx bx-user-plus"></i>
                                             </div>
                                             <p class="media-body">
-                                            ปัจวัฒน์ ศรีบุญเรือง 
+                                            <?=$helpdesk->viewCreateUser()?>
                                                 <small class="text-muted"><?=Yii::$app->thaiFormatter->asDateTime($helpdesk->created_at,'short')?> | <?=$helpdesk->data_json['title']?></small>
                                             </p>
                                         </div>

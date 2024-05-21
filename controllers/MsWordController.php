@@ -83,7 +83,7 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('vendor_add', $venrorAddress); //ที่อยู่ของผู้ขาย
             $templateProcessor->setValue('vendor_tel', $venrorPhone); //หมายเลขโทรศัพท์ของผู้ขาย
             $templateProcessor->setValue('budget_type', $model->budget_type); //ประเภทเงิน
-            $templateProcessor->setValue('method', $model->method_get); //วิธีการได้มา
+            $templateProcessor->setValue('method', $model->purchase); //วิธีการได้มา
             $templateProcessor->setValue('r_date',  Yii::$app->thaiFormatter->asDate($model->receive_date,'php:d/m/Y')); //วิธีการได้มา
             $templateProcessor->setValue('asset_name1',$model->AssetitemName()); //ชื่อหรือชนิดของทรัพย์สิน
             $templateProcessor->setValue('amount','1'); //จำนวน
