@@ -1,5 +1,7 @@
 {
-    "[php]": {
-        "editor.defaultFormatter": "kokororin.vscode-phpfmt"
-    }
+  "php-cs-fixer.executablePath": "/full/path/of/php-cs-fixer.phar",
+  "php-cs-fixer.formatHtml": true,
+  "[php]": {
+    "editor.defaultFormatter": "lkrms.pretty-php"
+  }
 }

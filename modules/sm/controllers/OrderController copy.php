@@ -2,16 +2,16 @@
 
 namespace app\modules\sm\controllers;
 
-use app\modules\am\models\Asset;
 use app\modules\sm\models\Order;
-use app\modules\sm\models\OrderDetail;
 use app\modules\sm\models\OrderSearch;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
+use app\modules\sm\models\OrderDetail;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
+use yii\filters\VerbFilter;
 use Yii;
+use yii\helpers\ArrayHelper;
+use app\modules\am\models\Asset;
+use yii\web\Response;
 
 /**
  * OrderController implements the CRUD actions for Order model.
@@ -72,34 +72,44 @@ class OrderController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Order([
-            'name' => $this->request->get('name'),
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-        ]);
-
+        $model = new Order();
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save(false)) {
+            if ($model->load($this->request->post())) {
+
+                //$model->save()
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    
+                    $items = Yii::$app->request->post();                     //บันทึกใบ Order
+                    $model->save();
+                    //var_dump($items['Order']['items']);
+                    //$items['Order']['schedule'] = \yii\helpers\Json::encode($items['Order']['schedule']);
+                    foreach($items['Order']['schedule'] as $key => $val){ //นำรายการสินค้าที่เลือกมา loop บันทึก
+                        $order_detail = new OrderDetail();
+                        
+                        $order_detail->order_id = strval($model->id); // ใส่ ID ของ Order ที่ถูกสร้างเพิ่มเข้าไป
+                        $order_detail->product_id = $val['product_id']; // ชื่อสินค้า
+                        $order_detail->price = $val['price']; // ราคาสินค้า
+                        $order_detail->amount = $val['amount']; // จำนวนสินค้า
+                        $order_detail->save();
+                    }
+
+                    $transaction->commit();
+                    return $this->redirect(['index']);
+                } catch (Exception $e) {
+                    $transaction->rollBack();
+                    return $this->redirect(['index']);
+                }
+                return print_r(Yii::$app->db->beginTransaction());
                 return $this->redirect(['view', 'id' => $model->id]);
-            } else {
-                return false;
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -152,6 +162,7 @@ class OrderController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    
     /**
      * Finds the Order model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -159,8 +170,7 @@ class OrderController extends Controller
      * @return Order the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDeteil($id)
-    {
+    public function actionDeteil($id){
         $model = Asset::findOne((['id' => $id]));
         Yii::$app->response->format = Response::FORMAT_JSON;
         return $model;

@@ -2,9 +2,9 @@
 
 namespace app\modules\sm\models;
 
+use app\modules\sm\models\Product;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\sm\models\Product;
 
 /**
  * ProductSearch represents the model behind the search form of `app\modules\sm\models\Product`.
@@ -76,12 +76,12 @@ class ProductSearch extends Product
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
+        $query
+            ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'asset_group', $this->asset_group])
             ->andFilterWhere(['like', 'asset_item', $this->asset_item])
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'fsn_number', $this->fsn_number])
-            ->andFilterWhere(['like', 'repair', $this->repair])
             ->andFilterWhere(['like', 'owner', $this->owner])
             ->andFilterWhere(['like', 'device_items', $this->device_items])
             ->andFilterWhere(['like', 'asset_status', $this->asset_status])

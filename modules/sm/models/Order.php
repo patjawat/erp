@@ -7,16 +7,19 @@ use Yii;
 /**
  * This is the model class for table "order".
  *
- * @property string $id
+ * @property int $id
  * @property string|null $ref
- * @property string|null $name ชื่อการบันทึก เช่น purchase_order
+ * @property string|null $name ชื่อตารางเก็บข้อมูล
+ * @property string|null $category_id หมวดหมูหลักที่เก็บ
+ * @property string|null $code รหัส
+ * @property int|null $item_id รายการที่เก็บ
+ * @property float|null $price ราคา
+ * @property int|null $amonth จำนวน
  * @property string|null $data_json
- * @property string|null $updated_at
- * @property string|null $created_at
+ * @property string|null $created_at วันที่สร้าง
+ * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
  * @property int|null $updated_by ผู้แก้ไข
- *
- * @property OrderDetail[] $orderDetails
  */
 class Order extends \yii\db\ActiveRecord
 {
@@ -34,12 +37,10 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['id'], 'required'],
-            [['data_json', 'updated_at', 'created_at'], 'safe'],
-            [['created_by', 'updated_by'], 'integer'],
-            [['id'], 'string', 'max' => 100],
-            [['ref', 'name'], 'string', 'max' => 255],
-            [['id'], 'unique'],
+            [['item_id', 'amonth', 'created_by', 'updated_by'], 'integer'],
+            [['price'], 'number'],
+            [['data_json', 'created_at', 'updated_at'], 'safe'],
+            [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
     }
 
@@ -52,21 +53,16 @@ class Order extends \yii\db\ActiveRecord
             'id' => 'ID',
             'ref' => 'Ref',
             'name' => 'Name',
+            'category_id' => 'Category ID',
+            'code' => 'Code',
+            'item_id' => 'Item ID',
+            'price' => 'Price',
+            'amonth' => 'Amonth',
             'data_json' => 'Data Json',
-            'updated_at' => 'Updated At',
             'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
         ];
-    }
-
-    /**
-     * Gets query for [[OrderDetails]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getOrderDetails()
-    {
-        return $this->hasMany(OrderDetail::class, ['order_id' => 'id']);
     }
 }
