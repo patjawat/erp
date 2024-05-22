@@ -85,17 +85,17 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function behaviors()
     {
         return [
-            // [
-            //     'class' => TimestampBehavior::className(),
-            //     'createdAtAttribute' => 'created_at',
-            //     'updatedAtAttribute' => 'updated_at',
-            //     'value' => new Expression('NOW()'),
-            // ],
-            // [
-            //     'class' => BlameableBehavior::className(),
-            //     'createdByAttribute' => 'created_by',
-            //     'updatedByAttribute' => 'updated_by',
-            // ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
+                'value' => new Expression('NOW()'),
+            ],
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
         ];
     }
 
