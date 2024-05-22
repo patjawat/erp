@@ -2,6 +2,20 @@
 
 namespace app\modules\sm\models;
 
+use app\components\AppHelper;
+use app\components\CategoriseHelper;
+use app\models\Categorise;
+use app\modules\am\models\AssetItem;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use Yii;
 
 /**
@@ -50,7 +64,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['qty', 'purchase', 'department', 'life', 'on_year', 'dep_id', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
-            [['receive_date', 'repair', 'device_items', 'data_json', 'updated_at', 'created_at'], 'safe'],
+            [['receive_date', 'device_items', 'data_json', 'updated_at', 'created_at'], 'safe'],
             [['price'], 'number'],
             [['ref', 'asset_group', 'asset_item', 'code', 'fsn_number', 'owner', 'asset_status'], 'string', 'max' => 255],
         ];
@@ -88,5 +102,10 @@ class Product extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
         ];
+    }
+
+    public function ListProductType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
     }
 }

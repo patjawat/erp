@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h4 class="card-title">รายการวัสดุ</h4>
                 <div>
 
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create'], ['class' => 'btn btn-primary']) ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 </div>
             </div>
         </div>
@@ -62,9 +62,9 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="col-3">
         <div class="card" style="height: 1400px;">
-            <div class="card-body d-flex justify-content-between">
+            <div class="card-body ">
                 <h4 class="card-title">ตัวกรอง</h4>
-                <p class="card-text">Clear All</p>
+                <?= $this->render('_search', ['model' => $searchModel]) ?>
             </div>
         </div>
     </div>

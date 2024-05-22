@@ -1,7 +1,7 @@
 <?php
 
+use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductSearch $model */
@@ -18,15 +18,12 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
 
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'ref') ?>
-
-    <?= $form->field($model, 'asset_group') ?>
-
-    <?= $form->field($model, 'asset_item') ?>
-
-    <?= $form->field($model, 'code') ?>
+<?php
+echo $form->field($model, 'data_json[checkbox1]')->checkboxList(
+    $model->ListProductType(),
+    ['custom' => true, 'id' => 'custom-checkbox-list']
+)->label('ประเภทของวัสดุ');
+?>
 
     <?php // echo $form->field($model, 'fsn_number') ?>
 

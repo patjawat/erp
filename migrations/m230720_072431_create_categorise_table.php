@@ -28,11 +28,11 @@ class m230720_072431_create_categorise_table extends Migration
         ]);
 
         $this->insert('categorise', ['name' => 'site', 'title' => 'ตั้งค่าระบบ', 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-        'data_json' => [
-            'company_name' => 'ระบุชื่อองค์กร'
-        ]]);
+            'data_json' => [
+                'company_name' => 'ระบุชื่อองค์กร'
+            ]]);
 
-        //ระดับ
+        // ระดับ
         $this->insert('categorise', ['code' => 1, 'name' => 'position_level', 'title' => 'ปฏิบัติการ']);
         $this->insert('categorise', ['code' => 2, 'name' => 'position_level', 'title' => 'ชำนาญการ']);
         $this->insert('categorise', ['code' => 3, 'name' => 'position_level', 'title' => 'ชำนาญการพิเศษ']);
@@ -54,13 +54,13 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT1', 'code' => 'PT1PG2', 'title' => 'อำนวยการ', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT1', 'code' => 'PT1PG3', 'title' => 'วิชาการ', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT1', 'code' => 'PT1PG4', 'title' => 'ทั่วไป', 'active' => 1]);
-        //PT1กำหนดตำแหน่งข้าราชการ
+        // PT1กำหนดตำแหน่งข้าราชการ
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG1', 'code' => 'PT1PG1PN1', 'title' => 'นักบริหาร', 'data_json' => ['code' => '1-1-2001', 'title_name' => 'บริหาร', 'level' => 'ต้น - สูง'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG1', 'code' => 'PT1PG1PN2', 'title' => 'ผู้ตรวจราชการกระทรวง', 'data_json' => ['code' => '1-1-2004', 'title_name' => 'ตรวจราชการกระทรวง', 'level' => 'สูง'], 'active' => 1]);
-       
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG2', 'code' => 'PT1PG2PN1', 'title' => 'ผู้อำนวยการ', 'data_json' => ['code' => '2-1-2001', 'title_name' => 'อำนวยการ', 'level' => 'ต้น - สูง'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG2', 'code' => 'PT1PG2PN2', 'title' => 'ผู้อำนวยการเฉพาะด้าน (ระบุชื่อสายงาน)', 'data_json' => ['code' => '2-1-2002', 'title_name' => 'อำนวยการเฉพาะด้าน', 'level' => 'ต้น - สูง'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG3', 'code' => 'PT1PG3PN1', 'title' => 'นักจัดการงานทั่วไป', 'data_json' => ['code' => '3-1-2004', 'title_name' => 'จัดการงานทั่วไป', 'level' => 'ปฏิบัติการ - ชำนาญการพิเศษ'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG3', 'code' => 'PT1PG3PN2', 'title' => 'นักทรัพยากรบุคคล', 'data_json' => ['code' => '3-1-2006', 'title_name' => 'ทรัพยากรบุคคล', 'level' => 'ปฏิบัติการ - ทรงคุณวุฒิ'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG3', 'code' => 'PT1PG3PN3', 'title' => 'นิติกร', 'data_json' => ['code' => '3-1-2008', 'title_name' => 'นิติการ', 'level' => 'ปฏิบัติการ - ทรงคุณวุฒิ'], 'active' => 1]);
@@ -100,7 +100,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG3', 'code' => 'PT1PG3PN37', 'title' => 'นักวิชาการศึกษา', 'data_json' => ['code' => '3-8-2021', 'title_name' => 'วิชาการศึกษา', 'level' => 'ปฏิบัติการ - ทรงคุณวุฒิ'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG3', 'code' => 'PT1PG3PN38', 'title' => 'วิทยาจารย์', 'data_json' => ['code' => '3-8-2025', 'title_name' => 'วิทยาจารย์', 'level' => 'ปฏิบัติการ - ชำนาญการพิเศษ'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG3', 'code' => 'PT1PG3PN39', 'title' => 'นักสังคมสงเคราะห์', 'data_json' => ['code' => '3-8-2026', 'title_name' => 'สังคมสงเคราะห์', 'level' => 'ปฏิบัติการ - เชี่ยวชาญ'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG4', 'code' => 'PT1PG4PN1', 'title' => 'เจ้าพนักงานธุรการ', 'data_json' => ['code' => '4-1-2001', 'title_name' => 'ปฏิบัติงานธุรการ', 'level' => 'ปฏิบัติงาน - อาวุโส'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG4', 'code' => 'PT1PG4PN2', 'title' => 'เจ้าพนักงานพัสดุ', 'data_json' => ['code' => '4-1-2002', 'title_name' => 'ปฏิบัติงานพัสดุ', 'level' => 'ปฏิบัติงาน - อาวุโส'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT1PG4', 'code' => 'PT1PG4PN3', 'title' => 'เจ้าพนักงานเวชสถิติ', 'data_json' => ['code' => '4-1-2004', 'title_name' => 'เจ้าพนักงานเวชสถิติ', 'level' => 'ปฏิบัติงาน - อาวุโส'], 'active' => 1]);
@@ -141,7 +141,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG1', 'code' => 'PT2PG1PN7', 'title' => 'เจ้าพนักงานการเงินและบัญชี', 'data_json' => ['title_name' => 'ปฏิบัติงานการเงินและบัญชี'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG1', 'code' => 'PT2PG1PN8', 'title' => 'เจ้าพนักงานเผยแพร่ประชาสัมพันธ์', 'data_json' => ['title_name' => 'ปฏิบัติงานเผยแพร่ประชาสัมพันธ์'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG1', 'code' => 'PT2PG1PN9', 'title' => 'เจ้าพนักงานห้องสมุด', 'data_json' => ['title_name' => 'ปฏิบัติงานห้องสมุด'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG2', 'code' => 'PT2PG2PN1', 'title' => 'เจ้าพนักงานโสตทัศนศึกษา', 'data_json' => ['title_name' => 'ปฏิบัติงานโสตทัศนศึกษา'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG2', 'code' => 'PT2PG2PN2', 'title' => 'นายช่างเทคนิค', 'data_json' => ['title_name' => 'ปฏิบัติงานช่างเทคนิค'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG2', 'code' => 'PT2PG2PN3', 'title' => 'เจ้าพนักงานเครื่องคอมพิวเตอร์', 'data_json' => ['title_name' => 'ปฏิบัติงานเครื่องคอมพิวเตอร์'], 'active' => 1]);
@@ -160,7 +160,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG2', 'code' => 'PT2PG2PN16', 'title' => 'ช่างกายอุปกรณ์', 'data_json' => ['title_name' => 'ปฏิบัติงานช่างกายอุปกรณ์'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG2', 'code' => 'PT2PG2PN17', 'title' => 'ช่างทันตกรรม', 'data_json' => ['title_name' => 'ปฏิบัติงานช่างทันตกรรม'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG2', 'code' => 'PT2PG2PN18', 'title' => 'พยาบาลเทคนิค', 'data_json' => ['title_name' => 'ปฏิบัติงานพยาบาลเทคนิค'], 'active' => 1]);
-       
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG3', 'code' => 'PT2PG3PN1', 'title' => 'นักจัดการงานทั่วไป', 'data_json' => ['title_name' => 'จัดการงานทั่วไป'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG3', 'code' => 'PT2PG3PN2', 'title' => 'นักทรัพยากรบุคคล', 'data_json' => ['title_name' => 'ทรัพยากรบุคคล'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG3', 'code' => 'PT2PG3PN3', 'title' => 'นักประชาสัมพันธ์', 'data_json' => ['title_name' => 'ประชาสัมพันธ์'], 'active' => 1]);
@@ -183,7 +183,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG3', 'code' => 'PT2PG3PN20', 'title' => 'นักจิตวิทยา', 'data_json' => ['title_name' => 'จิตวิทยา'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG3', 'code' => 'PT2PG3PN21', 'title' => 'เศรษฐกร', 'data_json' => ['title_name' => 'เศรษฐกร'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG3', 'code' => 'PT2PG3PN22', 'title' => 'นักวิเทศสัมพันธ์', 'data_json' => ['title_name' => 'วิเทศสัมพันธ์'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG4', 'code' => 'PT2PG4PN1', 'title' => 'นักกายอุปกรณ์', 'data_json' => ['title_name' => 'กายอุปกรณ์'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG4', 'code' => 'PT2PG4PN2', 'title' => 'นักกายภาพบำบัด', 'data_json' => ['title_name' => 'กายภาพบำบัด'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT2PG4', 'code' => 'PT2PG4PN3', 'title' => 'นักกิจกรรมบำบัด', 'data_json' => ['title_name' => 'กิจกรรมบำบัด'], 'active' => 1]);
@@ -225,7 +225,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG1', 'code' => 'PT3PG1PN15', 'title' => 'นักทัศนมาตร', 'data_json' => ['code' => '3-6-2022', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG1', 'code' => 'PT3PG1PN16', 'title' => 'นักกายอุปกรณ', 'data_json' => ['code' => '3-7-2001', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG1', 'code' => 'PT3PG1PN17', 'title' => 'วิศวกรไฟฟ้า', 'data_json' => ['code' => '3-7-2020', 'note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG2', 'code' => 'PT3PG2PN1', 'title' => 'นักวิชาการศึกษาพิเศษ', 'data_json' => ['code' => '3-8-2022', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG2', 'code' => 'PT3PG2PN2', 'title' => 'นักฟิสิกส์รังสี', 'data_json' => ['code' => '3-5-2007', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG2', 'code' => 'PT3PG2PN3', 'title' => 'นักวิทยาศาสตร์', 'data_json' => ['code' => '3-5-2010', 'note' => 'นักวิทยาศาสตร์ เริ่มใช้ 31/05/2560'], 'active' => 1]);
@@ -237,9 +237,9 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG2', 'code' => 'PT3PG2PN9', 'title' => 'นักวิทยาศาสตร์การแพทย์', 'data_json' => ['code' => '3-6-2018', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG2', 'code' => 'PT3PG2PN10', 'title' => 'ช่างภาพการแพทย์', 'data_json' => ['code' => '3-7-2004', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG2', 'code' => 'PT3PG2PN11', 'title' => 'นักสังคมสงเคราะห์', 'data_json' => ['code' => '3-8-2026', 'note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG3', 'code' => 'PT3PG3PN1', 'title' => 'นักวิชาการคอมพิวเตอร์', 'data_json' => ['code' => '3-1-2013', 'note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG4', 'code' => 'PT3PG4PN1', 'title' => 'นักจัดการงานทั่วไป', 'data_json' => ['code' => '3-1-2004', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG4', 'code' => 'PT3PG4PN2', 'title' => 'นักทรัพยากรบุคคล', 'data_json' => ['code' => '3-1-2006', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG4', 'code' => 'PT3PG4PN3', 'title' => 'นิติกร', 'data_json' => ['code' => '3-1-2008', 'note' => ''], 'active' => 1]);
@@ -258,7 +258,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG4', 'code' => 'PT3PG4PN16', 'title' => 'บรรณารักษ์', 'data_json' => ['code' => '3-8-2003', 'note' => 'บรรณารักษ์ เริ่มใช้ 31/05/2560'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG4', 'code' => 'PT3PG4PN17', 'title' => 'นักวิชาการศึกษา', 'data_json' => ['code' => '3-8-2021', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG4', 'code' => 'PT3PG4PN18', 'title' => 'วิทยาจารย์', 'data_json' => ['code' => '3-8-2025', 'note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG5', 'code' => 'PT3PG5PN1', 'title' => 'เจ้าพนักงานธุรการ', 'data_json' => ['code' => '4-1-2001', 'note' => 'เจ้าพนักงานธุรการ เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG5', 'code' => 'PT3PG5PN2', 'title' => 'เจ้าพนักงานพัสดุ', 'data_json' => ['code' => '4-1-2002', 'note' => 'เจ้าพนักงานพัสดุ เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG5', 'code' => 'PT3PG5PN3', 'title' => 'เจ้าพนักงานเวชสถิติ', 'data_json' => ['code' => '4-1-2004', 'note' => 'เจ้าพนักงานเวชสถิติ เริ่มใช้ 24/12/2562'], 'active' => 1]);
@@ -285,7 +285,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG5', 'code' => 'PT3PG5PN24', 'title' => 'นายช่างโยธา', 'data_json' => ['code' => '4-7-2016', 'note' => 'นายช่างโยธา เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG5', 'code' => 'PT3PG5PN25', 'title' => 'ครูการศึกษาพิเศษ', 'data_json' => ['code' => '4-8-2001', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG5', 'code' => 'PT3PG5PN26', 'title' => 'เจ้าพนักงานห้องสมุด', 'data_json' => ['code' => '7-8-2015', 'note' => 'เจ้าพนักงานห้องสมุด เริ่มใช้ 24/12/2562'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG6', 'code' => 'PT3PG6PN1', 'title' => 'พนักงานประจำตึก', 'data_json' => ['code' => '', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG6', 'code' => 'PT3PG6PN2', 'title' => 'พนักงานเปล', 'data_json' => ['code' => '', 'note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT3PG6', 'code' => 'PT3PG6PN3', 'title' => 'พนักงานซักฟอก', 'data_json' => ['code' => '', 'note' => ''], 'active' => 1]);
@@ -373,7 +373,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG1', 'code' => 'PT4PG1PN16', 'title' => 'นักกายอุปกรณ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG1', 'code' => 'PT4PG1PN17', 'title' => 'นักสาธารณสุข', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG1', 'code' => 'PT4PG1PN18', 'title' => 'วิศวกรไฟฟ้า', 'data_json' => ['note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG2', 'code' => 'PT4PG2PN1', 'title' => 'นักวิชาการศึกษาพิเศษ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG2', 'code' => 'PT4PG2PN2', 'title' => 'นักฟิสิกส์รังสี', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG2', 'code' => 'PT4PG2PN3', 'title' => 'นักวิทยาศาสตร์', 'data_json' => ['note' => 'นักวิทยาศาสตร์ เริ่มใช้ 31/05/2560'], 'active' => 1]);
@@ -408,7 +408,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG4', 'code' => 'PT4PG3PN17', 'title' => 'บรรณารักษ์', 'data_json' => ['note' => 'บรรณารักษ์ เริ่มใช้ 31/05/2560'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG4', 'code' => 'PT4PG3PN18', 'title' => 'นักวิชาการศึกษา', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG4', 'code' => 'PT4PG3PN19', 'title' => 'วิทยาจารย์', 'data_json' => ['note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG5', 'code' => 'PT4PG5PN1', 'title' => 'เจ้าพนักงานธุรการ', 'data_json' => ['note' => 'เจ้าพนักงานธุรการ เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG5', 'code' => 'PT4PG5PN2', 'title' => 'เจ้าพนักงานพัสดุ', 'data_json' => ['note' => 'เจ้าพนักงานพัสดุ เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG5', 'code' => 'PT4PG5PN3', 'title' => 'เจ้าพนักงานเวชสถิติ', 'data_json' => ['note' => 'เจ้าพนักงานเวชสถิติ เริ่มใช้ 24/12/2562'], 'active' => 1]);
@@ -435,7 +435,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG5', 'code' => 'PT4PG5PN24', 'title' => 'นายช่างโยธา', 'data_json' => ['note' => 'นายช่างโยธา เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG5', 'code' => 'PT4PG5PN25', 'title' => 'ครูการศึกษาพิเศษ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG5', 'code' => 'PT4PG5PN26', 'title' => 'เจ้าพนักงานห้องสมุด', 'data_json' => ['note' => 'เจ้าพนักงานห้องสมุด เริ่มใช้ 24/12/2562'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG6', 'code' => 'PT4PG6PN1', 'title' => 'พนักงานประจำตึก', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG6', 'code' => 'PT4PG6PN2', 'title' => 'พนักงานเปล', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT4PG6', 'code' => 'PT4PG6PN3', 'title' => 'พนักงานซักฟอก', 'data_json' => ['note' => ''], 'active' => 1]);
@@ -500,7 +500,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT5', 'code' => 'PT5PG4', 'title' => 'บริหารทั่วไป', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT5', 'code' => 'PT5PG5', 'title' => 'เทคนิค', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT5', 'code' => 'PT5PG6', 'title' => 'บริการ', 'active' => 1]);
-// ** ตำแหน่งลูกจ้างชั่วคราวรายวัน
+        // ** ตำแหน่งลูกจ้างชั่วคราวรายวัน
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG1', 'code' => 'PT5PG1PN1', 'title' => 'นักกายภาพบำบัด', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG1', 'code' => 'PT5PG1PN2', 'title' => 'นักกิจกรรมบำบัด', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG1', 'code' => 'PT5PG1PN3', 'title' => 'นักจิตวิทยาคลินิก', 'data_json' => ['note' => ''], 'active' => 1]);
@@ -519,7 +519,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG1', 'code' => 'PT5PG1PN16', 'title' => 'นักกายอุปกรณ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG1', 'code' => 'PT5PG1PN27', 'title' => 'วิศวกรไฟฟ้า', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG1', 'code' => 'PT5PG1PN28', 'title' => 'นักสาธารณสุข', 'data_json' => ['note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG2', 'code' => 'PT5PG2PN1', 'title' => 'นักวิชาการศึกษาพิเศษ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG2', 'code' => 'PT5PG2PN2', 'title' => 'นักฟิสิกส์รังสี', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG2', 'code' => 'PT5PG2P3', 'title' => 'นักวิทยาศาสตร์', 'data_json' => ['note' => 'นักวิทยาศาสตร์ เริ่มใช้ 31/05/2560'], 'active' => 1]);
@@ -536,7 +536,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG2', 'code' => 'PT5PG2PN14', 'title' => 'นักนิติวิทยาศาสตร์', 'data_json' => ['note' => ''], 'active' => 1]);
 
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG3', 'code' => 'PT5PG3PN1', 'title' => 'นักวิชาการคอมพิวเตอร์', 'data_json' => ['note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG4', 'code' => 'PT5PG4PN1', 'title' => 'นักจัดการงานทั่วไป', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG4', 'code' => 'PT5PG4PN2', 'title' => 'นักทรัพยากรบุคคล', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG4', 'code' => 'PT5PG4PN3', 'title' => 'นิติกร', 'data_json' => ['note' => ''], 'active' => 1]);
@@ -555,7 +555,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG4', 'code' => 'PT5PG4PN16', 'title' => 'บรรณารักษ์', 'data_json' => ['note' => 'บรรณารักษ์ เริ่มใช้ 31/05/2560'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG4', 'code' => 'PT5PG4PN17', 'title' => 'นักวิชาการศึกษา', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG4', 'code' => 'PT5PG4PN18', 'title' => 'วิทยาจารย์', 'data_json' => ['note' => ''], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG5', 'code' => 'PT5PG5PN1', 'title' => 'เจ้าพนักงานธุรการ', 'data_json' => ['note' => 'เจ้าพนักงานธุรการ เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG5', 'code' => 'PT5PG5PN2', 'title' => 'เจ้าพนักงานพัสดุ', 'data_json' => ['note' => 'เจ้าพนักงานพัสดุ เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG5', 'code' => 'PT5PG5PN3', 'title' => 'เจ้าพนักงานเวชสถิติ', 'data_json' => ['note' => 'เจ้าพนักงานเวชสถิติ เริ่มใช้ 24/12/2562'], 'active' => 1]);
@@ -582,7 +582,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG5', 'code' => 'PT5PG5PN24', 'title' => 'นายช่างโยธา', 'data_json' => ['note' => 'นายช่างโยธา เริ่มใช้ 24/12/2562'], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG5', 'code' => 'PT5PG5PN25', 'title' => 'ครูการศึกษาพิเศษ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG5', 'code' => 'PT5PG5PN26', 'title' => 'เจ้าพนักงานห้องสมุด', 'data_json' => ['note' => 'เจ้าพนักงานห้องสมุด เริ่มใช้ 24/12/2562'], 'active' => 1]);
-        
+
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG6', 'code' => 'PT5PG6PN1', 'title' => 'พนักงานประจำตึก', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG6', 'code' => 'PT5PG6PN2', 'title' => 'พนักงานเปล', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG6', 'code' => 'PT5PG6PN3', 'title' => 'พนักงานซักฟอก', 'data_json' => ['note' => ''], 'active' => 1]);
@@ -639,19 +639,18 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG6', 'code' => 'PT5PG6PN54', 'title' => 'ช่างเครื่องช่วยคนพิการ', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG6', 'code' => 'PT5PG6PN55', 'title' => 'ผู้ช่วยช่างทั่วไป', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT5PG6', 'code' => 'PT5PG6PN56', 'title' => 'พนักงานขับรถยนต์', 'data_json' => ['note' => ''], 'active' => 1]);
-       
 
         // PT6 กลุ่มลูกจ้างประจำ ================================= (ดำเนินการเรียบร้อย)
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT6', 'code' => 'PT6PG1', 'title' => 'วิชาชีพเฉพาะ ก', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT6', 'code' => 'PT6PG2', 'title' => 'วิชาชีพเฉพาะ ข', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT6', 'code' => 'PT6PG3', 'title' => 'บริการ', 'active' => 1]);
-        //**** */ ตำแหน่งลูกจ้างประจำ
+        // **** */ ตำแหน่งลูกจ้างประจำ
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT6PG3', 'code' => 'PT6PG3PN1', 'title' => 'พนักงานกายภาพบำบัด', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT6PG3', 'code' => 'PT6PG3PN2', 'title' => 'พนักงานช่วยเหลือคนไข้', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT6PG3', 'code' => 'PT6PG3PN3', 'title' => 'ผู้ช่วยทันตแพทย์', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT6PG3', 'code' => 'PT6PG3PN4', 'title' => 'พนักงานเภสัชกรรม', 'data_json' => ['note' => ''], 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT6PG3', 'code' => 'PT6PG3PN5', 'title' => 'พนักงานธุรการ', 'data_json' => ['note' => ''], 'active' => 1]);
-        
+
         // PT7 จ้างเหมาบริการรายวัน ============================= (ดำเนินการเรียบร้อย)
         $this->insert('categorise', ['name' => 'position_group', 'category_id' => 'PT7', 'code' => 'PT7PG1', 'title' => 'บริการ', 'active' => 1]);
         $this->insert('categorise', ['name' => 'position_name', 'category_id' => 'PT7PG1', 'code' => 'PT7PG1PN1', 'title' => 'พนักงานทั่วไป', 'data_json' => ['note' => ''], 'active' => 1]);
@@ -672,7 +671,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['name' => 'gender', 'title' => 'ชาย']);
         $this->insert('categorise', ['name' => 'gender', 'title' => 'หญิง']);
 
-        //กรุ๊บเลือด
+        // กรุ๊บเลือด
         $this->insert('categorise', ['code' => 'A', 'name' => 'blood', 'title' => 'A']);
         $this->insert('categorise', ['code' => 'B', 'name' => 'blood', 'title' => 'B']);
         $this->insert('categorise', ['code' => 'AB', 'name' => 'blood', 'title' => 'AB']);
@@ -708,7 +707,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['code' => 8, 'name' => 'nationality', 'title' => 'ฟิลิปปินส์']);
         $this->insert('categorise', ['code' => 9, 'name' => 'nationality', 'title' => 'มาเลเซีย']);
 
-        //สถานะของพนักงาน
+        // สถานะของพนักงาน
         $this->insert('categorise', ['code' => 1, 'name' => 'emp_status', 'title' => 'ปฏิบัติราชการ']);
         $this->insert('categorise', ['code' => 2, 'name' => 'emp_status', 'title' => 'ลาออก']);
         $this->insert('categorise', ['code' => 3, 'name' => 'emp_status', 'title' => 'เกษียณอายุราชการ']);
@@ -747,7 +746,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['code' => 36, 'name' => 'emp_status', 'title' => 'ลูกจ้างประจำบำเหน็จรายเดือน']);
         $this->insert('categorise', ['code' => 37, 'name' => 'emp_status', 'title' => 'ลูกจ้างประจำบำเหน็จรายเดือนถึงแก่กรรม']);
 
-        //ประเภทการเปลี่ยนชื่อ
+        // ประเภทการเปลี่ยนชื่อ
         $this->insert('categorise', ['code' => 1, 'name' => 'rename_type', 'title' => 'เปลี่ยนคำนำหน้า']);
         $this->insert('categorise', ['code' => 2, 'name' => 'rename_type', 'title' => 'เปลี่ยนชื่อ']);
         $this->insert('categorise', ['code' => 3, 'name' => 'rename_type', 'title' => 'เปลี่ยนสกุล']);
@@ -755,68 +754,66 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['code' => 5, 'name' => 'rename_type', 'title' => 'เปลี่ยนชื่อและเปลี่ยนสกุล']);
         $this->insert('categorise', ['code' => 6, 'name' => 'rename_type', 'title' => 'เปลี่ยนคำนำหน้าเปลี่ยนชื่อและเปลี่ยนสกุล']);
 
-        //รายการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ และข้อมูลรายงาน
+        // รายการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ และข้อมูลรายงาน
         $this->insert('categorise', ['code' => 1, 'name' => 'develop', 'title' => 'ประชุม']);
         $this->insert('categorise', ['code' => 2, 'name' => 'develop', 'title' => 'ประชุมวิชาการ']);
         $this->insert('categorise', ['code' => 3, 'name' => 'develop', 'title' => 'ประชุมเชิงปฏิบัติการ']);
         $this->insert('categorise', ['code' => 4, 'name' => 'develop', 'title' => 'ศึกษาดูงาน']);
         $this->insert('categorise', ['code' => 5, 'name' => 'develop', 'title' => 'สัมมนา']);
 
-        //ประเภทของเงิน
+        // ประเภทของเงิน
         $this->insert('categorise', ['code' => 1, 'name' => 'money_type', 'title' => 'งบประมาณแผ่นดิน']);
         $this->insert('categorise', ['code' => 2, 'name' => 'money_type', 'title' => 'เงินรายได้']);
 
-        //ลักษณะการไป
+        // ลักษณะการไป
         $this->insert('categorise', ['code' => 1, 'name' => 'followby', 'title' => 'ได้รับเชิญ']);
         $this->insert('categorise', ['code' => 2, 'name' => 'followby', 'title' => 'คณะ/หน่วยงานส่งเข้าร่วมเป็นตัวแทน']);
         $this->insert('categorise', ['code' => 3, 'name' => 'followby', 'title' => 'เจ้าตัวสมัครไป']);
         // กำหนด FSN
-        
+
         $this->insert('categorise', ['code' => '00', 'name' => 'vendor', 'title' => 'บริษัทตัวอย่างทดสอบ']);
 
         // ประเภททรัพย์สิน
-        $this->insert('categorise', ['category_id' => '2', 'code' => '1', 'name' => 'asset_type','title' => 'อาคารถาวร','data_json' => ['depreciation' => '4','service_life' => '25'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '2', 'code' => '2.1', 'name' => 'asset_type','title' => 'สิ่งปลูกสร้าง อาคารชั่วคราว/โรงเรือน','data_json' => ['depreciation' => '10','service_life' => '10'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '2', 'code' => '2.2', 'name' => 'asset_type','title' => 'สิ่งปลูกสร้าง ใช้คอนกรีตเสริมเหล็กหรือโครงเหล็กเป็นส่วนประกอบหลัก','data_json' => ['depreciation' => '6.66','service_life' => '15'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '2', 'code' => '2.3', 'name' => 'asset_type','title' => 'สิ่งปลูกสร้าง ใช้ไม้หรือวัสดุอื่นๆ เป็นส่วนประกอบหลัก','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '3', 'name' => 'asset_type','title' => 'ครุภัณฑ์สำนักงาน','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '4', 'name' => 'asset_type','title' => 'ครุภัณฑ์ยานพาหนะและขนส่ง','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '5.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์ไฟฟ้าและวิทยุ ','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '5.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์ไฟฟ้าและวิทยุ (เครื่องกำเนิดไฟฟ้า)','data_json' => ['depreciation' => '6.5','service_life' => '15'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '6', 'name' => 'asset_type','title' => 'ครุภัณฑ์โฆษณาและเผยแพร่','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '7.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์การเกษตร (เครื่องมือและอุปกรณ์)','data_json' => ['depreciation' => '50.00','service_life' => '2'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '7.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์การเกษตร (เครื่องจักรกล)','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '8.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์โรงงาน (เครื่องมือและอุปกรณ์)','data_json' => ['depreciation' => '50.00','service_life' => '2'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '8.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์โรงงาน (เครื่องจักรกล)','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '9.1', 'name' => 'asset_type','title' => 'ครุภัณฑ์ก่อสร้าง (เครื่องมือและอุปกรณ์)','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '9.2', 'name' => 'asset_type','title' => 'ครุภัณฑ์ก่อสร้าง (เครื่องจักกล)','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '10', 'name' => 'asset_type','title' => 'ครุภัณฑ์สำรวจ','data_json' => ['depreciation' => '12.5','service_life' => '8'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '11', 'name' => 'asset_type','title' => 'ครุภัณฑ์วิทยาศาสตร์และการแพทย์','data_json' => ['depreciation' => '20.00','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '12', 'name' => 'asset_type','title' => 'ครุภัณฑ์คอมพิวเตอร์','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '13', 'name' => 'asset_type','title' => 'ครุภัณฑ์การศึกษา','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '14', 'name' => 'asset_type','title' => 'ครุภัณฑ์งานบ้านงานครัว','data_json' => ['depreciation' => '33.33','service_life' => '3'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '15', 'name' => 'asset_type','title' => 'ครุภัณฑ์กีฬา/กายภาพ','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '16', 'name' => 'asset_type','title' => 'ครุภัณฑ์ดนตรี/นาฎศิลป์','data_json' => ['depreciation' => '20.0','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '17', 'name' => 'asset_type','title' => 'ครุภัณฑ์อาวุธ','data_json' => ['depreciation' => '10','service_life' => '10'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '3', 'code' =>  '18', 'name' => 'asset_type','title' => 'ครุภัณฑ์สนาม','data_json' => ['depreciation' => '50','service_life' => '2'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '' , 'code' =>  '19', 'name' => 'asset_type','title' => 'ครุภัณฑ์อื่นๆ','data_json' => ['depreciation' => '20','service_life' => '5'],'active' => 1]);
-        $this->insert('categorise', ['category_id' => '' , 'code' =>  '20', 'name' => 'asset_type','title' => 'สินทรัพย์ไม่มีตัวตัน','data_json' => ['depreciation' => '33.3','service_life' => '3'],'active' => 1]);
-        
+        $this->insert('categorise', ['category_id' => '2', 'code' => '1', 'name' => 'asset_type', 'title' => 'อาคารถาวร', 'data_json' => ['depreciation' => '4', 'service_life' => '25'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '2', 'code' => '2.1', 'name' => 'asset_type', 'title' => 'สิ่งปลูกสร้าง อาคารชั่วคราว/โรงเรือน', 'data_json' => ['depreciation' => '10', 'service_life' => '10'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '2', 'code' => '2.2', 'name' => 'asset_type', 'title' => 'สิ่งปลูกสร้าง ใช้คอนกรีตเสริมเหล็กหรือโครงเหล็กเป็นส่วนประกอบหลัก', 'data_json' => ['depreciation' => '6.66', 'service_life' => '15'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '2', 'code' => '2.3', 'name' => 'asset_type', 'title' => 'สิ่งปลูกสร้าง ใช้ไม้หรือวัสดุอื่นๆ เป็นส่วนประกอบหลัก', 'data_json' => ['depreciation' => '20', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '3', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์สำนักงาน', 'data_json' => ['depreciation' => '33.33', 'service_life' => '3'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '4', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์ยานพาหนะและขนส่ง', 'data_json' => ['depreciation' => '20.00', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '5.1', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์ไฟฟ้าและวิทยุ ', 'data_json' => ['depreciation' => '20.00', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '5.2', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์ไฟฟ้าและวิทยุ (เครื่องกำเนิดไฟฟ้า)', 'data_json' => ['depreciation' => '6.5', 'service_life' => '15'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '6', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์โฆษณาและเผยแพร่', 'data_json' => ['depreciation' => '20.00', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '7.1', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์การเกษตร (เครื่องมือและอุปกรณ์)', 'data_json' => ['depreciation' => '50.00', 'service_life' => '2'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '7.2', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์การเกษตร (เครื่องจักรกล)', 'data_json' => ['depreciation' => '50', 'service_life' => '2'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '8.1', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์โรงงาน (เครื่องมือและอุปกรณ์)', 'data_json' => ['depreciation' => '50.00', 'service_life' => '2'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '8.2', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์โรงงาน (เครื่องจักรกล)', 'data_json' => ['depreciation' => '20', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '9.1', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์ก่อสร้าง (เครื่องมือและอุปกรณ์)', 'data_json' => ['depreciation' => '50', 'service_life' => '2'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '9.2', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์ก่อสร้าง (เครื่องจักกล)', 'data_json' => ['depreciation' => '20', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '10', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์สำรวจ', 'data_json' => ['depreciation' => '12.5', 'service_life' => '8'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '11', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์วิทยาศาสตร์และการแพทย์', 'data_json' => ['depreciation' => '20.00', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '12', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์คอมพิวเตอร์', 'data_json' => ['depreciation' => '33.33', 'service_life' => '3'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '13', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์การศึกษา', 'data_json' => ['depreciation' => '33.33', 'service_life' => '3'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '14', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์งานบ้านงานครัว', 'data_json' => ['depreciation' => '33.33', 'service_life' => '3'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '15', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์กีฬา/กายภาพ', 'data_json' => ['depreciation' => '20', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '16', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์ดนตรี/นาฎศิลป์', 'data_json' => ['depreciation' => '20.0', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '17', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์อาวุธ', 'data_json' => ['depreciation' => '10', 'service_life' => '10'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '3', 'code' => '18', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์สนาม', 'data_json' => ['depreciation' => '50', 'service_life' => '2'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '', 'code' => '19', 'name' => 'asset_type', 'title' => 'ครุภัณฑ์อื่นๆ', 'data_json' => ['depreciation' => '20', 'service_life' => '5'], 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '', 'code' => '20', 'name' => 'asset_type', 'title' => 'สินทรัพย์ไม่มีตัวตัน', 'data_json' => ['depreciation' => '33.3', 'service_life' => '3'], 'active' => 1]);
+
         // ประเถทวัสดุ
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '1', 'name' => 'material_type','title' => 'วัสดุสำนักงาน','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '2', 'name' => 'material_type','title' => 'วัสดุไฟฟูาและวิทยุ','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '3', 'name' => 'material_type','title' => 'วัสดุงานบ้านงานครัว','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '4', 'name' => 'material_type','title' => 'วัสดุก่อสร้าง','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '5', 'name' => 'material_type','title' => 'วัสดุยานพาหนะและขนส่ง','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '6', 'name' => 'material_type','title' => 'วัสดุเชื้อเพลิงและหล่อลื่น','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '7', 'name' => 'material_type','title' => 'วัสดุวิทยาศาสตร์หรือการแพทย์','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '8', 'name' => 'material_type','title' => 'วัสดุการเกษตร','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '9', 'name' => 'material_type','title' => 'วัสดุโฆษณาและเผยแพร่','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '10', 'name' => 'material_type','title' => 'วัสดุเครื่องแต่งกาย','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '11', 'name' => 'material_type','title' => 'วัสดุกีฬา','active' => 1]);
-        $this->insert('categorise', ['category_id' => '4' , 'code' =>  '12', 'name' => 'material_type','title' => 'วัสดุคอมพิวเตอร์','active' => 1]);
-       
-       
+        $this->insert('categorise', ['category_id' => '4', 'code' => '1', 'name' => 'product_type', 'title' => 'วัสดุสำนักงาน', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '2', 'name' => 'product_type', 'title' => 'วัสดุไฟฟูาและวิทยุ', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '3', 'name' => 'product_type', 'title' => 'วัสดุงานบ้านงานครัว', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '4', 'name' => 'product_type', 'title' => 'วัสดุก่อสร้าง', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '5', 'name' => 'product_type', 'title' => 'วัสดุยานพาหนะและขนส่ง', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '6', 'name' => 'product_type', 'title' => 'วัสดุเชื้อเพลิงและหล่อลื่น', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '7', 'name' => 'product_type', 'title' => 'วัสดุวิทยาศาสตร์หรือการแพทย์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '8', 'name' => 'product_type', 'title' => 'วัสดุการเกษตร', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '9', 'name' => 'product_type', 'title' => 'วัสดุโฆษณาและเผยแพร่', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '10', 'name' => 'product_type', 'title' => 'วัสดุเครื่องแต่งกาย', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '11', 'name' => 'product_type', 'title' => 'วัสดุกีฬา', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => '12', 'name' => 'product_type', 'title' => 'วัสดุคอมพิวเตอร์', 'active' => 1]);
 
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_type.sql'));
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_group.sql'));
@@ -845,6 +842,5 @@ class m230720_072431_create_categorise_table extends Migration
     public function safeDown()
     {
         $this->dropTable('{{%categorise}}');
-
     }
 }

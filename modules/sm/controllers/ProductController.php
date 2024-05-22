@@ -4,9 +4,11 @@ namespace app\modules\sm\controllers;
 
 use app\modules\sm\models\Product;
 use app\modules\sm\models\ProductSearch;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
+use yii\web\Response;
+use Yii;
 
 /**
  * ProductController implements the CRUD actions for Product model.
@@ -67,19 +69,34 @@ class ProductController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Product();
+        $model = new Product([
+            'asset_group' => 4,
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+        ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
                 return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                return false;
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
