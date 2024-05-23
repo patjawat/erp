@@ -143,12 +143,16 @@ class Helpdesk extends \yii\db\ActiveRecord
         return $this->hasOne(Asset::class, ['code' => 'code']);
     }
 
-    // ผู้รับผิดชอบ
+    // ผู้แจ่งซ่อม
     public function getUserReq()
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-            return $employee->getAvatar(false);
+
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'department' => $employee->departmentName()
+            ];
         } catch (\Throwable $th) {
             return null;
         }

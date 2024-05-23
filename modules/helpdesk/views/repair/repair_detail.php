@@ -9,20 +9,32 @@ use yii\helpers\Html;
             </td>
         </tr>
         <tr>
-            <td class="text-end"><span class="fw-semibold">ผู้แจ้งซ่อม : </span></td>
-            <td colspan="3">
-                <span class="text-danger"><?= isset($repair->data_json['create_name']) ? $repair->data_json['create_name'] : '' ?></span>
+
+        <td class="text-end" style="width:180px">
+            <span class="fw-semibold">ผู้แจ้งซ่อม : </span></td>
+            <td colspan="3" style="width:200px">
+                <?= $repair->getUserReq()['avatar'] ?>
             </td>
-            <td class="text-end"><span class="fw-semibold">ความเร่งด่วน : </span></td>
-            <td colspan="3"><?= $repair->viewUrgency() ?></td>
-        </tr>
-        <tr>
-            <td class="text-end"><span class="fw-semibold">อาการแจ้งซ่อม : </span></td>
+        <td class="text-end" style="width:200px">
+            <span class="fw-semibold">อาการแจ้งซ่อม : </span></td>
             <td colspan="3">
                 <span class="text-danger"><?= $repair->data_json['title'] ?></span>
             </td>
-            <td class="text-end"><span class="fw-semibold">สภานะงานซ่อม : </span></td>
-            <td colspan="3"><?= $repair->viewStatus() ?></td>
+         
+
+        </tr>
+        <tr>
+        <td class="text-end"><span class="fw-semibold">หน่วยงาน : </span></td>
+            <td colspan="3"><?= $repair->data_json['location'] ?></td>
+        <td class="text-end"><span class="fw-semibold">ความเร่งด่วน : </span></td>
+            <td colspan="3"><?= $repair->viewUrgency() ?></td>
+           
+        </tr>
+        <tr>
+            <td class="text-end"><span class="fw-semibold">ระบุสถานที่อื่นๆ : </span></td>
+                <td colspan="3"><?= $repair->data_json['location_other'] ?></td>
+            <td class="text-end"><span class="fw-semibold">โทรศัพท์ : </span></td>
+            <td colspan="3"><?= isset($repair->data_json['phone']) ? $repair->data_json['phone'] : '-' ?></td>
         </tr>
         <tr>
             <td class="text-end"><span class="fw-semibold">ข้อมูลเพิ่มเติม : </span></td>
@@ -42,7 +54,9 @@ use yii\helpers\Html;
         <?php endif; ?>
         <tr class="align-middle">
             <td class="text-end"><span class="fw-semibold">หน่วยงานรับซ่อม : </span></td>
-            <td colspan="5"><?= $repair->viewRepairGroup(); ?>
+            <td colspan="3"><?= $repair->viewRepairGroup(); ?>
             <?= html::a('แก้ไข', ['/helpdesk/repair/switch-group', 'id' => $repair->id, 'title' => '<i class="fa-solid fa-wrench"></i> หน่วยงานรับซ่อม'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-sm']]) ?>
         </td>
+        <td class="text-end"><span class="fw-semibold">สภานะงานซ่อม : </span></td>
+            <td colspan="3"><?= $repair->viewStatus() ?></td>
         </tr>

@@ -7,8 +7,8 @@ use app\components\CategoriseHelper;
 use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
-use Yii;
 use yii\bootstrap5\Html;
+use Yii;
 
 /**
  * This is the model class for table "employees".
@@ -50,13 +50,12 @@ use yii\bootstrap5\Html;
  * @property int|null $updated_by ผู้แก้ไข
  */
 class Employees extends \yii\db\ActiveRecord
-
 {
     /**
      * {@inheritdoc}
      */
-
     public $show;
+
     public $fulladdress;
     public $fullname;
     public $fullname_en;
@@ -68,7 +67,6 @@ class Employees extends \yii\db\ActiveRecord
     public $nationality;
     public $religion;
     public $marry;
-
     public $_age_generation;
     public $_female;
     public $_female_percen;
@@ -88,13 +86,12 @@ class Employees extends \yii\db\ActiveRecord
     public $_position7;
     public $q_department;
     public $q;
-
     public $date_end;
-    public $age_join_date; // อายุราชการ
-    public $all_status; // สถานะทั้งหมด
+    public $age_join_date;  // อายุราชการ
+    public $all_status;  // สถานะทั้งหมด
+    public $range1;  // ช่วงตัวเลข
+    public $range2;  // ช่วงตัวเลข
 
-    public $range1; // ช่วงตัวเลข
-    public $range2; // ช่วงตัวเลข
     public static function tableName()
     {
         return 'employees';
@@ -106,17 +103,15 @@ class Employees extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-
             [['user_id', 'fname', 'lname', 'phone', 'cid'], 'required'],
             [['user_id', 'province', 'amphure', 'district', 'zipcode', 'department', 'created_by', 'updated_by'], 'integer'],
             [['photo'], 'string'],
-            [['birthday', 'data_json', 'updated_at', 'created_at', 'cid', 'code', 'emp_id', 'education', 'position_group', 'position_name', 'position_number', 'position_level', 'position_type', 'salary', 'show', 'cnt', 'title', '_groupname', '_groupcode', '_depcode', '_position1', '_position2', '_position3', '_position4', '_position5', '_position6', '_position7', '_age_generation', '_female', '_male', '_female_percen', '_male_percen', 'age_join_date', 'fulladdress', 'expertise', 'position_manage', 'age_y','range1','range2','q_department','q'], 'safe'],
+            [['birthday', 'data_json', 'updated_at', 'created_at', 'cid', 'code', 'emp_id', 'education', 'position_group', 'position_name', 'position_number', 'position_level', 'position_type', 'salary', 'show', 'cnt', 'title', '_groupname', '_groupcode', '_depcode', '_position1', '_position2', '_position3', '_position4', '_position5', '_position6', '_position7', '_age_generation', '_female', '_male', '_female_percen', '_male_percen', 'age_join_date', 'fulladdress', 'expertise', 'position_manage', 'age_y', 'range1', 'range2', 'q_department', 'q'], 'safe'],
             [['ref', 'avatar', 'email', 'address', 'status'], 'string', 'max' => 255],
             [['gender', 'prefix'], 'string', 'max' => 20],
             [['phone'], 'string', 'max' => 20],
             [['fname', 'lname', 'fname_en', 'lname_en'], 'string', 'max' => 200],
             //  ['phone', 'unique', 'targetClass' => 'app\modules\employees\models\Employees', 'message' => 'เบอร์โทรศัพท์ถูกใช้แล้ว'],
-
             // [['cid'], 'validateIdCard'],
         ];
     }
@@ -134,8 +129,7 @@ class Employees extends \yii\db\ActiveRecord
     public function validateIdCard()
     {
         try {
-
-            $id = str_split(str_replace('-', '', $this->cid)); //ตัดรูปแบบและเอา ตัวอักษร ไปแยกเป็น array $id
+            $id = str_split(str_replace('-', '', $this->cid));  // ตัดรูปแบบและเอา ตัวอักษร ไปแยกเป็น array $id
             $sum = 0;
             $total = 0;
             $digi = 13;
@@ -146,12 +140,12 @@ class Employees extends \yii\db\ActiveRecord
             }
             $total = (11 - ($sum % 11)) % 10;
 
-            if ($total != $id[12]) { //ตัวที่ 13 มีค่าไม่เท่ากับผลรวมจากการคำนวณ ให้ add error
+            if ($total != $id[12]) {  // ตัวที่ 13 มีค่าไม่เท่ากับผลรวมจากการคำนวณ ให้ add error
                 $this->addError('cid', 'หมายเลขบัตรประชาชนไม่ถูกต้อง');
             }
-            //code...
+            // code...
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
         }
     }
 
@@ -192,13 +186,11 @@ class Employees extends \yii\db\ActiveRecord
             'created_at' => 'Created At',
             'created_by' => 'ผู้สร้าง',
             'updated_by' => 'ผู้แก้ไข',
-
         ];
     }
 
     public function beforeSave($insert)
     {
-
         $this->birthday = AppHelper::DateToDb($this->birthday);
         // $this->join_date = $this->join_date;
         $this->cid = AppHelper::SaveCid($this->cid);
@@ -216,7 +208,7 @@ class Employees extends \yii\db\ActiveRecord
         try {
             // $this->cid = AppHelper::cidFormat($this->cid);
 
-            if ($this->UpdateFormDetail()['new_fullname']) { //ถ้ามีการเปลี่ยนชื่อ
+            if ($this->UpdateFormDetail()['new_fullname']) {  // ถ้ามีการเปลี่ยนชื่อ
                 $this->fullname = $this->UpdateFormDetail()['new_fullname'];
             } else {
                 $this->fullname = $this->prefix . $this->fname . ' ' . $this->lname;
@@ -237,9 +229,7 @@ class Employees extends \yii\db\ActiveRecord
             $this->marry = isset($this->data_json['marry']) ? $this->data_json['marry'] : null;
             $this->fulladdress = $this->address . ' ' . (isset($this->data_json['address2']) ? $this->data_json['address2'] : null);
             // $this->status = $this->UpdateFormDetail()['status'] ? $this->UpdateFormDetail()['status'] : '-';
-            
         } catch (\Throwable $th) {
-            
         }
         $this->age_y = AppHelper::Age($this->birthday, true);
 
@@ -251,21 +241,21 @@ class Employees extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
-    public function getAvatar($showAge=true)
+    public function getAvatar($showAge = true)
     {
-        $img = Html::img($this->showAvatar(), ['class' => 'avatar avatar-md bg-primary text-white']);
+        $img = Html::img($this->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
         return '<div class="d-flex">'
-        . $img . '
+            . $img . '
         <div class="avatar-detail">
             <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
-        . Html::a($this->fullname,
-            ["/hr/employees/view", "id" => $this->id],
-            ["class" => ""]) . '
+            . Html::a($this->fullname,
+                ['/hr/employees/view', 'id' => $this->id],
+                ['class' => '']) . '
             </h6>
             <p class="text-muted mb-0 fs-13">' . $this->positionName() . ' <code>(' . $this->positionTypeName() . ')</code></p>
-            '.($showAge ? '<p class="text-muted mb-0 fs-13">อายุ '. $this->age : '').'</p>
+            ' . ($showAge ? '<p class="text-muted mb-0 fs-13">อายุ ' . $this->age . '</p>' : '') . '
         </div>
     </div>';
     }
@@ -277,17 +267,16 @@ class Employees extends \yii\db\ActiveRecord
     public function Retire()
     {
         try {
-
             $birthday = AppHelper::DateToDb($this->birthday);
-            $age = 60; //รับค่าอายุที่จะเกษียณ
+            $age = 60;  // รับค่าอายุที่จะเกษียณ
 
-            $color = "";
+            $color = '';
 
             if (substr($birthday, 5, 2) >= 10) {
                 $age += 1;
             }
             // ถ้าเลยปีงบประมาณแล้ว ให้ไปอยู่ในปีข้างหน้า
-            $date_retire = (substr($birthday, 0, 4) + $age) . "-09-30"; //สิ้นปีงบประมาณ หน่วยงานราชการ
+            $date_retire = (substr($birthday, 0, 4) + $age) . '-09-30';  // สิ้นปีงบประมาณ หน่วยงานราชการ
             // return $date_retire;
             $currentDate = new \DateTime();
             $date1 = new \DateTime($birthday);
@@ -295,50 +284,44 @@ class Employees extends \yii\db\ActiveRecord
             $totalDays = $date1->diff($date2)->days;
             $currentDays = $date1->diff($currentDate)->days;
             $progress = ($currentDays / $totalDays) * 100;
-            if(100-$progress >= 70){
+            if (100 - $progress >= 70) {
                 $color = 'success';
-            }elseif(100-$progress >= 30){
+            } elseif (100 - $progress >= 30) {
                 $color = 'warning';
-            }else{
+            } else {
                 $color = 'danger';
             }
             return [
-                'date' =>  AppHelper::DateFormDb($date_retire),
-                'progress' => 100-$progress,
+                'date' => AppHelper::DateFormDb($date_retire),
+                'progress' => 100 - $progress,
                 'color' => $color
             ];
-           
 
-            //code...
+            // code...
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
         }
     }
 
-    //ครบ 60 ปี
+    // ครบ 60 ปี
     public function year60()
     {
         try {
-
             $date = explode('-', AppHelper::DateToDb($this->birthday));
             return Yii::$app->thaiFormatter->asDate(($date[0] + 60) . '-' . $date[1] . '-' . $date[2], 'medium');
-            //code...
+            // code...
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
         }
-
     }
 
-//การครลกำหนด
+    // การครลกำหนด
     public function due()
     {
         if ($this->position_type == 5 || $this->position_type == 6 || $this->position_type == 7) {
             $text = 'ครบกำหนดสัญญา';
-
         } else {
-
             $text = 'ครบกำหนดเกษียณ';
-
         }
         return [
             'label' => $text,
@@ -348,7 +331,7 @@ class Employees extends \yii\db\ActiveRecord
     // Category List
 
     // count form position Show Dashbroad
-// แสดงหน้า dashboard
+    // แสดงหน้า dashboard
     public function WorkgroupSummary($dep_id)
     {
         $data = [];
@@ -357,14 +340,12 @@ class Employees extends \yii\db\ActiveRecord
             $data[] = self::find()->where(['department' => $dep_id, 'position_type' => $key])->count();
         }
         return $data;
-
     }
 
-    //กลุ่มงาน
+    // กลุ่มงาน
     public function leader()
     {
         try {
-
             $model = Categorise::findOne(['code' => $this->empDepartment->category_id, 'name' => 'workgroup']);
             $leader = isset($model->data_json['leader']) ? $model->data_json['leader'] : null;
             if ($leader) {
@@ -373,7 +354,7 @@ class Employees extends \yii\db\ActiveRecord
                 return null;
             }
             return null;
-            //code...
+            // code...
         } catch (\Throwable $th) {
             return null;
         }
@@ -403,7 +384,6 @@ class Employees extends \yii\db\ActiveRecord
                 'subtitle' => 'ประวัติการศึกษา/คุณวุฒิต่างๆ',
                 'count' => count($this->educations),
             ],
-
             [
                 'title' => 'ข้อมูลครอบครัว',
                 'icon' => '<i class="fa-solid fa-people-roof avatar-title text-primary"></i> ',
@@ -474,9 +454,9 @@ class Employees extends \yii\db\ActiveRecord
                 'subtitle' => 'ประวัติการแต่งตั้งตำแหน่งบริหาร',
                 'count' => 0,
             ],
-
         ];
     }
+
     // คำนำหน้า
     public function ListPrefixTh()
     {
@@ -494,11 +474,12 @@ class Employees extends \yii\db\ActiveRecord
         return CategoriseHelper::PrefixEn();
     }
 
-    //ภูมิลำเนาเดิม
+    // ภูมิลำเนาเดิม
     public function ListBorn()
     {
         return CategoriseHelper::Born();
     }
+
     // สัญชาติ
     public function ListEthnicity()
     {
@@ -510,6 +491,7 @@ class Employees extends \yii\db\ActiveRecord
     {
         return CategoriseHelper::Nationality();
     }
+
     // สถานภาพสมรส
     public function ListMarry()
     {
@@ -527,6 +509,7 @@ class Employees extends \yii\db\ActiveRecord
     {
         return CategoriseHelper::Religion();
     }
+
     // ประเภทการเปลียนชื่อ
     public function ListRenameType()
     {
@@ -537,110 +520,124 @@ class Employees extends \yii\db\ActiveRecord
     {
         return CategoriseHelper::PositionType();
     }
-// ระดับของข้าราชการ
+
+    // ระดับของข้าราชการ
     public function ListPositionLevel()
     {
         return CategoriseHelper::PositionLevel();
     }
 
-    //กลุ่มงาน
+    // กลุ่มงาน
     public function ListPositionGroup()
     {
         return CategoriseHelper::PositionGroup();
     }
 
-    //ตำแหน่งบริหาร
+    // ตำแหน่งบริหาร
     public function ListPositionManage()
     {
         return CategoriseHelper::PositionManage();
     }
-    //ความเชี่ยวชาญ
+
+    // ความเชี่ยวชาญ
     public function ListExpertise()
     {
         return CategoriseHelper::Expertise();
     }
 
-    //ชื่อตำแหน่ง
+    // ชื่อตำแหน่ง
     public function ListPositionName()
     {
         return CategoriseHelper::PositionName();
     }
 
-    //ชื่อตำแหน่ง Ajax Template
+    // ชื่อตำแหน่ง Ajax Template
     public function ListPositionNameAjaxTemplate()
     {
         return CategoriseHelper::PositionNameAjaxTemplate();
     }
 
-    //สถานะ
+    // สถานะ
     public function ListStatus()
     {
         return CategoriseHelper::EmpStatus();
     }
+
     // แผนก
     public function ListDepartment()
     {
         return CategoriseHelper::Department();
     }
 
-    //รายการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ และข้อมูลรายงาน
+    // รายการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ และข้อมูลรายงาน
     public function ListDevelop()
     {
         return CategoriseHelper::Develop();
     }
-    //ลักษณะการไป
+
+    // ลักษณะการไป
     public function ListFollowby()
     {
         return CategoriseHelper::Followby();
     }
     // End Category list
 
-    //คำนวนวันที่เริ่มต้นทำงานจากการแต่งตั้ง
+    // คำนวนวันที่เริ่มต้นทำงานจากการแต่งตั้ง
     public function joinDate()
     {
         try {
             // $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $this->id])->all();
             // return count($model);
-            $queryCheck = Yii::$app->db->createCommand("SELECT count(id) FROM employee_detail WHERE emp_id = :emp_id AND name = 'position'")
-            ->bindValue(':emp_id',$this->id)
-            ->queryScalar();
+            $queryCheck = Yii::$app
+                ->db
+                ->createCommand("SELECT count(id) FROM employee_detail WHERE emp_id = :emp_id AND name = 'position'")
+                ->bindValue(':emp_id', $this->id)
+                ->queryScalar();
             // return count($model);
             if ($queryCheck >= 2) {
-
-                $sql = "SELECT CAST(JSON_UNQUOTE(JSON_EXTRACT(e.data_json,'$.date_start'))  AS DATE) as date_start FROM employee_detail e WHERE e.emp_id = $this->id AND JSON_EXTRACT(e.data_json,'$.date_start') > (SELECT e2.data_json->'$.date_start' as date_start FROM employee_detail e2 WHERE e2.emp_id =  $this->id AND JSON_EXTRACT(e2.data_json,'$.status') = '2' ORDER BY date_start desc limit 1) limit 1;";
-                $query = Yii::$app->db->createCommand($sql)
-                //  ->bindParam(':emp_id', '2')
+                $sql = "SELECT CAST(JSON_UNQUOTE(JSON_EXTRACT(e.data_json,'\$.date_start'))  AS DATE) as date_start FROM employee_detail e WHERE e.emp_id = $this->id AND JSON_EXTRACT(e.data_json,'\$.date_start') > (SELECT e2.data_json->'\$.date_start' as date_start FROM employee_detail e2 WHERE e2.emp_id =  $this->id AND JSON_EXTRACT(e2.data_json,'\$.status') = '2' ORDER BY date_start desc limit 1) limit 1;";
+                $query = Yii::$app
+                    ->db
+                    ->createCommand($sql)
+                    //  ->bindParam(':emp_id', '2')
                     ->queryOne();
 
                 //  return $query;
                 if ($query) {
                     return $query['date_start'];
                 } else {
-                    $data = EmployeeDetail::find()->where(['emp_id' => $this->id, 'name' => 'position'])
+                    $data = EmployeeDetail::find()
+                        ->where(['emp_id' => $this->id, 'name' => 'position'])
                         ->orderBy([
-                            new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') asc"),
+                            new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
                             'id' => SORT_DESC,
-                        ])->one();
+                        ])
+                        ->one();
                     return $data->data_json['date_start'];
                 }
             } else {
-                $data = EmployeeDetail::find()->where(['emp_id' => $this->id, 'name' => 'position'])
+                $data = EmployeeDetail::find()
+                    ->where(['emp_id' => $this->id, 'name' => 'position'])
                     ->orderBy([
-                        new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') asc"),
+                        new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
                         'id' => SORT_DESC,
-                    ])->one();
+                    ])
+                    ->one();
                 return $data->data_json['date_start'];
             }
-            //code...
+            // code...
         } catch (\Throwable $th) {
             return false;
         }
     }
+
     // วันลาออก เกษียร
     public function endDate()
     {
-        $sql = "SELECT data_json->'$.date_start' as date_start FROM employee_detail WHERE emp_id = 1 AND JSON_EXTRACT(data_json,'$.status') = '2' ORDER BY data_json->'$.date_start' ASC limit 1";
-        $query = Yii::$app->db->createCommand($sql)
+        $sql = "SELECT data_json->'\$.date_start' as date_start FROM employee_detail WHERE emp_id = 1 AND JSON_EXTRACT(data_json,'\$.status') = '2' ORDER BY data_json->'\$.date_start' ASC limit 1";
+        $query = Yii::$app
+            ->db
+            ->createCommand($sql)
             ->queryOne();
         return $query['date_start'];
     }
@@ -657,20 +654,23 @@ class Employees extends \yii\db\ActiveRecord
             'old_fullname' => $rename ? $rename->old_fullname : null,
             'new_fullname' => $rename ? $rename->new_fullname : null,
         ];
-
     }
-    //สมาชิกที่อยู่ในแผนกเดียวกัน
+
+    // สมาชิกที่อยู่ในแผนกเดียวกัน
     public function listMenberOnDep()
     {
         return self::find()
-            ->where(['department' => $this->department])->all();
+            ->where(['department' => $this->department])
+            ->all();
     }
 
     public function getDetail($name)
     {
         $id = $this->id;
-        $sql = "SELECT *,JSON_EXTRACT(data_json, '$.date_start') AS date_start FROM `employee_detail` WHERE name=:name AND emp_id = :emp_id ORDER by date_start desc LIMIT 1;";
-        $query = Yii::$app->db->createCommand($sql)
+        $sql = "SELECT *,JSON_EXTRACT(data_json, '\$.date_start') AS date_start FROM `employee_detail` WHERE name=:name AND emp_id = :emp_id ORDER by date_start desc LIMIT 1;";
+        $query = Yii::$app
+            ->db
+            ->createCommand($sql)
             ->bindParam(':emp_id', $id)
             ->bindParam(':name', $name)
             ->queryOne();
@@ -679,7 +679,7 @@ class Employees extends \yii\db\ActiveRecord
         }
     }
 
-    //section Relationships
+    // section Relationships
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
@@ -693,36 +693,38 @@ class Employees extends \yii\db\ActiveRecord
             return null;
         }
     }
+
     public function getAmphureName()
     {
         return $this->hasOne(Amphure::class, ['id' => 'amphure']);
     }
+
     public function getDistrictcName()
     {
         return $this->hasOne(District::class, ['id' => 'district']);
     }
 
-    //แสดงสถานะ
-//      public function statusName()
-//      {
-//          $model = CategoriseHelper::CategoriseByCodeName($this->status, 'emp_status');
-//          if ($model) {
-//              return $model->title;
-//          } else {
-//              return null;
-//          }
-//      }
-    //สภานะ
+    // แสดงสถานะ
+    //      public function statusName()
+    //      {
+    //          $model = CategoriseHelper::CategoriseByCodeName($this->status, 'emp_status');
+    //          if ($model) {
+    //              return $model->title;
+    //          } else {
+    //              return null;
+    //          }
+    //      }
+    // สภานะ
     public function statusName()
     {
         return isset($this->statusName) ? $this->statusName->title : $this->status;
-
     }
-    //แสดงชื่อตำแหน่ง
+
+    // แสดงชื่อตำแหน่ง
     public function positionName($arr = [])
     {
         $level = $this->positionLevelName() ? ' (ระดับ' . $this->positionLevelName() . ')' : '';
-        if (array_key_exists("icon", $arr) && $arr['icon'] == true) {
+        if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
             $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
         } else {
             $isIcon = null;
@@ -740,7 +742,7 @@ class Employees extends \yii\db\ActiveRecord
         // $model = CategoriseHelper::TreeById($this->position_name);
     }
 
-    //แสดงประเภทตำแหน่ง
+    // แสดงประเภทตำแหน่ง
     public function positionTypeName()
     {
         try {
@@ -750,7 +752,8 @@ class Employees extends \yii\db\ActiveRecord
             return false;
         }
     }
-    //แสดงประเภท/กลุ่มงาน
+
+    // แสดงประเภท/กลุ่มงาน
     public function positionGroupName()
     {
         try {
@@ -758,31 +761,28 @@ class Employees extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return false;
         }
-
     }
 
     public function positionManageName()
     {
         // return isset($this->positionManage) ? $this->positionManage->title : $this->position_manage;
         return '-';
-
     }
 
-//      //แสดงประเภทตำแหน่ง
-//      public function positionType()
-//      {
-//          $model = CategoriseHelper::CategoriseByCodeName($this->status, 'position_type');
-//          if ($model) {
-//              return $model->title;
-//          } else {
-//              return null;
-//          }
-//      }
+    //      //แสดงประเภทตำแหน่ง
+    //      public function positionType()
+    //      {
+    //          $model = CategoriseHelper::CategoriseByCodeName($this->status, 'position_type');
+    //          if ($model) {
+    //              return $model->title;
+    //          } else {
+    //              return null;
+    //          }
+    //      }
 
-//แสดงระดับของข้าราชการ
+    // แสดงระดับของข้าราชการ
     public function positionLevelName()
     {
-
         return isset($this->data_json['position_level_text']) ? $this->data_json['position_level_text'] : false;
     }
 
@@ -790,12 +790,12 @@ class Employees extends \yii\db\ActiveRecord
     {
         $model = CategoriseHelper::CategoriseByCodeName($this->education, 'education');
         return $model ? $model->title : '-';
-        //return isset($this->educations) ? $this->educations->title : $this->education;
+        // return isset($this->educations) ? $this->educations->title : $this->education;
     }
 
     public function departmentName()
     {
-        return  isset($this->data_json['department_text']) ? $this->data_json['department_text'] : null; 
+        return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : null;
         // return isset($this->empDepartment) ? $this->empDepartment->title : $this->department;
     }
 
@@ -835,7 +835,7 @@ class Employees extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'position_level'])->andOnCondition(['name' => 'position_level']);
     }
 
-    //Relation ประเภท/กลุ่มงาน
+    // Relation ประเภท/กลุ่มงาน
     public function getPositionGroup()
     {
         return $this->hasOne(Categorise::class, ['code' => 'position_group'])->andOnCondition(['name' => 'position_group']);
@@ -858,65 +858,69 @@ class Employees extends \yii\db\ActiveRecord
     //     return $this->hasOne(Uploads::class, ['ref' => 'ref']);
     // }
 
-// การศึกษ
+    // การศึกษ
     public function getEducations()
     {
-        return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])
+        return $this
+            ->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])
             ->orderBy([
-                new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_end') desc"),
+                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_end') desc"),
                 'id' => SORT_DESC,
             ])
             ->andOnCondition(['name' => 'education']);
     }
-//ประวัติการดำรงตำแหน่ง
+
+    // ประวัติการดำรงตำแหน่ง
     public function getPositions()
     {
-        return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])
+        return $this
+            ->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])
             ->orderBy([
-                new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc"),
+                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"),
                 'id' => SORT_DESC,
             ])
-
-        // ->orderBy(
-        // )
+            // ->orderBy(
+            // )
             ->andOnCondition(['name' => 'position']);
     }
 
-    //ประวัติการเปลี่ยนชื่อ
+    // ประวัติการเปลี่ยนชื่อ
     public function getHisRename()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'rename']);
     }
 
-    //ใบอนุญาต
+    // ใบอนุญาต
     public function getLicenses()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'license_name']);
     }
 
-    //ประวัติครอบครัว
+    // ประวัติครอบครัว
     public function getFamilys()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'family']);
     }
 
-    //รางวัลเชิดชูเกียรติ
+    // รางวัลเชิดชูเกียรติ
     public function getAwards()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'award']);
     }
-    //เครื่องราชอิสริยาภรณ์
+
+    // เครื่องราชอิสริยาภรณ์
     public function getInsignias()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'insignia']);
     }
-    //ประวัติการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ
+
+    // ประวัติการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ
     public function getDevelop()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'develop']);
     }
 
-    //ประวัติการรับทุน
+    // ประวัติการรับทุน
     public function getScholarships()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'scholarships']);
@@ -928,20 +932,19 @@ class Employees extends \yii\db\ActiveRecord
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'blame']);
     }
 
-        // ข้อมูลสวัสดิการ
-        public function getBenefits()
-        {
-            return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'benefit']);
-        }
-    
+    // ข้อมูลสวัสดิการ
+    public function getBenefits()
+    {
+        return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'benefit']);
+    }
 
-    //ประวัติการรับตำแหน่งบริกสน
+    // ประวัติการรับตำแหน่งบริกสน
     public function getPositionManage()
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'position_manage']);
     }
 
-    //End Relationships
+    // End Relationships
 
     public function ShowAvatar($class = null)
     {
@@ -953,15 +956,13 @@ class Employees extends \yii\db\ActiveRecord
             if ($model) {
                 // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
                 return FileManagerHelper::getImg($model->id);
-
             } else {
                 return Yii::getAlias('@web') . '/img/placeholder_cid.png';
             }
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             return Yii::getAlias('@web') . '/img/placeholder_cid.png';
         }
-
     }
 
     public function fullname()

@@ -330,12 +330,14 @@ class RepairController extends Controller
             $repair_group = '';
         }
 
+        $emp = UserHelper::GetEmployee();
         $model = new Helpdesk([
             'name' => 'repair',
             'code' => $code,
             'repair_group' => $repair_group,
             'data_json' => [
-                'send_type' => $this->request->get('send_type')
+                'send_type' => $this->request->get('send_type'),
+                'location' => $emp->departmentName()
             ]
         ]);
 
@@ -539,7 +541,9 @@ class RepairController extends Controller
             'accept_name' => $user->fullname,
             'accept_time' => date('Y-m-d H:i:s'),
         ];
-        $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
+        $model->data_json = ArrayHelper::merge(
+            $newObj, $model->data_json
+        );
         $model->status = 2;
         $model->save();
 
