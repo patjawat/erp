@@ -3,7 +3,7 @@ use yii\helpers\Url;
 ?>
 <div class="row">
     <div class="col-xl-8 col-lg-8 col-md-6 col-sm-12 col-sx-12">
-        <?=$this->render('@app/modules/hr/views/employees/avatar',['model' => $model])?>
+        <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
         <!-- <div class="card">
     <div class="card-body">
         <h6>บันทึกการแจ้งซ่อม</h6> -->
@@ -20,7 +20,7 @@ use yii\helpers\Url;
     <div class="col-4">
         <div class="card">
             <div class="card-body">
-                <?=$this->render('leave_total')?>
+                <?= $this->render('leave_total') ?>
             </div>
         </div>
 
@@ -42,30 +42,30 @@ use yii\helpers\Url;
 </div>
 
 <?php
-$urlRepair = Url::to(['/helpdesk/repair/history']);
+$urlRepair = Url::to(['/me/repair-me']);
 $js = <<< JS
 
-loadRepairHostory()
+    loadRepairHostory()
 
-//ประวัติการซ่อม
-function  loadRepairHostory(){
-    $.ajax({
-        type: "get",
-        url: "$urlRepair",
-        data:{
-            "title":"ประวัติการซ่อม",
-            "name":"repair",
-        },
-        dataType: "json",
-        success: function (res) {
-            if(res.summary > 0){
-                $('#viewRepairHistory').html(res.content);
+    //ประวัติการซ่อม
+    function  loadRepairHostory(){
+        \$.ajax({
+            type: "get",
+            url: "$urlRepair",
+            data:{
+                "title":"ประวัติการซ่อม",
+                "name":"repair",
+            },
+            dataType: "json",
+            success: function (res) {
+                if(res.summary > 0){
+                    \$('#viewRepairHistory').html(res.content);
+                }
             }
-        }
-    });
-}
+        });
+    }
 
 
-JS;
+    JS;
 $this->registerJS($js, yii\web\View::POS_END);
 ?>
