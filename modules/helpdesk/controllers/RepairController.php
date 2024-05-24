@@ -219,7 +219,7 @@ class RepairController extends Controller
                 ]),
             ];
         } else {
-            return $this->render('index', [
+            return $this->render('history', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);

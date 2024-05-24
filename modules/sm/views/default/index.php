@@ -271,7 +271,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="col-12">
      <!-- รายการใบขอซื้อ -->
-        <?php //  $this->render('pr_order_list') ?>
         <div id="showPrOrderList"></div>
 
     </div>

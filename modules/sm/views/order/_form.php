@@ -1,6 +1,7 @@
 <?php
 
 use app\modules\am\models\Asset;
+use kartik\datecontrol\DateControl;
 use kartik\form\ActiveField;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
@@ -54,14 +55,23 @@ $this->params['breadcrumbs'][] = $this->title;
                     ])->label('เพื่อจัดซื้อ/ซ่อมแซม');
                 ?>
                 <?php
-                    echo $form->field($model, 'data_json[start_job_date]')->widget(DatePicker::classname(), [
-                        'options' => ['placeholder' => 'ระบุวันที่ต้องการ ...'],
-                        'language' => 'th',
-                        'pluginOptions' => [
-                            'autoclose' => true,
-                            'format' => 'mm/dd/yyyy'
-                        ],
-                    ])->label('วันที่ต้องการ')
+                    echo $form->field($model, 'data_json[due_date]')->widget(DateControl::classname(), [
+                        'type' => DateControl::FORMAT_DATE,
+                        'ajaxConversion' => false,
+                        'widgetOptions' => [
+                            'pluginOptions' => [
+                                'autoclose' => true
+                            ]
+                        ]
+                    ])->label('วันที่ต้องการ');
+                    // echo $form->field($model, 'data_json[due_date]')->widget(DatePicker::classname(), [
+                    //     'options' => ['placeholder' => 'ระบุวันที่ต้องการ ...'],
+                    //     'language' => 'th',
+                    //     'pluginOptions' => [
+                    //         'autoclose' => true,
+                    //         'format' => 'mm/dd/yyyy'
+                    //     ],
+                    // ])->label('วันที่ต้องการ')
                 ?>
 
                 <?= $form->field($model, 'data_json[vendor]')->textInput()->label('บริษัทแนะนำ') ?>

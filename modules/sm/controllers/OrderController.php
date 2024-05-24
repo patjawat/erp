@@ -94,13 +94,16 @@ class OrderController extends Controller
      */
     public function actionCreate()
     {
+        $thaiYear = substr((date('Y') + 543), 2);
         $model = new Order([
             'name' => $this->request->get('name'),
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save(false)) {
+            if ($model->load($this->request->post())) {
+                $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
+                $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 return false;
@@ -135,13 +138,30 @@ class OrderController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $model->save(false);
+                return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                return false;
+            }
+        } else {
+            $model->loadDefaultValues();
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

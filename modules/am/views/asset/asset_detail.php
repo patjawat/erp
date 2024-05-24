@@ -1,8 +1,9 @@
 <?php
-use yii\helpers\Url;
-use yii\helpers\Html;
 use app\components\UserHelper;
-$assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-').' รหัส : <code>'.$model->code.'</code>';
+use yii\helpers\Html;
+use yii\helpers\Url;
+
+$assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-') . ' รหัส : <code>' . $model->code . '</code>';
 ?>
 
 
@@ -24,9 +25,9 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                     <i class="bi bi-caret-down-fill"></i>
                 </button>
                 <ul class="dropdown-menu" style="">
-                    <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่',['/am/asset-detail/create','id' => $model->id,'name' =>'ma',"title"=>'เพิ่มการบำรุงรักษา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่', ['/am/asset-detail/create', 'id' => $model->id, 'name' => 'ma', 'title' => 'เพิ่มการบำรุงรักษา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </li>
-        <li><?=Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า',['/sm/asset-item/update','id' => $model->assetItem->id,'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+        <li><?= Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า', ['/sm/asset-item/update', 'id' => $model->assetItem->id, 'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
             </ul>
     </div>
     </li>
@@ -36,7 +37,7 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
         <a class="nav-link" data-bs-toggle="pill" href="#assetItems"><i class="fa-solid fa-list-check"></i>
             ครุภัณฑ์ภายใน</a>
     </li>
-    <?php endif;?>
+    <?php endif; ?>
 
     <!-- ถ้าเป็นเครื่องมือแพทย์ -->
     <?php if ($model->isMedical()): ?>
@@ -59,7 +60,7 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
 </div>
 </li>
 
-<?php endif;?>
+<?php endif; ?>
 </ul>
 <div>
 
@@ -83,20 +84,20 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
     <?php if ($model->isCar()): ?>
     <div id="assetItems" class="tab-pane">
 
-        <?=$this->render('show/list', [
+        <?= $this->render('show/list', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-        ]);?>
+        ]); ?>
 
     </div>
-    <?php endif;?>
+    <?php endif; ?>
     <!-- ถ้าเป็นเครื่องมือแพทย์ -->
     <?php if ($model->isMedical()): ?>
     <div id="calibration" class="tab-pane">
         สอบเทียบ
         <div id="viewCalibration" class="mt-4"></div>
     </div>
-    <?php endif;?>
+    <?php endif; ?>
 </div>
 
 </div>
@@ -105,82 +106,81 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
 $url = Url::to(['/am/asset-detail']);
 $urlRepair = Url::to(['/helpdesk/repair/history']);
 $js = <<< JS
-loadCalibration();
-loadRepairHostory()
-loadMa()
-// assetItems()
-//สอบเทียบ
-function  loadCalibration(){
-    $.ajax({
-        type: "get",
-        url: "$url",
-        data:{
-            "title":"สอบเทียบ",
-            "name":"calibration"
-        },
-        dataType: "json",
-        success: function (res) {
-            $('#viewCalibration').html(res.content);
-            console.log(res.content);
-        }
-    });
-}
-//ประวัติการซ่อม
-function  loadRepairHostory(){
-    $.ajax({
-        type: "get",
-        url: "$urlRepair",
-        data:{
-            "title":"ประวัติการซ่อม",
-            "name":"repair",
-            "code":"$model->code"
-        },
-        dataType: "json",
-        success: function (res) {
-            $('#viewRepairHistory').html(res.content);
-            console.log(res.content);
-        }
-    });
-}
+    loadCalibration();
+    loadRepairHostory()
+    loadMa()
+    // assetItems()
+    //สอบเทียบ
+    function  loadCalibration(){
+        \$.ajax({
+            type: "get",
+            url: "$url",
+            data:{
+                "title":"สอบเทียบ",
+                "name":"calibration"
+            },
+            dataType: "json",
+            success: function (res) {
+                \$('#viewCalibration').html(res.content);
+                console.log(res.content);
+            }
+        });
+    }
+    //ประวัติการซ่อม
+    async function  loadRepairHostory(){
+        await \$.ajax({
+            type: "get",
+            url: "$urlRepair",
+            data:{
+                "title":"ประวัติการซ่อม",
+                "name":"repair",
+                "code":"$model->code"
+            },
+            dataType: "json",
+            success: function (res) {
+                \$('#viewRepairHistory').html(res.content);
+            }
+        });
+    }
 
-//การบำรุงรักษา
-function  loadMa(){
-    $.ajax({
-        type: "get",
-        url: "$url",
-        data:{
-            "title":"การบำรุงรักษา",
-            "name":"ma",
-            "id" : "$model->id",
-            "code" : "$model->code",
-        },
-        dataType: "json",
-        success: function (res) {
-            $('#viewMa').html(res.content);
-            console.log(res.content);
-        }
-    });
-}
+    //การบำรุงรักษา
+    function  loadMa(){
+        \$.ajax({
+            type: "get",
+            url: "$url",
+            data:{
+                "title":"การบำรุงรักษา",
+                "name":"ma",
+                "id" : "$model->id",
+                "code" : "$model->code",
+            },
+            dataType: "json",
+            success: function (res) {
+                \$('#viewMa').html(res.content);
+                console.log(res.content);
+            }
+        });
+    }
 
-//ครุภัณฑ์ภายใน
-// function assetItems(){
-//     $.ajax({
-//         type: "get",
-//         url: "$url",
-//         data:{
-//             "title":"ครุภัณฑ์ภายใน",
-//             "name":"assetItems",
-//             "id" : "$model->id",
-//             "code" : "$model->code",
-//         },
-//         dataType: "json",
-//         success: function (res) {
-//             $('#viewAssetItems').html(res.content);
-//             console.log(res.content);
-//         }
-//     });
-// }
+    //ครุภัณฑ์ภายใน
+    // function assetItems(){
+    //     \$.ajax({
+    //         type: "get",
+    //         url: "$url",
+    //         data:{
+    //             "title":"ครุภัณฑ์ภายใน",
+    //             "name":"assetItems",
+    //             "id" : "$model->id",
+    //             "code" : "$model->code",
+    //         },
+    //         dataType: "json",
+    //         success: function (res) {
+    //             \$('#viewAssetItems').html(res.content);
+    //             console.log(res.content);
+    //         }
+    //     });
+    // }
 
-JS;
+    JS;
 $this->registerJS($js, yii\web\View::POS_END);
 ?>

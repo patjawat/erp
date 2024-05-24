@@ -80,6 +80,38 @@ class Order extends \yii\db\ActiveRecord
         ];
     }
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
+                'value' => new Expression('NOW()'),
+            ],
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+        ];
+    }
+
+    // ผู้ขอ
+    public function getUserReq()
+    {
+        try {
+            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'department' => $employee->departmentName()
+            ];
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
     public function ListProductType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');

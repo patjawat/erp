@@ -34,29 +34,43 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="card">
             <div class="card-body">
-            <table class="table table-striped-columns">
+                <div class="d-flex justify-content-between">
+                    <p><i class="fa-solid fa-bag-shopping fs-3"></i> ใบขอซื้อ</p>
+                    <p class="">
+                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?= Html::a('<i class="fa-regular fa-trash-can"></i> ยกเลิก', ['delete', 'id' => $model->id], [
+                            'class' => 'btn btn-sm btn-danger rounded-pill ',
+                            'data' => [
+                                'confirm' => 'Are you sure you want to delete this item?',
+                                'method' => 'post',
+                            ],
+                        ]) ?>
+                    </p>
+                </div>
+                <table class="table table-striped-columns">
                     <tbody>
                         <tr class="">
                             <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
-                            <td>PR-670001</td>
+                            <td><?= $model->code ?></td>
                             <td>ผู้ขอ</td>
-                            <td>นายปัจวัฒน์ ศรีบุญเรือง</td>
+                            <td> <?= $model->getUserReq()['avatar'] ?></td>
                         </tr>
                         <tr class="">
                             <td class="text-end">วันที่ขอซื้อ</td>
-                            <td>Item</td>
-                            <td>Item</td>
+                            <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->created_at, 'medium') ?></td>
+                            <td>เรื่อง</td>
                             <td>Item</td>
                         </tr>
                         <tr class="">
                             <td class="text-end">วันที่ต้องการ</td>
-                            <td>Item</td>
-                            <td>Item</td>
-                            <td>Item</td>
+
+                            <td> <?php echo Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') ?></td>
+                            <td>เหตุผล</td>
+                            <td><?= $model->data_json['comment'] ?></td>
                         </tr>
                     </tbody>
                 </table>
-               
+
             </div>
         </div>
 
@@ -73,7 +87,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th scope="col">ราคาต่อหน่วย</th>
                                 <th scope="col">จำนวนเงิน</th>
                                 <th class="d-flex justify-content-center gap-2">
-                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>    
+                                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             </tr>
                         </thead>
                         <tbody>

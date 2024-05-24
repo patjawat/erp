@@ -5,6 +5,7 @@ use yii\helpers\Url;
 ?>
 <div class="card">
             <div class="card-body">
+
                 <div class="d-flex justify-content-between">
                     <p><i class="bi bi-plus-circle-fill text-black-50"></i> รายการขอซื้อขอจ้าง</p>
                     <div class="dropdown float-end">
@@ -34,12 +35,14 @@ use yii\helpers\Url;
                         <tbody>
                             <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="align-middle">
-                                <td>PO-560001</td>
+                                <td><?= Html::a($model->code, ['/sm/order/view', 'id' => $model->id]) ?></td>
                                 <td>
                                     <p class="m-0">
-                                        13 เม.ย. 2567
+                                        <?php echo Yii::$app->thaiFormatter->asDate($model->created_at, 'medium') ?>
                                     </p>
-                                    <span class="fs-13 text-muted-">13:35:00</span>
+                                    <span class="fs-13 text-muted-">
+                                        <?php echo Yii::$app->thaiFormatter->asDateTime($model->created_at, 'php:H:i:s') ?>
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
