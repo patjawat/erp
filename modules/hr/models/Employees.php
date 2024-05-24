@@ -160,7 +160,7 @@ class Employees extends \yii\db\ActiveRecord
             'ref' => 'Ref',
             'avatar' => 'Avatar',
             'photo' => 'Photo',
-            'phone' => 'Phone',
+            'phone' => 'หมายเลขโทรศัพท์',
             'cid' => 'เลขบัตรประชาชน',
             'email' => 'Email',
             'gender' => 'เพศ',
@@ -307,12 +307,28 @@ class Employees extends \yii\db\ActiveRecord
     public function year60()
     {
         try {
-            $date = explode('-', AppHelper::DateToDb($this->birthday));
-            return Yii::$app->thaiFormatter->asDate(($date[0] + 60) . '-' . $date[1] . '-' . $date[2], 'medium');
+            $sql = '';
+            return Yii::$app
+                ->db
+                ->createCommand('SELECT DATE_ADD(:date, INTERVAL 60 YEAR)')
+                ->bindValue('date', AppHelper::DateToDb($this->birthday))
+                ->queryScalar();
+
+            // $date = explode('-', AppHelper::DateToDb($this->birthday));
+            // return Yii::$app->thaiFormatter->asDate(($date[0] + 60) . '-' . $date[1] . '-' . $date[2], 'medium');
             // code...
         } catch (\Throwable $th) {
             // throw $th;
         }
+    }
+
+    public function leftYear60()
+    {
+        return Yii::$app
+            ->db
+            ->createCommand('SELECT (60-FLOOR(DATEDIFF(CURRENT_DATE, :date) / 365)) AS age')
+            ->bindValue('date', AppHelper::DateToDb($this->birthday))
+            ->queryScalar();
     }
 
     // การครลกำหนด
@@ -329,6 +345,31 @@ class Employees extends \yii\db\ActiveRecord
         ];
     }
     // Category List
+
+    // ตำแหน่งปัจจุบัน
+    public function nowPosition()
+    {
+        $model = EmployeeDetail::find()
+            ->where(['emp_id' => $this->id, 'name' => 'position'])
+            ->orderBy([
+                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
+                'id' => SORT_DESC,
+            ])
+            ->one();
+        if ($model) {
+            return [
+                'date_start' => (isset($model->data_json['date_start']) ? $model->data_json['date_start'] : ''),
+                'position_name' => (isset($model->data_json['position_name_text']) ? $model->data_json['position_name_text'] : ''),
+                'position_number' => (isset($model->data_json['position_nposition_numberme_text']) ? $model->data_json['position_number'] : ''),
+            ];
+        } else {
+            return [
+                'date_start' => '',
+                'position_name' => '',
+                'position_number' => '',
+            ];
+        }
+    }
 
     // count form position Show Dashbroad
     // แสดงหน้า dashboard
@@ -629,6 +670,11 @@ class Employees extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return false;
         }
+    }
+
+    public function workLife()
+    {
+        return AppHelper::Age($this->joinDate());
     }
 
     // วันลาออก เกษียร

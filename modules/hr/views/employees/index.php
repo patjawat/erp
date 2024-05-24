@@ -60,51 +60,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <?= Html::a('<i class="bi bi-list-ul"></i>', ['/hr/employees/index', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
             <?= Html::a('<i class="bi bi-grid"></i>', ['/hr/employees/index', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
+<?= $this->render('export_employee', ['dataProvider' => $dataProvider]) ?>
 
 
-
-            <?php
-                use kartik\export\ExportMenu;
-
-                $gridColumns = [
-                    'cid',
-                    'gender',
-                    'prefix',
-                    'fname',
-                    'lname',
-                    'birthday',
-                    'phone',
-                    'email',
-                    'address',
-                    'zipcode'
-                ];
-
-                echo ExportMenu::widget([
-                    'dataProvider' => $dataProvider,
-                    'columns' => $gridColumns,
-                    'clearBuffers' => true,
-                    'target' => GridView::TARGET_BLANK,
-                    'filename' => 'ข้อมูลบุคลากร_' . date('d/n/Y'),
-                    'exportConfig' => [
-                        ExportMenu::FORMAT_EXCEL_X => [
-                            'label' => 'ส่งออก Excel',
-                            'iconOptions' => ['class' => 'text-success me-1'],
-                            'linkOptions' => [],
-                            'options' => ['title' => 'titlex'],
-                            'alertMsg' => 'ส่งออกข้อมูลบุคลากร Excel File',
-                            'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'extension' => 'xlsx',
-                            'writer' => ExportMenu::FORMAT_EXCEL_X
-                        ],
-                        ExportMenu::FORMAT_TEXT => false,
-                        ExportMenu::FORMAT_PDF => false,
-                        ExportMenu::FORMAT_HTML => false,
-                        ExportMenu::FORMAT_EXCEL => false,
-                        // ExportMenu::FORMAT_EXCEL_X => false,
-                        ExportMenu::FORMAT_CSV => false,
-                    ]
-                ]);
-            ?>
+            
 
         </div>
 
