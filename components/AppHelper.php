@@ -230,8 +230,7 @@ class AppHelper extends Component
     public static function Age($date, $year = null)
     {
         // try {
-        //   $getDate = self::DateToDb($date);
-        $getDate = $date;
+        $getDate = self::DateToDb($date);
         $currentDate = date('Y-m-d');  // วันที่ปัจจุบัน
         $sql = 'SELECT TIMESTAMPDIFF(YEAR, :birthday, NOW()) AS years,
          TIMESTAMPDIFF(MONTH, :birthday, NOW()) % 12 AS months,

@@ -65,6 +65,28 @@ class OrderController extends Controller
         ]);
     }
 
+    public function actionPrOrderList()
+    {
+        $searchModel = new OrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('pr_order_list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('pr_order_list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
     /**
      * Creates a new Order model.
      * If creation is successful, the browser will be redirected to the 'view' page.

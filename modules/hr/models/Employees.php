@@ -674,7 +674,10 @@ class Employees extends \yii\db\ActiveRecord
 
     public function workLife()
     {
-        return AppHelper::Age($this->joinDate());
+        return AppHelper::Age(AppHelper::DateFormDb($this->joinDate()), false);
+        // AppHelper::Age($this->birthday, true);
+        // return $this->birthday;
+        // return $this->joinDate();
     }
 
     // วันลาออก เกษียร

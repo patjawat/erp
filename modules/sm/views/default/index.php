@@ -271,7 +271,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="col-12">
      <!-- รายการใบขอซื้อ -->
-        <?= $this->render('pr_order_list') ?>
+        <?php //  $this->render('pr_order_list') ?>
+        <div id="showPrOrderList"></div>
 
     </div>
 </div>
@@ -285,15 +286,15 @@ use yii\web\View;
 $PrOrderListUrl = Url::to(['/sm/order/pr-order-list']);
 $js = <<< JS
          
-         
+         prOrderList()   
          async function prOrderList()
          {
-            \$.ajax({
+            await \$.ajax({
                 type: "get",
                 url: "$PrOrderListUrl",
                 dataType: "json",
-                success: function (response) {
-                    
+                success: function (res) {
+                    \$('#showPrOrderList').html(res.content)
                 }
             });
          }

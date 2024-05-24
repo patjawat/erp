@@ -58,7 +58,7 @@ use yii\helpers\Url;
                                     </code>
                             </p>
                             <p><i class="fa-solid fa-business-time"></i>
-                            อายุงาน <?= $model->workLife() ?></p>
+                            อายุราชการ <?= $model->workLife() ?></p>
                         
 
                         <?php endif; ?>

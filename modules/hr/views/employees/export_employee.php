@@ -10,11 +10,17 @@ $gridColumns = [
     'fname',
     'lname',
     [
-        'header' => 'วันเกิด พ.ศ.',
+        'header' => 'วันเกิด',
         'value' => function ($model) {
             return Yii::$app->thaiFormatter->asDate(
                 AppHelper::DateToDb($model->birthday), 'php:d/m/Y'
             );
+        }
+    ],
+    [
+        'header' => 'อายุ',
+        'value' => function ($model) {
+            return $model->age_y;
         }
     ],
     'email',
@@ -27,7 +33,13 @@ $gridColumns = [
         }
     ],
     [
-        'header' => 'เกษียณ พ.ศ.',
+        'header' => 'อายุราชการ',
+        'value' => function ($model) {
+            return $model->workLife();
+        }
+    ],
+    [
+        'header' => 'เกษียณ',
         'value' => function ($model) {
             return Yii::$app->thaiFormatter->asDate($model->year60(), 'php:d/m/Y');
         }
