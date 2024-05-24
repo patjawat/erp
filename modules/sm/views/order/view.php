@@ -72,9 +72,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th scope="col">หน่วย</th>
                                 <th scope="col">ราคาต่อหน่วย</th>
                                 <th scope="col">จำนวนเงิน</th>
-                                <th class="d-flex justify-content-center gap-2"><button
-                                        class="btn btn-sm btn-primary rounded-pill"><i
-                                            class="fa-solid fa-circle-plus"></i> เพิ่มรายการ</button></th>
+                                <th class="d-flex justify-content-center gap-2">
+                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>    
                             </tr>
                         </thead>
                         <tbody>

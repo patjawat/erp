@@ -2,6 +2,20 @@
 
 namespace app\modules\sm\models;
 
+use app\components\AppHelper;
+use app\components\CategoriseHelper;
+use app\models\Categorise;
+use app\modules\am\models\AssetItem;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use Yii;
 
 /**
@@ -64,5 +78,10 @@ class Order extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
         ];
+    }
+
+    public function ListProductType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
     }
 }

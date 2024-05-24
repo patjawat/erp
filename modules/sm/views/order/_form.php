@@ -39,10 +39,9 @@ $this->params['breadcrumbs'][] = $this->title;
                  <i class="fa-solid fa-bag-shopping fs-1 text-center"></i>
                     <!-- <p class="text-center mt-1">ข้อซื้อ-ขอจ้าง</p> -->
              </div>
-             
                 <?php
-                    echo $form->field($model, 'data_json[type]')->widget(Select2::classname(), [
-                        'data' => [],
+                    echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+                        'data' => $model->ListProductType(),
                         'options' => ['placeholder' => 'กรุณาเลือก'],
                         'pluginOptions' => [
                             'allowClear' => true,

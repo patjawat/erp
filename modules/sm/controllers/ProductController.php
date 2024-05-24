@@ -42,6 +42,11 @@ class ProductController extends Controller
     {
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'product_item']);
+        $dataProvider->query->andFilterWhere([
+            'in', 'category_id',
+            $searchModel->q_category
+        ]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -57,9 +62,20 @@ class ProductController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'content' => $this->renderAjax('view_type', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('view_type', [
+                'model' => $model
+            ]);
+        }
     }
 
     /**
@@ -70,13 +86,17 @@ class ProductController extends Controller
     public function actionCreate()
     {
         $model = new Product([
-            'asset_group' => 4,
+            'name' => 'product_item',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save(false)) {
-                return $this->redirect(['view', 'id' => $model->id]);
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                    'container' => '#sm-container',
+                ];
             } else {
                 return false;
             }
@@ -108,15 +128,23 @@ class ProductController extends Controller
      */
     public function actionUpdate($id)
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            return [
+                'status' => 'success',
+                'container' => '#sm-container',
+            ];
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('create', [
+                'model' => $model,
+                'ref' => $model->ref == '' ? substr(Yii::$app->getSecurity()->generateRandomString(), 10) : $model->ref
+            ])
+        ];
     }
 
     /**

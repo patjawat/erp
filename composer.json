@@ -44,6 +44,7 @@
         "kartik-v/yii2-widget-alert": "@dev",
         "kartik-v/yii2-bootstrap4-dropdown": "@dev",
         "kartik-v/yii2-slider": "dev-master",
+        "kartik-v/yii2-export": "@dev",
         "insolita/yii2-adminlte-widgets": "^3.2",
         "miloschuman/yii2-highcharts-widget": "dev-master",
         "dominus77/yii2-sweetalert2-widget": "~1.3",

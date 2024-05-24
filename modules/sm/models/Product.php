@@ -54,8 +54,10 @@ class Product extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'asset';
+        return 'categorise';
     }
+
+    public $q_category;
 
     /**
      * {@inheritdoc}
@@ -63,10 +65,10 @@ class Product extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['qty', 'purchase', 'department', 'life', 'on_year', 'dep_id', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
-            [['receive_date', 'device_items', 'data_json', 'updated_at', 'created_at'], 'safe'],
-            [['price'], 'number'],
-            [['ref', 'asset_group', 'asset_item', 'code', 'fsn_number', 'owner', 'asset_status'], 'string', 'max' => 255],
+            [['name'], 'required'],
+            [['data_json', 'q_category'], 'safe'],
+            [['active'], 'integer'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }
 
@@ -78,34 +80,39 @@ class Product extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'ref' => 'Ref',
-            'asset_group' => 'Asset Group',
-            'asset_item' => 'Asset Item',
+            'category_id' => 'Category ID',
             'code' => 'Code',
-            'fsn_number' => 'Fsn Number',
-            'qty' => 'Qty',
-            'receive_date' => 'Receive Date',
-            'price' => 'Price',
-            'purchase' => 'Purchase',
-            'department' => 'Department',
-            'repair' => 'Repair',
-            'owner' => 'Owner',
-            'life' => 'Life',
-            'device_items' => 'Device Items',
-            'on_year' => 'On Year',
-            'dep_id' => 'Dep ID',
-            'depre_type' => 'Depre Type',
-            'budget_year' => 'Budget Year',
-            'asset_status' => 'Asset Status',
+            'emp_id' => 'Emp ID',
+            'name' => 'Name',
+            'title' => 'Title',
+            'description' => 'Description',
             'data_json' => 'Data Json',
-            'updated_at' => 'Updated At',
-            'created_at' => 'Created At',
-            'created_by' => 'Created By',
-            'updated_by' => 'Updated By',
+            'active' => 'Active',
         ];
+    }
+
+    public function getProductType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'product_type']);
+    }
+
+    public function ShowImg()
+    {
+        $model = Uploads::find()->where(['ref' => $this->ref])->one();
+        if ($model) {
+            return FileManagerHelper::getImg($model->id);
+        } else {
+            return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+        }
     }
 
     public function ListProductType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
+    }
+
+    public function ListUnit()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
     }
 }
