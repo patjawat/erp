@@ -1,7 +1,10 @@
 <?php
 
+use app\modules\sm\models\Order;
+use unclead\multipleinput\MultipleInput;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Order $model */
@@ -17,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'sm-container']); ?>
 
 <div class="card">
     <div class="card-body">
@@ -56,17 +59,24 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td> <?= $model->getUserReq()['avatar'] ?></td>
                         </tr>
                         <tr class="">
+                            <td>เพื่อจัดซื้อ/ซ่อมแซม</td>
+                        <td>
+                                <?php
+                                    try {
+                                        echo $model->data_json['product_type_name'];
+                                    } catch (\Throwable $th) {
+                                    }
+                                ?></td>
                             <td class="text-end">วันที่ขอซื้อ</td>
                             <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->created_at, 'medium') ?></td>
-                            <td>เรื่อง</td>
-                            <td>Item</td>
+                           
                         </tr>
                         <tr class="">
-                            <td class="text-end">วันที่ต้องการ</td>
-
-                            <td> <?php echo Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') ?></td>
                             <td>เหตุผล</td>
                             <td><?= $model->data_json['comment'] ?></td>
+                            <td class="text-end">วันที่ต้องการ</td>
+                            <td> <?php echo Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') ?></td>
+                           
                         </tr>
                     </tbody>
                 </table>
@@ -86,24 +96,28 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th scope="col">หน่วย</th>
                                 <th scope="col">ราคาต่อหน่วย</th>
                                 <th scope="col">จำนวนเงิน</th>
-                                <th class="d-flex justify-content-center gap-2">
-                                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                <th class="d-flex justify-content-end gap-2">
+                                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            </th>
                             </tr>
                         </thead>
                         <tbody>
+                            <?php foreach (Order::find()->where(['category_id' => $model->code])->all() as $item): ?>
                             <tr class="">
-                                <td>กระดาษ A4</td>
-                                <td>รีม</td>
-                                <td>240</td>
-                                <td>1</td>
-                                <td class="d-flex justify-content-center gap-2">
+                                <td><?= $item->product->title ?></td>
+                                <td><?= $item->product->data_json['unit'] ?></td>
+                                <td><?= $item->price ?></td>
+                                <td>
+                                <input type="number" class="form-control" style="width:100px">
+                                </td>
+                                <td class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-sm btn-warning rounded-pill"><i
                                             class="fa-regular fa-pen-to-square"></i></button>
                                     <button class="btn btn-sm btn-danger rounded-pill"><i
                                             class="fa-regular fa-trash-can"></i></button>
                                 </td>
                             </tr>
-
+<?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -115,3 +129,4 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
+<?php Pjax::end(); ?>

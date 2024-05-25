@@ -207,7 +207,12 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         <div class="col-6">
             <?= $form->field($model, 'data_json[repair_note]')->textArea(['style' => 'height: 127px;', 'placeholder' => 'ระบุวิธีการแก้ไข/แนวทางแก้ไข/อื่นๆ...'])->label(false) ?>
         </div>
-
+        <div class="d-flex bg-primary justify-content-between bg-opacity-10 p-3 rounded mb-3">
+        <div><i class="bi bi-check2-circle fs-5"></i> <span class="text-primary">เอกสารต่างๆ เช่น ใบส่งซ่อมจากร้านซ่อม(กรณีแจ้งซ่อมภายนอก)</span>
+        </div>
+        <div>ขั้นตอนที่ <span class="badge rounded-pill bg-primary text-white">3</span> </div>
+    </div>
+        
         <?= $model->Upload('repair_success') ?>
 
         <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>

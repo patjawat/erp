@@ -28,7 +28,7 @@ use Yii;
  * @property string|null $code รหัส
  * @property int|null $item_id รายการที่เก็บ
  * @property float|null $price ราคา
- * @property int|null $amonth จำนวน
+ * @property int|null $amount จำนวน
  * @property string|null $data_json
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
@@ -51,7 +51,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['item_id', 'amonth', 'created_by', 'updated_by'], 'integer'],
+            [['item_id', 'amount', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
             [['data_json', 'created_at', 'updated_at'], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
@@ -71,7 +71,7 @@ class Order extends \yii\db\ActiveRecord
             'code' => 'Code',
             'item_id' => 'Item ID',
             'price' => 'Price',
-            'amonth' => 'Amonth',
+            'amount' => 'amount',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -95,6 +95,18 @@ class Order extends \yii\db\ActiveRecord
                 'updatedByAttribute' => 'updated_by',
             ],
         ];
+    }
+
+    // relation
+
+    public function getProductType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'product_type']);
+    }
+
+    public function getProduct()
+    {
+        return $this->hasOne(Categorise::class, ['id' => 'item_id'])->andOnCondition(['name' => 'product_item']);
     }
 
     // ผู้ขอ

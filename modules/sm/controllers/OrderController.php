@@ -4,8 +4,9 @@ namespace app\modules\sm\controllers;
 
 use app\modules\am\models\Asset;
 use app\modules\sm\models\Order;
-use app\modules\sm\models\OrderDetail;
 use app\modules\sm\models\OrderSearch;
+use app\modules\sm\models\Product;
+use app\modules\sm\models\ProductSearch;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
@@ -137,9 +138,10 @@ class OrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
+        $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -160,6 +162,79 @@ class OrderController extends Controller
         } else {
             return $this->render('update', [
                 'model' => $model,
+            ]);
+        }
+    }
+
+    public function actionProductList()
+    {
+        $order_id = $this->request->get('order_id');
+        $order = Order::findOne($order_id);
+
+        $searchModel = new ProductSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->category_id]);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('product_list', [
+                    'order' => $order,
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('product_list', [
+                'order' => $order,
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+    public function actionProductAdd()
+    {
+        $code = $this->request->get('code');
+        $product_id = $this->request->get('product_id');
+        $product = Product::findOne($product_id);
+
+        $model = new Order([
+            'category_id' => $code,
+            'name' => 'order_item',
+            'item_id' => $product_id
+        ]);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                // $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->save(false);
+                return [
+                    'status' => 'success',
+                    'container' => '#sm-container',
+                ];
+            } else {
+                return false;
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_product_select', [
+                    'model' => $model,
+                    'product' => $product
+                ]),
+            ];
+        } else {
+            return $this->render('_form_product_select', [
+                'model' => $model,
+                'product' => $product
             ]);
         }
     }

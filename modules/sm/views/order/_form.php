@@ -35,7 +35,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $form = ActiveForm::begin([
     'id' => 'form-order'
 ]); ?>
-
+ <!-- ชื่อของประเภท -->
+ <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
              <div class="d-flex flex-column justify-content-center">
                  <i class="fa-solid fa-bag-shopping fs-1 text-center"></i>
                     <!-- <p class="text-center mt-1">ข้อซื้อ-ขอจ้าง</p> -->
@@ -49,7 +52,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         'pluginEvents' => [
                             'select2:select' => "function(result) { 
-                            // var data = \$(this).select2('data')[0]
+                            var data = \$(this).select2('data')[0].text;
+                            \$('#order-data_json-product_type_name').val(data)
                         }",
                         ]
                     ])->label('เพื่อจัดซื้อ/ซ่อมแซม');
@@ -82,10 +86,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 
             </div>
         </div>
+        
+       
 
-
-<?= $form->field($model, 'name')->textInput()->label(false) ?>
-<?= $form->field($model, 'ref')->textInput(['maxlength' => true])->label(false) ?>
 
 <?php ActiveForm::end(); ?>
 

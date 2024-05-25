@@ -1,32 +1,36 @@
 <?php
 
-/** @var yii\web\View $this */
-/** @var string $content */
+/**
+ * @var yii\web\View $this
+ */
+
+/**
+ * @var string $content
+ */
 
 use app\assets\AppAsset;
 use app\assets\BootstapIconAsset;
 use app\models\Categorise;
 use yii\bootstrap5\Html;
 use yii\web\View;
+
 AppAsset::register($this);
 BootstapIconAsset::register($this);
-
-
 
 $site = Categorise::findOne(['name' => 'site']);
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
 ?>
 
-<?php $this->beginPage()?>
+<?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?=Yii::$app->language?>" class="h-100" data-bs-theme="<?=$colorName?>">
+<html lang="<?= Yii::$app->language ?>" class="h-100" data-bs-theme="<?= $colorName ?>">
 
 <head>
-    <meta charset="<?=Yii::$app->charset?>">
+    <meta charset="<?= Yii::$app->charset ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <?php $this->registerCsrfMetaTags()?>
+    <?php $this->registerCsrfMetaTags() ?>
 
-    <title><?=Html::encode($this->title)?></title>
+    <title><?= Html::encode($this->title) ?></title>
     <link rel="stylesheet" <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
         integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
@@ -38,7 +42,7 @@ $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['the
     <link
         href="https://fonts.googleapis.com/css2?family=Anuphan:wght@100;200;300;400;500;600;700&family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Krub:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Mitr:wght@200;300;400;500;600;700&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;1,100;1,200;1,300;1,400&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,800;1,900&display=swap"
         rel="stylesheet">
-    <?php $this->head()?>
+    <?php $this->head() ?>
 </head>
 
 <style>
@@ -68,115 +72,115 @@ background: #ffc107 !important;
 </style>
 <body>
 <?php $this->beginBody() ?>
-    <?=$this->render('../modal')?>
+    <?= $this->render('../modal') ?>
     <main role="main">
         <div class="page-wrapper">
-            <?=$this->render('header')?>
-            <?=$this->render('sidebar')?>
+            <?= $this->render('header') ?>
+            <?= $this->render('sidebar') ?>
             <div class="main-content">
                 <div class="page-content">
-                    <?=$this->render('page_title')?>
+                    <?= $this->render('page_title') ?>
                     <div class="page-content-wrapper mt--45">
-                        <?=$this->render('content', ['content' => $content])?>
+                        <?= $this->render('content', ['content' => $content]) ?>
                     </div>
                 </div>
             </div>
-			<?=$this->render('footer')?>
+			<?= $this->render('footer') ?>
 			
         </div>
-		<?=$this->render('right_setting')?>
+		<?= $this->render('right_setting') ?>
     </main>
 
     <?php
-$js = <<< JS
+		$js = <<< JS
 
 
-var scrollBarCont, isfullscreen = false, ddSliderIns;
-var sidebarActive = localStorage.getItem("classes") == '' ? false : true;
-if(sidebarActive){
-	$("body").addClass('left-side-menu-condensed');
-}
-		$("#vertical-menu-btn").on("click", function (e) {
-		e.preventDefault();
-		e.stopPropagation();
-        console.log($(window).width());
-		if($(window).width() > 1024) {
-			if ($("body").hasClass("left-side-menu-condensed")) {
-				$("body").removeClass("left-side-menu-condensed");
+			var scrollBarCont, isfullscreen = false, ddSliderIns;
+			var sidebarActive = localStorage.getItem("classes") == '' ? false : true;
+			if(sidebarActive){
+				\$("body").addClass('left-side-menu-condensed');
 			}
-			else {
-				$("body").addClass('left-side-menu-condensed');
+					\$("#vertical-menu-btn").on("click", function (e) {
+					e.preventDefault();
+					e.stopPropagation();
+			        console.log(\$(window).width());
+					if(\$(window).width() > 1024) {
+						if (\$("body").hasClass("left-side-menu-condensed")) {
+							\$("body").removeClass("left-side-menu-condensed");
+						}
+						else {
+							\$("body").addClass('left-side-menu-condensed');
+						}
+						var classList = document.body.classList.value.trim();
+						localStorage.setItem("classes", classList);
+					}
+					else {
+						\$("body").toggleClass("show-sidebar");
+					}
+				});
+			// });
+
+			AOS.init({});
+			\$("#full-screen").on("click", function () {
+					\$(this).children().toggleClass("bx-fullscreen bx-exit-fullscreen");
+					if (!isfullscreen) {
+						isfullscreen = fullScreen(isfullscreen);
+					}
+					else {
+						isfullscreen = exitFullScreen(isfullscreen);
+					}
+				});
+
+
+			/**
+			  * Enter into full screen
+			  */
+			function fullScreen(isfullscreen) {
+				var docBrowserElem = document.documentElement
+				if (docBrowserElem.requestFullscreen) {
+					docBrowserElem.requestFullscreen();
+				} else if (docBrowserElem.mozRequestFullScreen) { /* Firefox */
+					docBrowserElem.mozRequestFullScreen();
+				} else if (docBrowserElem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+					docBrowserElem.webkitRequestFullscreen();
+				} else if (docBrowserElem.msRequestFullscreen) { /* IE/Edge */
+					docBrowserElem.msRequestFullscreen();
+				}
+				isfullscreen = true;
+				return isfullscreen
 			}
-			var classList = document.body.classList.value.trim();
-			localStorage.setItem("classes", classList);
-		}
-		else {
-			$("body").toggleClass("show-sidebar");
-		}
-	});
-// });
 
-AOS.init({});
-$("#full-screen").on("click", function () {
-		$(this).children().toggleClass("bx-fullscreen bx-exit-fullscreen");
-		if (!isfullscreen) {
-			isfullscreen = fullScreen(isfullscreen);
-		}
-		else {
-			isfullscreen = exitFullScreen(isfullscreen);
-		}
-	});
+			/**
+			* Exit from full screen
+			*/
+			function exitFullScreen(isfullscreen) {
+				if (document.exitFullscreen) {
+					document.exitFullscreen();
+				} else if (document.mozCancelFullScreen) {
+					document.mozCancelFullScreen();
+				} else if (document.webkitExitFullscreen) {
+					document.webkitExitFullscreen();
+				} else if (document.msExitFullscreen) {
+					document.msExitFullscreen();
+				}
+				isfullscreen = false;
+				return isfullscreen
+			}
 
-
-/**
-  * Enter into full screen
-  */
-function fullScreen(isfullscreen) {
-	var docBrowserElem = document.documentElement
-	if (docBrowserElem.requestFullscreen) {
-		docBrowserElem.requestFullscreen();
-	} else if (docBrowserElem.mozRequestFullScreen) { /* Firefox */
-		docBrowserElem.mozRequestFullScreen();
-	} else if (docBrowserElem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-		docBrowserElem.webkitRequestFullscreen();
-	} else if (docBrowserElem.msRequestFullscreen) { /* IE/Edge */
-		docBrowserElem.msRequestFullscreen();
-	}
-	isfullscreen = true;
-	return isfullscreen
-}
-
-/**
-* Exit from full screen
-*/
-function exitFullScreen(isfullscreen) {
-	if (document.exitFullscreen) {
-		document.exitFullscreen();
-	} else if (document.mozCancelFullScreen) {
-		document.mozCancelFullScreen();
-	} else if (document.webkitExitFullscreen) {
-		document.webkitExitFullscreen();
-	} else if (document.msExitFullscreen) {
-		document.msExitFullscreen();
-	}
-	isfullscreen = false;
-	return isfullscreen
-}
-
-var tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+			var tooltipTriggerList = [].slice.call(
+			    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+			    );
+			    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+			    return new bootstrap.Tooltip(tooltipTriggerEl);
+			    });
 
 
-JS;
-$this->registerJS($js, View::POS_END);
-?>
+			JS;
+		$this->registerJS($js, View::POS_END);
+	?>
 
-    <?php $this->endBody()?>
+    <?php $this->endBody() ?>
 </body>
 
 </html>
-<?php $this->endPage()?>
+<?php $this->endPage() ?>
