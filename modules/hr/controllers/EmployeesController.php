@@ -2,25 +2,24 @@
 
 namespace app\modules\hr\controllers;
 
-use Yii;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\modules\hr\models\EmployeeDetailSearch;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeesSearch;
+use app\modules\hr\models\Organization;
 use app\modules\hr\models\UploadCsv;
 use ruskid\csvimporter\CSVImporter;
 use ruskid\csvimporter\CSVReader;
 use ruskid\csvimporter\MultipleImportStrategy;
-use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\validators\DateValidator;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use yii\helpers\ArrayHelper;
-use app\modules\hr\models\Organization;
-
+use yii\web\UploadedFile;
+use Yii;
 
 /**
  * EmployeesController implements the CRUD actions for Employees model.
@@ -52,42 +51,42 @@ class EmployeesController extends Controller
      */
     public function actionIndex()
     {
-
         $searchModel = new EmployeesSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $notStatusParam = $this->request->get('not-status');
-        $dataProvider->query->andFilterWhere(['or',
-        ['like', 'cid', $searchModel->q],
-        ['like', 'email', $searchModel->q],
-        ['like', 'fname', $searchModel->q],
-        ['like', 'lname', $searchModel->q],
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+            ['like', 'fname', $searchModel->q],
+            ['like', 'lname', $searchModel->q],
+        ]);
 
-    ]);
-       
         $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
-        
+
         // ค้นหาคามกลุ่มโครงสร้าง
         $org1 = Organization::findOne($searchModel->q_department);
-        //ถ้ามรกลุ่มย่อย
-        if(isset($org1) && $org1->lvl == 1){
-            $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        // ถ้ามรกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-            WHERE t2.name = :name;";
-            $querys = Yii::$app->db->createCommand($sql)
-            ->bindValue(':name', $org1->name)
-            ->queryAll();
+            WHERE t2.name = :name;';
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
             $arrDepartment = [];
             foreach ($querys as $tree) {
                 $arrDepartment[] = $tree['id'];
             }
-            if(count($arrDepartment) > 0){
+            if (count($arrDepartment) > 0) {
                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
-            }else{
+            } else {
                 $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
             }
-
-        }else{
+        } else {
             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         }
         // จบการค้นหา
@@ -95,7 +94,6 @@ class EmployeesController extends Controller
         if (!$searchModel->status && $searchModel->all_status == 0) {
             $dataProvider->query->andWhere(['status' => 1]);
         }
-        
 
         if (!$searchModel->status && $searchModel->all_status == 0) {
             if ($notStatusParam) {
@@ -107,13 +105,13 @@ class EmployeesController extends Controller
 
         $dataProvider->query->andWhere(new \yii\db\Expression("CONCAT(fname,' ', lname) LIKE :term", [':term' => '%' . $searchModel->fullname . '%']));
 
-        //ค้นหาตามอายุ
-        if($searchModel->range1 && !$searchModel->range2){
-            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) = '.$searchModel->range1));
+        // ค้นหาตามอายุ
+        if ($searchModel->range1 && !$searchModel->range2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) = ' . $searchModel->range1));
         }
-         //ค้นหาระหว่างช่วงอายุ
-        if($searchModel->range1 && $searchModel->range2){
-            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) BETWEEN '.$searchModel->range1.' AND '.$searchModel->range2));
+        // ค้นหาระหว่างช่วงอายุ
+        if ($searchModel->range1 && $searchModel->range2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) BETWEEN ' . $searchModel->range1 . ' AND ' . $searchModel->range2));
         }
 
         $dataProvider->pagination->pageSize = 16;
@@ -122,7 +120,7 @@ class EmployeesController extends Controller
             SiteHelper::setDisplay($this->request->get('view'));
         }
 
-        $sql = "SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL";
+        $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
         $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();
 
         return $this->render('index', [
@@ -130,7 +128,6 @@ class EmployeesController extends Controller
             'dataProvider' => $dataProvider,
             'notStatus' => $notStatus
         ]);
-
     }
 
     /**
@@ -148,7 +145,7 @@ class EmployeesController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['emp_id' => $model->id, 'name' => $name]);
         $dataProvider->query->orderBy(
-            new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc")
+            new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc")
         );
         $dataProvider->pagination->pageSize = 8;
 
@@ -177,7 +174,6 @@ class EmployeesController extends Controller
             if ($model->load($this->request->post())) {
                 // return $this->redirect(['view', 'id' => $model->id]);
                 if ($model->save()) {
-
                     return [
                         'status' => 'success',
                         'container' => '#hr-container',
@@ -211,7 +207,6 @@ class EmployeesController extends Controller
             'title' => '<i class="fa-solid fa-file-circle-check"></i>  แบบสารสนเทศเบื้องต้น',
             'content' => $this->renderAjax('upload_basic_doc', ['model' => $model]),
         ];
-
     }
 
     /**
@@ -228,12 +223,12 @@ class EmployeesController extends Controller
         $model->join_date = AppHelper::DateFormDb($model->join_date);
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            
+
             if ($model->join_date) {
                 $model->join_date = AppHelper::DateToDb($model->join_date);
             }
 
-            $model->data_json = ArrayHelper::merge($model->data_json, $model_old_data_json);
+            $model->data_json = ArrayHelper::merge($model_old_data_json, $model->data_json);
             $model->save();
             return $this->redirect(['view', 'id' => $model->id]);
         }
@@ -278,7 +273,6 @@ class EmployeesController extends Controller
     protected function findModel($id)
     {
         if (($model = Employees::findOne(['id' => $id])) !== null) {
-
             return $model;
         }
 
@@ -294,8 +288,8 @@ class EmployeesController extends Controller
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 // return $model->data_json['education'];
-                $stack = ["orange", "banana"];
-                array_push($model->education, "apple", "raspberry");
+                $stack = ['orange', 'banana'];
+                array_push($model->education, 'apple', 'raspberry');
                 return $stack;
                 // return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -327,7 +321,7 @@ class EmployeesController extends Controller
         $error = [];
         if ($model->load(Yii::$app->request->post())) {
             $model->file = UploadedFile::getInstance($model, 'file');
-            $model->file->saveAs($basePath. $model->file->name);
+            $model->file->saveAs($basePath . $model->file->name);
 
             $importer = new CSVImporter();
             $filename = $basePath . $model->file->name;
@@ -341,32 +335,31 @@ class EmployeesController extends Controller
             for ($x = 1; $x <= count($importer->getData()); $x++) {
                 $data_check_error = $importer->getData()[$x][0];
                 $data_check_error = explode(',', $data_check_error);
-                if (!empty($data_check_error[0])){
+                if (!empty($data_check_error[0])) {
                     if (count($data_check_error) != 10) {
                         array_push($error, 'ข้อมูลไม่ครบถ้วน');
                     }
                     if (null != Employees::findOne(['cid' => $data_check_error[0]])) {
-                        array_push($error, '[ '.  $x .' ]' .' CID ' . $data_check_error[0] . ' อยู่ในระบบแล้ว');
+                        array_push($error, '[ ' . $x . ' ]' . ' CID ' . $data_check_error[0] . ' อยู่ในระบบแล้ว');
                     }
                     if (strlen($data_check_error[0]) != 13) {
-                        array_push($error, '[ '.  $x .' ]' .' CID ' . $data_check_error[0] . ' ไม่ถูกต้อง (ต้องมี 13 หลัก)');
+                        array_push($error, '[ ' . $x . ' ]' . ' CID ' . $data_check_error[0] . ' ไม่ถูกต้อง (ต้องมี 13 หลัก)');
                     }
                     $validator = new DateValidator();
                     $validator->format = 'yyyy-MM-dd';
                     if ($validator->validate($data_check_error[5])) {
                     } else {
-                        array_push($error, '[ '.  $x .' ]' .' วันเกิด ' . $data_check_error[5] . ' ไม่ถูกต้อง (1980-01-01)');
+                        array_push($error, '[ ' . $x . ' ]' . ' วันเกิด ' . $data_check_error[5] . ' ไม่ถูกต้อง (1980-01-01)');
                     }
                     if (strlen($data_check_error[6]) == 9 and $data_check_error[6][0] != 0) {
-
-                    }elseif (strlen($data_check_error[6]) != 10 ) {
-                        array_push($error, '[ '.  $x .' ]' .' เบอร์โทรศัพท์ ' . $data_check_error[6]  . ' ไม่ถูกต้อง (ต้องมี 10 หลัก)');
+                    } elseif (strlen($data_check_error[6]) != 10) {
+                        array_push($error, '[ ' . $x . ' ]' . ' เบอร์โทรศัพท์ ' . $data_check_error[6] . ' ไม่ถูกต้อง (ต้องมี 10 หลัก)');
                     }
                 }
             }
             if (empty($error)) {
                 $numberRowsAffected = $importer->import(new MultipleImportStrategy([
-                    'tableName' => Employees::tableName(), // change your model names accordingly
+                    'tableName' => Employees::tableName(),  // change your model names accordingly
                     'configs' => [
                         [
                             'attribute' => 'user_id',
@@ -458,7 +451,6 @@ class EmployeesController extends Controller
                             },
                         ],
                     ],
-
                 ]));
                 unlink($filename);
                 Yii::$app->session->setFlash('data', [
@@ -475,7 +467,7 @@ class EmployeesController extends Controller
                 return $this->redirect(['import-status']);
             }
 
-        // return var_dump($importer->getData());
+            // return var_dump($importer->getData());
         } else {
             return $this->render('import_csv',
                 ['model' => $model,
@@ -489,7 +481,7 @@ class EmployeesController extends Controller
         $data = Yii::$app->session->getFlash('data', []);
         $status = isset($data['status']) ? $data['status'] : false;
         $error = isset($data['error']) ? $data['error'] : [];
-        return $this->render('import-status',[
+        return $this->render('import-status', [
             'status' => $status,
             'error' => $error
         ]);
