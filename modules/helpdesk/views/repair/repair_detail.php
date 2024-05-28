@@ -74,7 +74,7 @@ use yii\helpers\Html;
     <td class="text-end">
         <span class="fw-semibold">สภานะงานซ่อม : </span>
     </td>
-    <?php if ($repair->data_json['repair_type'] == 'ซ่อมภายนอก'): ?>
+    <?php if (isset($repair->data_json['repair_type']) && $repair->data_json['repair_type'] == 'ซ่อมภายนอก'): ?>
     <td colspan="3">
         <?= $repair->viewStatus() ?>
     </td>
