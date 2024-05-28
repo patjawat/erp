@@ -61,7 +61,13 @@ use yii\helpers\Html;
     </td>
     <td class="text-end"><span class="fw-semibold">ประเภทการซ่อม : </span></td>
     <td colspan="3">
-        <?= $repair->data_json['repair_type']; ?>
+        <?php
+            try {
+                echo $repair->data_json['repair_type'];
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
+        ?>
     </td>
 </tr>
 <tr class="align-middle">
