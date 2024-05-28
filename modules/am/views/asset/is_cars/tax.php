@@ -9,13 +9,13 @@ $modelCar = AssetDetail::find()->where(['name' => 'tax_car', 'code' => $model->c
             <td>
             </td>
             <td colspan="5">
-            <?= Html::a('<span class="fw-semibold"><i class="fa-solid fa-tags"></i> พ.ร.บ./กาต่อภาษี</span>', ['/am/asset-detail/', 'id' => $model->id, 'name' => 'tax_car', 'title' => '<i class="fa-solid fa-car-on"></i> ข้อมูลการต่อภาษี', 'code' => $model->code], ['class' => 'btn btn-primary rounded-pill border border-white open-modal text-center', 'data' => ['size' => 'modal-xl']]) ?>
+            <?= Html::a('<span class="fw-semibold"><i class="fa-solid fa-tags"></i> กาต่อภาษี</span>', ['/am/asset-detail/', 'id' => $model->id, 'name' => 'tax_car', 'title' => '<i class="fa-solid fa-car-on"></i> ข้อมูลการต่อภาษี', 'code' => $model->code], ['class' => 'btn btn-primary rounded-pill border border-white open-modal text-center', 'data' => ['size' => 'modal-xl']]) ?>
             </td>
         </tr>
 <tr>
             <td class="text-end"><span class="fw-semibold">วันที่ต่อภาษี</span></td>
             <td colspan="3"><?= isset($modelCar->date_start) ? Yii::$app->thaiFormatter->asDate($modelCar->date_start, 'medium') : '-' ?></td>
-            <td class="text-end"><span class="fw-semibold">วันที่ครบกำหนดชำร</span></td>
+            <td class="text-end"><span class="fw-semibold">กำหนดชำระ</span></td>
             <td colspan="3"><?= isset($modelCar->date_end) ? Yii::$app->thaiFormatter->asDate($modelCar->date_end, 'medium') : '-' ?></td>
         </tr>
         <?php if (isset($modelCar->data_json['company1']) && $modelCar->data_json['company1'] != ''): ?>

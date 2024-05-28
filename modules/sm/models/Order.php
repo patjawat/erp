@@ -53,7 +53,7 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['item_id', 'amount', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
-            [['data_json', 'created_at', 'updated_at', 'pr_nunber', 'po_nunber', 'status'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'pr_number', 'po_number', 'status'], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
     }
@@ -121,6 +121,24 @@ class Order extends \yii\db\ActiveRecord
             ];
         } catch (\Throwable $th) {
             return null;
+        }
+    }
+
+    public function SumPo()
+    {
+        try {
+            $query = Yii::$app
+                ->db
+                ->createCommand('SELECT sum(price * amount) as total FROM `order` WHERE category_id = :category_id;')
+                ->bindValue(':category_id', $this->id)
+                ->queryScalar();
+            if ($query > 0) {
+                return $query;
+            } else {
+                return 0;
+            }
+        } catch (\Throwable $th) {
+            return 10;
         }
     }
 

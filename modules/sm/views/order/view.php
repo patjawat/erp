@@ -30,25 +30,25 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="row justify-content-center">
     <div class="col-lg-2 col-md-4 col-sm-12">
-        <?= $this->render('step') ?>
+        <?= $this->render('step', ['model' => $model]) ?>
     </div>
     <div class="col-lg-8 col-md-8 col-sm-12">
 
-<div class="d-flex justify-content-between">
-<div>
-<?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', ['/sm'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow pr-confirm']) ?>
-</div>
-<p class="">
-                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
-                        <?= Html::a('<i class="fa-regular fa-trash-can"></i> ยกเลิก', ['delete', 'id' => $model->id], [
-                            'class' => 'btn btn-sm btn-danger rounded-pill shadow',
-                            'data' => [
-                                'confirm' => 'Are you sure you want to delete this item?',
-                                'method' => 'post',
-                            ],
-                        ]) ?>
-                    </p>
-</div>
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5> <span class="badge rounded-pill bg-primary text-white">1</span> ขั้นตอนการขอซื้อขอจ้าง</h5>
+            </div>
+            <p class="">
+                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-regular fa-trash-can"></i> ยกเลิก', ['delete', 'id' => $model->id], [
+                    'class' => 'btn btn-sm btn-danger rounded-pill shadow',
+                    'data' => [
+                        'confirm' => 'Are you sure you want to delete this item?',
+                        'method' => 'post',
+                    ],
+                ]) ?>
+            </p>
+        </div>
         <div class="card">
             <div class="card-body">
                 <!-- <div class="d-flex justify-content-between">
@@ -58,13 +58,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tbody>
                         <tr class="">
                             <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
-                            <td><?= $model->code ?></td>
+                            <td class="fw-semibold"><?= $model->pr_number ?></td>
                             <td class="text-end">ผู้ขอ</td>
                             <td> <?= $model->getUserReq()['avatar'] ?></td>
                         </tr>
                         <tr class="">
                             <td>เพื่อจัดซื้อ/ซ่อมแซม</td>
-                        <td>
+                            <td>
                                 <?php
                                     try {
                                         echo $model->data_json['product_type_name'];
@@ -73,14 +73,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ?></td>
                             <td class="text-end">วันที่ขอซื้อ</td>
                             <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->created_at, 'medium') ?></td>
-                           
+
                         </tr>
                         <tr class="">
                             <td>เหตุผล</td>
                             <td><?= $model->data_json['comment'] ?></td>
                             <td class="text-end">วันที่ต้องการ</td>
-                            <td> <?php echo Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') ?></td>
-                           
+                            <td> <?php echo Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') ?>
+                            </td>
+
                         </tr>
                     </tbody>
                 </table>
@@ -101,57 +102,93 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th class="text-center" style="width:80px">หน่วย</th>
                                 <th class="text-end">ราคาต่อหน่วย</th>
                                 <th class="text-center" style="width:80px">จำนวน</th>
-                                <th class="text-end" >จำนวนเงิน</th>
+                                <th class="text-end">จำนวนเงิน</th>
                                 <th style="width:180px">
-                                <div class="d-flex justify-content-center">
-                                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <div class="d-flex justify-content-center">
+                                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
 
-                                </div>
-                            </th>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach (Order::find()->where(['category_id' => $model->code])->all() as $item): ?>
+                            <?php foreach (Order::find()->where(['category_id' => $model->id])->all() as $item): ?>
                             <tr class="">
                                 <td class="align-middle">
-                                <?php
-                                try {
-                                    // code...
-                                    echo Html::img($item->product->ShowImg(), ['class' => '  ', 'style' => 'max-width:50px;;height:280px;max-height: 50px;']);
-                                } catch (\Throwable $th) {
-                                    // throw $th;
-                                }
-                                ?>
+                                    <?php
+                                    try {
+                                        // code...
+                                        echo Html::img($item->product->ShowImg(), ['class' => '  ', 'style' => 'max-width:50px;;height:280px;max-height: 50px;']);
+                                    } catch (\Throwable $th) {
+                                        // throw $th;
+                                    }
+                                    ?>
                                 </td>
                                 <td class="align-middle"><?= $item->product->title ?></td>
                                 <td class="align-middle text-center"><?= $item->product->data_json['unit'] ?></td>
                                 <td class="align-middle text-end fw-semibold"><?= number_format($item->price, 2) ?></td>
-                                <td class="align-middle text-end">
-                                <?= $item->amount ?>
+                                <td class="align-middle text-center">
+                                    <?= $item->amount ?>
                                 </td>
                                 <td class="align-middle text-end">
                                     <div class="d-flex justify-content-end fw-semibold">
                                         <?= number_format(($item->amount * $item->price), 2) ?>
                                     </div>
                                 </td>
+                                
                                 <td class="align-middle gap-2">
                                     <div class="d-flex justify-content-center gap-2">
                                         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                        <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill']) ?>
+                                        <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
                                     </div>
-                            
+
                                 </td>
                             </tr>
-<?php endforeach; ?>
-<tr>
-    <td colspan="5" class="text-center">รวมทั้งสิ้น</td>
-    <td conspan="" class="text-end">
+                            <?php endforeach; ?>
 
-<span class="fw-semibold">100</span>
-    </td>
-</tr>
                         </tbody>
                     </table>
+
+                    <div class="row">
+                        <div class="col-6"></div>
+                        <div class="col-6">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tbody>
+                                        <tr class="">
+                                            <td>ทั้งหมด</td>
+                                            <td><span
+                                                    class="fw-semibold"><?= number_format($model->SumPo(), 2) ?></span>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php if ($model->status == ''): ?>
+                            <div class="d-grid gap-2">
+                                <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', ['/sm/order/pr-confirm', 'id' => $model->id], ['class' => 'btn btn-primary rounded shadow pr-confirm']) ?>
+                            </div>
+                            <?php endif; ?>
+                            <div class="d flex justify-between gap-3">
+                                    <button
+                                        type="button"
+                                        class="btn btn-success"
+                                    >
+                                    <i class="fa-regular fa-circle-check"></i> เห็นชอบ
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-danger"
+                                    >
+                                    <i class="fa-solid fa-xmark"></i> ไม่เห็นชอบ
+                                    </button>
+                                    
+                            </div>
+
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -172,7 +209,7 @@ $js = <<< JS
       var url = \$(this).attr("href");
       await Swal.fire({
         title: "ยืนยัน?",
-        text: "ส่งคำขอซื้อ!",
+        text: "ส่งคำขอซื้อเพื่อให้หัวหน้าพิจารณาเห็นชอบ!",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",

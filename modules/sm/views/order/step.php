@@ -79,7 +79,7 @@
         </div>
         <div>
             <div class="title">ขอซื้อ-ขอจ้าง (PR)</div>
-            <div class="caption">PR-6700001</div>
+            <div class="caption"><?= $model->pr_number ?></div>
         </div>
     </div>
     <div class="step">

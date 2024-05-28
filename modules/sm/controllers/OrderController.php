@@ -2,6 +2,7 @@
 
 namespace app\modules\sm\controllers;
 
+use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\modules\sm\models\Order;
 use app\modules\sm\models\OrderSearch;
@@ -31,6 +32,7 @@ class OrderController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        // 'delete-item' => ['POST'],
                     ],
                 ],
             ]
@@ -95,12 +97,12 @@ class OrderController extends Controller
      */
     public function actionCreate()
     {
-        $thaiYear = substr((date('Y') + 543), 2);
         $model = new Order([
             'name' => $this->request->get('name'),
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
+        $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
@@ -170,6 +172,7 @@ class OrderController extends Controller
     public function actionPrConfirm($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        $thaiYear = substr((date('Y') + 543), 2);
         $model = $this->findModel($id);
         $user = UserHelper::GetEmployee();
         $model->updated_by = $user->id;
@@ -180,13 +183,13 @@ class OrderController extends Controller
         $model->data_json = ArrayHelper::merge(
             $newObj, $model->data_json
         );
-        $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
-        $model->order_status = 1;
+        $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
+        $model->status = 1;
         $model->save();
 
         return [
             'status' => 'success',
-            'container' => '#helpdesk-container',
+            'container' => '#sm-container',
         ];
     }
 
@@ -218,17 +221,17 @@ class OrderController extends Controller
         }
     }
 
+    // เพิ่มรายการวัสดุ
     public function actionAddItem()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $order_id = $this->request->get('product_id');
-        return $order = $this->findModel($order_id);
-        $code = $this->request->get('code');
+        $order_id = $this->request->get('order_id');
+        $order = $this->findModel($order_id);
         $product_id = $this->request->get('product_id');
         $product = Product::findOne($product_id);
 
         $model = new Order([
-            'category_id' => $code,
+            'category_id' => $order_id,
             'name' => 'order_item',
             'item_id' => $product_id
         ]);
@@ -236,7 +239,6 @@ class OrderController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                // $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
                 return [
                     'status' => 'success',
@@ -279,7 +281,6 @@ class OrderController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                // $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
                 return [
                     'status' => 'success',
@@ -306,6 +307,23 @@ class OrderController extends Controller
                 'model' => $model,
                 'product' => $product
             ]);
+        }
+    }
+
+    public function actionDeleteItem($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ($model->delete()) {
+            return [
+                'status' => 'success',
+                'container' => '#sm-container',
+            ];
+        } else {
+            return [
+                'status' => 'error',
+                'container' => '#sm-container',
+            ];
         }
     }
 
