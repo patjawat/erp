@@ -103,7 +103,7 @@ class OrderController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
+                // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
                 $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -166,6 +166,30 @@ class OrderController extends Controller
         }
     }
 
+    // รับเรื่อง
+    public function actionPrConfirm($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $user = UserHelper::GetEmployee();
+        $model->updated_by = $user->id;
+        $newObj = [
+            'pr_confirm_name' => $user->fullname,
+            'pr_confirm_time' => date('Y-m-d H:i:s'),
+        ];
+        $model->data_json = ArrayHelper::merge(
+            $newObj, $model->data_json
+        );
+        $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
+        $model->order_status = 1;
+        $model->save();
+
+        return [
+            'status' => 'success',
+            'container' => '#helpdesk-container',
+        ];
+    }
+
     public function actionProductList()
     {
         $order_id = $this->request->get('order_id');
@@ -194,8 +218,11 @@ class OrderController extends Controller
         }
     }
 
-    public function actionProductAdd()
+    public function actionAddItem()
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $order_id = $this->request->get('product_id');
+        return $order = $this->findModel($order_id);
         $code = $this->request->get('code');
         $product_id = $this->request->get('product_id');
         $product = Product::findOne($product_id);
@@ -226,6 +253,49 @@ class OrderController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_product_select', [
+                    'model' => $model,
+                    'product' => $product,
+                    'order' => $order
+                ]),
+            ];
+        } else {
+            return $this->render('_form_product_select', [
+                'model' => $model,
+                'product' => $product,
+                'order' => $order
+            ]);
+        }
+    }
+
+    public function actionUpdateItem($id)
+    {
+        $model = Order::findOne([
+            'id' => $id,
+            'name' => 'order_item'
+        ]);
+        $product = Product::findOne($model->item_id);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                // $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->save(false);
+                return [
+                    'status' => 'success',
+                    'container' => '#sm-container',
+                ];
+            } else {
+                return false;
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $product->title,
                 'content' => $this->renderAjax('_form_product_select', [
                     'model' => $model,
                     'product' => $product

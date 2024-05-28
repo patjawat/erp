@@ -56,6 +56,7 @@ $modelCar = AssetDetail::find()->where(['name' => 'tax_car', 'code' => $model->c
             <td class="text-end"><span class="fw-semibold">ผู้ขาย/ผู้จำหน่าย/ผู้บริจาค : </span></td>
             <td colspan="3"><?= $model->vendor_name ?></td>
         </tr>
+        <?= $model->isCar() ? $this->render('./is_cars/tax', ['model' => $model]) : '' ?>
         <?= $model->isComputer() ? $this->render('./is_computer/spec', ['model' => $model]) : '' ?>
 
         <tr class="align-middle">
@@ -75,6 +76,7 @@ $modelCar = AssetDetail::find()->where(['name' => 'tax_car', 'code' => $model->c
         <!-- จบแสดงสถนะสงซ่อม -->
     </tbody>
 </table>
+
 <div class="row">
     <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
        

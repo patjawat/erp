@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="row">
             <?php foreach ($dataProvider->getModels() as $model): ?>
-            <div class="col-3">
+                <div class="col-lg-3 col-md-3 col-sm-6">
                 <div class="card">
                     <!-- <img class="card-img-top" src="https://angular.spruko.com/vexel/preview/assets/images/shop/1.png" alt="Title" /> -->
                         <?= Html::img($model->ShowImg(), ['class' => ' card-img-top ', 'style' => 'max-width:100%;height:280px;max-height: 280px;']) ?>

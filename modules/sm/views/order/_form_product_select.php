@@ -23,24 +23,36 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
-    'type' => ActiveForm::TYPE_HORIZONTAL,
-    'formConfig' => ['labelSpan' => 3, 'deviceSize' => ActiveForm::SIZE_SMALL]
+    // 'type' => ActiveForm::TYPE_HORIZONTAL,
+    // 'formConfig' => ['labelSpan' => 3, 'deviceSize' => ActiveForm::SIZE_SMALL]
 ]); ?>
 
 <?= Html::img($product->ShowImg(), ['class' => ' card-img-top ', 'style' => 'max-width:100%;height:280px;max-height: 280px;']) ?>
-<?= $form->field($model, 'amount')->textInput()->label('จำนวน'); ?>
-<?= $form->field($model, 'price')->textInput()->label('ราคา'); ?>
-                
+<div class="row d-flex justify-content-center">
+    <div class="col-4">
+        <?= $form->field($model, 'amount')->textInput()->label('จำนวน'); ?>
+    </div>
+    <div class="col-4">
+        <div class="mb-3 highlight-addon field-order-amount has-success">
+            <label class="form-label has-star" for="order-amount">หน่วย</label>
+            <input type="text" class="form-control is-valid" value="ชิ้น" disabled=true>
+            <div class="invalid-feedback"></div>
+        </div>
+    </div>
+    <div class="col-8">
+        <?= $form->field($model, 'price')->textInput()->label('ราคา'); ?>
+    </div>
+</div>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'item_id')->hiddenInput()->label(false); ?>
 
-                <div class="form-group mt-3 d-flex justify-content-center">
-                    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
-                </div>
-                
-            </div>
-        </div>
+<div class="form-group mt-3 d-flex justify-content-center">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+</div>
+
+</div>
+</div>
 <?php ActiveForm::end(); ?>
 
 <?php

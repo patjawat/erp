@@ -387,6 +387,7 @@ class RepairController extends Controller
                 } catch (\Throwable $th) {
                     // throw $th;
                 }
+
                 $model->save();
                 return [
                     'status' => 'success',

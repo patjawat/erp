@@ -73,40 +73,93 @@
 }
 </style>
 <div class="mt-3">
-<div class="step">
-    <div>
-        <div class="circle"><i class="fa fa-check"></i></div>
+    <div class="step  step-active">
+        <div>
+            <div class="circle"><i class="fa fa-check"></i></div>
+        </div>
+        <div>
+            <div class="title">ขอซื้อ-ขอจ้าง (PR)</div>
+            <div class="caption">PR-6700001</div>
+        </div>
     </div>
-    <div>
-        <div class="title">ขอซื้อ-ขอจ้าง</div>
-        <div class="caption">PR-6700001</div>
+    <div class="step">
+        <div>
+            <div class="circle">2</div>
+        </div>
+        <div>
+            <div class="title">หัวหน้าเห็นชอบ</div>
+            <div class="caption">ตรวจสอบคำขอซื้อ/ขอจ้าง</div>
+        </div>
     </div>
-</div>
-<div class="step step-active">
-    <div>
-        <div class="circle">2</div>
+    <div class="step">
+        <div>
+            <div class="circle">3</div>
+        </div>
+        <div>
+            <div class="title">ตรวจสอบคำขอซื้อ</div>
+            <div class="caption">Some text about Third step. </div>
+        </div>
     </div>
-    <div>
-        <div class="title">เห็นชอบ</div>
-        <div class="caption">This is description of second step.</div>
+    <div class="step">
+        <div>
+            <div class="circle">4</div>
+        </div>
+        <div>
+            <div class="title">อนุมัติ</div>
+        </div>
     </div>
-</div>
-<div class="step">
-    <div>
-        <div class="circle">3</div>
+    <div class="step">
+        <div>
+            <div class="circle">5</div>
+        </div>
+        <div>
+            <div class="title">ลงทะเบียนคุม</div>
+        </div>
     </div>
-    <div>
-        <div class="title">อนุมัติ</div>
-        <div class="caption">Some text about Third step. </div>
+
+    <div class="step">
+        <div>
+            <div class="circle">6</div>
+        </div>
+        <div>
+            <div class="title">ออกใบสั่งซื้อ (PO)</div>
+        </div>
     </div>
-</div>
-<div class="step">
-    <div>
-        <div class="circle">4</div>
+
+    <div class="step">
+        <div>
+            <div class="circle">7</div>
+        </div>
+        <div>
+            <div class="title">ตรวจรับ</div>
+        </div>
     </div>
-    <div>
-        <div class="title">ดำเนินการ</div>
+
+    <div class="step">
+        <div>
+            <div class="circle">8</div>
+        </div>
+        <div>
+            <div class="title">ยืนยันตรวจรับ</div>
+        </div>
     </div>
-</div>
-    
+
+    <div class="step">
+        <div>
+            <div class="circle">9</div>
+        </div>
+        <div>
+            <div class="title">รับเข้าคลัง</div>
+        </div>
+    </div>
+
+    <div class="step">
+        <div>
+            <div class="circle">10</div>
+        </div>
+        <div>
+            <div class="title">เสร็จสิ้น-ส่งบัญชี</div>
+        </div>
+    </div>
+
 </div>

@@ -14,6 +14,7 @@ $this->title = 'Products';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'sm-container']); ?>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -23,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="row">
             <?php foreach ($dataProvider->getModels() as $model): ?>
-            <div class="col-lg-4 col-md-4 col-sm-6">
+            <div class="col-lg-3 col-md-3 col-sm-6">
                 <div class="card">
                     <!-- <img class="card-img-top" src="https://angular.spruko.com/vexel/preview/assets/images/shop/1.png" alt="Title" /> -->
                     <?= Html::img($model->ShowImg(), ['class' => ' card-img-top ', 'style' => 'max-width:100%;height:280px;max-height: 280px;']) ?>
@@ -46,14 +47,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <h5 class="text-truncate"><?= $model->title ?></h5>
+                            <h6 class="text-truncate"><?= $model->title ?></h6>
                             <span
                             class=""><?= isset($model->data_json['unit']) ? $model->data_json['unit'] : '-' ?></span>
                         </div>
                         <hr>
                         <!-- <span>คงเหลือ 10 ชิ้น</span> -->
                         <div class="d-flex justify-content-between">
-                            <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/sm/order/product-add', 'title' => $model->title, 'product_id' => $model->id, 'code' => $order->code], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
+                            <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/sm/order/add-item', 'title' => $model->title, 'product_id' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
                             <input type="number" class="form-control" style="width:100px">
                         </div>
 

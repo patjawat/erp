@@ -53,7 +53,7 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['item_id', 'amount', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
-            [['data_json', 'created_at', 'updated_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'pr_nunber', 'po_nunber', 'status'], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
     }
@@ -106,7 +106,7 @@ class Order extends \yii\db\ActiveRecord
 
     public function getProduct()
     {
-        return $this->hasOne(Categorise::class, ['id' => 'item_id'])->andOnCondition(['name' => 'product_item']);
+        return $this->hasOne(Product::class, ['id' => 'item_id'])->andOnCondition(['name' => 'product_item']);
     }
 
     // ผู้ขอ

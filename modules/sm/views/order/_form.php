@@ -36,13 +36,10 @@ $this->params['breadcrumbs'][] = $this->title;
     'id' => 'form-order'
 ]); ?>
  <!-- ชื่อของประเภท -->
- <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
-             <div class="d-flex flex-column justify-content-center">
-                 <i class="fa-solid fa-bag-shopping fs-1 text-center"></i>
-                    <!-- <p class="text-center mt-1">ข้อซื้อ-ขอจ้าง</p> -->
-             </div>
+
+<div class="p-3">
+
+
                 <?php
                     echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                         'data' => $model->ListProductType(),
@@ -56,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             \$('#order-data_json-product_type_name').val(data)
                         }",
                         ]
-                    ])->label('เพื่อจัดซื้อ/ซ่อมแซม');
+                    ])->label('ประเภทขอซื้อ');
                 ?>
                 <?php
                     echo $form->field($model, 'data_json[due_date]')->widget(DateControl::classname(), [
@@ -80,6 +77,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <?= $form->field($model, 'data_json[vendor]')->textInput()->label('บริษัทแนะนำ') ?>
                 <?= $form->field($model, 'data_json[comment]', ['hintType' => ActiveField::HINT_SPECIAL])->textArea(['rows' => 3])->label('หมายเหตุ')->hint('Enter address in 4 lines. First 2 lines must contain the street details and next 2 lines the city, zip, and country detail.') ?>
+                <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
                 <div class="form-group mt-3 d-flex justify-content-center">
                     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
                 </div>
@@ -88,7 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         
        
-
+        </div>
 
 <?php ActiveForm::end(); ?>
 

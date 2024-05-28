@@ -59,6 +59,33 @@ use yii\helpers\Html;
     <td colspan="3"><?= $repair->viewRepairGroup(); ?>
         <?= html::a('แก้ไข', ['/helpdesk/repair/switch-group', 'id' => $repair->id, 'title' => '<i class="fa-solid fa-wrench"></i> หน่วยงานรับซ่อม'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-sm']]) ?>
     </td>
-    <td class="text-end"><span class="fw-semibold">สภานะงานซ่อม : </span></td>
-    <td colspan="3"><?= $repair->viewStatus() ?></td>
+    <td class="text-end"><span class="fw-semibold">ประเภทการซ่อม : </span></td>
+    <td colspan="3">
+        <?= $repair->data_json['repair_type']; ?>
+    </td>
+</tr>
+<tr class="align-middle">
+    <td class="text-end">
+        <span class="fw-semibold">สภานะงานซ่อม : </span>
+    </td>
+    <?php if ($repair->data_json['repair_type'] == 'ซ่อมภายนอก'): ?>
+    <td colspan="3">
+        <?= $repair->viewStatus() ?>
+    </td>
+    
+    <td class="text-end"><span class="fw-semibold">วันที่ส่งซ่อมถายนอก : </span></td>
+    <td colspan="3">
+        <?php
+        try {
+            echo Yii::$app->formatter->asDateTime($repair->data_json['repair_type_date'], 'php:d/m/Y');
+        } catch (\Throwable $th) {
+        }
+        ?>
+    </td>
+    <?php else: ?>
+        <td colspan="5">
+        <?= $repair->viewStatus() ?>
+    </td>
+        <?php endif ?>
+
 </tr>

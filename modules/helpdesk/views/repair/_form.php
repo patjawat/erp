@@ -127,6 +127,8 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     <?= $form->field($model, 'data_json[urgency]')->hiddenInput($model->listUrgency(), ['inline' => true, 'custom' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[location]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'data_json[send_type]')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'data_json[accept_name]')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'data_json[accept_time]')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
 
     <div class="d-flex bg-primary justify-content-between bg-opacity-10 p-3 rounded mb-3">
@@ -140,20 +142,46 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
             <div class="border border-1 border-primary p-3 rounded">
                 <?= $form->field($model, 'data_json[start_job]')->checkbox(['custom' => true, 'switch' => true])->label('ดำเนินการวันที่'); ?>
                 <?php
-                echo $form->field($model, 'data_json[start_job_date]')->widget(DateTimePicker::classname(), [
-                    'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                    'language' => 'th',
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'mm/dd/yyyy H:i:s'
-                    ],
-                ])->label(false)
+                echo $form
+                    ->field($model, 'data_json[start_job_date]')
+                    ->widget(DateControl::classname(), [
+                        'type' => DateControl::FORMAT_DATETIME,
+                        'language' => 'th',
+                        'widgetOptions' => [
+                            'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
+                            'pluginOptions' => [
+                                'autoclose' => true
+                            ]
+                        ]
+                    ])
+                    ->label(false)
                 ?>
             </div>
         </div>
         <div class="col-6">
             <div class="border border-1 border-primary p-3 rounded" style="height: 127px;">
-                <?= $form->field($model, 'data_json[repair_type]')->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน', 'ซ่อมภายนอก' => 'ซ่อมภายนอก'], ['inline' => true, 'custom' => true])->label('ประเภทารซ่อม') ?>
+                <?=
+                $form
+                    ->field($model, 'data_json[repair_type]')
+                    ->radioList(['ซ่อมภายใน' => 'ซ่อมภายใน', 'ซ่อมภายนอก' => 'ซ่อมภายนอก'], ['inline' => true, 'custom' => true])
+                    ->label(false)
+                // ->label('ประเภทารซ่อม')
+                ?>
+                <?php
+                echo $form
+                    ->field($model, 'data_json[repair_type_date]')
+                    ->widget(DateControl::classname(), [
+                        'type' => DateControl::FORMAT_DATE,
+                        'language' => 'th',
+                        'widgetOptions' => [
+                            'options' => ['placeholder' => 'ระบุวันที่ส่งซ่อมภายนอก ...'],
+                            'pluginOptions' => [
+                                'autoclose' => true
+                            ]
+                        ]
+                    ])
+                    ->label(false)
+                ?>
             </div>
         </div>
         ิ
@@ -191,14 +219,18 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
             <div class="border border-1 border-primary p-3 rounded">
                 <?= $form->field($model, 'data_json[end_job]')->checkbox(['custom' => true, 'switch' => true])->label('เสร็จวันที่'); ?>
                 <?php
-                echo $form->field($model, 'data_json[end_job_date]')->widget(DateTimePicker::classname(), [
-                    'options' => ['placeholder' => 'ระบุวันที่แล้วเสร็จ ...'],
-                    'language' => 'th',
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'mm/dd/yyyy H:i:s'
-                    ],
-                ])->label(false)
+                echo $form
+                    ->field($model, 'data_json[end_job_date]')
+                    ->widget(DateControl::classname(), [
+                        'type' => DateControl::FORMAT_DATETIME,
+                        'widgetOptions' => [
+                            'options' => ['placeholder' => 'ระบุวันที่แล้วเสร็จ ...'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                            ]
+                        ]
+                    ])
+                    ->label(false)
                 ?>
             </div>
             <?= $form->field($model, 'data_json[price]')->textInput(['placeholder' => 'ระบุมูลค่าการซ่อมถ้ามี', 'type' => 'number'])->label('มูลค่าการซ่อม') ?>
@@ -233,12 +265,18 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         $urlDateNow = Url::to(['/helpdesk/default/datetime-now']);
         $js = <<<JS
 
-             
+            if(\$("#helpdesk-data_json-repair_type").val() == "ซ่อมภายนอก"){
+                \$('#helpdesk-data_json-repair_type_date-disp').prop('disabled', false)
+                    }else{
+                        \$('#helpdesk-data_json-repair_type_date-disp').prop('disabled', true)
+
+                }           
+
              \$("#helpdesk-data_json-start_job").change(function() {
                 if(this.checked) {
                     \$.get("$urlDateNow",function (data, textStatus, jqXHR) 
                     {
-                        \$('#helpdesk-data_json-start_job_date').val(data).trigger('change')
+                        \$('#helpdesk-data_json-start_job_date-disp').val(data).trigger('change')
                     },"json");
                     \$('#helpdesk-status').val(3)
                 }else{
@@ -253,7 +291,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                 if(this.checked) {
                     \$.get("$urlDateNow",function (data, textStatus, jqXHR) 
                     {
-                        \$('#helpdesk-data_json-end_job_date').val(data).trigger('change')
+                        \$('#helpdesk-data_json-end_job_date-disp').val(data).trigger('change')
                     },"json");
                     \$('#helpdesk-status').val(4)
 
@@ -270,6 +308,15 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                 }
             });
 
+            \$("#helpdesk-data_json-repair_type").change(function() {
+                value = \$("input[name='Helpdesk[data_json][repair_type]']:checked").val();
+                if(value == "ซ่อมภายนอก") {
+                        \$('#helpdesk-data_json-repair_type_date-disp').prop('disabled', false)
+                    }else{
+                        \$('#helpdesk-data_json-repair_type_date-disp').prop('disabled', true)
+
+                }
+            });
 
 
             \$('#form-repair').on('beforeSubmit', function (e) {

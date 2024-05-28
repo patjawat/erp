@@ -34,28 +34,32 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="col-lg-8 col-md-8 col-sm-12">
 
-
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <p><i class="fa-solid fa-bag-shopping fs-3"></i> ใบขอซื้อ</p>
-                    <p class="">
-                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+<div class="d-flex justify-content-between">
+<div>
+<?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', ['/sm'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow pr-confirm']) ?>
+</div>
+<p class="">
+                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
                         <?= Html::a('<i class="fa-regular fa-trash-can"></i> ยกเลิก', ['delete', 'id' => $model->id], [
-                            'class' => 'btn btn-sm btn-danger rounded-pill ',
+                            'class' => 'btn btn-sm btn-danger rounded-pill shadow',
                             'data' => [
                                 'confirm' => 'Are you sure you want to delete this item?',
                                 'method' => 'post',
                             ],
                         ]) ?>
                     </p>
-                </div>
+</div>
+        <div class="card">
+            <div class="card-body">
+                <!-- <div class="d-flex justify-content-between">
+                    <p><i class="fa-solid fa-bag-shopping fs-3"></i> ใบขอซื้อ</p>
+                </div> -->
                 <table class="table table-striped-columns">
                     <tbody>
                         <tr class="">
                             <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
                             <td><?= $model->code ?></td>
-                            <td>ผู้ขอ</td>
+                            <td class="text-end">ผู้ขอ</td>
                             <td> <?= $model->getUserReq()['avatar'] ?></td>
                         </tr>
                         <tr class="">
@@ -92,32 +96,60 @@ $this->params['breadcrumbs'][] = $this->title;
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th scope="col">รายการ</th>
-                                <th scope="col">หน่วย</th>
-                                <th scope="col">ราคาต่อหน่วย</th>
-                                <th scope="col">จำนวนเงิน</th>
-                                <th class="d-flex justify-content-end gap-2">
+                                <th>รูป</th>
+                                <th style="width:500px">รายการ</th>
+                                <th class="text-center" style="width:80px">หน่วย</th>
+                                <th class="text-end">ราคาต่อหน่วย</th>
+                                <th class="text-center" style="width:80px">จำนวน</th>
+                                <th class="text-end" >จำนวนเงิน</th>
+                                <th style="width:180px">
+                                <div class="d-flex justify-content-center">
                                     <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+
+                                </div>
                             </th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach (Order::find()->where(['category_id' => $model->code])->all() as $item): ?>
                             <tr class="">
-                                <td><?= $item->product->title ?></td>
-                                <td><?= $item->product->data_json['unit'] ?></td>
-                                <td><?= $item->price ?></td>
-                                <td>
-                                <input type="number" class="form-control" style="width:100px">
+                                <td class="align-middle">
+                                <?php
+                                try {
+                                    // code...
+                                    echo Html::img($item->product->ShowImg(), ['class' => '  ', 'style' => 'max-width:50px;;height:280px;max-height: 50px;']);
+                                } catch (\Throwable $th) {
+                                    // throw $th;
+                                }
+                                ?>
                                 </td>
-                                <td class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-sm btn-warning rounded-pill"><i
-                                            class="fa-regular fa-pen-to-square"></i></button>
-                                    <button class="btn btn-sm btn-danger rounded-pill"><i
-                                            class="fa-regular fa-trash-can"></i></button>
+                                <td class="align-middle"><?= $item->product->title ?></td>
+                                <td class="align-middle text-center"><?= $item->product->data_json['unit'] ?></td>
+                                <td class="align-middle text-end fw-semibold"><?= number_format($item->price, 2) ?></td>
+                                <td class="align-middle text-end">
+                                <?= $item->amount ?>
+                                </td>
+                                <td class="align-middle text-end">
+                                    <div class="d-flex justify-content-end fw-semibold">
+                                        <?= number_format(($item->amount * $item->price), 2) ?>
+                                    </div>
+                                </td>
+                                <td class="align-middle gap-2">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                        <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill']) ?>
+                                    </div>
+                            
                                 </td>
                             </tr>
 <?php endforeach; ?>
+<tr>
+    <td colspan="5" class="text-center">รวมทั้งสิ้น</td>
+    <td conspan="" class="text-end">
+
+<span class="fw-semibold">100</span>
+    </td>
+</tr>
                         </tbody>
                     </table>
                 </div>
@@ -129,4 +161,52 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
+
+
+<?php
+$js = <<< JS
+
+
+    \$("body").on("click", ".pr-confirm", async function (e) {
+      e.preventDefault();
+      var url = \$(this).attr("href");
+      await Swal.fire({
+        title: "ยืนยัน?",
+        text: "ส่งคำขอซื้อ!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "ใช่, ลบเลย!",
+        cancelButtonText: "ยกเลิก",
+      }).then(async (result) => {
+        console.log("result", result.value);
+        if (result.value == true) {
+           await \$.ajax({
+            type: "post",
+            url: url,
+            dataType: "json",
+            success:  function (response) {
+              if (response.status == "success") {
+                 \$.pjax.reload({
+                  container: response.container,
+                  history: false,
+                  url: response.url,
+                });
+                success("ดำเนินการลบสำเร็จ รอหัวหน้าเห็นชอบ!.");
+                // location.reload();
+                if (response.close) {
+                   \$("#main-modal").modal("hide");
+                }
+              }
+            },
+          });
+        }
+      });
+    });
+
+    JS;
+$this->registerJS($js);
+?>
+
 <?php Pjax::end(); ?>
