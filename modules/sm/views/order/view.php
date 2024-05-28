@@ -165,37 +165,31 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </tbody>
                                 </table>
                             </div>
-                            <?php if ($model->status == ''): ?>
                             <div class="d-grid gap-2">
+                                <?php if ($model->status == ''): ?>
                                 <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', ['/sm/order/pr-confirm', 'id' => $model->id], ['class' => 'btn btn-primary rounded shadow pr-confirm']) ?>
-                            </div>
-                            <?php endif; ?>
-                            <div class="d flex justify-between gap-3">
-                                    <button
-                                        type="button"
-                                        class="btn btn-success"
-                                    >
-                                    <i class="fa-regular fa-circle-check"></i> เห็นชอบ
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="btn btn-danger"
-                                    >
-                                    <i class="fa-solid fa-xmark"></i> ไม่เห็นชอบ
-                                    </button>
-                                    
-                            </div>
+                                <?php endif; ?>
+                                <?php if ($model->status == 1): ?>
+                                    <?= Html::a('<span class="badge rounded-pill bg-light text-dark">2</span> หัวหน้าเห็นชอบ', ['/sm/order/confirm-status', 'id' => $model->id, 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ตรวจสอบคำขอซื้อ/ขอจ้าง'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php endif; ?>      
 
+                                    <?php if ($model->status == 2): ?>
+                                    <?= Html::a('<span class="badge rounded-pill bg-light text-dark">2</span> ตรวจสอบคำขอซื้อ', ['/sm/order/confirm-status', 'id' => $model->id, 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ตรวจสอบคำขอซื้อ/ขอจ้าง'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php endif; ?>  
+                                    <?php if ($model->status == 3): ?>
+                                    <?= Html::a('<span class="badge rounded-pill bg-light text-dark">2</span>  ผู้อำนวยการอนุมัติ  ', ['/sm/order/confirm-status', 'id' => $model->id, 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ผู้อำนวยการอนุมัติ'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php endif; ?>  
+
+                                    <?php if ($model->status == 4): ?>
+                                    <?= Html::a('<span class="badge rounded-pill bg-light text-dark">2</span>  ลงทะเบียนคุม  ', ['/sm/order/confirm-status', 'id' => $model->id, 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php endif; ?>  
+                                     
+                            </div>
                         </div>
                     </div>
-
                 </div>
-
             </div>
         </div>
-
-
-
     </div>
 </div>
 

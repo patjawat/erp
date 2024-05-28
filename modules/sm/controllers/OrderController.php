@@ -168,7 +168,7 @@ class OrderController extends Controller
         }
     }
 
-    // รับเรื่อง
+    // ส่งใบขอซื้อ
     public function actionPrConfirm($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -191,6 +191,44 @@ class OrderController extends Controller
             'status' => 'success',
             'container' => '#sm-container',
         ];
+    }
+
+    // อนุมัติตาม status
+    public function actionConfirmStatus($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $oldObj = $model->data_json;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->status = ($model->status + 1);
+
+                $model->save(false);
+                return [
+                    'status' => 'success',
+                    'container' => '#sm-container',
+                ];
+            } else {
+                return false;
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('confirm_status', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('confirm_status', [
+                'model' => $model,
+            ]);
+        }
     }
 
     public function actionProductList()
