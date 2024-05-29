@@ -21,7 +21,7 @@ $this->title = "My DashBoard";
             <div class="col-6">
                 <div class="card" style="height:300px;">
                     <div class="card-body">
-                        <h5>กิจกรม/ความเคลื่อนไหว</h5>
+                        <h5>กิจกรรม/ความเคลื่อนไหว</h5>
                         <?= $this->render('activity') ?>
 
                     </div>
@@ -37,7 +37,7 @@ $this->title = "My DashBoard";
 
         <div class="card" style="height:300px;">
             <div class="card-body">
-                <h5>กิจกรม/ความเคลื่อนไหว</h5>
+                <h5>กิจกรรม/ความเคลื่อนไหว</h5>
                 <?= $this->render('activity') ?>
 
             </div>
@@ -60,7 +60,7 @@ $this->title = "My DashBoard";
     <div class="col-4">
         <div class="card" style="height:300px;">
             <div class="card-body">
-                <h5>ทรัพสินย์ที่รับมอบหมาย</h5>
+                <h5>ทรัพย์สินที่รับมอบหมาย</h5>
                 <?= $this->render('activity') ?>
 
             </div>
@@ -79,7 +79,7 @@ $this->title = "My DashBoard";
     <div class="col-4">
         <div class="card" style="height:300px;">
             <div class="card-body">
-                <h5>กิจกรม/ความเคลื่อนไหว</h5>
+                <h5>กิจกรรม/ความเคลื่อนไหว</h5>
                 <?= $this->render('activity') ?>
             </div>
         </div>

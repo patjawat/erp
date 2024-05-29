@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row d-flex justify-content-center">
         <div class="col-6">
         <div class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
-            <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i> ไม่มีทรัพสินย์ที่ได้รับผิดชอบ</h4>
+            <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i> ไม่มีทรัพย์สินที่ได้รับผิดชอบ</h4>
             <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
 </div>
         </div>
