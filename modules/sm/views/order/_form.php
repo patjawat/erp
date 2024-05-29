@@ -82,9 +82,9 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
                
             
 
-                <?= $form->field($model, 'data_json[leader1]')->textInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
-                <?= $form->field($model, 'data_json[leader1_fullname]')->textInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
-                <?= $form->field($model, 'data_json[vendor]')->textInput()->label('บริษัทแนะนำ') ?>
+<?= $form->field($model, 'data_json[vendor]')->textInput()->label('บริษัทแนะนำ') ?>
+                <?= $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
+                <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
                 <?= $form->field($model, 'data_json[comment]', ['hintType' => ActiveField::HINT_SPECIAL])->textArea(['rows' => 3])->label('หมายเหตุ')->hint('Enter address in 4 lines. First 2 lines must contain the street details and next 2 lines the city, zip, and country detail.') ?>
                 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
