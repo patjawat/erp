@@ -81,7 +81,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="text-end">วันที่ต้องการ</td>
                             <td> <?php echo Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') ?>
                             </td>
-
+                        </tr>
+                        <td class="text-end">ผู้เห็นชอบ</td>
+                        <td colspan="5"><?= $model->viewLeaderUser()['avatar'] ?></td>
+                        </tr>
+                        <tr>
+                            <td class="text-end">ความเห็น</td>
+                            <td colspan="5"><?=isset($model->data_json['pr_confirm_2'])  ? '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-thumbs-up"></i> '.$model->data_json['pr_confirm_2'] .'</span>': ''?></td>
                         </tr>
                     </tbody>
                 </table>

@@ -1,6 +1,7 @@
 <?php
 
 use app\modules\am\models\Asset;
+use app\modules\hr\models\Employees;
 use kartik\datecontrol\DateControl;
 use kartik\form\ActiveField;
 use kartik\form\ActiveForm;
@@ -19,6 +20,9 @@ $this->title = 'ราการขอซื้อ';
 $this->params['breadcrumbs'][] = ['label' => 'Inventories', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+
+$employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -37,10 +41,10 @@ $this->params['breadcrumbs'][] = $this->title;
 ]); ?>
  <!-- ชื่อของประเภท -->
 
-<div class="p-3">
 
-
-                <?php
+<div class="row">
+<div class="col-6">
+<?php
                     echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                         'data' => $model->ListProductType(),
                         'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -55,26 +59,31 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]
                     ])->label('ประเภทขอซื้อ');
                 ?>
-                <?php
-                    echo $form->field($model, 'data_json[due_date]')->widget(DateControl::classname(), [
-                        'type' => DateControl::FORMAT_DATE,
-                        'ajaxConversion' => false,
-                        'widgetOptions' => [
-                            'pluginOptions' => [
-                                'autoclose' => true
-                            ]
-                        ]
-                    ])->label('วันที่ต้องการ');
-                    // echo $form->field($model, 'data_json[due_date]')->widget(DatePicker::classname(), [
-                    //     'options' => ['placeholder' => 'ระบุวันที่ต้องการ ...'],
-                    //     'language' => 'th',
-                    //     'pluginOptions' => [
-                    //         'autoclose' => true,
-                    //         'format' => 'mm/dd/yyyy'
-                    //     ],
-                    // ])->label('วันที่ต้องการ')
-                ?>
+</div>
+<div class="col-6">
+<?php
+                  echo $form
+                  ->field($model, 'data_json[due_date]')
+                  ->widget(DateControl::classname(), [
+                      'type' => DateControl::FORMAT_DATE,
+                      'language' => 'th',
+                      'widgetOptions' => [
+                          'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
+                          'pluginOptions' => [
+                              'autoclose' => true
+                          ]
+                      ]
+                  ])->label('วันที่ต้องการ');
 
+                ?>
+</div>
+</div>
+
+               
+            
+
+                <?= $form->field($model, 'data_json[leader1]')->textInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
+                <?= $form->field($model, 'data_json[leader1_fullname]')->textInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
                 <?= $form->field($model, 'data_json[vendor]')->textInput()->label('บริษัทแนะนำ') ?>
                 <?= $form->field($model, 'data_json[comment]', ['hintType' => ActiveField::HINT_SPECIAL])->textArea(['rows' => 3])->label('หมายเหตุ')->hint('Enter address in 4 lines. First 2 lines must contain the street details and next 2 lines the city, zip, and country detail.') ?>
                 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
@@ -87,8 +96,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         
-       
-        </div>
+
 
 <?php ActiveForm::end(); ?>
 

@@ -88,7 +88,10 @@
         </div>
         <div>
             <div class="title">หัวหน้าเห็นชอบ</div>
-            <div class="caption">ตรวจสอบคำขอซื้อ/ขอจ้าง</div>
+            <div class="caption">
+<?=isset($model->data_json['pr_confirm_2']) ? $model->data_json['pr_confirm_2'] : ''?>
+
+            </div>
         </div>
     </div>
     <div class="step  <?= $model->status == 3 ? 'step-active' : '' ?>">

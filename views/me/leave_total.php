@@ -42,7 +42,7 @@ $js = <<< JS
 var options = {
           series: [70],
           chart: {
-          height: 250,
+          height: 180,
           fontFamily: 'Prompt, sans-serif',
           type: 'radialBar',
           dropShadow: {
@@ -59,7 +59,7 @@ var options = {
             radialBar: {
                 hollow: {
                     margin: 15,
-                    size: '85%' // 
+                    size: '80%' // 
                 },
                 track: {
                 dropShadow: {

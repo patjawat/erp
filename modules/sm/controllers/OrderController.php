@@ -98,7 +98,8 @@ class OrderController extends Controller
     public function actionCreate()
     {
         $model = new Order([
-            'name' => $this->request->get('name'),
+            // 'name' => $this->request->get('name'),
+            'name' => 'order',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 

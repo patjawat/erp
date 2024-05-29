@@ -24,7 +24,7 @@ use yii\helpers\Url;
                     <table class="table table-primary">
                         <thead>
                             <tr>
-                                <th scope="col">เลขที่ใบขอ</th>
+                                <th scope="col">รายการ</th>
                                 <th scope="col">วันที่</th>
                                 <th scope="col">ผู้ขอ/เรื่อง</th>
                                 <th scope="col">หน่วยงาน</th>
@@ -35,7 +35,17 @@ use yii\helpers\Url;
                         <tbody>
                             <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="align-middle">
-                                <td><?= Html::a($model->code, ['/sm/order/view', 'id' => $model->id]) ?></td>
+                                <td>
+                      <div class="d-flex flex-column">
+<span>
+    <?php  echo isset($model->data_json['product_type_name']) ? ($model->data_json['product_type_name']) : ''?>
+</span>
+<span>
+    <?= isset($model->data_json['comment']) ? Html::a($model->data_json['comment'], ['/sm/order/view', 'id' => $model->id]) : ''?></td>
+</span>
+                      </div>
+                            
+
                                 <td>
                                     <p class="m-0">
                                         <?php echo Yii::$app->thaiFormatter->asDate($model->created_at, 'medium') ?>

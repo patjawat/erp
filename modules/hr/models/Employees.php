@@ -8,6 +8,7 @@ use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use yii\bootstrap5\Html;
+use app\modules\hr\models\Organization;
 use Yii;
 
 /**
@@ -400,6 +401,27 @@ class Employees extends \yii\db\ActiveRecord
             return null;
         }
     }
+    
+    public function leaderUser()
+    {
+        $model = Organization::find()->where(['id' => $this->department ])->one();
+        if($model){
+            return [
+                'leader1' => $model->data_json['leader1'],
+                'leader1_fullname' => $model->data_json['leader1_fullname'],
+                'leader2' => $model->data_json['leader2'],
+                'leader2_fullname' => $model->data_json['leader2_fullname'],
+            ];
+        }else{
+            return [
+                'leader1' => '',
+                'leader1_fullname' => '',
+                'leader2' => '',
+                'leader2_fullname' => '',
+            ];
+        }
+    }
+
 
     public function generalMenu()
     {
