@@ -19,6 +19,7 @@ services:
     image: mysql:5.7
     container_name: ${CONTAINER_NAME}_db
     hostname: mysqldboffice
+    
     cap_add:
       - SYS_NICE
     restart: always
@@ -56,18 +57,18 @@ services:
       PMA_HOST: mysqlDB
       UPLOAD_LIMIT: 300M
 
-  mysqlbackup:
-    image: selim13/automysqlbackup:2.6-9
-    volumes:
-      - "./docker/backup:/backup"
-    environment:
-      USERNAME: root
-      PASSWORD: "docker"
-      DBNAMES: ${CONTAINER_NAME}
-      DBHOST: mysqlDB
-      DBEXCLUDE: "performance_schema information_schema"
-      # CRON_SCHEDULE: "*/2 * * * *"
-      CRON_SCHEDULE: "0 0 * * *" 
-      EXTRA_OPTS: "--single-transaction"
-    depends_on:
-      - mysqlDB
+  # mysqlbackup:
+  #   image: selim13/automysqlbackup:2.6-9
+  #   volumes:
+  #     - "./docker/backup:/backup"
+  #   environment:
+  #     USERNAME: root
+  #     PASSWORD: "docker"
+  #     DBNAMES: ${CONTAINER_NAME}
+  #     DBHOST: mysqlDB
+  #     DBEXCLUDE: "performance_schema information_schema"
+  #     # CRON_SCHEDULE: "*/2 * * * *"
+  #     CRON_SCHEDULE: "0 0 * * *" 
+  #     EXTRA_OPTS: "--single-transaction"
+  #   depends_on:
+  #     - mysqlDB
