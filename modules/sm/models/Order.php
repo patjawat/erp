@@ -124,23 +124,23 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
-        // หัวหน้าผู้ตรวจสแบ
-        public function viewLeaderUser()
-        {
-            try {
-                $employee = Employees::find()->where(['id' => $this->data_json['leader1']])->one();
-    
-                return [
-                    'avatar' => $employee->getAvatar(false),
-                    'department' => $employee->departmentName()
-                ];
-            } catch (\Throwable $th) {
-                return [
-                    'avatar' => '',
-                    'department' => '',
-                ];
-            }
+    // หัวหน้าผู้ตรวจสแบ
+    public function viewLeaderUser()
+    {
+        try {
+            $employee = Employees::find()->where(['id' => $this->data_json['leader1']])->one();
+
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'department' => $employee->departmentName()
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'department' => '',
+            ];
         }
+    }
 
     public function SumPo()
     {
@@ -163,5 +163,10 @@ class Order extends \yii\db\ActiveRecord
     public function ListProductType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
+    }
+
+    public function ListProduct()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'product_item'])->all(), 'id', 'title');
     }
 }

@@ -2,9 +2,9 @@
 
 namespace app\models;
 
+use app\models\Categorise;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Categorise;
 
 /**
  * CategoriseSearch represents the model behind the search form of `app\models\Categorise`.
@@ -18,7 +18,7 @@ class CategoriseSearch extends Categorise
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','position_group','position_type'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'position_group', 'position_type', 'qty'], 'safe'],
         ];
     }
 
@@ -63,7 +63,8 @@ class CategoriseSearch extends Categorise
             'active' => $this->active,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
+        $query
+            ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'category_id', $this->category_id])
             ->andFilterWhere(['like', 'emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'name', $this->name])

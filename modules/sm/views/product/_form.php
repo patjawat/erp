@@ -2,70 +2,146 @@
 
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
+use unclead\multipleinput\MultipleInput;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+// use unclead\widgets\MultipleInput;
+use unclead\multipleinput\MultipleInputColumn;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\AssetType $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
+<style>
+    .modal-body{
+        background-color:#f1f5f9;
+    }
+</style>
 
+<?php $form = ActiveForm::begin(['id' => 'form-product']); ?>
 
-<?php $form = ActiveForm::begin([
-    'id' => 'form-product',
-    // 'type' => ActiveForm::TYPE_HORIZONTAL,
-    // 'formConfig' => ['labelSpan' => 4, 'deviceSize' => ActiveForm::SIZE_SMALL]
-]); ?>
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+
 <div class="row">
+    <div class="col-8">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="fa-solid fa-circle-plus"></i> เพิ่มสินค้า/บริการ</h5>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('รายการ') ?>
+                            <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('รหัส') ?>
+                        </div>
+                        <div class="col-6">
+                            <?php
+                                echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+                                    'data' => $model->listProductType(),
+                                    'options' => ['placeholder' => 'ระบุ...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'dropdownParent' => '#main-modal',
+                                    ],
+                                ])->label('ประเภท')
+                            ?>
+                            <?php
+                                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                                    'data' => $model->listUnit(),
+                                    'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'dropdownParent' => '#main-modal',
+                                    ],
+                                    'pluginEvents' => [
+                                        'select2:select' => "function(result) { 
+                                            var data = \$(this).select2('data')[0].text;
+                                        console.log(data)
+                                    }",
+                                    ]
+                                ])->label('หน่วยนับหลัก')
+                            ?>
+                        </div>
+                    </div>
+                    <div class="col-12">
+
+                    </div>
+
+            </div>
+        </div>
+    </div>
     <div class="col-4">
         <input type="file" id="my_file" style="display: none;" />
         <div class="d-flex justify-content-center">
             <a href="#" class="select-photo">
-                <?= Html::img($model->ShowImg(), ['class' => 'avatar-profile object-fit-cover rounded', 'style' => 'max-width:100%;']) ?>
+                <?= Html::img($model->ShowImg(), ['class' => 'avatar-profile object-fit-cover rounded', 'style' => 'max-width:100%;height: 219px;']) ?>
             </a>
         </div>
     </div>
-    <div class="col-8">
-        <div class="row">
-            <div class="col-8">
-                <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อครุภัณฑ์'])->label('ชื่อรายการ') ?>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">หน่วยนับอื่นๆ...</p>
                 <?php
-                    echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-                        'data' => $model->listProductType(),
-                        'options' => ['placeholder' => 'ระบุ...'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
+
+                    echo $form->field($model, 'unit_items')->widget(MultipleInput::class, [
+                        'allowEmptyList' => false,
+                        'enableGuessTitle' => true,
+                        'addButtonPosition' => MultipleInput::POS_HEADER,
+                        'addButtonOptions' => [
+                            'class' => ' btn-sm btn btn-success',
+                            'label' => '<i class="fa-solid fa-circle-plus"></i>',
                         ],
-                    ])->label('ประเภท')
+                        'removeButtonOptions' => [
+                            'class' => 'btn-sm btn btn-danger',
+                            'label' => '<i class="fa-solid fa-xmark"></i>'  // also you can use html code
+                        ],
+                        'columns' => [
+                            [
+                                'name' => 'id',
+                                'title' => 'ID',
+                                'enableError' => true,
+                                'type' => MultipleInputColumn::TYPE_HIDDEN_INPUT,
+                            ],
+                            [
+                                'type' => \kartik\widgets\Select2::className(),
+                                'name' => 'title',
+                                'title' => 'หน่วยนับ',
+                                'options' => [
+                                    'data' => $model->listUnit(),
+                                    'pluginOptions' => [
+                                        'placeholder' => 'ระบุหน่วยนับ...',
+                                        'allowClear' => true,
+                                        'dropdownParent' => '#main-modal',
+                                    ],
+                                ],
+                                'enableError' => true
+                            ],
+                            [
+                                'name' => 'qty',
+                                'type' => 'textInput',
+                                'title' => 'จำนวน',
+                            ],
+                            [
+                                'name' => 'barcode',
+                                'type' => 'textInput',
+                                'title' => "บาร์โค้ด\u{200B}",
+                                // 'headerOptions' => [
+                                //     'class' => 'table-light',// กำหนดสไตล์ให้กับพื้นหลังของ label
+                                // ],
+                            ],
+                        ]
+                    ])->label(false);
                 ?>
             </div>
-            <div class="col-4">
-                <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('รหัส') ?>
-                <?php
-                    echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-                        'data' => $model->listUnit(),
-                        'options' => ['placeholder' => 'ระบุหน่วยนับ...'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
-                        ],
-                    ])->label('หน่วยนับ')
-                ?>
-            </div>
-        </div>
-        <div class="col-12">
-            
         </div>
     </div>
-
 </div>
+
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
 </div>
-
 <?php ActiveForm::end(); ?>
 
 

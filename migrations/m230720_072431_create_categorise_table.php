@@ -21,6 +21,7 @@ class m230720_072431_create_categorise_table extends Migration
             'emp_id' => $this->string()->comment('พนักงาน'),
             'name' => $this->string()->notNull()->comment('ชนิดข้อมูล'),
             'title' => $this->string()->comment('ชื่อ'),
+            'qty' => $this->integer()->comment('จำนวน'),
             'description' => $this->string()->comment('รายละเอียดเพิ่มเติม'),
             'data_json' => $this->json(),
             'ma_items' => $this->json()->comment('รายการบำรุงรักษา'),

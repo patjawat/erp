@@ -45,19 +45,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <div class="dropdown float-end">
                                 <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-ellipsis"></i>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-right" style="">
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                                    <?= Html::a('<i class="bx bx-trash me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
-                                        'class' => 'dropdown-item  delete-item',
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right" style="">
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                <?= Html::a('<i class="bx bx-trash me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
+                                    'class' => 'dropdown-item  delete-item',
                                     ]) ?>
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between">
-                        <h5 class="text-truncate"><?= $model->title ?></h5>
+                            <?= Html::a($model->title, ['view', 'id' => $model->id], ['class' => 'h5 text-truncate']) ?>
                         <span class=""><?= isset($model->data_json['unit']) ? $model->data_json['unit'] : '-' ?></span>
                         </div>
                         <!-- <span>คงเหลือ 10 ชิ้น</span> -->

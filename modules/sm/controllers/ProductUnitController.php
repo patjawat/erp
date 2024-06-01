@@ -2,18 +2,21 @@
 
 namespace app\modules\sm\controllers;
 
-use app\modules\sm\models\Product;
-use app\modules\sm\models\ProductSearch;
+use app\models\Categorise;
+use app\models\CategoriseSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use Yii;
 
 /**
- * ProductController implements the CRUD actions for Product model.
+ * ProductUnitController implements the CRUD actions for Categorise model.
  */
-class ProductController extends Controller
+class ProductUnitController extends Controller
 {
+    /**
+     * @inheritDoc
+     */
     public function behaviors()
     {
         return array_merge(
@@ -30,20 +33,14 @@ class ProductController extends Controller
     }
 
     /**
-     * Lists all Product models.
+     * Lists all Categorise models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new ProductSearch();
+        $searchModel = new CategoriseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'product_item']);
-        $dataProvider->query->andFilterWhere([
-            'in',
-            'category_id',
-            $searchModel->q_category,
-        ]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -52,43 +49,28 @@ class ProductController extends Controller
     }
 
     /**
-     * Displays a single Product model.
-     *
+     * Displays a single Categorise model.
      * @param int $id ID
-     *
      * @return string
-     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-        if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
-                'content' => $this->renderAjax('view_type', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('view', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
     }
 
     /**
-     * Creates a new Product model.
+     * Creates a new Categorise model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     *
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Product([
-            'name' => 'product_item',
+        $model = new Categorise([
+            'name' => 'product_unit',
+            'category_id' => $this->request->get('product_id'),
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
@@ -148,7 +130,7 @@ class ProductController extends Controller
 
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('create', [
+            'content' => $this->renderAjax('update', [
                 'model' => $model,
                 'ref' => $model->ref == '' ? substr(\Yii::$app->getSecurity()->generateRandomString(), 10) : $model->ref,
             ]),
@@ -173,18 +155,15 @@ class ProductController extends Controller
     }
 
     /**
-     * Finds the Product model based on its primary key value.
+     * Finds the Categorise model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     *
      * @param int $id ID
-     *
-     * @return Product the loaded model
-     *
+     * @return Categorise the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Product::findOne(['id' => $id])) !== null) {
+        if (($model = Categorise::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

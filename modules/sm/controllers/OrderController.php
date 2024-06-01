@@ -63,8 +63,25 @@ class OrderController extends Controller
      */
     public function actionView($id)
     {
+        $modelsItems = [new Order];
+
+        if (Yii::$app->request->post()) {
+            $modelItems = Model::createMultiple(Order::classname());
+            Model::loadMultiple($modelItems, Yii::$app->request->post());
+
+            // ajax validation
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ArrayHelper::merge(
+                    ActiveForm::validateMultiple($modelItems),
+                    ActiveForm::validate($modelCustomer)
+                );
+            }
+        }
+
         return $this->render('view', [
             'model' => $this->findModel($id),
+            'modelsItems' => (empty($modelsItems)) ? [new Order] : $modelsItems
         ]);
     }
 
@@ -141,9 +158,34 @@ class OrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $modelsItems = [new Order];
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                // validate all models
+                $valid = $modelCustomer->validate();
+                $valid = Model::validateMultiple($modelItems) && $valid;
+
+                if ($valid) {
+                    $transaction = \Yii::$app->db->beginTransaction();
+                    try {
+                        if ($flag = $modelCustomer->save(false)) {
+                            foreach ($modelItems as $modelOrder) {
+                                $modelOrder->customer_id = $modelCustomer->id;
+                                if (!($flag = $modelOrder->save(false))) {
+                                    $transaction->rollBack();
+                                    break;
+                                }
+                            }
+                        }
+                        if ($flag) {
+                            $transaction->commit();
+                            return $this->redirect(['view', 'id' => $modelCustomer->id]);
+                        }
+                    } catch (Exception $e) {
+                        $transaction->rollBack();
+                    }
+                }
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -160,11 +202,13 @@ class OrderController extends Controller
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
+                    'modelsItems' => $modelsItems
                 ]),
             ];
         } else {
             return $this->render('update', [
                 'model' => $model,
+                'modelsItems' => $modelsItems
             ]);
         }
     }

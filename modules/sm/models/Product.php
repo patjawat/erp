@@ -66,7 +66,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category'], 'safe'],
+            [['data_json', 'q_category', 'unit_items'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -114,5 +114,10 @@ class Product extends \yii\db\ActiveRecord
     public function ListUnit()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
+    }
+
+    public function ListProductUnit()
+    {
+        return Categorise::find()->where(['category_id' => $this->id, 'name' => 'product_unit'])->all();
     }
 }

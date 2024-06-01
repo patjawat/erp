@@ -79,7 +79,8 @@
         "istvan-ujjmeszaros/bootstrap-duallistbox": "~4.0.0",
         "softark/yii2-dual-listbox": "dev-master",
         "chillerlan/php-qrcode": "dev-main",
-        "kartik-v/php-date-formatter": "dev-master"
+        "kartik-v/php-date-formatter": "dev-master",
+        "vivekmarakana/yii2-dynamicform": "dev-master"
         
     },
     "require-dev": {
