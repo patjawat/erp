@@ -69,7 +69,7 @@ services:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
     depends_on: 
-      - my_app
+      - php
     networks: 
       - proxy-network
     
