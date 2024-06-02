@@ -59,7 +59,7 @@ services:
       UPLOAD_LIMIT: 300M
 
   data-backup:
-    container_name: data-backup
+    container_name: ${CONTAINER_NAME}_backup
     image: tiredofit/db-backup
     volumes:
       - ./backups:/backup
