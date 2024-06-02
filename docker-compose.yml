@@ -1,5 +1,5 @@
 # https://crontab.guru/ ตั้งเวลา
-version: '2'
+version: '3.9'
 services:
   php:
     container_name: ${CONTAINER_NAME}
@@ -28,6 +28,7 @@ services:
       - MYSQL_ROOT_PASSWORD=docker
       - MYSQL_PASSWORD=docker
       - MYSQL_ROOT_HOST=%
+      - MYSQL_DATABASE=${DB_NAME}
     command:
       [
         # 'RUN echo "memory_limit = 2048M" >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini;',
@@ -56,6 +57,42 @@ services:
       MYSQL_ROOT_PASSWORD: docker
       PMA_HOST: mysqlDB
       UPLOAD_LIMIT: 300M
+
+  data-backup:
+    container_name: data-backup
+    image: tiredofit/db-backup
+    volumes:
+      - ./backups:/backup
+      - ./:/home/app
+      # - ./post-script.sh:/assets/custom-scripts/post-script.sh
+      - ./post-script.sh:/assets/scripts/post/post-script.sh
+      #- ./post-script.sh:/assets/custom-scripts/post-script.sh
+    environment:
+      - TIMEZONE=Asia/bangkok
+      - CONTAINER_NAME=data-backup
+      - CONTAINER_ENABLE_MONITORING=TRUE
+      - DEBUG_MODE=TRUE
+      - DB01_SCRIPT_LOCATION_POST=TRUE
+
+      - BACKUP_JOB_CONCURRENCY=1     # Only run one job at a time
+      - DEFAULT_CHECKSUM=NONE        # Don't create checksums
+      - DEFAULT_BACKUP_INTERVAL=1   # Backup every 1440 minutes
+      - DEFAULT_BACKUP_BEGIN=0000      # Start backing up at midnight
+      - DEFAULT_CLEANUP_TIME=8640    # Cleanup backups after a week
+
+      - DB01_TYPE=mysql
+      - DB01_HOST=mysqlDB
+      - DB01_NAME=dansai
+      - DB01_USER=root
+      - DB01_PASS=docker
+      - DB01_BACKUP_INTERVAL=30        # (override) Backup every 30 minutes
+      - DB01_BACKUP_BEGIN=+1           # (override) Backup starts immediately
+      - DB01_CLEANUP_TIME=180        # (override) Cleanup backups they are older than 180 minutes
+      # - DB01_CHECKSUM=SHA1           # (override) Create a SHA1 checksum
+      - DB01_COMPRESSION=GZ          # (override) Compress with GZIP
+
+
+    restart: always
 
   # mysqlbackup:
   #   image: selim13/automysqlbackup:2.6-9

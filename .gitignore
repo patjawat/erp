@@ -39,3 +39,4 @@ docker-compose.ylm
 web/uploads/*
 web/import-csv/*
 .env
+backups
