@@ -1,5 +1,4 @@
 # https://crontab.guru/ ตั้งเวลา
-version: '3'
 services:
   php:
     container_name: ${CONTAINER_NAME}
