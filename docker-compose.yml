@@ -76,7 +76,7 @@ services:
 
       - BACKUP_JOB_CONCURRENCY=1     # Only run one job at a time
       - DEFAULT_CHECKSUM=NONE        # Don't create checksums
-      - DEFAULT_BACKUP_INTERVAL=1   # Backup every 1440 minutes
+      - DEFAULT_BACKUP_INTERVAL=1440   # Backup every 1440 minutes
       - DEFAULT_BACKUP_BEGIN=0000      # Start backing up at midnight
       - DEFAULT_CLEANUP_TIME=8640    # Cleanup backups after a week
 
