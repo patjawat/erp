@@ -62,7 +62,7 @@ services:
     container_name: ${CONTAINER_NAME}_backup
     image: tiredofit/db-backup
     volumes:
-      - ./backups:/backup
+      - ./db-backup:/backup
       - ./:/home/app
       # - ./post-script.sh:/assets/custom-scripts/post-script.sh
       - ./post-script.sh:/assets/scripts/post/post-script.sh
