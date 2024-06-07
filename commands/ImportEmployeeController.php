@@ -29,7 +29,7 @@ use Yii;
  *
  * @since 2.0
  */
-class ImportPersonController extends Controller
+class ImportEmployeeController extends Controller
 {
     /**
      * This command echoes what you have entered as the message.
@@ -74,7 +74,11 @@ class ImportPersonController extends Controller
         p.HR_POSITION_ID as position_name,
         p.HR_PERSON_TYPE_ID as position_type,
         p.HR_LEVEL_ID as position_level,
-        p.HR_DEPARTMENT_SUB_SUB_ID as department,
+        dep.HR_DEPARTMENT_NAME as department_group,
+        dep_sub.HR_DEPARTMENT_SUB_NAME as department_group2,
+        dep_sub_sub.HR_DEPARTMENT_SUB_SUB_NAME as department_name,
+        p.POSITION_IN_WORK as position_name,
+        p_type.HR_PERSON_TYPE_NAME as position_group_name,
         CONCAT('เลขที่ ',p.HR_HOME_NUMBER,' ม.',p.HR_VILLAGE_NO) as address,
         CONCAT(p.HR_ROAD_NAME) as road,
         CONCAT(p.HR_SOI_NAME) as soiname,
@@ -88,11 +92,14 @@ class ImportPersonController extends Controller
         LEFT JOIN hrd_religion re ON re.`HR_RELIGION_ID` = p.HR_RELIGION_ID
         LEFT JOIN hrd_marry_status marry ON marry.`HR_MARRY_STATUS_ID` = p.`HR_MARRY_STATUS_ID`
         LEFT JOIN hrd_nationality nation ON nation.`HR_NATIONALITY_ID` = p.`HR_NATIONALITY_ID`
-        LEFT JOIN hrd_prefix pre ON pre.`HR_PREFIX_ID` = p.`HR_PREFIX_ID`";
+        LEFT JOIN hrd_prefix pre ON pre.`HR_PREFIX_ID` = p.`HR_PREFIX_ID`
+        LEFT JOIN hrd_person_type p_type ON p_type.HR_PERSON_TYPE_ID = p.PERSON_TYPE
+        LEFT JOIN hrd_department dep ON dep.HR_DEPARTMENT_ID = p.HR_DEPARTMENT_ID
+        LEFT JOIN hrd_department_sub dep_sub ON dep_sub.HR_DEPARTMENT_SUB_ID = p.HR_DEPARTMENT_SUB_ID
+        LEFT JOIN hrd_department_sub_sub dep_sub_sub ON dep_sub_sub.HR_DEPARTMENT_SUB_SUB_ID = p.HR_DEPARTMENT_SUB_SUB_ID;";
         $queryPersons = \Yii::$app->db2->createCommand($sqlPerson)->queryAll();
         $data = [];
         if (BaseConsole::confirm('Are you sure?')) {
-            echo "user typed yes\n";
             $i = 1;
             foreach ($queryPersons as $person) {
                 $checker = Employees::findOne(['cid' => $person['cid']]);
@@ -129,13 +136,18 @@ class ImportPersonController extends Controller
                     $model->zipcode = $person['zipcode'];
                     $model->position_name = 0;
                     $model->education = 0;  // การศึกษา
-                    $model->status = 0;  // สถานะ
+                    $model->status = $person['status'];  // สถานะ
                     $model->address = $person['address'];
                     $data_json = [
                         'marry' => $person['marry'],
                         'nationality' => $person['nationality'],
                         'religion' => $person['religion'],
                         'blood' => $person['blood'],
+                        'position_type' => $person['position_group_name'],
+                        // 'position_group' => $person['position_group_name'],
+                        'position_name_text' => $person['position_name'],
+                        'department_text' => '',
+                        'position_level_text' => ''
                     ];
 
                     // $fullname =   $this->getPrefix($person['HR_PREFIX_ID'], $person['SEX']).$model->fname = $person['fname'].' '.$model->lname = $person['lname'];
@@ -145,21 +157,86 @@ class ImportPersonController extends Controller
 
                     // $message = ('# '.$i++.' ').$fullname.' Success';
                     if ($model->save(false)) {
-                        // echo $message . "\n";
-                        // echo  $person['fname'] . "\n";
-                        echo $model->fname . ' ' . $model->lname . "\n";
-                        // echo $person['fname'] . "\n";
+                        $this->UpdatePosition($model, $person);
+                        // echo $model->fname . ' ' . $model->lname . "\n";
                     } else {
                         echo "False \n";
                     }
                 } else {
-                    echo "นำเข้าข้อมูลแล้ว เข้าใจไม!!  \n";
-
-                    return ExitCode::OK;
+                    // echo "นำเข้าข้อมูลแล้ว เข้าใจไม!!  \n";
+                    // return ExitCode::OK;
+                    $this->UpdatePosition($checker, $person);
                 }
             }
         } else {
             echo "user typed no\n";
+        }
+    }
+
+    public static function UpdatePosition($model, $person)
+    {
+        try {
+            $empDetailCheck = EmployeeDetail::findOne(['emp_id' => $model->id, 'name' => 'position']);
+            $empDetail = $empDetailCheck ? $empDetailCheck : new EmployeeDetail();
+
+            $positionName = $person['position_name'];
+            $positionGroupName = $person['position_group_name'];
+
+            $positionSql = "select * FROM (SELECT 
+                ps_group.code as position_group_code,
+                ps_group.title as position_group_name,
+                ps_type.code as position_type_code,
+                ps_type.title as position_type_name,
+                p.code as position_name_code,
+                p.title as position_name
+                FROM `categorise` p 
+                INNER JOIN categorise ps_type ON p.category_id = ps_type.code
+                INNER JOIN categorise ps_group ON ps_group.code = ps_type.category_id
+                WHERE p.name = 'position_name') as x
+                WHERE position_name = :position_name
+                AND position_group_name = :position_group_name";
+            $positionQuery = \Yii::$app
+                ->db
+                ->createCommand($positionSql)
+                ->bindValue(':position_name', $positionName)
+                ->bindValue(':position_group_name', $positionGroupName)
+                ->queryOne();
+            // return $positionQuery;
+
+            $fullname = $model->prefix . $model->fname . ' ' . $model->lname;
+            $empDetail->emp_id = $model->id;
+            $empDetail->name = 'position';
+
+            $empDetail->data_json = [
+                //     'point' => '',
+                'salary' => $person['salary'],
+                //     'status' => '1',
+                //     'comment' => '-',
+                //     'doc_ref' => 'คำสั่ง',
+                //     'date_end' => '',
+                'fullname' => $fullname,
+                //     'expertise' => '',
+                'date_start' => $person['join_date'],
+                //     'department' => '27',
+                //     'statuslist' => 'คส.รพร.ด่านซ้าย  1/2567 ลว 2 ม.ค.67',
+                'position_name' => $positionQuery['position_name_code'],
+                'position_type' => $positionQuery['position_type_code'],
+                'position_group' => $positionQuery['position_group_code'],
+                //     'position_level' => '',
+                //     'position_number' => '-',
+                'position_name_text' => $positionQuery['position_name'],
+                'position_type_text' => $positionQuery['position_type_name'],
+                'position_group_text' => $positionQuery['position_group_name']
+            ];
+
+            $empDetail->save(false);
+            $model->position_group = $positionQuery['position_group_code'];
+            $model->position_type = $positionQuery['position_type_code'];
+            $model->position_name = $positionQuery['position_name_code'];
+            $model->save();
+            // code...
+        } catch (\Throwable $th) {
+            // throw $th;
         }
     }
 

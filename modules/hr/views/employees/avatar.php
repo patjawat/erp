@@ -52,14 +52,13 @@ use yii\helpers\Url;
                             <?= $model->positionName(['icon' => true]) ?>
                         </p>
                         <?php if ($model->joinDate()): ?>
-                            <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
-                                <code>
-                                        <?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?>
-                                    </code>
-                            </p>
-                            <p><i class="fa-solid fa-business-time"></i>
+                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
+                            <code><?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?></code>
+                        </p>
+                        <p>
+                            <i class="fa-solid fa-business-time"></i>
                             อายุราชการ <?= $model->workLife() ?></p>
-                        
+
 
                         <?php endif; ?>
                         <?php if (isset($showAge) && $showAge == true): ?>

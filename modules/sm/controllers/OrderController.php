@@ -114,6 +114,7 @@ class OrderController extends Controller
      */
     public function actionCreate()
     {
+        $modelsItems = [new Order];
         $model = new Order([
             // 'name' => $this->request->get('name'),
             'name' => 'order',
@@ -139,11 +140,13 @@ class OrderController extends Controller
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
+                    'modelsItems' => $modelsItems
                 ]),
             ];
         } else {
             return $this->render('create', [
                 'model' => $model,
+                'modelsItems' => $modelsItems
             ]);
         }
     }

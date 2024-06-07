@@ -220,6 +220,7 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
                 <thead>
                     <tr>
                         <th style="width:40%">รายการ</th>
+                        <th>ขนาด</th>
                         <th>หน่วย</th>
                         <th>จำนวน</th>
                         <th>ราคา</th>
@@ -237,23 +238,25 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
                         }
                         ?>
                         <td>
-                        <?=
-                        $form->field($modelItems, "[{$i}]item_id")->widget(Select2::classname(), [
-                            'data' => $model->ListProduct(),
-                            // 'id' => 'item1',
-                            'options' => ['placeholder' => 'กรุณาเลือก'],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                            'pluginEvents' => [
-                                'select2:select' => "function(result) { 
-                            var data = \$(this).select2('data')[0].text;
-                            \$('#order-data_json-product_type_name').val(data)
-                        }",
-                            ]
-                        ])->label(false);
-                        ?>    
+                            <?=
+                            $form->field($modelItems, "[{$i}]item_id")->widget(Select2::classname(), [
+                                'data' => $model->ListProduct(),
+                                // 'id' => 'item1',
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'tags' => true,
+                                ],
+                                'pluginEvents' => [
+                                    'select2:select' => "function(result) { 
+                                    var data = \$(this).select2('data')[0].text;
+                                    \$('#order-data_json-product_type_name').val(data)
+                                }",
+                                ]
+                            ])->label(false);
+                            ?>    
 </td>
+<td><?= $form->field($modelItems, "[{$i}]amount")->textInput(['class' => 'form-control amount'])->label(false) ?></td>
                         <td>-</td>
                         <td><?= $form->field($modelItems, "[{$i}]amount")->textInput(['class' => 'form-control amount'])->label(false) ?></td>
                         <td><?= $form->field($modelItems, "[{$i}]price")->textInput(['class' => 'form-control price'])->label(false) ?></td>

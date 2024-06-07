@@ -7,8 +7,8 @@ use app\components\CategoriseHelper;
 use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
-use yii\bootstrap5\Html;
 use app\modules\hr\models\Organization;
+use yii\bootstrap5\Html;
 use Yii;
 
 /**
@@ -300,7 +300,11 @@ class Employees extends \yii\db\ActiveRecord
 
             // code...
         } catch (\Throwable $th) {
-            // throw $th;
+            return [
+                'date' => '0000-00-00',
+                'progress' => 0,
+                'color' => 'danger'
+            ];
         }
     }
 
@@ -401,18 +405,18 @@ class Employees extends \yii\db\ActiveRecord
             return null;
         }
     }
-    
+
     public function leaderUser()
     {
-        $model = Organization::find()->where(['id' => $this->department ])->one();
-        if($model){
+        $model = Organization::find()->where(['id' => $this->department])->one();
+        if ($model) {
             return [
                 'leader1' => $model->data_json['leader1'],
                 'leader1_fullname' => $model->data_json['leader1_fullname'],
                 'leader2' => $model->data_json['leader2'],
                 'leader2_fullname' => $model->data_json['leader2_fullname'],
             ];
-        }else{
+        } else {
             return [
                 'leader1' => '',
                 'leader1_fullname' => '',
@@ -421,7 +425,6 @@ class Employees extends \yii\db\ActiveRecord
             ];
         }
     }
-
 
     public function generalMenu()
     {
@@ -795,6 +798,7 @@ class Employees extends \yii\db\ActiveRecord
     public function positionName($arr = [])
     {
         $level = $this->positionLevelName() ? ' (ระดับ' . $this->positionLevelName() . ')' : '';
+
         if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
             $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
         } else {

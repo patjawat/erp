@@ -120,7 +120,10 @@ class Order extends \yii\db\ActiveRecord
                 'department' => $employee->departmentName()
             ];
         } catch (\Throwable $th) {
-            return null;
+            return [
+                'avatar' => '',
+                'department' => ''
+            ];
         }
     }
 
