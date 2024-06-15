@@ -13,7 +13,7 @@ use yii\widgets\Pjax;
 $this->title = 'Products';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-       <?php Pjax::begin(['id' => 'sm-container']); ?>
+       <?php Pjax::begin(['id' => 'sm-container', 'timeout' => 3000]); ?>
 <div class="row">
     <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12">
         <div class="card" style="height: 1400px;">
