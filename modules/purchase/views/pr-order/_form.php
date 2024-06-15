@@ -40,24 +40,24 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
 ]); ?>
 
 <!-- ชื่อของประเภท -->
-        <?php
-            echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
-                'data' => $model->ListProductType(),
-                'options' => ['placeholder' => 'กรุณาเลือก'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'dropdownParent' => '#main-modal',
-                ],
-                'pluginEvents' => [
-                    'select2:select' => "function(result) { 
+<?php
+echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
+    'data' => $model->ListProductType(),
+    'options' => ['placeholder' => 'กรุณาเลือก'],
+    'pluginOptions' => [
+        'allowClear' => true,
+        'dropdownParent' => '#main-modal',
+    ],
+    'pluginEvents' => [
+        'select2:select' => "function(result) { 
                             var data = \$(this).select2('data')[0].text;
                             \$('#order-data_json-product_type_name').val(data)
                         }",
-                ]
-            ])->label('ขอซื้อ');
-        ?>
+    ]
+])->label('ขอซื้อ');
+?>
 
-                  <?php
+<?php
 echo $form->field($model, 'data_json[vendor]')->widget(Select2::classname(), [
     'data' => $model->ListVendor(),
     'options' => ['placeholder' => 'เลขที่ใบขอซื้อ (ถ้ามี)'],
@@ -68,9 +68,9 @@ echo $form->field($model, 'data_json[vendor]')->widget(Select2::classname(), [
     'pluginEvents' => []
 ])->label('บริษัทแนะนำ');
 ?>
-        
-                  <?php if ($model->name == 'pr'): ?>
-                  <?php
+
+<?php if ($model->name == 'pr'): ?>
+<?php
     echo $form
         ->field($model, 'data_json[due_date]')
         ->widget(DateControl::classname(), [
@@ -86,17 +86,16 @@ echo $form->field($model, 'data_json[vendor]')->widget(Select2::classname(), [
         ->label('วันที่ต้องการ');
 ?>
 <?php endif; ?>
-  <?= $form->field($model, 'data_json[comment]')->textInput()->label('หมายเหตุ') ?>
+<?= $form->field($model, 'data_json[comment]')->textInput()->label('หมายเหตุ') ?>
+<?= $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
+<?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
+<?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
+<?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[pr_confirm_2]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 
-
-  <?= $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
-        <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
-        <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
-        <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-        <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
-        <?= $form->field($model, 'data_json[pr_confirm_2]')->hiddenInput()->label(false) ?>
-        <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-   
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

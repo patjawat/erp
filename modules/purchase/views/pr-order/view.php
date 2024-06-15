@@ -40,19 +40,22 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
             <div>
                 <h5> <span class="badge rounded-pill bg-primary text-white">1</span> ขั้นตอนการขอซื้อขอจ้าง</h5>
             </div>
-            <p class="">
-                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal shadow', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="fa-regular fa-trash-can"></i> ยกเลิก', ['delete', 'id' => $model->id], [
-                    'class' => 'btn btn-sm btn-danger rounded-pill shadow',
-                    'data' => [
-                        'confirm' => 'Are you sure you want to delete this item?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
-            </p>
         </div>
         <div class="card">
             <div class="card-body">
+                <div class="dropdown float-end">
+                    <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" style="">
+                        <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?= Html::a('<i class="bx bx-trash me-1 text-danger me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
+                            'class' => 'dropdown-item  delete-item',
+                        ]) ?>
+                    </div>
+                </div>
                 <table class="table table-striped-columns">
                     <tbody>
                         <tr class="">
@@ -86,14 +89,15 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                         </tr>
                         <tr>
                             <td class="text-end">ความเห็น</td>
-                            <td colspan="5"><?= isset($model->data_json['pr_confirm_2']) ? '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-thumbs-up"></i> ' . $model->data_json['pr_confirm_2'] . '</span>' : '' ?></td>
+                            <td colspan="5">
+                                <?= isset($model->data_json['pr_confirm_2']) ? '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-thumbs-up"></i> ' . $model->data_json['pr_confirm_2'] . '</span>' : '' ?>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
 
             </div>
         </div>
-
 
         <div class="card">
             <div class="card-body">
@@ -143,16 +147,16 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                                 </td>
                                 <td class="align-middle text-end">
                                     <div class="d-flex justify-content-end fw-semibold">
-                                    <?php
-                                    try {
-                                        echo number_format(($item->amount * $item->price), 2);
-                                    } catch (\Throwable $th) {
-                                        // throw $th;
-                                    }
-                                    ?>
+                                        <?php
+                                        try {
+                                            echo number_format(($item->amount * $item->price), 2);
+                                        } catch (\Throwable $th) {
+                                            // throw $th;
+                                        }
+                                        ?>
                                     </div>
                                 </td>
-                                
+
                                 <td class="align-middle gap-2">
                                     <div class="d-flex justify-content-center gap-2">
                                         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
@@ -192,17 +196,24 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                                 <?php endif; ?>
 
                                 <?php if ($model->approve == 'Y'): ?>
-                 
-                                        <?php foreach ($model->ListPrStatus() as $status): ?>
-                                    <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/purchase/pr-order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>
-                                    <?php endforeach; ?>
-                               <?php endif; ?>
+                                <?php foreach ($model->ListPrStatus() as $status): ?>
+                                <?php if ($status->code == 5): ?>
+                                <?= Html::a($status->title, ['/purchase/pq-order/create', 'category_id' => $model->code, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-xl']]) ?>
+                                <?php else: ?>
+                                <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/purchase/pr-order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>
+                                <?php endif; ?>
+
+                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <?= $this->render('step2', ['model' => $model]) ?>
+        <?= $this->render('step3', ['model' => $model]) ?>
+
     </div>
 </div>
 

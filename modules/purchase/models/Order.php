@@ -182,6 +182,24 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
+    // วิธีซื้อหรือจ้าง
+    public function ListPurchase()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'purchase'])->all(), 'code', 'title');
+    }
+
+    // วิธีจัดหา
+    public function ListMethodget()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'method_get'])->all(), 'code', 'title');
+    }
+
+    // ประเภท
+    public function ListBudgetdetail()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->all(), 'code', 'title');
+    }
+
     public function ListProductType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
