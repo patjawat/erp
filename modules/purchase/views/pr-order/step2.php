@@ -16,6 +16,7 @@ use yii\helpers\Html;
             </a>
             <div class="dropdown-menu dropdown-menu-right" style="">
                 <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                 <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
                     'class' => 'dropdown-item  delete-item',
                 ]) ?>
