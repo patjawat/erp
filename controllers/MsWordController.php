@@ -221,13 +221,31 @@ class MsWordController extends \yii\web\Controller
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ขออนุมัติจัดซื้อจัดจ้างx';
-
+        $filename = 'purchase_3.docx';
+        Settings::setTempDir(Yii::getAlias('@webroot') . '/msword/temp/');
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_3.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ขออนุมัติจัดซื้อจัดจ้าง');
         $templateProcessor->setValue('org_name_full', $this->GetInfo()['company']);
         $templateProcessor->setValue('director', $this->GetInfo()['director']);
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        $templateProcessor->setValue('doc_number', 'เลขหนังสือ');
+        $templateProcessor->setValue('date', 'เลขหนังสือ');
+        $templateProcessor->setValue('org_name', 'ชื่อโรงพาบาล');
+        $templateProcessor->setValue('department', 'ฝ่ายหน่วยงาน');
+        $templateProcessor->setValue('asset_detail', 'รายละเอียดวัสดุ');
+        $templateProcessor->setValue('remark', 'เหตุผล');
+        $templateProcessor->setValue('emp_name', 'ผู้อนุมัติ');
+        $templateProcessor->setValue('emp_position', 'ตำแหน่งผู้อนุมัติ');
+        $templateProcessor->setValue('director_name', 'ผู้อำนวยการ');
+        $templateProcessor->setValue('director_position', 'ตำแหน่งผู้อำนวยการ');
+
+        // try {
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $filename);
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        // }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $filename);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -236,11 +254,10 @@ class MsWordController extends \yii\web\Controller
             ];
         } else {
             echo '<p>';
-            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename . '.docx'), ['class' => 'btn btn-info']);  // สร้าง link download
+            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/asset_result.docx'), ['class' => 'btn btn-info']);  // สร้าง link download
             echo '</p>';
-            // echo '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=' . Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename . '.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
-            // echo '<iframe src="https://docs.google.com/gview?url="' . Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename . '.docx', true) . '"&embedded="true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
-            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename . '.docx', true) . '&hl=bn&embedded=true" style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+            // echo '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src='.Url::to(Yii::getAlias('@web').'/msword/temp/asset_result.docx', true).'&embedded=true"  style="position: absolute;width:99%; height: 90%;border: none;"></iframe>';
+            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
         }
     }
 
