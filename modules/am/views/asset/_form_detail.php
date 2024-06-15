@@ -129,7 +129,7 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                                 'yearOffset' => 543,
                                 'format' => 'd/m/Y', 
                             ],
-                            ])->label('วันที่รับข้า');
+                            ])->label('วันที่รับเข้า');
                         ?>
                 </div>
                         <div class="col-6">

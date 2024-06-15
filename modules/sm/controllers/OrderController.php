@@ -46,8 +46,10 @@ class OrderController extends Controller
      */
     public function actionIndex()
     {
+        $name = Yii::$app->request->get('name');
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterwhere(['name' => $name]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -116,8 +118,9 @@ class OrderController extends Controller
     {
         $modelsItems = [new Order];
         $model = new Order([
-            // 'name' => $this->request->get('name'),
-            'name' => 'order',
+            'name' => $this->request->get('name'),
+            'status' => $this->request->get('status'),
+            // 'name' => 'order',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
@@ -231,13 +234,13 @@ class OrderController extends Controller
         $model->data_json = ArrayHelper::merge(
             $newObj, $model->data_json
         );
-        $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
-        $model->status = 1;
+        $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
+        $model->status = 2;
         $model->save();
 
         return [
             'status' => 'success',
-            'container' => '#sm-container',
+            'container' => '#purchase-container',
         ];
     }
 
@@ -245,17 +248,21 @@ class OrderController extends Controller
     public function actionConfirmStatus($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        $status = $this->request->get('status');
+        $thaiYear = substr((date('Y') + 543), 2);
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-                $model->status = ($model->status + 1);
-
+                $model->status = $status;
+                if ($model->status == 6) {
+                    // $model->code = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
+                }
                 $model->save(false);
                 return [
                     'status' => 'success',
-                    'container' => '#sm-container',
+                    'container' => '#purchase-container',
                 ];
             } else {
                 return false;
@@ -286,7 +293,7 @@ class OrderController extends Controller
 
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->category_id]);
+        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->data_json['item_type']]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

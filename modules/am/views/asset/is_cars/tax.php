@@ -9,7 +9,7 @@ $modelCar = AssetDetail::find()->where(['name' => 'tax_car', 'code' => $model->c
             <td>
             </td>
             <td colspan="5">
-            <?= Html::a('<span class="fw-semibold"><i class="fa-solid fa-tags"></i> กาต่อภาษี</span>', ['/am/asset-detail/', 'id' => $model->id, 'name' => 'tax_car', 'title' => '<i class="fa-solid fa-car-on"></i> ข้อมูลการต่อภาษี', 'code' => $model->code], ['class' => 'btn btn-primary rounded-pill border border-white open-modal text-center', 'data' => ['size' => 'modal-xl']]) ?>
+            <?= Html::a('<span class="fw-semibold"><i class="fa-solid fa-tags"></i> การต่อภาษี</span>', ['/am/asset-detail/', 'id' => $model->id, 'name' => 'tax_car', 'title' => '<i class="fa-solid fa-car-on"></i> ข้อมูลการต่อภาษี', 'code' => $model->code], ['class' => 'btn btn-primary rounded-pill border border-white open-modal text-center', 'data' => ['size' => 'modal-xl']]) ?>
             </td>
         </tr>
 <tr>

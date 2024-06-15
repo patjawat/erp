@@ -51,6 +51,23 @@ class ProductController extends Controller
         ]);
     }
 
+    public function actionIndex2()
+    {
+        $searchModel = new ProductSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'product_item']);
+        $dataProvider->query->andFilterWhere([
+            'in',
+            'category_id',
+            $searchModel->q_category,
+        ]);
+
+        return $this->render('index2', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     /**
      * Displays a single Product model.
      *
@@ -68,7 +85,7 @@ class ProductController extends Controller
 
             return [
                 'title' => '<i class="fa-solid fa-eye"></i> แสดง',
-                'content' => $this->renderAjax('view_type', [
+                'content' => $this->renderAjax('view', [
                     'model' => $model,
                 ]),
             ];
@@ -97,7 +114,14 @@ class ProductController extends Controller
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->save(false);
 
+                // return [
+                //     'container' => '#sm-container',
+                // ];
                 return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('view', [
+                        'model' => $model,
+                    ]),
                     'status' => 'success',
                     'container' => '#sm-container',
                 ];
@@ -116,6 +140,8 @@ class ProductController extends Controller
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
+                'status' => 'success',
+                'container' => '#sm-container',
             ];
         } else {
             return $this->render('create', [
@@ -141,8 +167,11 @@ class ProductController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
                 'status' => 'success',
-                'container' => '#sm-container',
             ];
         }
 

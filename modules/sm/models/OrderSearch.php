@@ -17,8 +17,9 @@ class OrderSearch extends Order
     public function rules()
     {
         return [
-            [['id', 'ref', 'name', 'data_json', 'updated_at', 'created_at'], 'safe'],
-            [['created_by', 'updated_by'], 'integer'],
+            [['id', 'item_id', 'amount', 'status', 'created_by', 'updated_by'], 'integer'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['price'], 'number'],
         ];
     }
 
@@ -58,15 +59,23 @@ class OrderSearch extends Order
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'updated_at' => $this->updated_at,
+            'id' => $this->id,
+            'item_id' => $this->item_id,
+            'price' => $this->price,
+            'amount' => $this->amount,
+            'status' => $this->status,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'id', $this->id])
-            ->andFilterWhere(['like', 'ref', $this->ref])
+        $query->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'category_id', $this->category_id])
+            ->andFilterWhere(['like', 'code', $this->code])
+            ->andFilterWhere(['like', 'pr_number', $this->pr_number])
+            ->andFilterWhere(['like', 'po_number', $this->po_number])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;

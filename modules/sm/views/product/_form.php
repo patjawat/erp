@@ -14,9 +14,9 @@ use unclead\multipleinput\MultipleInputColumn;
 ?>
 
 <style>
-    .modal-body{
-        background-color:#f1f5f9;
-    }
+.modal-body {
+    background-color: #f1f5f9;
+}
 </style>
 
 <?php $form = ActiveForm::begin(['id' => 'form-product']); ?>
@@ -25,15 +25,22 @@ use unclead\multipleinput\MultipleInputColumn;
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
 <div class="row">
+    <div class="col-4">
+        <input type="file" id="my_file" style="display: none;" />
+        <div class="d-flex justify-content-center">
+            <a href="#" class="select-photo">
+                <?= Html::img($model->ShowImg(), ['class' => 'avatar-profile object-fit-cover rounded', 'style' => 'max-width:100%;height: 219px;']) ?>
+            </a>
+        </div>
+    </div>
     <div class="col-8">
         <div class="card">
             <div class="card-body">
-                <h6><i class="fa-solid fa-circle-plus"></i> เพิ่มสินค้า/บริการ</h5>
+                <h6><i class="fa-solid fa-circle-exclamation"></i> ข้อมูลรายการ</h5>
 
                     <div class="row">
-                        <div class="col-6">
-                            <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('รายการ') ?>
-                            <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('รหัส') ?>
+                        <div class="col-12">
+                            <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อรายการ') ?>
                         </div>
                         <div class="col-6">
                             <?php
@@ -46,6 +53,9 @@ use unclead\multipleinput\MultipleInputColumn;
                                     ],
                                 ])->label('ประเภท')
                             ?>
+                        </div>
+                        <div class="col-6">
+
                             <?php
                                 echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
                                     'data' => $model->listUnit(),
@@ -57,82 +67,103 @@ use unclead\multipleinput\MultipleInputColumn;
                                     'pluginEvents' => [
                                         'select2:select' => "function(result) { 
                                             var data = \$(this).select2('data')[0].text;
-                                        console.log(data)
-                                    }",
+                                            console.log(data)
+                                        }",
                                     ]
                                 ])->label('หน่วยนับหลัก')
                             ?>
                         </div>
-                    </div>
-                    <div class="col-12">
 
                     </div>
+                    <div class="col-5">
+                        <?= $form->field($model, 'data_json[unit_stock]')->textInput(['maxlength' => true, 'placeholder' => ''])->label('หน่วยรับเข้า/จ่ายออก') ?>
 
+                    </div>
+                    <div class="col-5">
+
+                        <?php
+                            echo $form->field($model, 'data_json[unit2]')->widget(Select2::classname(), [
+                                'data' => $model->listUnit(),
+                                'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'dropdownParent' => '#main-modal',
+                                ],
+                                'pluginEvents' => [
+                                    'select2:select' => "function(result) { 
+                                            var data = \$(this).select2('data')[0].text;
+                                            console.log(data)
+                                        }",
+                                ]
+                            ])->label('หน่วยนับหลัก')
+                        ?>
+                    </div>
             </div>
         </div>
     </div>
-    <div class="col-4">
-        <input type="file" id="my_file" style="display: none;" />
-        <div class="d-flex justify-content-center">
-            <a href="#" class="select-photo">
-                <?= Html::img($model->ShowImg(), ['class' => 'avatar-profile object-fit-cover rounded', 'style' => 'max-width:100%;height: 219px;']) ?>
-            </a>
-        </div>
-    </div>
+
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <p class="card-text">หน่วยนับอื่นๆ...</p>
+                <p class="card-text">คุณลักษณะ/ขนาด</p>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex justify-content-between gap-2">
+                            <?= $form->field($model, 'data_json[size]')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('ขนาดบรรจุ') ?>
+                            <?= $form->field($model, 'data_json[size_unit]')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('หน่วยบรรจุ') ?>
+                        </div>
+                    </div>
+                </div>
                 <?php
 
-                    echo $form->field($model, 'unit_items')->widget(MultipleInput::class, [
-                        'allowEmptyList' => false,
-                        'enableGuessTitle' => true,
-                        'addButtonPosition' => MultipleInput::POS_HEADER,
-                        'addButtonOptions' => [
-                            'class' => ' btn-sm btn btn-success',
-                            'label' => '<i class="fa-solid fa-circle-plus"></i>',
-                        ],
-                        'removeButtonOptions' => [
-                            'class' => 'btn-sm btn btn-danger',
-                            'label' => '<i class="fa-solid fa-xmark"></i>'  // also you can use html code
-                        ],
-                        'columns' => [
-                            [
-                                'name' => 'id',
-                                'title' => 'ID',
-                                'enableError' => true,
-                                'type' => MultipleInputColumn::TYPE_HIDDEN_INPUT,
-                            ],
-                            [
-                                'type' => \kartik\widgets\Select2::className(),
-                                'name' => 'title',
-                                'title' => 'หน่วยนับ',
-                                'options' => [
-                                    'data' => $model->listUnit(),
-                                    'pluginOptions' => [
-                                        'placeholder' => 'ระบุหน่วยนับ...',
-                                        'allowClear' => true,
-                                        'dropdownParent' => '#main-modal',
-                                    ],
-                                ],
-                                'enableError' => true
-                            ],
-                            [
-                                'name' => 'qty',
-                                'type' => 'textInput',
-                                'title' => 'จำนวน',
-                            ],
-                            [
-                                'name' => 'barcode',
-                                'type' => 'textInput',
-                                'title' => "บาร์โค้ด\u{200B}",
-                                // 'headerOptions' => [
-                                //     'class' => 'table-light',// กำหนดสไตล์ให้กับพื้นหลังของ label
-                                // ],
-                            ],
-                        ]
-                    ])->label(false);
+                    // echo $form->field($model, 'unit_items')->widget(MultipleInput::class, [
+                    //     'allowEmptyList' => false,
+                    //     'enableGuessTitle' => true,
+                    //     'addButtonPosition' => MultipleInput::POS_HEADER,
+                    //     'addButtonOptions' => [
+                    //         'class' => ' btn-sm btn btn-success',
+                    //         'label' => '<i class="fa-solid fa-circle-plus"></i>',
+                    //     ],
+                    //     'removeButtonOptions' => [
+                    //         'class' => 'btn-sm btn btn-danger',
+                    //         'label' => '<i class="fa-solid fa-xmark"></i>'  // also you can use html code
+                    //     ],
+                    //     'columns' => [
+                    //         [
+                    //             'name' => 'id',
+                    //             'title' => 'ID',
+                    //             'enableError' => true,
+                    //             'type' => MultipleInputColumn::TYPE_HIDDEN_INPUT,
+                    //         ],
+                    //         [
+                    //             'type' => \kartik\widgets\Select2::className(),
+                    //             'name' => 'title',
+                    //             'title' => 'หน่วยนับ',
+                    //             'options' => [
+                    //                 'data' => $model->listUnit(),
+                    //                 'pluginOptions' => [
+                    //                     'placeholder' => 'ระบุหน่วยนับ...',
+                    //                     'allowClear' => true,
+                    //                     'dropdownParent' => '#main-modal',
+                    //                 ],
+                    //             ],
+                    //             'enableError' => true
+                    //         ],
+                    //         [
+                    //             'name' => 'qty',
+                    //             'type' => 'textInput',
+                    //             'title' => 'จำนวน',
+                    //         ],
+                    //         [
+                    //             'name' => 'barcode',
+                    //             'type' => 'textInput',
+                    //             'title' => "บาร์โค้ด\u{200B}",
+                    //             // 'headerOptions' => [
+                    //             //     'class' => 'table-light',// กำหนดสไตล์ให้กับพื้นหลังของ label
+                    //             // ],
+                    //         ],
+                    //     ]
+                    // ])->label(false);
                 ?>
             </div>
         </div>
@@ -200,7 +231,9 @@ $js = <<< JS
                             success: async function (response) {
                                 form.yiiActiveForm('updateMessages', response, true);
                                 if(response.status == 'success') {
-                                    closeModal()
+                                    //closeModal()
+                                    \$("#main-modal-label").html(response.title);
+                                    \$(".modal-body").html(response.content);
                                     success()
                                     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                                 }

@@ -19,7 +19,7 @@ use yii\helpers\Html;
                                     <tr>
                                         <th scope="col">ชื่อ-นามสกุล</th>
                                         <th scope="col">แผนก/ฝ่าย</th>
-                                        <th scope="col">สภานะ</th>
+                                        <th scope="col">สถานะ</th>
                                         <th class="text-center" style="width: 100px;">ดำเนินการ</th>
                                     </tr>
                                 </thead>

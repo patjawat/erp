@@ -788,7 +788,7 @@ class Employees extends \yii\db\ActiveRecord
     //              return null;
     //          }
     //      }
-    // สภานะ
+    // สถานะ
     public function statusName()
     {
         return isset($this->statusName) ? $this->statusName->title : $this->status;

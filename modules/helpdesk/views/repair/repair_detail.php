@@ -72,7 +72,7 @@ use yii\helpers\Html;
 </tr>
 <tr class="align-middle">
     <td class="text-end">
-        <span class="fw-semibold">สภานะงานซ่อม : </span>
+        <span class="fw-semibold">สถานะงานซ่อม : </span>
     </td>
     <?php if (isset($repair->data_json['repair_type']) && $repair->data_json['repair_type'] == 'ซ่อมภายนอก'): ?>
     <td colspan="3">

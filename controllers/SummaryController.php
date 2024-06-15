@@ -15,7 +15,7 @@ class SummaryController extends \yii\web\Controller
         ->andWhere(['status' => 1])
         ->andWhere(['<>','id',1])
         ->count('id');
-        //มูลค่าทรัพสินทั้งหมด
+        //มูลค่าทรัพย์สินทั้งหมด
         $totalPrice = Asset::find()
         // ->where(['NOT IN','asset_status',[2]])
         ->sum('price');

@@ -35,11 +35,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $form = ActiveForm::begin([
     'id' => 'form-status-confirm'
 ]); ?>
+<?= $form->field($model, 'status')->textInput()->label('สถานะ') ?>
 <!-- ชื่อของประเภท -->
 <?php if ($model->status == 1): ?>
 <?=
     $form->field($model, 'data_json[pr_confirm_2]')->radioList(
-        ['เห็นชอบ' => 'เห็นชอบ', 'ไม่เห็นชอบ' => 'ไม่เห็นชอบ'],
+        ['Y' => 'เห็นชอบ', 'N' => 'ไม่เห็นชอบ'],
         ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
     )->label(false);
 ?>
@@ -49,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php if ($model->status == 2): ?>
 <?=
     $form->field($model, 'data_json[pr_confirm_3]')->radioList(
-        ['ตรวจสอบผ่าน' => 'ตรวจสอบผ่าน', 'ตรวจสอบไม่ผ่าน' => 'ตรวจสอบไม่ผ่าน'],
+        ['Y' => 'ตรวจสอบผ่าน', 'N' => 'ตรวจสอบไม่ผ่าน'],
         ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
     )->label(false);
 ?>
@@ -59,12 +60,21 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php if ($model->status == 3): ?>
 <?=
     $form->field($model, 'data_json[pr_confirm_4]')->radioList(
-        ['อนุมัติ' => 'อนุมัติ', 'ไม่อนุมัติ' => 'ไม่อนุมัติ'],
+        ['Y' => 'อนุมัติ', 'N' => 'ไม่อนุมัติ'],
         ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
     )->label(false);
 ?>
 <?= $form->field($model, 'data_json[pr_confirm_comment_4]')->textArea()->label('หมายเหตุ') ?>
 <?php endif ?>
+
+<?php if ($model->status == 5): ?>
+<?= $form->field($model, 'data_json[po_confirm_comment_6]')->textArea()->label('หมายเหตุ') ?>
+<?php endif ?>
+
+<?php if ($model->status == 6): ?>
+<?= $form->field($model, 'data_json[po_confirm_comment_7]')->textArea()->label('หมายเหตุ') ?>
+<?php endif ?>
+
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

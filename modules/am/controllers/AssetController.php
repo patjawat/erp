@@ -64,7 +64,7 @@ class AssetController extends Controller
 
         if(!isset($this->request->queryParams['AssetSearch'])){
 
-              //หายังไม่มีการค้นหาใดๆ ให้ แสดงเฉพาะทรัพสินที่ตัวเองรับผิดชอบ
+              //หายังไม่มีการค้นหาใดๆ ให้ แสดงเฉพาะทรัพย์สินที่ตัวเองรับผิดชอบ
               $user  = UserHelper::GetEmployee();
               $dataProvider->query->andFilterWhere(['owner' => $user->cid]); 
     } else{

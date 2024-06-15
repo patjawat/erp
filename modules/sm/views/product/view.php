@@ -11,9 +11,9 @@ $this->params['breadcrumbs'][] = ['label' => 'Products', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="card">
+<!-- <div class="card">
     <div class="card-body">
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('Update', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square text-warning"></i> แก้ไข'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ]) ?>
     </div>
-</div>
+</div> -->
 
 
 <div class="row">
@@ -58,11 +58,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tbody>
                             <tr class="">
                                 <td class="fw-semibold">ชื่อ</td>
-                                <td><?= $model->title ?></td>
-                                <td class="fw-semibold">ประเภท</td>
-                                <td><?= $model->productType->title ?></td>
+                                <td colspan="5"><?= $model->title ?></td>
+
                             </tr>
                             <tr class="">
+                                <td class="fw-semibold">ประเภท</td>
+                                <td><?= $model->productType->title ?></td>
                                 <td class="fw-semibold">คงเหลือ</td>
                                 <td>0</td>
                                 <td class="fw-semibold">หน่วยนับหลัก</td>
@@ -80,11 +81,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
             </div>
         </div>
-
-
-
         <div class="row">
-            <div class="col-6">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -93,7 +91,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มใหม่', ['/sm/product-unit/create', 'product_id' => $model->id, 'title' => '<i class="bi bi-box"></i> เพิ่มหน่วยบรรจุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </div>
-
                         <table class="table table-primary">
                             <thead>
                                 <tr>
@@ -108,55 +105,21 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <td><?= $unit->title ?></td>
                                     <td><?= $unit->qty; ?></td>
                                     <td class="align-middle gap-2">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/product-unit/update', 'id' => $unit->id, 'title' => '<i class="bi bi-box"></i> แก้ไขหน่วยบรรจุ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                        <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/delete-item', 'id' => $unit->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
-                                    </div>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/product-unit/update', 'id' => $unit->id, 'title' => '<i class="bi bi-box"></i> แก้ไขหน่วยบรรจุ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                            <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/delete-item', 'id' => $unit->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
+                                        </div>
 
-                                </td>
+                                    </td>
                                 </tr>
-        <?php endforeach; ?>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
 
                     </div>
                 </div>
             </div>
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex flex-column">
-                                <span class="h6"><i class="fa-solid fa-truck-field"></i> ผู้จำหน่าย</span>
-                            </div>
-                            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มใหม่', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        </div>
-                        <table class="table table-primary">
-                            <thead>
-                                <tr>
-                                    <th>Column 1</th>
-                                    <th>Column 2</th>
-                                    <th>Column 3</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="">
-                                    <td>R1C1</td>
-                                    <td>R1C2</td>
-                                    <td>R1C3</td>
-                                </tr>
-                                <tr class="">
-                                    <td>Item</td>
-                                    <td>Item</td>
-                                    <td>Item</td>
-                                </tr>
-                            </tbody>
-                        </table>
 
-                    </div>
-                </div>
-
-            </div>
         </div>
 
 

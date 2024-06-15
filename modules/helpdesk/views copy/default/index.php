@@ -56,7 +56,7 @@ use yii\helpers\Url;
                             <div class="offset-xl-3 offset-sm-6 col-xl-8 col-sm-6 col-12 img-bg ">
                                 <h4 class="d-flex mb-3"> <span class="text-fixed-white ">Helpdesk ! ระบบงานซ่อม</span>
                                 </h4>
-                                <p class="tx-white-7 mb-1">คุณมี 2 รายการที่ต้องทำให้เสร็จ คุทำเสร็จไปแล้ว <b
+                                <p class="tx-white-7 mb-1">คุณมี 2 รายการที่ต้องทำให้เสร็จ คุณทำเสร็จไปแล้ว <b
                                         class="text-warning">57%</b>
                                 </p>
                             </div>

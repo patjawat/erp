@@ -168,8 +168,50 @@ class Order extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
     }
 
+    public function ListPr()
+    {
+        return ArrayHelper::map(self::find()->where(['name' => 'pr'])->all(), 'code', 'code');
+    }
+
     public function ListProduct()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_item'])->all(), 'id', 'title');
+    }
+
+    public function ListPrStatus()
+    {
+        return Categorise::find()->where(['name' => 'pr_status'])->all();
+    }
+
+    public function viewPrStatus()
+    {
+        // switch ($this->status) {
+        //     case '1':
+        //         return ['color' => 'warning'];
+        //         break;
+        //     case '2':
+        //         return ['color' => 'info'];
+        //         break;
+        //     case '3':
+        //         return ['color' => 'primary'];
+        //         break;
+        //     case '4':
+        //         return ['color' => 'success'];
+        //         break;
+        //     default:
+        //         // code...
+        //         break;
+        // }
+        $status = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
+        if ($status) {
+            return '<label class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate"><i class="bi bi-clipboard-check"></i> ' . $status->title . '</label>';
+        } else {
+            return '';
+        }
+    }
+
+    public function ListPoStatus()
+    {
+        return Categorise::find()->where(['name' => 'po_status'])->all();
     }
 }

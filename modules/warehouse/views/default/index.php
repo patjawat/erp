@@ -9,9 +9,18 @@ use yii\helpers\Url;
 
 $this->title = 'ระบบคลัง';
 ?>
+
+
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('./menu') ?>
+<?php $this->endBlock(); ?>
+
 
 <body>
 
@@ -248,52 +257,52 @@ $this->title = 'ระบบคลัง';
 use yii\web\View;
 
 $js = <<< JS
-  var options = {
-          series: [
-            { name: "Sales", data: [50, 45, 60, 70, 50, 45, 60, 70] },
-            { name: "Purchase", data: [-21, -54, -45, -35, -21, -54, -45, -35] },
-          ],
-          colors: ["#28C76F", "#EA5455"],
-          chart: {
-            type: "bar",
-            height: 300,
-            stacked: true,
-            zoom: { enabled: true },
-          },
-          responsive: [
-            {
-              breakpoint: 280,
-              options: { legend: { position: "bottom", offsetY: 0 } },
-            },
-          ],
-          plotOptions: {
-            bar: { horizontal: false, columnWidth: "20%", endingShape: "rounded" },
-          },
-          xaxis: {
-            categories: [
-              " Jan ",
-              "feb",
-              "march",
-              "april",
-              "may",
-              "june",
-              "july",
-              "auguest",
+    var options = {
+            series: [
+              { name: "Sales", data: [50, 45, 60, 70, 50, 45, 60, 70] },
+              { name: "Purchase", data: [-21, -54, -45, -35, -21, -54, -45, -35] },
             ],
-          },
-          legend: { position: "right", offsetY: 40 },
-          fill: { opacity: 1 },
-        };
-        var chart = new ApexCharts(
-          document.querySelector("#sales_charts"),
-          options
-        );
-        chart.render();
-      
-
-
+            colors: ["#28C76F", "#EA5455"],
+            chart: {
+              type: "bar",
+              height: 300,
+              stacked: true,
+              zoom: { enabled: true },
+            },
+            responsive: [
+              {
+                breakpoint: 280,
+                options: { legend: { position: "bottom", offsetY: 0 } },
+              },
+            ],
+            plotOptions: {
+              bar: { horizontal: false, columnWidth: "20%", endingShape: "rounded" },
+            },
+            xaxis: {
+              categories: [
+                " Jan ",
+                "feb",
+                "march",
+                "april",
+                "may",
+                "june",
+                "july",
+                "auguest",
+              ],
+            },
+            legend: { position: "right", offsetY: 40 },
+            fill: { opacity: 1 },
+          };
+          var chart = new ApexCharts(
+            document.querySelector("#sales_charts"),
+            options
+          );
+          chart.render();
         
-  JS;
+
+
+          
+    JS;
 $this->registerJS($js, View::POS_END);
 ?>
 

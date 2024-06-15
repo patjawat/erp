@@ -24,6 +24,7 @@ class m240522_073153_create_order_table extends Migration
             'price' => $this->double(255)->comment('ราคา'),
             'amount' => $this->integer(255)->comment('จำนวน'),
             'status' => $this->integer(255)->comment('สถานะ'),
+            'approve' => $this->string(1)->comment('อนุมัติ'),
             'data_json' => $this->json(),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
@@ -34,16 +35,16 @@ class m240522_073153_create_order_table extends Migration
         $sqlOrderStatus = Yii::$app->db->createCommand("select * from categorise where name = 'order_status'")->queryAll();
         if (count($sqlOrderStatus) < 1) {
             // สถานะคำสั่งซื้อ
-            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'order_status', 'title' => 'ขอซื้อ-ขอจ้าง(PR)', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'order_status', 'title' => 'รอเห็นชอบ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'order_status', 'title' => 'พัสดุตรวจสอบ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'order_status', 'title' => 'ผู้อำนวยการตรวจสอบ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'order_status', 'title' => 'ลงทะเบียนคุม', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'order_status', 'title' => 'ออกใบสั่งซื้อ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '7', 'name' => 'order_status', 'title' => 'ตรวจรับวัสดุ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '8', 'name' => 'order_status', 'title' => 'ยืนยันตรวจรับ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '9', 'name' => 'order_status', 'title' => 'วัสดุเข้าคลัง', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '10', 'name' => 'order_status', 'title' => 'ส่งบัญชี', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'pr_status', 'title' => 'ขอซื้อ-ขอจ้าง(PR)', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'pr_status', 'title' => 'รอเห็นชอบ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'pr_status', 'title' => 'พัสดุตรวจสอบ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'pr_status', 'title' => 'ผู้อำนวยการตรวจสอบ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'pr_status', 'title' => 'ลงทะเบียนคุม', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'po_status', 'title' => 'ออกใบสั่งซื้อ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'po_status', 'title' => 'ตรวจรับวัสดุ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'po_status', 'title' => 'ยืนยันตรวจรับ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'po_status', 'title' => 'วัสดุเข้าคลัง', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'po_status', 'title' => 'ส่งบัญชี', 'active' => 1]);
         }
     }
 

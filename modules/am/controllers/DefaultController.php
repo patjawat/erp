@@ -16,7 +16,7 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        //มูลค่าทรัพสินทั้งหมด
+        //มูลค่าทรัพย์สินทั้งหมด
          $totalPrice = Asset::find()
         // ->where(['NOT IN','asset_status',[2]])
         ->sum('price');
