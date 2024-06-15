@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
        <?php Pjax::begin(['id' => 'sm-container']); ?>
 <div class="row">
-    <div class="col-2">
+    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12">
         <div class="card" style="height: 1400px;">
             <div class="card-body ">
                 <h4 class="card-title"><i class="bi bi-grid"></i> หมวดหมู่</h4>

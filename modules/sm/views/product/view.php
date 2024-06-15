@@ -125,3 +125,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
+
+<div class="d-flex justify-content-center gap-2">
+    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+    <i class="fa-regular fa-circle-xmark"></i>  ปืด
+    </button>
+
+</div>

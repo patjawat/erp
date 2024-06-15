@@ -11,4 +11,5 @@ INSERT INTO `categorise` (`category_id`, `code`, `name`, `title`, `active`) VALU
 ('4', '9', 'product_type', 'วัสดุโฆษณาและเผยแพร่', 1),
 ('4', '10', 'product_type', 'วัสดุเครื่องแต่งกาย', 1),
 ('4', '11', 'product_type', 'วัสดุกีฬา', 1),
-('4', '12', 'product_type', 'วัสดุคอมพิวเตอร์', 1);
+('4', '12', 'product_type', 'วัสดุคอมพิวเตอร์', 1),
+('4', '13', 'product_type', 'ยา', 1);
