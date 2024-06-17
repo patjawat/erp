@@ -5,7 +5,7 @@ use yii\helpers\Html;
 ?>
 <div class="d-flex justify-content-between">
             <div>
-                <h5> <span class="badge rounded-pill bg-primary text-white">3</span> ออกใบสั่งซื้อ</h5>
+                <h5><i class="fa-solid fa-circle-info text-primary"></i> ออกใบสั่งซื้อ</h5>
             </div>
            
         </div>

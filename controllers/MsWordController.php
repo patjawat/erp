@@ -156,15 +156,14 @@ class MsWordController extends \yii\web\Controller
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด';
+        $word_name = 'purchase_1.docx';
+        $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด.docx';
 
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_1.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
                 'org_name_full' => 'รายละเอียดโรงพยาบาล',
                 'doc_number' => 'เลขที่เอกสาร',
                 'date' => 'วันที่',
@@ -181,26 +180,24 @@ class MsWordController extends \yii\web\Controller
                 'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
                 'director_name' => 'ผู้อำนวยการโรงพยาบาล',
                 'org_name' => 'ชื่อโรงพยาบาล',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+            ]
+        ];
+
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_2()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ขอความเห็นชอบและรายงานผล';
+        $word_name = 'purchase_2.docx';
+        $result_name = 'ขอความเห็นชอบและรายงานผล.docx';
 
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_2.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ขอความเห็นชอบและรายงานผล');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ขอความเห็นชอบและรายงานผล',
                 'org_name_full' => 'รายละเอียดชื่อโรงพยาบาลเต็ม',
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'วันที่',
@@ -209,11 +206,9 @@ class MsWordController extends \yii\web\Controller
                 'director_name' => 'ชื่อผู้อำนวยการ',
                 'director_nameposition' => 'ตำแหน่งผู้อำนวยการ',
                 'povice' => 'จังหวัด',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     // ขออนุมัติจัดซื้อจัดจ้าง
@@ -221,85 +216,63 @@ class MsWordController extends \yii\web\Controller
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'purchase_3.docx';
-        Settings::setTempDir(Yii::getAlias('@webroot') . '/msword/temp/');
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_3.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ขออนุมัติจัดซื้อจัดจ้าง');
-        $templateProcessor->setValue('org_name_full', $this->GetInfo()['company']);
-        $templateProcessor->setValue('director', $this->GetInfo()['director']);
-        $templateProcessor->setValue('doc_number', 'เลขหนังสือ');
-        $templateProcessor->setValue('date', 'เลขหนังสือ');
-        $templateProcessor->setValue('org_name', 'ชื่อโรงพาบาล');
-        $templateProcessor->setValue('department', 'ฝ่ายหน่วยงาน');
-        $templateProcessor->setValue('asset_detail', 'รายละเอียดวัสดุ');
-        $templateProcessor->setValue('remark', 'เหตุผล');
-        $templateProcessor->setValue('emp_name', 'ผู้อนุมัติ');
-        $templateProcessor->setValue('emp_position', 'ตำแหน่งผู้อนุมัติ');
-        $templateProcessor->setValue('director_name', 'ผู้อำนวยการ');
-        $templateProcessor->setValue('director_position', 'ตำแหน่งผู้อำนวยการ');
-
-        // try {
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $filename);
-        // } catch (\Throwable $th) {
-        //     //throw $th;
-        // }
-
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $filename);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            echo '<p>';
-            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/asset_result.docx'), ['class' => 'btn btn-info']);  // สร้าง link download
-            echo '</p>';
-            // echo '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src='.Url::to(Yii::getAlias('@web').'/msword/temp/asset_result.docx', true).'&embedded=true"  style="position: absolute;width:99%; height: 90%;border: none;"></iframe>';
-            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
-        }
+        $word_name = 'purchase_3.docx';
+        $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ขออนุมัติจัดซื้อจัดจ้าง',
+                'org_name_full' => $this->GetInfo()['company'],
+                'director', $this->GetInfo()['director'],
+                'doc_number' => 'เลขหนังสือ',
+                'date' => 'เลขหนังสือ',
+                'org_name' => 'ชื่อโรงพาบาล',
+                'department' => 'ฝ่ายหน่วยงาน',
+                'asset_detail' => 'รายละเอียดวัสดุ',
+                'remark' => 'เหตุผล',
+                'emp_name' => 'ผู้อนุมัติ',
+                'emp_position' => 'ตำแหน่งผู้อนุมัติ',
+                'director_name' => 'ผู้อำนวยการ',
+                'director_position' => 'ตำแหน่งผู้อำนวยการ'
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_4()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'รายการคุณลักษณะพัสดุ';
 
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_4.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'รายการคุณลักษณะพัสดุ');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
+        $word_name = 'purchase_4.docx';
+        $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
                 'number' => 'ลำดับ',
                 'asset_detail' => 'รายละเอียดขอบเขตงาน',
                 'amount' => 'จำนวน',
                 'unit' => 'หน่วย',
                 'priceunit' => 'ราคา/หน่วย',
                 'sum' => 'ราคารวม',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_5()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'รายงานขอซื้อขอจ้าง';
 
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_4.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'รายงานขอซื้อขอจ้าง');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
+        $word_name = 'purchase_5.docx';
+        $result_name = 'รายงานขอซื้อขอจ้าง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
                 'org_name_full' => 'รายละเอียดชื่อโรงพยาบาลเต็ม',
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'วันที่',
@@ -317,26 +290,22 @@ class MsWordController extends \yii\web\Controller
                 'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
                 'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
                 'director_name' => 'ผู้อำนวยการโรงพยาบาล',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_6()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'รายงานผลการตรวจรับพัสดุ';
 
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_6.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'รายงานผลการตรวจรับพัสดุ');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
+        $word_name = 'purchase_6.docx';
+        $result_name = 'รายงานผลการตรวจรับพัสดุ.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
                 'org_name_full' => 'รายละเอียดชื่อโรงพยาบาลเต็ม',
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'วันที่',
@@ -357,26 +326,21 @@ class MsWordController extends \yii\web\Controller
                 'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
                 'director_name' => 'ผู้อำนวยการโรงพยาบาล',
                 'provice' => 'จังหวัด',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_7()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ประกาศผู้ชนะการเสนอราคา';
-
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_7.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ประกาศผู้ชนะการเสนอราคา');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
+        $word_name = 'purchase_7.docx';
+        $result_name = 'ประกาศผู้ชนะการเสนอราคา.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
                 'sup_type' => 'ประเภทพัสดุ',
                 'org_name' => 'ชื่อโรงพยาบาล',
                 'project_name' => 'ชื่อโปรเจค',
@@ -386,150 +350,136 @@ class MsWordController extends \yii\web\Controller
                 'price_character' => 'ราคาตัวอักษร',
                 'director_name' => 'ผู้อำนวยการโรงพยาบาล',
                 'date' => 'วันที่ประกาศ',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_8()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ใบสั่งซื้อสั่งจ้าง';
-
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_8.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ใบสั่งซื้อสั่งจ้าง');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '<i class="fa-solid fa-calendar-check"></i>ใบสั่งซื้อสั่งจ้าง',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+        $word_name = 'purchase_8.docx';
+        $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ใบสั่งซื้อสั่งจ้าง'
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_9()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ใบตรวจรับการจัดซื้อจัดจ้าง';
-
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_9.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ใบตรวจรับการจัดซื้อ/จัดจ้าง');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'date' => 'วันที่',
-                'bill_number' => 'ใบสั่งซื้อเลขที่',
-                'bill_date' => 'ใบสั่งซื้อลงวันที่',
-                'provice' => 'จังหวัด',
-                'org_name' => 'ชื่อโรงพยาบาล',
-                'vendor_name' => 'ชื่อโรงพยาบาล',
-                'sup_detail' => 'รายละเอียดพัสดุ',
-                'amount' => 'จำนวน',
-                'budget_type' => 'ประเภทงบ',
-                'price' => 'ราคา',
-                'price_character' => 'ราคาตัวอักษร',
-                'president' => 'ประธาน',
-                'director_one' => 'กรรามการ 1',
-                'director_two' => 'กรรามการ 2',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+        $word_name = 'purchase_8.docx';
+        $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ใบตรวจรับการจัดซื้อ/จัดจ้าง'
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_10()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'รายงานผลการตรวจรับ';
-
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_10.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'รายงานผลการตรวจรับ');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '<i class="fa-solid fa-calendar-check"></i>รายงานผลการตรวจรับ',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+        $word_name = 'purchase_10.docx';
+        $result_name = 'รายงานผลการตรวจรับ.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'รายงานผลการตรวจรับ'
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_11()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'แบบแสดงความบริสุทธิ์ใจ';
-
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_11.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'แบบแสดงความบริสุทธิ์ใจ');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '<i class="fa-solid fa-calendar-check"></i>แบบแสดงความบริสุทธิ์ใจ',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-            return $this->render('word', ['filename' => $filename]);
-        }
+        $word_name = 'purchase_11.docx';
+        $result_name = 'แบบแสดงความบริสุทธิ์ใจ.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'แบบแสดงความบริสุทธิ์ใจ'
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_12()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $filename = 'ขออนุมัติจ่ายเงินบำรุง';
-
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/purchase_12.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ขออนุมัติจ่ายเงินบำรุง');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '<i class="fa-solid fa-calendar-check"></i>ขออนุมัติจ่ายเงินบำรุง',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
-            ];
-        } else {
-        }
+        $word_name = 'purchase_12.docx';
+        $result_name = 'ขออนุมัติจ่ายเงินบำรุง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ขออนุมัติจ่ายเงินบำรุง'
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     // ตัวอย่าง/
-    public function actionBill()
+    // public function actionBill()
+    // {
+    //     $id = $this->request->get('id');
+    //     $user = Yii::$app->user->id;
+    //     $filename = 'บันทึกข้อความ';
+
+    //     $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/template_example.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
+    //     $templateProcessor->setValue('title', 'ตัวอย่าง');
+    //     $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+
+    //     if ($this->request->isAjax) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //         return [
+    //             'title' => '<i class="fa-solid fa-calendar-check"></i> ใบขอซื้อ',
+    //             'content' => $this->renderAjax('word', ['filename' => $filename]),
+    //         ];
+    //     } else {
+    //         return $this->render('word', ['filename' => $filename]);
+    //     }
+    // }
+
+    // function สร้าง Word
+    public function CreateFile($data)
     {
-        $id = $this->request->get('id');
-        $user = Yii::$app->user->id;
-        $filename = 'บันทึกข้อความ';
+        $result_name = $data['result_name'];
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $data['word_name']);  // เลือกไฟล์ template ที่เราสร้างไว้
+        foreach ($data['items'] as $key => $value) {
+            $templateProcessor->setValue($key, $value);
+        }
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
 
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/template_example.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ตัวอย่าง');
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
             return [
-                'title' => '<i class="fa-solid fa-calendar-check"></i> ใบขอซื้อ',
-                'content' => $this->renderAjax('word', ['filename' => $filename]),
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'content' => $this->renderAjax('word', ['filename' => $result_name]),
             ];
         } else {
-            return $this->render('word', ['filename' => $filename]);
+            echo '<p>';
+            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/asset_result.docx'), ['class' => 'btn btn-info']);  // สร้าง link download
+            echo '</p>';
+            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
         }
     }
 }

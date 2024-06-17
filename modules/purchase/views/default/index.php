@@ -8,6 +8,6 @@ $this->title = 'ระบบจัดซื้อ';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php // $this->render('../default/menu') ?>
+<?php $this->render('@app/modules/sm/views/default/menu') ?>
 <?php $this->endBlock(); ?>
 <?= $this->render('../default/menu2') ?>

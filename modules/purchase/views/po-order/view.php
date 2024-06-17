@@ -5,7 +5,6 @@ use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Order $model */
-
 $this->title = $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -39,12 +38,6 @@ $this->params['breadcrumbs'][] = $this->title;
             'item_id',
             'price',
             'amount',
-            'status',
-            'data_json',
-            'created_at',
-            'updated_at',
-            'created_by',
-            'updated_by',
         ],
     ]) ?>
 

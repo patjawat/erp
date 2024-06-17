@@ -11,6 +11,7 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\sm\models\Product;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
@@ -53,7 +54,7 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['item_id', 'amount', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
-            [['data_json', 'created_at', 'updated_at', 'pr_number', 'po_number', 'status', 'approve'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'pr_number', 'pq_number', 'po_number', 'status', 'approve'], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
     }

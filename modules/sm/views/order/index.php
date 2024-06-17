@@ -27,10 +27,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'sm-container']); ?>
 
 <div class="card">
-    <div class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
+    <div
+        class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
         <div class="d-flex gap-3 justify-content-start">
             <div class="btn-group">
-            <?= Html::a('<i class="fa-solid fa-business-time"></i> ใบขอซื้อ', ['/sm/order', 'name' => 'pr'], ['class' => 'btn btn-light']) ?>
+                <?= Html::a('<i class="fa-solid fa-business-time"></i> ใบขอซื้อ', ['/sm/order', 'name' => 'pr'], ['class' => 'btn btn-light']) ?>
                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                     <i class="bi bi-caret-down-fill"></i>
@@ -41,7 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </ul>
             </div>
             <div class="btn-group">
-            <?= Html::a('<i class="fa-solid fa-basket-shopping"></i> ใบสั่งซื้อ', ['/sm/order', 'name' => 'po'], ['class' => 'btn btn-light']) ?>
+                <?= Html::a('<i class="fa-solid fa-basket-shopping"></i> ใบสั่งซื้อ', ['/sm/order', 'name' => 'po'], ['class' => 'btn btn-light']) ?>
                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                     <i class="bi bi-caret-down-fill"></i>
@@ -62,46 +63,85 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<div class="inventory-index">
-   
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+<div class="card">
+    <div class="card-body">
 
-    <div class="card">
-        <div class="card-body p-1">
 
-            <div class="table-responsive">
-                <table class="table table-primary">
-                    <thead>
-                        <tr>
-                            <th style="width:150px">สถานะ</th>
-                            <th>เลขที่</th>
-                            <th>ผู้แทนจำหน่าย</th>
-                            <th>ราคารวม</th>
-                            <th>วันที่ขอ</th>
-                            <th width="100px">ดำเนินการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($dataProvider->getModels() as $model): ?>
-                        <tr class="">
-                            <td><?= $model->viewPrStatus() ?></td>
-                            <td scope="row">
-                                <?= Html::a($model->code, ['view', 'id' => $model->id]) ?>
-                            </td>
-                            <td>R1C2</td>
-                            <td>R1C3</td>
-                            <td>R1C3</td>
-                            <td>
-                                <?= Html::a('<i class="fa-solid fa-eye"></i>', ['view', 'id' => $model->id]) ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-responsive" style="height:500px">
+            <table class="table table-primary">
+                <thead>
+                    <tr>
+                        <th class="fw-semibold">สถานะ</th>
+                        <th class="fw-semibold">รหัสขอซื้อ (PR)</th>
+                        <th class="fw-semibold">เลขทะเบียนคุม</th>
+                        <th class="fw-semibold">ประเภท</th>
+                        <th class="fw-semibold">ผู้จำหน่าย</th>
+                        <th class="fw-semibold">ผู้ขอซื้อ</th>
+                        <th class="fw-semibold">ความคืบหน้า</th>
+                        <th class="fw-semibold">หมายเหตุ</th>
+                        <th class="fw-semibold text-center">วันที่ขอซื้อ</th>
+                        <th class="fw-semibold text-center">ดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($dataProvider->getModels() as $model): ?>
+                    <tr class="">
+                        <td class="fw-light"><?= $model->viewPrStatus() ?></td>
+                        <td class="fw-light">
+                            <?= Html::a($model->pr_number, ['/purchase/pr-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                        </td>
+                        <td class="fw-light">
+                            <?= Html::a($model->pq_number, ['/purchase/pq-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                        </td>
+                        <td class="fw-light">
+                            <?php
+                            try {
+                                echo $model->data_json['product_type_name'];
+                            } catch (\Throwable $th) {
+                            }
+                            ?></td>
+                        <td class="fw-light">
+                            <?php
+                            try {
+                                $model->vendor->title;
+                            } catch (\Throwable $th) {
+                                // throw $th;
+                            }
+                            ?>
 
+                        </td>
+                        <td class="fw-light"><?php // $model->getUserReq()['avatar'] ?></td>
+                        <td class="fw-light">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar" role="progressbar" aria-label="Progress" style="width: 50%;"
+                                    aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-light"><?php //  $model->data_json['comment'] ?></td>
+                        <td class="text-center fw-light"><?php // $model->viewDueDate() ?></td>
+                        <td class="text-center fw-light">
+
+                            <div class="btn-group">
+                                <?= Html::a('<i class="bi bi-3-circle-fill text-primary"></i> ใบสั่งซื้อ', ['/purchase/po-order', 'name' => 'po'], ['class' => 'btn btn-light']) ?>
+                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <li><?= Html::a('<i class="bi bi-1-circle text-primary me-1"></i> ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด', ['/purchase/po-order/create', 'name' => 'po', 'status' => 5, 'title' => '<i class="bi bi-plus-circle"></i> สร้างใบสั่งซื้อ (PO)'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                    <li><?= Html::a('<i class="bi bi-2-circle text-primary me-1"></i> ขอความเห็นชอบและรายงานผล', ['/purchase/po-order/create', 'name' => 'po', 'status' => 5, 'title' => '<i class="bi bi-plus-circle"></i> สร้างใบสั่งซื้อ (PO)'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
-    
 </div>
+
 <?php Pjax::end(); ?>

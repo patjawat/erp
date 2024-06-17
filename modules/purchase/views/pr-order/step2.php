@@ -1,11 +1,14 @@
 <?php
 use yii\helpers\Html;
 ?>
+
+
 <div class="d-flex justify-content-between">
     <div>
-        <h5> <span class="badge rounded-pill bg-primary text-white">2</span> ลงทะเบียนคุม</h5>
+        <h5><i class="fa-solid fa-circle-info text-primary"></i> ลงทะเบียนคุม</h5>
     </div>
 
+    
 </div>
 <div class="card">
     <div class="card-body">
@@ -26,7 +29,7 @@ use yii\helpers\Html;
             <tbody>
                 <tr class="">
                     <td class="text-end" style="width:150px;">ทะเบียนคุม</td>
-                    <td class="fw-semibold">PQ-67002</td>
+                    <td class="fw-semibold"><?= $model->pq_number ?></td>
                     <td class="text-end">ตามคำสั่ง</td>
                     <td colspan="3">123</td>
 

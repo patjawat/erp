@@ -49,7 +49,7 @@ class OrderController extends Controller
         $name = Yii::$app->request->get('name');
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => $name]);
+        $dataProvider->query->andFilterwhere(['name' => 'order']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -85,6 +85,20 @@ class OrderController extends Controller
             'model' => $this->findModel($id),
             'modelsItems' => (empty($modelsItems)) ? [new Order] : $modelsItems
         ]);
+    }
+
+    public function actionDocument($id)
+    {
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('document', ['model' => $model]),
+            ];
+        } else {
+            return $this->render('document', ['model' => $model]);
+        }
     }
 
     public function actionPrOrderList()

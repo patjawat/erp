@@ -2,9 +2,9 @@
 
 namespace app\modules\purchase\models;
 
+use app\modules\purchase\models\Order;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\purchase\models\Order;
 
 /**
  * OrderSearch represents the model behind the search form of `app\modules\purchase\models\Order`.
@@ -18,7 +18,7 @@ class OrderSearch extends Order
     {
         return [
             [['id', 'item_id', 'amount', 'status', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'approve', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at'], 'safe'],
             [['price'], 'number'],
         ];
     }
@@ -70,7 +70,8 @@ class OrderSearch extends Order
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
+        $query
+            ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'category_id', $this->category_id])
             ->andFilterWhere(['like', 'code', $this->code])

@@ -44,7 +44,7 @@ class PrOrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'pr']);
+        $dataProvider->query->andFilterwhere(['name' => 'order']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -191,7 +191,7 @@ class PrOrderController extends Controller
         $model->data_json = ArrayHelper::merge(
             $newObj, $model->data_json
         );
-        $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
+        $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
         $model->status = 2;
         $model->approve = 'Y';
         $model->save();
@@ -218,7 +218,7 @@ class PrOrderController extends Controller
                     $model->status = $status;
                 }
                 if ($model->status == 6) {
-                    // $model->code = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
+                    // $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 }
                 $model->save(false);
                 return [

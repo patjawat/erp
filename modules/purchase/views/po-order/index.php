@@ -3,6 +3,7 @@
 use app\modules\sm\models\Order;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
@@ -12,10 +13,11 @@ use yii\widgets\Pjax;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'ระบบขอซื้อ';
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <div class="order-index">
 
-    <?php Pjax::begin(); ?>
+<?php Pjax::begin(['id' => 'purchase-container']); ?>
     <?= $this->render('../default/menu2') ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 

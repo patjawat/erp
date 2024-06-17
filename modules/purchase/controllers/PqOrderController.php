@@ -5,6 +5,7 @@ namespace app\modules\purchase\controllers;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -42,7 +43,7 @@ class PqOrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'pq']);
+        $dataProvider->query->andFilterwhere(['name' => 'order']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -79,7 +80,7 @@ class PqOrderController extends Controller
         $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $model->code = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
+                $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -115,9 +116,12 @@ class PqOrderController extends Controller
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
+        $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                // validate all models
+                if ($model->pq_number == '') {
+                    $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
+                }  // validate all models
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);

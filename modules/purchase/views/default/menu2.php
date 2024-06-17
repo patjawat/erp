@@ -36,7 +36,7 @@ $name = Yii::$app->request->get('name');
                     <i class="bi bi-caret-down-fill"></i>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><?= Html::a('<i class="fa-solid fa-circle-plus text-primary me-1"></i> สร้างใบสั่งซื้อ', ['/purchase/po-order/create', 'name' => 'po', 'status' => 5, 'title' => '<i class="bi bi-plus-circle"></i> สร้างใบสั่งซื้อ (PO)'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <li><?= Html::a('<i class="fa-solid fa-circle-plus text-primary me-1"></i> สร้างใบสั่งซื้อ', ['/purchase/po-order/create', 'name' => 'po', 'status' => 5, 'title' => '<i class="bi bi-plus-circle"></i> สร้างใบสั่งซื้อ (PO)'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
                     </li>
                 </ul>
             </div>

@@ -5,6 +5,7 @@ namespace app\modules\purchase\controllers;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -42,7 +43,7 @@ class PoOrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'po']);
+        $dataProvider->query->andFilterwhere(['name' => 'order']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

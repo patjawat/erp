@@ -30,7 +30,7 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
 }
 </style>
 
-<?php Pjax::begin(['id' => 'sm-container']); ?>
+<?php Pjax::begin(['id' => 'purchase-container']); ?>
 
 
 <?php $form = ActiveForm::begin([
