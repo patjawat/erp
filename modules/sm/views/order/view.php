@@ -19,7 +19,7 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
 ?>
 
 <style>
-.nav-tabs {
+/* .nav-tabs {
     border-bottom: none;
     margin-bottom: 20px;
 }
@@ -56,7 +56,7 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
 
 .container {
     max-width: 800px;
-}
+} */
 </style>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>

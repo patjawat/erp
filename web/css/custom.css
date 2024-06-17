@@ -13563,42 +13563,38 @@ small, .small {
   }
 }
 .nav-tabs {
-  border-bottom: none;
-  margin-bottom: 20px;
+  border-bottom: none !important;
+  margin-bottom: 20px !important;
 }
 
 .nav-tabs .nav-link {
-  border: none;
-  border-radius: 0.5rem;
-  padding: 10px 20px;
-  color: #555;
-  background-color: #f8f9fa;
-  margin-right: 10px;
-  transition: background-color 0.3s, color 0.3s;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  padding: 10px 20px !important;
+  color: #555 !important;
+  background-color: #f8f9fa !important;
+  margin-right: 10px !important;
+  transition: background-color 0.3s, color 0.3s !important;
 }
 
 .nav-tabs .nav-link.active {
-  background-color: #007bff;
-  color: #fff;
+  background-color: #007bff !important;
+  color: #fff !important;
 }
 
 .nav-tabs .nav-link:hover {
-  background-color: #e9ecef;
-  color: #007bff;
+  background-color: #e9ecef !important;
+  color: #007bff !important;
 }
 
 .tab-content {
-  border-radius: 0.5rem;
-  padding: 20px;
-  background-color: #fff;
+  border-radius: 0.5rem !important;
+  padding: 20px !important;
+  background-color: #fff !important;
 }
 
 .tab-pane h3, .tab-pane .h3 {
-  margin-top: 0;
-}
-
-.container {
-  max-width: 800px;
+  margin-top: 0 !important;
 }
 
 /*# sourceMappingURL=custom.css.map */
