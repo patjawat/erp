@@ -73,7 +73,7 @@ class PrOrderController extends Controller
     public function actionCreate()
     {
         $model = new Order([
-            'name' => $this->request->get('name'),
+            'name' => 'order',
             'status' => $this->request->get('status'),
             // 'name' => 'order',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
