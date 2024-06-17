@@ -13,7 +13,7 @@ use yii\widgets\Pjax;
 $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(), 'id', 'pq_number');
 ?>
 
-<?php Pjax::begin(['id' => 'purchase-container']); ?>
+<?php Pjax::begin(['id' => 'order-container']); ?>
 <?php //  $this->render('../default/menu2') ?>
 
 <div class="card">
