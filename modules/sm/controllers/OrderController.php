@@ -4,8 +4,8 @@ namespace app\modules\sm\controllers;
 
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
-use app\modules\sm\models\Order;
-use app\modules\sm\models\OrderSearch;
+use app\modules\purchase\models\Order;
+use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
 use app\modules\sm\models\ProductSearch;
 use yii\filters\VerbFilter;

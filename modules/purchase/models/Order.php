@@ -110,11 +110,6 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasOne(Product::class, ['id' => 'item_id'])->andOnCondition(['name' => 'product_item']);
     }
 
-    public function getVendor()
-    {
-        return $this->hasOne(Categorise::class, ['code' => 'data_json[vendor]'])->andOnCondition(['name' => 'vendor']);
-    }
-
     // ผู้ขอ
     public function getUserReq()
     {
@@ -238,6 +233,12 @@ class Order extends \yii\db\ActiveRecord
         } else {
             return '';
         }
+    }
+
+    public function viewStatus()
+    {
+        $model = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
+        return $model->title;
     }
 
     public function ListPoStatus()
