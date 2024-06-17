@@ -10,7 +10,7 @@ use yii\widgets\Pjax;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\InventorySearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'ขอซื้อขอจ้าง';
+$this->title = 'บริหารพัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
