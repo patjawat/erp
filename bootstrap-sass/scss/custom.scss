@@ -1833,3 +1833,42 @@ small {
     margin-left: 70px
   }
 }
+
+.nav-tabs {
+  border-bottom: none;
+  margin-bottom: 20px;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 10px 20px;
+  color: #555;
+  background-color: #f8f9fa;
+  margin-right: 10px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: #e9ecef;
+  color: #007bff;
+}
+
+.tab-content {
+  border-radius: 0.5rem;
+  padding: 20px;
+  background-color: #fff;
+}
+
+.tab-pane h3 {
+  margin-top: 0;
+}
+
+.container {
+  max-width: 800px;
+}
