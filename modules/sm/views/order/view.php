@@ -18,46 +18,6 @@ $this->params['breadcrumbs'][] = $this->title;
 $listItems = Order::find()->where(['category_id' => $model->id])->all();
 ?>
 
-<style>
-/* .nav-tabs {
-    border-bottom: none;
-    margin-bottom: 20px;
-}
-
-.nav-tabs .nav-link {
-    border: none;
-    border-radius: 0.5rem;
-    padding: 10px 20px;
-    color: #555;
-    background-color: #f8f9fa;
-    margin-right: 10px;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.nav-tabs .nav-link.active {
-    background-color: #007bff;
-    color: #fff;
-}
-
-.nav-tabs .nav-link:hover {
-    background-color: #e9ecef;
-    color: #007bff;
-}
-
-.tab-content {
-    border-radius: 0.5rem;
-    padding: 20px;
-    background-color: #fff;
-}
-
-.tab-pane h3 {
-    margin-top: 0;
-}
-
-.container {
-    max-width: 800px;
-} */
-</style>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -73,52 +33,53 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
     </div>
 </div>
 
-
-
-
-
-
 <div class="row justify-content-center">
     <div class="col-lg-2 col-md-4 col-sm-12">
         <?= $this->render('timeline', ['model' => $model]) ?>
     </div>
     <div class="col-lg-8 col-md-8 col-sm-12">
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="process-tab" data-bs-toggle="tab" data-bs-target="#process"
-                    type="button" role="tab" aria-controls="process" aria-selected="true"><i
-                        class="fas fa-file-alt fa-fw"></i> กระบวนการการขอซื้อขอจ้าง</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional"
-                    type="button" role="tab" aria-controls="additional" aria-selected="false"><i
-                        class="far fa-list-alt fa-fw"></i> รายการเพิ่มเติม/ใบเสนอราคา/อื่นๆ...</button>
-            </li>
-        </ul>
+        <div class="d-flex justify-content-between align-items-center">
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="process-tab" data-bs-toggle="tab" data-bs-target="#process"
+                        type="button" role="tab" aria-controls="process" aria-selected="true"><i
+                            class="fas fa-file-alt fa-fw"></i> กระบวนการการขอซื้อขอจ้าง</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional"
+                        type="button" role="tab" aria-controls="additional" aria-selected="false"><i
+                            class="far fa-list-alt fa-fw"></i> รายการเพิ่มเติม/ใบเสนอราคา/อื่นๆ...</button>
+                </li>
+            </ul>
+            <?= Html::a('<i class="fa-solid fa-print"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>
+        </div>
+
+
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="process" role="tabpanel" aria-labelledby="process-tab">
-          
 
-        <!-- <div class="card">
+
+                <!-- <div class="card">
             <div class="card-body"> -->
                 <table class="table table-striped-columns">
                     <tbody>
                         <?= $this->render('step1', ['model' => $model]) ?>
-                        
+
                         <?= $this->render('step2', ['model' => $model]) ?>
                         <?= $this->render('step3', ['model' => $model]) ?>
 
                     </tbody>
                 </table>
 
-            <!-- </div>
+                <!-- </div>
         </div> -->
 
 
-        <?= $this->render('list_items', ['model' => $model]) ?>
+                <?= $this->render('list_items', ['model' => $model]) ?>
 
 
-        </div>
+            </div>
             <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
                 <h3>รายการเพิ่มเติม</h3>
                 <p>เนื้อหาสำหรับแท็บ "รายการเพิ่มเติม" ไปที่นี่.</p>

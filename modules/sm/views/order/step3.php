@@ -3,7 +3,7 @@ use yii\helpers\Html;
 ?>
 
 <td colspan="6" class="p-0">
-    <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between">
+    <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between mt-2">
         <h5><i class="fa-solid fa-circle-info text-primary"></i> ใบสั่งซื้อ</h5>
 
         <div class="dropdown float-end">
