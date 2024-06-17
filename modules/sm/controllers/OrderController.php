@@ -58,33 +58,24 @@ class OrderController extends Controller
     }
 
     /**
-     * Displays a single Order model.
+     * * Displays a single Order model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-        $modelsItems = [new Order];
-
-        if (Yii::$app->request->post()) {
-            $modelItems = Model::createMultiple(Order::classname());
-            Model::loadMultiple($modelItems, Yii::$app->request->post());
-
-            // ajax validation
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ArrayHelper::merge(
-                    ActiveForm::validateMultiple($modelItems),
-                    ActiveForm::validate($modelCustomer)
-                );
-            }
+        $model = $this->findModel($id);
+        $name = $this->request->get('name');
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax(($name ? 'view_' . $name : 'view'), ['model' => $model]),
+            ];
+        } else {
+            return $this->render('view', ['model' => $model]);
         }
-
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-            'modelsItems' => (empty($modelsItems)) ? [new Order] : $modelsItems
-        ]);
     }
 
     public function actionDocument($id)
@@ -130,7 +121,6 @@ class OrderController extends Controller
      */
     public function actionCreate()
     {
-        $modelsItems = [new Order];
         $model = new Order([
             'name' => $this->request->get('name'),
             'status' => $this->request->get('status'),
@@ -157,13 +147,11 @@ class OrderController extends Controller
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
-                    'modelsItems' => $modelsItems
                 ]),
             ];
         } else {
             return $this->render('create', [
                 'model' => $model,
-                'modelsItems' => $modelsItems
             ]);
         }
     }

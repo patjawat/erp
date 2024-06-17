@@ -18,7 +18,46 @@ $this->params['breadcrumbs'][] = $this->title;
 $listItems = Order::find()->where(['category_id' => $model->id])->all();
 ?>
 
+<style>
+.nav-tabs {
+    border-bottom: none;
+    margin-bottom: 20px;
+}
 
+.nav-tabs .nav-link {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 10px 20px;
+    color: #555;
+    background-color: #f8f9fa;
+    margin-right: 10px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #007bff;
+}
+
+.tab-content {
+    border-radius: 0.5rem;
+    padding: 20px;
+    background-color: #fff;
+}
+
+.tab-pane h3 {
+    margin-top: 0;
+}
+
+.container {
+    max-width: 800px;
+}
+</style>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -27,186 +66,70 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-<?php Pjax::begin(['id' => 'sm-container']); ?>
-
+<?php Pjax::begin(['id' => 'order-container']); ?>
 <div class="card">
     <div class="card-body">
-        <p class="card-text">ขอซื้อขอจ้าง</p>
+        <h5>ขอซื้อขอจ้าง</h5>
     </div>
 </div>
+
+
+
+
+
 
 <div class="row justify-content-center">
     <div class="col-lg-2 col-md-4 col-sm-12">
-        <?= $this->render('step', ['model' => $model]) ?>
+        <?= $this->render('timeline', ['model' => $model]) ?>
     </div>
     <div class="col-lg-8 col-md-8 col-sm-12">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="process-tab" data-bs-toggle="tab" data-bs-target="#process"
+                    type="button" role="tab" aria-controls="process" aria-selected="true"><i
+                        class="fas fa-file-alt fa-fw"></i> กระบวนการการขอซื้อขอจ้าง</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional"
+                    type="button" role="tab" aria-controls="additional" aria-selected="false"><i
+                        class="far fa-list-alt fa-fw"></i> รายการเพิ่มเติม/ใบเสนอราคา/อื่นๆ...</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="process" role="tabpanel" aria-labelledby="process-tab">
+          
 
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5> <span class="badge rounded-pill bg-primary text-white">1</span> ขั้นตอนการขอซื้อขอจ้าง</h5>
-            </div>
-            <p class="">
-                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal shadow', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="fa-regular fa-trash-can"></i> ยกเลิก', ['delete', 'id' => $model->id], [
-                    'class' => 'btn btn-sm btn-danger rounded-pill shadow',
-                    'data' => [
-                        'confirm' => 'Are you sure you want to delete this item?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
-            </p>
-        </div>
-        <div class="card">
-            <div class="card-body">
+        <!-- <div class="card">
+            <div class="card-body"> -->
                 <table class="table table-striped-columns">
                     <tbody>
-                        <tr class="">
-                            <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
-                            <td class="fw-semibold"><?= $model->code ?></td>
-                            <td class="text-end">ผู้ขอ</td>
-                            <td> <?= $model->getUserReq()['avatar'] ?></td>
-                        </tr>
-                        <tr class="">
-                            <td>เพื่อจัดซื้อ/ซ่อมแซม</td>
-                            <td>
-                                <?php
-                                    try {
-                                        echo $model->data_json['product_type_name'];
-                                    } catch (\Throwable $th) {
-                                    }
-                                ?></td>
-                            <td class="text-end">วันที่ขอซื้อ</td>
-                            <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->created_at, 'medium') ?></td>
+                        <?= $this->render('step1', ['model' => $model]) ?>
+                        
+                        <?= $this->render('step2', ['model' => $model]) ?>
+                        <?= $this->render('step3', ['model' => $model]) ?>
 
-                        </tr>
-                        <tr class="">
-                            <td class="text-end">เหตุผล</td>
-                            <td><?= isset($model->data_json['comment']) ? $model->data_json['comment'] : '' ?></td>
-                            <td class="text-end">วันที่ต้องการ</td>
-                            <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') : '' ?>
-                            </td>
-                        </tr>
-                        <td class="text-end">ผู้เห็นชอบ</td>
-                        <td colspan="5"><?= $model->viewLeaderUser()['avatar'] ?></td>
-                        </tr>
-                        <tr>
-                            <td class="text-end">ความเห็น</td>
-                            <td colspan="5"><?= isset($model->data_json['pr_confirm_2']) ? '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-thumbs-up"></i> ' . $model->data_json['pr_confirm_2'] . '</span>' : '' ?></td>
-                        </tr>
                     </tbody>
                 </table>
 
+            <!-- </div>
+        </div> -->
+
+
+        <?= $this->render('list_items', ['model' => $model]) ?>
+
+
+        </div>
+            <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
+                <h3>รายการเพิ่มเติม</h3>
+                <p>เนื้อหาสำหรับแท็บ "รายการเพิ่มเติม" ไปที่นี่.</p>
             </div>
         </div>
 
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>รูป</th>
-                                <th style="width:500px">รายการ</th>
-                                <th class="text-center" style="width:80px">หน่วย</th>
-                                <th class="text-end">ราคาต่อหน่วย</th>
-                                <th class="text-center" style="width:80px">จำนวน</th>
-                                <th class="text-end">จำนวนเงิน</th>
-                                <th style="width:180px">
-                                    <div class="d-flex justify-content-center">
-                                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($listItems as $item): ?>
-                            <tr class="">
-                                <td class="align-middle">
-                                    <?php
-                                    try {
-                                        echo Html::img($item->product->ShowImg(), ['class' => '  ', 'style' => 'max-width:50px;;height:280px;max-height: 50px;']);
-                                    } catch (\Throwable $th) {
-                                        // throw $th;
-                                    }
-                                    ?>
-                                </td>
-                                <td class="align-middle"><?= $item->product->title ?></td>
-                                <td class="align-middle text-center"><?= $item->product->data_json['unit'] ?></td>
-                                <td class="align-middle text-end fw-semibold">
-                                    <?php
-                                    try {
-                                        echo number_format($item->price, 2);
-                                    } catch (\Throwable $th) {
-                                        // throw $th;
-                                    }
-                                    ?>
-                                </td>
-                                <td class="align-middle text-center">
-                                    <?= $item->amount ?>
-                                </td>
-                                <td class="align-middle text-end">
-                                    <div class="d-flex justify-content-end fw-semibold">
-                                    <?php
-                                    try {
-                                        echo number_format(($item->amount * $item->price), 2);
-                                    } catch (\Throwable $th) {
-                                        // throw $th;
-                                    }
-                                    ?>
-                                    </div>
-                                </td>
-                                
-                                <td class="align-middle gap-2">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                        <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
-                                    </div>
-
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-
-                        </tbody>
-                    </table>
-
-                    <div class="row">
-                        <div class="col-6"></div>
-                        <div class="col-6">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <tbody>
-                                        <tr class="">
-                                            <td>ทั้งหมด</td>
-                                            <td><span
-                                                    class="fw-semibold"><?= number_format($model->SumPo(), 2) ?></span>
-                                            </td>
-                                        </tr>
-
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="d-grid gap-2">
-                                <?php if ($model->status == '' && count($listItems) > 0): ?>
-                                <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', [
-                                    '/sm/order/pr-confirm',
-                                    'id' => $model->id,
-                                    'status' => 2,
-                                ], ['class' => 'btn btn-primary rounded shadow pr-confirm']) ?>
-                                <?php endif; ?>
-
-                                <?php foreach ($model->ListPrStatus() as $status): ?>
-                                    <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/sm/order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>
-                                    <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+    <!-- End col-8 -->
 </div>
+
 
 
 <?php

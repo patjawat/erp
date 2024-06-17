@@ -217,8 +217,8 @@ class PrOrderController extends Controller
                 if ($model->approve == 'Y') {
                     $model->status = $status;
                 }
-                if ($model->status == 6) {
-                    // $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
+                if ($model->status == 4) {
+                    $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 }
                 $model->save(false);
                 return [

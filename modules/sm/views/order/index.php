@@ -88,7 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="">
                         <td class="fw-light">
                             <div class="btn-group">
-                                <?= Html::a('<i class="bi bi-clock"></i> ' . $model->viewStatus(), ['#'], ['class' => 'btn btn-light']) ?>
+                                <?= Html::a('<i class="bi bi-clock"></i> ' . $model->viewStatus(), ['/sm/order/view', 'id' => $model->id], ['class' => 'btn btn-light']) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
@@ -104,7 +104,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-light"><?= $model->getUserReq()['avatar'] ?></td>
                         <td class="fw-light align-middle">
                             <div class="d-flex flex-column">
-                                <?= Html::a($model->pr_number, ['/purchase/pr-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                                <?= Html::a($model->pr_number, ['/sm/order/view', 'id' => $model->id, 'name' => 'pr'], ['class' => 'fw-bolder open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 <?php
                                 try {
                                     echo $model->data_json['product_type_name'];
