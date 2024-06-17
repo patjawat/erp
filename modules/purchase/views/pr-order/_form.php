@@ -69,23 +69,23 @@ echo $form->field($model, 'data_json[vendor]')->widget(Select2::classname(), [
 ])->label('บริษัทแนะนำ');
 ?>
 
-<?php if ($model->name == 'pr'): ?>
+
 <?php
-    echo $form
-        ->field($model, 'data_json[due_date]')
-        ->widget(DateControl::classname(), [
-            'type' => DateControl::FORMAT_DATE,
-            'language' => 'th',
-            'widgetOptions' => [
-                'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                'pluginOptions' => [
-                    'autoclose' => true
-                ]
+echo $form
+    ->field($model, 'data_json[due_date]')
+    ->widget(DateControl::classname(), [
+        'type' => DateControl::FORMAT_DATE,
+        'language' => 'th',
+        'widgetOptions' => [
+            'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
+            'pluginOptions' => [
+                'autoclose' => true
             ]
-        ])
-        ->label('วันที่ต้องการ');
+        ]
+    ])
+    ->label('วันที่ต้องการ');
 ?>
-<?php endif; ?>
+
 <?= $form->field($model, 'data_json[comment]')->textInput()->label('หมายเหตุ') ?>
 <?= $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>

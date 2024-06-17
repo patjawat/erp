@@ -183,8 +183,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                     </div>
                     <!-- End Tabs1 -->
                     <div class="tab-pane active" id="detail">
-                        sss
-                        <?php echo $this->render('../pr-order/view', ['model' => $model]) ?>
+                       
                     </div>
                 </div>
                 

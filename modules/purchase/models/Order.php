@@ -238,7 +238,11 @@ class Order extends \yii\db\ActiveRecord
     public function viewStatus()
     {
         $model = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
-        return $model->title;
+        if ($model) {
+            return $model->title;
+        } else {
+            return null;
+        }
     }
 
     public function ListPoStatus()
