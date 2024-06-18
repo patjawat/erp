@@ -119,12 +119,16 @@ class PqOrderController extends Controller
         $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->pq_number == '') {
                     $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 }  // validate all models
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->data_json = ArrayHelper::merge(
+                    $oldObj,
+                    $model->data_json,
+                );
+                // return $model->data_json;
                 $model->save(false);
-                Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'status' => 'success',
                     'container' => '#order-container',

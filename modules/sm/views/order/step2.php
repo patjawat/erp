@@ -32,7 +32,9 @@ use yii\helpers\Html;
 </tr>
 <tr class="">
     <td class="text-end">วิธีซื้อหรือจ้าง</td>
-    <td></td>
+    <td>
+        <?= isset($model->data_json['pq_purchase_type_name']) ? $model->data_json['pq_purchase_type_name'] : '' ?>
+    </td>
     <td class="text-end">เลขที่คำสั่ง</td>
     <td> กกน-123</td>
     <td class="text-end">ลงวันที่</td>
@@ -41,7 +43,7 @@ use yii\helpers\Html;
 </tr>
 <tr class="">
     <td class="text-end">วิธีจัดหา</td>
-    <td><?= isset($model->data_json['comment']) ? $model->data_json['comment'] : '' ?></td>
+    <td><?= isset($model->data_json['pq_method_get_name']) ? $model->data_json['pq_method_get_name'] : '' ?></td>
     <td class="text-end">ลงวันที่</td>
     <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') : '' ?>
     </td>
@@ -50,27 +52,28 @@ use yii\helpers\Html;
 </tr>
 <tr class="">
     <td class="text-end">ประเภทเงิน</td>
-    <td></td>
+    <td><?= isset($model->data_json['pq_budget_type_name']) ? $model->data_json['pq_budget_type_name'] : '' ?></td>
     <td class="text-end">ชื่อโครงการ</td>
-    <td colspan="3"></td>
+    <td colspan="3">
+        <?= isset($model->data_json['pq_project_name']) ? $model->data_json['pq_project_name'] : '' ?></td>
 </tr>
 
 <tr class="">
     <td class="text-end">การพิจารณา</td>
-    <td></td>
+    <td><?= isset($model->data_json['pq_consideration']) ? $model->data_json['pq_consideration'] : '' ?></td>
     <td class="text-end">โครงการเลขที่</td>
-    <td></td>
+    <td><?= isset($model->data_json['pq_project_id']) ? $model->data_json['pq_project_id'] : '' ?></td>
     <td class="text-end">การเบิกจ่ายเงิน</td>
-    <td></td>
+    <td><?= isset($model->data_json['pq_disbursement']) ? $model->data_json['pq_disbursement'] : '' ?></td>
 </tr>
 
 <tr class="">
     <td class="text-end">หมวดเงิน</td>
-    <td></td>
+    <td><?= isset($model->data_json['pq_budget_group_name']) ? $model->data_json['pq_budget_group_name'] : '' ?></td>
     <td class="text-end">รหัสอ้างอิง EGP</td>
-    <td></td>
-    <td class="text-end">การเบิกจ่รายการแผน EGPายเงิน</td>
-    <td></td>
+    <td><?= isset($model->data_json['pq_egp_number']) ? $model->data_json['pq_egp_number'] : '' ?></td>
+    <td class="text-end">รายการแผน EGP</td>
+    <td><?= isset($model->data_json['pq_egp_report']) ? $model->data_json['pq_egp_report'] : '' ?></td>
 </tr>
 
 <tr>

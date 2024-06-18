@@ -1,5 +1,6 @@
 <?php
 
+use kartik\datecontrol\DateControl;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
@@ -15,26 +16,62 @@ use yii\widgets\Pjax;
     text-align: end;
 }
 </style>
-<div class="order-form">
-
     <?php $form = ActiveForm::begin([
         'id' => 'form-order',
-        // 'type' => ActiveForm::TYPE_HORIZONTAL,
         'fieldConfig' => ['labelSpan' => 3, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
     ]); ?>
 
-    <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
 
     <div class="row">
+        <div class="col-6">
+            <div class="border border-secondary rounded p-4">
+                <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> คำสั่ง</h6>
+                <div class="row">
+                    <div class="col-12">
+                        <?= $form->field($model, 'data_json[order]')->textInput()->label('ตามคำสั่ง') ?>
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[order_number]')->textInput()->label('เลขที่คำสั่ง') ?>
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[order_date]')->widget(DateControl::classname(), [
+                            'type' => DateControl::FORMAT_DATE,
+                            'language' => 'th',
+                            'widgetOptions' => [
+                                'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
+                                'pluginOptions' => [
+                                    'autoclose' => true
+                                ]
+                            ]
+                        ])->label('ลงวันที่') ?>
+                    </div>
+                </div>
+            </div>
 
+
+            <div class="border border-secondary rounded p-4 mt-3">
+                <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> แผนงานโครงการ</h6>
+                <div class="row">
+                    <div class="col-12">
+                    <?= $form->field($model, 'data_json[pq_project_name]')->textInput()->label('ชื่อโครงการ') ?>
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[pq_project_id]')->textInput()->label('โครงการเลขที่') ?>
+                        <?= $form->field($model, 'data_json[pq_egp_number]')->textInput()->label('รหัสอ้างอิง EGP') ?>
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[pq_disbursement]')->textInput()->label('การเบิกจ่ายเงิน') ?>
+                        <?= $form->field($model, 'data_json[pq_egp_report]')->textInput()->label('รายการแผน EGP') ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <!-- End Col-6 -->
         <div class="col-6">
             <div class="border border-secondary rounded p-4">
                 <h6 class=" text-center"><i class="fa-solid fa-circle-info text-primary"></i> วิธีการซื้อ/จ้าง</h6>
                 <div class="row">
                     <div class="col-6">
-
                         <?php
                             echo $form->field($model, 'data_json[pq_purchase_type]')->widget(Select2::classname(), [
                                 'data' => $model->ListPurchase(),
@@ -45,7 +82,7 @@ use yii\widgets\Pjax;
                                 'pluginEvents' => [
                                     'select2:select' => "function(result) { 
                                             var data = \$(this).select2('data')[0]
-                                            \$('#asset-data_json-purchase_text').val(data.text)
+                                            \$('#order-data_json-pq_purchase_type_name').val(data.text)
                                         }",
                                 ]
                             ])->label('วิธีซื้อหรือจ้าง');
@@ -63,6 +100,12 @@ use yii\widgets\Pjax;
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                 ],
+                                'pluginEvents' => [
+                                    'select2:select' => "function(result) { 
+                                            var data = \$(this).select2('data')[0]
+                                            \$('#order-data_json-pq_method_get_name').val(data.text)
+                                        }",
+                                ]
                             ])->label('วิธีจัดหา');
                         ?>
 
@@ -73,6 +116,12 @@ use yii\widgets\Pjax;
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                 ],
+                                'pluginEvents' => [
+                                    'select2:select' => "function(result) { 
+                                            var data = \$(this).select2('data')[0]
+                                            \$('#order-data_json-pq_budget_group_name').val(data.text)
+                                        }",
+                                ]
                             ])->label('หมวดเงิน');
                         ?>
                     </div>
@@ -84,62 +133,38 @@ use yii\widgets\Pjax;
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                 ],
+                                'pluginEvents' => [
+                                    'select2:select' => "function(result) { 
+                                            var data = \$(this).select2('data')[0]
+                                            \$('#order-data_json-pq_budget_type_name').val(data.text)
+                                        }",
+                                ]
                             ])->label('ประเภทเงิน');
                         ?>
-                        
-                        </div>
-                        
-                        <div class="col-6">
-                            <?= $form->field($model, 'data_json[pq_condition]')->textInput()->label('เงื่อนไข') ?>
-                            </div>
-                            <div class="col-12">
-                                <?= $form->field($model, 'data_json[pq_income_reason]')->textArea(['rows' => 5, 'style' => 'height: 106px;'])->label('เหตุผลการจัดหา') ?>
-                            <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['1' => 'เกณฑ์ราคา', '2' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'])->label('การพิจารณา') ?>
-                </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="col-6">
-            <div class="border border-secondary rounded p-4">
-                <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> คำสั่ง</h6>
-                <div class="row">
+                    </div>
+
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[pq_condition]')->textInput()->label('เงื่อนไข') ?>
+                    </div>
                     <div class="col-12">
-                        <?= $form->field($model, 'data_json[order]')->textInput()->label('ตามคำสั่ง') ?>
-                    </div>
-                    <div class="col-6">
-                        <?= $form->field($model, 'data_json[order_number]')->textInput()->label('เลขที่คำสั่ง') ?>
-                    </div>
-                    <div class="col-6">
-                        <?= $form->field($model, 'data_json[order_date]')->textInput()->label('ลงวันที่') ?>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="border border-secondary rounded p-4 mt-3">
-                <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> แผนงานโครงการ</h6>
-                <div class="row">
-                    <div class="col-12">
-                        <?= $form->field($model, 'data_json[pq_project_name')->textInput()->label('ชื่อโครงการ') ?>
-                    </div>
-                    <div class="col-6">
-                        <?= $form->field($model, 'data_json[pq_project_id]')->textInput()->label('โครงการเลขที่') ?>
-                        <?= $form->field($model, 'data_json[pq_egp_number]')->textInput()->label('รหัสอ้างอิง EGP') ?>
-                    </div>
-                    <div class="col-6">
-                        <?= $form->field($model, 'data_json[pq_disbursement]')->textInput()->label('การเบิกจ่ายเงิน') ?>
-                        <?= $form->field($model, 'data_json[pq_egp_report]')->textInput()->label('รายการแผน EGP') ?>
+                        <?= $form->field($model, 'data_json[pq_income_reason]')->textArea(['rows' => 5, 'style' => 'height: 106px;'])->label('เหตุผลการจัดหา') ?>
+                        <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['1' => 'เกณฑ์ราคา', '2' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'])->label('การพิจารณา') ?>
+                        <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'data_json[pq_purchase_type_name]')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'data_json[pq_method_get_name]')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'data_json[pq_budget_group_name]')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'data_json[pq_budget_type_name]')->hiddenInput()->label(false) ?>
                     </div>
                 </div>
             </div>
-
-
-
+            
         </div>
-
-
+        <!-- End Col-6 -->
     </div>
+    <!-- End Row -->
 
     <div class="form-group mt-3 d-flex justify-content-center">
         <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
@@ -147,7 +172,6 @@ use yii\widgets\Pjax;
 
     <?php ActiveForm::end(); ?>
 
-</div>
 
 <?php
 $js = <<< JS

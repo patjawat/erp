@@ -6,6 +6,7 @@ use app\components\Processor;
 use app\components\SiteHelper;
 use app\modules\am\components\AssetHelper;
 use app\modules\am\models\Asset;
+use app\modules\purchase\models\Order;
 use PhpOffice\PhpWord\Settings;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -19,9 +20,18 @@ class MsWordController extends \yii\web\Controller
         return $this->render('index');
     }
 
-    protected function findModel($id)
+    protected function findAssetModel($id)
     {
         if (($model = Asset::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function findOrderModel($id)
+    {
+        if (($model = Order::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
@@ -32,7 +42,7 @@ class MsWordController extends \yii\web\Controller
     protected function GetInfo()
     {
         $info = SiteHelper::getInfo();
-        return ['company' => $info['company_name'], 'director' => $info['director_name']];
+        return ['company_name' => $info['company_name'], 'director_name' => $info['director_name']];
     }
 
     // ทะเบียนทรัพย์สิน
@@ -49,7 +59,7 @@ class MsWordController extends \yii\web\Controller
 
         // ถ้ามี ID ส่งมาให้แสดงจาก Database
         if (isset($id)) {
-            $model = $this->findModel($id);
+            $model = $this->findAssetModel($id);
             $number = $this->request->get('number');
             $date = $this->request->get('date');
             $vendor = $model->getVendor();
@@ -57,7 +67,7 @@ class MsWordController extends \yii\web\Controller
             $venrorPhone = isset($vendor->data_json['phone']) ? $vendor->data_json['phone'] : '-';
             $templateProcessor->setValue('title', 'ทะเบียนทรัพย์สิน');
             $templateProcessor->setValue('org_name', $model->department_name);
-            $templateProcessor->setValue('department', $this->GetInfo()['company']);
+            $templateProcessor->setValue('department', $this->GetInfo()['company_name']);
             $templateProcessor->setValue('asset_type', $model->AssetTypeName());  // ประเภท
             $templateProcessor->setValue('asset_fsn', $model->code);  // หมายเลขครุภัณฑ์
             $templateProcessor->setValue('feature', $model->asset_option);  // ลักษณะ/คุณสมบัติ
@@ -154,7 +164,10 @@ class MsWordController extends \yii\web\Controller
 
     public function actionPurchase_1()
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
         $id = $this->request->get('id');
+        $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
         $word_name = 'purchase_1.docx';
         $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด.docx';
@@ -166,10 +179,10 @@ class MsWordController extends \yii\web\Controller
                 'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
                 'org_name_full' => 'รายละเอียดโรงพยาบาล',
                 'doc_number' => 'เลขที่เอกสาร',
-                'date' => 'วันที่',
+                'date' => isset($model->data_json['order_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium') : '-',
                 'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
                 'org_name' => 'ชื่อโรงพยาบาล',
-                'suptype' => 'ประเภททรัพย์สิน',
+                'suptype' => (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'),
                 'budget_year' => 'ปีงบประมาณ',
                 'budget_amount' => 'วงเงินงบประมาณ',
                 'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
@@ -178,9 +191,28 @@ class MsWordController extends \yii\web\Controller
                 'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
                 'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
                 'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
-                'director_name' => 'ผู้อำนวยการโรงพยาบาล',
-                'org_name' => 'ชื่อโรงพยาบาล',
+                'director_name' => $this->GetInfo()['director_name'],
+                'org_name' => $this->GetInfo()['company_name'],
             ]
+            // 'items' => [
+            //     'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
+            //     'org_name_full' => 'รายละเอียดโรงพยาบาล',
+            //     'doc_number' => 'เลขที่เอกสาร',
+            //     'date' => 'วันที่',
+            //     'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
+            //     'org_name' => 'ชื่อโรงพยาบาล',
+            //     'suptype' => 'ประเภททรัพย์สิน',
+            //     'budget_year' => 'ปีงบประมาณ',
+            //     'budget_amount' => 'วงเงินงบประมาณ',
+            //     'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
+            //     'board' => 'คณะกรรมการกำหนดรายละเอียด',
+            //     'emp_name' => 'เจ้าหน้าที่พนักงาน',
+            //     'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
+            //     'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
+            //     'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
+            //     'director_name' => 'ผู้อำนวยการโรงพยาบาล',
+            //     'org_name' => 'ชื่อโรงพยาบาล',
+            // ]
         ];
 
         return $this->CreateFile($data);
@@ -223,8 +255,8 @@ class MsWordController extends \yii\web\Controller
             'result_name' => $result_name,
             'items' => [
                 'title' => 'ขออนุมัติจัดซื้อจัดจ้าง',
-                'org_name_full' => $this->GetInfo()['company'],
-                'director', $this->GetInfo()['director'],
+                'org_name_full' => $this->GetInfo()['company_name'],
+                'director', $this->GetInfo()['director_name'],
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'เลขหนังสือ',
                 'org_name' => 'ชื่อโรงพาบาล',
@@ -434,29 +466,6 @@ class MsWordController extends \yii\web\Controller
         ];
         return $this->CreateFile($data);
     }
-
-    // ตัวอย่าง/
-    // public function actionBill()
-    // {
-    //     $id = $this->request->get('id');
-    //     $user = Yii::$app->user->id;
-    //     $filename = 'บันทึกข้อความ';
-
-    //     $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/template_example.docx');  // เลือกไฟล์ template ที่เราสร้างไว้
-    //     $templateProcessor->setValue('title', 'ตัวอย่าง');
-    //     $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/temp/' . $filename . '.docx');  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-
-    //     if ($this->request->isAjax) {
-    //         Yii::$app->response->format = Response::FORMAT_JSON;
-
-    //         return [
-    //             'title' => '<i class="fa-solid fa-calendar-check"></i> ใบขอซื้อ',
-    //             'content' => $this->renderAjax('word', ['filename' => $filename]),
-    //         ];
-    //     } else {
-    //         return $this->render('word', ['filename' => $filename]);
-    //     }
-    // }
 
     // function สร้าง Word
     public function CreateFile($data)
