@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 $listItems = Order::find()->where(['category_id' => $model->id])->all();
 ?>
-
+<?php Pjax::begin(['id' => 'order-container']); ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -26,7 +26,6 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-<?php Pjax::begin(['id' => 'order-container']); ?>
 <div class="card">
     <div class="card-body">
         <h5>ขอซื้อขอจ้าง</h5>
@@ -55,34 +54,20 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
             <?= Html::a('<i class="fa-solid fa-print"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>
         </div>
 
-
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="process" role="tabpanel" aria-labelledby="process-tab">
-
-
-                <!-- <div class="card">
-            <div class="card-body"> -->
                 <table class="table table-striped-columns">
                     <tbody>
                         <?= $this->render('step1', ['model' => $model]) ?>
-
-                        <?= $this->render('step2', ['model' => $model]) ?>
-                        <?= $this->render('step3', ['model' => $model]) ?>
-
-                    </tbody>
-                </table>
-
-                <!-- </div>
-        </div> -->
-
-
-                <?= $this->render('list_items', ['model' => $model]) ?>
-
-
-            </div>
-            <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
-                <h3>รายการเพิ่มเติม</h3>
-                <p>เนื้อหาสำหรับแท็บ "รายการเพิ่มเติม" ไปที่นี่.</p>
+                        <?= $model->pq_number ? $this->render('step2', ['model' => $model]) : '' ?>
+                        <?= $model->po_number ? $this->render('step3', ['model' => $model]) : '' ?>
+                        </tbody>
+                        </table>
+                        <?= $this->render('list_items', ['model' => $model]) ?>
+                        </div>
+                        <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
+                <?= $this->render('_view_order_files', ['model' => $model]) ?>
+              
             </div>
         </div>
 

@@ -6,15 +6,13 @@ use yii\helpers\Html;
     <div
         class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between">
         <h5><i class="fa-solid fa-circle-info text-primary"></i> ขอซื้อขอจ้าง</h5>
-
         <div class="dropdown float-end">
             <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                 aria-expanded="false">
                 <i class="fa-solid fa-ellipsis"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right" style="">
-                <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขใบขอซื้อ : ' . $model->pr_number], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
                     'class' => 'dropdown-item  delete-item',
                 ]) ?>

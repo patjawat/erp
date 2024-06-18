@@ -110,6 +110,12 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasOne(Product::class, ['id' => 'item_id'])->andOnCondition(['name' => 'product_item']);
     }
 
+    //  uploadFile
+    public function Upload($name)
+    {
+        return FileManagerHelper::FileUpload($this->ref, $name);
+    }
+
     // ผู้ขอ
     public function getUserReq()
     {

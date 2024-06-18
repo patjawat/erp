@@ -30,8 +30,6 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
 }
 </style>
 
-<?php Pjax::begin(['id' => 'purchase-container']); ?>
-
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
@@ -109,7 +107,25 @@ echo $form
 
 $js = <<< JS
 
+    \$('#form-order').on('beforeSubmit', function (e) {
+        var form = \$(this);
+        \$.ajax({
+            url: form.attr('action'),
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: async function (response) {
+                form.yiiActiveForm('updateMessages', response, true);
+                if(response.status == 'success') {
+                    closeModal()
+                    success()
+                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                }
+            }
+        });
+        return false;
+    });
+
     JS;
-$this->registerJS($js, View::POS_READY)
+$this->registerJS($js, View::POS_END)
 ?>
-<?php Pjax::end(); ?>

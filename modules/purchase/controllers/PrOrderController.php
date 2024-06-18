@@ -123,26 +123,31 @@ class PrOrderController extends Controller
                 // validate all models
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                // return $this->redirect(['view', 'id' => $model->id]);
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                    'container' => '#order-container',
+                ];
             } else {
                 return false;
             }
         } else {
             $model->loadDefaultValues();
-        }
 
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('update', [
+                        'model' => $model,
+                    ]),
+                ];
+            } else {
+                return $this->render('update', [
                     'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
+                ]);
+            }
         }
     }
 
