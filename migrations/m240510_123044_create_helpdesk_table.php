@@ -80,6 +80,13 @@ class m240510_123044_create_helpdesk_table extends Migration
             $this->insert('categorise', ['category_id' => '', 'code' => 1, 'name' => 'line_group', 'title' => 'งานซ่อมบำรุง', 'active' => 1]);
             $this->insert('categorise', ['category_id' => '', 'code' => 2, 'name' => 'line_group', 'title' => 'ศูนย์คอมพิวเตอร์', 'active' => 1]);
             $this->insert('categorise', ['category_id' => '', 'code' => 3, 'name' => 'line_group', 'title' => 'ศูนย์เครื่องมือแพทย์', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 4, 'name' => 'line_group', 'title' => 'ระบบลา', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 5, 'name' => 'line_group', 'title' => 'ระบบความเสี่ยง', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 6, 'name' => 'line_group', 'title' => 'ระบบห้องประชุม', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 7, 'name' => 'line_group', 'title' => 'ระบบขอใช้รถยนต์', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 8, 'name' => 'line_group', 'title' => 'ระบบจองรถพยาบาล', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 9, 'name' => 'line_group', 'title' => 'ระบบ รปภ.', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => 10, 'name' => 'line_group', 'title' => 'ระบบบ้านพัก', 'active' => 1]);
         }
     }
 

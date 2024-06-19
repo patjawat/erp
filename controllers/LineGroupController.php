@@ -87,8 +87,9 @@ class LineGroupController extends Controller
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $model->save(false);
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+
                 return [
                     'status' => 'success',
                     'container' => '#line-group-container',

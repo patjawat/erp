@@ -83,7 +83,7 @@
 }
 </style>
 <div class="mt-3">
-<?php foreach ($model->ListPrStatus() as $status): ?>
+<?php foreach ($model->ListStatus() as $status): ?>
 <?php if ($status->code < $model->status): ?>
 
     <div class="step step-active">

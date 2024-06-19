@@ -178,9 +178,14 @@ class Order extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_item'])->all(), 'id', 'title');
     }
 
-    public function ListPrStatus()
+    // public function ListPrStatus()
+    // {
+    //     return Categorise::find()->where(['name' => 'pr_status'])->all();
+    // }
+
+    public function ListStatus()
     {
-        return Categorise::find()->where(['name' => 'pr_status'])->all();
+        return Categorise::find()->where(['name' => 'order_status'])->all();
     }
 
     public function viewPrStatus()
