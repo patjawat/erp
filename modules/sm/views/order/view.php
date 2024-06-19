@@ -46,6 +46,11 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                             class="fas fa-file-alt fa-fw"></i> กระบวนการการขอซื้อขอจ้าง</button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="director-tab" data-bs-toggle="tab" data-bs-target="#director"
+                        type="button" role="tab" aria-controls="director" aria-selected="true"><i
+                            class="fas fa-file-alt fa-fw"></i> กรรมการตรวจรับ</button>
+
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional"
                         type="button" role="tab" aria-controls="additional" aria-selected="false"><i
                             class="far fa-list-alt fa-fw"></i> รายการเพิ่มเติม/ใบเสนอราคา/อื่นๆ...</button>
@@ -61,13 +66,15 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                         <?= $this->render('step1', ['model' => $model]) ?>
                         <?= $model->pq_number ? $this->render('step2', ['model' => $model]) : '' ?>
                         <?= $model->po_number ? $this->render('step3', ['model' => $model]) : '' ?>
-                        </tbody>
-                        </table>
-                        <?= $this->render('list_items', ['model' => $model]) ?>
-                        </div>
-                        <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
+                    </tbody>
+                </table>
+                <?= $this->render('list_items', ['model' => $model]) ?>
+            </div>
+            <div class="tab-pane fade" id="director" role="tabpanel" aria-labelledby="director-tab">
+                <?= $this->render('list_director', ['model' => $model]) ?>
+            </div>
+            <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
                 <?= $this->render('_view_order_files', ['model' => $model]) ?>
-              
             </div>
         </div>
 

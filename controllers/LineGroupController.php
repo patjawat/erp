@@ -1,21 +1,19 @@
 <?php
 
-namespace app\modules\purchase\controllers;
+namespace app\controllers;
 
-use app\components\AppHelper;
-use app\modules\purchase\models\Order;
-use app\modules\purchase\models\OrderSearch;
+use app\models\Categorise;
+use app\models\CategoriseSearch;
 use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;
 
 /**
- * PqOrderController implements the CRUD actions for Order model.
+ * LineGroupController implements the CRUD actions for Categorise model.
  */
-class PqOrderController extends Controller
+class LineGroupController extends Controller
 {
     /**
      * @inheritDoc
@@ -35,16 +33,27 @@ class PqOrderController extends Controller
         );
     }
 
+    public function actionNotify()
+    {
+        $lineNotify = Yii::$app->lineNotify;
+        try {
+            $response = $lineNotify->sendMessage('Hello from Yii2!');
+            return $this->render('notify', ['response' => $response]);
+        } catch (\Exception $e) {
+            return $this->render('notify', ['error' => $e->getMessage()]);
+        }
+    }
+
     /**
-     * Lists all Order models.
+     * Lists all Categorise models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new OrderSearch();
+        $searchModel = new CategoriseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere(['name' => 'line_group']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -53,7 +62,7 @@ class PqOrderController extends Controller
     }
 
     /**
-     * Displays a single Order model.
+     * Displays a single Categorise model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -66,24 +75,24 @@ class PqOrderController extends Controller
     }
 
     /**
-     * Creates a new Order model.
+     * Creates a new Categorise model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Order([
-            'name' => 'pq',
-            'category_id' => $this->request->get('category_id'),
+        $model = new Categorise([
+            'name' => 'line_group',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
-        $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'container' => '#line-group-container',
+                ];
             } else {
                 return false;
             }
@@ -107,7 +116,7 @@ class PqOrderController extends Controller
     }
 
     /**
-     * Updates an existing Order model.
+     * Updates an existing Categorise model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -116,48 +125,38 @@ class PqOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $oldObj = $model->data_json;
-        $thaiYear = substr((date('Y') + 543), 2);
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                if ($model->pq_number == '') {
-                    $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
-                }  // validate all models
-                $model->data_json = ArrayHelper::merge(
-                    $oldObj,
-                    $model->data_json,
-                );
-                // return $model->data_json;
-                $model->save(false);
-                return [
-                    'status' => 'success',
-                    'container' => '#order-container',
-                ];
-            } else {
-                return false;
-            }
+
+        // if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        //     return $this->redirect(['view', 'id' => $model->id]);
+        // }
+
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'success',
+                'container' => '#line-group-container',
+            ];
         } else {
             $model->loadDefaultValues();
+        }
 
-            if ($this->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('update', [
-                        'model' => $model,
-                    ]),
-                ];
-            } else {
-                return $this->render('update', [
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
                     'model' => $model,
-                ]);
-            }
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
         }
     }
 
     /**
-     * Deletes an existing Order model.
+     * Deletes an existing Categorise model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -171,15 +170,15 @@ class PqOrderController extends Controller
     }
 
     /**
-     * Finds the Order model based on its primary key value.
+     * Finds the Categorise model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Order the loaded model
+     * @return Categorise the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Order::findOne(['id' => $id])) !== null) {
+        if (($model = Categorise::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

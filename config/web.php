@@ -29,6 +29,10 @@ $config = [
     'language' => 'th_TH',  // เปิดใช้งานภาษาไทย
     'components' => [
         'employee' => 'app\components\UserHelper',
+        // แจ่งเตือน line Group
+        'lineNotify' => [
+            'class' => 'app\components\LineNotify',
+        ],
         'image' => [
             'class' => 'yii\image\ImageDriver',
             'driver' => 'GD',  // GD or Imagick
@@ -167,6 +171,7 @@ $config = [
             // '*',
             // 'liff/*',
             'me/*',
+            'line-group/*',
             'summary/*',
             'helpdesk/*',
             'purchase/*',

@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
 use app\modules\am\components\AssetHelper;
@@ -179,7 +180,7 @@ class MsWordController extends \yii\web\Controller
                 'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
                 'org_name_full' => 'รายละเอียดโรงพยาบาล',
                 'doc_number' => 'เลขที่เอกสาร',
-                'date' => isset($model->data_json['order_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium') : '-',
+                'date' => isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-',
                 'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
                 'org_name' => 'ชื่อโรงพยาบาล',
                 'suptype' => (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'),

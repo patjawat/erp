@@ -24,7 +24,15 @@ $modelCar = AssetDetail::find()->where(['name' => 'tax_car', 'code' => $model->c
             <td colspan="3"><code><?= $model->code ?></code></td>
             <td class="text-end"><span class="fw-semibold"> มูลค่า : </span></td>
             <td colspan="3"><span
-                    class="text-white bg-primary badge rounded-pill fs-6"><?= number_format($model->price, 2) ?></span>
+                    class="text-white bg-primary badge rounded-pill fs-6">
+                    <?php
+                        try {
+                            echo number_format($model->price, 2);
+                        } catch (\Throwable $th) {
+                            // throw $th;
+                        }
+                    ?>
+</span>
                 บาท</td>
         </tr>
         <tr>

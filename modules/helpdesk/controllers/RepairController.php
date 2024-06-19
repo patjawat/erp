@@ -315,7 +315,7 @@ class RepairController extends Controller
             ->bindValue(':code', $code)
             ->queryOne();
 
-        // return $checkAssetType['code'];
+        // return $checkAssetType;
         $repair_group = '';
         try {
             if (isset($checkAssetType) && $checkAssetType['code'] == 11) {
@@ -344,12 +344,28 @@ class RepairController extends Controller
         $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
+                // && $model->save()
                 $this->changAssetStatus($model->code);
-                return [
-                    'status' => 'success',
-                    'container' => '#helpdesk-container',
-                ];
+
+                // template message
+                $emp = Yii::$app->employee::GetEmployee();
+
+                $message = 'แจ้งงานซ่อมจาก ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->data_json['title'] . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
+                try {
+                    $response = Yii::$app->lineNotify->sendMessage($message, $model->repair_group);
+                    return [
+                        'status' => 'success',
+                        'container' => '#helpdesk-container',
+                        'response' => $response
+                    ];
+                } catch (\Exception $e) {
+                    return [
+                        'status' => false,
+                        'container' => '#helpdesk-container',
+                        'error' => $e->getMessage()
+                    ];
+                }
             }
         } else {
             $model->loadDefaultValues();
@@ -389,6 +405,7 @@ class RepairController extends Controller
                 }
 
                 $model->save();
+
                 return [
                     'status' => 'success',
                     'container' => '#helpdesk-container',

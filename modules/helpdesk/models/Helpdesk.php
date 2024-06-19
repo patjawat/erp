@@ -280,6 +280,14 @@ class Helpdesk extends \yii\db\ActiveRecord
         }
     }
 
+    public function UrgencyName()
+    {
+        $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
+        if ($model) {
+            return $model->title;
+        }
+    }
+
     // แสดงความเร่งด่วน
     public function viewUrgency()
     {
