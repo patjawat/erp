@@ -156,7 +156,6 @@ class LineGroupController extends Controller
             ]);
         }
     }
-    }
 
     /**
      * Deletes an existing Categorise model.
