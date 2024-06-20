@@ -66,12 +66,7 @@ $resultsJs = <<< JS
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
 ]); ?>
-    <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[board_position]')->textInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[board_fullname]')->textInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[position_name]')->textInput(['maxlength' => true])->label(false) ?>
-   
+
     <?php
         $initEmployee = isset($model->data_json['employee_id']) ? Employees::find()->where(['id' => $model->data_json['employee_id']])->one()->getAvatar(false) : null;
         // echo $initEmployee->getAvatar(false);
@@ -128,6 +123,13 @@ echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
     ]
 ])->label('คณะกรรมการ');
 ?>
+    <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[board_position]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[board_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[position_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
+   
+    
     <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
 </div>
