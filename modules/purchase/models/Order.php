@@ -124,12 +124,16 @@ class Order extends \yii\db\ActiveRecord
 
             return [
                 'avatar' => $employee->getAvatar(false),
-                'department' => $employee->departmentName()
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+                'position_name' => $employee->positionName()
             ];
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
-                'department' => ''
+                'department' => '',
+                'fullname' => '',
+                'position_name' => '',
             ];
         }
     }
@@ -142,12 +146,34 @@ class Order extends \yii\db\ActiveRecord
 
             return [
                 'avatar' => $employee->getAvatar(false),
-                'department' => $employee->departmentName()
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+                'position_name' => $employee->positionName()
             ];
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
                 'department' => '',
+                'fullname' => '',
+                'position_name' => '',
+            ];
+        }
+    }
+
+    // คณะกรรมการ
+    public function ShowBoard()
+    {
+        try {
+            $employee = Employees::find()->where(['id' => $this->data_json['employee_id']])->one();
+
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'department' => $employee->departmentName()
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'department' => ''
             ];
         }
     }
@@ -184,10 +210,27 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
+    public function ListStatus()
+    {
+        return Categorise::find()->where(['name' => 'order_status'])->all();
+    }
+
+    // แสดงชื่อคณะกรรมการ
+    public function getBoard()
+    {
+        return self::find()->where(['category_id' => $this->id, 'name' => 'board'])->all();
+    }
+
     // วิธีซื้อหรือจ้าง
     public function ListPurchase()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'purchase'])->all(), 'code', 'title');
+    }
+
+    // คณะกรรมการ
+    public function ListBoard()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'board'])->all(), 'code', 'title');
     }
 
     // วิธีจัดหา

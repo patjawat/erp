@@ -48,6 +48,43 @@ class AppHelper extends Component
         return;
     }
 
+    // แปลงตัวเลขเป็นตัวหนังสือ
+    public static function convertNumberToWords($number)
+    {
+        $units = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+        $positions = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+
+        if ($number == 0) {
+            return 'ศูนย์';
+        }
+
+        if ($number < 0) {
+            return 'ลบ ' . convertNumberToWords(abs($number));
+        }
+
+        $string = '';
+        $position = 0;
+
+        while ($number > 0) {
+            $digit = $number % 10;
+
+            if ($position == 0 && $digit == 1 && $string != '') {
+                $string = 'เอ็ด' . $string;
+            } elseif ($position == 1 && $digit == 1) {
+                $string = 'สิบ' . $string;
+            } elseif ($position == 1 && $digit == 2) {
+                $string = 'ยี่สิบ' . $string;
+            } elseif ($digit != 0) {
+                $string = $units[$digit] . $positions[$position] . $string;
+            }
+
+            $number = intval($number / 10);
+            $position++;
+        }
+
+        return $string;
+    }
+
     // แปลงตัวเลขอาราบิก เป็น ตัวเลขไทย
     public static function thainumDigit($num)
     {

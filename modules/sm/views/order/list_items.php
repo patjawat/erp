@@ -2,7 +2,7 @@
 use app\modules\sm\models\Order;
 use yii\helpers\Html;
 
-$listItems = Order::find()->where(['category_id' => $model->id])->all();
+$listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order_item'])->all();
 ?>
 <div class="card">
     <div class="card-body">
@@ -36,8 +36,23 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                             }
                             ?>
                         </td>
-                        <td class="align-middle"><?= $item->product->title ?></td>
-                        <td class="align-middle text-center"><?= $item->product->data_json['unit'] ?>
+                        <td class="align-middle">
+                            <?php
+                            try {
+                                echo $item->product->title;
+                            } catch (\Throwable $th) {
+                            }
+                            // throw $th;
+                            ?></td>
+                        <td class="align-middle text-center">
+                            
+                        <?php
+                        try {
+                            echo $item->product->data_json['unit'];
+                        } catch (\Throwable $th) {
+                        }
+                        // throw $th;
+                        ?>
                         </td>
                         <td class="align-middle text-end fw-semibold">
                             <?php

@@ -113,10 +113,6 @@ class ProductController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->save(false);
-
-                // return [
-                //     'container' => '#sm-container',
-                // ];
                 return [
                     'title' => $this->request->get('title'),
                     'content' => $this->renderAjax('view', [

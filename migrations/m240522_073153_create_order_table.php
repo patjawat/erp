@@ -33,6 +33,17 @@ class m240522_073153_create_order_table extends Migration
             'updated_by' => $this->integer()->comment('ผู้แก้ไข')
         ]);
 
+        $sqlBoardStatus = Yii::$app->db->createCommand("select * from categorise where name = 'board'")->queryAll();
+        if (count($sqlBoardStatus) < 1) {
+            // คณะกรรมการ
+            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'board', 'title' => 'ประธานกรรมการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'board', 'title' => 'กรรมการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'board', 'title' => 'กรรมการและเลขานุการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'board', 'title' => 'เลขานุการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'board', 'title' => 'ผู้ควบคุมงาน', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'board', 'title' => 'ผู้ตรวจรับพัสดุหรืองานจ้าง', 'active' => 1]);
+        }
+
         $sqlOrderStatus = Yii::$app->db->createCommand("select * from categorise where name = 'order_status'")->queryAll();
         if (count($sqlOrderStatus) < 1) {
             // สถานะคำสั่งซื้อ

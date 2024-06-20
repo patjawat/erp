@@ -169,54 +169,83 @@ class MsWordController extends \yii\web\Controller
 
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
+        $listBoards = Order::find()->where(['category_id' => $model->id, 'name' => 'board'])->all();
         $user = Yii::$app->user->id;
         $word_name = 'purchase_1.docx';
         $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด.docx';
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        // $data = [
+        //     'word_name' => $word_name,
+        //     'result_name' => $result_name,
+        //     'items' => [
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
 
-        $data = [
-            'word_name' => $word_name,
-            'result_name' => $result_name,
-            'items' => [
-                'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
-                'org_name_full' => 'รายละเอียดโรงพยาบาล',
-                'doc_number' => 'เลขที่เอกสาร',
-                'date' => isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-',
-                'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
-                'org_name' => 'ชื่อโรงพยาบาล',
-                'suptype' => (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'),
-                'budget_year' => 'ปีงบประมาณ',
-                'budget_amount' => 'วงเงินงบประมาณ',
-                'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
-                'board' => 'คณะกรรมการกำหนดรายละเอียด',
-                'emp_name' => 'เจ้าหน้าที่พนักงาน',
-                'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
-                'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
-                'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
-                'director_name' => $this->GetInfo()['director_name'],
-                'org_name' => $this->GetInfo()['company_name'],
-            ]
-            // 'items' => [
-            //     'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
-            //     'org_name_full' => 'รายละเอียดโรงพยาบาล',
-            //     'doc_number' => 'เลขที่เอกสาร',
-            //     'date' => 'วันที่',
-            //     'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
-            //     'org_name' => 'ชื่อโรงพยาบาล',
-            //     'suptype' => 'ประเภททรัพย์สิน',
-            //     'budget_year' => 'ปีงบประมาณ',
-            //     'budget_amount' => 'วงเงินงบประมาณ',
-            //     'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
-            //     'board' => 'คณะกรรมการกำหนดรายละเอียด',
-            //     'emp_name' => 'เจ้าหน้าที่พนักงาน',
-            //     'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
-            //     'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
-            //     'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
-            //     'director_name' => 'ผู้อำนวยการโรงพยาบาล',
-            //     'org_name' => 'ชื่อโรงพยาบาล',
-            // ]
-        ];
+        $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
+        $templateProcessor->setValue('org_name_full', 'รายละเอียดโรงพยาบาล');
+        $templateProcessor->setValue('doc_number', 'เลขที่เอกสาร');
+        $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
+        $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
+        $templateProcessor->setValue('org_name', 'ชื่อโรงพยาบาล');
+        $templateProcessor->setValue('suptype', (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'));
+        $templateProcessor->setValue('budget_year', 'ปีงบประมาณ');
+        $templateProcessor->setValue('budget_amount', number_format($model->SumPo(), 2));
+        $templateProcessor->setValue('budget_letter', AppHelper::convertNumberToWords($model->SumPo(), 2));
+        $templateProcessor->setValue('board', 'คณะกรรมการกำหนดรายละเอียด');
+        $templateProcessor->setValue('emp_name', $model->getUserReq()['fullname']);
+        $templateProcessor->setValue('emp_position', $model->getUserReq()['position_name']);
+        $templateProcessor->setValue('emphead_name', $model->viewLeaderUser()['fullname']);
+        $templateProcessor->setValue('emphead_position', $model->viewLeaderUser()['position_name']);
+        $templateProcessor->setValue('director_name', $this->GetInfo()['director_name']);
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
 
-        return $this->CreateFile($data);
+        $templateProcessor->cloneRow('board_name', count($listBoards));
+        $i = 1;
+        $num = 1;
+        foreach ($listBoards as $board) {
+            $templateProcessor->setValue('num#' . $i, AppHelper::thainumDigit($num++));
+            $templateProcessor->setValue('board_name#' . $i, $board->data_json['board_fullname']);
+            $templateProcessor->setValue('position_name#' . $i, $board->data_json['position_name']);
+            $templateProcessor->setValue('board_position#' . $i, $board->data_json['board_position']);
+            $i++;
+        }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'content' => $this->renderAjax('word', ['filename' => $result_name]),
+            ];
+        } else {
+            echo '<p>';
+            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-info']);  // สร้าง link download
+            echo '</p>';
+            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+        }
+        // ],
+
+        // 'items' => [
+        //     'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
+        //     'org_name_full' => 'รายละเอียดโรงพยาบาล',
+        //     'doc_number' => 'เลขที่เอกสาร',
+        //     'date' => 'วันที่',
+        //     'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
+        //     'org_name' => 'ชื่อโรงพยาบาล',
+        //     'suptype' => 'ประเภททรัพย์สิน',
+        //     'budget_year' => 'ปีงบประมาณ',
+        //     'budget_amount' => 'วงเงินงบประมาณ',
+        //     'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
+        //     'board' => 'คณะกรรมการกำหนดรายละเอียด',
+        //     'emp_name' => 'เจ้าหน้าที่พนักงาน',
+        //     'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
+        //     'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
+        //     'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
+        //     'director_name' => 'ผู้อำนวยการโรงพยาบาล',
+        //     'org_name' => 'ชื่อโรงพยาบาล',
+        // ]
+        // ];
+
+        // return $this->CreateFile($data);
     }
 
     public function actionPurchase_2()
