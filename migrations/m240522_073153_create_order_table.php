@@ -33,6 +33,20 @@ class m240522_073153_create_order_table extends Migration
             'updated_by' => $this->integer()->comment('ผู้แก้ไข')
         ]);
 
+        // เงื่อนไขการจัดซื้อ
+        $sqlPurchaseCondition = Yii::$app->db->createCommand("select * from categorise where name = 'purchase_condition'")->queryAll();
+        if (count($sqlPurchaseCondition) < 1) {
+            // คณะกรรมการ
+            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'purchase_condition', 'title' => 'ก.ดำเนินการด้วยวิธีประกาศเชิญชวนทั่วไปและวิธีคัดเลือก', 'data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'purchase_condition', 'title' => 'ข.ไม่เกินวงเงินที่กำหนดในกฏกระทรวง', 'data_json' => ['comment' => 'เนื่องจากการจัดซื้อจัดจ้างพัสดุ ที่มีการผลิต จำหน่าย ก่อสร้าง หรือให้บริการทั่วไป และมีวงเงินในการจัดซื้อจัดจ้างบครั้งหนึ่งไม่เกินวงเงินตามที่กำหนดในกฏกระทรวง'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'purchase_condition', 'title' => 'ค.มีผู้ประกอบการที่มีคุณสมบัติเพียงรายเดียว', 'data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'purchase_condition', 'title' => 'ง.มีความจำเป็นต้องใช้พัสดุโดยฉุกเฉิน', 'data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'purchase_condition', 'title' => 'จ.เกี่ยวพันกับพัสดุที่ชื่อไว้ก่อนหน้า', 'data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'purchase_condition', 'title' => 'ฉ.เป็นพัสดุจะขายทอดตลาดโดยหน่วยงานของรัฐ', 'data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '7', 'name' => 'purchase_condition', 'title' => 'ช.ที่ดิน/สิ่งปลูกสร้างที่ต้องซื้อเฉพาะแห่ง','data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '8', 'name' => 'purchase_condition', 'title' => 'ซ.กรณีอื่นตามที่กำหนดในกฏกระทรวง','data_json' => ['comment' => '-'], 'active' => 1]);
+        }
+
         $sqlBoardStatus = Yii::$app->db->createCommand("select * from categorise where name = 'board'")->queryAll();
         if (count($sqlBoardStatus) < 1) {
             // คณะกรรมการ

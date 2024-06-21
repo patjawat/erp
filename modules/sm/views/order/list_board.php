@@ -14,9 +14,9 @@ $listBoard = Order::find()
 <?php Pjax::begin(['id' => 'board-container']); ?>
 
 <div class="d-flex justify-content-between align-items-center">
-    <h5><i class="fa-solid fa-circle-info text-primary"></i> กรรมมการตรวจรับ</h5>
+    <h5><i class="fa-solid fa-circle-info text-primary"></i> กรรมการตรวจรับ</h5>
 
-    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/sm/order-item/create', 'id' => $model->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/sm/order-item/create', 'id' => $model->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
     
 </div>
 
@@ -44,7 +44,7 @@ $listBoard = Order::find()
                 </td>
             <td>
                 
-                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/order-item/delete', 'id' => $item->id], [
                     'class' => 'btn btn-sm btn-danger delete-item',
                 ]) ?>

@@ -43,7 +43,14 @@ class MsWordController extends \yii\web\Controller
     protected function GetInfo()
     {
         $info = SiteHelper::getInfo();
-        return ['company_name' => $info['company_name'], 'director_name' => $info['director_name']];
+        return [
+            'company_full' => $info['company_name'] . ' ' . $info['address'],  // ที่อยู่
+            'company_name' => $info['company_name'],  // ชื่อหน่วยงาน
+            'company_address' => $info['address'],  // ที่อยู่
+            'province' => $info['province'],  // ที่อยู่
+            'director_name' => $info['director_name'],  // ชื่อผู้บริหาร ผอ.
+            'director_position' => $info['director_position']  // ตำแหน่งของ ผอ.
+        ];
     }
 
     // ทะเบียนทรัพย์สิน
@@ -173,6 +180,7 @@ class MsWordController extends \yii\web\Controller
         $user = Yii::$app->user->id;
         $word_name = 'purchase_1.docx';
         $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด.docx';
+
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         // $data = [
         //     'word_name' => $word_name,
@@ -181,11 +189,11 @@ class MsWordController extends \yii\web\Controller
         @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
 
         $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
-        $templateProcessor->setValue('org_name_full', 'รายละเอียดโรงพยาบาล');
+        $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
         $templateProcessor->setValue('doc_number', 'เลขที่เอกสาร');
         $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
         $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
-        $templateProcessor->setValue('org_name', 'ชื่อโรงพยาบาล');
+        $templateProcessor->setValue('org_name', $this->getInfo()['company_name']);
         $templateProcessor->setValue('suptype', (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'));
         $templateProcessor->setValue('budget_year', 'ปีงบประมาณ');
         $templateProcessor->setValue('budget_amount', number_format($model->SumPo(), 2));
@@ -260,14 +268,14 @@ class MsWordController extends \yii\web\Controller
             'result_name' => $result_name,
             'items' => [
                 'title' => 'ขอความเห็นชอบและรายงานผล',
-                'org_name_full' => 'รายละเอียดชื่อโรงพยาบาลเต็ม',
+                'org_name_full' => $this->GetInfo()['company_full'],
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'วันที่',
                 'doc_title' => 'หัวข้ออนุมัติการแต่งตั้ง',
-                'org_name' => 'ชื่อโรงพยาบาล',
-                'director_name' => 'ชื่อผู้อำนวยการ',
-                'director_nameposition' => 'ตำแหน่งผู้อำนวยการ',
-                'povice' => 'จังหวัด',
+                'org_name' => $this->GetInfo()['company_name'],
+                'director_name' => $this->GetInfo()['director_name'],
+                'director_position' => $this->GetInfo()['director_position'],
+                'province' => $this->GetInfo()['province'],
             ]
         ];
         return $this->CreateFile($data);
@@ -296,7 +304,7 @@ class MsWordController extends \yii\web\Controller
                 'emp_name' => 'ผู้อนุมัติ',
                 'emp_position' => 'ตำแหน่งผู้อนุมัติ',
                 'director_name' => 'ผู้อำนวยการ',
-                'director_position' => 'ตำแหน่งผู้อำนวยการ'
+                'director_position' => $this->GetInfo()['director_position']
             ]
         ];
         return $this->CreateFile($data);

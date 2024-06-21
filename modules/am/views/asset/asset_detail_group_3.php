@@ -60,7 +60,14 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                             <h5 class="card-title mb-0 position-relative" style="margin-left: 26px;">
                                 <i class="fa-solid fa-circle-info"
                                     style="position: absolute;font-size: 47px;margin-left: -32px;margin-top: -4px;color: #2196F3;"></i>
-                                <?= Html::a('&nbsp;' . (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-'), ['/sm/asset-item/view', 'id' => $model->assetItem->id], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                <?php
+
+                                    try {
+                                        echo Html::a('&nbsp;' . (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-'), ['/sm/asset-item/view', 'id' => $model->assetItem->id], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]);
+                                    } catch (\Throwable $th) {
+                                        // throw $th;
+                                    }
+                                ?>
                             </h5>
                         </div>
                         <div>

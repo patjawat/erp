@@ -27,7 +27,14 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                 <ul class="dropdown-menu" style="">
                     <?= Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่', ['/am/asset-detail/create', 'id' => $model->id, 'name' => 'ma', 'title' => 'เพิ่มการบำรุงรักษา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </li>
-        <li><?= Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า', ['/sm/asset-item/update', 'id' => $model->assetItem->id, 'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <li>
+            <?php
+                try {
+                    echo Html::a('<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า', ['/sm/asset-item/update', 'id' => $model->assetItem->id, 'title' => '<i class="fa-solid fa-gear fs-6 me-2"></i> ตั้งค่า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]);
+                } catch (\Throwable $th) {
+                    // throw $th;
+                }
+            ?>
             </ul>
     </div>
     </li>

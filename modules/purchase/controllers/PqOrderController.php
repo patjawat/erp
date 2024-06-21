@@ -129,6 +129,7 @@ class PqOrderController extends Controller
                     $model->data_json,
                 );
                 // return $model->data_json;
+                $model->status = 6;
                 $model->save(false);
                 return [
                     'status' => 'success',

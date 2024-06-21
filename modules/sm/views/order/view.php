@@ -53,7 +53,7 @@ $listItems = Order::find()->where(['category_id' => $model->id])->all();
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional"
                         type="button" role="tab" aria-controls="additional" aria-selected="false"><i
-                            class="far fa-list-alt fa-fw"></i> รายการเพิ่มเติม/ใบเสนอราคา/อื่นๆ...</button>
+                            class="far fa-list-alt fa-fw"></i> ใบเสนอราคา/เพิ่มเติมอื่นๆ...</button>
                 </li>
             </ul>
             <?= Html::a('<i class="fa-solid fa-print"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>

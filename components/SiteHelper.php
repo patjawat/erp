@@ -20,7 +20,9 @@ class SiteHelper extends Component
                 return [
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
                         'director_name' => isset($model->data_json['director_name']) ? $model->data_json['director_name'] : null,
+                        'director_position' => isset($model->data_json['director_position']) ? $model->data_json['director_position'] : null,
                         'address' => isset($model->data_json['address']) ? $model->data_json['address'] : null,
+                        'province' => isset($model->data_json['province']) ? $model->data_json['province'] : null,
                         'website' => Html::a($siteName, $siteUrl)
                 ];
         }

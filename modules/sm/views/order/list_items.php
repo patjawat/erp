@@ -116,8 +116,9 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                         <?php endif; ?>
 
                         <?php if ($model->approve == 'Y'): ?>
-                        <?php foreach ($model->ListPrStatus() as $status): ?>
-                        <?php if ($status->code == 5): ?>
+                        <?php foreach ($model->ListStatus() as $status): ?>
+        
+                        <?php if ($model->code == 5): ?>
                         <?= Html::a($status->title, ['/purchase/pq-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
                         <?php else: ?>
                         <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/purchase/pr-order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>

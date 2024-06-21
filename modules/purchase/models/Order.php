@@ -239,6 +239,12 @@ class Order extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'method_get'])->all(), 'code', 'title');
     }
 
+    // เงื่อนไข
+    public function ListPurchaseCondition()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'purchase_condition'])->all(), 'code', 'title');
+    }
+
     // ประเภท
     public function ListBudgetdetail()
     {
