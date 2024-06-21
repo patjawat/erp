@@ -23,7 +23,7 @@ class m240522_073153_create_order_table extends Migration
             'po_number' => $this->string(255)->comment('ที่ที่สั่งซื้อ'),
             'item_id' => $this->integer(255)->comment('รายการที่เก็บ'),
             'price' => $this->double(255)->comment('ราคา'),
-            'amount' => $this->integer(255)->comment('จำนวน'),
+            'qty' => $this->integer(255)->comment('จำนวน'),
             'status' => $this->integer(255)->comment('สถานะ'),
             'approve' => $this->string(1)->comment('อนุมัติ'),
             'data_json' => $this->json(),
@@ -43,8 +43,8 @@ class m240522_073153_create_order_table extends Migration
             $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'purchase_condition', 'title' => 'ง.มีความจำเป็นต้องใช้พัสดุโดยฉุกเฉิน', 'data_json' => ['comment' => '-'], 'active' => 1]);
             $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'purchase_condition', 'title' => 'จ.เกี่ยวพันกับพัสดุที่ชื่อไว้ก่อนหน้า', 'data_json' => ['comment' => '-'], 'active' => 1]);
             $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'purchase_condition', 'title' => 'ฉ.เป็นพัสดุจะขายทอดตลาดโดยหน่วยงานของรัฐ', 'data_json' => ['comment' => '-'], 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '7', 'name' => 'purchase_condition', 'title' => 'ช.ที่ดิน/สิ่งปลูกสร้างที่ต้องซื้อเฉพาะแห่ง','data_json' => ['comment' => '-'], 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '8', 'name' => 'purchase_condition', 'title' => 'ซ.กรณีอื่นตามที่กำหนดในกฏกระทรวง','data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '7', 'name' => 'purchase_condition', 'title' => 'ช.ที่ดิน/สิ่งปลูกสร้างที่ต้องซื้อเฉพาะแห่ง', 'data_json' => ['comment' => '-'], 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '8', 'name' => 'purchase_condition', 'title' => 'ซ.กรณีอื่นตามที่กำหนดในกฏกระทรวง', 'data_json' => ['comment' => '-'], 'active' => 1]);
         }
 
         $sqlBoardStatus = Yii::$app->db->createCommand("select * from categorise where name = 'board'")->queryAll();

@@ -84,7 +84,7 @@ class PrOrderController extends Controller
             if ($model->load($this->request->post())) {
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
             }
@@ -127,7 +127,7 @@ class PrOrderController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'status' => 'success',
-                    'container' => '#order-container',
+                    'container' => '#purchase-container',
                 ];
             } else {
                 return false;

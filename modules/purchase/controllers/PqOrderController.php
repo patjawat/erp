@@ -133,7 +133,7 @@ class PqOrderController extends Controller
                 $model->save(false);
                 return [
                     'status' => 'success',
-                    'container' => '#order-container',
+                    'container' => '#purchase-container',
                 ];
             } else {
                 return false;

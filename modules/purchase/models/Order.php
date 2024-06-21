@@ -29,7 +29,7 @@ use Yii;
  * @property string|null $code รหัส
  * @property int|null $item_id รายการที่เก็บ
  * @property float|null $price ราคา
- * @property int|null $amount จำนวน
+ * @property int|null $qty จำนวน
  * @property string|null $data_json
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
@@ -52,7 +52,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['item_id', 'amount', 'created_by', 'updated_by'], 'integer'],
+            [['item_id', 'qty', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
             [['data_json', 'created_at', 'updated_at', 'pr_number', 'pq_number', 'po_number', 'status', 'approve'], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
@@ -72,7 +72,7 @@ class Order extends \yii\db\ActiveRecord
             'code' => 'Code',
             'item_id' => 'Item ID',
             'price' => 'Price',
-            'amount' => 'amount',
+            'qty' => 'qty',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -197,7 +197,7 @@ class Order extends \yii\db\ActiveRecord
         try {
             $query = Yii::$app
                 ->db
-                ->createCommand('SELECT sum(price * amount) as total FROM `order` WHERE category_id = :category_id;')
+                ->createCommand('SELECT sum(price * qty) as total FROM `order` WHERE category_id = :category_id;')
                 ->bindValue(':category_id', $this->id)
                 ->queryScalar();
             if ($query > 0) {
@@ -213,6 +213,11 @@ class Order extends \yii\db\ActiveRecord
     public function ListStatus()
     {
         return Categorise::find()->where(['name' => 'order_status'])->all();
+    }
+
+    public function ListOrderItems()
+    {
+        return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->all();
     }
 
     // แสดงชื่อคณะกรรมการ
@@ -292,7 +297,7 @@ class Order extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
-        $model = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
+        $model = Categorise::findOne(['code' => $this->status, 'name' => 'order_status']);
         if ($model) {
             return $model->title;
         } else {

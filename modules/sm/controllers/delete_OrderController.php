@@ -246,48 +246,6 @@ class OrderController extends Controller
         ];
     }
 
-    // อนุมัติตาม status
-    public function actionConfirmStatus($id)
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $status = $this->request->get('status');
-        $thaiYear = substr((date('Y') + 543), 2);
-        $model = $this->findModel($id);
-        $oldObj = $model->data_json;
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-                $model->status = $status;
-                if ($model->status == 6) {
-                    // $model->code = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
-                }
-                $model->save(false);
-                return [
-                    'status' => 'success',
-                    'container' => '#purchase-container',
-                ];
-            } else {
-                return false;
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('confirm_status', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('confirm_status', [
-                'model' => $model,
-            ]);
-        }
-    }
-
     public function actionProductList()
     {
         $order_id = $this->request->get('order_id');
@@ -350,14 +308,14 @@ class OrderController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_product_select', [
+                'content' => $this->renderAjax('_add_item', [
                     'model' => $model,
                     'product' => $product,
                     'order' => $order
                 ]),
             ];
         } else {
-            return $this->render('_form_product_select', [
+            return $this->render('_add_item', [
                 'model' => $model,
                 'product' => $product,
                 'order' => $order
@@ -392,13 +350,13 @@ class OrderController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $product->title,
-                'content' => $this->renderAjax('_form_product_select', [
+                'content' => $this->renderAjax('_add_item', [
                     'model' => $model,
                     'product' => $product
                 ]),
             ];
         } else {
-            return $this->render('_form_product_select', [
+            return $this->render('_add_item', [
                 'model' => $model,
                 'product' => $product
             ]);

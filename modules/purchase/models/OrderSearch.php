@@ -17,7 +17,7 @@ class OrderSearch extends Order
     public function rules()
     {
         return [
-            [['id', 'item_id', 'amount', 'status', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'item_id', 'qty', 'status', 'created_by', 'updated_by'], 'integer'],
             [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at'], 'safe'],
             [['price'], 'number'],
         ];
@@ -62,7 +62,7 @@ class OrderSearch extends Order
             'id' => $this->id,
             'item_id' => $this->item_id,
             'price' => $this->price,
-            'amount' => $this->amount,
+            'qty' => $this->qty,
             'status' => $this->status,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

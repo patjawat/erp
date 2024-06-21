@@ -285,29 +285,49 @@ class MsWordController extends \yii\web\Controller
     public function actionPurchase_3()
     {
         $id = $this->request->get('id');
+        $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
         $word_name = 'purchase_3.docx';
         $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
-        $data = [
-            'word_name' => $word_name,
-            'result_name' => $result_name,
-            'items' => [
-                'title' => 'ขออนุมัติจัดซื้อจัดจ้าง',
-                'org_name_full' => $this->GetInfo()['company_name'],
-                'director', $this->GetInfo()['director_name'],
-                'doc_number' => 'เลขหนังสือ',
-                'date' => 'เลขหนังสือ',
-                'org_name' => 'ชื่อโรงพาบาล',
-                'department' => 'ฝ่ายหน่วยงาน',
-                'asset_detail' => 'รายละเอียดวัสดุ',
-                'remark' => 'เหตุผล',
-                'emp_name' => 'ผู้อนุมัติ',
-                'emp_position' => 'ตำแหน่งผู้อนุมัติ',
-                'director_name' => 'ผู้อำนวยการ',
-                'director_position' => $this->GetInfo()['director_position']
-            ]
-        ];
-        return $this->CreateFile($data);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        $templateProcessor->setValue('title', 'ขออนุมัติจัดซื้อจัดจ้าง');
+        $templateProcessor->setValue('org_name_full', $this->GetInfo()['company_full']);
+        $templateProcessor->setValue('director', $this->GetInfo()['director_name']);
+        $templateProcessor->setValue('doc_number', 'เลขหนังสือ');
+        $templateProcessor->setValue('date', 'เลขหนังสือ');
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('department', $model->getUserReq()['department']);
+        $templateProcessor->setValue('asset_detail', 'รายละเอียดวัสดุ');
+        $templateProcessor->setValue('comment', $model->data_json['comment']);
+        $templateProcessor->setValue('emp_name', $model->viewLeaderUser()['fullname']);
+        $templateProcessor->setValue('emp_position', $model->viewLeaderUser()['position_name']);
+        $templateProcessor->setValue('director_name', $this->GetInfo()['director_name']);
+        $templateProcessor->setValue('director_position', $this->GetInfo()['director_position']);
+
+        $templateProcessor->cloneRow('item_name', count($model->ListOrderItems()));
+        $i = 1;
+        $num = 1;
+        foreach ($model->ListOrderItems() as $item) {
+            $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
+            $templateProcessor->setValue('item_name#' . $i, $item->product->title);
+            $templateProcessor->setValue('qty#' . $i, number_format($item->price, 2));
+            $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
+            $i++;
+        }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'content' => $this->renderAjax('word', ['filename' => $result_name]),
+            ];
+        } else {
+            echo '<p>';
+            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-info']);  // สร้าง link download
+            echo '</p>';
+            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+        }
     }
 
     public function actionPurchase_4()

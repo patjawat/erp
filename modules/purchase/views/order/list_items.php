@@ -1,9 +1,11 @@
 <?php
 use app\modules\sm\models\Order;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 
 $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order_item'])->all();
 ?>
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -18,7 +20,7 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                         <th class="text-end">จำนวนเงิน</th>
                         <th style="width:180px">
                             <div class="d-flex justify-content-center">
-                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/sm/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
 
                             </div>
                         </th>
@@ -64,13 +66,13 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                             ?>
                         </td>
                         <td class="align-middle text-center">
-                            <?= $item->amount ?>
+                            <?= $item->qty ?>
                         </td>
                         <td class="align-middle text-end">
                             <div class="d-flex justify-content-end fw-semibold">
                                 <?php
                                 try {
-                                    echo number_format(($item->amount * $item->price), 2);
+                                    echo number_format(($item->qty * $item->price), 2);
                                 } catch (\Throwable $th) {
                                     // throw $th;
                                 }
@@ -80,8 +82,8 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
 
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/sm/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
                             </div>
 
                         </td>
@@ -121,7 +123,7 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                         <?php if ($model->code == 5): ?>
                         <?= Html::a($status->title, ['/purchase/pq-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
                         <?php else: ?>
-                        <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/purchase/pr-order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>
+                        <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/purchase/order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>
                         <?php endif; ?>
 
                         <?php endforeach; ?>
