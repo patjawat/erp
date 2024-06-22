@@ -271,29 +271,29 @@ class Order extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'product_item'])->all(), 'id', 'title');
     }
 
-    public function ListPrStatus()
-    {
-        return Categorise::find()->where(['name' => 'pr_status'])->all();
-    }
+    // public function ListPrStatus()
+    // {
+    //     return Categorise::find()->where(['name' => 'pr_status'])->all();
+    // }
 
     public function ListVendor()
     {
         return CategoriseHelper::Vendor();
     }
 
-    public function viewPrStatus()
-    {
-        $status = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
-        if ($status) {
-            if ($this->approve == 'N') {
-                return '<label class="badge rounded-pill text-primary-emphasis bg-danger-subtle fs-6 text-truncate"><i class="fa-regular fa-circle-xmark text-danger"></i> ' . $status->title . ' | ไม่อนุมัติ</label>';
-            } else {
-                return '<label class="badge rounded-pill text-primary-emphasis bg-success-subtle fs-6 text-truncate"><i class="bi bi-clipboard-check"></i> ' . $status->title . '</label>';
-            }
-        } else {
-            return '';
-        }
-    }
+    // public function viewPrStatus()
+    // {
+    //     $status = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
+    //     if ($status) {
+    //         if ($this->approve == 'N') {
+    //             return '<label class="badge rounded-pill text-primary-emphasis bg-danger-subtle fs-6 text-truncate"><i class="fa-regular fa-circle-xmark text-danger"></i> ' . $status->title . ' | ไม่อนุมัติ</label>';
+    //         } else {
+    //             return '<label class="badge rounded-pill text-primary-emphasis bg-success-subtle fs-6 text-truncate"><i class="bi bi-clipboard-check"></i> ' . $status->title . '</label>';
+    //         }
+    //     } else {
+    //         return '';
+    //     }
+    // }
 
     public function viewStatus()
     {

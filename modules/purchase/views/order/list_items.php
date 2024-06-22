@@ -1,5 +1,5 @@
 <?php
-use app\modules\sm\models\Order;
+use app\modules\purchase\models\Order;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 

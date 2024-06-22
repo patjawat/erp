@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'THSarabunNew';
+    font-style: normal;
+    font-weight: normal;
+    src: url('/fonts/THSarabunNew/THSarabunNew.ttf') format('truetype');
+}
+body {
+    font-family: 'THSarabunNew';
+}

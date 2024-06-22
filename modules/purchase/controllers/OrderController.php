@@ -280,6 +280,23 @@ class OrderController extends Controller
         }
     }
 
+    public function actionDeleteItem($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ($model->delete()) {
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+            ];
+        } else {
+            return [
+                'status' => 'error',
+                'container' => '#purchase-container',
+            ];
+        }
+    }
+
     /**
      * Deletes an existing Order model.
      * If deletion is successful, the browser will be redirected to the 'index' page.

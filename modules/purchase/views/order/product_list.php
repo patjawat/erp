@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <p>ไม่พบคำว่า (<span class="text-danger"> <?= $searchModel->title ?> </span>) ในฐานข้อมูล
             </p>
             <hr>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/purchase/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
     </div>
 </div>
@@ -59,8 +59,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <i class="fa-solid fa-ellipsis"></i>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right" style="">
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                                    <?= Html::a('<i class="bx bx-trash me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/purchase/product/update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                    <?= Html::a('<i class="bx bx-trash me-1"></i> ลบ', ['/purchase/asset-type/delete', 'id' => $model->id], [
                                         'class' => 'dropdown-item  delete-item',
                                     ]) ?>
                                 </div>
@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="d-flex flex-column">
                                 <span class="badge text-bg-primary "><?= $model->productType->title ?></span>
                             </div>
-                            <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/sm/order/add-item', 'title' => $model->title, 'product_id' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
+                            <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $model->title, 'product_id' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
 
                         </div>
                         <div class="d-flex justify-content-between">

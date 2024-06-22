@@ -186,7 +186,7 @@ class MsWordController extends \yii\web\Controller
         //     'word_name' => $word_name,
         //     'result_name' => $result_name,
         //     'items' => [
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        // @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
 
         $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
         $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
@@ -310,7 +310,7 @@ class MsWordController extends \yii\web\Controller
         foreach ($model->ListOrderItems() as $item) {
             $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
             $templateProcessor->setValue('item_name#' . $i, $item->product->title);
-            $templateProcessor->setValue('qty#' . $i, number_format($item->price, 2));
+            $templateProcessor->setValue('qty#' . $i, $item->qty);
             $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
             $i++;
         }
@@ -337,19 +337,13 @@ class MsWordController extends \yii\web\Controller
 
         $word_name = 'purchase_4.docx';
         $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
-        $data = [
-            'word_name' => $word_name,
-            'result_name' => $result_name,
-            'items' => [
-                'number' => 'ลำดับ',
-                'asset_detail' => 'รายละเอียดขอบเขตงาน',
-                'amount' => 'จำนวน',
-                'unit' => 'หน่วย',
-                'priceunit' => 'ราคา/หน่วย',
-                'sum' => 'ราคารวม',
-            ]
-        ];
-        return $this->CreateFile($data);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        $templateProcessor->setValue('number', 'ลำดับ');
+        $templateProcessor->setValue('asset_detail', 'รายละเอียดขอบเขตงาน');
+        $templateProcessor->setValue('amount', 'จำนวน');
+        $templateProcessor->setValue('unit', 'หน่วย');
+        $templateProcessor->setValue('priceunit', 'ราคา/หน่วย');
+        $templateProcessor->setValue('sum', 'ราคารวม');
     }
 
     public function actionPurchase_5()
