@@ -189,7 +189,7 @@ $config = [
             'depdrop/*',
             'auth/*',
             'gii/*',
-            'hr/*',
+            // 'hr/*',
             'sm/*',
             'am/*',
             'pm/*',
