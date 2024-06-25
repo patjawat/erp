@@ -258,7 +258,7 @@ class Order extends \yii\db\ActiveRecord
 
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type']])->all(), 'id', 'title');
     }
 
     public function ListPr()

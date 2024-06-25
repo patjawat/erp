@@ -9,7 +9,7 @@ use yii\helpers\Html;
         <div class="dropdown float-end">
             <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                 aria-expanded="false">
-                <i class="fa-solid fa-ellipsis"></i>
+                <i class="fa-solid fa-ellipsis-vertical"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right" style="">
                 <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขใบขอซื้อ : ' . $model->pr_number], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>

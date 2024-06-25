@@ -15,10 +15,22 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'sm-container', 'timeout' => 3000]); ?>
 <div class="row">
-    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12">
+    <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12">
         <div class="card" style="height: 1400px;">
             <div class="card-body ">
-                <h4 class="card-title"><i class="bi bi-grid"></i> หมวดหมู่</h4>
+                <div class="d-flex justify-content-between">
+                    <h4 class="card-title"><i class="bi bi-grid"></i> หมวดหมู่</h4>
+                    <div class="dropdown float-end">
+                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" style="">
+                            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        </div>
+                    </div>
+                </div>
                 <?= $this->render('_search_left', ['model' => $searchModel]) ?>
             </div>
         </div>

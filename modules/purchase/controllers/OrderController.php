@@ -2,6 +2,7 @@
 
 namespace app\modules\purchase\controllers;
 
+use app\models\Categorise;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
@@ -151,12 +152,16 @@ class OrderController extends Controller
 
     public function actionProductList()
     {
-        $order_id = $this->request->get('order_id');
-        $order = Order::findOne($order_id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
+        $order_id = $this->request->get('order_id');
+
+        $order = Order::findOne($order_id);
+        $category = Categorise::findOne($order->data_json['item_type']);
+        return $category;
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->data_json['item_type']]);
+        $dataProvider->query->andFilterWhere(['name' => $category->name, 'category_id' => $order->data_json['item_type']]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

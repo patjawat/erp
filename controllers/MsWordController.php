@@ -289,6 +289,7 @@ class MsWordController extends \yii\web\Controller
         $user = Yii::$app->user->id;
         $word_name = 'purchase_3.docx';
         $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
+
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ขออนุมัติจัดซื้อจัดจ้าง');
         $templateProcessor->setValue('org_name_full', $this->GetInfo()['company_full']);
@@ -306,14 +307,14 @@ class MsWordController extends \yii\web\Controller
 
         $templateProcessor->cloneRow('item_name', count($model->ListOrderItems()));
         $i = 1;
-        $num = 1;
-        foreach ($model->ListOrderItems() as $item) {
-            $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
-            $templateProcessor->setValue('item_name#' . $i, $item->product->title);
-            $templateProcessor->setValue('qty#' . $i, $item->qty);
-            $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
-            $i++;
-        }
+        // $num = 1;
+        // foreach ($model->ListOrderItems() as $item) {
+        //     $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
+        //     $templateProcessor->setValue('item_name#' . $i, $item->product->title);
+        //     $templateProcessor->setValue('qty#' . $i, $item->qty);
+        //     $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
+        //     $i++;
+        // }
 
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         if ($this->request->isAjax) {
@@ -323,10 +324,22 @@ class MsWordController extends \yii\web\Controller
                 'content' => $this->renderAjax('word', ['filename' => $result_name]),
             ];
         } else {
-            echo '<p>';
-            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-info']);  // สร้าง link download
-            echo '</p>';
-            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+            $this->layout = false;
+
+            // Set raw HTML content
+            Yii::$app->response->content = $this->render('word', ['filename' => $result_name]);
+            // Yii::$app->response->content = Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-info']);  // สร้าง link download';
+            // Yii::$app->response->content = '</p>';
+            // Yii::$app->response->content = '';
+            // Optionally, you can set response format to HTML
+            Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
+
+            // Return the response directly
+            // echo '<p>';
+            // echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-info']);  // สร้าง link download
+            // echo '</p>';
+            // echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+            return Yii::$app->response;
         }
     }
 
