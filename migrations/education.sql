@@ -4,8 +4,8 @@ INSERT INTO `categorise` (`code`, `name`, `title`,`active`) VALUES
 ('3','education','ปวช.','1'),
 ('4','education','ปวส.','1'),
 ('5','education','ปริญญาตรี.','1'),
-('6','education','ปริญญาโทร.','1'),
-('7','education','ปริญญาเอก.','1');
+('6','education','ปริญญาโท','1'),
+('7','education','ปริญญาเอก','1');
 -- ('2','education','B.Arch.','1'),
 -- ('3','education','B.E.','1'),
 -- ('4','education','B.S.','1'),
