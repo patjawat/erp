@@ -1,9 +1,10 @@
 <?php
 use yii\helpers\Url;
-$this->title = "My DashBoard";
+
+$this->title = 'My DashBoard';
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check"></i> <?=$this->title;?>
+<i class="bi bi-folder-check"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <div class="row">
@@ -46,7 +47,7 @@ $this->title = "My DashBoard";
         <div class="card">
             <div class="card-body">
                 <h5>ขออนุมัติ</h5>
-                <?=$this->render('req_approve') ?>
+                <?php // $this->render('req_approve') ?>
             </div>
         </div>
 
@@ -61,7 +62,7 @@ $this->title = "My DashBoard";
         <div class="card" style="height:300px;">
             <div class="card-body">
                 <h5>ทรัพย์สินที่รับมอบหมาย</h5>
-                <?= $this->render('activity') ?>
+                <?php // $this->render('activity') ?>
 
             </div>
         </div>
@@ -70,7 +71,7 @@ $this->title = "My DashBoard";
         <div class="card" style="height:300px;">
             <div class="card-body">
                 <h5>กลุ่ม/ทีมประสาน</h5>
-                <?= $this->render('activity') ?>
+                <?php // $this->render('activity') ?>
 
             </div>
         </div>
@@ -80,7 +81,7 @@ $this->title = "My DashBoard";
         <div class="card" style="height:300px;">
             <div class="card-body">
                 <h5>กิจกรรม/ความเคลื่อนไหว</h5>
-                <?= $this->render('activity') ?>
+                <?php // $this->render('activity') ?>
             </div>
         </div>
 

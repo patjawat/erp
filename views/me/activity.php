@@ -3,9 +3,8 @@ use app\modules\helpdesk\models\Helpdesk;
 use app\modules\purchase\models\Order;
 use yii\helpers\Html;
 
-$repairs = Helpdesk::find()->all();
-$orders = Order::find()->where(['name' => 'order'])->all();
-
+$repairs = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])->all();
+$orders = Order::find()->where(['name' => 'order', 'created_by' => Yii::$app->user->id])->all();
 ?>
 
         <table

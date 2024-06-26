@@ -1,17 +1,17 @@
 <?php
 
 use app\modules\helpdesk\models\Helpdesk;
+use app\modules\hr\models\Employees;
+use kartik\grid\GridView;
+use yii\bootstrap5\LinkPager;
+use yii\grid\ActionColumn;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use kartik\grid\GridView;
 use yii\widgets\Pjax;
-use yii\bootstrap5\LinkPager;
-use app\modules\hr\models\Employees;
+
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\RepairSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-
 $this->title = 'Repairs';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -29,25 +29,25 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($dataProvider->getModels() as $model):?>
+                <?php foreach ($dataProvider->getModels() as $model): ?>
                 <tr class="align-middle">
                     <td>
                         <div class="d-flex flex-row gap-3">
-                        <?=$model->showAvatarCreate();?>
+                        <?= $model->showAvatarCreate(); ?>
                             <div class="d-flex flex-column">
-                                <?=Html::a($model->data_json['title'],['/helpdesk/repair/view','id' => $model->id])?>
+                                <?= Html::a($model->data_json['title'], ['/helpdesk/repair/view', 'id' => $model->id]) ?>
                                 <div>
-                                    <span class="mb-0 fs-13 text-muted"><?=$model->data_json['location']?></span> | <?=$model->viewCreateDate()?>
+                                    <span class="mb-0 fs-13 text-muted"><?= $model->data_json['location'] ?></span> | <?= $model->viewCreateDate() ?>
                                 </div>
                             </div>
                         </div>
-
                     </td>
-                    <td><?=$model->avatarStack()?></td>
-                    <td class="text-center"><?=$model->viewUrgency()?></td>
-                    <td class="text-center"> <?=$model->viewStatus()?></td>
+                    <td><?= $model->avatarStack() ?></td>
+                    <td class="text-center"><?= $model->viewUrgency() ?></td>
+                    <td class="text-center"> <?= $model->viewStatus() ?></td>
                 </tr>
-                <?php endforeach;?>
+    
+                <?php endforeach; ?>
             </tbody>
         </table>
         <div class="d-flex justify-content-center">

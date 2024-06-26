@@ -2,6 +2,7 @@
 
 namespace app\modules\sm\controllers;
 
+use app\components\AppHelper;
 use app\models\Categorise;
 use app\modules\hr\models\UploadCsv;
 use app\modules\sm\models\Vendor;
@@ -9,15 +10,15 @@ use app\modules\sm\models\VendorSearch;
 use ruskid\csvimporter\CSVImporter;
 use ruskid\csvimporter\CSVReader;
 use ruskid\csvimporter\MultipleImportStrategy;
-use Yii;
 use yii\filters\VerbFilter;
+use yii\helpers\Json;
 use yii\validators\DateValidator;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\UploadedFile;
-use app\components\AppHelper;
-use yii\helpers\Json;
+use Yii;
+
 /**
  * VendorController implements the CRUD actions for Vendor model.
  */
@@ -69,7 +70,7 @@ class VendorController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-eye"></i> '.$model->title,
+                'title' => '<i class="fa-solid fa-eye"></i> ' . $model->title,
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                 ]),
@@ -77,7 +78,6 @@ class VendorController extends Controller
         } else {
             return $this->render('view', [
                 'model' => $model,
-
             ]);
         }
     }
@@ -97,17 +97,17 @@ class VendorController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
-                    return [
-                        'status' => 'success',
-                        'container' => '#sm-container',
-                    ];
-            }else{
+                return [
+                    'status' => 'success',
+                    'container' => '#sm-container',
+                ];
+            } else {
                 return false;
             }
         } else {
             $model->loadDefaultValues();
         }
-        
+
         if ($this->request->isAjax) {
             return [
                 'title' => '<i class="fa-regular fa-pen-to-square"></i> สร้างใหม่',
@@ -122,24 +122,23 @@ class VendorController extends Controller
         }
     }
 
-
     // ตรวจสอบความถูกต้อง
     public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new Vendor();
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $requiredName = "ต้องระบุ";
-            //ตรวจสอบตำแหน่ง
-                $model->code == "" ? $model->addError('code', $requiredName) : null;
-                $model->title == "" ? $model->addError('title', $requiredName) : null;
-                $model->data_json['address'] == "" ? $model->addError('data_json[address]', $requiredName) : null;
-                // $model->data_json['phone'] == "" ? $model->addError('data_json[phone]', $requiredName) : null;
-                $model->data_json['contact_name'] == "" ? $model->addError('data_json[contact_name]', $requiredName) : null;
-                $model->data_json['bank_name'] == "" ? $model->addError('data_json[bank_name]', $requiredName) : null;
-                $model->data_json['account_name'] == "" ? $model->addError('data_json[account_name]', $requiredName) : null;
-                $model->data_json['account_number'] == "" ? $model->addError('data_json[account_number]', $requiredName) : null;
-            
+            $requiredName = 'ต้องระบุ';
+            // ตรวจสอบตำแหน่ง
+            $model->code == '' ? $model->addError('code', $requiredName) : null;
+            $model->title == '' ? $model->addError('title', $requiredName) : null;
+            $model->data_json['address'] == '' ? $model->addError('data_json[address]', $requiredName) : null;
+            // $model->data_json['phone'] == "" ? $model->addError('data_json[phone]', $requiredName) : null;
+            $model->data_json['contact_name'] == '' ? $model->addError('data_json[contact_name]', $requiredName) : null;
+            $model->data_json['bank_name'] == '' ? $model->addError('data_json[bank_name]', $requiredName) : null;
+            $model->data_json['account_name'] == '' ? $model->addError('data_json[account_name]', $requiredName) : null;
+            $model->data_json['account_number'] == '' ? $model->addError('data_json[account_number]', $requiredName) : null;
+
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
             }
@@ -199,6 +198,7 @@ class VendorController extends Controller
             }
         }
     }
+
     public function actionImportCsv()
     {
         $model = new UploadCsv([
@@ -211,7 +211,7 @@ class VendorController extends Controller
         $error = [];
         if ($model->load(Yii::$app->request->post())) {
             $model->file = UploadedFile::getInstance($model, 'file');
-            $model->file->saveAs($basePath. $model->file->name);
+            $model->file->saveAs($basePath . $model->file->name);
 
             $importer = new CSVImporter();
             $filename = $basePath . $model->file->name;
@@ -238,7 +238,7 @@ class VendorController extends Controller
             }
             if (empty($error)) {
                 $numberRowsAffected = $importer->import(new MultipleImportStrategy([
-                    'tableName' => Vendor::tableName(), // change your model names accordingly
+                    'tableName' => Vendor::tableName(),  // change your model names accordingly
                     'configs' => [
                         [
                             'attribute' => 'name',
@@ -278,16 +278,14 @@ class VendorController extends Controller
                                     'address' => $data[4],
                                     'bank_name' => $data[10],
                                     'account_name' => $data[8],
-                                    'contact_name'=> $data[6],
+                                    'contact_name' => $data[6],
                                     'account_number' => $data[9],
                                 ];
-                                
+
                                 return Json::encode($jsonData);
                             },
                         ],
-                        
                     ],
-
                 ]));
                 unlink($filename);
                 Yii::$app->session->setFlash('data', [
@@ -304,7 +302,7 @@ class VendorController extends Controller
                 return $this->redirect(['import-status']);
             }
 
-        // return var_dump($importer->getData());
+            // return var_dump($importer->getData());
         } else {
             return $this->render('import_csv',
                 ['model' => $model,
@@ -318,7 +316,7 @@ class VendorController extends Controller
         $data = Yii::$app->session->getFlash('data', []);
         $status = isset($data['status']) ? $data['status'] : false;
         $error = isset($data['error']) ? $data['error'] : [];
-        return $this->render('import-status',[
+        return $this->render('import-status', [
             'status' => $status,
             'error' => $error
         ]);
