@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use yii\widgets\Pjax;
 
 $this->title = 'My DashBoard';
 ?>
@@ -23,7 +24,8 @@ $this->title = 'My DashBoard';
                 <div class="card" style="height:300px;">
                     <div class="card-body">
                         <h5>กิจกรรม/ความเคลื่อนไหว</h5>
-                        <?= $this->render('activity') ?>
+                       
+                        <?php // $this->render('activity') ?>
 
                     </div>
                 </div>
@@ -35,15 +37,16 @@ $this->title = 'My DashBoard';
 
     </div>
     <div class="col-6">
-
+    <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
         <div class="card" style="height:300px;">
             <div class="card-body">
                 <h5>กิจกรรม/ความเคลื่อนไหว</h5>
-                <?= $this->render('activity') ?>
+                <div id="viewRepair" class="mt-4"></div>
+                <?php //  $this->render('activity') ?>
 
             </div>
         </div>
-
+        <?php Pjax::end(); ?>
         <div class="card">
             <div class="card-body">
                 <h5>ขออนุมัติ</h5>
@@ -92,12 +95,13 @@ $this->title = 'My DashBoard';
 
 <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12">
-                <div id="viewRepairHistory" class="mt-4"></div>
+                <div id="viewRepairHistory" class="mt-4">xxx</div>
             </div>
             <div class="col-lg-6 col-md-6 col-sm-12"></div>
         </div>
 <?php
-$urlRepair = Url::to(['/me/repair-me']);
+$urlRepair = Url::to(['/me/repair']);
+// $urlRepair = Url::to(['/me/repair-me']);
 $js = <<< JS
 
     loadRepairHostory()
@@ -114,7 +118,7 @@ $js = <<< JS
             dataType: "json",
             success: function (res) {
                 if(res.summary > 0){
-                    \$('#viewRepairHistory').html(res.content);
+                    \$('#viewRepair').html(res.content);
                 }
             }
         });

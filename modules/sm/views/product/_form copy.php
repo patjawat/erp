@@ -102,7 +102,72 @@ use unclead\multipleinput\MultipleInputColumn;
         </div>
     </div>
 
-    
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">คุณลักษณะ/ขนาด</p>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex justify-content-between gap-2">
+                            <?= $form->field($model, 'data_json[size]')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('ขนาดบรรจุ') ?>
+                            <?= $form->field($model, 'data_json[size_unit]')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัส'])->label('หน่วยบรรจุ') ?>
+                        </div>
+                    </div>
+                </div>
+                <?php
+
+                    // echo $form->field($model, 'unit_items')->widget(MultipleInput::class, [
+                    //     'allowEmptyList' => false,
+                    //     'enableGuessTitle' => true,
+                    //     'addButtonPosition' => MultipleInput::POS_HEADER,
+                    //     'addButtonOptions' => [
+                    //         'class' => ' btn-sm btn btn-success',
+                    //         'label' => '<i class="fa-solid fa-circle-plus"></i>',
+                    //     ],
+                    //     'removeButtonOptions' => [
+                    //         'class' => 'btn-sm btn btn-danger',
+                    //         'label' => '<i class="fa-solid fa-xmark"></i>'  // also you can use html code
+                    //     ],
+                    //     'columns' => [
+                    //         [
+                    //             'name' => 'id',
+                    //             'title' => 'ID',
+                    //             'enableError' => true,
+                    //             'type' => MultipleInputColumn::TYPE_HIDDEN_INPUT,
+                    //         ],
+                    //         [
+                    //             'type' => \kartik\widgets\Select2::className(),
+                    //             'name' => 'title',
+                    //             'title' => 'หน่วยนับ',
+                    //             'options' => [
+                    //                 'data' => $model->listUnit(),
+                    //                 'pluginOptions' => [
+                    //                     'placeholder' => 'ระบุหน่วยนับ...',
+                    //                     'allowClear' => true,
+                    //                     'dropdownParent' => '#main-modal',
+                    //                 ],
+                    //             ],
+                    //             'enableError' => true
+                    //         ],
+                    //         [
+                    //             'name' => 'qty',
+                    //             'type' => 'textInput',
+                    //             'title' => 'จำนวน',
+                    //         ],
+                    //         [
+                    //             'name' => 'barcode',
+                    //             'type' => 'textInput',
+                    //             'title' => "บาร์โค้ด\u{200B}",
+                    //             // 'headerOptions' => [
+                    //             //     'class' => 'table-light',// กำหนดสไตล์ให้กับพื้นหลังของ label
+                    //             // ],
+                    //         ],
+                    //     ]
+                    // ])->label(false);
+                ?>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="form-group mt-3 d-flex justify-content-center">

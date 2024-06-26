@@ -33,4 +33,21 @@ class MeController extends \yii\web\Controller
             ])
         ];
     }
+
+    public function actionRepair()
+    {
+        $userId = Yii::$app->user->id;
+        $searchModel = new HelpdeskSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        // $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
+        // $dataProvider->query->andFilterWhere(['in', 'status', [1, 2, 3]]);
+        $dataProvider->pagination->pageSize = 4;
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'summary' => $dataProvider->getTotalCount(),
+            'content' => $this->renderAjax('activity', [
+                'dataProvider' => $dataProvider,
+            ])
+        ];
+    }
 }

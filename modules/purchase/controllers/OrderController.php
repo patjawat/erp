@@ -158,7 +158,7 @@ class OrderController extends Controller
 
         $order = Order::findOne($order_id);
         $category = Categorise::findOne($order->data_json['item_type']);
-        return $category;
+        // return $category;
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => $category->name, 'category_id' => $order->data_json['item_type']]);
