@@ -15,11 +15,43 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 
 <?php Pjax::begin(['id' => 'purchase-container']); ?>
 <?php //  $this->render('../default/menu2') ?>
-<?php $form = ActiveForm::begin([
-    'action' => ['/purchase/po-order/update', 'id' => $model->id],
-    'type' => ActiveForm::TYPE_HORIZONTAL,
-    'fieldConfig' => ['labelSpan' => 4, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
-]); ?>
+
+<div class="card">
+    <div class="card-body">
+        <h6><i class="fa-solid fa-cart-shopping"></i> ใบสั่งซื้อสินค้า (PO)</h6>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-2 col-md-4 col-sm-12">
+        <?= $this->render('../order/timeline', ['model' => $model]) ?>
+    </div>
+
+    <div class="col-lg-8 col-md-8 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="mt-4">
+
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#basic-data"><span
+                                    class="badge rounded-pill bg-body text-primary">3</span> ใบสั่งซื้อ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#pq-detail"><span
+                                    class="badge rounded-pill bg-primary text-white">2</span> ทะเบียนคุม</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#po-detail"><span
+                                    class="badge rounded-pill bg-primary text-white">1</span> ใบขอซื้อ</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane active" id="basic-data">
+                            <?php $form = ActiveForm::begin([
+                                'type' => ActiveForm::TYPE_HORIZONTAL,
+                                'fieldConfig' => ['labelSpan' => 4, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
+                            ]); ?>
 
                             <div class="row">
                                 <div class="col-4">
@@ -91,16 +123,18 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                         <th>ชื่อสินค้า</th>
                                         <th>หน่วยนับ</th>
                                         <th>คลัง</th>
-                                        <th class="text-center">จำนวน</th>
-                                        <th class="text-end">ราคา/หน่วย</th>
-                                        <th class="text-end">จำนวนเงิน</th>
+                                        <th>ที่เก็บ</th>
+                                        <th>จำนวน</th>
+                                        <th>ราคา/หน่วย</th>
+                                        <th>ส่วนลด</th>
+                                        <th>จำนวนเงิน</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach (Order::find()->where(['name' => 'order_item', 'category_id' => $model->id])->all() as $item): ?>
+                                    <?php foreach (Order::find()->where(['category_id' => $model->id])->all() as $item): ?>
                                     <tr>
                                         <td>1</td>
-                                        <td><?= $model->code ?></td>
+                                        <td>IC6108-028</td>
                                         <td class="align-middle">
                                             <?php
                                             try {
@@ -109,32 +143,27 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                             }
                                             // throw $th;
                                             ?></td>
-                                        <td>
-                                        <?php
-                                        try {
-                                            echo $item->product->data_json['unit'];
-                                        } catch (\Throwable $th) {
-                                        }
-                                        // throw $th;
-                                        ?>
-                                        </td>
+                                        <td>UNT-06</td>
                                         <td>001</td>
-                                        <td class="text-center"><?= $item->qty ?></td>
-                                        <td class="text-end"><?= number_format($item->price, 2) ?></td>
-                                        <td class="text-end"><?= number_format($item->qty * $item->price, 2) ?></td>
+                                        <td>01</td>
+                                        <td>5.00</td>
+                                        <td>3,190.00</td>
+                                        <td>@50</td>
+                                        <td>15,700.00</td>
                                     </tr>
                                     <?php endforeach; ?>
 
                                 </tbody>
                             </table>
                             <div class="row">
-                                <div class="col-md-8 d-flex align-items-end gap-3">
-                                <button type="button" class="btn btn-primary">
+                                <div class="col-md-8">
+                                    <button type="button" class="btn btn-primary">
                                         preview
                                     </button>
                                     <button type="button" class="btn btn-primary">
                                         บันทึก
                                     </button>
+
                                 </div>
                                 <div class="col-md-4">
                                     <table class="table">
@@ -165,28 +194,67 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                     </table>
                                 </div>
                             </div>
-                            <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
-<div class="form-group">
-    <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
-</div>
 
-<?php ActiveForm::end(); ?>
+                            <!-- End Tabs1 -->
+                            <div class="tab-pane" id="po-detail">
 
-<?php
+                                <table class="table table-striped-columns">
+                                    <tbody>
+                                        <?= $this->render(
+                                            '../order/step1',
+                                            ['model' => $model]
+                                        ) ?>
+                                    </tbody>
+                                </table>
+                                <?= $this->render('../order/list_board_detail', ['model' => $model]) ?>
+                                <?= $this->render('../order/list_board', ['model' => $model]) ?>
+                            </div>
+                            <div class="tab-pane active" id="pq-detail">
+                                <table class="table table-striped-columns">
+                                    <tbody>
+                                        <?= $this->render(
+                                            '../order/step2',
+                                            ['model' => $model]
+                                        ) ?>
+                                    </tbody>
+                                </table>
+                                <?= $this->render('../order/_view_order_files', ['model' => $model]) ?>
+                            </div>
+                        </div>
 
-$js = <<< JS
+                        <!-- End tabs Content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    \$('#order-id').on("select2:unselect", function (e) { 
-        console.log("select2:unselect", e);
-        window.location.href ='/purchase/po-order/create'
-    });
-    // function getId(id){
-    //     window.location.href = Url::to(['/purchase/po-order/create'])
-    // }
-    JS;
-$this->registerJS($js)
-?>
 
-<?php Pjax::end() ?>
+
+    <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
+
+
+    <div class="form-group">
+        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    </div>
+
+    <?php ActiveForm::end(); ?>
+
+    <?php
+
+        $js = <<< JS
+
+            \$('#order-id').on("select2:unselect", function (e) { 
+                console.log("select2:unselect", e);
+                window.location.href ='/purchase/po-order/create'
+            });
+            // function getId(id){
+            //     window.location.href = Url::to(['/purchase/po-order/create'])
+            // }
+            JS;
+        $this->registerJS($js)
+    ?>
+
+    <?php Pjax::end() ?>

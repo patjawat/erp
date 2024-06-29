@@ -151,8 +151,8 @@ $this->title = 'ระบบคลัง';
         <div class="card-body">
             <div class="d-flex align-items-center">
                 <div class="flex-grow-1">
-                    <span class="text-muted text-uppercase fs-6">จำนวนวัสดุน้อยกว่ากำหนด</span>
-                    <h2 class="text-muted text-uppercase fs-4">85 รายการ</h2>
+                    <span class="text-muted text-uppercase fs-6">คลังย่อย</span>
+                    <h2 class="text-muted text-uppercase fs-4">13 รายการ</h2>
                 </div>
                 <div class="text-center" style="position: relative;">
                     <div id="t-rev" style="min-height: 45px;">

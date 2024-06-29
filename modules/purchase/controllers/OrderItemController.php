@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\sm\controllers;
+namespace app\modules\purchase\controllers;
 
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;

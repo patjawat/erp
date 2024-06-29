@@ -117,12 +117,25 @@ class PoOrderController extends Controller
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
+        $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                // validate all models
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                if ($model->po_number == '') {
+                    $model->po_number = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
+                }  // validate all models
+                $model->data_json = ArrayHelper::merge(
+                    $oldObj,
+                    $model->data_json,
+                );
+                // return $model->data_json;
+                $model->status = 4;
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
+                // return [
+                //     'status' => 'success',
+                //     'container' => '#purchase-container',
+                // ];
             } else {
                 return false;
             }

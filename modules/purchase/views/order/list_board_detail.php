@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 
 $listBoard = Order::find()
-    ->where(['name' => 'board'])
+    ->where(['name' => 'board_detail'])
     ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.board') asc"))
     ->all();
 ?>
@@ -13,10 +13,12 @@ $listBoard = Order::find()
 
 <?php Pjax::begin(['id' => 'board-container']); ?>
 
+
 <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between">
-    <h5><i class="fa-solid fa-circle-info text-primary"></i> กรรมการตรวจรับ</h5>
-    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <h5><i class="fa-solid fa-circle-info text-primary"></i> กรรมการกำหนดรายละเอียด</h5>
+    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'board_detail', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
 </div>
+
 
 <table class="table table-primary">
     <thead>
@@ -28,9 +30,9 @@ $listBoard = Order::find()
     </thead>
     <tbody>
         <?php foreach ($listBoard as $item): ?>
-        <tr class="">
-            <td scope="row">
-                <?= $item->ShowBoard()['avatar']; ?>
+            <tr class="">
+                <td scope="row">
+                    <?= $item->ShowBoard()['avatar']; ?>
             </td>
             <td>
                 <?php
@@ -39,9 +41,9 @@ $listBoard = Order::find()
                 } catch (\Throwable $th) {
                 }
                 ?>
-            </td>
+                </td>
             <td>
-
+                
                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/order-item/delete', 'id' => $item->id], [
                     'class' => 'btn btn-sm btn-danger delete-item',

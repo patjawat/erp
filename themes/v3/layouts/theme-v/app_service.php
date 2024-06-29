@@ -29,7 +29,7 @@ use yii\helpers\Url;
 
                             <div class="col-4 mt-1">
                                 <a href="<?= Url::to(['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง']); ?>"
-                                class="open-modal" data-title="xxx">
+                                class="open-modal" data-title="xxx" data-size="modal-lg">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
                                         <i class="fa-solid fa-bag-shopping fs-3"></i>

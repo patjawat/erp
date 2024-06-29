@@ -118,16 +118,15 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                         <?php endif; ?>
 
                         <?php if ($model->approve == 'Y'): ?>
+                        <?php foreach ($model->ListStatus() as $status): ?>
+        
+                        <?php if ($model->code == 3): ?>
+                        <?= Html::a($status->title, ['/purchase/pq-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?php else: ?>
+                        <?= $model->status == $status->code ? Html::a('<span class="badge rounded-pill bg-light text-dark">' . $status->code . '</span> ' . $status->title, ['/purchase/order/confirm-status', 'id' => $model->id, 'status' => ($status->code + 1), 'title' => '<i class="fa-solid fa-circle-exclamation"></i> ' . $status->title], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-md']]) : '' ?>
+                        <?php endif; ?>
 
-                            <?php if ($model->status == 2): ?>
-                        <?= Html::a('ลงทะเบียนคุม', ['/purchase/pq-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
-                       <?php endif; ?>
-
-
-                       <?php if ($model->status == 3): ?>
-                        <?= Html::a('sss', ['/purchase/po-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal-x shadow', 'data' => ['size' => 'modal-lg']]) ?>
-                       <?php endif; ?>
-
+                        <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>

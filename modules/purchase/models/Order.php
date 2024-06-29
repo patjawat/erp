@@ -16,6 +16,7 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\helpers\Json;
 use Yii;
 
@@ -116,6 +117,23 @@ class Order extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
+    public function orderAvatar()
+    {
+        $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+        $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
+        return '<div class="d-flex">'
+            . $img . '
+        <div class="avatar-detail">
+            <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
+            data-bs-custom-class="custom-tooltip"
+            data-bs-title="ดูเพิ่มเติม..."><span>'
+            . $employee->fullname . '</span>
+            </h6>
+            <p class="text-muted mb-0 fs-13">' . $this->data_json['product_type_name'] . ' (<code>' . $this->pr_number . '</code>)</p>
+        </div>
+    </div>';
+    }
+
     // ผู้ขอ
     public function getUserReq()
     {
@@ -123,10 +141,11 @@ class Order extends \yii\db\ActiveRecord
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
 
             return [
-                'avatar' => $employee->getAvatar(false),
+                'avatar' => $this->orderAvatar(),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->positionName()
+                'position_name' => $employee->positionName(),
+                'product_type_name' => $this->data_json['product_type_name']
             ];
         } catch (\Throwable $th) {
             return [
@@ -134,6 +153,7 @@ class Order extends \yii\db\ActiveRecord
                 'department' => '',
                 'fullname' => '',
                 'position_name' => '',
+                'product_type_name' => ''
             ];
         }
     }
