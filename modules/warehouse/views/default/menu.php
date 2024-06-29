@@ -4,7 +4,7 @@ use yii\helpers\Url;
 ?>
 <div class="d-flex gap-2">
     <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> Dashbroad', ['/warehouse'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> รับสินค้า', ['/warehouse/rc'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> รับสินค้า', ['/warehouse/rc-order'], ['class' => 'btn btn-light']) ?>
     <div class="btn-group">
        <span class="btn btn-light">
        <i class="fa-solid fa-gear"></i>

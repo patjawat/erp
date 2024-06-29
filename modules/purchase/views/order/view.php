@@ -37,35 +37,36 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                 <?php if ($model->status >= 5): ?>
                                 <a class="<?= $model->status == 5 ? 'nav-link  active' : 'nav-link ' ?>"
                                     data-bs-toggle="tab" href="#importStore"><span
-                                        class="badge rounded-pill bg-body text-primary">5</span> รับเข้าคลัง</a>
+                                        class="badge rounded-pill bg-primary text-primary">5</span> รับเข้าคลัง</a>
                             </li>
                             <?php endif; ?>
                             <li class="nav-item">
                                 <?php if ($model->status >= 4): ?>
                                 <a class="<?= $model->status == 4 ? 'nav-link  active' : 'nav-link ' ?>"
                                     data-bs-toggle="tab" href="#checker"><span
-                                        class="badge rounded-pill bg-body text-primary">4</span> ตรวจรับวัสดุ</a>
+                                        class="badge rounded-pill bg-primary text-white">4</span> ตรวจรับวัสดุ</a>
                             </li>
                             <?php endif; ?>
 
                             <li class="nav-item">
                                 <?php if ($model->status >= 3): ?>
                                 <a class="<?= $model->status == 3 ? 'nav-link  active' : 'nav-link ' ?>"
-                                    data-bs-toggle="tab" href="#basic-data"><span
-                                        class="badge rounded-pill bg-body text-primary">3</span> ใบสั่งซื้อ</a>
+                                    data-bs-toggle="tab" href="#po-detail"><span
+                                        class="badge rounded-pill bg-primary text-white">3</span> ใบสั่งซื้อ</a>
                             </li>
                             <?php endif; ?>
 
 
                             <?php if ($model->status >= 2): ?>
-                            <li class="<?= $model->status == 2 ? 'nav-item  active' : 'nav-item ' ?>">
-                                <a class="nav-link" data-bs-toggle="tab" href="#pq-detail"><span
-                                        class="badge rounded-pill bg-primary text-white">2</span> ทะเบียนคุม</a>
+                            <li class="nav-item">
+                                <a class="<?= $model->status == 2 ? 'nav-link  active' : 'nav-link' ?>" data-bs-toggle="tab" href="#pq-detail"><span
+                                        class="badge rounded-pill bg-primary text-white">2</span> ทะเบียนคุม<?= $model->status ?></a>
                             </li>
                             <?php endif; ?>
+
                             <?php if ($model->status == '' || $model->status >= 1): ?>
-                            <li class="<?= $model->status == '' ? 'nav-item active' : 'nav-item ' ?>">
-                                <a class="nav-link" data-bs-toggle="tab" href="#po-detail"><span
+                            <li class="nav-item">
+                                <a class="<?= $model->status == '' ? 'nav-link  active' : 'nav-link' ?>" data-bs-toggle="tab" href="#pr-detail"><span
                                         class="badge rounded-pill bg-primary text-white">1</span> ขอซื้อ/ขอจ้าง</a>
                             </li>
                             <?php endif; ?>
@@ -97,14 +98,17 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                             </div>
                             <?= $this->render('../order/_view_order_files', ['model' => $model]) ?>
                         </div>
-
-                        <div class="tab-pane <?= $model->status == 3 ? 'active' : '' ?>" id="basic-data">
+                        <!-- ใบสั่งซื้อ -->
+                        <div class="tab-pane <?= $model->status == 3 ? 'active' : '' ?>" id="po-detail">
                             <?= $this->render(
                                 '../po-order/_form',
                                 ['model' => $model]
                             ) ?>
                         </div>
-                        <div class="tab-pane <?= $model->status == '' ? 'active' : '' ?>" id="po-detail">
+                        <!-- จบใบสั่งซื้อ -->
+
+                        <!-- ใบขอซื้อ -->
+                        <div class="tab-pane <?= $model->status == '' ? 'active' : '' ?>" id="pr-detail">
                             <table class="table table-striped-columns">
                                 <tbody>
                                     <?= $this->render(
@@ -117,6 +121,9 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                             <?= $this->render('../order/list_board', ['model' => $model]) ?>
                             <?= $this->render('list_items', ['model' => $model]) ?>
                         </div>
+                        <!-- จบใบขอซื้อ -->
+
+                        <!-- ทะเบียนคุม -->
                         <div class="tab-pane <?= $model->status == 2 ? 'active' : '' ?>" id="pq-detail">
                             <table class="table table-striped-columns">
                                 <tbody>
@@ -128,7 +135,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                             </table>
                             <?= $this->render('../order/_view_order_files', ['model' => $model]) ?>
                         </div>
-
+                        <!-- จบทะเบียนคุม -->
 
 
                         <!-- End Tabs1 -->

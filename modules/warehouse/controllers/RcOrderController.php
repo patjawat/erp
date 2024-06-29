@@ -2,8 +2,8 @@
 
 namespace app\modules\warehouse\controllers;
 
-use app\modules\warehouse\models\Order;
-use app\modules\warehouse\models\OrderSearch;
+use app\modules\purchase\models\Order;
+use app\modules\purchase\models\OrderSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -12,7 +12,7 @@ use yii\web\Response;
 /**
  * irController implements the CRUD actions for ir model.
  */
-class RcController extends Controller
+class RcOrderController extends Controller
 {
     /**
      * @inheritDoc
@@ -41,7 +41,7 @@ class RcController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'order_ir']);
+        $dataProvider->query->andFilterwhere(['name' => 'order', 'status' => 5]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

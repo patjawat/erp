@@ -248,7 +248,7 @@ class OrderController extends Controller
                 $model->save(false);
                 return [
                     'status' => 'success',
-                    'container' => '#purchase-container',
+                    'container' => '#' . $model->name,
                 ];
             } else {
                 return false;

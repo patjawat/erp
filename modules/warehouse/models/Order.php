@@ -40,7 +40,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['item_id', 'amount', 'status', 'created_by', 'updated_by'], 'integer'],
+            [['item_id', 'qty', 'status', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
             [['data_json', 'created_at', 'updated_at'], 'safe'],
             [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number'], 'string', 'max' => 255],
@@ -62,7 +62,7 @@ class Order extends \yii\db\ActiveRecord
             'po_number' => 'Po Number',
             'item_id' => 'Item ID',
             'price' => 'Price',
-            'amount' => 'Amount',
+            'qty' => 'qty',
             'status' => 'Status',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',

@@ -80,7 +80,7 @@ class OrderItemController extends Controller
                 return [
                     'title' => $this->request->get('title'),
                     'status' => 'success',
-                    'container' => '#board-container',
+                    'container' => '#' . $model->name,
                 ];
             }
         } else {
@@ -119,7 +119,7 @@ class OrderItemController extends Controller
                 return [
                     'title' => $this->request->get('title'),
                     'status' => 'success',
-                    'container' => '#board-container',
+                    'container' => '#' . $model->name,
                 ];
             }
         } else {
@@ -150,11 +150,13 @@ class OrderItemController extends Controller
      */
     public function actionDelete($id)
     {
+        $container = $this->request->get('container');
+        $model = $this->findModel($id);
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $this->findModel($id)->delete();
+        $model->delete();
         return [
             'status' => 'success',
-            'container' => '#board-container',
+            'container' => '#' . $model->name,
         ];
     }
 

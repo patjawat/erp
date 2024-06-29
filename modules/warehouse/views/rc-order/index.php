@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใบรับสินค้า', ['/warehouse/rc/create', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใบรับสินค้า', ['/warehouse/rc-order/create', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
     </div>
 </div>
 
@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'category_id',
                 'header' => 'ใบสั่งซื้อ',
                 'value' => function ($model) {
-                    return $model->category_id;
+                    return $model->po_number;
                 }
             ],
             [
@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'header' => 'สถานะ',
                 'value' => function ($model) {
-                    return $model->category_id;
+                    return $model->viewStatus();
                 }
             ],
             [

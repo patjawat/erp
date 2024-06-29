@@ -13,7 +13,7 @@ use yii\widgets\Pjax;
 $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(), 'id', 'pq_number');
 ?>
 
-<?php Pjax::begin(['id' => 'purchase-container']); ?>
+<?php // Pjax::begin(['id' => 'purchase-container']); ?>
 <?php //  $this->render('../default/menu2') ?>
 <?php $form = ActiveForm::begin([
     'action' => ['/purchase/po-order/update', 'id' => $model->id],
@@ -189,4 +189,4 @@ $js = <<< JS
 $this->registerJS($js)
 ?>
 
-<?php Pjax::end() ?>
+<?php // Pjax::end() ?>

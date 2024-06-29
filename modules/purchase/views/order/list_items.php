@@ -5,7 +5,7 @@ use yii\widgets\Pjax;
 
 $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order_item'])->all();
 ?>
-
+<?php Pjax::begin(['id' => 'order_item']); ?>
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -135,3 +135,4 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
         </div>
     </div>
 </div>
+<?php Pjax::end() ?>
