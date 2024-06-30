@@ -469,7 +469,7 @@ class MsWordController extends \yii\web\Controller
                 'org_name' => $this->GetInfo()['company_name'],
                 'project_name' => 'ชื่อโปรเจค',
                 'budget_name' => $model->data_json['pq_budget_type_name'],
-                'vendor_name' => $model->data_json['vendor_name'],
+                'vendor' => isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '-',
                 'price' => number_format($model->sumPo(), 2),
                 'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
                 'director_name' => $this->GetInfo()['director_name'],
@@ -491,7 +491,7 @@ class MsWordController extends \yii\web\Controller
             'result_name' => $result_name,
             'items' => [
                 'title' => 'ใบสั่งซื้อสั่งจ้าง',
-                'vendor' => $model->data_json['vendor_name'],
+                'vendor' => isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '-',
                 'org_name' => $this->GetInfo()['company_name'],
                 'address' => $this->GetInfo()['address'],
                 'phone' => $this->GetInfo()['phone'],
