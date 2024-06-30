@@ -8,6 +8,7 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use Yii;
 
 /**
  * irController implements the CRUD actions for ir model.
@@ -74,95 +75,37 @@ class RcOrderController extends Controller
         }
     }
 
-    /**
-     * Creates a new ir model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     *
-     * @return string|\yii\web\Response
-     */
-    public function actionCreate()
+    // เพิ่มคณะกรรมการ ตรวจรับ
+    public function actionAddCommittee()
     {
         $model = new Order([
-            'name' => 'ir',
-            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
+            'category_id' => $this->request->get('category_id'),
+            'name' => $this->request->get('name')
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->save(false);
-                return [
-                    'status' => 'success',
-                    'container' => '#warehouse-container',
-                ];
-            } else {
-                return false;
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ]),
-                'status' => 'success',
-                'container' => '#sm-container',
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Updates an existing ir model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->save(false);
+            if ($model->load($this->request->post()) && $model->save()) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('view', [
-                        'model' => $model,
-                    ]),
                     'status' => 'success',
-                    'container' => '#warehouse-container',
+                    'container' => '#' . $model->name,
                 ];
-            } else {
-                return false;
             }
         } else {
             $model->loadDefaultValues();
         }
 
         if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
+            Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
+                'content' => $this->renderAjax('_form_commitee', [
                     'model' => $model,
                 ]),
-                'status' => 'success',
-                'container' => '#sm-container',
             ];
         } else {
-            return $this->render('update', [
+            return $this->render('_form_commitee', [
                 'model' => $model,
             ]);
         }
@@ -177,9 +120,14 @@ class RcOrderController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        $container = $this->request->get('container');
+        $model = $this->findModel($id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model->delete();
+        return [
+            'status' => 'success',
+            'container' => '#' . $model->name,
+        ];
     }
 
     /**

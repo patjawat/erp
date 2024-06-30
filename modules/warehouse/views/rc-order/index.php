@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
-    <?php Pjax::begin(); ?>
+    <?php Pjax::begin(['id' => 'warehouse']); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <?= GridView::widget([
@@ -53,8 +53,9 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'category_id',
                 'header' => 'ใบสั่งซื้อ',
+                'format' => 'raw',
                 'value' => function ($model) {
-                    return $model->po_number;
+                    return Html::a($model->po_number, ['view', 'id' => $model->id]);
                 }
             ],
             [
@@ -86,12 +87,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 'header' => 'สถานะ',
                 'value' => function ($model) {
                     return $model->viewStatus();
-                }
-            ],
-            [
-                'header' => '',
-                'value' => function ($model) {
-                    return $model->category_id;
                 }
             ],
         ],

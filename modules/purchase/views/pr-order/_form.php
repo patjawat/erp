@@ -77,14 +77,19 @@ echo $form
   </div>
     <div class="col-6">
     <?php
-        echo $form->field($model, 'data_json[vendor]')->widget(Select2::classname(), [
+        echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'data' => $model->ListVendor(),
             'options' => ['placeholder' => 'เลขที่ใบขอซื้อ (ถ้ามี)'],
             'pluginOptions' => [
                 'allowClear' => true,
                 'dropdownParent' => '#main-modal',
             ],
-            'pluginEvents' => []
+            'pluginEvents' => [
+                'select2:select' => "function(result) { 
+                                    var data = \$(this).select2('data')[0].text;
+                                    \$('#order-data_json-vendor_name').val(data)
+                                }",
+            ]
         ])->label('บริษัทแนะนำ');
     ?>
     <?php
@@ -114,6 +119,7 @@ echo $form
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_name]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[pr_confirm_2]')->hiddenInput()->label(false) ?>

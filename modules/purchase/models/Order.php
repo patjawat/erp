@@ -55,7 +55,17 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['item_id', 'qty', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
-            [['data_json', 'created_at', 'updated_at', 'pr_number', 'pq_number', 'po_number', 'status', 'approve'], 'safe'],
+            [[
+                'data_json',
+                'created_at',
+                'updated_at',
+                'pr_number',
+                'pq_number',
+                'po_number',
+                'status',
+                'approve',
+                'vendor_id',
+            ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
     }
@@ -73,6 +83,7 @@ class Order extends \yii\db\ActiveRecord
             'code' => 'Code',
             'item_id' => 'Item ID',
             'price' => 'Price',
+            'vendor_id' => 'ผู้จำหน่าย',
             'qty' => 'qty',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',

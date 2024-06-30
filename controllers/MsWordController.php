@@ -46,7 +46,8 @@ class MsWordController extends \yii\web\Controller
         return [
             'company_full' => $info['company_name'] . ' ' . $info['address'],  // ที่อยู่
             'company_name' => $info['company_name'],  // ชื่อหน่วยงาน
-            'company_address' => $info['address'],  // ที่อยู่
+            'address' => $info['address'],  // ที่อยู่
+            'phone' => $info['phone'],  // โทรศัพท์
             'province' => $info['province'],  // ที่อยู่
             'director_name' => $info['director_name'],  // ชื่อผู้บริหาร ผอ.
             'director_position' => $info['director_position']  // ตำแหน่งของ ผอ.
@@ -176,7 +177,7 @@ class MsWordController extends \yii\web\Controller
 
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
-        $listBoards = Order::find()->where(['category_id' => $model->id, 'name' => 'board'])->all();
+        $listBoards = Order::find()->where(['category_id' => $model->id, 'name' => 'board_detail'])->all();
         $user = Yii::$app->user->id;
         $word_name = 'purchase_1.docx';
         $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด.docx';
@@ -304,17 +305,18 @@ class MsWordController extends \yii\web\Controller
         $templateProcessor->setValue('emp_position', $model->viewLeaderUser()['position_name']);
         $templateProcessor->setValue('director_name', $this->GetInfo()['director_name']);
         $templateProcessor->setValue('director_position', $this->GetInfo()['director_position']);
+        $templateProcessor->setValue('price_amount', number_format($model->sumPo(), 2) . ' บาท');
 
         $templateProcessor->cloneRow('item_name', count($model->ListOrderItems()));
         $i = 1;
-        // $num = 1;
-        // foreach ($model->ListOrderItems() as $item) {
-        //     $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
-        //     $templateProcessor->setValue('item_name#' . $i, $item->product->title);
-        //     $templateProcessor->setValue('qty#' . $i, $item->qty);
-        //     $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
-        //     $i++;
-        // }
+        $num = 1;
+        foreach ($model->ListOrderItems() as $item) {
+            $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
+            $templateProcessor->setValue('item_name#' . $i, $item->product->title);
+            $templateProcessor->setValue('qty#' . $i, $item->qty);
+            $templateProcessor->setValue('unit#' . $i, isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-');
+            $i++;
+        }
 
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         if ($this->request->isAjax) {
@@ -347,46 +349,70 @@ class MsWordController extends \yii\web\Controller
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
+        $model = $this->findOrderModel($id);
 
         $word_name = 'purchase_4.docx';
         $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        $templateProcessor->setValue('po_number', $model->po_number);
         $templateProcessor->setValue('number', 'ลำดับ');
-        $templateProcessor->setValue('asset_detail', 'รายละเอียดขอบเขตงาน');
         $templateProcessor->setValue('amount', 'จำนวน');
-        $templateProcessor->setValue('unit', 'หน่วย');
-        $templateProcessor->setValue('priceunit', 'ราคา/หน่วย');
-        $templateProcessor->setValue('sum', 'ราคารวม');
+        $templateProcessor->cloneRow('item_name', count($model->ListOrderItems()));
+        $i = 1;
+        $num = 1;
+        foreach ($model->ListOrderItems() as $item) {
+            $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
+            $templateProcessor->setValue('item_name#' . $i, $item->product->title);
+            $templateProcessor->setValue('qty#' . $i, $item->qty);
+            $templateProcessor->setValue('price#' . $i, number_format($item->qty, 2));
+            $templateProcessor->setValue('sum#' . $i, number_format(($item->qty * $item->price), 2));
+            $templateProcessor->setValue('unit#' . $i, isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-');
+            $i++;
+        }
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'content' => $this->renderAjax('word', ['filename' => $result_name]),
+            ];
+        } else {
+            $this->layout = false;
+            // Set raw HTML content
+            Yii::$app->response->content = $this->render('word', ['filename' => $result_name]);
+            Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
+            return Yii::$app->response;
+        }
     }
 
     public function actionPurchase_5()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-
+        $model = $this->findOrderModel($id);
         $word_name = 'purchase_5.docx';
         $result_name = 'รายงานขอซื้อขอจ้าง.docx';
         $data = [
             'word_name' => $word_name,
             'result_name' => $result_name,
             'items' => [
-                'org_name_full' => 'รายละเอียดชื่อโรงพยาบาลเต็ม',
+                'org_name_full' => $this->GetInfo()['company_full'],
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'วันที่',
-                'org_name' => 'ชื่อโรงพยาบาล',
-                'budget_type' => 'ประเภทเงินงบประมาณ',
+                'org_name' => $this->GetInfo()['company_name'],
+                'budget_type' => $model->data_json['pq_budget_type_name'],
                 'sup_detail' => 'รายละเอียดพัสดุ',
-                'detail' => 'เหตุผลของการจัดซื้อ',
+                'detail' => $model->data_json['comment'],
                 'amount' => 'จำนวน',
-                'price' => 'ราคา',
-                'price_character' => 'ราคาตัวอักษร',
+                'price' => number_format($model->sumPo(), 2),
+                'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
                 'sup_detailfull' => 'รายละเอียดของพัสดุ',
                 'board' => 'คณะกรรมการตรวจรับพัสดุ',
                 'emp_name' => 'เจ้าหน้าที่พนักงาน',
                 'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
                 'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
                 'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
-                'director_name' => 'ผู้อำนวยการโรงพยาบาล',
+                'director_name' => $this->GetInfo()['director_name'],
             ]
         ];
         return $this->CreateFile($data);
@@ -403,7 +429,7 @@ class MsWordController extends \yii\web\Controller
             'word_name' => $word_name,
             'result_name' => $result_name,
             'items' => [
-                'org_name_full' => 'รายละเอียดชื่อโรงพยาบาลเต็ม',
+                'org_name_full' => $this->GetInfo()['company_full'],
                 'doc_number' => 'เลขหนังสือ',
                 'date' => 'วันที่',
                 'sup_detail' => 'รายละเอียดพัสดุ',
@@ -432,20 +458,21 @@ class MsWordController extends \yii\web\Controller
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
+        $model = $this->findOrderModel($id);
         $word_name = 'purchase_7.docx';
         $result_name = 'ประกาศผู้ชนะการเสนอราคา.docx';
         $data = [
             'word_name' => $word_name,
             'result_name' => $result_name,
             'items' => [
-                'sup_type' => 'ประเภทพัสดุ',
-                'org_name' => 'ชื่อโรงพยาบาล',
+                'sup_type' => $model->data_json['product_type_name'],
+                'org_name' => $this->GetInfo()['company_name'],
                 'project_name' => 'ชื่อโปรเจค',
-                'budget_name' => 'ประเภทงบประมาณ',
-                'vendor_name' => 'ชื่อจำแทนจำหน่าย',
-                'price' => 'ราคา',
-                'price_character' => 'ราคาตัวอักษร',
-                'director_name' => 'ผู้อำนวยการโรงพยาบาล',
+                'budget_name' => $model->data_json['pq_budget_type_name'],
+                'vendor_name' => $model->data_json['vendor_name'],
+                'price' => number_format($model->sumPo(), 2),
+                'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
+                'director_name' => $this->GetInfo()['director_name'],
                 'date' => 'วันที่ประกาศ',
             ]
         ];
@@ -455,6 +482,7 @@ class MsWordController extends \yii\web\Controller
     public function actionPurchase_8()
     {
         $id = $this->request->get('id');
+        $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
         $word_name = 'purchase_8.docx';
         $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
@@ -462,7 +490,11 @@ class MsWordController extends \yii\web\Controller
             'word_name' => $word_name,
             'result_name' => $result_name,
             'items' => [
-                'title' => 'ใบสั่งซื้อสั่งจ้าง'
+                'title' => 'ใบสั่งซื้อสั่งจ้าง',
+                'vendor' => $model->data_json['vendor_name'],
+                'org_name' => $this->GetInfo()['company_name'],
+                'address' => $this->GetInfo()['address'],
+                'phone' => $this->GetInfo()['phone'],
             ]
         ];
         return $this->CreateFile($data);

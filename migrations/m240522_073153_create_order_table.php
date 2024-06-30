@@ -17,6 +17,7 @@ class m240522_073153_create_order_table extends Migration
             'ref' => $this->string(255),
             'name' => $this->string(255)->comment('ชื่อตารางเก็บข้อมูล'),
             'category_id' => $this->string(255)->comment('หมวดหมูหลักที่เก็บ'),
+            'vendor_id' => $this->integer(255)->comment('ผู้ขาย'),
             'code' => $this->string(255)->comment('รหัส'),
             'pr_number' => $this->string(255)->comment('เลขที่ขอซื้อ'),
             'pq_number' => $this->string(255)->comment('เลขทะเบียนคุม'),

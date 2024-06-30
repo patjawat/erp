@@ -60,7 +60,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                             <?php if ($model->status >= 2): ?>
                             <li class="nav-item">
                                 <a class="<?= $model->status == 2 ? 'nav-link  active' : 'nav-link' ?>" data-bs-toggle="tab" href="#pq-detail"><span
-                                        class="badge rounded-pill bg-primary text-white">2</span> ทะเบียนคุม<?= $model->status ?></a>
+                                        class="badge rounded-pill bg-primary text-white">2</span> ทะเบียนคุม</a>
                             </li>
                             <?php endif; ?>
 
