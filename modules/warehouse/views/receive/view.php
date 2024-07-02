@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\warehouse\models\StockOrder;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\widgets\Pjax;
@@ -50,26 +51,40 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-7">
         <div class="card">
             <div class="card-body">
-                <h6><i class="fa-solid fa-file-lines"></i> ข้อมูลตรวจรับ</h6>
+                <div class="d-flex justify-content-between">
+                    <h6><i class="fa-solid fa-file-lines"></i> ข้อมูลตรวจรับ</h6>
+                    <div class="dropdown float-end">
+            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" style="">
+                <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['/warehouse/receive/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
+                    'class' => 'dropdown-item  delete-item',
+                ]) ?>
+            </div>
+        </div>
+                </div>
                 <?= DetailView::widget([
                     'model' => $model,
                     'attributes' => [
                         [
                             'label' => 'เลขที่ขอซื้อ',
                             'value' => function ($model) {
-                                return $model->pr_number;
+                                // return $model->pr_number;
                             }
                         ],
                         [
                             'label' => 'เลขที่สั่งซื้อ',
                             'value' => function ($model) {
-                                return $model->po_number;
+                                // return $model->po_number;
                             }
                         ],
                         [
                             'label' => 'สานะ',
                             'value' => function ($model) {
-                                return $model->viewStatus();
+                                // return $model->viewStatus();
                             }
                         ],
                     ],
@@ -86,9 +101,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between">
                         <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
                         <div>
-                            <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
-                                เลือกรายการ</button>
+                            <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
+                                เลือกรายการ</button> -->
+                                <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/warehouse/receive/list-item-form-po', 'po_number' => $model->category_id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </div>
+                        
                     </div>
                 <div class="table-responsive">
                     <table class="table table-primary">
@@ -104,8 +121,17 @@ $this->params['breadcrumbs'][] = $this->title;
                             </tr>
                         </thead>
                         <tbody>
+                            <?php foreach (StockOrder::find()->where(['name' => 'receive_item'])->all() as $item): ?>
                             <tr class="">
-                                <td scope="row">R1C1</td>
+                                <td scope="row">
+                                    <?php
+                                    try {
+                                        echo $item->data_json['product_name'];
+                                    } catch (\Throwable $th) {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
                                 <td>R1C2</td>
                                 <td>R1C3</td>
                                 <td>R1C3</td>
@@ -113,7 +139,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td>R1C3</td>
                                 <td>R1C3</td>
                             </tr>
-                        
+                        <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -123,4 +149,29 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+
+<div class="form-group mt-3 d-flex justify-content-center">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึกรับเข้าคลัง', ['class' => 'btn btn-primary', 'id' => 'toStock']) ?>
+</div>
+<?php
+use yii\helpers\Url;
+
+$url = Url::to(['/warehouse/receive/save-to-stock']);
+$js = <<< JS
+    \$('#toStock').click(function (e) { 
+        e.preventDefault();
+        
+        \$.ajax({
+            type: "post",
+            url: "$url",
+            dataType: "json",
+            success: function (response) {
+                
+            }
+        });
+    });
+    JS;
+
+$this->registerJS($js);
+?>
 <?php Pjax::end(); ?>

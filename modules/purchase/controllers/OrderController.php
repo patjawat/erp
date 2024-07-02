@@ -159,7 +159,7 @@ class OrderController extends Controller
 
         $order = Order::findOne($order_id);
         $category = Categorise::findOne($order->data_json['item_type']);
-        // return $order->data_json['item_type'];
+
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['name' => $category->name, 'category_id' => $order->data_json['item_type']]);
@@ -190,6 +190,7 @@ class OrderController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $order_id = $this->request->get('order_id');
+        $po_number = $this->request->get('po_number');
         $order = $this->findModel($order_id);
         $product_id = $this->request->get('product_id');
         $product = Product::findOne($product_id);
@@ -197,18 +198,26 @@ class OrderController extends Controller
         $model = new Order([
             'category_id' => $order_id,
             'name' => 'order_item',
-            'item_id' => $product_id
+            'item_id' => $product_id,
+            'pr_number' => $order->pr_number,
+            'pq_number' => $order->pq_number,
+            'po_number' => $order->po_number,
         ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->save(false);
+                if ($model->save()) {
+                    return $model->save(false);
+                } else {
+                    return $model->getErrors();
+                }
                 return [
                     'status' => 'success',
                     'container' => '#purchase-container',
                 ];
             } else {
+                return $model->getErrors();
                 return false;
             }
         } else {

@@ -16,10 +16,10 @@ $listCommittee = Order::find()
         <table class="table table-primary">
             <thead>
                 <tr>
-                    <th scope="col"><i class="fa-solid fa-user-tie"></i> กรรมการตรวจรับ</th>
+                    <th scope="col"><i class="fa-solid fa-user-tie"></i> กรรมการตรวจรับวัสดุเข้าคลัง</th>
 
                     <th scope="col" class="d-flex justify-content-end"> 
-                        <?= Html::a('<i class="fa-solid fa-plus"></i>เพิ่มกรรมการ',
+                        <?= Html::a('<i class="fa-solid fa-plus"></i>เพิ่ม',
                             ['/warehouse/rc-order/add-committee', 'name' => 'rc_commitee', 'category_id' => $model->id, 'title' => '<i class="fa-solid fa-user-tie"></i> กรรมการตรวจรับ'],
                             ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
     </th>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -19,9 +20,10 @@ class AppAsset extends AssetBundle
 {
     public $basePath = '@webroot';
     public $baseUrl = '@web';
+
     public $css = [
         // "css/site.css",
-        "css/custom.css",
+        'css/custom.css',
         // "css/v2.css",
         // "css/docs.css",
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
@@ -31,10 +33,11 @@ class AppAsset extends AssetBundle
         'apexcharts/apexcharts.css',
         // 'css/style.min.css',
         'css/waves.min.css',
-        'https://unpkg.com/nprogress@0.2.0/nprogress.css'
-        
+        'https://unpkg.com/nprogress@0.2.0/nprogress.css',
+        'css/tour.min.css'
         // 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'
     ];
+
     public $js = [
         // 'js/v2.js',
         'js/erp.js',
@@ -47,9 +50,11 @@ class AppAsset extends AssetBundle
         'chart-assets/echart/echarts.min.js',
         'https://code.highcharts.com/highcharts.js',
         'https://code.highcharts.com/modules/exporting.js',
-        'https://unpkg.com/nprogress@0.2.0/nprogress.js'
+        'https://unpkg.com/nprogress@0.2.0/nprogress.js',
+        'js/tour.js'
         // 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
     ];
+
     public $depends = [
         'yii\web\YiiAsset',
         'yii\bootstrap5\BootstrapAsset',
