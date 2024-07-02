@@ -24,7 +24,7 @@ use yii\helpers\Html;
                         <div class="card-body">
                             <div class="d-flex flex-column align-items-center justify-content-center">
                                 <?=Html::img('@web/images/hr.png', ['width' => 70])?>
-                                <div>บุคลกร</div>
+                                <div>บุคลากร</div>
                             </div>
                         </div>
                     </div>

@@ -26,7 +26,7 @@ $companyName = SiteHelper::getInfo()["company_name"];
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <?=Html::a('บุคลกร',['/hr'],['class' => 'text-muted text-uppercase fs-6'])?>
+                        <?=Html::a('บุคลากร',['/hr'],['class' => 'text-muted text-uppercase fs-6'])?>
                         <h2 class="mb-0 mt-1" id="totalEmployees"></h2>
                     </div>
                     <div class="text-center" style="position: relative;">
@@ -323,7 +323,7 @@ $companyName = SiteHelper::getInfo()["company_name"];
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <?=Html::a('ทรัพย์สินย์',['/am'],['class' => 'text-muted text-uppercase fs-6'])?>
+                        <?=Html::a('ทรัพย์สิน',['/am'],['class' => 'text-muted text-uppercase fs-6'])?>
                         <h2 class="mb-0 mt-1" id="totalAsset"></h2>
                     </div>
                     <div class="text-center" style="position: relative;">

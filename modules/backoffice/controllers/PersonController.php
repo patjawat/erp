@@ -57,7 +57,7 @@ class PersonController extends Controller
 
         Yii::$app->response->format = Response::FORMAT_JSON;
         return [
-            'title' => '<i class="bi bi-database-add"></i> นำเข้าบุคลกรจาก Backoffice',
+            'title' => '<i class="bi bi-database-add"></i> นำเข้าบุคลากรจาก Backoffice',
             'content' => $this->renderAjax('person')
         ];
     }
