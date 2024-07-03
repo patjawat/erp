@@ -32,6 +32,8 @@ class StockOrder extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $qty_check;
+
     public static function tableName()
     {
         return 'stock_order';
@@ -46,7 +48,7 @@ class StockOrder extends \yii\db\ActiveRecord
             [['product_id', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             [['movement_type'], 'required'],
             [['movement_type'], 'string'],
-            [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
             [['category_id', 'ref'], 'string', 'max' => 255],
         ];

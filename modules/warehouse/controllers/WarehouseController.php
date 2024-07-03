@@ -4,9 +4,11 @@ namespace app\modules\warehouse\controllers;
 
 use app\modules\warehouse\models\Warehouse;
 use app\modules\warehouse\models\WarehouseSearch;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
+use yii\web\Response;
+use Yii;
 
 /**
  * WarehouseController implements the CRUD actions for Warehouse model.
@@ -40,6 +42,7 @@ class WarehouseController extends Controller
     {
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['delete' => null]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -49,14 +52,14 @@ class WarehouseController extends Controller
 
     /**
      * Displays a single Warehouse model.
-     * @param int $warehouse_id Warehouse ID
+     * @param int $id Warehouse ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($warehouse_id)
+    public function actionView($id)
     {
         return $this->render('view', [
-            'model' => $this->findModel($warehouse_id),
+            'model' => $this->findModel($id),
         ]);
     }
 
@@ -67,65 +70,103 @@ class WarehouseController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Warehouse();
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Warehouse([
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+        ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'warehouse_id' => $model->warehouse_id]);
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                return [
+                    'status' => 'success',
+                    'container' => '#warehouse',
+                ];
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAJax) {
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
      * Updates an existing Warehouse model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $warehouse_id Warehouse ID
+     * @param int $id Warehouse ID
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($warehouse_id)
+    public function actionUpdate($id)
     {
-        $model = $this->findModel($warehouse_id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'warehouse_id' => $model->warehouse_id]);
+        $model = $this->findModel($id);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                return [
+                    'status' => 'success',
+                    'container' => '#warehouse',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAJax) {
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
      * Deletes an existing Warehouse model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $warehouse_id Warehouse ID
+     * @param int $id Warehouse ID
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($warehouse_id)
+    public function actionDelete($id)
     {
-        $this->findModel($warehouse_id)->delete();
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->delete = date('Y-m-d H:i:s');
+        $model->save(false);
 
-        return $this->redirect(['index']);
+        return [
+            'status' => 'success',
+            'container' => '#warehouse',
+        ];
     }
 
     /**
      * Finds the Warehouse model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $warehouse_id Warehouse ID
+     * @param int $id Warehouse ID
      * @return Warehouse the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($warehouse_id)
+    protected function findModel($id)
     {
-        if (($model = Warehouse::findOne(['warehouse_id' => $warehouse_id])) !== null) {
+        if (($model = Warehouse::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

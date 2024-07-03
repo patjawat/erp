@@ -4,9 +4,9 @@ namespace app\modules\warehouse\controllers;
 
 use app\modules\warehouse\models\StockOrder;
 use app\modules\warehouse\models\StockOrderSearch;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * StockOrderController implements the CRUD actions for StockOrder model.

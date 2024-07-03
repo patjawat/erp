@@ -1,39 +1,97 @@
 <?php
 
+/**
+ * @var yii\web\View $this
+ */
+
 use yii\helpers\Html;
-use yii\widgets\DetailView;
+use yii\helpers\Url;
 
-/** @var yii\web\View $this */
-/** @var app\modules\warehouse\models\Warehouse $model */
-
-$this->title = $model->warehouse_id;
-$this->params['breadcrumbs'][] = ['label' => 'Warehouses', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
-\yii\web\YiiAsset::register($this);
+$this->title = $model->warehouse_name;
 ?>
-<div class="warehouse-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>
-        <?= Html::a('Update', ['update', 'warehouse_id' => $model->warehouse_id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'warehouse_id' => $model->warehouse_id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'warehouse_id',
-            'warehouse_name',
-            'warehouse_code',
-            'is_main',
-        ],
-    ]) ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
 
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="card" style="height: 208px;">
+            <div class="card-body">
+                <h4 class="card-title">ปริมาณรวม</h4>
+                <p class="card-text">Text</p>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">ปริมาณรวม</h4>
+                <p class="card-text">Text</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">ปริมาณรวม</h4>
+                <p class="card-text">Text</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-6 col-sm-12">
+
+        <div class="card" style="height: 208px;">
+            <div class="card-body">
+            <div class="d-flex justify-content-between">
+                    <h4 class="card-title">ปริมาณรวม</h4>
+                    <div class="dropdown float-end">
+                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" style="">
+                            <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-6 col-sm-12">
+        <div class="card" style="height: 308px;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h4 class="card-title">ปริมาณรวม</h4>
+                    <div class="dropdown float-end">
+                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" style="">
+                            <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="card-text">Text</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-6 col-sm-12">
+        <div class="card" style="height: 308px;">
+            <div class="card-body">
+                <?= $this->render('order_show') ?>
+            </div>
+        </div>
+    </div>
 </div>

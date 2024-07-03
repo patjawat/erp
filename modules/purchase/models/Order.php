@@ -65,6 +65,7 @@ class Order extends \yii\db\ActiveRecord
                 'status',
                 'approve',
                 'vendor_id',
+                'to_stock'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
@@ -85,6 +86,7 @@ class Order extends \yii\db\ActiveRecord
             'price' => 'Price',
             'vendor_id' => 'ผู้จำหน่าย',
             'qty' => 'qty',
+            'to_stock' => 'จำนวนที่รับเข้าคลังแล้ว',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',

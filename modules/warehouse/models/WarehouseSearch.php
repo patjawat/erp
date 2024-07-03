@@ -2,9 +2,9 @@
 
 namespace app\modules\warehouse\models;
 
+use app\modules\warehouse\models\Warehouse;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\warehouse\models\Warehouse;
 
 /**
  * WarehouseSearch represents the model behind the search form of `app\modules\warehouse\models\Warehouse`.
@@ -17,7 +17,7 @@ class WarehouseSearch extends Warehouse
     public function rules()
     {
         return [
-            [['warehouse_id', 'is_main'], 'integer'],
+            [['id', 'is_main'], 'integer'],
             [['warehouse_name', 'warehouse_code'], 'safe'],
         ];
     }
@@ -58,11 +58,11 @@ class WarehouseSearch extends Warehouse
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'warehouse_id' => $this->warehouse_id,
             'is_main' => $this->is_main,
         ]);
 
-        $query->andFilterWhere(['like', 'warehouse_name', $this->warehouse_name])
+        $query
+            ->andFilterWhere(['like', 'warehouse_name', $this->warehouse_name])
             ->andFilterWhere(['like', 'warehouse_code', $this->warehouse_code]);
 
         return $dataProvider;

@@ -98,7 +98,8 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<?= $form->field($model, 'name')->textInput()->label(false) ?>
+<?= $form->field($model, 'qty_check')->textInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'data_json[product_name]')->hiddenInput(['value' => $product->title])->label(false); ?>
 <?= $form->field($model, 'product_id')->hiddenInput()->label(false); ?>

@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'data' => ['size' => 'modal-md']
         ]) ?>
         <?= Html::a('ลบทิ้ง', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
+            'class' => 'btn btn-danger delete-item',
             'data' => [
                 'confirm' => 'Are you sure you want to delete this item?',
                 'method' => 'post',

@@ -43,7 +43,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $form->field($model, 'price')->textInput()->label('ราคา'); ?>
     </div>
 </div>
-<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'pr_number')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'pq_number')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'item_id')->hiddenInput()->label(false); ?>
 

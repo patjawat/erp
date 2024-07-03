@@ -219,7 +219,8 @@ class ReceiveController extends Controller
             'category_id' => $order->id,
             'name' => 'receive_item',
             'product_id' => $product->id,
-            'movement_type' => 'IN'
+            'movement_type' => 'IN',
+            'qty_check' => $order->qty
         ]);
 
         if ($this->request->isPost) {

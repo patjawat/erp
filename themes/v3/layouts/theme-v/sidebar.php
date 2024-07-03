@@ -1,7 +1,7 @@
 <?php
-use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\helpers\Url;
+use yii\web\View;
 ?>
 <aside class="sidebar">
     <div class="scroll-content" id="metismenu" data-scrollbar="true" tabindex="-1"
@@ -11,7 +11,7 @@ use yii\helpers\Html;
             <ul id="side-menu" class="metismenu list-unstyled">
                 <li class="side-nav-title side-nav-item menu-title">Menu</li>
                 <li class="">
-                    <a href="<?=Url::to(['/'])?>" class="side-nav-link" aria-expanded="false">
+                    <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
                         <i class="bx bx-home-circle fs-4"></i>
                         <span> Dashboard</span>
                         <!-- <span class="menu-arrow"></span> -->
@@ -29,39 +29,39 @@ use yii\helpers\Html;
                     </ul> -->
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?=Url::to(['/me'])?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
                     <i class="fa-solid fa-user-tie fs-4"></i>
                         <span> My Dashboard</span>
                     </a>
                 </li>
                 <li class="side-nav-title side-nav-item menu-title">Apps</li>
                 <li>
-                    <a class="side-nav-link" href="<?=Url::to(['/hr'])?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/hr']) ?>">
                         <i class="bi bi-people-fill fs-4"></i>
                         <span> บุคลากร</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?=Url::to(['/am'])?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/am']) ?>">
                         <i class="bi bi-folder-check fs-4"></i>
                         <span> ทรัพย์สิน</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?=Url::to(['/sm'])?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/sm']) ?>">
                     <i class="bi bi-box fs-4"></i>
                         <span> พัสดุ</span>
                     </a>
                 </li>
                 
                 <li>
-                    <a class="side-nav-link" href="<?=Url::to(['/warehouse'])?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/warehouse/warehouse']) ?>">
                     <i class="fa-solid fa-cubes-stacked fs-4"></i>
                         <span> คลัง</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?=Url::to(['/pm'])?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/pm']) ?>">
                         <i class="bi bi-folder-check fs-4"></i>
                         <span> แผนงานและโครงการ</span>
                     </a>
@@ -157,8 +157,7 @@ use yii\helpers\Html;
 <?php
 $js = <<< JS
 
-JS;
-$this->registerJS($js,View::POS_END);
-
+    JS;
+$this->registerJS($js, View::POS_END);
 
 ?>

@@ -2,6 +2,15 @@
 
 namespace app\modules\warehouse\models;
 
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
+use yii\helpers\Json;
 use Yii;
 
 /**
@@ -32,6 +41,7 @@ class Warehouse extends \yii\db\ActiveRecord
             [['warehouse_name', 'warehouse_type'], 'required'],
             [['warehouse_type'], 'string'],
             [['is_main'], 'integer'],
+            [['data_json', 'created_at', 'updated_at'], 'safe'],
             [['warehouse_name', 'warehouse_code'], 'string', 'max' => 100],
         ];
     }
@@ -42,11 +52,59 @@ class Warehouse extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'warehouse_id' => 'Warehouse ID',
-            'warehouse_name' => 'Warehouse Name',
-            'warehouse_code' => 'Warehouse Code',
-            'warehouse_type' => 'Warehouse Type',
-            'is_main' => 'Is Main',
+            'id' => 'ID',
+            'warehouse_name' => 'ชื่อคลัง',
+            'warehouse_code' => 'รหัสคลัง',
+            'warehouse_type' => 'ประเภทคลัง',
+            'is_main' => 'เป็นคลังหลัก',
         ];
+    }
+
+    //  ภาพทีมผู้ดูและคลัง
+    public function avatarStack()
+    {
+        try {
+            $data = '';
+            $data .= '<div class="avatar-stack">';
+            foreach ($this->data_json['officer'] as $key => $avatar) {
+                $emp = Employees::findOne(['user_id' => $avatar]);
+                $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
+                $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+                $data .= '</a>';
+            }
+            $data .= '</div>';
+            return $data;
+        } catch (\Throwable $th) {
+        }
+    }
+
+    // ผู้ที่มีสิทรับผิดชอลคลัง
+    public function listUserstore()
+    {
+        $sql = "SELECT concat(emp.fname,' ',emp.lname) as fullname,emp.user_id FROM employees emp
+        INNER JOIN user ON user.id = emp.user_id
+        INNER JOIN auth_assignment auth ON auth.user_id = user.id
+        where auth.item_name = :item_name";
+        $querys = Yii::$app
+            ->db
+            ->createCommand($sql)
+            ->bindValue(':item_name', 'warehouse')
+            ->queryAll();
+        return ArrayHelper::map($querys, 'user_id', 'fullname');
+    }
+
+    public function ShowImg($class = null)
+    {
+        // try {
+        $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'warehouse'])->one();
+        if ($model) {
+            return FileManagerHelper::getImg($model->id);
+        } else {
+            return Yii::getAlias('@web') . '/images/store1.jpg';
+        }
+        // } catch (\Throwable $th) {
+        //     // throw $th;
+        //     return Yii::getAlias('@web') . '/images/store1.jpg';
+        // }
     }
 }

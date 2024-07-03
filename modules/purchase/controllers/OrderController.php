@@ -208,14 +208,13 @@ class OrderController extends Controller
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->save()) {
-                    return $model->save(false);
+                    return [
+                        'status' => 'success',
+                        'container' => '#purchase-container',
+                    ];
                 } else {
                     return $model->getErrors();
                 }
-                return [
-                    'status' => 'success',
-                    'container' => '#purchase-container',
-                ];
             } else {
                 return $model->getErrors();
                 return false;

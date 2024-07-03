@@ -25,6 +25,7 @@ class m240522_073153_create_order_table extends Migration
             'item_id' => $this->integer(255)->comment('รายการที่เก็บ'),
             'price' => $this->double(255)->comment('ราคา'),
             'qty' => $this->integer(255)->comment('จำนวน'),
+            'to_stock' => $this->integer(255)->comment('จำนวนที่รับเข้าคลังแล้ว'),
             'status' => $this->integer(255)->comment('สถานะ'),
             'approve' => $this->string(1)->comment('อนุมัติ'),
             'data_json' => $this->json(),
