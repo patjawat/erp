@@ -3,7 +3,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
 <div class="d-flex gap-2">
-    <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> Dashbroad', ['/warehouse'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลัง', ['/warehouse/warehouse'], ['class' => 'btn btn-light']) ?>
     <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> รับสินค้า', ['/warehouse/receive'], ['class' => 'btn btn-light']) ?>
     <button class="btn btn-light" onclick="openTour()">
         <span>แนะนำ</span>

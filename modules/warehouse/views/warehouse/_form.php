@@ -4,7 +4,7 @@ use kartik\widgets\ActiveForm;
 use softark\duallistbox\DualListbox;
 use yii\helpers\Html;
 use yii\helpers\Url;
-
+use kartik\select2\Select2
 /** @var yii\web\View $this */
 /** @var app\modules\warehouse\models\Warehouse $model */
 /** @var yii\widgets\ActiveForm $form */
@@ -26,7 +26,15 @@ use yii\helpers\Url;
                 </div>
             </div>
         
-            <?= $form->field($model, 'warehouse_type')->textInput(['maxlength' => true]) ?>
+            <?php
+                echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
+                    'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย', 'BRANCH' => 'คลังนอก'],
+                    'options' => ['placeholder' => 'Select a state ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                ]);
+            ?>
            
 
         </div>
@@ -61,7 +69,7 @@ use yii\helpers\Url;
                     'clientOptions' => [
                         'moveOnSelect' => false,
                         'selectedListLabel' => 'เจ้าหน้าที่รับผิดชอบคลัง',
-                        'nonSelectedListLabel' => 'ผู้มีสิทเข้าใช้คลัง',
+                        'nonSelectedListLabel' => '(กำหนดให้สิทธ์ warehouse ก่อนถึงจะปรากฏ)',
                     ],
                 ]);
             ?>
