@@ -14,11 +14,13 @@ class StockOrderSearch extends StockOrder
     /**
      * {@inheritdoc}
      */
+    public $qty_check;
+
     public function rules()
     {
         return [
             [['id', 'product_id', 'from_warehouse_id', 'to_warehouse_id', 'qty'], 'integer'],
-            [['name', 'po_number', 'rc_number', 'movement_type', 'movement_date', 'lot_number', 'expiry_date'], 'safe'],
+            [['name', 'po_number', 'rc_number', 'movement_type', 'movement_date', 'lot_number', 'expiry_date', 'qty_check'], 'safe'],
         ];
     }
 

@@ -2,9 +2,9 @@
 
 namespace app\modules\warehouse\models;
 
+use app\modules\warehouse\models\Stock;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\warehouse\models\Stock;
 
 /**
  * StockSearch represents the model behind the search form of `app\modules\warehouse\models\Stock`.
@@ -17,8 +17,8 @@ class StockSearch extends Stock
     public function rules()
     {
         return [
-            [['stock_id', 'product_id', 'warehouse_id', 'quantity'], 'integer'],
-            [['lot_number', 'expiry_date'], 'safe'],
+            [['stock_id', 'product_id', 'warehouse_id', 'qty'], 'integer'],
+            [['lot_number', 'expiry_date', 'po_number'], 'safe'],
         ];
     }
 
@@ -61,7 +61,7 @@ class StockSearch extends Stock
             'stock_id' => $this->stock_id,
             'product_id' => $this->product_id,
             'warehouse_id' => $this->warehouse_id,
-            'quantity' => $this->quantity,
+            'qty' => $this->qty,
             'expiry_date' => $this->expiry_date,
         ]);
 

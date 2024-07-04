@@ -131,6 +131,18 @@ class PoOrderController extends Controller
                 // return $model->data_json;
                 $model->status = 4;
                 $model->save(false);
+
+                //  update pr po pq on items
+                $sql = "UPDATE `order` SET  pr_number = :pr_number,pq_number = :pq_number,po_number = :po_number WHERE name = 'order_item' AND category_id = :category_id";
+                $command = \Yii::$app
+                    ->db
+                    ->createCommand($sql)
+                    ->bindValues([':pr_number' => $model->pr_number])
+                    ->bindValues([':pq_number' => $model->pq_number])
+                    ->bindValues([':po_number' => $model->po_number])
+                    ->bindValues([':category_id' => $model->id])
+                    ->execute();
+
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
                 // return [
                 //     'status' => 'success',

@@ -13,13 +13,15 @@ use yii\widgets\Pjax;
                     <tr>
                         <th>รูป</th>
                         <th style="width:500px">รายการ</th>
+                        <th class="text-center" style="width:80px">จำนวน</th>
                         <th class="text-center" style="width:80px">หน่วย</th>
                         <th class="text-center" style="width:80px">ดำเนินการ</th>
                         
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($listItems as $item): ?>
+                    <?php foreach ($order->ListOrderItems() as $item): ?>
+                    <?php // if ($item->to_stock != $item->qty): ?>
                     <tr class="">
                         <td class="align-middle">
                             <?php
@@ -39,7 +41,10 @@ use yii\widgets\Pjax;
                             // throw $th;
                             ?></td>
                         <td class="align-middle text-center">
-                            
+                        <td>
+                            <?= $item->qty; ?>
+
+                        </td>
                         <?php
                         try {
                             echo $item->product->data_json['unit'];
@@ -56,6 +61,7 @@ use yii\widgets\Pjax;
 
                         </td>
                     </tr>
+                    <?php // endif; ?>
                     <?php endforeach; ?>
 
                 </tbody>

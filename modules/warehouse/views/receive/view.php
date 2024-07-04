@@ -96,6 +96,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $this->render('list_committee', ['model' => $model]) ?>
     </div>
     <div class="col-12">
+    <?php Pjax::begin(['id' => 'receive_item']); ?>
     <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -103,7 +104,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div>
                             <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
                                 เลือกรายการ</button> -->
-                                <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/warehouse/receive/list-item-form-po', 'po_number' => $model->category_id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/warehouse/receive/list-item-form-po', 'po_number' => $model->po_number, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </div>
                         
                     </div>
@@ -132,12 +133,33 @@ $this->params['breadcrumbs'][] = $this->title;
                                     }
                                     ?>
                                 </td>
-                                <td>R1C2</td>
+                                <td>
+                                <?php
+                                try {
+                                    echo $item->data_json['product_type_name'];
+                                } catch (\Throwable $th) {
+                                    echo '-';
+                                }
+                                ?>
+                                </td>
+                                <td>
+                                <?php
+                                try {
+                                    echo $item->data_json['unit'];
+                                } catch (\Throwable $th) {
+                                    echo '-';
+                                }
+                                ?>
+                                </td>
+                                <td><?= $item->qty ?></td>
+                                <td><?= $item->lot_number ?></td>
                                 <td>R1C3</td>
-                                <td>R1C3</td>
-                                <td>R1C3</td>
-                                <td>R1C3</td>
-                                <td>R1C3</td>
+                                <td>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/warehouse/receive/update-item', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                        <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/warehouse/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
+                            'class' => 'btn btn-sm btn-danger delete-item',
+                        ]) ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
@@ -147,6 +169,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
+    <?php Pjax::end(); ?>
 </div>
 
 

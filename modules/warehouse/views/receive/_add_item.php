@@ -30,6 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
     font-size: xxx-large;
 } */
 </style>
+<?= $product->id ?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -101,7 +102,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $form->field($model, 'qty_check')->textInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'po_number')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'data_json[product_name]')->hiddenInput(['value' => $product->title])->label(false); ?>
+<?= $form->field($model, 'data_json[unit]')->hiddenInput(['value' => isset($product->data_json['unut']) ? $product->data_json['unut'] : null])->label(false); ?>
+<?= $form->field($model, 'data_json[product_type_name]')->hiddenInput(['value' => $product->productType->title])->label(false); ?>
 <?= $form->field($model, 'product_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'movement_type')->hiddenInput()->label(false); ?>
 

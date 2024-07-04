@@ -23,8 +23,7 @@
                 role="tab"><span class="badge rounded-pill bg-primary text-white">1</span> อนุมัติ</a>
         </li>
     </ul>
-    <a class="btn btn-light mb-4 open-modal"
-        href="/purchase/order/document?id=1&amp;" data-size="modal-md"><i class="fa-solid fa-print"></i> พิมพ์เอกสาร</a>
+    
 </div>
 
 

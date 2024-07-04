@@ -78,6 +78,7 @@ $listOpOrder = ArrayHelper::map(Categorise::find()->all(), 'id', 'title');
     ]); ?>
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
 
     <div class="row">

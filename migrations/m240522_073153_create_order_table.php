@@ -22,7 +22,7 @@ class m240522_073153_create_order_table extends Migration
             'pr_number' => $this->string(255)->comment('เลขที่ขอซื้อ'),
             'pq_number' => $this->string(255)->comment('เลขทะเบียนคุม'),
             'po_number' => $this->string(255)->comment('ที่ที่สั่งซื้อ'),
-            'item_id' => $this->integer(255)->comment('รายการที่เก็บ'),
+            'product_id' => $this->integer(255)->comment('รายการที่เก็บ'),
             'price' => $this->double(255)->comment('ราคา'),
             'qty' => $this->integer(255)->comment('จำนวน'),
             'to_stock' => $this->integer(255)->comment('จำนวนที่รับเข้าคลังแล้ว'),

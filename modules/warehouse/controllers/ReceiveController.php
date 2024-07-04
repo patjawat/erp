@@ -83,11 +83,16 @@ class ReceiveController extends Controller
     {
         $model = new StockOrder([
             'name' => 'receive',
-            'category_id' => $this->request->get('category_id')
+            'po_number' => $this->request->get('category_id')
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save(false)) {
+            if ($model->load($this->request->post())) {
+                $thaiYear = substr((date('Y') + 543), 2);
+                if ($model->po_number == '') {
+                    $model->rc_number = \mdm\autonumber\AutoNumber::generate('RC-' . $thaiYear . '????');
+                }
+                $model->save(false);
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
@@ -159,11 +164,12 @@ class ReceiveController extends Controller
 
         $po_number = $this->request->get('po_number');
         // $po_number = 'PO-670005';
-        $listItems = Order::find()->where(['name' => 'order_item', 'po_number' => $po_number])->all();
+        $order = Order::find()->where(['name' => 'order', 'po_number' => $po_number])->one();
+
         return [
             'title' => $this->request->get('tilte'),
             'content' => $this->renderAjax('list_item_form_po', [
-                'listItems' => $listItems,
+                'order' => $order,
             ])
         ];
     }
@@ -211,23 +217,26 @@ class ReceiveController extends Controller
         $id = $this->request->get('id');
         // ตรวจสอบ order จาก ID
         $order = Order::findOne($id);
-        $po_number = $this->request->get('po_number');
-        // ค้นหารายการสินค่าจาก item_id ที่เก็บไว้ใน Order po_number
-        $product = Product::findOne($order->item_id);
+        $stockOrder = StockOrder::find()->where(['name' => 'receive', 'po_number' => $order->po_number])->One();
+        // ค้นหารายการสินค่าจาก product_id ที่เก็บไว้ใน Order po_number
+        $product = Product::findOne($order->product_id);
 
         $model = new StockOrder([
             'category_id' => $order->id,
+            'po_number' => $order->po_number,
+            'rc_number' => $stockOrder->rc_number,
             'name' => 'receive_item',
             'product_id' => $product->id,
             'movement_type' => 'IN',
-            'qty_check' => $order->qty
         ]);
+        $model->qty_check = $model->QtyCheck();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
 
                 if ($model->save()) {
+                    $order->save(false);
                     // return $model->save();
                     return [
                         'status' => 'success',
@@ -262,11 +271,11 @@ class ReceiveController extends Controller
 
     public function actionUpdateItem($id)
     {
-        $model = StockOrder::findOne([
-            'id' => $id,
-            'name' => 'stock_item'
-        ]);
-        $product = Product::findOne($model->item_id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = StockOrder::findOne(['id' => $id]);
+        $model->qty_check = $model->QtyCheck();
+
+        $product = Product::findOne($model->product_id);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -303,14 +312,16 @@ class ReceiveController extends Controller
     public function actionSaveToStock()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+
         $iems = StockOrder::find()->where(['name' => 'receive_item'])->all();
         $data = [];
         foreach ($iems as $key => $item) {
             $stock = new Stock();
             $stock->product_id = $item->product_id;
             $stock->warehouse_id = 1;
-            $stock->quantity = $item->qty;
-            // $stock->save();
+            $stock->po_number = $item->po_number;
+            $stock->lot_number = $item->lot_number;
+            $stock->qty = $item->qty;
             $data[] = [
                 'data' => $item->product_id,
                 'status' => $stock->save(false)
@@ -369,6 +380,7 @@ class ReceiveController extends Controller
                 $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
                 // $model->data_json['position_name'] == '' ? $model->addError('data_json[position_name]', $requiredName) : null;
                 // $model->data_json['position_number'] == '' ? $model->addError('data_json[position_number]', $requiredName) : null;
+                $model->qty > $model->qty_check ? $model->addError('qty', 'เกินจำนวนที่สั่งซื้อ') : null;
             }
 
             foreach ($model->getErrors() as $attribute => $errors) {

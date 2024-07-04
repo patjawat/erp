@@ -28,7 +28,7 @@ use Yii;
  * @property string|null $name ชื่อตารางเก็บข้อมูล
  * @property string|null $category_id หมวดหมูหลักที่เก็บ
  * @property string|null $code รหัส
- * @property int|null $item_id รายการที่เก็บ
+ * @property int|null $product_id รายการที่เก็บ
  * @property float|null $price ราคา
  * @property int|null $qty จำนวน
  * @property string|null $data_json
@@ -53,7 +53,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['item_id', 'qty', 'created_by', 'updated_by'], 'integer'],
+            [['product_id', 'qty', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
             [[
                 'data_json',
@@ -82,7 +82,7 @@ class Order extends \yii\db\ActiveRecord
             'name' => 'Name',
             'category_id' => 'Category ID',
             'code' => 'Code',
-            'item_id' => 'Item ID',
+            'product_id' => 'Item ID',
             'price' => 'Price',
             'vendor_id' => 'ผู้จำหน่าย',
             'qty' => 'qty',
@@ -121,7 +121,7 @@ class Order extends \yii\db\ActiveRecord
 
     public function getProduct()
     {
-        return $this->hasOne(Product::class, ['id' => 'item_id'])->andOnCondition(['name' => 'product_item']);
+        return $this->hasOne(Product::class, ['id' => 'product_id'])->andOnCondition(['name' => 'product_item']);
     }
 
     //  uploadFile
@@ -250,7 +250,9 @@ class Order extends \yii\db\ActiveRecord
 
     public function ListOrderItems()
     {
-        return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->all();
+        return self::find()
+            ->where(['name' => 'order_item', 'category_id' => $this->id])
+            ->all();
     }
 
     // แสดงชื่อคณะกรรมการ

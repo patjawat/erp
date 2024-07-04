@@ -10,7 +10,7 @@ use Yii;
  * @property int $id รหัสสต็อก
  * @property int $product_id รหัสสินค้า
  * @property int $warehouse_id รหัสคลังสินค้า
- * @property int $quantity จำนวนสินค้าในสต็อก
+ * @property int $qty จำนวนสินค้าในสต็อก
  * @property string|null $lot_number หมายเลข Lot
  * @property string|null $expiry_date วันหมดอายุ
  * @property string|null $ref
@@ -37,8 +37,8 @@ class Stock extends \yii\db\ActiveRecord
     {
         return [
             [['product_id', 'warehouse_id'], 'required'],
-            [['product_id', 'warehouse_id', 'quantity', 'created_by', 'updated_by'], 'integer'],
-            [['expiry_date', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['product_id', 'warehouse_id', 'qty', 'created_by', 'updated_by'], 'integer'],
+            [['expiry_date', 'data_json', 'created_at', 'updated_at', 'po_number'], 'safe'],
             [['lot_number'], 'string', 'max' => 50],
             [['ref'], 'string', 'max' => 255],
         ];
@@ -53,7 +53,7 @@ class Stock extends \yii\db\ActiveRecord
             'id' => 'ID',
             'product_id' => 'Product ID',
             'warehouse_id' => 'Warehouse ID',
-            'quantity' => 'Quantity',
+            'qty' => 'qty',
             'lot_number' => 'Lot Number',
             'expiry_date' => 'Expiry Date',
             'ref' => 'Ref',

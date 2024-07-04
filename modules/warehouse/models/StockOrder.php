@@ -2,6 +2,7 @@
 
 namespace app\modules\warehouse\models;
 
+use app\modules\purchase\models\Order;
 use Yii;
 
 /**
@@ -80,5 +81,29 @@ class StockOrder extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
         ];
+    }
+
+    public function beforeFind()
+    {
+        if (!parent::beforeFind()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+    }
+
+    public function QtyCheck()
+    {
+        // return $this->product_id;
+        $stockOrder = self::find()->where(['po_number' => $this->po_number, 'product_id' => $this->product_id])->sum('qty');
+        $Order = Order::findOne(['name' => 'order_item', 'product_id' => $this->product_id, 'po_number' => $this->po_number]);
+        $summeryQty = ($Order->qty - $stockOrder);
+        
+        return $stockOrder ? $summeryQty : $Order->qty;
     }
 }
