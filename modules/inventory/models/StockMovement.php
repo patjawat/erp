@@ -7,6 +7,7 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
 use DateTime;
 use Yii;
+use app\modules\sm\models\Product;
 
 /**
  * This is the model class for table "stock_order".
@@ -37,6 +38,7 @@ class StockMovement extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $qty_check;
+    public $sum_qty;
 
     public static function tableName()
     {
@@ -52,7 +54,7 @@ class StockMovement extends \yii\db\ActiveRecord
             [['product_id', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             [['movement_type'], 'required'],
             [['movement_type'], 'string'],
-            [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type'], 'safe'],
+            [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
             [['category_id', 'ref'], 'string', 'max' => 255],
         ];
@@ -154,6 +156,15 @@ class StockMovement extends \yii\db\ActiveRecord
         return Order::findOne(['po_number' => $this->po_number,'product_id' => $this->product_id]);
     }
 
+    public function getProduct(){
+        $model = Product::findOne($this->product_id);
+        if($model){
+            return $model;
+        }else{
+            return $model;
+        }
+    }
+
 //ตรวจสอบว่าวัสดจกใบ PO รับเข้าหมดหือยัง
     public function OrderSuccess(){
         $sql = "SELECT 
@@ -163,7 +174,7 @@ class StockMovement extends \yii\db\ActiveRecord
     $query =   Yii::$app->db->createCommand($sql)
     ->bindValue(':po_number', $this->po_number)
     ->queryOne();
-    $status = ($query['x1'] == $query['x2'] ? true : false);
+    $status = ($query['po'] == $query['stock'] ? true : false);
 
         return [
             'status' =>  $status,

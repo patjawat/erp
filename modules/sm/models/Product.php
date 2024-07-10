@@ -109,14 +109,25 @@ class Product extends \yii\db\ActiveRecord
 
     public function Avatar(){
         return '<div class="d-flex">
-        '.Html::a(Html::img($this->ShowImg(), ['class' => 'avatar']), ['/sm/product/view', 'id' => $this->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]).'
+        '.Html::img($this->ShowImg(),['class' => 'avatar']).'
                                 <div class="avatar-detail">
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
-                                        '.Html::a($this->title,['/sm/product/view', 'id' => $this->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]).'
+                                        '.$this->title.'
                                     </h6>
                                     <p class="text-primary mb-0 fs-13">'.$this->productType->title.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
                                 </div>
                             </div>';
+    }
+                            public function AvatarXl(){
+                                return '<div class="d-flex">
+                                '.Html::img($this->ShowImg(),['class' => 'avatar']).'
+                                                        <div class="avatar-detail">
+                                                            <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                '.$this->title.'
+                                                            </h5>
+                                                            <p class="text-primary mb-0 fs-6">'.$this->productType->title.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
+                                                        </div>
+                                                    </div>';
     }
     public function ListProductType()
     {

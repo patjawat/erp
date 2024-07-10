@@ -138,7 +138,7 @@ class ReceiveController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $this->request->get('tilte'),
+                'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ])
@@ -178,7 +178,7 @@ class ReceiveController extends Controller
         $order = Order::find()->where(['name' => 'order', 'po_number' => $po_number])->one();
 
         return [
-            'title' => $this->request->get('tilte'),
+            'title' => $this->request->get('title'),
             'content' => $this->renderAjax('list_po_order', [
                 'model' => $model,
             ])
@@ -349,12 +349,12 @@ class ReceiveController extends Controller
             $order->save(false);
         }
 
-        if ($updateStock) {
+        // if ($updateStock) {
             return [
                 'status' => 'success',
                 'container' => '#inventory',
             ];
-        }
+        // }
 
     }
 

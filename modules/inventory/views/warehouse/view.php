@@ -7,6 +7,8 @@
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\inventory\models\StockMovement;
+use app\models\Categorise;
 
 $this->title = $model->warehouse_name;
 ?>
@@ -69,7 +71,15 @@ $this->title = $model->warehouse_name;
         
         <div class="card">
           <div class="card-body">
-          <h6 class="card-title">วัสดุต่ำกว่ากำหนด</h6>
+          <h6 class="card-title">วัสดุ</h6>
+          <?php
+          $models = StockMovement::find()
+          ->select(['p.id','stock_movements.product_id', 'sum(stock_movements.qty) as sum_qty'])
+          ->join('INNER JOIN', 'categorise p', 'p.id = stock_movements.product_id')
+          ->groupBy('p.id')
+          ->all();
+          
+          ?>
           <div
             class="table-responsive"
           >
@@ -78,22 +88,19 @@ $this->title = $model->warehouse_name;
             >
               <thead>
                 <tr>
-                  <th scope="col">Column 1</th>
-                  <th scope="col">Column 2</th>
-                  <th scope="col">Column 3</th>
+                  <th scope="col">รายการ</th>
+                  <th scope="col">คงเหลือ</th>
+                  <th scope="col">ดำเนินการ</th>
                 </tr>
               </thead>
               <tbody>
+                <?php foreach($models as $model):?>
                 <tr class="">
-                  <td scope="row">R1C1</td>
-                  <td>R1C2</td>
+                  <td scope="row"><?=$model->getProduct()->Avatar()?></td>
+                  <td><?=$model['sum_qty']?></td>
                   <td>R1C3</td>
                 </tr>
-                <tr class="">
-                  <td scope="row">Item</td>
-                  <td>Item</td>
-                  <td>Item</td>
-                </tr>
+                <?php endforeach;?>
               </tbody>
             </table>
           </div>

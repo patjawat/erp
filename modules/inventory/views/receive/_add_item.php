@@ -4,6 +4,7 @@ use app\modules\am\models\Asset;
 use kartik\datecontrol\DateControl;
 use kartik\form\ActiveField;
 use kartik\form\ActiveForm;
+// use yii\bootstrap5\ActiveForm;
 use kartik\select2\Select2;
 use kartik\widgets\DatePicker;
 use kartik\widgets\DateTimePicker;
@@ -22,38 +23,25 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <style>
-    .modal-body {
+.modal-body {
     /* padding: 0 !important */
 }
-/* #order-qty{
-    height: 50px;
-    font-size: xxx-large;
-} */
+
+#stockmovement-qty {
+    font-size: 45px;
+    font-weight: 500;
+}
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/inventory/receive/validator']
 ]); ?>
-<!-- <h5><i class="fa-solid fa-circle-info text-primary"></i> <?= $product->title ?></h5> -->
-<div class="row">
-    <div class="col-5">
-        <?= Html::img($product->ShowImg(), ['class' => 'rounded border border-1', 'style' => 'width:100%']) ?>
-</div>
-<div class="col-7">
-<div class="d-flex justify-content-between">
-    <h4><i class="fa-solid fa-tag"></i> <?= $model->unit_price ?></h4>
-    <h4><?= isset($product->data_json['unit']) ? $product->data_json['unit'] : '-' ?></h4>
-</div>
 
-</div>
-</div>
-<div class="mt-3">
-</div>
-
+<?=$product->AvatarXl()?>
+<hr>
 <div class="row">
-    <div class="col-6">
-        <?php
+    <div class="col-6"> <?php
             echo $form
                 ->field($model, 'data_json[mfg_date]')
                 ->widget(DateControl::classname(), [
@@ -68,6 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันผลิต');
         ?>
+
         <?php
             echo $form
                 ->field($model, 'data_json[exp_date]')
@@ -83,20 +72,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันหมดอายุ');
         ?>
+     
     </div>
     <div class="col-6">
-        <?= $form->field($model, 'lot_number')->textInput()->label('ล็อตผลิต'); ?>
-        <div class="d-flex justify-content-between gap-2">
-            <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
-            <div class="mb-3 highlight-addon field-order-qty has-success">
-            <label class="form-label has-star" for="order-qty">หน่วย</label>
-            <input type="text" class="form-control is-valid" value="ชิ้น" disabled=true>
-            <div class="invalid-feedback"></div>
-        </div>
-
-        </div>
+    <div class="mt-4 mb-4">
+        <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
     </div>
+    <div style="margin-top: 28px;">
+        <?= $form->field($model, 'lot_number')->textInput()->label('ล็อตผลิต'); ?>
+
+    </div>
+    </div>
+
 </div>
+
+
+
+
+
+<?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+
 
 <?= $form->field($model, 'qty_check')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
@@ -115,8 +110,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
 </div>
 
-</div>
-</div>
 <?php ActiveForm::end(); ?>
 
 <?php

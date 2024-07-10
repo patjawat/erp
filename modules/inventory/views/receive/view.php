@@ -103,15 +103,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
                     <div>
                         <?php if ($model->receive_type == 'normal'): ?>
-                            <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-all-product', 'po_number' => $model->po_number, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <?php else: ?>
-                                <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-po-order', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                <?php endif ?>
-                            </div>
-                            
-                        </div>
-                        <?php else:?>
-                            <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
+                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-all-product', 'po_number' => $model->po_number, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?php else: ?>
+                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-po-order', 'id' => $model->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการใบสั่งซื้อเลขที่ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?php endif ?>
+                    </div>
+
+                </div>
+                <?php else:?>
+                <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
                 <?php endif ?>
                 <div class="table-responsive">
                     <table class="table table-primary">
@@ -126,55 +126,55 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th scope="col">วันที่ผลิต</th>
                                 <th scope="col">วันที่หมดอายุ</th>
                                 <?php if($model->order_status != 'success') : ?>
-                                    <th scope="col">ดำเนินการ</th>
+                                <th scope="col">ดำเนินการ</th>
 
-                                    <?php endif;?>
+                                <?php endif;?>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($model->ListItemFormRcNumber() as $item): ?>
-                                <tr class="">
-                                    <td scope="row">
-                                        <?php
+                            <tr class="">
+                                <td scope="row">
+                                    <?php
                                         try {
                                             echo $item->data_json['product_name'];
                                         } catch (\Throwable $th) {
                                             echo '-';
                                         }
                                         ?>
-                                    </td>
-                                    <td>
-                                        <?php
+                                </td>
+                                <td>
+                                    <?php
                                         try {
                                             echo $item->data_json['product_type_name'];
                                         } catch (\Throwable $th) {
                                             echo '-';
                                         }
                                         ?>
-                                    </td>
-                                    <td>
-                                        <?php
+                                </td>
+                                <td>
+                                    <?php
                                         try {
                                             echo $item->data_json['unit'];
                                         } catch (\Throwable $th) {
                                             echo '-';
                                         }
                                         ?>
-                                    </td>
-                                    <td><?= $item->getPoQty()->qty ?></td>
-                                    <td><?= $item->qty ?></td>
-                                    <td><?= $item->lot_number ?></td>
-                                    <td><?= $item->lot_number ?></td>
-                                    <td>R1C3</td>
-                                    <?php if($model->order_status != 'success') : ?>
-                                    <td>
-                                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/receive/update-item', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                        <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
+                                </td>
+                                <td><?= $item->getPoQty()->qty ?></td>
+                                <td><?= $item->qty ?></td>
+                                <td><?= $item->lot_number ?></td>
+                                <td><?= $item->lot_number ?></td>
+                                <td>R1C3</td>
+                                <?php if($model->order_status != 'success') : ?>
+                                <td>
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/receive/update-item', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
                                             'class' => 'btn btn-sm btn-danger delete-item',
                                         ]) ?>
-                                    </td>
-                                    <?php endif;?>
-                                </tr>
+                                </td>
+                                <?php endif;?>
+                            </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -185,9 +185,9 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <!-- ถ้าหามีรายการรับเข้าให้แสดงปุ่ม บันทึกรับเข้าคลัง -->
     <?php if (count($model->ListItemFormRcNumber()) > 0 AND $model->order_status != 'success'): ?>
-        <div class="form-group mt-3 d-flex justify-content-center">
-            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึกรับเข้าคลัง', ['class' => 'btn btn-primary', 'id' => 'toStock']) ?>
-        </div>
+    <div class="form-group mt-3 d-flex justify-content-center">
+        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึกรับเข้าคลัง', ['class' => 'btn btn-primary', 'id' => 'toStock']) ?>
+    </div>
     <?php endif ?>
 </div>
 

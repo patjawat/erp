@@ -49,7 +49,7 @@ $receive_type_name = $model->receive_type == 'normal' ? 'รับเข้า�
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'receive_type')->textInput()->label(false) ?>
+    <?= $form->field($model, 'receive_type')->hiddenInput()->label(false) ?>
 
     <div class="row">
 
@@ -127,42 +127,42 @@ $receive_type_name = $model->receive_type == 'normal' ? 'รับเข้า�
         ?>
     
             <?php
-                // echo $form
-                //     ->field($model, 'data_json[to_stock_date]')
-                //     ->widget(DateControl::classname(), [
-                //         'type' => DateControl::FORMAT_DATE,
-                //         'language' => 'th',
-                //         'ajaxConversion' => false,
-                //         'options' => [
-                //             'pluginOptions' => [
-                //                 'autoclose' => true,
-                //                 'format' => 'dd/mm/yyyy',
-                //                 'language' => 'th',
-                //                 'todayHighlight' => true,
-                //                 'calendarWeeks' => true,
-                //                 'todayBtn' => 'linked',
-                //                 'daysOfWeekHighlighted' => [0, 6],
-                //                 'orientation' => 'bottom left',
-                //                 'startDate' => '01/01/2564',  // ใส่วันที่เริ่มต้นที่เป็น พ.ศ.
-                //                 'endDate' => '31/12/2564',  // ใส่วันที่สิ้นสุดที่เป็น พ.ศ.
-                //                 'yearRange' => '2450:2564',  // ใส่ช่วงปีที่เป็น พ.ศ.
-                //             ],
-                //             'pluginEvents' => [
-                //                 'changeDate' => "function(e) {
-                //     var year = e.date.getFullYear();
-                //     e.date.setFullYear(year - 543);
-                //     \$('#yourmodel-your_date_field').val(e.date.toISOString().slice(0, 10));
-                // }",
-                //             ],
-                //         ],
-                //         // 'widgetOptions' => [
-                //         //     'options' => ['placeholder' => 'ระบุวันรับเข้าคลัง ...'],
-                //         //     'pluginOptions' => [
-                //         //         'autoclose' => true
-                //         //     ]
-                //         // ]
-                //     ])
-                //     ->label('วันรับเข้าคลัง');
+                echo $form
+                    ->field($model, 'data_json[to_stock_date]')
+                    ->widget(DateControl::classname(), [
+                        'type' => DateControl::FORMAT_DATE,
+                        'language' => 'th',
+                        'ajaxConversion' => false,
+                        'options' => [
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'dd/mm/yyyy',
+                                'language' => 'th',
+                                'todayHighlight' => true,
+                                'calendarWeeks' => true,
+                                'todayBtn' => 'linked',
+                                'daysOfWeekHighlighted' => [0, 6],
+                                'orientation' => 'bottom left',
+                                'startDate' => '01/01/2564',  // ใส่วันที่เริ่มต้นที่เป็น พ.ศ.
+                                'endDate' => '31/12/2564',  // ใส่วันที่สิ้นสุดที่เป็น พ.ศ.
+                                'yearRange' => '2450:2564',  // ใส่ช่วงปีที่เป็น พ.ศ.
+                            ],
+                            'pluginEvents' => [
+                                'changeDate' => "function(e) {
+                    var year = e.date.getFullYear();
+                    e.date.setFullYear(year - 543);
+                    \$('#yourmodel-your_date_field').val(e.date.toISOString().slice(0, 10));
+                }",
+                            ],
+                        ],
+                        // 'widgetOptions' => [
+                        //     'options' => ['placeholder' => 'ระบุวันรับเข้าคลัง ...'],
+                        //     'pluginOptions' => [
+                        //         'autoclose' => true
+                        //     ]
+                        // ]
+                    ])
+                    ->label('วันรับเข้าคลัง');
             ?>
             <?php
                 echo $form
