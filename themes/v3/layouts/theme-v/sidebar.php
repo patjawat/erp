@@ -55,7 +55,7 @@ use yii\web\View;
                 </li>
                 
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/warehouse/warehouse']) ?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/inventory/warehouse']) ?>">
                     <i class="fa-solid fa-cubes-stacked fs-4"></i>
                         <span> คลัง</span>
                     </a>

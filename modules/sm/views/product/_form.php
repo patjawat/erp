@@ -5,6 +5,7 @@ use kartik\widgets\ActiveForm;
 use unclead\multipleinput\MultipleInput;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Url;
 // use unclead\widgets\MultipleInput;
 use unclead\multipleinput\MultipleInputColumn;
 
@@ -106,12 +107,13 @@ use unclead\multipleinput\MultipleInputColumn;
 </div>
 
 <div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'submit']) ?>
 </div>
 <?php ActiveForm::end(); ?>
 
 
 <?php
+ $urlUpload = Url::to('/filemanager/uploads/single');
 $ref = $model->ref;
 $js = <<< JS
 
@@ -131,30 +133,57 @@ $js = <<< JS
                         }
 
                     });
+                    $('#my_file').change(function (e) { 
+                    e.preventDefault();
+                    formdata = new FormData();
+                    if($(this).prop('files').length > 0)
+                    {
+                        file =$(this).prop('files')[0];
+                        formdata.append("product_item", file);
+                        formdata.append("id", 1);
+                        formdata.append("ref", '$ref');
+                        formdata.append("name", 'product_item');
 
-                    \$("button[id='summit']").on('click', function() {
-                        formdata = new FormData();
-                        if(\$("input[id='my_file']").prop('files').length > 0)
-                        {
-                    var file = \$("input[id='my_file']").prop('files')[0];
-                            formdata.append("product_item", file);
-                            formdata.append("id", 1);
-                            formdata.append("ref", '$ref');
-                            formdata.append("name", 'product_item');
-
-                            console.log(file);
-                            \$.ajax({
-                            url: '/filemanager/uploads/single',
+                        console.log(file);
+                        $.ajax({
+                            url: '$urlUpload',
                             type: "POST",
                             data: formdata,
                             processData: false,
                             contentType: false,
                             success: function (res) {
-                                            console.log(res)
-                                        }
-                            });
-                                }
-                            })
+                                console.log(res);
+                                $('.avatar-profile').attr('src', res.img)
+                                // success('แก้ไขภาพ')
+                            }
+                        });
+                    }
+                });
+                
+
+                    // \$("button[id='submit']").on('click', function() {
+                    //     formdata = new FormData();
+                    //     if(\$("input[id='my_file']").prop('files').length > 0)
+                    //     {
+                    // var file = \$("input[id='my_file']").prop('files')[0];
+                    //         formdata.append("product_item", file);
+                    //         formdata.append("id", 1);
+                    //         formdata.append("ref", '$ref');
+                    //         formdata.append("name", 'product_item');
+
+                    //         console.log(file);
+                    //         \$.ajax({
+                    //         url: '/filemanager/uploads/single',
+                    //         type: "POST",
+                    //         data: formdata,
+                    //         processData: false,
+                    //         contentType: false,
+                    //         success: function (res) {
+                    //                         console.log(res)
+                    //                     }
+                    //         });
+                    //             }
+                    //         })
 
                     \$('#form-product').on('beforeSubmit', function (e) {
                         var form = \$(this);

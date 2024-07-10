@@ -24,7 +24,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 
 <div class="row justify-content-center">
     <div class="col-lg-2 col-md-4 col-sm-12">
-        <?= $this->render('../order/timeline', ['model' => $model]) ?>
+        <?= $this->render('../order/list_status', ['model' => $model]) ?>
     </div>
 
     <div class="col-lg-9 col-md-9 col-sm-12">

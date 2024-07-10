@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $form->field($model, 'pq_number')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'item_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'product_id')->hiddenInput()->label(false); ?>
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

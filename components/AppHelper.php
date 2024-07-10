@@ -11,6 +11,7 @@ use yii\base\Component;
 use yii\helpers\ArrayHelper;
 use yii\helpers\BaseFileHelper;
 use yii\helpers\Html;
+use DateTime;
 use Yii;
 
 // รวม function ตที่ใช้งานบ่อยๆ
@@ -48,6 +49,29 @@ class AppHelper extends Component
         return;
     }
 
+    // แปลง ค.ศ. เป็น พ.ศ.
+
+    public static function convertToThaiBuddhist($date)
+    {
+        if ($date !== null) {
+            $dateTime = new DateTime($date);
+            $year = $dateTime->format('Y') + 543;
+            return $dateTime->format("d/m/{$year}");
+        }
+        return null;
+    }
+
+    // แปลง พ.ศ. เป็น ค.ศ.
+    public static function convertToGregorian($date)
+    {
+        if ($date !== null) {
+            list($day, $month, $year) = explode('/', $date);
+            $year -= 543;
+            return "{$year}-{$month}-{$day}";
+        }
+        return null;
+    }
+
     // แปลงตัวเลขเป็นตัวหนังสือ
     public static function convertNumberToWords($number)
     {
@@ -59,7 +83,7 @@ class AppHelper extends Component
         }
 
         if ($number < 0) {
-            return 'ลบ ' . convertNumberToWords(abs($number));
+            return 'ลบ ' . self::convertNumberToWords(abs($number));
         }
 
         $string = '';
@@ -384,26 +408,6 @@ class AppHelper extends Component
         }
     }
 
-    public static function inithospcode($hospcode = null)
-    {
-        if (empty($hospcode)) {
-            return '';
-        } else {
-            $item = Hospcode::findOne($hospcode);
-            return '(<code>' . $item->hospcode . '</code>) ' . '&nbsp;<span class="text-primary">' . $item->name . ' <code>' . $item->province_name . '</code>';
-        }
-    }
-
-    public static function initCareteam($user_id = null)
-    {
-        if (empty($user_id)) {
-            return '';
-        } else {
-            $item = Profile::findOne($user_id);
-            return $item->fname . ' ' . $item->lname . ' ' . AppHelper::inithospcode($item->hospcode);
-        }
-    }
-
     // หาค่า BMI
 
     public static function getBMI($weight, $height)
@@ -595,7 +599,7 @@ class AppHelper extends Component
       where m1<= DATE_FORMAT('2020-01-01' + INTERVAL 3 YEAR,'%Y-%m-%d')
       order by m1";
         $querys = Yii::$app->db->createCommand($sql2)->queryAll();
-        return $query;
+        return $querys;
     }
 
     public static function GetDataCsv($data)

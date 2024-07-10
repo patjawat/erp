@@ -6,6 +6,7 @@ use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use yii\bootstrap5\LinkPager;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductSearch $searchModel */
@@ -14,9 +15,23 @@ $this->title = 'Products';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'sm-container', 'timeout' => 3000]); ?>
+<style>
+.custom-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.custom-table th:first-child,
+.custom-table td:first-child {
+    border-top-left-radius: .5rem;
+    border-bottom-left-radius: .5rem;
+    border-top-right-radius: .5rem;
+    border-bottom-right-radius: .5rem;
+}
+</style>
 <div class="row">
     <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12">
-        <div class="card" style="height: 1400px;">
+        <div class="card" style="height:900px;">
             <div class="card-body ">
                 <div class="d-flex justify-content-between">
                     <h4 class="card-title"><i class="bi bi-grid"></i> หมวดหมู่</h4>
@@ -44,42 +59,55 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php echo $this->render('_search', ['model' => $searchModel]); ?>
             </div>
         </div>
-        <div class="row">
-            <?php foreach ($dataProvider->getModels() as $model): ?>
-            <div class="col-lg-3 col-md-3 col-sm-6">
-                <div class="card">
-                    <?= Html::a(Html::img($model->ShowImg(), ['class' => ' card-img-top ', 'style' => 'max-width:100%;height:280px;max-height: 280px;']), ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="d-flex flex-column">
-                                <span class="badge text-bg-primary "><?= $model->productType->title ?></span>
-                            </div>
-                            <div class="dropdown float-end">
-                                <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-ellipsis"></i>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-right" style="">
-                                    <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1 text-warning"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                                    <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
-                                        'class' => 'dropdown-item  delete-item',
-                                    ]) ?>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <?= Html::a($model->title, ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'h5 text-truncate open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <span
-                                class=""><?= isset($model->data_json['unit']) ? $model->data_json['unit'] : '-' ?></span>
-                        </div>
-                        <!-- <span>คงเหลือ 10 ชิ้น</span> -->
 
+        <div class="card">
+            <div class="card-body">
+
+
+
+                <div class="table-responsive">
+                    <table class="table table-striped custom-table">
+                        <thead>
+                        <th style="width:500px">รายการ</th>
+                        <th class="text-center" style="width:80px">หน่วย</th>
+                        <th class="text-end">ราคาต่อหน่วย</th>
+                        <th class="text-center" style="width:80px">จำนวน</th>
+                        <th class="text-end">จำนวนเงิน</th>
+                        <th scope="col" style="width: 100px;">ดำเนินการ</th>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($dataProvider->getModels() as $model): ?>
+                            <tr class="rounded">
+                                <td scope="row">
+                                    <?=$model->Avatar()?>
+                                </td>
+                                <td><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td>
+                                <td>00.00</td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <div class="text-muted">
+                        <?= LinkPager::widget([
+                            'pagination' => $dataProvider->pagination,
+                            'firstPageLabel' => 'หน้าแรก',
+                            'lastPageLabel' => 'หน้าสุดท้าย',
+                            'options' => [
+                                'listOptions' => 'pagination pagination-sm',
+                                'class' => 'pagination-sm',
+                            ],
+                        ]); ?>
                     </div>
                 </div>
+
+
             </div>
-            <?php endforeach; ?>
         </div>
+
+
     </div>
 </div>
 <?php Pjax::end(); ?>

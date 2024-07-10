@@ -198,7 +198,7 @@ class OrderController extends Controller
         $model = new Order([
             'category_id' => $order_id,
             'name' => 'order_item',
-            'item_id' => $product_id,
+            'product_id' => $product_id,
             'pr_number' => $order->pr_number,
             'pq_number' => $order->pq_number,
             'po_number' => $order->po_number,
@@ -248,7 +248,7 @@ class OrderController extends Controller
             'id' => $id,
             'name' => 'order_item'
         ]);
-        $product = Product::findOne($model->item_id);
+        $product = Product::findOne($model->product_id);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {

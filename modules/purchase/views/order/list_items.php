@@ -6,46 +6,38 @@ use yii\widgets\Pjax;
 $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order_item'])->all();
 ?>
 <?php Pjax::begin(['id' => 'order_item']); ?>
-<div class="card">
-    <div class="card-body">
+
+
+
         <div class="table-responsive">
             <table class="table table-striped">
-                <thead>
+                <thead class="table-primary">
                     <tr>
-                        <th>รูป</th>
-                        <th style="width:500px">รายการ</th>
+                        <th style="width:500px"><i class="fa-solid fa-circle-info text-primary"></i> รายการขอซื้อ/ขอจ้าง</th>
                         <th class="text-center" style="width:80px">หน่วย</th>
                         <th class="text-end">ราคาต่อหน่วย</th>
                         <th class="text-center" style="width:80px">จำนวน</th>
                         <th class="text-end">จำนวนเงิน</th>
-                        <th style="width:180px">
-                            <div class="d-flex justify-content-center">
-                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-
-                            </div>
+                        <th class="text-center" scope="col" style="width: 120px;">
+                        <div class="d-grid gap-2">
+                        <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+</div>
                         </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="table-group-divider">
                     <?php foreach ($listItems as $item): ?>
                     <tr class="">
                         <td class="align-middle">
                             <?php
                             try {
-                                echo Html::img($item->product->ShowImg(), ['class' => '  ', 'style' => 'max-width:50px;;height:280px;max-height: 50px;']);
+                                echo $item->product->Avatar();
                             } catch (\Throwable $th) {
                                 // throw $th;
                             }
                             ?>
                         </td>
-                        <td class="align-middle">
-                            <?php
-                            try {
-                                echo $item->product->title;
-                            } catch (\Throwable $th) {
-                            }
-                            // throw $th;
-                            ?></td>
+                       
                         <td class="align-middle text-center">
                             
                         <?php
@@ -80,7 +72,7 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                             </div>
                         </td>
 
-                        <td class="align-middle gap-2">
+                        <td class="align-middle">
                             <div class="d-flex justify-content-center gap-2">
                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
@@ -133,6 +125,4 @@ $listItems = Order::find()->where(['category_id' => $model->id, 'name' => 'order
                 </div>
             </div>
         </div>
-    </div>
-</div>
 <?php Pjax::end() ?>

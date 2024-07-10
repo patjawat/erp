@@ -14,21 +14,19 @@ $listBoard = Order::find()
 <?php Pjax::begin(['id' => 'board_detail']); ?>
 
 
-<div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between">
-    <h5><i class="fa-solid fa-circle-info text-primary"></i> กรรมการกำหนดรายละเอียด</h5>
-    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'board_detail', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-</div>
-
-
-<table class="table table-primary">
-    <thead>
+<table class="table">
+    <thead class="table-primary">
         <tr>
-            <th scope="col">คณะกรรมการ</th>
+            <th scope="col"><i class="fa-solid fa-circle-info text-primary"></i> กรรมการกำหนดรายละเอียด</th>
             <th scope="col">ตำแหน่ง</th>
-            <th scope="col" style="width: 100px;">ดำเนินการ</th>
+            <th scope="col" style="width: 120px;">
+            <div class="d-grid gap-2">
+            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'board_detail', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+</div>   
+        </th>
         </tr>
     </thead>
-    <tbody>
+    <tbody class="table-group-divider">
         <?php foreach ($listBoard as $item): ?>
             <tr class="">
                 <td scope="row">
@@ -42,11 +40,10 @@ $listBoard = Order::find()
                 }
                 ?>
                 </td>
-            <td>
-                
-                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <td class="align-middle">
+                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/purchase/order-item/delete', 'id' => $item->id, 'container' => 'boardDetail-container'], [
-                    'class' => 'btn btn-sm btn-danger delete-item',
+                    'class' => 'btn btn-sm btn-danger rounded-pill delete-item',
                 ]) ?>
             </td>
         </tr>

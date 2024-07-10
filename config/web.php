@@ -39,8 +39,17 @@ $config = [
         ],
         'formatter' => [
             'class' => 'yii\i18n\Formatter',
-            'nullDisplay' => '-',
+            'dateFormat' => 'php:d/m/Y',
+            'datetimeFormat' => 'php:d/m/Y H:i:s',
+            'timeFormat' => 'php:H:i:s',
+            'defaultTimeZone' => 'Asia/Bangkok',
+            'nullDisplay' => '',
+            'locale' => 'th_TH',
         ],
+        // 'formatter' => [
+        //     'class' => 'yii\i18n\Formatter',
+        //     'nullDisplay' => '-',
+        // ],
         'authClientCollection' => [
             'class' => 'yii\authclient\Collection',
             'clients' => [
@@ -194,7 +203,7 @@ $config = [
             'am/*',
             'pm/*',
             'fsn/*',
-            'warehouse/*',
+            'inventory/*',
             'stock/*',
             'backoffice/*',
             'setting/*',

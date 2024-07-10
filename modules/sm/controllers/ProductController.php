@@ -44,6 +44,7 @@ class ProductController extends Controller
             'category_id',
             $searchModel->q_category,
         ]);
+        $dataProvider->pagination->pageSize = 10;
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -160,6 +161,9 @@ class ProductController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
+        if(!$model->ref){
+            $model->ref  = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return [
