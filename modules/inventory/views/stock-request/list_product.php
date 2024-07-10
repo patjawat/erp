@@ -16,7 +16,15 @@ use yii\helpers\Html;
                     <?php foreach ($model->ListProductFormType() as $item): ?>
                     <tr class="">
                         <td class="align-middle"><?php echo $item->Avatar(false);?></td>
-                        <td class="align-middle text-center"><?= $item->qty; ?></td>
+                        <td class="align-middle text-center">
+                            <?php
+                            try {
+                                echo $item->qty; 
+                            } catch (\Throwable $th) {
+                                //throw $th;
+                            } 
+                            ?>
+                        </td>
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
                                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม', ['/inventory/receive/add-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
