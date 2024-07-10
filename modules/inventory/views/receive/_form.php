@@ -1,7 +1,7 @@
 <?php
 
 use app\models\Categorise;
-use app\modules\inventory\models\warehouse;
+use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
 // use kartik\date\DatePicker;
 use kartik\datecontrol\DateControl;
@@ -188,7 +188,7 @@ $receive_type_name = $model->receive_type == 'normal' ? 'รับเข้า�
 
             <?php
                 echo $form->field($model, 'to_warehouse_id')->widget(Select2::classname(), [
-                    'data' => ArrayHelper::map(warehouse::find()->all(), 'id', 'warehouse_name'),
+                    'data' => ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name'),
                     'options' => ['placeholder' => 'กรุณาเลือก'],
                     'pluginOptions' => [
                         'allowClear' => true,
