@@ -7,8 +7,14 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
 use DateTime;
 use Yii;
+use yii\helpers\Html;
 use app\modules\sm\models\Product;
-
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
+use app\modules\hr\models\Employees;
 /**
  * This is the model class for table "stock_order".
  *
@@ -91,6 +97,24 @@ class StockMovement extends \yii\db\ActiveRecord
         ];
     }
 
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
@@ -107,6 +131,37 @@ class StockMovement extends \yii\db\ActiveRecord
         parent::afterFind();
         // แปลงวันที่จาก ค.ศ. เป็น พ.ศ. หลังจากดึงข้อมูลจากฐานข้อมูล
         // $this->movement_date = AppHelper::convertToThaiBuddhist($this->movement_date);
+    }
+
+    // แสดงวันที่ส่งซ่อม
+    public function viewCreateDate()
+    {
+        return Yii::$app->thaiFormatter->asDate($this->created_at, 'php:d/m/Y เวลา H:i:s');
+    }
+
+
+    // ผู้ขอ
+    public function CreateBy()
+    {
+        // try {
+            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+                'position_name' => $employee->positionName(),
+                // 'product_type_name' => $this->data_json['product_type_name']
+            ];
+        // } catch (\Throwable $th) {
+        //     return [
+        //         'avatar' => '',
+        //         'department' => '',
+        //         'fullname' => '',
+        //         'position_name' => '',
+        //         'product_type_name' => ''
+        //     ];
+        // }
     }
 
     public function getCurrDate()
@@ -147,6 +202,10 @@ class StockMovement extends \yii\db\ActiveRecord
 
     }
 
+
+    public function ListProductFormType(){
+        return Product::find()->where(['name' => 'product_item'])->all();
+    }
 //แสดงรายการรับสินค้าเข้าคลัง
     public function ListItemFormRcNumber(){
         return self::find()->where(['name' => 'receive_item', 'rc_number' => $this->rc_number])->all();

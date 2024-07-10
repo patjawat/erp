@@ -1,12 +1,6 @@
 <?php
-
-use app\modules\inventory\models\StockMovement;
-use app\modules\purchase\models\Order;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-
 ?>
-<?php Pjax::begin(['id' => 'order_item']); ?>
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -14,16 +8,14 @@ use yii\widgets\Pjax;
                 <thead>
                     <tr>
                         <th style="width:500px">รายการ</th>
-                        <th class="text-center" style="width:100px">จำนวนสั่งซื้อ</th>
+                        <th class="text-center" style="width:100px">จำนวนคงเหลือ</th>
                         <th class="text-center" style="width:80px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
                     <?php foreach ($model->ListProductFormType() as $item): ?>
-                     <?php $checkStock = StockMovement::find()->where(['name'=> 'receive_item','product_id' => $item->product_id,'po_number' => $item->po_number])->sum('qty');?>
-                    <?php  if ($checkStock != $item->qty) : ?>
                     <tr class="">
-                        <td class="align-middle"><?php echo $item->product->Avatar(false);?></td>
+                        <td class="align-middle"><?php echo $item->Avatar(false);?></td>
                         <td class="align-middle text-center"><?= $item->qty; ?></td>
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
@@ -31,8 +23,6 @@ use yii\widgets\Pjax;
                             </div>
                         </td>
                     </tr>
-
-                    <?php   endif; ?>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -40,4 +30,3 @@ use yii\widgets\Pjax;
         </div>
     </div>
 </div>
-<?php Pjax::end() ?>

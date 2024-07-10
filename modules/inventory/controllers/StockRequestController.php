@@ -2,20 +2,18 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockMovement;
 use app\modules\inventory\models\StockMovementSearch;
-use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use app\modules\sm\models\Product;
+use yii\filters\VerbFilter;
 use Yii;
+use yii\web\Response;
 
 /**
- * StockMovementController implements the CRUD actions for StockMovement model.
+ * StockRequestController implements the CRUD actions for StockMovement model.
  */
-class StockMovementController extends Controller
+class StockRequestController extends Controller
 {
     /**
      * @inheritDoc
@@ -42,8 +40,10 @@ class StockMovementController extends Controller
      */
     public function actionIndex()
     {
+        $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockMovementSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['to_warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -64,57 +64,62 @@ class StockMovementController extends Controller
         ]);
     }
 
-
-    public function actionProduct($id)
-    {
-        $model = Product::findOne($id);
-        return $this->render('product_history', [
-            'model' => $model,
-        ]);
-    }
-
-
     /**
      * Creates a new StockMovement model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
-    {
-        $model = new StockMovement([
-            'name' => $this->request->get('name'),
-            'movement_type' => $this->request->get('name'),
-            'po_number' => $this->request->get('category_id'),
-            'receive_type' => $this->request->get('receive_type')
-        ]);
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $thaiYear = substr((date('Y') + 543), 2);
-                if ($model->rq_number == '') {
-                    $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
-                }
-                $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
+        public function actionCreate()
+        {
+            $warehouse = Yii::$app->session->get('warehouse');
+            $model = new StockMovement([
+                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+                'name' => 'request',
+                'to_warehouse_id' => $warehouse['warehouse_id'],
             ]);
-        }
+    
+            if ($this->request->isPost) {
+                if ($model->load($this->request->post())) {
+                    $thaiYear = substr((date('Y') + 543), 2);
+                    if ($model->rq_number == '') {
+                        $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
+                    }
+                    $model->order_status = 'pending';
+                    $model->save(false);
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+            } else {
+                $model->loadDefaultValues();
+            }
+    
+            if ($this->request->isAJax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+    
+                return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('create', [
+                        'model' => $model,
+                    ])
+                ];
+            } else {
+                return $this->render('create', [
+                    'model' => $model,
+                ]);
+            }
+
+        // $model = new StockMovement();
+
+        // if ($this->request->isPost) {
+        //     if ($model->load($this->request->post()) && $model->save()) {
+        //         return $this->redirect(['view', 'id' => $model->id]);
+        //     }
+        // } else {
+        //     $model->loadDefaultValues();
+        // }
+
+        // return $this->render('create', [
+        //     'model' => $model,
+        // ]);
     }
 
     /**
@@ -135,22 +140,6 @@ class StockMovementController extends Controller
         return $this->render('update', [
             'model' => $model,
         ]);
-    }
-
-    public function actionListInStock()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $po_number = $this->request->get('po_number');
-        // $po_number = 'PO-670005';
-        $listItem = Stock::find()->all();
-
-        return [
-            'title' => $this->request->get('tilte'),
-            'content' => $this->renderAjax('list_in_stock', [
-                'listItem' => $listItem,
-            ])
-        ];
     }
 
     /**

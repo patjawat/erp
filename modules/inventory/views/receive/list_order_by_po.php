@@ -1,6 +1,5 @@
 <?php
 use yii\helpers\Html;
-
 ?>
     <?php if(count($models) >=1): ?>
     <table

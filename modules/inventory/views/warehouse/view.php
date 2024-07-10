@@ -98,7 +98,9 @@ $this->title = $model->warehouse_name;
                 <tr class="">
                   <td scope="row"><?=$model->getProduct()->Avatar()?></td>
                   <td><?=$model['sum_qty']?></td>
-                  <td>R1C3</td>
+                  <td>
+                    <?=Html::a('<i class="bi bi-clock-history"></i>',['/inventory/stock-movement/product','id' => $model->id])?>
+                  </td>
                 </tr>
                 <?php endforeach;?>
               </tbody>

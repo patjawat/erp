@@ -349,12 +349,12 @@ class ReceiveController extends Controller
             $order->save(false);
         }
 
-        // if ($updateStock) {
+        if ($updateStock) {
             return [
                 'status' => 'success',
                 'container' => '#inventory',
             ];
-        // }
+        }
 
     }
 
