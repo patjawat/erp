@@ -187,6 +187,7 @@ class StockMovement extends \yii\db\ActiveRecord
         return $stockOrder ? $summeryQty : $Order->qty;
     }
 
+    //แสดงรายการสั่งซื้อจาก PO
     public function ListOrderItems()
     {
         return Order::find()
@@ -203,8 +204,13 @@ class StockMovement extends \yii\db\ActiveRecord
     }
 
 
-    public function ListProductFormType(){
-        return Product::find()->where(['name' => 'product_item'])->all();
+    //แสดงรายการวัสดุจากคัลงที่เลือก
+    public function ListProductFormwarehouse(){
+        return self::find()
+        ->select('product_id,sum(qty) as sum_qty')
+        ->where(['name' => 'receive_item','to_warehouse_id' => $this->from_warehouse_id])
+        ->groupBy('product_id')
+        ->all();
     }
 //แสดงรายการรับสินค้าเข้าคลัง
     public function ListItemFormRcNumber(){

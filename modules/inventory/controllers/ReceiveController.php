@@ -168,22 +168,28 @@ class ReceiveController extends Controller
     // แสดงรายการสินค้าจากใบ po
     public function actionListPoOrder()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $po_number = $this->request->get('po_number');
+        
         $id = $this->request->get('id');
         $model = $this->findModel($id);
-       ;
-        // $po_number = 'PO-670005';
-        $order = Order::find()->where(['name' => 'order', 'po_number' => $po_number])->one();
-
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_po_order', [
-                'model' => $model,
-            ])
-        ];
-    }
+        $order = Order::find()->where(['name' => 'order', 'po_number' => $model->po_number])->one();
+        
+        if($this->request->isAjax){
+            
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_po_order', [
+                    'model' => $model,
+                    'order' => $order
+                    ])
+                ];
+            }else{
+                return $this->render('list_po_order', [
+                    'model' => $model,
+                    'order' => $order
+                ]);
+            }
+        }
 
     public function actionListAllProduct()
     {
@@ -246,6 +252,7 @@ class ReceiveController extends Controller
         $model = new StockMovement([
             'po_number' => $order->po_number,
             'rc_number' => $StockMovement->rc_number,
+            'to_warehouse_id' => $StockMovement->to_warehouse_id,
             'name' => 'receive_item',
             'product_id' => $product->id,
             'movement_type' => 'receive',

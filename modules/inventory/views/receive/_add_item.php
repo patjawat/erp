@@ -97,6 +97,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'po_number')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'to_warehouse_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'data_json[product_name]')->hiddenInput(['value' => $product->title])->label(false); ?>
 <?= $form->field($model, 'data_json[unit]')->hiddenInput(['value' => isset($product->data_json['unut']) ? $product->data_json['unut'] : null])->label(false); ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput(['value' => $product->productType->title])->label(false); ?>

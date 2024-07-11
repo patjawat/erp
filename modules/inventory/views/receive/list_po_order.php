@@ -14,17 +14,23 @@ use yii\widgets\Pjax;
                 <thead>
                     <tr>
                         <th style="width:500px">รายการ</th>
-                        <th class="text-center" style="width:100px">จำนวนสั่งซื้อ</th>
-                        <th class="text-center" style="width:80px">ดำเนินการ</th>
+                        <th class="text-center" style="width:100px">ซื้อ</th>
+                        <th class="text-center" style="width:100px">รับ</th>
+                        <th class="text-center" style="width:100px">เหลือ</th>
+                        <th class="text-center" style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
-                    <?php foreach ($model->ListProductFormType() as $item): ?>
-                     <?php $checkStock = StockMovement::find()->where(['name'=> 'receive_item','product_id' => $item->product_id,'po_number' => $item->po_number])->sum('qty');?>
-                    <?php  if ($checkStock != $item->qty) : ?>
+                    <?php foreach ($model->ListOrderItems() as $item): ?>
+                     <?php $checkStock = StockMovement::find()->where(['name'=> 'receive_item','product_id' => $item->product_id,'po_number' => $order->po_number])->sum('qty');?>
+                     <?php $checkStock2 = StockMovement::find()->where(['name'=> 'receive_item','product_id' => $item->product_id,'po_number' => $order->po_number,'rc_number' => $model->rc_number])->One();?>
+
+                     <?php if (!$checkStock2 && ($item->qty - $checkStock) !=0) : ?>
                     <tr class="">
                         <td class="align-middle"><?php echo $item->product->Avatar(false);?></td>
                         <td class="align-middle text-center"><?= $item->qty; ?></td>
+                        <td class="align-middle text-center"><?= $checkStock; ?></td>
+                        <td class="align-middle text-center"><?= $item->qty - $checkStock; ?></td>
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
                                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม', ['/inventory/receive/add-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
@@ -32,7 +38,7 @@ use yii\widgets\Pjax;
                         </td>
                     </tr>
 
-                    <?php   endif; ?>
+                    <?php  endif; ?>
                     <?php endforeach; ?>
                 </tbody>
             </table>

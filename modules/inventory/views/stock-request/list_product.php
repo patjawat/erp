@@ -7,19 +7,19 @@ use yii\helpers\Html;
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th style="width:500px">รายการ</th>
+                        <th style="width:500px">รายการ(คลัง)</th>
                         <th class="text-center" style="width:100px">จำนวนคงเหลือ</th>
                         <th class="text-center" style="width:80px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
-                    <?php foreach ($model->ListProductFormType() as $item): ?>
+                    <?php foreach ($model->ListProductFormwarehouse() as $item): ?>
                     <tr class="">
-                        <td class="align-middle"><?php echo $item->Avatar(false);?></td>
+                        <td class="align-middle"><?php echo $item->product->Avatar(false);?></td>
                         <td class="align-middle text-center">
                             <?php
                             try {
-                                echo $item->qty; 
+                                echo $item->sum_qty; 
                             } catch (\Throwable $th) {
                                 //throw $th;
                             } 
@@ -27,7 +27,7 @@ use yii\helpers\Html;
                         </td>
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
-                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม', ['/inventory/receive/add-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/receive/add-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                             </div>
                         </td>
                     </tr>
