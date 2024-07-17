@@ -43,6 +43,7 @@ class StockRequestController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockMovementSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'request']);
         $dataProvider->query->andFilterWhere(['to_warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
@@ -84,7 +85,7 @@ class StockRequestController extends Controller
                     if ($model->rq_number == '') {
                         $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
                     }
-                    $model->order_status = 'pending';
+                    $model->order_status = 'none';
                     $model->save(false);
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
@@ -106,19 +107,6 @@ class StockRequestController extends Controller
                     'model' => $model,
                 ]);
             }
-
-        // $model = new StockMovement();
-
-        // if ($this->request->isPost) {
-        //     if ($model->load($this->request->post()) && $model->save()) {
-        //         return $this->redirect(['view', 'id' => $model->id]);
-        //     }
-        // } else {
-        //     $model->loadDefaultValues();
-        // }
-
-        // return $this->render('create', [
-        //     'model' => $model,
         // ]);
     }
 
@@ -142,6 +130,48 @@ class StockRequestController extends Controller
         ]);
     }
 
+    public function actionListProduct()
+    {
+        $id = $this->request->get('id');
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('list_product', [
+                'model' => $model,
+            ])
+        ];
+
+    }
+    public function actionAddItem()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $warehouse = Yii::$app->session->get('warehouse');
+
+        if ($this->request->isPost) {
+            $data = $this->request->post();
+            $model = new StockMovement();
+            $model->name = 'request_item';
+            $model->rq_number = $data['rq_number'];
+            $model->product_id = $data['product_id'];
+            $model->qty = $data['qty'];
+            $model->order_status = 'none';
+            $model->to_warehouse_id = $warehouse['warehouse_id'];
+            return [
+                'save' =>  $model->save(false),
+                'status' => 'success',
+                'container' => '#inventory',
+            ];
+        } else {
+            return [
+                'status' => 'error',
+                'container' => '#inventory',
+            ];
+        }
+
+     
+}
+
     /**
      * Deletes an existing StockMovement model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -151,9 +181,13 @@ class StockRequestController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->delete();
+        return [
+            'status' => 'success',
+            'container' => '#inventory',
+        ];
     }
 
     /**

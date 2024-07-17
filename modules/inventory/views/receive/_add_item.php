@@ -34,14 +34,19 @@ $this->params['breadcrumbs'][] = $this->title;
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
+    // 'type' => ActiveForm::TYPE_HORIZONTAL,
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/inventory/receive/validator']
 ]); ?>
 
 <?=$product->AvatarXl()?>
 <hr>
-<div class="row">
-    <div class="col-6"> <?php
+
+<?=$form->field($model, 'data_json[item_type]')->radioList(['ยอดยกมา' => 'ยอดยกมา','ของแถม' => 'ของแถม','ของบริจาค' => 'ของบริจาค'], ['inline'=>true,'custom' => true])->label('ประเภท');?>
+
+        <div class="row">
+            <div class="col-6">
+            <?php
             echo $form
                 ->field($model, 'data_json[mfg_date]')
                 ->widget(DateControl::classname(), [
@@ -56,8 +61,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันผลิต');
         ?>
-
-        <?php
+                <?= $form->field($model, 'lot_number')->textInput()->label('ล็อตผลิต'); ?>
+            </div>
+            <div class="col-6">
+            <?php
             echo $form
                 ->field($model, 'data_json[exp_date]')
                 ->widget(DateControl::classname(), [
@@ -72,19 +79,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันหมดอายุ');
         ?>
-     
-    </div>
-    <div class="col-6">
-    <div class="mt-4 mb-4">
-        <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
-    </div>
-    <div style="margin-top: 28px;">
-        <?= $form->field($model, 'lot_number')->textInput()->label('ล็อตผลิต'); ?>
+            <div class="mt-5 mb-0">
+                <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
+            </div>
+            </div>
+      
+         
+ 
+        </div>
 
-    </div>
-    </div>
-
-</div>
 
 
 

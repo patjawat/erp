@@ -115,15 +115,16 @@ class OrderController extends Controller
         $status = $this->request->get('status');
         $thaiYear = substr((date('Y') + 543), 2);
         $model = $this->findModel($id);
+
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
+            $model->status = $status;
             // if ($model->load($this->request->post())) {
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-            $model->status = $status;
             // if ($model->status == 6) {
             // $model->code = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
             // }
-            $model->save(false);
+            //$model->save(false);
             return [
                 'status' => 'success',
                 'container' => '#purchase-container',

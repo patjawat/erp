@@ -43,6 +43,7 @@ class PoOrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andwhere(['is not', 'po_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
 
         return $this->render('index', [
@@ -71,12 +72,14 @@ class PoOrderController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Order([
-            'name' => $this->request->get('name'),
-            'status' => $this->request->get('status'),
-            // 'name' => 'order',
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-        ]);
+        $id = $this->request->get('id');
+        $model = $this->findModel($id);
+        // $model = new Order([
+        //     'name' => $this->request->get('name'),
+        //     'status' => $this->request->get('status'),
+        //     // 'name' => 'order',
+        //     'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+        // ]);
 
         $thaiYear = substr((date('Y') + 543), 2);
         if ($this->request->isPost) {

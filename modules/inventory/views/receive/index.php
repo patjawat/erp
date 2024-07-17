@@ -30,8 +30,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="card">
         <div class="card-body">
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใบรับสินค้า', ['/inventory/receive/create', 'receive_type' => 'normal', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['id' => 'btn-add1', 'class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-            <?= Html::a('<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ', ['/inventory/receive/list-order-by-po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รายการรอรับเข้าคลัง'], ['id' => 'btn-add2', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> รับเข้า', ['/inventory/receive/create', 'receive_type' => 'receive', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['id' => 'btn-add1', 'class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-file-circle-plus"></i> รับจากใบสั่งซื้อ', ['/inventory/receive/list-order-by-po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รายการรอรับเข้าคลัง'], ['id' => 'btn-add2', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
     </div>
 

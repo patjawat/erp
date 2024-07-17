@@ -58,7 +58,7 @@ class StockMovement extends \yii\db\ActiveRecord
     {
         return [
             [['product_id', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
-            [['movement_type'], 'required'],
+            // [['movement_type'], 'required'],
             [['movement_type'], 'string'],
             [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
@@ -207,7 +207,7 @@ class StockMovement extends \yii\db\ActiveRecord
     //แสดงรายการวัสดุจากคัลงที่เลือก
     public function ListProductFormwarehouse(){
         return self::find()
-        ->select('product_id,sum(qty) as sum_qty')
+        ->select('id,product_id,sum(qty) as sum_qty')
         ->where(['name' => 'receive_item','to_warehouse_id' => $this->from_warehouse_id])
         ->groupBy('product_id')
         ->all();
@@ -217,6 +217,12 @@ class StockMovement extends \yii\db\ActiveRecord
         return self::find()->where(['name' => 'receive_item', 'rc_number' => $this->rc_number])->all();
     }
 
+
+    //แสดงรายการจาเลขที่ขอเบิก
+    public function ListItemRequest()
+    {
+        return self::find()->where(['name' => 'request_item', 'rq_number' => $this->rq_number])->all();
+    }
     public function getPoQty(){
         return Order::findOne(['po_number' => $this->po_number,'product_id' => $this->product_id]);
     }

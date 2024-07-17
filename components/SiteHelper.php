@@ -9,6 +9,7 @@ use PHPUnit\Framework\Constraint\IsEmpty;
 use yii\base\Component;
 use yii\bootstrap5\Html;
 use Yii;
+use app\modules\hr\models\Employees;
 
 class SiteHelper extends Component
 {
@@ -27,6 +28,32 @@ class SiteHelper extends Component
                         'website' => Html::a($siteName, $siteUrl)
                 ];
         }
+
+        //ข้อมูลของผู้อำนวยการ
+        public static function viewDirector()
+        {
+                try {
+                        $emp_id = self::getInfo()['director_name'];
+                        $employee = Employees::find()->where(['id' => $emp_id])->one();
+
+                        return [
+                                'id' => $employee->user_id,
+                                'avatar' => $employee->getAvatar(false),
+                                'department' => $employee->departmentName(),
+                                'fullname' => $employee->fullname,
+                                'position_name' => $employee->positionName()
+                        ];
+                } catch (\Throwable $th) {
+                        return [
+                                'id' => '',
+                                'avatar' => '',
+                                'department' => '',
+                                'fullname' => '',
+                                'position_name' => '',
+                        ];
+                }
+        }
+
 
         public static function getCategoriseByname($name)
         {

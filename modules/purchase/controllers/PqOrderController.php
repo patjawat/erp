@@ -44,11 +44,13 @@ class PqOrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andwhere(['is not', 'pq_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'name' => 'pq'
         ]);
     }
 
@@ -124,12 +126,11 @@ class PqOrderController extends Controller
                 if ($model->pq_number == '') {
                     $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 }  // validate all models
-                $model->data_json = ArrayHelper::merge(
-                    $oldObj,
-                    $model->data_json,
-                );
+                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
                 // return $model->data_json;
-                $model->status = 3;
+                if($model->status == 1){
+                    $model->status = 2;
+                }
                 $model->save(false);
                 return [
                     'status' => 'success',

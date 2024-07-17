@@ -1,18 +1,11 @@
 <?php
 
-use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
 use kartik\datecontrol\DateControl;
-use kartik\form\ActiveField;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use kartik\widgets\DatePicker;
-use kartik\widgets\DateTimePicker;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\web\View;
-use yii\widgets\DetailView;
-use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
@@ -79,7 +72,7 @@ echo $form
     <?php
         echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'data' => $model->ListVendor(),
-            'options' => ['placeholder' => 'เลขที่ใบขอซื้อ (ถ้ามี)'],
+            'options' => ['placeholder' => 'เลือกบริษัทแนะนำ)'],
             'pluginOptions' => [
                 'allowClear' => true,
                 'dropdownParent' => '#main-modal',
@@ -122,6 +115,10 @@ echo $form
 <?= $form->field($model, 'data_json[vendor_name]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[pr_leader_confirm]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[pr_confirm_comment]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[pr_director_confirm]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[pr_director_comment]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[pr_confirm_2]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 

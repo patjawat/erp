@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'inventory']); ?>
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center">
-        <h5><i class="fa-solid fa-shop"></i> รับสินค้าเข้าคลัง</h5>
+        <h5><i class="fa-solid fa-shop"></i> รับวัสดุ</h5>
         <div>
             <?php Html::a('เลือกรายการ', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
             <?php Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
@@ -47,8 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="row">
-
-    <div class="col-7">
+    <!-- <div class="col-7">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -94,20 +93,14 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="col-5">
         <?= $this->render('list_committee', ['model' => $model]) ?>
-    </div>
+    </div> -->
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <?php if($model->order_status != 'success') : ?>
                 <div class="d-flex justify-content-between">
                     <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
-                    <div>
-                        <?php if ($model->receive_type == 'normal'): ?>
-                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-all-product', 'po_number' => $model->po_number, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        <?php else: ?>
-                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-po-order', 'id' => $model->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการใบสั่งซื้อเลขที่ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        <?php endif ?>
-                    </div>
+                   
 
                 </div>
                 <?php else:?>
@@ -117,14 +110,21 @@ $this->params['breadcrumbs'][] = $this->title;
                     <table class="table table-primary">
                         <thead>
                             <tr>
-                                <th scope="col">ชื่อรายการ</th>
-                                <th scope="col">ประเภท</th>
-                                <th scope="col">หน่วย</th>
-                                <th scope="col">จำนวนสั่งซื้อ</th>
+                                <th scope="col">
+                                <div>
+                        <?php if ($model->receive_type == 'receive'): ?>
+                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-product','id' => $model->id, 'po_number' => $model->po_number, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?php else: ?>
+                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-product-order', 'id' => $model->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการใบสั่งซื้อเลขที่ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?php endif ?>
+                    </div>
+                </th>
+                <th scope="col">ประเภท</th>
+                <?php if ($model->receive_type == 'purchase'): ?>
+                    <th scope="col">จำนวนสั่งซื้อ</th>
+                    <?php endif ?>
                                 <th scope="col">จำนวนรับเข้า</th>
                                 <th scope="col">ล็อต</th>
-                                <th scope="col">วันที่ผลิต</th>
-                                <th scope="col">วันที่หมดอายุ</th>
                                 <?php if($model->order_status != 'success') : ?>
                                 <th scope="col">ดำเนินการ</th>
 
@@ -137,7 +137,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td scope="row">
                                     <?php
                                         try {
-                                            echo $item->data_json['product_name'];
+                                            echo $item->product->Avatar(false);
                                         } catch (\Throwable $th) {
                                             echo '-';
                                         }
@@ -145,26 +145,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </td>
                                 <td>
                                     <?php
-                                        try {
-                                            echo $item->data_json['product_type_name'];
-                                        } catch (\Throwable $th) {
-                                            echo '-';
-                                        }
+                                        // try {
+                                        //     echo $item->data_json['product_type_name'];
+                                        // } catch (\Throwable $th) {
+                                        //     echo '-';
+                                        // }
                                         ?>
                                 </td>
-                                <td>
-                                    <?php
-                                        try {
-                                            echo $item->data_json['unit'];
-                                        } catch (\Throwable $th) {
-                                            echo '-';
-                                        }
-                                        ?>
-                                </td>
+                                <?php if ($model->receive_type == 'purchase'): ?>
                                 <td><?= $item->getPoQty()->qty ?></td>
+                                <?php endif;?>
                                 <td><?= $item->qty ?></td>
-                                <td><?= $item->lot_number ?></td>
-                                <td><?= $item->lot_number ?></td>
                                 <td>R1C3</td>
                                 <?php if($model->order_status != 'success') : ?>
                                 <td>

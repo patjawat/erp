@@ -3,6 +3,7 @@
 namespace app\modules\purchase\controllers;
 
 use app\components\UserHelper;
+use app\components\SiteHelper;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use yii\filters\VerbFilter;
@@ -44,11 +45,15 @@ class PrOrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andwhere(['is not', 'pr_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
+        // $actionId = $this->action->id;
+        $actionId = Yii::$app->controller->id;
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'name' => 'pr'
         ]);
     }
 
@@ -60,6 +65,7 @@ class PrOrderController extends Controller
      */
     public function actionView($id)
     {
+        \Yii::$app->session->set('name', 'pr_item');
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -75,7 +81,6 @@ class PrOrderController extends Controller
         $model = new Order([
             'name' => 'order',
             'status' => $this->request->get('status'),
-            // 'name' => 'order',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
@@ -84,7 +89,8 @@ class PrOrderController extends Controller
             if ($model->load($this->request->post())) {
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
                 $model->save(false);
-                return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
+                // return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
+                return $this->redirect(['/purchase/pr-order/view', 'id' => $model->id]);
             } else {
                 return false;
             }
@@ -181,6 +187,77 @@ class PrOrderController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    public function actionLeaderConfirm($id){
+        $model = $this->findModel($id);
+        
+        $oldObj = $model->data_json;
+        if ($model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+         
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            $model->save(false);
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+                'model' => $model
+            ];
+
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' =>$model->viewLeaderUser()['avatar'],
+                'content' => $this->renderAjax('_leader_confirm', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_leader_confirm', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    public function actionDirectorConfirm($id){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        
+        $oldObj = $model->data_json;
+        if ($model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+          
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            $model->save(false);
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+                'model' => $model
+            ];
+
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => SiteHelper::viewDirector()['avatar'],
+                'content' => $this->renderAjax('_director_confirm', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_director_confirm', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+
     // ส่งใบขอซื้อ
     public function actionPrConfirm($id)
     {
@@ -197,7 +274,7 @@ class PrOrderController extends Controller
             $newObj, $model->data_json
         );
         $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
-        $model->status = 2;
+        $model->status = 1;
         $model->approve = 'Y';
         $model->save();
 

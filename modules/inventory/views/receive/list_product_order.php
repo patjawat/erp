@@ -33,7 +33,7 @@ use yii\widgets\Pjax;
                         <td class="align-middle text-center"><?= $item->qty - $checkStock; ?></td>
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
-                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม', ['/inventory/receive/add-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม', ['/inventory/receive/add-po-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                             </div>
                         </td>
                     </tr>

@@ -2,6 +2,9 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\web\View;
+use yii\helpers\Url;
+use yii\widgets\Pjax;
 
 /** @var app\modules\inventory\models\StockMovement $model */
 /** @var yii\web\View $this */
@@ -27,16 +30,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <h5>ขอเบิกวัสดุ</h5>
     </div>
 </div> -->
+<?php // $this->render('list_product',['model' => $model])?>
+<?php yii\widgets\Pjax::begin(['id' =>'inventory']); ?>
+<div class="row d-flex justify-content-center">
 
-<div class="row">
-<div class="col-8">
-<?=$this->render('list_product',['model' => $model])?>
-</div>
-<div class="col-4">
-<div class="card">
-    <div class="card-body">
-    <div class="d-flex justify-content-between">
-                    <h6><i class="fa-solid fa-file-lines"></i> ขอเบิกวัสดุ</h6>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h5><i class="fa-solid fa-file-lines"></i> ขอเบิกวัสดุ</h5>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
@@ -51,54 +53,101 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
 
+                <div class="row">
+           
+                    <div class="col-6">
+                        <table class="table table-striped-columns">
+                            <tbody>
+                                <tr class="bg-primary-subtle">
+                                    <td colspan="6">รายละเอียดผู้เบิก</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end">รหัสขอเบิก</td>
+                                    <td colspan="2"><?=$model->rq_number?></td>
+                                    <td class="text-end">วันที่</td>
+                                    <td colspan="2"><?=$model->viewCreateDate()?></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end">ผู้ขอ</td>
+                                    <td colspan="5"><?=$model->CreateBy()['avatar']?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-        <table class="table table-striped-columns">
-<tbody>
+                    <div class="col-6">
+                        <table class="table table-striped-columns">
+                            <tbody>
+                                <tr class="bg-primary-subtle">
+                                    <td colspan="6">รายละเอียดผู้จ่าย</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end">ชื่อคลัง</td>
+                                    <td colspan="2"><?=$model->rq_number?></td>
+                                    <td class="text-end">วันที่</td>
+                                    <td colspan="2"><?=$model->viewCreateDate()?></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end">ผู้ขอ</td>
+                                    <td colspan="5"><?=$model->CreateBy()['avatar']?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-    <tr>
-        <td class="text-end">รหัสขอเบิก</td>
-        <td colspan="2"><?=$model->rq_number?></td>
-        <td class="text-end">วันที่</td>
-        <td colspan="2"><?=$model->viewCreateDate()?></td>
-    </tr>
-    <tr>
-        <td class="text-end">ผู้ขอ</td>
-        <td colspan="5"><?=$model->CreateBy()['avatar']?></td>
-        
-    </tr>
-</tbody>
-        </table>
-    <?php
-     DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            [
-                'label' => 'รหัสขอเบิก',
-                'value' => function($model){
-                    return $model->rq_number;
-                }
-            ],
-            [
-                'label' => 'วันที่',
-                'value' => function($model){
-                    return $model->rq_number;
-                }
-            ],
-            [
-                'label' => 'ผู้ขอ',
-                'value' => function($model){
-                    return $model->rq_number;
-                }
-            ]
-
-        ],
-    ]) ?>
-
+                </div>
+                <?=$this->render('list_item_requet',['model' => $model])?>
+                <div class="form-group mt-3 d-flex justify-content-center">
+                    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-</div>
-</div>
-</div>
+<?php yii\widgets\Pjax::end(); ?>
+<?php
+$url = Url::to(['/inventory/stock-request/add-item']);
+$js = <<< JS
 
+$(document).ready(function () {
     
+});
 
-</div>
+$("body").on("click", ".add-product", function (e) {
+    e.preventDefault();
+    var product_id = $(this).data('product_id');
+    var id = $(this).data('id');
+    var rq_number = $(this).data('rq_number');
+    var total = $(this).data('total');
+    // var qty =  $('#qty-'+id).val();  
+    var qty =  $('#qty-'+id).val();  
+
+    console.log(qty);
+
+    if((total - qty) < 0){
+        alert('xx')
+        $('#qty-'+id).val(total)
+    }
+
+    $.ajax({
+        type: "post",
+        url: "$url",
+        data:{
+            id:id,
+            product_id:product_id,
+            qty:qty,
+            total:total,
+            rq_number:rq_number
+        },
+        dataType: "json",
+        success: function (response) {
+            console.log(response);
+            $.pjax.reload({container:response.container, history:false});
+            success("ดำเนินการลบสำเร็จ!.");
+
+        }
+    });
+});
+JS;
+$this->registerJS($js,View::POS_END);
+?>

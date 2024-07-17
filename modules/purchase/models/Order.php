@@ -142,7 +142,7 @@ class Order extends \yii\db\ActiveRecord
             data-bs-title="ดูเพิ่มเติม..."><span>'
             . $employee->fullname . '</span>
             </h6>
-            <p class="text-muted mb-0 fs-13">' . $this->data_json['product_type_name'] . ' (<code>' . $this->pr_number . '</code>)</p>
+            <p class="text-muted mb-0 fs-13">' . $this->data_json['product_type_name'] . ' (<code>' . $this->viewCreatedAt(). '</code>)</p>
         </div>
     </div>';
     }
@@ -178,6 +178,7 @@ class Order extends \yii\db\ActiveRecord
             $employee = Employees::find()->where(['id' => $this->data_json['leader1']])->one();
 
             return [
+                'id' => $employee->user_id,
                 'avatar' => $employee->getAvatar(false),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
@@ -242,6 +243,14 @@ class Order extends \yii\db\ActiveRecord
             return 10;
         }
     }
+
+
+    public function listPrOrder()
+    {
+
+        return self::find()->where(['name' => 'pr_item', 'pr_number' => $this->pr_number])->all();
+    }
+    
 
     public function ListStatus()
     {
@@ -332,16 +341,73 @@ class Order extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
-        $model = Categorise::findOne(['code' => $this->status, 'name' => 'order_status']);
-        if ($model) {
-            return $model->title;
-        } else {
-            return null;
+        $data = $this->data_json;
+        // $model = Categorise::findOne(['code' => $this->status, 'name' => 'order_status']);
+        // if ($model) {
+        //     return $model->title;
+        // } else {
+        //     return 'ขอซื้อ/ขอจ้าง';
+        // }
+        if($this->status == 2){
+            if($data['pr_leader_confirm'] == 'Y'){
+                return 'หัวหน้า <i class="bi bi-check2-circle"></i> เห็นชอบ';
+            }else{
+                return 'หัวหน้า <i class="bi bi-x-circle"></i> ไม่เป็นชอบ';
+            }
         }
+
+        if($this->status == 3){
+            if($data['pr_leader_confirm'] == 'Y'){
+                return 'ผู้อำนวยการ <i class="bi bi-check2-circle"></i> เห็นชอบ';
+            }else{
+                return 'ผู้อำนวยการ <i class="bi bi-x-circlef"></i> ไม่เป็นชอบ';
+            }
+        }
+
+        if($this->status == 4){
+                return 'ละทะเบียนคุม';
+        }
+
     }
 
     public function ListPoStatus()
     {
         return Categorise::find()->where(['name' => 'po_status'])->all();
+    }
+
+        //รวมราคา
+        public static function SumOrderPrice()
+        {
+            return static::find()
+            ->where(['is not', 'pr_number', null])
+            ->andWhere(['name' => 'order_item'])
+                ->sum('price');
+        }
+
+    //นับจำนวนใบขอซื้อ
+    public static function countPrOrder()
+    {
+        return static::find()
+            ->where(['is not', 'pr_number', null])
+            ->andWhere(['name' => 'order'])
+            ->count();
+    }
+
+    //นับจำนวนทะเบียนคุม
+    public static function countPqOrder()
+    {
+        return static::find()
+            ->where(['is not', 'pq_number', null])
+            ->andWhere(['name' => 'order'])
+            ->count();
+    }
+
+    //นับจำนวนใบสั่งซื้อ
+    public static function countPoOrder()
+    {
+        return static::find()
+            ->where(['is not', 'po_number', null])
+            ->andWhere(['name' => 'order'])
+            ->count();
     }
 }

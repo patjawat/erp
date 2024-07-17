@@ -8,6 +8,7 @@ use app\modules\inventory\models\StockMovementSearch;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
+use app\modules\sm\models\ProductSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -63,6 +64,7 @@ class ReceiveController extends Controller
     public function actionView($id)
     {
         $model = $this->findModel($id);
+        Yii::$app->session->set('receive',$model);
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -166,7 +168,7 @@ class ReceiveController extends Controller
     }
 
     // แสดงรายการสินค้าจากใบ po
-    public function actionListPoOrder()
+    public function actionListProductOrder()
     {
         
         $id = $this->request->get('id');
@@ -178,28 +180,43 @@ class ReceiveController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('list_po_order', [
+                'content' => $this->renderAjax('list_product_order', [
                     'model' => $model,
                     'order' => $order
                     ])
                 ];
             }else{
-                return $this->render('list_po_order', [
+                return $this->render('list_product_order', [
                     'model' => $model,
                     'order' => $order
                 ]);
             }
         }
 
-    public function actionListAllProduct()
+    public function actionListProduct()
     {
+        $searchModel = new ProductSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['IN','name',['product_item','asset_item']]);
+        $dataProvider->pagination->pageSize = 10;
+
+        if ($this->request->isAjax) {
         Yii::$app->response->format = Response::FORMAT_JSON;
+
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_all_product', [])
+            'content' => $this->renderAjax('list_product', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider
+            ])
         ];
+    }else{
+        return $this->render('list_product', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider
+        ]);
     }
-
+    }
     // เพิ่มคณะกรรมการ ตรวจรับ
 
     public function actionAddCommittee()
@@ -237,8 +254,69 @@ class ReceiveController extends Controller
         }
     }
 
-    // เพิ่มรายการวัสดุจาก PO
+    //เพิ่มรายการวสดุรับเข้า
     public function actionAddItem()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $receive = Yii::$app->session->get('receive');
+        $id = $this->request->get('id');
+  
+        $product = Product::findOne($id);
+
+        $order = new Order();
+        $StockMovement =  StockMovement::findOne($receive->id);
+
+        $model = new StockMovement([
+            'po_number' => $order->po_number,
+            'rc_number' => $StockMovement->rc_number,
+            'to_warehouse_id' => $StockMovement->to_warehouse_id,
+            'name' => 'receive_item',
+            'product_id' => $product->id,
+            'movement_type' => 'receive',
+            'order_status' => 'pending',
+            'data_json' => [
+                'po_qty' => $order->qty
+            ]
+        ]);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'container' => '#inventory',
+                    ];
+                }
+            } else {
+                return $model->getErrors();
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_add_item', [
+                    'model' => $model,
+                    'product' => $product,
+                    'order' => $order
+                ]),
+            ];
+        } else {
+            return $this->render('_add_item', [
+                'model' => $model,
+                'product' => $product,
+                'order' => $order
+            ]);
+        }
+    }
+    // เพิ่มรายการวัสดุจาก PO
+    public function actionAddPoItem()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
@@ -306,7 +384,12 @@ class ReceiveController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = StockMovement::findOne(['id' => $id]);
-        $model->qty_check = $model->QtyCheck();
+
+        //เมื่อเป็นการรับเข้าจากการสั่งซื้อให้ตรวจสอบจำนวนด้วย
+        if($model->movement_type == 'po_receive'){
+            $model->qty_check = $model->QtyCheck();
+        }
+        
 
         $product = Product::findOne($model->product_id);
 
@@ -413,7 +496,9 @@ class ReceiveController extends Controller
                 $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
                 // $model->data_json['position_name'] == '' ? $model->addError('data_json[position_name]', $requiredName) : null;
                 // $model->data_json['position_number'] == '' ? $model->addError('data_json[position_number]', $requiredName) : null;
-                $model->qty > $model->qty_check ? $model->addError('qty', 'เกินจำนวนที่สั่งซื้อ') : null;
+                if($model->po_number){
+                    $model->qty > $model->qty_check ? $model->addError('qty', 'เกินจำนวนที่สั่งซื้อ('.$model->qty_check.')') : null;
+                }
             }
 
             foreach ($model->getErrors() as $attribute => $errors) {

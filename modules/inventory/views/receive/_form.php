@@ -18,7 +18,7 @@ use DateTime;
 /** @var yii\widgets\ActiveForm $form */
 // $listOpOrder = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(), 'id', 'po_number');
 $listOpOrder = ArrayHelper::map(Categorise::find()->all(), 'id', 'title');
-$receive_type_name = $model->receive_type == 'normal' ? 'รับเข้าปกติ' : 'รับจากใบใบสั่งซื้อ';
+$receive_type_name = $model->receive_type == 'receive' ? 'รับเข้าปกติ' : 'รับจากใบใบสั่งซื้อ';
 ?>
 <style>
 .col-form-label {
@@ -54,78 +54,7 @@ $receive_type_name = $model->receive_type == 'normal' ? 'รับเข้า�
     <div class="row">
 
         <div class="col-6">
-        <?php
-            // echo $form
-            //     ->field($model, 'movement_date')
-            //     ->widget(DateControl::classname(), [
-            //         'type' => DateControl::FORMAT_DATE,
-            //         'language' => 'th',
-            //         'widgetOptions' => [
-            //             'options' => ['placeholder' => 'ระบุวันที่วันรับเข้าคลัง ...'],
-            //             'pluginOptions' => [
-            //                 'autoclose' => true
-            //             ]
-            //         ]
-            //     ])
-            //     ->label('วันรับเข้าคลัง');
-        ?>
-
-        <?php
-
-            // echo $form->field($model, 'movement_date')->widget(DatePicker::classname(), [
-            //     'options' => ['placeholder' => 'เลือกวันที่...'],
-            //     // 'pluginOptions' => [
-            //     //     'autoclose' => true,
-            //     //     'format' => 'yyyy-mm-dd',
-            //     //     'todayHighlight' => true,
-            //     //     'language' => 'th',  // กำหนดภาษาเป็นภาษาไทย
-            //     //     'calendarWeeks' => true,
-            //     //     'clearBtn' => true,
-            //     //     'startDate' => '01/01/2021',
-            //     //     'todayBtn' => true,
-            //     //     'yearRange' => '-100:+0',
-            //     //     'startView' => 'year',
-            //     //     'minViewMode' => 'months',
-            //     //     'format' => 'dd-mm-yyyy',  // รูปแบบวันที่เป็น พ.ศ.
-            //     //     'beforeShowDay' => function ($date) {
-            //     //         return date('Y', strtotime($date)) + 543;  // เปลี่ยนปี ค.ศ. เป็น พ.ศ.
-            //     //     },
-            //     // ],
-            //     // 'pluginOptions' => [
-            //     //     'autoclose' => true,
-            //     //     'format' => 'dd/mm/yyyy',
-            //     //     'language' => 'th',
-            //     //     'todayHighlight' => true,
-            //     //     'calendarWeeks' => true,
-            //     //     'todayBtn' => true,
-            //     //     'daysOfWeekHighlighted' => [0, 6],
-            //     //     'startDate' => $model->getCurrDate()['startDate'],  // ใส่วันที่เริ่มต้นที่เป็น พ.ศ.
-            //     //     'endDate' => $model->getCurrDate()['endDate'],  // ใส่วันที่สิ้นสุดที่เป็น พ.ศ.
-            //     //     'orientation' => 'bottom left',
-            //     //     'yearRange' => '2450:2564',  // ใส่ช่วงปีที่เป็น พ.ศ.
-            //     // ],
-            //     'pluginOptions' => [
-            //         'format' => 'dd/mm/yyyy',
-            //         'autoclose' => true
-            //     ],
-            //     'convertFormat' => true,
-            //     'pluginEvents' => [
-            //         'changeDate' => "function(e) {
-            //             var year = parseInt(e.date.getFullYear()) + 543;
-            //             \$(this).val(('0' + e.date.getDate()).slice(-2) + '/' +
-            //                          ('0' + (e.date.getMonth()+1)).slice(-2) + '/' + year);
-            //         }",
-            //     ],
-            //     //     'pluginEvents' => [
-            //     //         'changeDate' => "function(e) {
-            //     //     var year = e.date.getFullYear();
-            //     //     e.date.setFullYear(year - 543);
-            //     //     \$('#movement_date-movement_date').val(e.date.toISOString().slice(0, 10));
-            //     // }",
-            //     //     ]
-            // ]);
-        ?>
-    
+     
             <?php
                 echo $form
                     ->field($model, 'data_json[to_stock_date]')
@@ -155,12 +84,6 @@ $receive_type_name = $model->receive_type == 'normal' ? 'รับเข้า�
                 }",
                             ],
                         ],
-                        // 'widgetOptions' => [
-                        //     'options' => ['placeholder' => 'ระบุวันรับเข้าคลัง ...'],
-                        //     'pluginOptions' => [
-                        //         'autoclose' => true
-                        //     ]
-                        // ]
                     ])
                     ->label('วันรับเข้าคลัง');
             ?>

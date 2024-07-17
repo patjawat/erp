@@ -156,17 +156,17 @@ $("body").on("click", ".delete-item", async function (e) {
         type: "post",
         url: url,
         dataType: "json",
-        success: async function (response) {
+        success:  function (response) {
           if (response.status == "success") {
             // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            await $.pjax.reload({
+             $.pjax.reload({
               container: response.container,
               history: false,
               url: response.url,
             });
             success("ดำเนินการลบสำเร็จ!.");
             if (response.close) {
-              await $("#main-modal").modal("hide");
+               $("#main-modal").modal("hide");
             }
           }
         },

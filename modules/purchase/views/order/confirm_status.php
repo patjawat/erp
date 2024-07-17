@@ -24,11 +24,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $form = ActiveForm::begin([
     'id' => 'form-status-confirm'
 ]); ?>
-<?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'status')->textInput()->label(false) ?>
+<?php
+echo $model->status;
+?>
 <!-- ชื่อของประเภท -->
-<?php if ($model->status == 1): ?>
-<?=
-    $form->field($model, 'data_json[pr_confirm_2]')->radioList(
+<?php if ($model->status == 2): ?>
+<?=$form->field($model, 'data_json[pr_leader_confirm]')->radioList(
         ['Y' => 'เห็นชอบ', 'N' => 'ไม่เห็นชอบ'],
         ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
     )->label(false);
@@ -36,7 +38,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $form->field($model, 'data_json[pr_confirm_comment_2]')->textArea()->label('หมายเหตุ') ?>
 <?php endif ?>
 
-<?php if ($model->status == 2): ?>
+
+<?php if ($model->status == 99): ?>
 <?=
     $form->field($model, 'data_json[pr_confirm_3]')->radioList(
         ['Y' => 'ตรวจสอบผ่าน', 'N' => 'ตรวจสอบไม่ผ่าน'],

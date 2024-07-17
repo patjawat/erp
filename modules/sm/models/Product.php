@@ -114,20 +114,42 @@ class Product extends \yii\db\ActiveRecord
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
-                                    <p class="text-primary mb-0 fs-13">'.$this->productType->title.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
+                                    <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].' <code>('.$this->ViewTypeName()['code'].')</code></p>
                                 </div>
                             </div>';
     }
-                            public function AvatarXl(){
-                                return '<div class="d-flex">
-                                '.Html::img($this->ShowImg(),['class' => 'avatar']).'
-                                                        <div class="avatar-detail">
-                                                            <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">
-                                                                '.$this->title.'
-                                                            </h5>
-                                                            <p class="text-primary mb-0 fs-6">'.$this->productType->title.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
-                                                        </div>
-                                                    </div>';
+
+    //แสดงรูปแบบประเภท
+    public function ViewTypeName(){
+            $model =  self::find()->where(['name' => $this->name])->one();
+            if($model->name == 'product_item'){
+                return [
+                    'title' =>  $model->title,
+                    'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
+                ];
+            }else if($model->name == 'asset_item'){
+                return [
+                    'title' =>  $model->title,
+                    'code' => $model->code
+                ];
+            }else{
+                return [
+                    'title' =>  '',
+                    'code' => ''
+                ];
+            }
+               
+
+    }
+
+    public function AvatarXl(){
+                return '<div class="d-flex">
+                        '.Html::img($this->ShowImg(),['class' => 'avatar']).'
+                            <div class="avatar-detail">
+                                <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">'.$this->title.'</h5>
+                                    <p class="text-primary mb-0 fs-6">'.$this->productType->title.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
+                            </div>
+        </div>';
     }
     public function ListProductType()
     {

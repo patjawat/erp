@@ -12,9 +12,63 @@ use yii\helpers\Url;
 use yii\web\JsExpression;
 use yii\web\View;
 use yii\widgets\MaskedInput;
+use app\modules\hr\models\Employees;
 
 $this->title = 'ตั้งค่าองค์กร';
+
+$formatJs = <<< 'JS'
+    var formatRepo = function (repo) {
+        if (repo.loading) {
+            return repo.avatar;
+        }
+        // console.log(repo);
+        var markup =
+    '<div class="row">' +
+        '<div class="col-12">' +
+            '<span>' + repo.avatar + '</span>' +
+        '</div>' +
+    '</div>';
+        if (repo.description) {
+          markup += '<p>' + repo.avatar + '</p>';
+        }
+        return '<div style="overflow:hidden;">' + markup + '</div>';
+    };
+    var formatRepoSelection = function (repo) {
+        return repo.avatar || repo.avatar;
+    }
+    JS;
+
+// Register the formatting script
+$this->registerJs($formatJs, View::POS_HEAD);
+
+// script to parse the results into the format expected by Select2
+$resultsJs = <<< JS
+    function (data, params) {
+        params.page = params.page || 1;
+        return {
+            results: data.results,
+            pagination: {
+                more: (params.page * 30) < data.total_count
+            }
+        };
+    }
+    JS;
+
 ?>
+<style>
+    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #fff;
+}
+:not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.875rem + 12px) !important;
+}
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #3F51B5;
+}
+</style>
+
 <!-- <h1 class="text-center"><i class="bi bi-building-fill-check fs-1"></i> ข้อมูลองค์กร</h1> -->
 
 <div class="card">
@@ -38,8 +92,8 @@ $this->title = 'ตั้งค่าองค์กร';
                 <?= $form->field($model, 'data_json[company_name]')->textInput()->label('ชื่อหน่วยงาน') ?>
                 <?= $form->field($model, 'data_json[phone]')->textInput()->label('โทรศัพท์') ?>
                 <div class="d-flex justify-content-between gap-3">
-                    <?= $form->field($model, 'data_json[director_name]')->textInput()->label('ผู้อำนวยการ') ?>
-                    <?= $form->field($model, 'data_json[director_position]')->textInput()->label('ตำแหน่ง') ?>
+                    <?php //  $form->field($model, 'data_json[director_name]')->textInput()->label('ผู้อำนวยการ') ?>
+                    <?php //  $form->field($model, 'data_json[director_position]')->textInput()->label('ตำแหน่ง') ?>
                 </div>
                 <?= $form->field($model, 'data_json[website]')->textInput()->label('เว็บไซต์') ?>
             </div>
@@ -52,6 +106,49 @@ $this->title = 'ตั้งค่าองค์กร';
             </div>
             <div class="col-8">
                 <?= $form->field($model, 'data_json[address]')->textArea(['style' => 'height:100px'])->label('ที่อยู่') ?>
+
+
+                <?php
+        $initEmployee = isset($model->data_json['director_name']) ? Employees::find()->where(['id' => $model->data_json['director_name']])->one()->getAvatar(false) : null;
+        // echo $initEmployee->getAvatar(false);
+        echo $form->field($model, 'data_json[director_name]')->widget(Select2::classname(), [
+            'initValueText' => $initEmployee,
+            'id' => 'boardId',
+            'options' => ['placeholder' => 'เลือก ...'],
+            'size' => Select2::LARGE,
+            'pluginEvents' => [
+                'select2:unselect' => 'function() {
+            $("#order-data_json-board_fullname").val("")
+
+         }',
+                'select2:select' => 'function() {
+                var fullname = $(this).select2("data")[0].fullname;
+                var position_name = $(this).select2("data")[0].position_name;
+                $("#order-data_json-board_fullname").val(fullname)
+                $("#order-data_json-position_name").val(position_name)
+               
+         }',
+            ],
+            'pluginOptions' => [
+                // 'dropdownParent' => '#main-modal',
+                'allowClear' => true,
+                'minimumInputLength' => 1,
+                'ajax' => [
+                    'url' => Url::to(['/depdrop/employee-by-id']),
+                    'dataType' => 'json',
+                    'delay' => 250,
+                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                    'processResults' => new JsExpression($resultsJs),
+                    'cache' => true,
+                ],
+                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                'templateResult' => new JsExpression('formatRepo'),
+            ],
+        ])->label('ผู้อำนวยการ')
+    ?>
+
+
                 <?= $model->upload($model->ref, 'company_logo') ?>
             </div>
         </div>
