@@ -11,6 +11,16 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-box-seam"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php echo $this->render('@app/modules/sm/views/default/menu') ?>
+<?php $this->endBlock(); ?>
+
 <div class="card">
     <div class="card-body">
         <table class="table table-striped-columns">

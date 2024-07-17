@@ -346,7 +346,7 @@ class Employees extends \yii\db\ActiveRecord
         }
         return [
             'label' => $text,
-            'due_date' => $label,
+            'due_date' => '',
         ];
     }
     // Category List
@@ -409,8 +409,11 @@ class Employees extends \yii\db\ActiveRecord
     public function leaderUser()
     {
         $model = Organization::find()->where(['id' => $this->department])->one();
+        $employee = Employees::find()->where(['id' => $model->data_json['leader1']])->one();
+        
         if ($model) {
             return [
+                'avatar' => $employee->getAvatar(false),
                 'leader1' => $model->data_json['leader1'],
                 'leader1_fullname' => $model->data_json['leader1_fullname'],
                 'leader2' => $model->data_json['leader2'],
@@ -418,6 +421,7 @@ class Employees extends \yii\db\ActiveRecord
             ];
         } else {
             return [
+                'avatar' => '',
                 'leader1' => '',
                 'leader1_fullname' => '',
                 'leader2' => '',

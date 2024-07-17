@@ -52,26 +52,43 @@ use app\components\SiteHelper;
         </tr>
         <?php if($model->data_json['pr_leader_confirm'] == 'Y'):?>
         <tr>
+            <td class="text-end">ผู้ตรวจสอบ</td>
+            <td > <?= $model->getMe()['avatar'] ?></td>
             <td class="text-end">ผู้อำนวยการ</td>
-            <td colspan="6"> <?= SiteHelper::viewDirector()['avatar'] ?></td>
-
+            <td > <?= SiteHelper::viewDirector()['avatar'] ?></td>
         </tr>
         <tr>
-            <td class="text-end">ความเห็นผู้อำนวยการ</td>
-            <td colspan="6">
-                <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
-                <?=Html::a('<i class="bi bi-check2-circle"></i> เห็นชอบ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+            <td class="text-end">จนท.พัสดุตรวจสอบ</td>
+            <td >
+                <?php if($model->data_json['pr_officer_checker'] == 'Y'):?>
+                <?=Html::a('<i class="bi bi-check2-circle"></i> ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
                                 ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-md']])?>
-                <?php elseif($model->data_json['pr_director_confirm'] == 'N'):?>
-                <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่เห็นชอบ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                <?php elseif($model->data_json['pr_officer_checker'] == 'N'):?>
+                <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
                                 ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-md']])?>
                 <?php else:?>
-                <?=Html::a('<i class="fa-regular fa-clock"></i> รอเห็นชอบ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                <?=Html::a('<i class="fa-regular fa-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
+                                ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?>
+                <?php endif?>
+
+            </td>
+
+            <td class="text-end">ผู้อำนวยการอนุมัติ</td>
+            <td >
+                <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
+                <?=Html::a('<i class="bi bi-check2-circle"></i> อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                                ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-md']])?>
+                <?php elseif($model->data_json['pr_director_confirm'] == 'N'):?>
+                <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                                ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-md']])?>
+                <?php else:?>
+                <?=Html::a('<i class="fa-regular fa-clock"></i> รออนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
                                 ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?>
                 <?php endif?>
 
             </td>
         </tr>
+        
         <?php endif;?>
     </tbody>
 </table>

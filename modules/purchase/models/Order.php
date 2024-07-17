@@ -147,6 +147,25 @@ class Order extends \yii\db\ActiveRecord
     </div>';
     }
 
+    // Avatar ของฉัน
+    public static function getMe()
+    {
+try {
+    $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+    return [
+        'avatar' => $employee->getAvatar(false),
+        'department' => $employee->departmentName(),
+        'fullname' => $employee->fullname,
+    ];
+
+} catch (\Throwable $th) {
+    return [
+        'avatar' => '',
+        'department' => '',
+        'fullname' => '',
+    ];
+}
+    }
     // ผู้ขอ
     public function getUserReq()
     {

@@ -26,12 +26,12 @@ $this->params['breadcrumbs'][] = $this->title;
 ])
 ?>
 
-<?=$form->field($model, 'data_json[pr_director_confirm]')->radioList(
-        ['Y' => 'อนุมัติ', 'N' => 'ไม่อนุมัติ'],
+<?=$form->field($model, 'data_json[pr_officer_checker]')->radioList(
+        ['Y' => 'ผ่าน', 'N' => 'ไม่ผ่าน'],
         ['custom' => true, 'inline' => true]
     )->label(false);
 ?>
-<?= $form->field($model, 'data_json[pr_director_comment]')->textArea()->label('หมายเหตุ') ?>
+<?= $form->field($model, 'data_json[pr_officer_checker_comment]')->textArea()->label('หมายเหตุ') ?>
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

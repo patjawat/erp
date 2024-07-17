@@ -69,13 +69,8 @@ use yii\widgets\Pjax;
                         </td>
                         <td class="align-middle">
                             <div class="d-flex justify-content-center gap-2">
-                        <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
-                            <button class="btn btn-sm btn-secondary rounded-pill"><i class="fa-regular fa-pen-to-square"></i></button>
-                            <button class="btn btn-sm btn-secondary rounded-pill"><i class="fa-regular fa-trash-can"></i></button>
-                        <?php else:?>
                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
-                                <?php endif;?>
                             </div>
                         </td>
                     </tr>

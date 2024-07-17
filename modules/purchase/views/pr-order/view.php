@@ -88,7 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ], ['class' => 'btn btn-primary rounded shadow confirm-order','data' => ['title' => 'ยืนยัน?','text' => 'ส่งคำขอซื้อเพื่อรอการพิจารณา']]) ?>
                         <?php endif; ?>
                         
-                        <?php if($model->status == 1 && $model->data_json['pr_leader_confirm'] == 'Y'):?>
+                        <?php if($model->status == 1 && $model->data_json['pr_leader_confirm'] == 'Y' && $model->data_json['pr_officer_checker'] == 'Y' && $model->data_json['pr_director_confirm'] == 'Y'):?>
                             <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ลงทะเบียนคุม', [
                             '/purchase/pq-order/update',
                             'id' => $model->id,

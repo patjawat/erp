@@ -82,6 +82,9 @@ class PrOrderController extends Controller
             'name' => 'order',
             'status' => $this->request->get('status'),
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'data_json' => [
+                'leader1' => 260
+            ]
         ]);
 
         $thaiYear = substr((date('Y') + 543), 2);
@@ -187,6 +190,41 @@ class PrOrderController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    //จนท.พัสดุตรวจสอบ
+    public function actionCheckerConfirm($id){
+        $model = $this->findModel($id);
+        
+        $oldObj = $model->data_json;
+        if ($model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+         
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            $model->save(false);
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+                'model' => $model
+            ];
+
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' =>$model->getMe()['avatar'],
+                'content' => $this->renderAjax('_checker_confirm', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_checker_confirm', [
+                'model' => $model,
+            ]);
+        }
+    }
+    
     public function actionLeaderConfirm($id){
         $model = $this->findModel($id);
         

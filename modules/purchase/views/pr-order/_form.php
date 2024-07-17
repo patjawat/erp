@@ -6,7 +6,8 @@ use kartik\form\ActiveForm;
 use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\web\View;
-
+use yii\helpers\Url;
+use yii\web\JsExpression;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
 $this->title = 'ราการขอซื้อ';
@@ -16,13 +17,61 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
 
+$formatJs = <<< 'JS'
+    var formatRepo = function (repo) {
+        if (repo.loading) {
+            return repo.avatar;
+        }
+        // console.log(repo);
+        var markup =
+    '<div class="row">' +
+        '<div class="col-12">' +
+            '<span>' + repo.avatar + '</span>' +
+        '</div>' +
+    '</div>';
+        if (repo.description) {
+          markup += '<p>' + repo.avatar + '</p>';
+        }
+        return '<div style="overflow:hidden;">' + markup + '</div>';
+    };
+    var formatRepoSelection = function (repo) {
+        return repo.avatar || repo.avatar;
+    }
+    JS;
+
+// Register the formatting script
+$this->registerJs($formatJs, View::POS_HEAD);
+
+// script to parse the results into the format expected by Select2
+$resultsJs = <<< JS
+    function (data, params) {
+        params.page = params.page || 1;
+        return {
+            results: data.results,
+            pagination: {
+                more: (params.page * 30) < data.total_count
+            }
+        };
+    }
+    JS;
+
 ?>
 <style>
 .col-form-label {
     text-align: end;
 }
+    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #fff;
+}
+:not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.875rem + 12px) !important;
+}
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #3F51B5;
+}
 </style>
-
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
@@ -32,9 +81,7 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
 
 <!-- ชื่อของประเภท -->
 
-<div class="row">
-    <div class="col-6">
-      
+
 <?php
 echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
     'data' => $model->ListProductType(),
@@ -51,7 +98,27 @@ echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), 
     ]
 ])->label('ขอซื้อ/ขอจ้าง');
 ?>
-  <?php
+<div class="row">
+    <div class="col-6">
+
+        <?php
+        echo $form
+            ->field($model, 'data_json[po_create_date]')
+            ->widget(DateControl::classname(), [
+                'type' => DateControl::FORMAT_DATE,
+                'language' => 'th',
+                'widgetOptions' => [
+                    'options' => ['placeholder' => 'ระบุวันที่ขอซื้อ ...'],
+                    'pluginOptions' => [
+                        'autoclose' => true
+                    ]
+                ]
+            ])
+            ->label('วันที่ขอซื้อ');
+    ?>
+</div>
+        <div class="col-6">
+            <?php
 echo $form
     ->field($model, 'data_json[due_date]')
     ->widget(DateControl::classname(), [
@@ -67,9 +134,13 @@ echo $form
     ->label('วันที่ต้องการ');
 ?>
 
-  </div>
-    <div class="col-6">
-    <?php
+
+    </div>
+</div>
+
+
+
+<?php
         echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'data' => $model->ListVendor(),
             'options' => ['placeholder' => 'เลือกบริษัทแนะนำ)'],
@@ -85,30 +156,47 @@ echo $form
             ]
         ])->label('บริษัทแนะนำ');
     ?>
-    <?php
-        echo $form
-            ->field($model, 'data_json[po_create_date]')
-            ->widget(DateControl::classname(), [
-                'type' => DateControl::FORMAT_DATE,
-                'language' => 'th',
-                'widgetOptions' => [
-                    'options' => ['placeholder' => 'ระบุวันที่ขอซื้อ ...'],
-                    'pluginOptions' => [
-                        'autoclose' => true
-                    ]
-                ]
-            ])
-            ->label('วันที่ขอซื้อ');
+
+<?php
+        $initEmployee =  Employees::find()->where(['id' => $model->data_json['leader1']])->one()->getAvatar(false);
+        echo $form->field($model, 'data_json[leader1]')->widget(Select2::classname(), [
+            'initValueText' => $initEmployee,
+            'options' => ['placeholder' => 'เลือก ...'],
+            'size' => Select2::LARGE,
+            'pluginEvents' => [
+                'select2:unselect' => 'function() {
+                $("#order-data_json-board_fullname").val("")
+
+         }',
+                'select2:select' => 'function() {
+                var fullname = $(this).select2("data")[0].fullname;
+                var position_name = $(this).select2("data")[0].position_name;
+                $("#order-data_json-board_fullname").val(fullname)
+                $("#order-data_json-position_name").val(position_name)
+               
+         }',
+            ],
+            'pluginOptions' => [
+                'dropdownParent' => '#main-modal',
+                'allowClear' => true,
+                'minimumInputLength' => 1,
+                'ajax' => [
+                    'url' => Url::to(['/depdrop/employee-by-id']),
+                    'dataType' => 'json',
+                    'delay' => 250,
+                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                    'processResults' => new JsExpression($resultsJs),
+                    'cache' => true,
+                ],
+                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                'templateResult' => new JsExpression('formatRepo'),
+            ],
+        ])->label('ผู้เห็นชอบ')
     ?>
 
-
-
-    </div>
-</div>
-
-
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
-<?= $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
+<?php // $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
@@ -120,6 +208,7 @@ echo $form
 <?= $form->field($model, 'data_json[pr_director_confirm]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[pr_director_comment]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[pr_confirm_2]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[pr_officer_checker]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 
 
@@ -133,27 +222,27 @@ echo $form
 
 <?php
 
-$js = <<< JS
+// $js = <<< JS
 
-    \$('#form-order').on('beforeSubmit', function (e) {
-        var form = \$(this);
-        \$.ajax({
-            url: form.attr('action'),
-            type: 'post',
-            data: form.serialize(),
-            dataType: 'json',
-            success: async function (response) {
-                form.yiiActiveForm('updateMessages', response, true);
-                if(response.status == 'success') {
-                    closeModal()
-                    success()
-                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                }
-            }
-        });
-        return false;
-    });
+//     \$('#form-order').on('beforeSubmit', function (e) {
+//         var form = \$(this);
+//         \$.ajax({
+//             url: form.attr('action'),
+//             type: 'post',
+//             data: form.serialize(),
+//             dataType: 'json',
+//             success: async function (response) {
+//                 form.yiiActiveForm('updateMessages', response, true);
+//                 if(response.status == 'success') {
+//                     closeModal()
+//                     success()
+//                     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+//                 }
+//             }
+//         });
+//         return false;
+//     });
 
-    JS;
-$this->registerJS($js, View::POS_END)
+//     JS;
+// $this->registerJS($js, View::POS_END)
 ?>
