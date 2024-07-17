@@ -109,7 +109,13 @@ $resultsJs = <<< JS
 
 
                 <?php
-        $initEmployee = isset($model->data_json['director_name']) ? Employees::find()->where(['id' => $model->data_json['director_name']])->one()->getAvatar(false) : null;
+                try {
+                    //code...
+                    $initEmployee = isset($model->data_json['director_name']) ? Employees::find()->where(['id' => $model->data_json['director_name']])->one()->getAvatar(false) : null;
+                } catch (\Throwable $th) {
+                    //throw $th;
+                    $initEmployee = '';
+                }
         // echo $initEmployee->getAvatar(false);
         echo $form->field($model, 'data_json[director_name]')->widget(Select2::classname(), [
             'initValueText' => $initEmployee,
