@@ -29,7 +29,7 @@ use yii\web\View;
                     <div class="avatar-detail">
                         <h6 class="mb-1 fs-15"><span class="" href="/hr/employees/view?id=1">ข้อมูลผู้ขาย
                                 : <?=$model->data_json['vendor_name']?></span></h6>
-                        <p class="text-muted mb-0 fs-13"><?=$model->data_json['vendor_address']?></p>
+                        <p class="text-muted mb-0 fs-13"><?=issset($model->data_json['vendor_address']) ? $model->data_json['vendor_address'] : '-'?></p>
                     </div>
                 </div>
 
