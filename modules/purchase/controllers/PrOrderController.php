@@ -9,6 +9,7 @@ use app\modules\purchase\models\OrderSearch;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
+use app\model\Categorise;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;

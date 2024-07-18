@@ -15,7 +15,8 @@ use kartik\widgets\ActiveForm;
     ]); ?>
 
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'name')->textInput()->label(false) ?>
+    <?= $form->field($model, 'category_id')->textInput()->label(false) ?>
     <?= $form->field($model, 'title')->textInput(['maxlength' => true])->label('ชื่อรายการ') ?>
 
 

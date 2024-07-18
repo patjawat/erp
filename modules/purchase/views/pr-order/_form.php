@@ -4,6 +4,8 @@ use app\modules\hr\models\Employees;
 use kartik\datecontrol\DateControl;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use app\models\Categorise;
 use yii\helpers\Html;
 use yii\web\View;
 use yii\helpers\Url;
@@ -81,6 +83,29 @@ $resultsJs = <<< JS
 
 <!-- ชื่อของประเภท -->
 
+<div class="row">
+    <div class="col-4">
+    <?php
+echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+    'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(),'code','title'),
+    'options' => ['placeholder' => 'กรุณาเลือก'],
+    'pluginOptions' => [
+        'allowClear' => true,
+        'dropdownParent' => '#main-modal',
+    ],
+    'pluginEvents' => [
+        'select2:select' => "function(result) { 
+                            var data = \$(this).select2('data')[0].text;
+                            \$('#order-data_json-product_type_name').val(data)
+                            console.log($(this).val())
+                        }",
+    ]
+])->label('ขอซื้อ/ขอจ้าง');
+?>
+    </div>
+<div class="col-8">
+
+
 
 <?php
 echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
@@ -94,10 +119,14 @@ echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), 
         'select2:select' => "function(result) { 
                             var data = \$(this).select2('data')[0].text;
                             \$('#order-data_json-product_type_name').val(data)
+                            console.log($(this).val())
                         }",
     ]
 ])->label('ขอซื้อ/ขอจ้าง');
 ?>
+</div>
+</div>
+
 <div class="row">
     <div class="col-6">
 
@@ -257,6 +286,7 @@ echo $form
 //         });
 //         return false;
 //     });
+
 
 //     JS;
 // $this->registerJS($js, View::POS_END)

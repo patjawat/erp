@@ -40,8 +40,11 @@ use unclead\multipleinput\MultipleInputColumn;
                 <h6><i class="fa-solid fa-circle-exclamation"></i> ข้อมูลรายการ</h5>
 
                     <div class="row">
-                        <div class="col-12">
+                        <div class="col-8">
                             <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อรายการ') ?>
+                        </div>
+                        <div class="col-4">
+                            <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสสินค้า/barcode'])->label('รหัสสินค้า') ?>
                         </div>
                         <div class="col-6">
                             <?php

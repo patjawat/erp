@@ -154,17 +154,18 @@ class OrderController extends Controller
 
     public function actionProductList()
     {
+        // $category = Categorise::findOne($order->data_json['item_type']);
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $order_id = $this->request->get('order_id');
 
         $order = Order::findOne($order_id);
-        $category = Categorise::findOne($order->data_json['item_type']);
 
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['name' => $category->name, 'category_id' => $order->data_json['item_type']]);
-        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->category_id]);
+        // $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->category_id]);
+        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->data_json['item_type']]);
         $dataProvider->pagination->pageSize = 10;
 
         if ($this->request->isAjax) {

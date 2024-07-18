@@ -321,7 +321,7 @@ try {
 
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type']])->all(), 'id', 'title');
+        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type','food_type','service_type']])->all(), 'code', 'title');
     }
 
     public function ListPr()
