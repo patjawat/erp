@@ -2,43 +2,31 @@
 
 namespace app\modules\sm\models;
 
+use Yii;
 use yii\helpers\Html;
 use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use yii\helpers\ArrayHelper;
 use app\modules\filemanager\models\Uploads;
-use Yii;
 
 /**
- * This is the model class for table "asset".
+ * This is the model class for table "categorise".
  *
  * @property int $id
  * @property string|null $ref
- * @property string|null $asset_group แยกประเภทพัสดุ/ครุภัณฑ์
- * @property string|null $asset_item
- * @property string|null $code ครุภัณฑ์
- * @property string|null $fsn_number หมายเลขครุภัณฑ์
+ * @property string|null $category_id
+ * @property string|null $code รหัส
+ * @property string|null $emp_id พนักงาน
+ * @property string $name ชนิดข้อมูล
+ * @property string|null $title ชื่อ
  * @property int|null $qty จำนวน
- * @property string|null $receive_date วันที่รับเข้า
- * @property float|null $price ราคา
- * @property int|null $purchase
- * @property int|null $department
- * @property string|null $repair ประวัติการซ่อม
- * @property string|null $owner
- * @property int|null $life อายุการใช้งาน
- * @property string|null $device_items อุปกรณ์ภายใน
- * @property int|null $on_year
- * @property int|null $dep_id ประจำอยู่หน่วยงาน
- * @property int|null $depre_type ประเภทค่าเสื่อมราคา
- * @property int|null $budget_year งบประมาณ
- * @property string|null $asset_status สถานะทรัพย์สิน
+ * @property string|null $description รายละเอียดเพิ่มเติม
  * @property string|null $data_json
- * @property string|null $updated_at วันเวลาแก้ไข
- * @property string|null $created_at วันเวลาสร้าง
- * @property int|null $created_by ผู้สร้าง
- * @property int|null $updated_by ผู้แก้ไข
+ * @property string|null $unit_items
+ * @property string|null $ma_items รายการบำรุงรักษา
+ * @property int|null $active
  */
-class Product extends \yii\db\ActiveRecord
+class ServiceItem extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
@@ -48,8 +36,6 @@ class Product extends \yii\db\ActiveRecord
         return 'categorise';
     }
 
-    public $q_category;
-
     /**
      * {@inheritdoc}
      */
@@ -57,8 +43,8 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items'], 'safe'],
-            [['active'], 'integer'],
+            [['qty', 'active'], 'integer'],
+            [['data_json', 'unit_items', 'ma_items'], 'safe'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }
@@ -76,16 +62,15 @@ class Product extends \yii\db\ActiveRecord
             'emp_id' => 'Emp ID',
             'name' => 'Name',
             'title' => 'Title',
+            'qty' => 'Qty',
             'description' => 'Description',
             'data_json' => 'Data Json',
+            'unit_items' => 'Unit Items',
+            'ma_items' => 'Ma Items',
             'active' => 'Active',
         ];
     }
 
-    public function getProductType()
-    {
-        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'product_type']);
-    }
 
     public function ShowImg()
     {
@@ -104,7 +89,7 @@ class Product extends \yii\db\ActiveRecord
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
-                                    <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].' <code>('.$this->data_json['unit'].')</code></p>
+                                    <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].'</p>
                                 </div>
                             </div>';
     }
@@ -141,18 +126,5 @@ class Product extends \yii\db\ActiveRecord
                             </div>
         </div>';
     }
-    public function ListProductType()
-    {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
-    }
 
-    public function ListUnit()
-    {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
-    }
-
-    public function ListProductUnit()
-    {
-        return Categorise::find()->where(['category_id' => $this->id, 'name' => 'product_unit'])->all();
-    }
 }
