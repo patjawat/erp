@@ -114,7 +114,7 @@ class Product extends \yii\db\ActiveRecord
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
-                                    <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].' <code>('.$this->ViewTypeName()['code'].')</code></p>
+                                    <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].' <code>('.$this->data_json['unit'].')</code></p>
                                 </div>
                             </div>';
     }
