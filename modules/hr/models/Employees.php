@@ -251,9 +251,11 @@ class Employees extends \yii\db\ActiveRecord
             <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
-            . Html::a($this->fullname,
+            . Html::a(
+                $this->fullname,
                 ['/hr/employees/view', 'id' => $this->id],
-                ['class' => '']) . '
+                ['class' => '']
+            ) . '
             </h6>
             <p class="text-muted mb-0 fs-13">' . $this->positionName() . ' <code>(' . $this->positionTypeName() . ')</code></p>
             ' . ($showAge ? '<p class="text-muted mb-0 fs-13">อายุ ' . $this->age . '</p>' : '') . '
@@ -408,18 +410,31 @@ class Employees extends \yii\db\ActiveRecord
 
     public function leaderUser()
     {
-        $model = Organization::find()->where(['id' => $this->department])->one();
-        $employee = Employees::find()->where(['id' => $model->data_json['leader1']])->one();
-        
-        if ($model) {
-            return [
-                'avatar' => $employee->getAvatar(false),
-                'leader1' => $model->data_json['leader1'],
-                'leader1_fullname' => $model->data_json['leader1_fullname'],
-                'leader2' => $model->data_json['leader2'],
-                'leader2_fullname' => $model->data_json['leader2_fullname'],
-            ];
-        } else {
+
+        try {
+            //code...
+
+            $model = Organization::find()->where(['id' => $this->department])->one();
+            $employee = Employees::find()->where(['id' => $model->data_json['leader1']])->one();
+
+            if ($model) {
+                return [
+                    'avatar' => $employee->getAvatar(false),
+                    'leader1' => $model->data_json['leader1'],
+                    'leader1_fullname' => $model->data_json['leader1_fullname'],
+                    'leader2' => $model->data_json['leader2'],
+                    'leader2_fullname' => $model->data_json['leader2_fullname'],
+                ];
+            } else {
+                return [
+                    'avatar' => '',
+                    'leader1' => '',
+                    'leader1_fullname' => '',
+                    'leader2' => '',
+                    'leader2_fullname' => '',
+                ];
+            }
+        } catch (\Throwable $th) {
             return [
                 'avatar' => '',
                 'leader1' => '',
