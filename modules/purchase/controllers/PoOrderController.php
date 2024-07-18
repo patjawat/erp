@@ -86,7 +86,7 @@ class PoOrderController extends Controller
             if ($model->load($this->request->post())) {
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['/purchase/po-order']);
             } else {
                 return false;
             }
