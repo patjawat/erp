@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="food-item-index">
 
-    <?php Pjax::begin(['enablePushState' => false]); ?>
+    <?php Pjax::begin(['id' => 'food-container','enablePushState' => false]); ?>
     <div class="card">
         <div class="card-body">
 

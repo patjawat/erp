@@ -107,7 +107,7 @@ class ServiceItemController extends Controller
                         'model' => $model,
                     ]),
                     'status' => 'success',
-                    'container' => '#sm-container',
+                    'container' => '#service-container',
                 ];
             } else {
                 return false;
@@ -125,7 +125,7 @@ class ServiceItemController extends Controller
                     'model' => $model,
                 ]),
                 'status' => 'success',
-                'container' => '#sm-container',
+                'container' => '#service-container',
             ];
         } else {
             return $this->render('create', [
@@ -152,7 +152,7 @@ class ServiceItemController extends Controller
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return [
                 'status' => 'success',
-                'container' => '#sm-container',
+                'container' => '#service-container',
             ];
         }
 

@@ -56,7 +56,7 @@ class FoodItem extends \yii\db\ActiveRecord
             'code' => 'Code',
             'emp_id' => 'Emp ID',
             'name' => 'Name',
-            'title' => 'Title',
+           'title' => 'ชื่อรายการ',
             'qty' => 'Qty',
             'description' => 'Description',
             'data_json' => 'Data Json',

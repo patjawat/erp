@@ -108,7 +108,7 @@ class FoodItemController extends Controller
                         'model' => $model,
                     ]),
                     'status' => 'success',
-                    'container' => '#sm-container',
+                    'container' => '#food-container',
                 ];
             } else {
                 return false;
@@ -126,7 +126,7 @@ class FoodItemController extends Controller
                     'model' => $model,
                 ]),
                 'status' => 'success',
-                'container' => '#sm-container',
+                'container' => '#food-container',
             ];
         } else {
             return $this->render('create', [
@@ -153,7 +153,7 @@ class FoodItemController extends Controller
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return [
                 'status' => 'success',
-                'container' => '#sm-container',
+                'container' => '#food-container',
             ];
         }
 
