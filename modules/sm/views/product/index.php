@@ -27,41 +27,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'sm-container', 'timeout' => 3000]); ?>
-<style>
-.custom-table {
-    border-collapse: separate;
-    border-spacing: 0;
-}
 
-.custom-table th:first-child,
-.custom-table td:first-child {
-    border-top-left-radius: .5rem;
-    border-bottom-left-radius: .5rem;
-    border-top-right-radius: .5rem;
-    border-bottom-right-radius: .5rem;
-}
-</style>
 <div class="row">
-    <!-- <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12">
-        <div class="card" style="height:900px;">
-            <div class="card-body ">
-                <div class="d-flex justify-content-between">
-                    <h4 class="card-title"><i class="bi bi-grid"></i> หมวดหมู่</h4>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่า', ['/sm/product-type', 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                        </div>
-                    </div>
-                </div>
-                <?= $this->render('_search_left', ['model' => $searchModel]) ?>
-            </div>
-        </div>
-    </div> -->
+
     <div class="col-12">
         <div class="card">
             <div class="card-body d-flex justify-content-between">
@@ -90,9 +58,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="card">
             <div class="card-body">
-
-
-
                 <div class="table-responsive">
                     <table class="table table-striped custom-table">
                         <thead>

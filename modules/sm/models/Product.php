@@ -124,7 +124,7 @@ class Product extends \yii\db\ActiveRecord
             $model =  self::find()->where(['name' => $this->name])->one();
             if($model->name == 'product_item'){
                 return [
-                    'title' =>  $model->title,
+                    'title' =>  isset($this->productType->title) ? $this->productType->title : 'ไม่ได้ระบุ',
                     'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
                 ];
             }else if($model->name == 'asset_item'){
