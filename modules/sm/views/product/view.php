@@ -63,7 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </tr>
                             <tr class="">
                                 <td class="fw-semibold">ประเภท</td>
-                                <td><?= $model->productType->title ?></td>
+                                <td><?= isset($model->productType->title) ? $model->productType->title : '-' ?></td>
                                 <td class="fw-semibold">คงเหลือ</td>
                                 <td>0</td>
                                 <td class="fw-semibold">หน่วยนับหลัก</td>

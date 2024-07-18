@@ -88,21 +88,21 @@ $resultsJs = <<< JS
     <?php
 
      
-echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-    'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(),'code','title'),
-    'options' => ['placeholder' => 'กรุณาเลือก','id' => 'category-id'],
-    'pluginOptions' => [
-        'allowClear' => true,
-        'dropdownParent' => '#main-modal',
-    ],
-    'pluginEvents' => [
-        'select2:select' => "function(result) { 
-                            var data = \$(this).select2('data')[0].text;
-                            \$('#order-data_json-product_type_name').val(data)
-                            console.log($(this).val())
-                        }",
-    ]
-])->label('กลุ่ม');
+// echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+//     'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(),'code','title'),
+//     'options' => ['placeholder' => 'กรุณาเลือก','id' => 'category-id'],
+//     'pluginOptions' => [
+//         'allowClear' => true,
+//         'dropdownParent' => '#main-modal',
+//     ],
+//     'pluginEvents' => [
+//         'select2:select' => "function(result) { 
+//                             var data = \$(this).select2('data')[0].text;
+//                             \$('#order-data_json-product_type_name').val(data)
+//                             console.log($(this).val())
+//                         }",
+//     ]
+// ])->label('กลุ่ม');
 ?>
     </div>
 <div class="col-8">
@@ -111,17 +111,17 @@ echo $form->field($model, 'category_id')->widget(Select2::classname(), [
 
 <?php
 
-echo $form->field($model, 'data_json[item_type]')->widget(kartik\depdrop\DepDrop::classname(), [
-    // 'options'=>['id'=>'category-id'],
-    'type' => kartik\depdrop\DepDrop::TYPE_SELECT2,
-    'select2Options' => ['pluginOptions' => ['allowClear' => true,'dropdownParent' => '#main-modal',]],
-    'pluginOptions'=>[
-        'dropdownParent' => '#main-modal',
-        'depends'=>['category-id'],
-        'placeholder'=>'Select...',
-        'url'=>Url::to(['/depdrop/asset-type'])
-    ]
-])->label('ประเภท');
+// echo $form->field($model, 'data_json[item_type]')->widget(kartik\depdrop\DepDrop::classname(), [
+//     // 'options'=>['id'=>'category-id'],
+//     'type' => kartik\depdrop\DepDrop::TYPE_SELECT2,
+//     'select2Options' => ['pluginOptions' => ['allowClear' => true,'dropdownParent' => '#main-modal',]],
+//     'pluginOptions'=>[
+//         'dropdownParent' => '#main-modal',
+//         'depends'=>['category-id'],
+//         'placeholder'=>'Select...',
+//         'url'=>Url::to(['/depdrop/asset-type'])
+//     ]
+// ])->label('ประเ');
 
 // echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
 //     'data' => $model->ListProductType(),
@@ -215,7 +215,12 @@ echo $form
     ?>
 
 <?php
-        $initEmployee =  Employees::find()->where(['id' => $model->data_json['leader1']])->one()->getAvatar(false);
+try {
+    //code...
+    $initEmployee =  Employees::find()->where(['id' => $model->data_json['leader1']])->one()->getAvatar(false);
+} catch (\Throwable $th) {
+    $initEmployee = '';
+}
         echo $form->field($model, 'data_json[leader1]')->widget(Select2::classname(), [
             'initValueText' => $initEmployee,
             'options' => ['placeholder' => 'เลือก ...'],
@@ -254,6 +259,7 @@ echo $form
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
 <?php // $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
+<?= $form->field($model, 'data_json[item_type]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>

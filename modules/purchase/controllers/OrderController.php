@@ -164,8 +164,15 @@ class OrderController extends Controller
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['name' => $category->name, 'category_id' => $order->data_json['item_type']]);
-        // $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->category_id]);
-        $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->data_json['item_type']]);
+       
+       if($order->data_json['item_type'] == ""){
+           $dataProvider->query->andFilterWhere(['IN','name',['asset_item','product_item']]);
+           
+    }else{
+           $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->data_json['item_type']]);
+
+       }
+
         $dataProvider->pagination->pageSize = 10;
 
         if ($this->request->isAjax) {
@@ -196,6 +203,8 @@ class OrderController extends Controller
         $order = $this->findModel($order_id);
         $product_id = $this->request->get('product_id');
         $product = Product::findOne($product_id);
+        
+        // return $product;
 
         $model = new Order([
             'category_id' => $order_id,
@@ -210,6 +219,15 @@ class OrderController extends Controller
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->save()) {
+
+                    if($order->data_json['item_type'] == ""){
+                      
+                        // $order->data_json = ArrayHelper::merge($order->data_json,$addItem_type);
+                        $order->category_id = $product->category_id;
+                        $order->save(false);
+                        // return $order->data_json;
+                        
+                    }
                     return [
                         'status' => 'success',
                         'container' => '#purchase-container',

@@ -37,13 +37,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 </div>
                 <div class="w-50">
-                    <div class="d-flex justify-content-end gap-2 align-items-middle">
+                    <div class="d-flex justify-content-end gap-2 align-items-start">
 
                         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-                        <div class="dropdown float-end mx-2 d-flex align-items-middle">
+                        <div class="dropdown float-end btn btn-sm btn-outline-primary">
                             <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis-vertical fs-5"></i>
+                            <i class="fa-solid fa-gear fs-5"></i>
+                            
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="bi bi-grid-fill me-1"></i>  ประเภทวัสดุ', ['/sm/product-type', 'title' => '<i class="bi bi-grid-fill"></i> ประเภทวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
@@ -75,6 +76,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="text-center">
                                     <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                                     <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
+                                    <?=Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/product/delete', 'id' => $model->id], [
+    'class' => 'btn btn-sm btn-danger rounded-pill  delete-item',
+])?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
