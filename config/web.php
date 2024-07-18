@@ -186,7 +186,7 @@ $config = [
             'purchase/*',
             'debug/*',
             'filemanager/*',
-            // 'usermanager/*',
+            'usermanager/*',
             'site/login',
             'site/logout',
             'site/sign-up',
