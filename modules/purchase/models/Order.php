@@ -372,9 +372,9 @@ try {
 
         if($this->status == 3){
             if($data['pr_leader_confirm'] == 'Y'){
-                return 'ผู้อำนวยการ <i class="bi bi-check2-circle"></i> เห็นชอบ';
+                return ' <i class="bi bi-check2-circle"></i>  ผู้อำนวยการเห็นชอบ';
             }else{
-                return 'ผู้อำนวยการ <i class="bi bi-x-circlef"></i> ไม่เป็นชอบ';
+                return '<i class="bi bi-x-circlef"></i> ผู้อำนวยการไม่เป็นชอบ';
             }
         }
 
