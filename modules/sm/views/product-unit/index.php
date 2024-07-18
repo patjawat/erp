@@ -13,13 +13,13 @@ use yii\widgets\Pjax;
 $this->title = 'Product Types';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="product-type-index">
+<div class="product-unit-index">
 
     <?php Pjax::begin(['enablePushState' => false]); ?>
  
     <div class="d-flex justify-content-between  align-items-start">
 
-    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product-type/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product-unit/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
         
     <div class="w-50">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -43,8 +43,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr class="">
                     <td scope="row"><?=$model->title?></td>
                     <td class="text-center">
-                                    <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product-type/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
-                                    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product-type/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                    <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product-unit/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product-unit/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                                 </td>
                 </tr>
                 <?php endforeach;?>

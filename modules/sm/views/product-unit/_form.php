@@ -25,10 +25,6 @@ use yii\helpers\Html;
 
     <?php echo $form->field($model, 'title')->textInput(['maxlength' => true]); ?>
 
-    <?php echo $form->field($model, 'qty')->textInput(['placeholder' => 'เช่น 6,12,24'])->label('หน่วยนับ'); ?>
-
-    <?php echo $form->field($model, 'data_json[barcode]')->textInput()->label('บาร์โค้ด'); ?>
-
 <div class="form-group mt-3 d-flex justify-content-center">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']); ?>
 </div>
