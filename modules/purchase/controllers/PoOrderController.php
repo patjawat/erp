@@ -146,7 +146,7 @@ class PoOrderController extends Controller
                     ->bindValues([':category_id' => $model->id])
                     ->execute();
 
-                return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
+                 return $this->redirect(['/purchase/po-order']);;
                 // return [
                 //     'status' => 'success',
                 //     'container' => '#purchase-container',
