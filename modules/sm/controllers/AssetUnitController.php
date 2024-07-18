@@ -49,7 +49,7 @@ class AssetUnitController extends Controller
         $dataProvider->query->where(['name' => 'unit']);
         return [
             'title' => 'หน่วยนับ',
-            'content' => $this->renderAjax('unit',[
+            'content' => $this->renderAjax('index',[
                 'model' => $model,
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider

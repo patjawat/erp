@@ -178,6 +178,15 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
+    
+    public function actionGetVendor()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $model = Categorise::findOne(['code' => $id,'name' => 'vendor']);
+            return $model;
+    }
+
     public function actionCategoriseByCode()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;

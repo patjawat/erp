@@ -361,12 +361,7 @@ try {
     public function viewStatus()
     {
         $data = $this->data_json;
-        // $model = Categorise::findOne(['code' => $this->status, 'name' => 'order_status']);
-        // if ($model) {
-        //     return $model->title;
-        // } else {
-        //     return 'ขอซื้อ/ขอจ้าง';
-        // }
+
         if($this->status == 2){
             if($data['pr_leader_confirm'] == 'Y'){
                 return 'หัวหน้า <i class="bi bi-check2-circle"></i> เห็นชอบ';
@@ -384,8 +379,16 @@ try {
         }
 
         if($this->status == 4){
-                return 'ละทะเบียนคุม';
+                return 'ตรวจรับวัสดุ';
         }
+
+        if($this->status == 5){
+            return 'รับเข้าคลัง';
+    }
+
+    if($this->status == 6){
+        return 'ส่งบัญชี';
+}
 
     }
 

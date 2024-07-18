@@ -2,17 +2,17 @@
 
 namespace app\modules\sm\controllers;
 
-use app\models\Categorise;
-use app\models\CategoriseSearch;
-use yii\filters\VerbFilter;
+use app\modules\sm\models\ProductType;
+use app\modules\sm\models\ProductTypeSearch;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
 use yii\web\Response;
-use Yii;
 
 /**
- * ProductUnitController implements the CRUD actions for Categorise model.
+ * ProductTypeController implements the CRUD actions for ProductType model.
  */
-class ProductUnitController extends Controller
+class ProductTypeController extends Controller
 {
     /**
      * @inheritDoc
@@ -33,15 +33,16 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Lists all Categorise models.
+     * Lists all ProductType models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new CategoriseSearch();
+        $searchModel = new ProductTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'unit']);
+        $dataProvider->query->andFilterWhere(['name' => 'product_type']);
+
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -60,28 +61,39 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Displays a single Categorise model.
+     * Displays a single ProductType model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
-     * Creates a new Categorise model.
+     * Creates a new ProductType model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Categorise([
-            'name' => 'product_unit',
-            'category_id' => $this->request->get('product_id'),
+        $model = new ProductType([
+            'name' => 'product_type',
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
@@ -89,8 +101,11 @@ class ProductUnitController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->save(false);
-
                 return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('view', [
+                        'model' => $model,
+                    ]),
                     'status' => 'success',
                     'container' => '#sm-container',
                 ];
@@ -109,6 +124,8 @@ class ProductUnitController extends Controller
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
+                'status' => 'success',
+                'container' => '#sm-container',
             ];
         } else {
             return $this->render('create', [
@@ -118,19 +135,19 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Updates an existing Product model.
+     * Updates an existing ProductType model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     *
      * @param int $id ID
-     *
      * @return string|\yii\web\Response
-     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
+        if(!$model->ref){
+            $model->ref  = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return [
@@ -141,7 +158,7 @@ class ProductUnitController extends Controller
 
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('update', [
+            'content' => $this->renderAjax('create', [
                 'model' => $model,
                 'ref' => $model->ref == '' ? substr(\Yii::$app->getSecurity()->generateRandomString(), 10) : $model->ref,
             ]),
@@ -149,13 +166,10 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Deletes an existing Product model.
+     * Deletes an existing ProductType model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     *
      * @param int $id ID
-     *
      * @return \yii\web\Response
-     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
@@ -166,15 +180,15 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Finds the Categorise model based on its primary key value.
+     * Finds the ProductType model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Categorise the loaded model
+     * @return ProductType the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Categorise::findOne(['id' => $id])) !== null) {
+        if (($model = ProductType::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

@@ -4,9 +4,12 @@ namespace app\modules\purchase\controllers;
 
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
+use yii\web\Response;
+use Yii;
 
 /**
  * GrOrderController implements the CRUD actions for Order model.
@@ -46,6 +49,29 @@ class GrOrderController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $requiredName = 'ต้องระบุ';
+            $model->data_json['do_date'] == '' ? $model->addError('data_json[do_date]', 'ต้องระบุอาการ...') : null;
+            $model->data_json['do_number'] == '' ? $model->addError('data_json[do_number]', 'ต้องระบุอาการ...') : null;
+            $model->data_json['order_item_checker'] == '' ? $model->addError('data_json[order_item_checker]', 'ต้องระบุอาการ...') : null;
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
+
 
     /**
      * Displays a single Order model.
@@ -92,9 +118,20 @@ class GrOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $oldObj = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post()) ) {
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            if($model->data_json['order_item_checker'] == 'Y'){
+                $model->status = 5;
+            }else{
+                $model->status = 4;
+            }
+            $model->data_json = ArrayHelper::merge(
+                $oldObj,
+                $model->data_json,
+            );
+            $model->save(false);
+            return $this->redirect(['/purchase/po-order']);
         }
 
         return $this->render('update', [

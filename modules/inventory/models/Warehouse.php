@@ -5,6 +5,7 @@ namespace app\modules\inventory\models;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\Employees;
+use app\models\Categorise;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
@@ -106,5 +107,11 @@ class Warehouse extends \yii\db\ActiveRecord
         //     // throw $th;
         //     return Yii::getAlias('@web') . '/images/store1.jpg';
         // }
+    }
+
+    //แสดงประเภทสินค้าบริการ
+    public function ListOrderType()
+    {
+        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type']])->all(), 'id', 'title');
     }
 }

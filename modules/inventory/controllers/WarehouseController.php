@@ -9,6 +9,8 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;
+use yii\db\Expression;
+use app\modules\purchase\models\Order;
 
 /**
  * WarehouseController implements the CRUD actions for Warehouse model.
@@ -66,6 +68,8 @@ class WarehouseController extends Controller
      */
     public function actionView($id)
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -117,10 +121,12 @@ class WarehouseController extends Controller
      */
     public function actionUpdate($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+       
 
         $model = $this->findModel($id);
+     
         if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load($this->request->post()) && $model->save(false)) {
                 return [
                     'status' => 'success',
@@ -132,6 +138,7 @@ class WarehouseController extends Controller
         }
 
         if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [

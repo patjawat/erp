@@ -149,9 +149,22 @@ echo $form
                 'dropdownParent' => '#main-modal',
             ],
             'pluginEvents' => [
+                "select2:unselecting" => "function() { 
+                $('#order-data_json-vendor_address').val('')
+                }",
                 'select2:select' => "function(result) { 
                                     var data = \$(this).select2('data')[0].text;
                                     \$('#order-data_json-vendor_name').val(data)
+                                    $.ajax({
+                                        type: 'get',
+                                        url: '/depdrop/get-vendor',
+                                        data:{id:$(this).val()},
+                                        dataType:'json',
+                                        success: function (res) {
+                                            $('#order-data_json-vendor_address').val(res.data_json.address)
+                                        }
+                                    });
+
                                 }",
             ]
         ])->label('บริษัทแนะนำ');
@@ -201,6 +214,7 @@ echo $form
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[vendor_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_address]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[pr_leader_confirm]')->hiddenInput()->label(false) ?>
@@ -221,6 +235,7 @@ echo $form
 
 
 <?php
+
 
 // $js = <<< JS
 

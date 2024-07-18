@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="">
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                         <td class="fw-light align-middle">
-                            <?= Html::a($model->po_number, ['/purchase/po-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                            <?= Html::a($model->po_number, ['/purchase/po-order/update', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
                         </td>
 
                         <td class="fw-light align-middle">
@@ -75,13 +75,14 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-light align-middle"><?php //  $model->data_json['comment'] ?></td>
                         <td class="fw-light">
                             <div class="btn-group">
-                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/po-order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/po-order/update', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
                                         <li><?= Html::a('<i class="bi bi-clipboard2-check-fill me-1"></i> ตรวจรับ', ['/purchase/gr-order/update','id' => $model->id], ['class' => 'dropdown-item']) ?></li>
+                                        <li><?= Html::a('<i class="bi bi-clipboard2-check-fill me-1"></i> ส่งบัญชี', ['/purchase/gr-order/update','id' => $model->id], ['class' => 'dropdown-item']) ?></li>
                                         
                             </div>
 

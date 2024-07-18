@@ -1,14 +1,15 @@
 <?php
 
+use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use kartik\select2\Select2;
 
 /** @var yii\web\View $this */
-/** @var app\models\CategoriseSearch $model */
+/** @var app\modules\sm\models\ProductSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="categorise-search">
+<div class="product-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -18,35 +19,14 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
 
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'ref') ?>
-
-    <?= $form->field($model, 'category_id') ?>
-
-    <?= $form->field($model, 'code') ?>
-
-    <?= $form->field($model, 'emp_id') ?>
-
-    <?php // echo $form->field($model, 'name') ?>
-
-    <?php // echo $form->field($model, 'title') ?>
-
-    <?php // echo $form->field($model, 'description') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'unit_items') ?>
-
-    <?php // echo $form->field($model, 'ma_items') ?>
-
-    <?php // echo $form->field($model, 'active') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <?php echo $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+        </div>
     </div>
-
+</div>
     <?php ActiveForm::end(); ?>
 
 </div>

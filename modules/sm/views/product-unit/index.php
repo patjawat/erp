@@ -1,55 +1,71 @@
 <?php
 
-use app\models\Categorise;
+use app\modules\sm\models\ProductType;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-/** @var app\models\CategoriseSearch $searchModel */
+/** @var app\modules\sm\models\ProductTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Categorises';
+$this->title = 'Product Types';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="categorise-index">
+<div class="product-type-index">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <?php Pjax::begin(['enablePushState' => false]); ?>
+ 
+    <div class="d-flex justify-content-between  align-items-start">
 
-    <p>
-        <?= Html::a('Create Categorise', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product-type/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+        
+    <div class="w-50">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
 
-    <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <div
+        class="table-responsive"
+    >
+        <table
+            class="table table-primary"
+        >
+            <thead>
+                <tr>
+                    <th scope="col">รายการ</th>
+                    <th scope="col" style="width:100px;">ดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($dataProvider->getModels() as $model):?>
+                <tr class="">
+                    <td scope="row"><?=$model->title?></td>
+                    <td class="text-center">
+                                    <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product-type/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product-type/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                </td>
+                </tr>
+                <?php endforeach;?>
+            </tbody>
+        </table>
+    </div>
+    
 
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            'ref',
-            'category_id',
-            'code',
-            'emp_id',
-            //'name',
-            //'title',
-            //'description',
-            //'data_json',
-            //'unit_items',
-            //'ma_items',
-            //'active',
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Categorise $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
+    <div class="d-flex justify-content-center">
+                    <div class="text-muted">
+                        <?= yii\bootstrap5\LinkPager::widget([
+                            'pagination' => $dataProvider->pagination,
+                            'firstPageLabel' => 'หน้าแรก',
+                            'lastPageLabel' => 'หน้าสุดท้าย',
+                            'options' => [
+                                'listOptions' => 'pagination pagination-sm',
+                                'class' => 'pagination-sm',
+                            ],
+                        ]); ?>
+                    </div>
+                </div>
 
     <?php Pjax::end(); ?>
 

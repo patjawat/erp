@@ -33,18 +33,18 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
             <h5><i class="fa-solid fa-circle-info text-primary"></i> ใบสั่งซื้อสินค้า</h5>
 
             <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <?= Html::a('<i class="bx bx-trash text-danger me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
+                <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" style="">
+                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a('<i class="bx bx-trash text-danger me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
                             'class' => 'dropdown-item  delete-item',
                             ]) ?>
-                        </div>
-                    </div>
+                </div>
+            </div>
         </div>
         <br>
         <?php $form = ActiveForm::begin([
@@ -59,10 +59,10 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 
                 <table class="table table-striped-columns mt-4">
                     <tbody>
-                    <tr>
+                        <tr>
                             <td class="text-end">ผู้ขอ</td>
-                            <td  colspan="3"> <?= $model->getUserReq()['avatar'] ?></td>
-                          
+                            <td colspan="3"> <?= $model->getUserReq()['avatar'] ?></td>
+
                         </tr>
                         <tr class="">
                             <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
@@ -71,10 +71,10 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                             <td> <?= $model->data_json['product_type_name']?></td>
                         </tr>
                         <tr class="">
-                            
+
                             <td class="text-end">ผู้ขาย</td>
                             <td colspan="3"><?= $model->data_json['vendor_name']?></td>
-                           
+
                         </tr>
 
                     </tbody>
@@ -96,7 +96,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                         ]
                                     ]
                                 ])->label('ลงวันที่') ?>
-                                                    <?= $form->field($model, 'data_json[warranty]')
+                        <?= $form->field($model, 'data_json[warranty]')
                                                     ->widget(DateControl::classname(), [
                                     'type' => DateControl::FORMAT_DATE,
                                     'language' => 'th',
@@ -107,7 +107,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                         ]
                                     ]
                                 ])->label('การรับประกัน') ?>
-                                                    <?= $form->field($model, 'data_json[order_receipt_date]')->widget(DateControl::classname(), [
+                        <?= $form->field($model, 'data_json[order_receipt_date]')->widget(DateControl::classname(), [
                                     'type' => DateControl::FORMAT_DATE,
                                     'language' => 'th',
                                     'widgetOptions' => [
@@ -118,9 +118,9 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                     ]
                                 ])->label('วันที่รับใบสั่ง') ?>
 
-                                                </div>
-                                                <div class="col-6">
-                                                    <?= $form->field($model, 'data_json[supplier]')->widget(DateControl::classname(), [
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[delivery_date]')->widget(DateControl::classname(), [
                                     'type' => DateControl::FORMAT_DATE,
                                     'language' => 'th',
                                     'widgetOptions' => [
@@ -130,8 +130,8 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                         ]
                                     ]
                                 ])->label('กำหนดวันส่งมอบ') ?>
-                                                    <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
-                                                    <?= $form->field($model, 'data_json[signing_date]')->widget(DateControl::classname(), [
+                        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
+                        <?= $form->field($model, 'data_json[signing_date]')->widget(DateControl::classname(), [
                                     'type' => DateControl::FORMAT_DATE,
                                     'language' => 'th',
                                     'widgetOptions' => [
@@ -152,15 +152,14 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
         <div class="row d-flex justify-content-end">
             <div class="col-md-4 gap-3">
                 <div class="d-grid gap-2">
-            <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary shadow']) ?>
-        </div>
+                    <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary shadow']) ?>
+                </div>
             </div>
-            
         </div>
         <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
-    
+
 
         <?php ActiveForm::end(); ?>
 

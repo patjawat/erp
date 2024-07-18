@@ -86,7 +86,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif; ?>
                                         
                                         <?php if($model->po_number != ''):?>
-                                            <li><a href="#" class="text-success dropdown-item"><i class="bi bi-check2-circle me-1"></i> ออกใบสั่งซื้อแล้ว</a></li>
+                                            <li><?= Html::a('<i class="bi bi-check2-circle me-1"></i> ออกใบสั่งซื้อแล้ว', ['/purchase/po-order/create','id' => $model->id], ['class' => 'dropdown-item']) ?></li>
                                             <?php endif; ?>
                                 </ul>
                             </div>

@@ -14,6 +14,8 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;
+use yii\db\Expression;
+use app\modules\inventory\models\Warehouse;
 
 /**
  * irController implements the CRUD actions for ir model.
@@ -156,9 +158,16 @@ class ReceiveController extends Controller
     public function actionListOrderByPo()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+        $item= $warehouseModel->data_json['item_type'];
+
         $po_number = $this->request->get('po_number');
-        // $po_number = 'PO-670005';
-        $models = Order::find()->where(['name' => 'order','status' => '5'])->all();
+        $models = Order::find()
+        ->where(['name' => 'order','status' => '5'])
+        ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
+        ->all();
         return [
             'title' => $this->request->get('title'),
             'content' => $this->renderAjax('list_order_by_po', [

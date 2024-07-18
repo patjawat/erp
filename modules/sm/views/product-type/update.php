@@ -3,14 +3,14 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\purchase\models\Order $model */
+/** @var app\modules\sm\models\ProductType $model */
 
-$this->title = 'Update Order: ' . $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Orders', 'url' => ['index']];
+$this->title = 'Update Product Type: ' . $model->name;
+$this->params['breadcrumbs'][] = ['label' => 'Product Types', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
-<div class="order-update">
+<div class="product-type-update">
 
     <?= $this->render('_form', [
         'model' => $model,

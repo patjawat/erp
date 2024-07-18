@@ -39,11 +39,6 @@ class ProductController extends Controller
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'product_item']);
-        $dataProvider->query->andFilterWhere([
-            'in',
-            'category_id',
-            $searchModel->q_category,
-        ]);
         $dataProvider->pagination->pageSize = 10;
 
         return $this->render('index', [

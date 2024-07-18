@@ -4,10 +4,13 @@ use kartik\widgets\ActiveForm;
 use softark\duallistbox\DualListbox;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use kartik\select2\Select2
+use kartik\select2\Select2;
+use yii\db\Expression;
+use app\modules\purchase\models\Order;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\Warehouse $model */
 /** @var yii\widgets\ActiveForm $form */
+ 
 ?>
 
 <div class="warehouse-form">
@@ -62,6 +65,27 @@ use kartik\select2\Select2
                     'model' => $model,
                     'attribute' => 'data_json[officer]',
                     'items' => $model->listUserstore(),
+                    'options' => [
+                        'multiple' => true,
+                        'size' => 8,
+                    ],
+                    'clientOptions' => [
+                        'moveOnSelect' => false,
+                        'selectedListLabel' => 'เจ้าหน้าที่รับผิดชอบคลัง',
+                        'nonSelectedListLabel' => '(กำหนดให้สิทธ์ warehouse ก่อนถึงจะปรากฏ)',
+                    ],
+                ]);
+            ?>
+ <div
+                class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between mt-3">
+                <h5><i class="fa-solid fa-circle-info text-primary"></i> กำหนดประเภทที่รับเข้า</h5>
+
+            </div>
+<?php
+                echo DualListbox::widget([
+                    'model' => $model,
+                    'attribute' => 'data_json[item_type]',
+                    'items' => $model->ListOrderType(),
                     'options' => [
                         'multiple' => true,
                         'size' => 8,
