@@ -86,9 +86,11 @@ $resultsJs = <<< JS
 <div class="row">
     <div class="col-4">
     <?php
+
+     
 echo $form->field($model, 'category_id')->widget(Select2::classname(), [
     'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(),'code','title'),
-    'options' => ['placeholder' => 'กรุณาเลือก'],
+    'options' => ['placeholder' => 'กรุณาเลือก','id' => 'category-id'],
     'pluginOptions' => [
         'allowClear' => true,
         'dropdownParent' => '#main-modal',
@@ -100,7 +102,7 @@ echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                             console.log($(this).val())
                         }",
     ]
-])->label('ขอซื้อ/ขอจ้าง');
+])->label('กลุ่ม');
 ?>
     </div>
 <div class="col-8">
@@ -108,21 +110,34 @@ echo $form->field($model, 'category_id')->widget(Select2::classname(), [
 
 
 <?php
-echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
-    'data' => $model->ListProductType(),
-    'options' => ['placeholder' => 'กรุณาเลือก'],
-    'pluginOptions' => [
-        'allowClear' => true,
+
+echo $form->field($model, 'data_json[item_type]')->widget(kartik\depdrop\DepDrop::classname(), [
+    // 'options'=>['id'=>'category-id'],
+    'type' => kartik\depdrop\DepDrop::TYPE_SELECT2,
+    'select2Options' => ['pluginOptions' => ['allowClear' => true,'dropdownParent' => '#main-modal',]],
+    'pluginOptions'=>[
         'dropdownParent' => '#main-modal',
-    ],
-    'pluginEvents' => [
-        'select2:select' => "function(result) { 
-                            var data = \$(this).select2('data')[0].text;
-                            \$('#order-data_json-product_type_name').val(data)
-                            console.log($(this).val())
-                        }",
+        'depends'=>['category-id'],
+        'placeholder'=>'Select...',
+        'url'=>Url::to(['/depdrop/asset-type'])
     ]
-])->label('ขอซื้อ/ขอจ้าง');
+])->label('ประเภท');
+
+// echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
+//     'data' => $model->ListProductType(),
+//     'options' => ['placeholder' => 'กรุณาเลือก'],
+//     'pluginOptions' => [
+//         'allowClear' => true,
+//         'dropdownParent' => '#main-modal',
+//     ],
+//     'pluginEvents' => [
+//         'select2:select' => "function(result) { 
+//                             var data = \$(this).select2('data')[0].text;
+//                             \$('#order-data_json-product_type_name').val(data)
+//                             console.log($(this).val())
+//                         }",
+//     ]
+// ])->label('ขอซื้อ/ขอจ้าง');
 ?>
 </div>
 </div>
