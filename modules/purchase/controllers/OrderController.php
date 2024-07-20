@@ -61,8 +61,11 @@ class OrderController extends Controller
      */
     public function actionView($id)
     {
+        $model =  $this->findModel($id);
+        \Yii::$app->session->set('order', $model);
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 

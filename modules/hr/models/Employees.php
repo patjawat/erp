@@ -889,7 +889,13 @@ class Employees extends \yii\db\ActiveRecord
 
     public function departmentName()
     {
-        return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : null;
+        try {
+            return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : '';
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+            return '';
+        }
         // return isset($this->empDepartment) ? $this->empDepartment->title : $this->department;
     }
 

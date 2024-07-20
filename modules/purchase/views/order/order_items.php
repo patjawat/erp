@@ -10,7 +10,7 @@ use yii\widgets\Pjax;
                 <thead class="table-primary">
                     <tr>
                         <th style="width:500px"> 
-                            <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เพิ่มรายการใหม่', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มรายการใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?></th>
+                            <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เพิ่มรายการใหม่', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มรายการใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?></th>
                         <th class="text-center" style="width:80px">หน่วย</th>
                         <th class="text-end">ราคาต่อหน่วย</th>
                         <th class="text-center" style="width:80px">จำนวน</th>
@@ -76,9 +76,7 @@ use yii\widgets\Pjax;
             </table>
             <div class="row justify-content-end">
                 <div class="col-8">
-                            <div class="bg-primary-subtle p-3 rounded w-100 d-flex justify-content-center align-middle">
-                                <h1><?=$model->viewStatus()?></h1>
-                            </div>
+
                 </div>
                 <div class="col-4">
                     <div class="table-responsive">

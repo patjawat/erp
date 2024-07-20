@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use app\components\SiteHelper;
+
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Order $model */
 $this->title = 'ขอซื้อขอจ้าง';
@@ -9,8 +9,6 @@ $this->params['breadcrumbs'][] = ['label' => 'Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-
-
 
 
 <?php $this->beginBlock('page-title'); ?>
@@ -118,108 +116,30 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="col-4">
 
-
-        <!-- ผู้อำนวยการอนุมัติ -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center py-2">
-                <h6 class="mb-0">ผู้อำนวยการอนุมัติ</h6>
-                <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#Director"
-                    aria-expanded="true" aria-controls="collapseCard">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-
-            <div class="card-body collapse" id="Director">
-                <!-- Start Flex Contriler -->
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="text-truncate">
-                        <?= SiteHelper::viewDirector()['avatar'] ?>
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6>อนุมัติ/เห็นชอบ</h6>
+                    <div class="dropdown float-end">
+                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" style="">
+                            <a class="dropdown-item open-modal"
+                                href="/purchase/order/update?id=6&amp;title=%3Ci+class%3D%22fa-regular+fa-pen-to-square%22%3E%3C%2Fi%3E+%E0%B9%81%E0%B8%81%E0%B9%89%E0%B9%84%E0%B8%82"
+                                data-size="modal-md"><i class="fa-regular fa-pen-to-square me-1"></i> ดำเนินการ</a>
+                        </div>
                     </div>
                 </div>
-                <!-- End Flex Contriler -->
-            </div>
 
-            <div class="card-footer d-flex justify-content-between">
-                <h6>การอนุมัติ</h6>
+<!-- Start` -->
+                <div class="d-flex flex-column gap-3">
+
+               
                 <div>
-                    <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
-                    <?=Html::a('<i class="bi bi-check2-circle"></i> อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-md']])?>
-                    <?php elseif($model->data_json['pr_director_confirm'] == 'N'):?>
-                    <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-md']])?>
-                    <?php else:?>
-                    <?=Html::a('<i class="fa-regular fa-clock"></i> รออนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?>
-                    <?php endif?>
-                </div>
-            </div>
+                    <?= $model->viewLeaderUser()['avatar'] ?>
 
-        </div>
-        <!-- จบส่วนผู้อำนวยการอนุมัติ -->
-
-
-        <!-- ผู้ตรวจสอบ -->
-        <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center py-2">
-                <h6 class="mb-0">ผู้ตรวจสอบ</h6>
-                <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#me"
-                    aria-expanded="true" aria-controls="collapseCard">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-            <div class="card-body collapse" id="me">
-                <!-- Start Flex Contriler -->
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="text-truncate">
-                        <h6>ผู้ตรวจสอบ</h6>
-                        <?= $model->getMe()['avatar'] ?>
-                    </div>
-                </div>
-                <!-- End Flex Contriler -->
-            </div>
-            <div class="card-footer d-flex justify-content-between">
-
-                <h6>จนท.พัสดุตรวจสอบ</h6>
-                <div>
-                    <?php if($model->data_json['pr_officer_checker'] == 'Y'):?>
-                    <?=Html::a('<i class="bi bi-check2-circle"></i> ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-md']])?>
-                    <?php elseif($model->data_json['pr_officer_checker'] == 'N'):?>
-                    <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-md']])?>
-                    <?php else:?>
-                    <?=Html::a('<i class="fa-regular fa-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?>
-                    <?php endif?>
-                </div>
-            </div>
-        </div>
-        <!-- จบส่วนผู้ตรวจสอบ -->
-
-
-        <!-- ผู้เห็นชอบ -->
-        <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center py-2">
-                <h6 class="mb-0">ผู้เห็นชอบ</h6>
-                <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#leader"
-                    aria-expanded="true" aria-controls="collapseCard">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-            <div class="card-body collapse" id="leader">
-                <!-- Start Flex Contriler -->
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="text-truncate">
-                        <?= $model->viewLeaderUser()['avatar'] ?>
-                    </div>
-                </div>
-                <!-- End Flex Contriler -->
-            </div>
-            <div class="card-footer d-flex justify-content-between">
-
-                <h6>อนุมัติ/เห็นชอบ</h6>
-                <div>
                     <?php if($model->pr_number != ''):?>
                     <?php if($model->data_json['pr_leader_confirm'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> เห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
@@ -233,9 +153,30 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif?>
                     <?php endif?>
                 </div>
+                
+                <?php if($model->data_json['pr_leader_confirm'] == 'Y'):?>
+                    <div>
+                        <?= $model->getMe()['avatar'] ?>
+                        <?php if($model->data_json['pr_officer_checker'] == 'Y'):?>
+                <?=Html::a('<i class="bi bi-check2-circle"></i> ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
+                                ['class' => 'btn btn-sm btn-success open-modal','data' => ['size' => 'modal-md']])?>
+                <?php elseif($model->data_json['pr_officer_checker'] == 'N'):?>
+                <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
+                                ['class' => 'btn btn-sm  btn-danger open-modal','data' => ['size' => 'modal-md']])?>
+                <?php else:?>
+                <?=Html::a('<i class="fa-regular fa-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
+                                ['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-md']])?>
+                <?php endif?>
+
+                    </div>
+                    <?php endif?>
+
+
+                    </div>
+                    <!-- End  -->
             </div>
+            <div class="card-footer"></div>
         </div>
-        <!-- จบส่วนผู้เห็นชอบ -->
 
         <div class="card">
             <div class="card-body">

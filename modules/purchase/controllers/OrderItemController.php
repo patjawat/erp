@@ -49,6 +49,27 @@ class OrderItemController extends Controller
         ]);
     }
 
+    //คณะกรรมการตรวจรับพัสดุ
+    public function actionCommittee()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('list_committee'),
+        ];
+    }
+
+        //คณะกรรมการตรวจรับพัสดุ
+        public function actionCommitteeDetail()
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_committee_detail'),
+            ];
+        }
+
+
     /**
      * Displays a single Order model.
      * @param int $id ID
@@ -79,9 +100,14 @@ class OrderItemController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('list_'.$model->name),
                     'status' => 'success',
-                    'container' => '#' . $model->name,
                 ];
+                // return [
+                //     'title' => $this->request->get('title'),
+                //     'status' => 'success',
+                //     'container' => '#' . $model->name,
+                // ];
             }
         } else {
             $model->loadDefaultValues();
@@ -118,9 +144,14 @@ class OrderItemController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('list_'.$model->name),
                     'status' => 'success',
-                    'container' => '#' . $model->name,
                 ];
+                // return [
+                //     'title' => $this->request->get('title'),
+                //     'status' => 'success',
+                //     'container' => '#' . $model->name,
+                // ];
             }
         } else {
             $model->loadDefaultValues();

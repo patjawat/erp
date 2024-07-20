@@ -214,7 +214,7 @@ try {
     }
 
     // คณะกรรมการ
-    public function ShowBoard()
+    public function ShowCommittee()
     {
         try {
             $employee = Employees::find()->where(['id' => $this->data_json['employee_id']])->one();
@@ -230,6 +230,44 @@ try {
             ];
         }
     }
+
+
+  //  ภาพทีมคณะกรรมการ
+    public function StackComittee()
+    {
+        try {
+            $data = '';
+            $data .= '<div class="avatar-stack">';
+            foreach (self::find()->where(['name' => 'committee'])->all() as $key => $avatar) {
+                $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
+                $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
+                $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+                $data .= '</a>';
+            }
+            $data .= '</div>';
+            return $data;
+        } catch (\Throwable $th) {
+        }
+    }
+
+
+  //  ภาพทีมคณะกรรมการกำหนดรายละเอียด
+  public function StackComitteeDetail()
+  {
+      try {
+          $data = '';
+          $data .= '<div class="avatar-stack">';
+          foreach (self::find()->where(['name' => 'committee_detail'])->all() as $key => $avatar) {
+              $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
+              $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
+              $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+              $data .= '</a>';
+          }
+          $data .= '</div>';
+          return $data;
+      } catch (\Throwable $th) {
+      }
+  }
 
     // แสเงวันที่ขอ
 
