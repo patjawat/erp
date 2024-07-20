@@ -21,6 +21,8 @@ class LineNotify extends Component
 
     public function sendMessage($message, $groupId)
     {
+        try {
+
         $group = Categorise::find()->where(['name' => 'line_group', 'code' => $groupId])->one();
         $client = new Client();
         // $token = 'u090Q5IjiP3BOCPbGGdn1Vdj16AZ6mVtz2SV9Bd22ce';
@@ -38,5 +40,9 @@ class LineNotify extends Component
         } else {
             throw new \Exception('Failed to send message: ' . $response->content);
         }
+                    //code...
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
     }
 }
