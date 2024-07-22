@@ -18,6 +18,7 @@ class SignupForm extends Model {
 
     public $cid;
     public $birthday;
+    public $line_id;
 
 
     /**
@@ -27,7 +28,7 @@ class SignupForm extends Model {
     {
         return [
             ['username', 'trim'],
-            // ['fullname', 'required'],
+            ['line_id', 'string'],
             [['email','cid'], 'required'],
             ['username', 'unique', 'targetClass' => '\app\modules\usermanager\models\User', 'message' => 'ถูกใช้แล้ว'],
             ['fullname', 'string', 'min' => 2, 'max' => 255],
@@ -89,6 +90,7 @@ class SignupForm extends Model {
                 
                 $user->username = $this->email;
                 $user->email = $this->email;
+                $user->line_id = $this->line_id;
                 
                 $user->setPassword($this->password);
                 $user->generateAuthKey();

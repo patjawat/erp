@@ -178,7 +178,7 @@ $config = [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
             // '*',
-            // 'liff/*',
+            'line/*',
             // 'me/*',
             'line-group/*',
             'summary/*',

@@ -1,0 +1,16 @@
+<div class="line-default-index">
+    <h1><?= $this->context->action->uniqueId ?></h1>
+    <p>
+        This is the view content for action "<?= $this->context->action->id ?>".
+        The action belongs to the controller "<?= get_class($this->context) ?>"
+        in the "<?= $this->context->module->id ?>" module.
+    </p>
+    <p>
+        You may customize this page by editing the following file:<br>
+        <code><?= __FILE__ ?></code>
+    </p>
+</div>
+<div class="mt-5 p-5" style="background-color:#0966AD">
+    <i class="bi bi-ui-checks-grid fs-1" style="color: #f1f2f8;"></i>
+
+</div>

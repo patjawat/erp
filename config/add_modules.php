@@ -60,6 +60,7 @@ $modules['old'] = ['class' => 'app\modules\old\Module'];  // theme dev
 $modules['hr'] = ['class' => 'app\modules\hr\Module'];  // HRMS
 $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานและโครงการ (Project mansgement)
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
+$modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
 $modules['inventory'] = ['class' => 'app\modules\inventory\Module'];  // คลัง
 $modules['stock'] = ['class' => 'app\modules\stock\Module'];  // คลัง by โอ๋
 $modules['helpdesk'] = ['class' => 'app\modules\helpdesk\Module'];  // บริการช่วยเหลือ (งานซ่อม)
