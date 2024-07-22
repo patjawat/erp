@@ -26,7 +26,7 @@ class AppAsset extends AssetBundle
         'css/custom.css',
         // "css/v2.css",
         // "css/docs.css",
-        'css/font-awesome-all.min.css',
+        'css/fontawesome.min.css',
         'css/bootstrap-icons.min.css',
         'aos/aos.css',
         'sweetalert2/dist/sweetalert2.css',
