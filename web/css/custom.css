@@ -11962,7 +11962,7 @@ textarea.form-control-lg {
 }
 
 :root {
-  --bs-body-font-family: "prompt", sans-serif;
+  --bs-body-font-family: "prompt", Arial, sans-serif;
 }
 
 /* make primary button bold */
