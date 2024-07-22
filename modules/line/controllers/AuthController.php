@@ -17,9 +17,9 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 
-class RegisterController extends \yii\web\Controller
+class AuthController extends \yii\web\Controller
 {
-    public function actionIndex()
+    public function actionRegister()
     {
 
         $model = new SignupForm([
@@ -32,11 +32,12 @@ class RegisterController extends \yii\web\Controller
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->signup()) {
+            // if ($model->load(Yii::$app->request->post())) {
                 $emp = Employees::findOne(['cid' => $model->cid]);
                 return $this->asJson([
                     'success' => true,
                     'model' => $model,
-                    'content' => $this->renderAjax('signup_success',['model' => $emp])
+                    'content' => $this->renderAjax('welcome',['model' => $emp])
                 ]);
             }
     
@@ -47,15 +48,49 @@ class RegisterController extends \yii\web\Controller
     
             return $this->asJson(['validation' => $result]);
         }
-        return $this->render('index', [
+        return $this->render('register', [
             'model' => $model,
         ]);
 
-        return $this->render('index');
+        return $this->render('register');
     }
+    public function actionLogin()
+    {
+        $model = new SignupForm([
+            'cid' =>'112233',
+            'email' =>'admin@local.com',
+            'password' =>'112233',
+        ]);
+        return $this->render('login',[
+            'model' => $model,
+        ]);
+    }
+
+    public function actionCheckProfile()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+       
+        if ($this->request->isPost) {
+            $line_id =  $this->request->post('line_id');
+            $user = User::findOne(['line_id' => $line_id]);
+
+           if($user){
+            $user_  = User::findByUsername($user->username);
+             $isLogin = Yii::$app->user->login($user_,0);
+             if($isLogin){
+                return true;
+             }else{
+                return false;
+             }
+           }
+        // return $this->render('welcome');
+        }
+    }
+
     public function actionWelcome()
     {
         return $this->render('welcome');
     }
+
 
 }

@@ -18,7 +18,7 @@ class UserSearch extends User
     {
         return [
             [['id', 'confirmed_at', 'blocked_at', 'created_at', 'updated_at', 'last_login_at', 'status'], 'integer'],
-            [['username', 'email', 'password_hash', 'auth_key', 'unconfirmed_email', 'registration_ip', 'password_reset_token','fullname','q','phone'], 'safe'],
+            [['username', 'email', 'password_hash', 'auth_key', 'unconfirmed_email', 'registration_ip', 'password_reset_token','fullname','q','phone','line_id'], 'safe'],
         ];
     }
 

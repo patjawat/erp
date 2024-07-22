@@ -6,16 +6,16 @@ use yii\bootstrap5\ActiveForm;
 use yii\web\View;
 use yii\widgets\MaskedInput;
 // $assets = AppAsset::register($this);
-$this->title = "ระบบลงทะเบียน";
+$this->title = "Authentication";
 ?>
 
 
-<div class="card">
+<div class="card border border-danger">
     <div class="card-body">
 
 <div id="signup-container" class="row justify-content-center mt-5">
     <div class="sign-in-from">
-        <h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
+        <h4 class="text-center mb-3 text-primary" id="title"><?=$this->title?></h4>
         <div class="line-profile">
     <div class="d-flex justify-content-center align-items-center">
         <div class="round-image">
@@ -32,12 +32,7 @@ $this->title = "ระบบลงทะเบียน";
         <div class="row justify-content-center">
             <div class="col-lg-4 col-md-12 col-sm-12">
                 <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'cid')->textInput(['placeholder' => 'ระบุเลขบัตรประชาชน','autofocus' => true,'class' => 'form-control form-control-lg rounded-pill border-0'])->label('เลขบัตรประชาชน') ?>
-                <?= $form->field($model, 'email')->textInput(['placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
-                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
                 <div class="d-inline-block w-100">
-
-
                     <div class="d-grid gap-2 mt-3">
                         <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-regster" type="submit">
                             <i class="fa-solid fa-circle-check"></i> ลงทะเบียน</button>
@@ -66,7 +61,12 @@ $this->title = "ระบบลงทะเบียน";
 
 
 <?php
+use yii\helpers\Url;
+$urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $js = <<< JS
+
+
+
 
 
 $('#blank-form').on('beforeSubmit', function () {
@@ -107,6 +107,7 @@ $('#blank-form').on('beforeSubmit', function () {
 
 
 
+
 function logOut() {
       liff.logout()
       window.location.reload()
@@ -127,15 +128,40 @@ function logOut() {
     //   $('#profile').src = profile.pictureUrl;
 
     }
+
+
+
+    async function checkProfile(){
+    const {userId} = await liff.getProfile()
+    await $.ajax({
+        type: "post",
+        url: "$urlCheckProfile",
+        data:{
+            line_id:userId
+        },
+        dataType: "json",
+        success: function (res) {
+            console.log(res);
+            if(!res){
+                location.replace("https://liff.line.me/2005893839-9qRwwMWG");
+            }
+        }
+    });
+    console.log('check profile');
+}
+
+
+
     async function main() {
-      await liff.init({ liffId: "2005893839-9qRwwMWG" })
+      await liff.init({ liffId: "2005893839-JAYvvA6G" })
       if (liff.isInClient()) {
         getUserProfile()
-        console.log('ss');
+
       } else {
         if (liff.isLoggedIn()) {
-            console.log("xx")
           getUserProfile()
+          //ตรวจสอล ID ว่าเคยมี
+          checkProfile()
         //   document.getElementById("btnLogIn").style.display = "none"
         //   document.getElementById("btnLogOut").style.display = "block"
         } else {
@@ -148,6 +174,11 @@ function logOut() {
       }
     }
     main()
+
+    
+    
+
+
 
 JS;
 $this->registerJs($js,View::POS_END);
