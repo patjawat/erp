@@ -1,9 +1,8 @@
 <?php
 /** @var yii\web\View $this */
 ?>
-<h1>service/index</h1>
-
-<p>
-    You may change the content of this page by modifying
-    the file <code><?= __FILE__; ?></code>.
-</p>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">อยู่ระหว่างดำเนินการ</h4>
+    </div>
+</div>

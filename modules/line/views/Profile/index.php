@@ -4,60 +4,49 @@ use yii\web\View;
 use yii\helpers\Html;
 ?>
 
-<?php if(!Yii::$app->user->isGuest):?>
-     <?php
-                     echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
-                     . Html::submitButton(
-                         '<i class="bx bx-power-off me-2"></i> ออกจากระบบ (' . Yii::$app->user->identity->username . ')',
-                         ['class' => 'dropdown-item']
-                     )
-                     . Html::endForm();
-                    ?>
-                    <?php else:?>
-                        <?php
-    echo Yii::$app->user->id;
-    ?>
-                    <?php endif; ?>
+<?php $this->beginBlock('page-title'); ?>
+ข้อมูลส่วนบุคคล | โปรไฟล์
+<?php $this->endBlock(); ?>
 
 
-    <?= $this->render('avatar',['model' => $model])?>
+<?php
+try {
+    if (!Yii::$app->user->isGuest){
+        echo $this->render('avatar',['model' => $model]);
+    }
+} catch (\Throwable $th) {
+    //throw $th;
+}
+?>
 
 
 
-
-
-                    <div class="card">
+<div class="card">
     <div class="card-body">
 
-<div id="signup-container" class="row justify-content-center mt-5">
-    <div class="sign-in-from">
-        <h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
-        <div class="line-profile">
-    <div class="d-flex justify-content-center align-items-center">
-        <div class="round-image">
-            <img id="pictureUrl" class="rounded-circle" width="200">
-        </div>
-    </div>
-    <div class="text-center">
-        <h4 class="mt-3" id="displayName"></h4>
-    </div>
-</div>
-    
-
-<?php
-print_r(Yii::$app->user->id)
-
-?>
-<button onclick="return logOut()">Logout</button>
+        <div id="signup-container" class="row justify-content-center mt-5">
+            <div class="sign-in-from">
+                <h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
+                <div class="line-profile">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="round-image">
+                            <img id="pictureUrl" class="rounded-circle" width="200">
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="mt-3" id="displayName"></h4>
+                    </div>
+                </div>
+                <!-- <button onclick="return logOut()">Logout</button>
 
 
-<img id="pictureUrl" width="25%">
-  <p id="userId"></p>
-  <p id="displayName"></p>
-  <p id="statusMessage"></p>
-  <p id="getDecodedIDToken"></p>
+                <img id="pictureUrl" width="25%">
+                <p id="userId"></p>
+                <p id="displayName"></p>
+                <p id="statusMessage"></p>
+                <p id="getDecodedIDToken"></p> -->
 
-<?php
+                <?php
 use yii\helpers\Url;
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $js = <<< JS
@@ -76,7 +65,7 @@ async function checkProfile(){
         success: function (res) {
             console.log(res);
             if(res.status == false){
-                location.replace("https://liff.line.me/2005893839-9qRwwMWG");
+                // location.replace("https://liff.line.me/2005893839-9qRwwMWG");
             }
         }
     });
@@ -85,11 +74,11 @@ async function checkProfile(){
 
 function runApp() {
       liff.getProfile().then(profile => {
-        document.getElementById("pictureUrl").src = profile.pictureUrl;
-        document.getElementById("userId").innerHTML = '<b>UserId:</b> ' + profile.userId;
-        document.getElementById("displayName").innerHTML = '<b>DisplayName:</b> ' + profile.displayName;
-        document.getElementById("statusMessage").innerHTML = '<b>StatusMessage:</b> ' + profile.statusMessage;
-        document.getElementById("getDecodedIDToken").innerHTML = '<b>Email:</b> ' + liff.getDecodedIDToken().email;
+        // document.getElementById("pictureUrl").src = profile.pictureUrl;
+        // document.getElementById("userId").innerHTML = '<b>UserId:</b> ' + profile.userId;
+        // document.getElementById("displayName").innerHTML = '<b>DisplayName:</b> ' + profile.displayName;
+        // document.getElementById("statusMessage").innerHTML = '<b>StatusMessage:</b> ' + profile.statusMessage;
+        // document.getElementById("getDecodedIDToken").innerHTML = '<b>Email:</b> ' + liff.getDecodedIDToken().email;
         checkProfile()
       }).catch(err => console.error(err));
     }
@@ -104,4 +93,3 @@ function runApp() {
 JS;
 $this->registerJs($js,View::POS_END);
 ?>
-

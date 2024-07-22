@@ -89,7 +89,7 @@ async function checkProfile(){
         success: function (res) {
             console.log(res);
             if(res.status == false){
-                // location.replace("https://liff.line.me/2005893839-9qRwwMWG");
+                location.replace("https://liff.line.me/2005893839-9qRwwMWG");
             }
             if(res.status == true){
                 location.replace("https://liff.line.me/2005893839-1vEqqXoQ");

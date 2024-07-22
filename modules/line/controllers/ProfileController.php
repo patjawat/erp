@@ -20,8 +20,8 @@ class ProfileController extends \yii\web\Controller
 
     public function actionIndex()
     {
-
-        $model = EmployeeHelper::GetEmployee();
+        $id = Yii::$app->user->id;
+        $model = Employees::findOne(['user_id' => $id]);
 
         return $this->render('index',[
             'model' => $model

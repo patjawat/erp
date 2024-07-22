@@ -4,12 +4,17 @@ use app\modules\hr\models\EmployeeDetail;
 use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
-
+<style>
+    .avatar-xxl {
+    height: 10rem;
+    width: 10rem;
+}
+</style>
 <div class="card">
     <div class="card-body">
         <div class="d-flex flex-column mb-3 ">
             <div class="d-flex justify-content-center">
-                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1 card-img-top mt--45']) ?>
+                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xxl border border-primary-subtl border-1 card-img-top mt--45']) ?>
             </div>
 
             <div class="d-flex justify-content-center">

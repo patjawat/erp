@@ -2,8 +2,8 @@
 use yii\helpers\Html;
 ?>
 
+<h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
 <div class="d-flex justify-content-center mt-5">
-    <h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
 
     <div class="line-profile">
         <div class="row d-flex justify-content-center align-items-center">

@@ -1,26 +1,71 @@
 <?php
 /** @var yii\web\View $this */
 use yii\helpers\Url;
+use yii\helpers\Html;
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-ui-checks-grid"></i> Application | บริการต่างๆ
+<?php $this->endBlock(); ?>
+
 <div class="row">
-    <div class="col-6">
+    <div class="col-12">
         <a href="<?= Url::to(['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม']); ?>"
             class="open-modal shadow" data-title="xxx">
-            <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
-                <i class="fa-solid fa-triangle-exclamation fs-3"></i>
-                <div>แจ้งซ่อม</div>
+            <div class="card">
+                <div class="card-body">
+                <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">แจ้งซ่อม</h4>
+                            <p class="card-text">ระบบแจ้งซ่อมทั่วไปและทรัพย์สินย์</p>
+                        </div>
+                        <div>
+                            <?=Html::img('@web/img/customer-service.png',['class' => 'avatar'])?>
+                        </div>
+                    </div>
+                </div>
             </div>
         </a>
     </div>
-    
-    <div class="col-6">
+
+    <div class="col-12">
         <a href="<?= Url::to(['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม']); ?>"
-            class="open-modal" data-title="xxx">
-            <div class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
-                <i class="fa-solid fa-triangle-exclamation fs-3"></i>
-                <div>ความเสี่ยง</div>
+            class="open-modal shadow" data-title="xxx">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">ขอใช้ยานพาหนะ</h4>
+                            <p class="card-text">ระบบการขอใช้ยานพาหนะในราชการ</p>
+                        </div>
+                        <div>
+                            <?=Html::img('@web/img/customer-service.png',['class' => 'avatar'])?>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </a>
     </div>
+
+    <div class="col-12">
+        <a href="<?= Url::to(['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม']); ?>"
+            class="open-modal shadow" data-title="xxx">
+            <div class="card">
+                <div class="card-body">
+                <div class="d-flex justify-content-between">
+                        <div>
+                        <h4 class="card-title">ข้อใช้ห้องประชุม</h4>
+                        <p class="card-text">ระบบจองห้องประชุม</p>
+                        </div>
+                        <div>
+                            <?=Html::img('@web/img/customer-service.png',['class' => 'avatar'])?>
+                        </div>
+                    </div>
+                  
+                </div>
+            </div>
+        </a>
+    </div>
+
 
 </div>
