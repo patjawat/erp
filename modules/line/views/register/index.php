@@ -9,13 +9,9 @@ use yii\widgets\MaskedInput;
 $this->title = "ระบบลงทะเบียน";
 ?>
 
-<div id="success-container"></div>
 
-
-
-
-
-
+<div class="card">
+    <div class="card-body">
 
 <div id="signup-container" class="row justify-content-center mt-5">
     <div class="sign-in-from">
@@ -63,6 +59,9 @@ $this->title = "ระบบลงทะเบียน";
 </div>
 
 
+
+</div>
+</div>
 
 
 
