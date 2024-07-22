@@ -104,7 +104,7 @@ $style = 2;
 <body>
     <?php $this->beginBody() ?>
 
-
+    <?= $this->render('./modal') ?>
                 <?= $this->render('page_title') ?>
 
         <div class="container mt--45">

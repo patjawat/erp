@@ -3,8 +3,11 @@ use yii\web\View;
 /** @var yii\web\View $this */
 use yii\helpers\Html;
 ?>
-
-<?php if(!Yii::$app->user->isGuest):?>
+    <?= $this->render('avatar',['model' => $model])?>
+    <?php
+    echo Yii::$app->user->id;
+    ?>
+     <?php if(!Yii::$app->user->isGuest):?>
      <?php
                      echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
                      . Html::submitButton(
@@ -13,15 +16,7 @@ use yii\helpers\Html;
                      )
                      . Html::endForm();
                     ?>
-                    <?php else:?>
-                        <?php
-    echo Yii::$app->user->id;
-    ?>
                     <?php endif; ?>
-
-
-    <?= $this->render('avatar',['model' => $model])?>
-
 
 
 
@@ -43,19 +38,7 @@ use yii\helpers\Html;
     </div>
 </div>
     
-
-<?php
-print_r(Yii::$app->user->id)
-
-?>
 <button onclick="return logOut()">Logout</button>
-
-
-<img id="pictureUrl" width="25%">
-  <p id="userId"></p>
-  <p id="displayName"></p>
-  <p id="statusMessage"></p>
-  <p id="getDecodedIDToken"></p>
 
 <?php
 use yii\helpers\Url;
@@ -64,7 +47,31 @@ $js = <<< JS
 
 
 
-async function checkProfile(){
+
+function logOut() {
+      liff.logout()
+      window.location.reload()
+    }
+
+    function logIn() {
+      liff.login({ redirectUri: window.location.href })
+    }
+
+    async function getUserProfile() {
+      const profile = await liff.getProfile()
+    //   document.getElementById("pictureUrl").style.display = "block"
+      document.getElementById("pictureUrl").src = profile.pictureUrl
+      $('#displayName').text(profile.displayName)
+      $('#signupform-line_id').val(profile.userId)
+      console.log(profile)
+      $('#line_id').val(profile.userId)
+    //   $('#profile').src = profile.pictureUrl;
+
+    }
+
+
+
+    async function checkProfile(){
     const {userId} = await liff.getProfile()
     await $.ajax({
         type: "post",
@@ -75,7 +82,7 @@ async function checkProfile(){
         dataType: "json",
         success: function (res) {
             console.log(res);
-            if(res.status == false){
+            if(!res){
                 location.replace("https://liff.line.me/2005893839-9qRwwMWG");
             }
         }
@@ -83,23 +90,38 @@ async function checkProfile(){
     console.log('check profile');
 }
 
-function runApp() {
-      liff.getProfile().then(profile => {
-        document.getElementById("pictureUrl").src = profile.pictureUrl;
-        document.getElementById("userId").innerHTML = '<b>UserId:</b> ' + profile.userId;
-        document.getElementById("displayName").innerHTML = '<b>DisplayName:</b> ' + profile.displayName;
-        document.getElementById("statusMessage").innerHTML = '<b>StatusMessage:</b> ' + profile.statusMessage;
-        document.getElementById("getDecodedIDToken").innerHTML = '<b>Email:</b> ' + liff.getDecodedIDToken().email;
-        checkProfile()
-      }).catch(err => console.error(err));
-    }
-    liff.init({ liffId: "2005893839-1vEqqXoQ" }, () => {
-      if (liff.isLoggedIn()) {
-        runApp()
+
+
+    async function main() {
+      await liff.init({ liffId: "2005893839-JAYvvA6G" })
+      if (liff.isInClient()) {
+        getUserProfile()
+       console.log('isInClient');
+
       } else {
-        liff.login();
+        if (liff.isLoggedIn()) {
+            getUserProfile()
+            const profile = await liff.getProfile()
+            
+         
+
+          //ตรวจสอล ID ว่าเคยมี
+        //   checkProfile()
+
+        //   $('#title').text(profile)
+        //   document.getElementById("btnLogIn").style.display = "none"
+        //   document.getElementById("btnLogOut").style.display = "block"
+        } else {
+        //   document.getElementById("btnLogIn").style.display = "block"
+        //   document.getElementById("btnLogOut").style.display = "none"
+        console.log('Not InClient');
+        logIn()
+
+        }
       }
-    }, err => console.error(err.code, error.message));
+    }
+    main()
+
 
 JS;
 $this->registerJs($js,View::POS_END);

@@ -19,6 +19,18 @@ use app\models\ContactForm;
 
 class AuthController extends \yii\web\Controller
 {
+
+    public function beforeAction($action) {
+     
+
+        // if (!Yii::$app->user->isGuest) {
+        //     return $this->redirect(['/line/profile']);
+        // }
+
+        return parent::beforeAction($action);
+    }
+
+
     public function actionRegister()
     {
 
@@ -71,6 +83,8 @@ class AuthController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
        
         if ($this->request->isPost) {
+
+            if (Yii::$app->user->isGuest) {
             $line_id =  $this->request->post('line_id');
             $user = User::findOne(['line_id' => $line_id]);
 
@@ -78,11 +92,20 @@ class AuthController extends \yii\web\Controller
             $user_  = User::findByUsername($user->username);
              $isLogin = Yii::$app->user->login($user_,0);
              if($isLogin){
-                return true;
+               return [
+                'status' => true
+               ];
              }else{
-                return false;
+                return [
+                    'status' => false
+                   ];
              }
            }
+        }else{
+            return [
+                'status' => true
+               ];
+        }
         // return $this->render('welcome');
         }
     }

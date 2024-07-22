@@ -3,7 +3,7 @@
 namespace app\modules\line\controllers;
 use Yii;
 use app\modules\hr\models\Employees;
-
+use app\components\EmployeeHelper;
 class ProfileController extends \yii\web\Controller
 {
 
@@ -21,7 +21,7 @@ class ProfileController extends \yii\web\Controller
     public function actionIndex()
     {
 
-        $model = Employees::findOne(8);
+        $model = EmployeeHelper::GetEmployee();
 
         return $this->render('index',[
             'model' => $model

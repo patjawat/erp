@@ -2,24 +2,11 @@
 @import "./_utilities";
 @import "./card";
 @import "../node_modules/bootstrap/scss/bootstrap";
+@import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@100;200;300;400;500;600;700&family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Krub:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Mitr:wght@200;300;400;500;600;700&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;1,100;1,200;1,300;1,400&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,800;1,900&display=swap');
 
 
 
 
-// @font-face {
-//   font-family: 'Open Sans';
-//   font-style: normal;
-//   font-weight: 300;
-//   src: local('Open Sans Light'), local('OpenSans-Light'), url(https://fonts.gstatic.com/s/opensans/v13/DXI1ORHCpsQm3Vp6mXoaTQ7aC6SjiAOpAWOKfJDfVRY.woff2) format('woff2');
-//   unicode-range: U+0460-052F, U+20B4, U+2DE0-2DFF, U+A640-A69F;
-// }
-
-// @font-face {
-//   font-family: 'Prompt';  /* Name your font */
-//   src: url('Prompt-Black.woff2') format('truetype');  /* Path to your font file */
-//   font-style: Black;
-//   font-weight: 700;
-// }
 // @import "bootstrap";
 
 .text-pink {
@@ -143,7 +130,7 @@
 
 
 :root {
-  --bs-body-font-family: 'prompt', Arial, sans-serif;
+  --bs-body-font-family: 'prompt', sans-serif;
 }
 
 /* make primary button bold */

@@ -9,7 +9,11 @@ use yii\widgets\MaskedInput;
 $this->title = "Authentication";
 ?>
 
-
+<style>
+    #displayName{
+        font-family: 'Prompt';
+    }
+</style>
 <div class="card border border-danger">
     <div class="card-body">
 
@@ -26,7 +30,7 @@ $this->title = "Authentication";
         <h4 class="mt-3" id="displayName"></h4>
     </div>
 </div>
-    
+    <p id="debug"></p>
 
         <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
         <div class="row justify-content-center">
@@ -59,6 +63,13 @@ $this->title = "Authentication";
 </div>
 
 
+<img id="pictureUrl" width="25%">
+  <p id="userId"></p>
+  <p id="displayName"></p>
+  <p id="statusMessage"></p>
+  <p id="getDecodedIDToken"></p>
+
+
 
 <?php
 use yii\helpers\Url;
@@ -66,72 +77,7 @@ $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $js = <<< JS
 
 
-
-
-
-$('#blank-form').on('beforeSubmit', function () {
-
-
-    var yiiform = $(this);
-    $('#btn-regster').hide();
-    $('#btn-loading').show();
-    $.ajax({
-            type: yiiform.attr('method'),
-            url: yiiform.attr('action'),
-            data: yiiform.serializeArray(),
-        }
-    )
-        .done(function(data) {
-            if(data.success) {
-                // data is saved
-                $('#success-container').html(data.content);
-                $('#signup-container').hide();
-                success()
-            } else if (data.validation) {
-                // server validation failed
-                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
-                $('#btn-regster').show();
-                $('#btn-loading').hide();
-            } else {
-                // incorrect server response
-            }
-        })
-        .fail(function () {
-            // request failed
-        })
-
-    // }
-    return false; // prevent default form submission
-})
-
-
-
-
-
-function logOut() {
-      liff.logout()
-      window.location.reload()
-    }
-
-    function logIn() {
-      liff.login({ redirectUri: window.location.href })
-    }
-
-    async function getUserProfile() {
-      const profile = await liff.getProfile()
-    //   document.getElementById("pictureUrl").style.display = "block"
-      document.getElementById("pictureUrl").src = profile.pictureUrl
-      $('#displayName').text(profile.displayName)
-      $('#signupform-line_id').val(profile.userId)
-      console.log(profile)
-      $('#line_id').val(profile.userId)
-    //   $('#profile').src = profile.pictureUrl;
-
-    }
-
-
-
-    async function checkProfile(){
+async function checkProfile(){
     const {userId} = await liff.getProfile()
     await $.ajax({
         type: "post",
@@ -142,44 +88,37 @@ function logOut() {
         dataType: "json",
         success: function (res) {
             console.log(res);
-            if(!res){
-                location.replace("https://liff.line.me/2005893839-9qRwwMWG");
+            if(res.status == false){
+                // location.replace("https://liff.line.me/2005893839-9qRwwMWG");
+            }
+            if(res.status == true){
+                location.replace("https://liff.line.me/2005893839-1vEqqXoQ");
             }
         }
     });
     console.log('check profile');
 }
 
+function runApp() {
+      liff.getProfile().then(profile => {
+        document.getElementById("pictureUrl").src = profile.pictureUrl;
+        document.getElementById("userId").innerHTML = '<b>UserId:</b> ' + profile.userId;
+        document.getElementById("displayName").innerHTML = '<b>DisplayName:</b> ' + profile.displayName;
+        document.getElementById("statusMessage").innerHTML = '<b>StatusMessage:</b> ' + profile.statusMessage;
+        document.getElementById("getDecodedIDToken").innerHTML = '<b>Email:</b> ' + liff.getDecodedIDToken().email;
 
-
-    async function main() {
-      await liff.init({ liffId: "2005893839-JAYvvA6G" })
-      if (liff.isInClient()) {
-        getUserProfile()
-
-      } else {
-        if (liff.isLoggedIn()) {
-          getUserProfile()
-          //ตรวจสอล ID ว่าเคยมี
-          checkProfile()
-        //   document.getElementById("btnLogIn").style.display = "none"
-        //   document.getElementById("btnLogOut").style.display = "block"
-        } else {
-        //   document.getElementById("btnLogIn").style.display = "block"
-        //   document.getElementById("btnLogOut").style.display = "none"
-        console.log('no');
-        logIn()
-
-        }
-      }
+        checkProfile()
+      }).catch(err => console.error(err));
     }
-    main()
-
-    
-    
-
-
+    liff.init({ liffId: "2005893839-1vEqqXoQ" }, () => {
+      if (liff.isLoggedIn()) {
+        runApp()
+      } else {
+        liff.login();
+      }
+    }, err => console.error(err.code, error.message));
 
 JS;
 $this->registerJs($js,View::POS_END);
 ?>
+
