@@ -18,8 +18,6 @@ input::placeholder {
 }
 </style>
 
-
-
 <div id="signup-container" class="row justify-content-center mt-2">
     <div class="sign-in-from">
         <h4 class="text-center mb-3 text-primary" data-aos="fade-down" data-aos-delay="100"><?=$this->title?></h4>
