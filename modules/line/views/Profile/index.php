@@ -12,7 +12,12 @@ use yii\helpers\Html;
 <?php
 try {
     if (!Yii::$app->user->isGuest){
-        echo $this->render('avatar',['model' => $model]);
+        try {
+            echo $this->render('avatar',['model' => $model]);
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
     }
 } catch (\Throwable $th) {
     //throw $th;
