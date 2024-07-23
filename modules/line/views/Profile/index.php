@@ -10,15 +10,12 @@ use yii\helpers\Html;
 
 
 <?php
-try {
    
         try {
             echo $this->render('avatar',['model' => $model]);
         } catch (\Throwable $th) {
             Yii::$app->user->logout();
 
-} catch (\Throwable $th) {
-    //throw $th;
 }
 ?>
 
