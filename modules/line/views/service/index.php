@@ -18,41 +18,42 @@ $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_regi
 
 $js = <<< JS
 
-async function checkProfile(){
-    const {userId} = await liff.getProfile()
-    await $.ajax({
-        type: "post",
-        url: "$urlCheckProfile",
-        data:{
-            line_id:userId
-        },
-        dataType: "json",
-        success: function (res) {
-            console.log(res);
-            if(res.status == false){
-                location.replace("$liffRegisterUrl");
+    async function checkProfile(){
+        const {userId} = await liff.getProfile()
+        await $.ajax({
+            type: "post",
+            url: "$urlCheckProfile",
+            data:{
+                line_id:userId
+            },
+            dataType: "json",
+            success: function (res) {
+                console.log(res);
+                if(res.status == false){
+                    location.replace("$liffRegisterUrl");
+                }
+                if(res.status == true){
+                    $('#avatar').html(res.avatar)
+                    $('#loading').hide()
+                }
             }
-            if(res.status == true){
-                $('#avatar').html(res.avatar)
-                $('#loading').hide()
-            }
-        }
-    });
-    console.log('check profile');
-}
-
-function runApp() {
-      liff.getProfile().then(profile => {
-        checkProfile()
-      }).catch(err => console.error(err));
+        });
+        console.log('check profile');
     }
-    liff.init({ liffId: "$liffService"}, () => {
-      if (liff.isLoggedIn()) {
-        runApp()
-      } else {
-        liff.login();
-      }
-    }, err => console.error(err.code, error.message));
+
+    function runApp() {
+        liff.getProfile().then(profile => {
+            checkProfile()
+        }).catch(err => console.error(err));
+        }
+        
+        liff.init({ liffId: "$liffService"}, () => {
+        if (liff.isLoggedIn()) {
+            runApp()
+        } else {
+            liff.login();
+        }
+        }, err => console.error(err.code, error.message));
 
 JS;
 $this->registerJs($js,View::POS_END);
