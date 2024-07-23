@@ -3,6 +3,9 @@ use app\components\AppHelper;
 use app\modules\hr\models\EmployeeDetail;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\hr\models\Employees;
+$id = Yii::$app->user->id;
+$model = Employees::findOne(['user_id' => $id]);
 ?>
 <style>
     .avatar-xxl {
@@ -10,6 +13,7 @@ use yii\helpers\Url;
     width: 10rem;
 }
 </style>
+<?php if($model):?>
 <div class="card">
     <div class="card-body">
         <div class="d-flex flex-column mb-3 ">
@@ -74,3 +78,4 @@ use yii\helpers\Url;
         <!-- End Row -->
     </div>
 </div>
+<?php endif;?>

@@ -17,6 +17,8 @@ use yii\helpers\Html;
 //             Yii::$app->user->logout();
 
 // }
+
+echo $this->render('avatar');
 ?>
 
 
