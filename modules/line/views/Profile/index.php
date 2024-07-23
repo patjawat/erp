@@ -11,12 +11,12 @@ use yii\helpers\Html;
 
 <?php
    
-        try {
-            echo $this->render('avatar',['model' => $model]);
-        } catch (\Throwable $th) {
-            Yii::$app->user->logout();
+//         try {
+//             echo $this->render('avatar',['model' => $model]);
+//         } catch (\Throwable $th) {
+//             Yii::$app->user->logout();
 
-}
+// }
 ?>
 
 
