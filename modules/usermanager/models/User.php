@@ -75,7 +75,7 @@ class User extends ActiveRecord implements IdentityInterface {
             // ['phone', 'validateCountry'],
             ['phone', 'checkOwner'],
             //['status', 'required'],
-            ['line_id', 'string'],
+            ['line_id', 'safe'],
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
             ['username', 'filter', 'filter' => 'trim'],

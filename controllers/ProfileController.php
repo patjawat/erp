@@ -18,6 +18,21 @@ use yii\helpers\Url;
 class ProfileController extends \yii\web\Controller
 
 {
+
+        //เชื่อม line กับ user ที่ลงทะเบียนไว้แล้ว
+        public function actionLineConnect(){
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                'title' => 'title',
+                'content' => $this->renderAjax('line_connect')
+            ];
+        }else{
+            return $this->render('line_connect');
+        }
+    
+        }
+        
     public function actionIndex()
     {
         $name = $this->request->get('name');

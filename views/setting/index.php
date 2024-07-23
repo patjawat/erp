@@ -64,6 +64,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         <span data-aos="fade-up" data-aos-delay="400">Line Group</span>',
                     ['/line-group'], ['class' => 'nav-link text-secondary d-flex flex-column text-center justify-content-center text-truncate', 'style' => '']) ?>
             </li>
+            <li data-aos="fade-up" data-aos-delay="500">
+                <?= Html::a('
+                        <span data-aos="fade-up" data-aos-delay="500"><i class="fa-brands fa-line fs-1 mb-3"></i></span>
+                        <span data-aos="fade-up" data-aos-delay="400">Line official</span>',
+                    ['/setting/line-official'], ['class' => 'nav-link text-secondary d-flex flex-column text-center justify-content-center text-truncate', 'style' => '']) ?>
+            </li>
         </ul>
 
         <!-- <button type="button" class="btn btn-indigo" id="btnSwitch">

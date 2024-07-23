@@ -21,12 +21,15 @@ use yii\helpers\Url;
                         </h6>
                     </div>
                     <div class="col-lg-3 col-md-12 col-sm-12">
-
                         <div class="dropdown float-end">
-                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
+                            <div class="d-flex justify-end gap-2">
+                                <?=Html::a('<i class="fa-brands fa-line text-success"></i>',['/profile/line-connect'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
+                                
+                                <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-sliders"></i>
                             </a>
+                        </div>
                             <div class="dropdown-menu dropdown-menu-right" style="">
                                 <?= AppHelper::Btn([
                                     'type' => 'update',

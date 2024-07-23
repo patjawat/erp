@@ -25,6 +25,19 @@ class SettingController extends \yii\web\Controller
         return $this->render('company',['model' => $model]);
     }
 
+    //ตั้งค่า Line official
+    public function actionLineOfficial()
+    {
+        $model = Categorise::findOne(['name' => 'site']);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return $this->redirect('/setting/line-official');
+            }
+        }
+        return $this->render('line_official',['model' => $model]);
+    }
+
+
     public function actionLayout()
     {
         $model = Categorise::findOne(['name' => 'site']);

@@ -2,10 +2,9 @@
 use app\modules\employees\models\Employees;
 // use app\themes\assets\AppAsset;
 use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
+use kartik\widgets\ActiveForm;
 use yii\web\View;
-use yii\widgets\MaskedInput;
-// $assets = AppAsset::register($this);
+use app\components\SiteHelper;
 $this->title = "ระบบลงทะเบียน";
 ?>
 
@@ -14,27 +13,17 @@ $this->title = "ระบบลงทะเบียน";
 </div>
 
 
-<div class="card" id="registerContainer">
-    <div class="card-body">
-        <div id="signup-container" class="row justify-content-center mt-5">
-            <div class="sign-in-from">
-                <h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
-                <div class="line-profile">
-                    <div class="d-flex justify-content-center align-items-center">
-                        <div class="round-image">
-                            <img id="pictureUrl" class="rounded-circle" width="200">
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <h4 class="mt-3" id="displayName"></h4>
-                    </div>
-                </div>
+<!-- <div cid="welcome">
+    
+<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>
+</div> -->
 
-
-                <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
+<?php $form = ActiveForm::begin([
+        'id' => 'form-register',
+    ]); ?>
                 <div class="row justify-content-center">
                     <div class="col-lg-4 col-md-12 col-sm-12">
-                        <?= $form->field($model, 'line_id')->textInput()->label(false) ?>
+                        <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
                         <?= $form->field($model, 'cid')->textInput(['placeholder' => 'ระบุเลขบัตรประชาชน','autofocus' => true,'class' => 'form-control form-control-lg rounded-pill border-0'])->label('เลขบัตรประชาชน') ?>
                         <?= $form->field($model, 'email')->textInput(['placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
                         <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
@@ -42,9 +31,10 @@ $this->title = "ระบบลงทะเบียน";
 
 
                             <div class="d-grid gap-2 mt-3">
-                                <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-regster"
+                                <button class="btn btn-lg btn-primary account-btn rounded-pill shadow" id="btn-regster"
                                     type="submit">
                                     <i class="fa-solid fa-circle-check"></i> ลงทะเบียน</button>
+                                    <span class="btn btn-lg btn-warning account-btn rounded-pill" id="userConnect">มีทะเบียนอยู่แล้ว</span>
 
                                 <button class="btn btn-lg btn-primary account-btn rounded-pill d-none" id="btn-loading"
                                     type="button" disabled="">
@@ -60,60 +50,48 @@ $this->title = "ระบบลงทะเบียน";
 
                 <?php ActiveForm::end(); ?>
 
-            </div>
-        </div>
-
-
-
-    </div>
-</div>
-
+                
 
 <?php
 use yii\helpers\Url;
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
+$liffUserConnect = SiteHelper::getInfo()['line_liff_user_connect'];
+$liffUserConnectUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_user_connect'];
+$liffProfile = SiteHelper::getInfo()['line_liff_profile'];
+$liffProfileUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_profile'];
+$liffRegister =SiteHelper::getInfo()['line_liff_register'];
+$liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
+
 $js = <<< JS
 
+\$('#form-register').on('beforeSubmit', function (e) {
+                var form = \$(this);
+                \$.ajax({
+                    url: form.attr('action'),
+                    type: 'post',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: async function (response) {
+                        location.replace("$liffProfileUrl");
+                        form.yiiActiveForm('updateMessages', response.validation, true);
+                        if(response.status == true) {
+                            $('#welcome').show()
+                            console.log('register Success');
+                        }
+                    }
+                });
+                return false;
+            });
 
-$('#blank-form').on('beforeSubmit', function () {
-
-
-    var yiiform = $(this);
-    $('#registerContainer').hide();
-    $('#welcome').show();
-    $.ajax({
-            type: yiiform.attr('method'),
-            url: yiiform.attr('action'),
-            data: yiiform.serializeArray(),
-        }
-    )
-        .done(function(data) {
-            console.log(data)
-            if(data.status == true) {
-              
-
-                location.replace("https://liff.line.me/2005893839-1vEqqXoQ");
-            } else if (data.validation) {
-                // server validation failed
-                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
-                // $('#btn-regster').show();
-                // $('#btn-loading').hide();
-            } else {
-                // incorrect server response
-            }
-        })
-        .fail(function () {
-            // request failed
-        })
-
-    // }
-    return false; // prevent default form submission
-})
-
-
+            $('#userConnect').click(function (e) { 
+                e.preventDefault();
+                location.replace("$liffUserConnectUrl");
+                
+            });
 
 async function checkProfile(){
     const {userId} = await liff.getProfile()
+   
     await $.ajax({
         type: "post",
         url: "$urlCheckProfile",
@@ -123,9 +101,9 @@ async function checkProfile(){
         dataType: "json",
         success: function (res) {
             console.log(res);
-            // if(res.status == false){
-            //     location.replace("https://liff.line.me/2005893839-9qRwwMWG");
-            // }
+            if(res.status == true){
+                location.replace("$liffProfileUrl");
+            }
         }
     });
     console.log('check profile');
@@ -138,10 +116,11 @@ function runApp() {
         $('#signupform-line_id').val(profile.userId)
       }).catch(err => console.error(err));
     }
-    liff.init({ liffId: "2005893839-9qRwwMWG" }, () => {
+    liff.init({ liffId: "$liffRegister" }, () => {
       if (liff.isLoggedIn()) {
         runApp()
-      } else {
+     
+    } else {
         liff.login();
       }
     }, err => console.error(err.code, error.message));

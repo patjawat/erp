@@ -14,7 +14,7 @@ $this->title = "Authentication";
         font-family: 'Prompt';
     }
 </style>
-<div class="card border border-danger">
+<div class="card border">
     <div class="card-body">
 
 <div id="signup-container" class="row justify-content-center mt-5">

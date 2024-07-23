@@ -10,9 +10,9 @@ class ProfileController extends \yii\web\Controller
     public function beforeAction($action) {
      
 
-        if (Yii::$app->user->isGuest) {
-            return $this->redirect(['/line/auth/login']);
-        }
+        // if (Yii::$app->user->isGuest) {
+        //     return $this->redirect(['/line/auth/login']);
+        // }
 
         return parent::beforeAction($action);
     }
@@ -20,12 +20,13 @@ class ProfileController extends \yii\web\Controller
 
     public function actionIndex()
     {
-        // $id = Yii::$app->user->id;
-        // $model = Employees::findOne(['user_id' => $id]);
+        $id = Yii::$app->user->id;
+        $model = Employees::findOne(['user_id' => $id]);
 
         return $this->render('index',[
-            // 'model' => $model
+            'model' => $model
         ]);
     }
+
 
 }

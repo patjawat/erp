@@ -31,7 +31,7 @@ $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['the
     <?php $this->registerCsrfMetaTags() ?>
 
     <title><?= Html::encode($this->title) ?></title>
-    
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <!-- <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet"> -->
 
     <!-- <link rel="preconnect" href="https://fonts.googleapis.com">

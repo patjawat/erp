@@ -27,13 +27,15 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
                     </div>
                     <div class="text-center" style="position: relative;">
                         <div id="t-rev" style="min-height: 45px;">
-                            <div id="apexchartsdlqwjkgl" class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light" style="width: 90px; height: 45px;">
+                            <div id="apexchartsdlqwjkgl"
+                                class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
+                                style="width: 90px; height: 45px;">
                                 <i class="bi bi-person-badge fs-1"></i>
                                 <div class="apexcharts-legend"></div>
-                                
+
                             </div>
                         </div>
-                      
+
                         <div class="resize-triggers">
                             <div class="expand-trigger">
                                 <div style="width: 91px; height: 70px;"></div>
@@ -44,11 +46,13 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
                 </div>
 
 
-<!-- ความสมบรูณ์ของข้อมูล -->
-<div class="progress progress-animate progress-sm" role="progressbar" aria-valuenow="<?=$queryPositionName;?>" aria-valuemin="0" aria-valuemax="100">
-    <div class="progress-bar progress-bar-striped bg-danger" style="width: <?=$queryPositionName;?>%"></div>
-</div>
-<!-- ความสมบรูณ์ของข้อมูล -->
+                <!-- ความสมบรูณ์ของข้อมูล -->
+                <div class="progress progress-animate progress-sm" role="progressbar"
+                    aria-valuenow="<?=$queryPositionName;?>" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped bg-danger" style="width: <?=$queryPositionName;?>%">
+                    </div>
+                </div>
+                <!-- ความสมบรูณ์ของข้อมูล -->
 
 
 
@@ -62,12 +66,13 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                    <a href="<?=Url::to(['/hr/organization/diagram'])?>">
+                        <a href="<?=Url::to(['/hr/organization/diagram'])?>">
                             <span class="text-muted text-uppercase fs-6">ผังองค์กร/กลุ่มงาน</span>
                         </a>
-                        <h2 class="mb-0 mt-1"><?=Organization::find()->where(['tb_name' => 'diagram'])->count('id')?></h2>
+                        <h2 class="mb-0 mt-1"><?=Organization::find()->where(['tb_name' => 'diagram'])->count('id')?>
+                        </h2>
                     </div>
-                    
+
                     <div class="text-center" style="position: relative;">
                         <div id="t-rev" style="min-height: 45px;">
                             <div id="apexchartsdlqwjkgl"
@@ -75,7 +80,7 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
                                 style="width: 90px; height: 45px;">
                                 <i class="bi bi-diagram-3 fs-1"></i>
                                 <div class="apexcharts-legend"></div>
-                                
+
                             </div>
                         </div>
                         <!-- <span class="text-success fw-bold fs-13">
@@ -101,15 +106,18 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <?=Html::a(' <span class="text-muted text-uppercase fs-6">ตำแหน่ง</span>',['/hr/categorise','name' => 'position_name','title' => 'ตำแหน่ง'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                        
-                        <h2 class="mb-0 mt-1"><?=Organization::find()->where(['tb_name' => 'position'])->count('id')?></h2>
+
+                        <h2 class="mb-0 mt-1"><?=Organization::find()->where(['tb_name' => 'position'])->count('id')?>
+                        </h2>
                     </div>
                     <div class="text-center" style="position: relative;">
                         <div id="t-rev" style="min-height: 45px;">
-                            <div id="apexchartsdlqwjkgl" class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light" style="width: 90px; height: 45px;">
+                            <div id="apexchartsdlqwjkgl"
+                                class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
+                                style="width: 90px; height: 45px;">
                                 <i class="fa-solid fa-user-tag fs-1"></i>
                                 <div class="apexcharts-legend"></div>
-                                
+
                             </div>
                         </div>
                         <div class="resize-triggers">
@@ -124,10 +132,12 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
 
 
                 <!-- ความสมบรูณ์ของข้อมูล -->
-<div class="progress progress-animate progress-sm" role="progressbar" aria-valuenow="<?=$queryPositionName;?>" aria-valuemin="0" aria-valuemax="100">
-    <div class="progress-bar progress-bar-striped bg-danger" style="width: <?=$queryPositionName;?>%"></div>
-</div>
-<!-- ความสมบรูณ์ของข้อมูล -->
+                <div class="progress progress-animate progress-sm" role="progressbar"
+                    aria-valuenow="<?=$queryPositionName;?>" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped bg-danger" style="width: <?=$queryPositionName;?>%">
+                    </div>
+                </div>
+                <!-- ความสมบรูณ์ของข้อมูล -->
 
 
             </div>
