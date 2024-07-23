@@ -1,4 +1,5 @@
 <?php
+use yii\web\View;
 /** @var yii\web\View $this */
 ?>
 <div class="card">
