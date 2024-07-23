@@ -11,14 +11,12 @@ use yii\helpers\Html;
 
 <?php
 try {
-    if (!Yii::$app->user->isGuest){
+   
         try {
             echo $this->render('avatar',['model' => $model]);
-            //code...
         } catch (\Throwable $th) {
-            //throw $th;
-        }
-    }
+            Yii::$app->user->logout();
+
 } catch (\Throwable $th) {
     //throw $th;
 }
