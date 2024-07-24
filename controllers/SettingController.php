@@ -17,8 +17,11 @@ class SettingController extends \yii\web\Controller
     public function actionCompany()
     {
         $model = Categorise::findOne(['name' => 'site']);
+        $old = $model->data_json;
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
+                $model->data_json = ArrayHelper::merge($old,$model->data_json);
+                $model->save();
                 return $this->redirect('/setting/company');
             }
         }
