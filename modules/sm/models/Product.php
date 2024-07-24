@@ -84,7 +84,7 @@ class Product extends \yii\db\ActiveRecord
 
     public function getProductType()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'product_type']);
+        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
     public function ShowImg()
@@ -143,7 +143,7 @@ class Product extends \yii\db\ActiveRecord
     }
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'product_type'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->all(), 'code', 'title');
     }
 
     public function ListUnit()

@@ -34,7 +34,7 @@ $listCommittee = Order::find()
                     <td class="d-flex justify-content-end gap-2">
 
                         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                        <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/inventory/rc-order/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
+                        <?= Html::a('<i class="bi bi-trash"></i>', ['/inventory/rc-order/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
                             'class' => 'btn btn-sm btn-danger delete-item',
                         ]) ?>
                     </td>

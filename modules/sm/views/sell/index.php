@@ -86,7 +86,7 @@ $this->params['breadcrumbs'][] = $this->title;
 															<??>
 															<?=Html::a('<i class="bx bx-edit-alt me-1"></i>รายละเอียด', ['#'], ['class' => 'dropdown-item'])?>
 
-															<?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
+															<?=Html::a('<i class="bi bi-trash"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
 														</div>
 													</div>
 												</td>
@@ -125,7 +125,7 @@ $this->params['breadcrumbs'][] = $this->title;
 															<??>
 															<?=Html::a('<i class="bx bx-edit-alt me-1"></i>รายละเอียด', ['#'], ['class' => 'dropdown-item'])?>
 
-															<?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
+															<?=Html::a('<i class="bi bi-trash"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
 														</div>
 													</div>
 												</td>

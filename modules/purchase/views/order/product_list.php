@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </td>
                 <td><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td>
                 <td class="align-middle">
-                    <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $model->title, 'product_id' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
+                    <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $model->title, 'asset_item' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
                 </td>
             </tr>
             <?php endforeach; ?>

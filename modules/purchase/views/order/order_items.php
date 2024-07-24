@@ -23,8 +23,8 @@ use yii\widgets\Pjax;
                     <tr class="">
                         <td class="align-middle">
                             <?php
-                            try {
                                 echo $item->product->Avatar();
+                            try {
                             } catch (\Throwable $th) {
                                 // throw $th;
                             }

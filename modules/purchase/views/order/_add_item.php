@@ -47,7 +47,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $form->field($model, 'pq_number')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'product_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'group_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'asset_item')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'data_json[asset_item_type_name]')->textInput()->label(false); ?>
+<?= $form->field($model, 'data_json[asset_item_name]')->textInput()->label(false); ?>
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

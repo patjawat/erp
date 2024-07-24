@@ -148,7 +148,7 @@ $this->title = "ผังองค์กร/กลุ่มงาน";
                             ])?>
 
                   
-<?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/hr/organization/delete', 'id' => $model->id], [
+<?=Html::a('<i class="bi bi-trash"></i>ลบ', ['/hr/organization/delete', 'id' => $model->id], [
 'class' => 'dropdown-item delete-item',
 ])?>
                 </div>

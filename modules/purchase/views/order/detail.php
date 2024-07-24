@@ -14,9 +14,8 @@ use app\components\SiteHelper;
             <td class="text-end">เพื่อจัดซื้อ/ซ่อมแซม</td>
             <td>
                 <?php
-                            // echo $model->productType->id;
                             try {
-                                echo $model->data_json['type_name'];
+                                echo $model->data_json['order_type_name'];
                             } catch (\Throwable $th) {
                             }
                         ?></td>

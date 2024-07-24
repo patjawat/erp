@@ -13,6 +13,5 @@ $this->params['breadcrumbs'][] = 'Update';
 
 <?= $this->render('_form_item_', [
         'model' => $model,
-        // 'itemType' => $itemType,
         'ref' => $ref
     ]) ?>

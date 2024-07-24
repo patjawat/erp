@@ -92,7 +92,7 @@ $items = [
                                     <?=Html::a('<i class="fa-solid fa-copy me-1"></i> ทำสำเนา', ['/hr/employee-detail/create','id' => $item->id, 'emp_id' => $model->id, 'name' => 'position', 'title' => '<i class="fa-solid fa-user-tag"></i> ตำแหน่ง'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
                                     <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/hr/employee-detail/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-user-tag"></i> ตำแหน่ง'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
 
-                                    <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], [
+                                    <?=Html::a('<i class="bi bi-trash"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], [
 'class' => 'dropdown-item delete-item',
 ])?>
                                 </div>

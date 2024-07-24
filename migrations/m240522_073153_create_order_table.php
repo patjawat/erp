@@ -12,18 +12,20 @@ class m240522_073153_create_order_table extends Migration
      */
     public function safeUp()
     {
-        $this->createTable('{{%order}}', [
+        $this->createTable('{{%orders}}', [
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
             'name' => $this->string(255)->comment('ชื่อตารางเก็บข้อมูล'),
-            'category_id' => $this->string(255)->comment('หมวดหมูหลักที่เก็บ'),
+            'group_id' => $this->string(255)->comment('หมวดหมูหลักที่เก็บ'),
+            'category_id' => $this->string(255)->comment('Key หลักของ order หลัก'),
+            'asset_type' => $this->string(255)->comment('ประภทของรายการ'),
+            'asset_item' => $this->string(255)->comment('รายการที่เก็บ'),
             'vendor_id' => $this->string(255)->comment('ผู้ขาย'),
             'code' => $this->string(255)->comment('รหัส'),
             'pr_number' => $this->string(255)->comment('เลขที่ขอซื้อ'),
             'pq_number' => $this->string(255)->comment('เลขทะเบียนคุม'),
             'po_number' => $this->string(255)->comment('ที่ที่สั่งซื้อ'),
             'gr_number' => $this->string(255)->comment('เลขที่รับสินค้า'),
-            'product_id' => $this->integer(255)->comment('รายการที่เก็บ'),
             'price' => $this->double(255)->comment('ราคา'),
             'qty' => $this->integer(255)->comment('จำนวน'),
             'to_stock' => $this->integer(255)->comment('จำนวนที่รับเข้าคลังแล้ว'),

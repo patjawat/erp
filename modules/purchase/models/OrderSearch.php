@@ -17,7 +17,7 @@ class OrderSearch extends Order
     public function rules()
     {
         return [
-            [['id', 'product_id', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by'], 'integer'],
             [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at'], 'safe'],
             [['price'], 'number'],
         ];
@@ -60,7 +60,7 @@ class OrderSearch extends Order
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'product_id' => $this->product_id,
+            'asset_item' => $this->asset_item,
             'price' => $this->price,
             'qty' => $this->qty,
             'vendor_id' => $this->vendor_id,

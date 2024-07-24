@@ -160,7 +160,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php if($model->order_status != 'success') : ?>
                                 <td>
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/receive/update-item', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
+                                    <?= Html::a('<i class="bi bi-trash"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
                                             'class' => 'btn btn-sm btn-danger delete-item',
                                         ]) ?>
                                 </td>

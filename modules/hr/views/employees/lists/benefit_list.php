@@ -50,7 +50,7 @@ $this->title = "ข้อมูลสวัสดิการ";
                                     <??>
                                     <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/hr/employee-detail/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-heart-circle-plus"></i> '.$this->title], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
 
-                                    <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], [
+                                    <?=Html::a('<i class="bi bi-trash"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], [
                                         'class' => 'dropdown-item delete-item',
                                         ])?>
                                 </div>

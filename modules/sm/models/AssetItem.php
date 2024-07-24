@@ -42,7 +42,7 @@ class AssetItem extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json','fsn_auto','ma_items'], 'safe'],
+            [['data_json','fsn_auto','ma_items','group_id'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -164,7 +164,7 @@ class AssetItem extends \yii\db\ActiveRecord
     }
 
     public function AssetType(){
-        return ArrayHelper::map(self::find()->where(['name' => 'asset_type'])->all(),'code','title');
+        return ArrayHelper::map(self::find()->where(['name' => 'asset_type','category_id' => 3])->all(),'code','title');
     }
 
 

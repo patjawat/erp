@@ -139,8 +139,8 @@ class SettingController extends \yii\web\Controller
                 'name' => $name,
                 'category_id' => $assetType->code,
                 'data_json' => [
-                    'service_life' => $assetType->data_json['service_life'],
-                    'depreciation' => $assetType->data_json['depreciation'],
+                    'service_life' => isset($assetType->data_json['service_life']) ? $assetType->data_json['service_life'] : '',
+                    'depreciation' => isset($assetType->data_json['depreciation']) ? $assetType->data_json['service_life'] : '',
                     ]
                 ]);
             }

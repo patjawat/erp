@@ -94,7 +94,7 @@ class PrOrderController extends Controller
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
                 $model->save(false);
                 // return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
-                return $this->redirect(['/purchase/pr-order/view', 'id' => $model->id]);
+                return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
             }

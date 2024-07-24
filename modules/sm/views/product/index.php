@@ -76,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="text-center">
                                     <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                                     <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
-                                    <?=Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/product/delete', 'id' => $model->id], [
+                                    <?=Html::a('<i class="bi bi-trash"></i>', ['/sm/product/delete', 'id' => $model->id], [
     'class' => 'btn btn-sm btn-danger rounded-pill  delete-item',
 ])?>
                                 </td>

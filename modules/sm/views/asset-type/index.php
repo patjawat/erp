@@ -121,23 +121,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     'pluginOptions' => ['allowClear' => true],
                 ],
                 ],
-/*             [
-                'format' => 'raw',
-                'header' => 'ดำเนินการ',
-                'hAlign' => 'center',
-                'vAlign' => 'middle',
-                'width' => '90px',
-                'value' => function($model){
-                    return '<div clas="d-flex gap-3">'.Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary open-modal me-2', 'data' => ['size' => 'modal-lg']])
-                    .Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $model->id], [
-                        'class' => 'btn btn-sm btn-danger',
-                        'data' => [
-                            'confirm' => 'Are you sure you want to delete this item?',
-                            'method' => 'post',
-                        ],
-                    ]).'</div>';
-                }
-            ], */
         ],
     ]); ?>
 

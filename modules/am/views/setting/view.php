@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex gap-2  justify-content-start mb-3">
                     <?=Html::a('<i class="fa-solid fa-house"></i> ย้อนกลับ', ['/am/setting'], ['class' => 'btn btn-primary'])?>
                     <?=Html::a('<i class="bx bx-edit-alt me-1"></i> แก้ไข', ['/am/setting/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-lg']])?>
-                    <?=Html::a('<i class="bx bx-trash me-1"></i> ลบ', ['/am/setting/delete', 'id' => $model->id], ['class' => 'btn btn-danger  delete-item'])?>
+                    <?=Html::a('<i class="bi bi-trash"></i> ลบ', ['/am/setting/delete', 'id' => $model->id], ['class' => 'btn btn-danger  delete-item'])?>
                 </div>
                 <?=DetailView::widget([
     'model' => $model,

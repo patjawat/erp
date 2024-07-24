@@ -10,7 +10,7 @@ use yii\helpers\Html;
                                     <??>
                                     <?php echo  Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/am/fsn/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
 
-                                    <?php Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/am/fsn/delete', 'id' => $model->id], [
+                                    <?php Html::a('<i class="bi bi-trash"></i>ลบ', ['/am/fsn/delete', 'id' => $model->id], [
                                         'class' => 'dropdown-item delete-item',
                                         ])?>
                                 </div>

@@ -42,7 +42,7 @@ $model = Yii::$app->session->get('order');
             </td>
             <td class="align-middle">
                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/purchase/order-item/delete', 'id' => $item->id], [
+                <?= Html::a('<i class="bi bi-trash"></i>', ['/purchase/order-item/delete', 'id' => $item->id], [
                     'class' => 'btn btn-sm btn-danger rounded-pill delete-item',
                 ]) ?>
             </td>

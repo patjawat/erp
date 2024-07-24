@@ -41,7 +41,7 @@ class ProductTypeController extends Controller
     {
         $searchModel = new ProductTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'product_type']);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_type','category_id' => 4]);
 
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;

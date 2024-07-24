@@ -10,9 +10,6 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 
-
-
-
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -23,12 +20,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/sm/views/default/menu') ?>
 <?php $this->endBlock(); ?>
 
+
 <?php Pjax::begin(['id' => 'purchase-container']); ?>
 <div class="row">
     <div class="col-8">
-
-
-
         <div class="row justify-content-center">
             <div class="col-lg-12 col-md-12 col-sm-12">
                 <div class="card">
@@ -55,12 +50,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                             class="fa-solid fa-circle-info"></i> รายละเอียดการขอซื้อ</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-bs-toggle="pill" href="#list_committee_detail"
-                                        role="pill"><i class="fa-solid fa-user-tag"></i> กรรมการกำหนดรายละเอียด</a>
+                                    <a class="nav-link" data-bs-toggle="pill" href="#pq_number"
+                                        role="pill"><i class="fa-solid fa-user-tag"></i> ทะเบียนคุม</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-bs-toggle="pill" href="#list_committee" role="pill"><i
-                                            class="fa-solid fa-users"></i> กรรมการตรวจรับ</a>
+                                    <a class="nav-link" data-bs-toggle="pill" href="#po_number" role="pill"><i
+                                            class="fa-solid fa-users"></i> คำสั่งซื้อ</a>
                                 </li>
                             </ul>
 
@@ -69,12 +64,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div id="home1" class="tab-pane active">
                                     <?= $this->render('detail', ['model' => $model]) ?>
                                 </div>
-                                <div id="list_committee_detail" class="tab-pane fade">
-                                    <?= $this->render('@app/modules/purchase/views/order-item/list_committee_detail', ['model' => $model]) ?>
+                                <div id="pq_number" class="tab-pane fade">
+                                ทะเบียนคุม
 
                                 </div>
-                                <div id="list_committee" class="container tab-pane fade">
-                                    <?= $this->render('@app/modules/purchase/views/order-item/list_committee', ['model' => $model]) ?>
+                                <div id="po_number" class="container tab-pane fade">
+                                คำสั่งซื้อ
                                 </div>
                             </div>
                         </div>
@@ -117,8 +112,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
     <div class="col-4">
-
-
         <!-- ผู้อำนวยการอนุมัติ -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -129,7 +122,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
 
-            <div class="card-body collapse" id="Director">
+            <div class="card-body collapse <?=$model->data_json['pr_director_confirm'] == 'Y' ? '' : 'show'?>" id="Director">
                 <!-- Start Flex Contriler -->
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="text-truncate">
@@ -144,13 +137,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div>
                     <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-success rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php elseif($model->data_json['pr_director_confirm'] == 'N'):?>
                     <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-regular fa-clock"></i> รออนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-warning rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                 </div>
             </div>
@@ -168,11 +161,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <i class="bi bi-chevron-down"></i>
                 </button>
             </div>
-            <div class="card-body collapse" id="me">
+            <div class="card-body collapse <?=$model->data_json['pr_officer_checker'] == 'Y' ? '' : 'show'?>" id="me">
                 <!-- Start Flex Contriler -->
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="text-truncate">
-                        <h6>ผู้ตรวจสอบ</h6>
                         <?= $model->getMe()['avatar'] ?>
                     </div>
                 </div>
@@ -184,13 +176,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div>
                     <?php if($model->data_json['pr_officer_checker'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-success open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-success rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php elseif($model->data_json['pr_officer_checker'] == 'N'):?>
                     <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-danger open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-regular fa-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-warning rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                 </div>
             </div>
@@ -207,7 +199,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <i class="bi bi-chevron-down"></i>
                 </button>
             </div>
-            <div class="card-body collapse" id="leader">
+            <div class="card-body collapse <?=$model->data_json['pr_leader_confirm'] == 'Y' ? '' : 'show'?>" id="leader">
                 <!-- Start Flex Contriler -->
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="text-truncate">
@@ -223,10 +215,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php if($model->pr_number != ''):?>
                     <?php if($model->data_json['pr_leader_confirm'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> เห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-success open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-success  rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php elseif($model->data_json['pr_leader_confirm'] == 'N'):?>
                     <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่เห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-danger open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-danger rounued-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-regular fa-clock"></i> รอเห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
                                 ['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-md']])?>
@@ -241,17 +233,9 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6>กรรมการกำหนดรายละเอียด</h6>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ดำเนินการ', [
-                            '/purchase/order-item/committee-detail','title' => 'กรรมการกำหนดรายละเอียด'
-                        ], ['class' => 'dropdown-item rounded shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-                        </div>
-                    </div>
+                    <?= Html::a('<i class="bi bi-plus-circle-fill"></i>', [
+                            '/purchase/order-item/committee-detail','title' => 'กรรมการตรวจรับ'
+                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
                 </div>
                 <?=$model->StackComitteeDetail()?>
             </div>
@@ -262,17 +246,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6>กรรมการตรวจรับ</h6>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> กำเนินการ', [
+                    <?= Html::a('<i class="bi bi-plus-circle-fill"></i>', [
                             '/purchase/order-item/committee','title' => 'กรรมการตรวจรับ'
-                        ], ['class' => 'dropdown-item rounded shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-                        </div>
-                    </div>
+                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
+                    
                 </div>
                 <?=$model->StackComittee()?>
             </div>

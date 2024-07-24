@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right" style="">
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/purchase/product/update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                                    <?= Html::a('<i class="bx bx-trash me-1"></i> ลบ', ['/purchase/asset-type/delete', 'id' => $model->id], [
+                                    <?= Html::a('<i class="bi bi-trash"></i> ลบ', ['/purchase/asset-type/delete', 'id' => $model->id], [
                                         'class' => 'dropdown-item  delete-item',
                                     ]) ?>
                                 </div>

@@ -45,7 +45,7 @@ $listBoard = Order::find()
             <td>
                 
                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/order-item/delete', 'id' => $item->id], [
+                <?= Html::a('<i class="bi bi-trash"></i>', ['/sm/order-item/delete', 'id' => $item->id], [
                     'class' => 'btn btn-sm btn-danger delete-item',
                 ]) ?>
             </td>

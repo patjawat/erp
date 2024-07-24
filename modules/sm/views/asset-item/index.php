@@ -47,7 +47,7 @@ $name = Yii::$app->request->get('name');
     </div>
 </div>
 
-<?php Pjax::begin(['id' => 'sm-container', 'enablePushState' => true, 'timeout' => 5000]);?>
+<?php Pjax::begin(['id' => 'sm-container', 'enablePushState' => false, 'timeout' => 5000]);?>
 
 
 <div class="row justify-content-center">

@@ -52,7 +52,7 @@ $items = Categorise::find()->where(['name' => 'position_name','category_id' => $
                                 'class' => 'dropdown-item open-modal'
                                 ])?>
                                
-                               <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/hr/organization/delete', 'id' => $item->id], [
+                               <?=Html::a('<i class="bi bi-trash"></i>ลบ', ['/hr/organization/delete', 'id' => $item->id], [
 'class' => 'dropdown-item delete-item',
 ])?>
                                                             </div>

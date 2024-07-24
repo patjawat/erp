@@ -13,7 +13,7 @@ use yii\helpers\Html;
             <td><?= $model->viewLeaderUser()['avatar'] ?></td>
             <td>
                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => 1, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/order-item/delete', 'id' => 1], [
+                <?= Html::a('<i class="bi bi-trash"></i>', ['/sm/order-item/delete', 'id' => 1], [
                     'class' => 'btn btn-sm btn-danger delete-item',
                 ]) ?>
             </td>
@@ -23,7 +23,7 @@ use yii\helpers\Html;
             <td><?= $model->viewLeaderUser()['avatar'] ?></td>
             <td>
                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => 1, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/order-item/delete', 'id' => 1], [
+                <?= Html::a('<i class="bi bi-trash"></i>', ['/sm/order-item/delete', 'id' => 1], [
                     'class' => 'btn btn-sm btn-danger delete-item',
                 ]) ?>
             </td>
@@ -32,7 +32,7 @@ use yii\helpers\Html;
             <td><?= $model->viewLeaderUser()['avatar'] ?></td>
             <td>
                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => 1, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="bx bx-trash me-1"></i>', ['/sm/order-item/delete', 'id' => 1], [
+                <?= Html::a('<i class="bi bi-trash"></i>', ['/sm/order-item/delete', 'id' => 1], [
                     'class' => 'btn btn-sm btn-danger delete-item',
                 ]) ?>
             </td>

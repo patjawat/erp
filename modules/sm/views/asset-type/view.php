@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <hr>
 <div class="d-flex gap-2  justify-content-center">
     <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/sm/asset-type/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-lg']])?>
-    <?=Html::a('<i class="bx bx-trash me-1"></i>ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
+    <?=Html::a('<i class="bi bi-trash"></i>ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
     'class' => 'btn btn-danger  delete-item',
 ])?>
 </div>

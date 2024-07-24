@@ -157,24 +157,27 @@ class OrderController extends Controller
 
     public function actionProductList()
     {
-        // $category = Categorise::findOne($order->data_json['item_type']);
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $order_id = $this->request->get('order_id');
 
         $order = Order::findOne($order_id);
+            $checkOrderItem = [];
+        foreach(Order::find()->where(['category_id' => $order->id])->all() as $order_item){
+            $checkOrderItem[] = $order_item->asset_item;
+        }
+        // return $checkOrderItem;
+
 
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andFilterWhere(['name' => $category->name, 'category_id' => $order->data_json['item_type']]);
-       
-       if($order->data_json['item_type'] == ""){
-           $dataProvider->query->andFilterWhere(['IN','name',['asset_item','product_item']]);
-           
-    }else{
-           $dataProvider->query->andFilterWhere(['name' => 'product_item', 'category_id' => $order->data_json['item_type']]);
-
-       }
+        if($order->category_id == ""){
+            $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
+        }else{
+            $dataProvider->query->andFilterWhere(['name' => 'asset_item','category_id' => $order->category_id]);
+            $dataProvider->query->andFilterWhere(['NOT IN' , 'code',$checkOrderItem]);
+            
+        }
 
         $dataProvider->pagination->pageSize = 10;
 
@@ -202,35 +205,42 @@ class OrderController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $order_id = $this->request->get('order_id');
-        $po_number = $this->request->get('po_number');
         $order = $this->findModel($order_id);
-        $product_id = $this->request->get('product_id');
-        $product = Product::findOne($product_id);
+        $asset_item = $this->request->get('asset_item');
+        $product = Product::findOne($asset_item);
         
-        // return $product;
-
         $model = new Order([
-            'category_id' => $order_id,
+            'group_id' => $product->group_id,
+            'category_id' =>  $order_id,
             'name' => 'order_item',
-            'product_id' => $product_id,
+            'asset_item' => $product->code,
             'pr_number' => $order->pr_number,
             'pq_number' => $order->pq_number,
             'po_number' => $order->po_number,
+            'data_json' => [
+                'asset_item_type_name' => $product->productType->title,
+                'asset_item_name' => $product->title
+            ]
         ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->save()) {
-
-                    if($order->data_json['item_type'] == ""){
-                      
-                        // $order->data_json = ArrayHelper::merge($order->data_json,$addItem_type);
-                        $order->category_id = $product->category_id;
-                        $order->save(false);
-                        // return $order->data_json;
+                    // return $order->group_id;
+                    if($order->group_id == null){
+                        $old = $order->data_json;
+                        $newObj = $order->data_json = [
+                            'order_type_name' => $product->productType->title
+                        ];
                         
+                        $order->group_id = $product->group_id;
+                        $order->category_id = $product->category_id;
+                        
+                        $order->data_json = ArrayHelper::merge($old,$newObj);
+                        $order->save(false);
                     }
+
                     return [
                         'status' => 'success',
                         'container' => '#purchase-container',
@@ -271,7 +281,7 @@ class OrderController extends Controller
             'id' => $id,
             'name' => 'order_item'
         ]);
-        $product = Product::findOne($model->product_id);
+        $product = Product::findOne($model->asset_item);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -323,7 +333,15 @@ class OrderController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
+        
         if ($model->delete()) {
+            $order = Order::findOne($model->category_id);
+            if(count($order->ListOrderItems())  == 0){
+            $order->data_json =  ArrayHelper::merge($order->data_json, ['order_type_name' => '']);
+            $order->group_id = NULL;
+            $order->category_id = NULL;
+            $order->save();
+            }
             return [
                 'status' => 'success',
                 'container' => '#purchase-container',

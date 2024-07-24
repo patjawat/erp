@@ -38,8 +38,7 @@ class ProductController extends Controller
     {
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'product_item']);
-        // $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item','group_id' => 4]);
         $dataProvider->pagination->pageSize = 10;
 
         return $this->render('index', [
@@ -102,7 +101,8 @@ class ProductController extends Controller
     public function actionCreate()
     {
         $model = new Product([
-            'name' => 'product_item',
+            'name' => 'asset_item',
+            'group_id' => 4,
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 

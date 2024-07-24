@@ -71,7 +71,7 @@ class ProductTypeSearch extends ProductType
             ->andFilterWhere(['like', 'title', $this->title])
             ->andFilterWhere(['like', 'description', $this->description])
             ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'unit_items', $this->unit_items])
+            // ->andFilterWhere(['like', 'unit_items', $this->unit_items])
             ->andFilterWhere(['like', 'ma_items', $this->ma_items]);
 
         return $dataProvider;

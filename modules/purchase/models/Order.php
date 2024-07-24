@@ -28,7 +28,7 @@ use Yii;
  * @property string|null $name ชื่อตารางเก็บข้อมูล
  * @property string|null $category_id หมวดหมูหลักที่เก็บ
  * @property string|null $code รหัส
- * @property int|null $product_id รายการที่เก็บ
+ * @property int|null $asset_item รายการที่เก็บ
  * @property float|null $price ราคา
  * @property int|null $qty จำนวน
  * @property string|null $data_json
@@ -44,7 +44,7 @@ class Order extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'order';
+        return 'orders';
     }
 
     /**
@@ -53,7 +53,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['product_id', 'qty', 'created_by', 'updated_by'], 'integer'],
+            [['qty', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
             [[
                 'data_json',
@@ -65,7 +65,9 @@ class Order extends \yii\db\ActiveRecord
                 'status',
                 'approve',
                 'vendor_id',
-                'to_stock'
+                'to_stock',
+                'group_id',
+                'asset_item'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
@@ -82,7 +84,7 @@ class Order extends \yii\db\ActiveRecord
             'name' => 'Name',
             'category_id' => 'Category ID',
             'code' => 'Code',
-            'product_id' => 'Item ID',
+            'asset_item' => 'Item ID',
             'price' => 'Price',
             'vendor_id' => 'ผู้จำหน่าย',
             'qty' => 'qty',
@@ -118,10 +120,19 @@ class Order extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'product_type']);
     }
+    public function getAssetGroup()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'group_id'])->andOnCondition(['name' => 'asset_type']);
+    }
 
+    public function getAssetType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
+    }
+    
     public function getProduct()
     {
-        return $this->hasOne(Product::class, ['id' => 'product_id'])->andOnCondition(['name' => 'product_item']);
+        return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item','group_id' => $this->group_id]);
     }
 
     //  uploadFile

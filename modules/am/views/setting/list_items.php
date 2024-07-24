@@ -11,7 +11,7 @@ use kartik\grid\GridView;
                 <div class="mb-3">
                     <?=app\components\AppHelper::Btn([
                         'title' => "<i class='fa-solid fa-circle-plus'></i> สร้างใหม่",
-                        'url' => ['/am/setting/create', 'name' => 'asset_item', 'id' => $model->id],
+                        'url' => ['/am/setting/create', 'name' => 'asset_item', 'id' => $model->id,'title' => "<i class='fa-solid fa-circle-plus'></i> สร้าง".$model->title,],
                         'modal' => true, 'size' => 'lg'])?>
                 </div>
                 <?php echo GridView::widget([

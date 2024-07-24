@@ -21,6 +21,7 @@ $title = Yii::$app->request->get('title');
     ]); ?>
 
 <?php $form->field($model, 'data_json[title]')->textInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'group_id')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>

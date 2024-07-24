@@ -57,7 +57,6 @@ class AssetItemController extends Controller
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['name' => 'asset_group','active' => true]);
-        // $dataProvider->query->andFilterWhere(['category_id' => $code]);
 
 
         return $this->render('setting', [
@@ -85,14 +84,13 @@ class AssetItemController extends Controller
         $model = Categorise::findAll(['name' => 'asset_type',]);
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'asset_item','active' => true]);
+        $dataProvider->query->where(['name' => 'asset_item','group_id' => 3,'active' => true]);
         if($model){
-            $dataProvider->query->andFilterWhere(['name' => 'asset_item', 'active' => true]);
+            $dataProvider->query->andFilterWhere(['name' => 'asset_item','group_id' => 3,'active' => true]);
             
         }
         $dataProviderGroup = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andFilterWhere(['category_id' => $code]);
-        $dataProviderGroup->query->andFilterWhere(['name' => 'asset_item ','active' => true]);
+        $dataProviderGroup->query->andFilterWhere(['name' => 'asset_item ','group_id' => 3,'active' => true]);
 
 
         return $this->render('index', [
@@ -235,69 +233,16 @@ class AssetItemController extends Controller
     }
 
 
-    /**
-     * Creates a new Assetitem model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
-     */
-/*     public function actionCreate()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $name = $this->request->get('name');
-        $type_code = $this->request->get('type_code');
-        $group = $this->request->get('group');
-        $category_id = $this->request->get('category_id');
-        $title = $this->request->get('title');
-
-        $group = Categorise::findOne(['name' => 'asset_group','code' => $group]);
-       
-        $model = new Assetitem([
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'name' => $name,
-            'category_id' => $group->code,
-        ]);
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return [
-                    'status' => 'success',
-                    'container' => '#sm-container',
-                ];
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-        return [
-            'title' => $title ,
-            'content' => $this->renderAjax('create', [
-                'model' => $model,
-                'title' => $title ,
-                'itemType' => null,
-                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            ]),
-        ];
-       
-    } */
-
-
     public function actionCreate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $model = new Assetitem();
+        $model = new Assetitem([
+            'group_id' => 3
+        ]);
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {/* 
-                $data = Categorise::findOne(["id" => $model->data_json["id"]]);
-                $model->category_id = $data->category_id; */
-                // $model->data_json = [
-                //     "unit" => $model->data_json["unit"],
-                //     "asset_type" => [
-                //         'code' => $data->code,
-                //         'name' => 'asset_type',
-                //         'title' => $data->title,
-                //         'category_id' => $data->category_id
-                //     ],
-                //     "asset_group" => null,
-                // ];
+            if ($model->load($this->request->post())) {
+                return $model;
                 $model->save();
                 return [
                     'status' => 'success',
@@ -379,28 +324,8 @@ class AssetItemController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        // $assetType = Categorise::findOne(['code' => $model->category_id,"category_id"=> $model->data_json["asset_type"]["category_id"]]);
-        // $model->data_json =  ['asset_type' => '2','asset_type_text' => 'ครุภัณฑ์'];
-// return $assetType;
         if ($this->request->isPost && $model->load($this->request->post())) {
-            // return $model->save();
-            // $data = Categorise::findOne(["id" => $model->data_json["id"]]);
-            // $model->category_id = $data->category_id;
-            // $model->data_json = [
-            //     "unit" => $model->data_json["unit"],
-            //     "asset_type" => [
-            //         'code' => $data->code,
-            //         'name' => 'asset_type',
-            //         'title' => $data->title,
-            //         'category_id' => $data->category_id
-            //     ],
-            //     "asset_group" => null,
-            // ];
-            // $ma_items = [
-            //     'ma_items' => $model->ma
-            // ];
-            // $model->data_json = ArrayHelper::merge($model->data_json, $ma_items);
-            // return $model->ma_items;
+
             $model->save();
             return [
                 'status' => 'success',
