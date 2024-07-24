@@ -48,7 +48,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>
+                        <?php if($name == 'pr'):?>
                         <th class="fw-semibold">เลขที่ขอ(PR)</th>
+                        <?php endif;?>
+                        <?php if($name == 'pq'):?>
+                        <th class="fw-semibold">เลขทะเบียนคุม(PQ)</th>
+                        <?php endif;?>
+                        <?php if($name == 'po'):?>
+                        <th class="fw-semibold">เลขที่สั่งซื้อ(PO)</th>
+                        <?php endif;?>
                         <th class="fw-semibold">ความคืบหน้า</th>
                         <th class="fw-semibold">หมายเหตุ</th>
                         <th class="fw-semibold text-center" style="width:176px">ดำเนินการ</th>
@@ -58,10 +66,21 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php foreach ($dataProvider->getModels() as $model): ?>
                     <tr class="">
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
+                        <?php if($model->status == '' || $model->status == 2):?>
                         <td class="fw-light align-middle">
-                            <?= Html::a($model->pr_number, ['/purchase/order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                            <?= Html::a($model->pr_number, ['/purchase/pr-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
                         </td>
-
+                        <?php endif;?>
+                        <?php if($model->status == 2):?>
+                        <td class="fw-light align-middle">
+                            <?= Html::a($model->pq_number, ['/purchase/pq-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                        </td>
+                        <?php endif;?>
+                        <?php if($model->status == 3):?>
+                        <td class="fw-light align-middle">
+                            <?= Html::a($model->po_number, ['/purchase/po-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                        </td>
+                        <?php endif;?>
                         <td class="fw-light align-middle">
                             <div class="progress" style="height: 5px;">
                                 <div class="progress-bar" role="progressbar" aria-label="Progress" style="width: 50%;"
@@ -69,8 +88,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                             <?=$model->viewStatus()?>
-
-
                         </td>
                         <td class="fw-light align-middle"><?php //  $model->data_json['comment'] ?></td>
                         <td class="fw-light">
@@ -81,10 +98,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <?php if($model->status == 3 && $model->data_json['pr_leader_confirm'] == 'Y'):?>
-                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบียนคุม', ['/purchase/pq-order/update','id' => $model->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?></li>
-                                    <?php endif; ?>
-
+                                <?php if ($model->status == 3): ?>
+                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบีนยคุม', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ลงทะเบีนยคุม'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php endif;?>
+                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> สร้างใบสั่งซื้อ', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                    </li>
                                 </ul>
                             </div>
 

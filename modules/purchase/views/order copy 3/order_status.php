@@ -2,17 +2,21 @@
 use yii\helpers\Html;
 ?>
 <style>
-.apexcharts-title-text {
-    font-weight: 300
+    .apexcharts-title-text {
+  font-weight: 300
 }
 </style>
+<div class="card">
+    <div class="card-body">
+    <h6 class="mb-0">สถานะ/ความคืนหน้า</h6>
+        <div id="leaveChart"></div>
+        <div class="d-flex justify-content-center">
 
-<h6 class="mb-0 text-center">สถานะ/ความคืนหน้า</h6>
-<div id="leaveChart"></div>
-<div class="d-flex justify-content-center">
     <span class="h5 text-center">
         ออกคำสั่งซืื้อ
     </span>
+</div>
+    </div>
 </div>
 
 
