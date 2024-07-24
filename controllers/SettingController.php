@@ -30,7 +30,10 @@ class SettingController extends \yii\web\Controller
     {
         $model = Categorise::findOne(['name' => 'site']);
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            $old = $model->data_json;
+            if ($model->load($this->request->post())) {
+                $model->data_json = ArrayHelper::merge($old,$model->data_json);
+                $model->save();
                 return $this->redirect('/setting/line-official');
             }
         }
@@ -116,3 +119,28 @@ public function actionLooker()
 
 
 }
+
+
+
+
+
+// {
+//     "fax": "042892379",
+//     "email": "dansaihospital@gmail.com",
+//     "phone": "042891276",
+//     "address": "168 ม.3 ต.ด่านซ้าย อ.ด่านซ้าย จ.เลย 42120",
+//     "hoscode": "11447",
+//     "website": "dansaihospital.com",
+//     "province": "เลย",
+//     "company_name": "โรงพยาบาลสมเด็จพระยุพราชด่านซ้าย",
+//     "director_name": "นพ.สันทัด บุญเรือง",
+//     "line_liff_app": "2005893839-2ynww1B4",
+//     "line_liff_about": "2005893839-lrKJJjOg",
+//     "line_liff_login": "2005893839-JAYvvA6G",
+//     "director_position": "นายแพทย์ชำนาญการพิเศษ รักษาการในตำแหน่งผู้อำนวยการโรงพยาบาลสมเด็จพระยุพราชด่านซ้าย",
+//     "line_liff_profile": "2005893839-1vEqqXoQ",
+//     "line_liff_service": "2005893839-Zz0NN7Xk",
+//     "line_liff_register": "2005893839-9qRwwMWG",
+//     "line_liff_dashboard": "2005893839-d5355D6g",
+//     "line_liff_user_connect": "2005893839-Lyjoo921"
+// }
