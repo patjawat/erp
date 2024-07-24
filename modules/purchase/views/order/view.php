@@ -221,7 +221,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ['class' => 'btn btn-sm btn-danger rounued-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-regular fa-clock"></i> รอเห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-warning rounued-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                     <?php endif?>
                 </div>
