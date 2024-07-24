@@ -102,6 +102,7 @@ class OrderItemController extends Controller
                     'title' => $this->request->get('title'),
                     'content' => $this->renderAjax('list_'.$model->name),
                     'status' => 'success',
+                    'container' => '#' . $model->name,
                 ];
                 // return [
                 //     'title' => $this->request->get('title'),
@@ -187,7 +188,8 @@ class OrderItemController extends Controller
         $model->delete();
         return [
             'status' => 'success',
-            'container' => '#' . $model->name,
+            // 'container' => '#' . $model->name,
+            'container' => '#committee',
         ];
     }
 

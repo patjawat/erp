@@ -25,9 +25,17 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="col-8">
         <div class="row justify-content-center">
-            <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="col-lg-12 col-md-12 col-sm-ค">
+
+
+
                 <div class="card">
                     <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-9">
+
+                            
                         <div class="d-flex justify-content-between">
                             <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง</h6>
                             <div class="dropdown float-end">
@@ -35,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fa-solid fa-ellipsis"></i>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-right" style="">
+                                <div class="dropdown-menu dropdown-menu-right">
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
 
@@ -50,8 +58,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                             class="fa-solid fa-circle-info"></i> รายละเอียดการขอซื้อ</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-bs-toggle="pill" href="#pq_number"
-                                        role="pill"><i class="fa-solid fa-user-tag"></i> ทะเบียนคุม</a>
+                                    <a class="nav-link" data-bs-toggle="pill" href="#pq_number" role="pill"><i
+                                            class="fa-solid fa-user-tag"></i> ทะเบียนคุม</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="pill" href="#po_number" role="pill"><i
@@ -61,22 +69,35 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <!-- Tab panes -->
                             <div class="tab-content p-0">
+
                                 <div id="home1" class="tab-pane active">
                                     <?= $this->render('detail', ['model' => $model]) ?>
                                 </div>
                                 <div id="pq_number" class="tab-pane fade">
-                                ทะเบียนคุม
-
+                                    <table class="table table-striped-columns">
+                                        <tbody>
+                                            <?= $this->render('@app/modules/purchase/views/order/pq_detail.php', ['model' => $model]) ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                                 <div id="po_number" class="container tab-pane fade">
-                                คำสั่งซื้อ
+                                    คำสั่งซื้อ
                                 </div>
+
+                            </div>
+                            <!-- End Tab Content -->
+
+                        </div>
+
+                        </div>
+                            <div class="col-3">
+                                <?=$this->render('order_status')?>
                             </div>
                         </div>
 
+
                         <div class="d-flex justify-content-between mt-5">
                             <h6><i class="fa-solid fa-circle-info text-primary"></i> รายการขอซื้อ/ขอจ้าง</h6>
-
                         </div>
                         <?= $this->render('@app/modules/purchase/views/order/order_items', ['model' => $model]) ?>
 
@@ -103,7 +124,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </div>
 
+
+
                     </div>
+                    <!-- End Body -->
                 </div>
             </div>
         </div>
@@ -122,7 +146,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
 
-            <div class="card-body collapse <?=$model->data_json['pr_director_confirm'] == 'Y' ? '' : 'show'?>" id="Director">
+            <div class="card-body collapse <?=$model->data_json['pr_director_confirm'] == 'Y' ? '' : 'show'?>"
+                id="Director">
                 <!-- Start Flex Contriler -->
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="text-truncate">
@@ -154,7 +179,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <!-- ผู้ตรวจสอบ -->
         <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
                 <h6 class="mb-0">ผู้ตรวจสอบ</h6>
                 <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#me"
                     aria-expanded="true" aria-controls="collapseCard">
@@ -192,14 +217,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <!-- ผู้เห็นชอบ -->
         <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
                 <h6 class="mb-0">ผู้เห็นชอบ</h6>
                 <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#leader"
                     aria-expanded="true" aria-controls="collapseCard">
                     <i class="bi bi-chevron-down"></i>
                 </button>
             </div>
-            <div class="card-body collapse <?=$model->data_json['pr_leader_confirm'] == 'Y' ? '' : 'show'?>" id="leader">
+            <div class="card-body collapse <?=$model->data_json['pr_leader_confirm'] == 'Y' ? '' : 'show'?>"
+                id="leader">
                 <!-- Start Flex Contriler -->
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="text-truncate">
@@ -249,7 +275,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= Html::a('<i class="bi bi-plus-circle-fill"></i>', [
                             '/purchase/order-item/committee','title' => 'กรรมการตรวจรับ'
                         ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
-                    
+
                 </div>
                 <?=$model->StackComittee()?>
             </div>
@@ -263,6 +289,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
+
+        $("#main-modal").on('hide.bs.modal', function(){
+       
+            \$.pjax.reload({ container:'#purchase-container', history:false,replace: false,timeout: false});   
+        });
 
     \$("body").on("click", ".confirm-order", async function (e) {
       e.preventDefault();

@@ -4,10 +4,6 @@ use app\modules\purchase\models\Order;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
-$listcommittee = Order::find()
-    ->where(['name' => 'committee'])
-    ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
-    ->all();
 ?>
 <!-- กรรมการตรวจรับ -->
 
@@ -15,6 +11,10 @@ $listcommittee = Order::find()
 <?php
 $model = Yii::$app->session->get('order');
 
+$listcommittee = Order::find()
+    ->where(['name' => 'committee'])
+    ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
+    ->all();
 ?>
 
 <table class="table table-primary">

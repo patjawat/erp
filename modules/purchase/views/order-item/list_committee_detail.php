@@ -4,17 +4,17 @@ use app\modules\purchase\models\Order;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
+
+?>
+<!-- กรรมการตรวจรับ -->
+<?php Pjax::begin(['id' => 'committee_detail']); ?>
+<?php
+$model = Yii::$app->session->get('order');
 $listBoard = Order::find()
     ->where(['name' => 'committee_detail'])
     ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.board') asc"))
     ->all();
 ?>
-<!-- กรรมการตรวจรับ -->
-<?php
-$model = Yii::$app->session->get('order');
-
-?>
-<?php Pjax::begin(['id' => 'committee_detail']); ?>
 
 
 <table class="table">

@@ -157,9 +157,8 @@ $js = <<< JS
                     $(".modal-body").html(response.content);
                     $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                     $(".modal-dialog").addClass("modal-lg");
-                    // closeModal()
                     success()
-                    // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                 }
             }
         });
