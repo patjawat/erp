@@ -49,7 +49,7 @@ class OrderItemController extends Controller
         ]);
     }
 
-    //คณะกรรมการตรวจรับพัสดุ
+    //แสดงคณะกรรมการตรวจรับพัสดุ
     public function actionCommittee()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;

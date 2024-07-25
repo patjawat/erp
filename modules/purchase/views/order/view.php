@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             } catch (\Throwable $th) {
                             }
                         ?></h6>
-                <?=Html::a('<i class="bi bi-trash"></i> ยกเลิกรายการ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-danger rounded-pill shadow text-center open-modal shadow','data' => ['size' => 'modal-md']])?>
+                <?=Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-danger rounded-pill shadow text-center open-modal shadow me-5','data' => ['size' => 'modal-md']])?>
             </div>
         </div>
 
