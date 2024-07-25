@@ -2,7 +2,8 @@
 use app\modules\purchase\models\Order;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-
+use kartik\form\ActiveForm;
+use kartik\select2\Select2;
 ?>
 <?php Pjax::begin(['id' => 'order_item']); ?>
         <div class="table-responsive">
@@ -76,6 +77,35 @@ use yii\widgets\Pjax;
             </table>
             <div class="row justify-content-end">
                 <div class="col-8">
+                         
+                <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded">
+
+                    <?php $form = ActiveForm::begin([
+                        'id' => 'form-order',
+                        // 'type' => ActiveForm::TYPE_HORIZONTAL,
+                        'fieldConfig' => ['labelSpan' => 3, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
+                    ]); ?>
+
+<!-- https://www.myaccount-cloud.com/Article/Detail/147604/%E0%B8%A7%E0%B8%B4%E0%B8%98%E0%B8%B5%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B8%B3%E0%B8%99%E0%B8%A7%E0%B8%93-VAT-%E0%B8%99%E0%B8%AD%E0%B8%81-%E0%B9%81%E0%B8%A5%E0%B8%B0-VAT-%E0%B9%83%E0%B8%99 -->
+
+<?= $form->field($model, 'data_json[vat]')->widget(Select2::classname(), [
+    'data' => [
+        '1' => 'ไม่มี VAT',
+        '2' => 'VAT นอก',
+        '3' => 'VAT ใน',
+    ],
+    'options' => ['placeholder' => 'เลือกภาษี ...', 'multiple' => true],
+    'pluginOptions' => [
+        'tags' => false,
+        'tokenSeparators' => [',', ' '],
+        'maximumInputLength' => 10
+    ],
+])->label('ภาษี') ?>
+<?= $form->field($model, 'data_json[discount]')->textInput()->label('ส่วนลด (บาท)') ?>
+
+<?php ActiveForm::end(); ?>
+</div>
+
 
                 </div>
                 <div class="col-4">

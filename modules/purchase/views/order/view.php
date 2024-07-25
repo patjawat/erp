@@ -52,16 +52,13 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <!-- Nav tabs -->
                                 <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
                                     <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="pill" href="#home1" role="pill"><i
-                                                class="fa-solid fa-circle-info"></i> รายละเอียดการขอซื้อ</a>
+                                        <a class="nav-link active" data-bs-toggle="pill" href="#home1" role="pill"><span class="badge bg-primary rounded-pill text-white">1</span> รายละเอียดการขอซื้อ</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="pill" href="#pq_detail" role="pill"><i
-                                                class="fa-solid fa-user-tag"></i> ทะเบียนคุม</a>
+                                        <a class="nav-link" data-bs-toggle="pill" href="#pq_detail" role="pill"><span class="badge bg-primary rounded-pill text-white">2</span> ทะเบียนคุม</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="pill" href="#po_detail" role="pill"><i
-                                                class="fa-solid fa-users"></i> คำสั่งซื้อ</a>
+                                        <a class="nav-link" data-bs-toggle="pill" href="#po_detail" role="pill"><span class="badge bg-primary rounded-pill text-white">3</span> คำสั่งซื้อ</a>
                                     </li>
                                 </ul>
 
