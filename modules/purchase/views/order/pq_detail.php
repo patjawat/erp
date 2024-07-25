@@ -3,7 +3,7 @@ use yii\helpers\Html;
 ?>
  <table class="table table-striped-columns">
  <tbody>
-<tr>
+<!-- <tr>
     <td colspan="6" class="p-0">
         <div
             class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between">
@@ -23,7 +23,7 @@ use yii\helpers\Html;
             </div>
         </div>
     </td>
-</tr>
+</tr> -->
 <tr class="">
     <td class="text-end" style="width:150px;">ทะเบียนคุม</td>
     <td class="fw-semibold"><?= $model->pq_number ?></td>
@@ -85,3 +85,6 @@ use yii\helpers\Html;
 </tr>
 </tbody>
 </table>
+<div class="d-flex justify-content-center mt-3">
+                            <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไข',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม'],['class' => 'btn btn-warning rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-lg']])?>
+                        </div>

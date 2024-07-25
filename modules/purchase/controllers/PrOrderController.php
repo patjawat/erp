@@ -48,13 +48,10 @@ class PrOrderController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andwhere(['is not', 'pr_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
-        // $actionId = $this->action->id;
-        $actionId = Yii::$app->controller->id;
 
-        return $this->render('index', [
+        return $this->render('@app/modules/purchase/views/order/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'name' => 'pr'
         ]);
     }
 

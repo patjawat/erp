@@ -102,7 +102,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
         <div class="row d-flex justify-content-center mt-5">
             <div class="col-md-4 gap-3">
                 <div class="d-grid gap-2">
-                    <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
+                    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
                 </div>
             </div>
         </div>

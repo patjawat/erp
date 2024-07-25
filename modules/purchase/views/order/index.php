@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['id' => 'purchase']); ?>
+<?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
 
 <div class="card">
     <div
@@ -48,15 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>
-                        <?php if($name == 'pr'):?>
                         <th class="fw-semibold">เลขที่ขอ(PR)</th>
-                        <?php endif;?>
-                        <?php if($name == 'pq'):?>
-                        <th class="fw-semibold">เลขทะเบียนคุม(PQ)</th>
-                        <?php endif;?>
-                        <?php if($name == 'po'):?>
-                        <th class="fw-semibold">เลขที่สั่งซื้อ(PO)</th>
-                        <?php endif;?>
                         <th class="fw-semibold">ความคืบหน้า</th>
                         <th class="fw-semibold">หมายเหตุ</th>
                         <th class="fw-semibold text-center" style="width:176px">ดำเนินการ</th>
@@ -66,21 +58,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php foreach ($dataProvider->getModels() as $model): ?>
                     <tr class="">
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
-                        <?php if($model->status == '' || $model->status == 2):?>
                         <td class="fw-light align-middle">
-                            <?= Html::a($model->pr_number, ['/purchase/pr-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
+                            <?= Html::a($model->pr_number, ['/purchase/order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
                         </td>
-                        <?php endif;?>
-                        <?php if($model->status == 2):?>
-                        <td class="fw-light align-middle">
-                            <?= Html::a($model->pq_number, ['/purchase/pq-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
-                        </td>
-                        <?php endif;?>
-                        <?php if($model->status == 3):?>
-                        <td class="fw-light align-middle">
-                            <?= Html::a($model->po_number, ['/purchase/po-order/view', 'id' => $model->id], ['class' => 'fw-bolder']) ?>
-                        </td>
-                        <?php endif;?>
+                      
                         <td class="fw-light align-middle">
                             <div class="progress" style="height: 5px;">
                                 <div class="progress-bar" role="progressbar" aria-label="Progress" style="width: 50%;"
@@ -92,7 +73,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-light align-middle"><?php //  $model->data_json['comment'] ?></td>
                         <td class="fw-light">
                             <div class="btn-group">
-                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/'.$name.'-order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>

@@ -47,10 +47,9 @@ class PqOrderController extends Controller
         $dataProvider->query->andwhere(['is not', 'pq_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
 
-        return $this->render('index', [
+        return $this->render('@app/modules/purchase/views/order/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'name' => 'pq'
         ]);
     }
 
