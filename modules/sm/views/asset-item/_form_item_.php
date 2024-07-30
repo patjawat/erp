@@ -48,29 +48,30 @@ echo "</pre>";
             </div>
             <div class="col-4">
                 <?php 
-                    $units = Categorise::findAll(['name' => 'unit']);
+                    // $units = Categorise::findAll(['name' => 'unit']);
 
-                    // สร้าง array เพื่อใช้ใน Select2
-                    $unitData = [];
-                    foreach ($units as $unit) {
-                        $unitData[$unit->id] = $unit->title;
-                    }
+                    // // สร้าง array เพื่อใช้ใน Select2
+                    // $unitData = [];
+                    // foreach ($units as $unit) {
+                    //     $unitData[$unit->id] = $unit->title;
+                    // }
 
-                    $assets = Categorise::findAll(['name' => 'asset_type', 'category_id'=>[3,4]]);
+                    // $assets = Categorise::findAll(['name' => 'asset_type', 'category_id'=>[3,4]]);
 
-                    // สร้าง array เพื่อใช้ใน Select2
-                    $assetData = [];
-                    foreach ($assets as $asset) {
-                        $assetData[$asset->id] = $asset->title;
-                    }
+                    // // สร้าง array เพื่อใช้ใน Select2
+                    // $assetData = [];
+                    // foreach ($assets as $asset) {
+                    //     $assetData[$asset->id] = $asset->title;
+                    // }
 
                 ?>
                 <?php
                 echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-                    'data' => $unitData,
+                    'data' => $model->listUnit(),
                     'options' => ['placeholder' => 'ระบุ...'],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label("หน่วยนับ")
                 ?>
@@ -108,17 +109,7 @@ echo "</pre>";
             'class' => 'btn btn-sm btn-danger',
             'label' => '<i class="fa-solid fa-trash"></i>'
         ],
-        // 'columns' => [
-        //     [
-        //         'name'  => 'ma_items',
-        //         'title' => 'แผนบำรุงรักษา',
-        //         'enableError' => true,
-        //         'options' => [
-        //             'class' => 'input-priority'
-        //         ]
-        //     ],
-            
-        // ]
+    
     ])
     ->label(false);
 ?>

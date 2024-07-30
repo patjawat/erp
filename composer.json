@@ -55,7 +55,6 @@
         "twbs/bootstrap-icons": "^1.10",
         "coderius/yii2-hit-counter": "dev-master",
         "kartik-v/yii2-ipinfo": "dev-master",
-        "alexandernst/yii2-device-detect": "0.0.12",
         "idk/yii2-google-apiclient": "dev-master",
         "google/apiclient": "^2.0@dev",
         "sergmoro1/yii2-google-spreadsheet": "dev-master",
@@ -80,7 +79,7 @@
         "softark/yii2-dual-listbox": "dev-master",
         "chillerlan/php-qrcode": "dev-main",
         "kartik-v/php-date-formatter": "dev-master",
-        "vivekmarakana/yii2-dynamicform": "dev-master"
+        "kartik-v/yii2-popover-x": "dev-master"
         
     },
     "require-dev": {

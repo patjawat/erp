@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
                                 </div>
                             </div>
-                            <?=$model->viewStatus()?>
+                            <?=$model->viewStatus()['status']?>
                         </td>
                         <td class="fw-light align-middle"><?php //  $model->data_json['comment'] ?></td>
                         <td class="fw-light">

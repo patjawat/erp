@@ -8,7 +8,7 @@ $modules = require __DIR__ . '/add_modules.php';
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log', 'devicedetect'],
+    'bootstrap' => ['log'],
     'homeUrl' => ['/site'],
     'timeZone' => 'Asia/Bangkok',
     'aliases' => [
@@ -59,9 +59,6 @@ $config = [
                     'clientSecret' => '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',
                 ],
             ],
-        ],
-        'devicedetect' => [
-            'class' => 'alexandernst\devicedetect\DeviceDetect'
         ],
         'assetManager' => [
             'bundles' => [

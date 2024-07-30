@@ -27,6 +27,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 
 <?php Pjax::begin(['id' => 'purchase']); ?>
 <?php $form = ActiveForm::begin([
+    'id' => 'form-order',
                     'action' => ['/purchase/po-order/update', 'id' => $model->id],
                     // 'type' => ActiveForm::TYPE_HORIZONTAL,
                     'fieldConfig' => ['labelSpan' => 4, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
@@ -122,11 +123,28 @@ $js = <<< JS
         console.log("select2:unselect", e);
         window.location.href ='/purchase/po-order/create'
     });
-    // function getId(id){
-    //     window.location.href = Url::to(['/purchase/po-order/create'])
-    // }
+
+    \$('#form-order').on('beforeSubmit', function (e) {
+        var form = \$(this);
+        \$.ajax({
+            url: form.attr('action'),
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: async function (response) {
+                form.yiiActiveForm('updateMessages', response, true);
+                if(response.status == 'success') {
+                    closeModal()
+                    success()
+                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                }
+            }
+        });
+        return false;
+    });
     JS;
 $this->registerJS($js)
 ?>
 
 <?php  Pjax::end() ?>
+

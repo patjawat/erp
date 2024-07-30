@@ -27,6 +27,7 @@ class m240522_073153_create_order_table extends Migration
             'po_number' => $this->string(255)->comment('ที่ที่สั่งซื้อ'),
             'gr_number' => $this->string(255)->comment('เลขที่รับสินค้า'),
             'price' => $this->double(255)->comment('ราคา'),
+            'discount_price' => $this->double(255)->comment('ราคาส่ววนลด'),
             'qty' => $this->integer(255)->comment('จำนวน'),
             'to_stock' => $this->integer(255)->comment('จำนวนที่รับเข้าคลังแล้ว'),
             'status' => $this->integer(255)->comment('สถานะ'),
@@ -83,6 +84,6 @@ class m240522_073153_create_order_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%order}}');
+        $this->dropTable('{{%orders}}');
     }
 }

@@ -24,16 +24,19 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'purchase-container']); ?>
+
+<?php
+                            try {
+                                $orderTypeName =  $model->data_json['order_type_name'];
+                            } catch (\Throwable $th) {
+                                $orderTypeName = '';
+                            }
+                        ?>
 <div class="row">
     <div class="col-8">
         <div class="card">
             <div class="card-body d-flex justify-content-between align-items-center">
-                <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?php
-                            try {
-                                echo $model->data_json['order_type_name'];
-                            } catch (\Throwable $th) {
-                            }
-                        ?></h6>
+                <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?=$orderTypeName?></h6>
                 <?=Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-danger rounded-pill shadow text-center open-modal shadow me-5','data' => ['size' => 'modal-md']])?>
             </div>
         </div>
@@ -80,10 +83,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                     </div>
                     <div class="col-3">
-                        <?=$this->render('order_status')?>
+                        <?=$this->render('order_status',['model' => $model])?>
                         <hr>
                         <div class="d-flex justify-content-center mt-3">
-                            <?=Html::a('<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร',['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'],['class' => 'btn btn-primary rouned-pull shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                            <?=Html::a('<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร',['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'],['class' => 'btn btn-primary rouned-pull shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                         </div>
                     </div>
                 </div>
@@ -154,7 +157,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-regular fa-clock"></i> รออนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                 </div>
             </div>
@@ -195,7 +198,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-regular fa-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                 </div>
             </div>
@@ -246,15 +249,15 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด</h6>
-                    <?= Html::a('<i class="bi bi-plus-circle-fill"></i>', [
-                            '/purchase/order-item/committee','title' => 'กรรมการกำหนดรายละเอียด'
-                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
+                    
                 </div>
                 <?=$model->StackComitteeDetail()?>
             </div>
             <div class="card-footer d-flex justify-content-between">
                 <h6>กรรมการ</h6>
-                <?=Html::a('เลือกกลุ่มกรรมการ',['/'],['class' => 'btn btn-sm btn-primary rounded-pill shadow'])?>
+                <?= Html::a('ดำเนินการ', [
+                            '/purchase/order-item/committee-detail','title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
+                        ], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
             </div>
         </div>
 
@@ -262,15 +265,14 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-person-circle"></i> กรรมการตรวจรับ</h6>
-                    <?= Html::a('<i class="bi bi-plus-circle-fill"></i>', [
-                            '/purchase/order-item/committee','title' => 'กรรมการตรวจรับ'
-                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
                 </div>
                 <?=$model->StackComittee()?>
             </div>
             <div class="card-footer d-flex justify-content-between">
                 <h6>กรรมการ</h6>
-                <?=Html::a('เลือกกลุ่มกรรมการ',['/'],['class' => 'btn btn-sm btn-primary rounded-pill shadow'])?>
+                <?= Html::a('ดำเนินการ', [
+                            '/purchase/order-item/committee','title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'
+                        ], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
             </div>
         </div>
 

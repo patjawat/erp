@@ -49,6 +49,7 @@ class Product extends \yii\db\ActiveRecord
     }
 
     public $q_category;
+    public $unit_name;
 
     /**
      * {@inheritdoc}
@@ -82,9 +83,26 @@ class Product extends \yii\db\ActiveRecord
         ];
     }
 
+
+    public function afterFind()
+    {
+        try {
+
+            $this->unit_name = isset($this->data_json['unit']) ? $this->data_json['unit'] : '-';
+        } catch (\Throwable $th) {
+        }
+
+        parent::afterFind();
+    }
+
+    public function getProductItem()
+    {
+        return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_item']);
+    }
+
     public function getProductType()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
+        return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
     public function ShowImg()
@@ -111,23 +129,23 @@ class Product extends \yii\db\ActiveRecord
 
     //แสดงรูปแบบประเภท
     public function ViewTypeName(){
+        try {
+ 
             $model =  self::find()->where(['name' => $this->name])->one();
-            if($model->name == 'product_item'){
+            
                 return [
                     'title' =>  isset($this->productType->title) ? $this->productType->title : 'ไม่ได้ระบุ',
                     'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
                 ];
-            }else if($model->name == 'asset_item'){
-                return [
-                    'title' =>  $model->title,
-                    'code' => $model->code
-                ];
-            }else{
-                return [
+
+        } catch (\Throwable $th) {
+              return [
                     'title' =>  '',
                     'code' => ''
                 ];
-            }
+        }
+             
+            
                
 
     }

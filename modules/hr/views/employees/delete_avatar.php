@@ -1,73 +1,112 @@
 <?php
-use yii\bootstrap5\Html;
+use app\components\AppHelper;
+use app\modules\hr\models\EmployeeDetail;
+use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
-<style>
-    .profile-user-wid {
-    margin-top: -30px;
-}
 
-.avatar-md > img{
-    height: 6.5rem;
-    width: 6.5rem;
-    max-width:6.5rem;
-    max-height:6.5rem;
-}
-</style>
-<?php
-// print_r($model->UpdateFormDetail());
-// echo Html::img($model->showAvatar(),['style' =>'margin-top: 25px;max-width: 135px;max-height: 135px;']);
-// print_r($model->showAvatar());
-?>
-<div class="overflow-hidden card rounded-4 shadow-none border border-3 border-primary border-end-0 border-bottom-0 border-start-0 mb-4 custom-card hrm-main-card primary">
-            <div class="bg-<?=$model->status == 'ลาออก' ? 'danger' : 'primary'?>-subtle">
-                <div class="row">
-                    <div class="col-7">
-               
-                        <div class="text-primary p-3">
-                            <h5 class="text-primary"><?=isset($model->statusName->title) ? $model->statusName->title : '-'?> <i class="fa-solid fa-user-check"></i></h5>
-                            <p class="text-truncate">อายุราชการ 1 ปี 8 เดือน 8 วัน</p>
-                        </div>
-                    </div>
-                    <div class="align-self-end col-5">
-                        <?=Html::img('@web/img/profile-bg.png',['class' => 'img-fluid'])?>    
-                       </div>
-                </div>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex">
+            <div class="position-relative">
+                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1', 'data-aos' => 'zoom-in']) ?>
+                <span class="contact-status offline"></span>
             </div>
-            <div class="pt-0 card-body">
+            <div class="flex-grow-1 w-50">
                 <div class="row">
-                    <div class="col-6">
-                        <div class="avatar-md profile-user-wid mb-4">
-                        <?php // Html::img($model->showAvatar(),['class' => 'object-fit-cover img-thumbnail rounded-circle shadow'])?>    
-                        <?=Html::img($model->showAvatar(),['class' => 'object-fit-cover rounded shadow'])?>    
-                            </div>
-                        <h5 class="font-size-15 text-truncate"><?=$model->fullname;?></h5>
-                        <p class="mb-0 text-truncate"><?=isset($model->positionName->title) ? $model->positionName->title : '-'?></p>
+                    <div class="col-lg-9 col-md-12 col-sm-12 fw-semibold mb-1 d-inline-block text-truncate">
+                        <h6>
+                            <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id]) ?>"
+                                class="text-dark"><?= $model->fullname ?> (<code><?= $model->age_y ?></code> ปี)</a>
+                        </h6>
                     </div>
-                    <div class="col-6">
-                        <div class="pt-4">
-                            <div class="row">
-                                <div class="col-12">
-                                    <?php if($model->position_type == 'ข้าราชการ'):?>
-                                        <h5 class="font-size-15 text-truncate">เกษียณอายุราชการ</h5>
-                                    <p class="mb-0"><i class="fa-regular fa-clock"></i> <?=$model->date_end?></p>
-                                    <?php else:?>
-                                    <h5 class="font-size-15 text-truncate">วันครบกำหนดสัญญาจ้าง</h5>
-                                    <p class="mb-0"><i class="fa-regular fa-clock"></i> <?=$model->date_end?></p>
-                                    <?php endif;?>
-                                </div>
-                               
-                            </div>
-                            <div class="mt-4">
-                                <?php if(isset($list)):?>
-                                    <?=Html::a('<i class="fa-solid fa-eye"></i> เพิ่มเติม',['/hr/employees/view','id' => $model->id],['class' => 'btn btn-primary'])?>
-                            <?php else:?>
-                                <?=Html::a('<i class="fa-solid fa-print"></i> หนังสือรับรอง ',['/hr/employees/view','id' => $model->id,'detail' => 'certi'],['class' => 'btn btn-primary rounded-pill shadow'])?>    
-                            
-                            <?php endif;?>
+                    <div class="col-lg-3 col-md-12 col-sm-12">
+                        <div class="dropdown float-end">
+                            <div class="d-flex justify-end gap-2">
+                                <!-- <?=Html::a('<i class="fa-brands fa-line text-success"></i>',['/profile/line-connect'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
+                                 -->
+                                <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-sliders"></i>
+                            </a>
                         </div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <?= AppHelper::Btn([
+                                    'type' => 'update',
+                                    'url' => ['/hr/employees/update', 'id' => $model->id],
+                                    'modal' => true,
+                                    'size' => 'lg',
+                                    'class' => 'dropdown-item',
+                                ]) ?>
+
+                                <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?php // Html::a('<i class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id, 'title' => ''], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-12 text-truncate">
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-check2-circle text-primary me-1"></i><?= $model->departmentName() ?>
+                        </p>
+                        <p class="text-muted mb-0">
+                            <?= $model->positionName(['icon' => true]) ?>
+                        </p>
+                        <?php if ($model->joinDate()): ?>
+                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
+                            <code><?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?></code>
+                        </p>
+                        <p>
+                            <i class="fa-solid fa-business-time"></i>
+                            อายุราชการ <?= $model->workLife() ?></p>
+
+
+                        <?php endif; ?>
+                        <?php if (isset($showAge) && $showAge == true): ?>
+                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i>
+                            อายุราชการ<?= $model->age_join_date ?> </p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+
             </div>
         </div>
+    </div>
+    <div class="card-footer bg-transparent">
+        <div class="row">
+            <div class="col-6 text-truncate">
+
+                <?php if ($model->positionTypeName()): ?>
+                <div class="d-flex gap-2">
+                    <i class="bi bi-tag text-primary"></i>
+                    <span class="text-primary fw-normal"><?= $model->positionTypeName() ?></span>
+                </div>
+                <?php else: ?>
+                <div class="d-flex gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-warning"></i>
+                    <span class="text-primary fw-normal">ไม่ระบุประเภท</span>
+                </div>
+                <?php endif ?>
+            </div>
+            <!-- End col-6 -->
+            <div class="col-6 text-truncate">
+                <?php if ($model->positionTypeName()): ?>
+                <label
+                    class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate float-end">
+                    <i class="bi bi-clipboard-check"></i> <?= $model->statusName() ?>
+                </label>
+                <?php else: ?>
+                <label
+                    class="badge rounded-pill text-primary-emphasis bg-success-subtle p-2 fs-6 text-truncate float-end">
+                    <i class="fa-solid fa-circle-exclamation text-warning"></i> ไม่ระบุสถานะ
+                </label>
+                <?php endif ?>
+            </div>
+            <!-- End col-6 -->
+        </div>
+        <!-- End Row -->
+    </div>
+</div>

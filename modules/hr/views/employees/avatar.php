@@ -21,15 +21,12 @@ use yii\helpers\Url;
                         </h6>
                     </div>
                     <div class="col-lg-3 col-md-12 col-sm-12">
+
                         <div class="dropdown float-end">
-                            <div class="d-flex justify-end gap-2">
-                                <?=Html::a('<i class="fa-brands fa-line text-success"></i>',['/profile/line-connect'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
-                                
-                                <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
+                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-sliders"></i>
                             </a>
-                        </div>
                             <div class="dropdown-menu dropdown-menu-right" style="">
                                 <?= AppHelper::Btn([
                                     'type' => 'update',
@@ -55,13 +52,14 @@ use yii\helpers\Url;
                             <?= $model->positionName(['icon' => true]) ?>
                         </p>
                         <?php if ($model->joinDate()): ?>
-                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
-                            <code><?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?></code>
-                        </p>
-                        <p>
-                            <i class="fa-solid fa-business-time"></i>
+                            <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
+                                <code>
+                                        <?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?>
+                                    </code>
+                            </p>
+                            <p><i class="fa-solid fa-business-time"></i>
                             อายุราชการ <?= $model->workLife() ?></p>
-
+                        
 
                         <?php endif; ?>
                         <?php if (isset($showAge) && $showAge == true): ?>

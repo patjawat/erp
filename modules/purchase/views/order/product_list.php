@@ -56,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td scope="row">
                     <?=$model->Avatar()?>
                 </td>
-                <td><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td>
+                <td><?=(isset($model->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">'.$model->data_json['unit'].'</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>')?></td>
                 <td class="align-middle">
                     <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $model->title, 'asset_item' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
                 </td>

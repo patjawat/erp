@@ -103,6 +103,7 @@ class OrderController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            $order->data_json = ArrayHelper::merge($old,$newObj);
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -110,6 +111,57 @@ class OrderController extends Controller
             'model' => $model,
         ]);
     }
+    public function actionDiscount($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = $this->findModel($id);
+
+        $old = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            // $model->data_json = ArrayHelper::merge($model->data_json,$old);
+            $model->data_json = ArrayHelper::merge($old,$model->data_json);
+            $model->save();
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+                'model' => $model
+            ];
+        }
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('_form_discount', [
+                'model' => $model,
+            ]),
+        ];
+
+    }
+
+    public function actionFormVat($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = $this->findModel($id);
+
+        $old = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->data_json = ArrayHelper::merge($old,$model->data_json);
+            $model->save();
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+                'model' => $model
+            ];
+        }
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('_form_vat', [
+                'model' => $model,
+            ]),
+        ];
+
+    }
+
 
     // อนุมัติตาม status
     public function actionConfirmStatus($id)
@@ -219,6 +271,7 @@ class OrderController extends Controller
             'po_number' => $order->po_number,
             'data_json' => [
                 'asset_item_type_name' => $product->productType->title,
+                'asset_item_unit_name' => isset($product->data_json['unit']) ? $product->data_json['unit'] : null,
                 'asset_item_name' => $product->title
             ]
         ]);
@@ -281,8 +334,7 @@ class OrderController extends Controller
             'id' => $id,
             'name' => 'order_item'
         ]);
-        $product = Product::findOne($model->asset_item);
-
+        $product = Product::findOne(['code' => $model->asset_item]);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;

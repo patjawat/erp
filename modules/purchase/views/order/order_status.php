@@ -11,7 +11,9 @@ use yii\helpers\Html;
 <div id="leaveChart"></div>
 <div class="d-flex justify-content-center">
     <span class="h5 text-center">
-        ออกคำสั่งซืื้อ
+       <?php
+       print_r($model->viewStatus()['status_name']);
+       ?>
     </span>
 </div>
 
@@ -19,9 +21,10 @@ use yii\helpers\Html;
 
 <?php
 use yii\web\View;
+$progress = $model->viewStatus()['progress'];
 $js = <<< JS
 var options = {
-          series: [70],
+          series: [$progress],
           chart: {
           height: 180,
           fontFamily: 'Prompt, sans-serif',

@@ -136,7 +136,7 @@ class PoOrderController extends Controller
                 $model->save(false);
 
                 //  update pr po pq on items
-                $sql = "UPDATE `order` SET  pr_number = :pr_number,pq_number = :pq_number,po_number = :po_number WHERE name = 'order_item' AND category_id = :category_id";
+                $sql = "UPDATE `orders` SET  pr_number = :pr_number,pq_number = :pq_number,po_number = :po_number WHERE name = 'order_item' AND category_id = :category_id";
                 $command = \Yii::$app
                     ->db
                     ->createCommand($sql)
@@ -146,11 +146,11 @@ class PoOrderController extends Controller
                     ->bindValues([':category_id' => $model->id])
                     ->execute();
 
-                 return $this->redirect(['/purchase/po-order']);;
-                // return [
-                //     'status' => 'success',
-                //     'container' => '#purchase-container',
-                // ];
+                    return [
+                        'status' => 'success',
+                        'container' => '#purchase-container',
+                    ];
+    
             } else {
                 return false;
             }

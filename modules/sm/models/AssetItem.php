@@ -159,6 +159,12 @@ class AssetItem extends \yii\db\ActiveRecord
         return ArrayHelper::map(self::find()->all(),'code','title');
     }
 
+    public function listUnit(){
+        return ArrayHelper::map(self::find()->where(['name' => 'unit'])->all(),'title','title');
+    }
+
+
+    
     public function FsnGroup(){
         return ArrayHelper::map(self::find()->where(['name' => 'asset_group'])->all(),'code','title');
     }
