@@ -47,10 +47,22 @@ class PqOrderController extends Controller
         $dataProvider->query->andwhere(['is not', 'pq_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
 
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+          
         return $this->render('@app/modules/purchase/views/order/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+        }
     }
 
     /**

@@ -165,13 +165,13 @@ class Order extends \yii\db\ActiveRecord
         $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
         return '<div class="d-flex">'
             . $img . '
-        <div class="avatar-detail">
+        <div class="avatar-detail text-truncate">
             <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม..."><span>'
             . $employee->fullname . '</span>
             </h6>
-            <p class="text-muted mb-0 fs-13">' . $this->data_json['product_type_name'] . ' <span class="text-primary">' . $this->po_number . '</span> '.$this->viewCreated().'ที่แล้ว</p>
+            <p class="text-muted mb-0 fs-13">' . $this->data_json['order_type_name'].'</p>
         </div>
     </div>';
     }

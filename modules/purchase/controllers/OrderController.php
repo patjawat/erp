@@ -286,16 +286,19 @@ class OrderController extends Controller
             'po_number' => $order->po_number,
             'data_json' => [
                 'asset_item_type_name' => $product->productType->title,
+                'asset_item_type_name' => $product->productType->title,
                 'asset_item_unit_name' => isset($product->data_json['unit']) ? $product->data_json['unit'] : null,
                 'asset_item_name' => $product->title
             ]
         ]);
+     
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->save()) {
                     // return $order->group_id;
+                    //ถ้ายังไม่มีการจัดประเภทของ order
                     if($order->group_id == null){
                         $old = $order->data_json;
                         $newObj = $order->data_json = [
@@ -345,6 +348,8 @@ class OrderController extends Controller
 
     public function actionUpdateItem($id)
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
         $model = Order::findOne([
             'id' => $id,
             'name' => 'order_item'

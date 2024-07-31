@@ -17,7 +17,7 @@ class StockMovementSearch extends StockMovement
     public function rules()
     {
         return [
-            [['id', 'product_id', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'asset_item', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by'], 'integer'],
             [['name', 'rc_number', 'po_number', 'movement_type', 'receive_type', 'movement_date', 'lot_number', 'expiry_date', 'category_id', 'ref', 'data_json', 'created_at', 'updated_at'], 'safe'],
             [['total_price', 'unit_price'], 'number'],
         ];
@@ -60,7 +60,7 @@ class StockMovementSearch extends StockMovement
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'product_id' => $this->product_id,
+            'asset_item' => $this->asset_item,
             'from_warehouse_id' => $this->from_warehouse_id,
             'to_warehouse_id' => $this->to_warehouse_id,
             'qty' => $this->qty,

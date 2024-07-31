@@ -22,8 +22,8 @@ use yii\widgets\Pjax;
                 </thead>
                 <tbody class="table-group-divider">
                     <?php foreach ($model->ListOrderItems() as $item): ?>
-                     <?php $checkStock = StockMovement::find()->where(['name'=> 'receive_item','product_id' => $item->product_id,'po_number' => $order->po_number])->sum('qty');?>
-                     <?php $checkStock2 = StockMovement::find()->where(['name'=> 'receive_item','product_id' => $item->product_id,'po_number' => $order->po_number,'rc_number' => $model->rc_number])->One();?>
+                     <?php $checkStock = StockMovement::find()->where(['name'=> 'receive_item','asset_item' => $item->asset_item,'po_number' => $order->po_number])->sum('qty');?>
+                     <?php $checkStock2 = StockMovement::find()->where(['name'=> 'receive_item','asset_item' => $item->asset_item,'po_number' => $order->po_number,'rc_number' => $model->rc_number])->One();?>
 
                      <?php if (!$checkStock2 && ($item->qty - $checkStock) !=0) : ?>
                     <tr class="">

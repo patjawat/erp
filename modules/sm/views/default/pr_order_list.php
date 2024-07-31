@@ -8,7 +8,7 @@ use yii\web\View;
 <div class="card" style="height: 435px;">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <p><i class="fa-solid fa-user-check text-black-50"></i> เห็นชอบ</p>
+                    <p><i class="fa-solid fa-user-check text-black-50"></i> ขอซื้อ</p>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">

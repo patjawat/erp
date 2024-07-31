@@ -53,9 +53,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <!-- Nav tabs -->
                                 <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
                                     <li class="nav-item">
-                                        <a class="nav-link <?=$model->status == '' ? 'active' : null;?>" data-bs-toggle="pill" href="#home1" role="pill"><span
-                                                class="badge bg-primary rounded-pill text-white">1</span>
-                                            รายละเอียดการขอซื้อ</a>
+                                        <a class="nav-link <?=$model->data_json['pr_director_confirm'] == '' ? 'active' : null;?>" data-bs-toggle="pill" href="#home1" role="pill"><span
+                                                class="badge bg-primary rounded-pill text-white">1</span> ขอซื้อ</a>
                                     </li>
                                     <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
                                     <li class="nav-item">
@@ -72,8 +71,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                         <?php if($model->status >= 3):?>
                                         <li class="nav-item">
-                                            <a class="nav-link <?=$model->status == 4 ? 'active' : null;?>" data-bs-toggle="pill" href="#gr_detail" role="pill"><span
+                                            <a class="nav-link <?=$model->status == 3 ? 'active' : null;?>" data-bs-toggle="pill" href="#gr_detail" role="pill"><span
                                             class="badge bg-primary rounded-pill text-white">3</span> ตรวจรับ</a>
+                                        </li>
+                                        <?php endif?>
+
+                                        <?php if($model->status >= 4):?>
+                                        <li class="nav-item">
+                                            <a class="nav-link <?=$model->status == 4 ? 'active' : null;?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
+                                            class="badge bg-primary rounded-pill text-white">4</span> คลัง</a>
                                         </li>
                                         <?php endif?>
                                 </ul>
@@ -91,10 +97,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <!-- Tab panes -->
                             <div class="tab-content p-0">
-                                <div id="home1" class="tab-pane <?=$model->status == '' ? 'active' : null;?>">
+                                <div id="home1" class="tab-pane <?=$model->data_json['pr_director_confirm'] == '' ? 'active' : null;?>">
                                     <?= $this->render('detail', ['model' => $model]) ?>
                                 </div>
-                                <div id="pq_detail" class="tab-pane <?=$model->status == 1 ? 'active' : null;?>">
+                                <div id="pq_detail" class="tab-pane <?=($model->status == 1 && $model->data_json['pr_director_confirm'] == 'Y') ? 'active' : null;?>">
                                     <?= $this->render('pq_detail', ['model' => $model]) ?>
 
                                 </div>
@@ -102,8 +108,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?= $this->render('po_detail', ['model' => $model]) ?>
                                 </div>
 
-                                <div id="gr_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
+                                <div id="gr_detail" class="container tab-pane <?=$model->status == 3 ? 'active' : null;?>">
                                     <?= $this->render('gr_detail', ['model' => $model]) ?>
+                                </div>
+
+                                <div id="warehouse_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
+                                    <?= $this->render('warehouse_detail', ['model' => $model]) ?>
                                 </div>
                             </div>
                         </div>

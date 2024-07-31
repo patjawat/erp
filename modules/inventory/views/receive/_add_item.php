@@ -107,7 +107,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?= $form->field($model, 'data_json[po_qty]')->hiddenInput()->label(false); ?>
 
-<?= $form->field($model, 'product_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'asset_item')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'movement_type')->hiddenInput()->label(false); ?>
 
 <div class="d-grid gap-2">

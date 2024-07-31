@@ -13,6 +13,7 @@ use app\model\Categorise;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;
+use yii\db\Expression;
 
 /**
  * PrOrderController implements the CRUD actions for Order model.
@@ -49,11 +50,81 @@ class PrOrderController extends Controller
         $dataProvider->query->andwhere(['is not', 'pr_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
 
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+          
         return $this->render('@app/modules/purchase/views/order/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+        }
+        
     }
+
+    // รายการที่ขอซื้อ
+    public function actionList()
+    {
+        $searchModel = new OrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterwhere(['name' => 'order','status' => 1]);
+        $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm') = ''"));
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/list_style1', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                     'title' => 'ขอซื้อ/ขอจ้าง'
+                ]),
+            ];
+        } else {
+          
+        return $this->render('@app/modules/purchase/views/order/list_style1', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+             'title' => 'ขอซื้อ/ขอจ้าง'
+        ]);
+        } 
+    }
+
+    // รายการที่อนุมัติแล้ว
+    public function actionAcceptOrderList()
+    {
+        $searchModel = new OrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterwhere(['name' => 'order','status' => 1]);
+        $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm') = 'Y'"));
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/list_style1', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                    'title' => 'อนุมิติ'
+                ]),
+            ];
+        } else {
+          
+        return $this->render('@app/modules/purchase/views/order/list_style1', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+             'title' => 'อนุมิติ'
+        ]);
+        } 
+    }
+
 
     /**
      * Displays a single Order model.
@@ -130,12 +201,13 @@ class PrOrderController extends Controller
                 // validate all models
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
+                return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
                 // return $this->redirect(['view', 'id' => $model->id]);
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'status' => 'success',
-                    'container' => '#purchase-container',
-                ];
+                // Yii::$app->response->format = Response::FORMAT_JSON;
+                // return [
+                //     'status' => 'success',
+                //     'container' => '#purchase-container',
+                // ];
             } else {
                 return false;
             }

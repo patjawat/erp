@@ -157,7 +157,6 @@ class ReceiveController extends Controller
     // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
     public function actionListOrderByPo()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
 
         $warehouse = Yii::$app->session->get('warehouse');
         $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
@@ -165,15 +164,24 @@ class ReceiveController extends Controller
 
         $po_number = $this->request->get('po_number');
         $models = Order::find()
-        ->where(['name' => 'order','status' => '5'])
-        ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
+        ->where(['name' => 'order','status' => 4])
+        // ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
+        ->andWhere(['IN','category_id',$item])
         ->all();
+        if($this->request->isAjax){
+            
+            Yii::$app->response->format = Response::FORMAT_JSON;
         return [
             'title' => $this->request->get('title'),
             'content' => $this->renderAjax('list_order_by_po', [
                 'models' => $models,
             ])
         ];
+    }else{
+        return $this->render('list_order_by_po', [
+            'models' => $models,
+        ]);
+        }
     }
 
     // แสดงรายการสินค้าจากใบ po
@@ -280,7 +288,7 @@ class ReceiveController extends Controller
             'rc_number' => $StockMovement->rc_number,
             'to_warehouse_id' => $StockMovement->to_warehouse_id,
             'name' => 'receive_item',
-            'product_id' => $product->id,
+            'asset_item' => $product->id,
             'movement_type' => 'receive',
             'order_status' => 'pending',
             'data_json' => [
@@ -327,21 +335,20 @@ class ReceiveController extends Controller
     // เพิ่มรายการวัสดุจาก PO
     public function actionAddPoItem()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         // ตรวจสอบ order จาก ID
         $order = Order::findOne($id);
         // ถ้ามีรายการเดิมที่ยังรับเข้าไม่หมด
         $StockMovement = StockMovement::find()->where(['name' => 'receive', 'po_number' => $order->po_number,'order_status' => 'pending'])->One();
-        // ค้นหารายการสินค่าจาก product_id ที่เก็บไว้ใน Order po_number
-        $product = Product::findOne($order->product_id);
+        // ค้นหารายการสินค่าจาก asset_item ที่เก็บไว้ใน Order po_number
+        $product = Product::findOne(['code' => $order->asset_item]);
 
         $model = new StockMovement([
             'po_number' => $order->po_number,
             'rc_number' => $StockMovement->rc_number,
             'to_warehouse_id' => $StockMovement->to_warehouse_id,
             'name' => 'receive_item',
-            'product_id' => $product->id,
+            'asset_item' => $product->id,
             'movement_type' => 'receive',
             'order_status' => 'pending',
             'data_json' => [
@@ -400,7 +407,7 @@ class ReceiveController extends Controller
         }
         
 
-        $product = Product::findOne($model->product_id);
+        $product = Product::findOne($model->asset_item);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {

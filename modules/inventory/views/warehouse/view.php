@@ -75,8 +75,8 @@ $this->title = $model->warehouse_name;
           <?php
           $warehouse = Yii::$app->session->get('warehouse');
           $models = StockMovement::find()
-          ->select(['p.id','stock_movements.product_id', 'sum(stock_movements.qty) as sum_qty'])
-          ->join('INNER JOIN', 'categorise p', 'p.id = stock_movements.product_id')
+          ->select(['p.id','stock_movements.asset_item', 'sum(stock_movements.qty) as sum_qty'])
+          ->join('INNER JOIN', 'categorise p', 'p.id = stock_movements.asset_item')
           ->where(['stock_movements.to_warehouse_id' => $warehouse['warehouse_id']])
           ->groupBy('p.id')
           ->all();

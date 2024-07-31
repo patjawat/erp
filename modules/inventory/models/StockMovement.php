@@ -22,7 +22,7 @@ use app\modules\hr\models\Employees;
  * @property string|null $name ชื่อการเก็บของข้อมูล เช่น stock_order, stock_item
  * @property string|null $po_number รหัสใบสั่งซื้อ
  * @property string|null $rc_number รหัสใบรับสินค้า
- * @property int|null $product_id รหัสสินค้า
+ * @property int|null $asset_item รหัสสินค้า
  * @property int|null $from_warehouse_id รหัสคลังสินค้าต้นทาง
  * @property int|null $to_warehouse_id รหัสคลังสินค้าปลายทาง
  * @property int|null $qty จำนวนสินค้าที่เคลื่อนย้าย
@@ -57,7 +57,7 @@ class StockMovement extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['product_id', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
+            [['asset_item', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             // [['movement_type'], 'required'],
             [['movement_type'], 'string'],
             [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty'], 'safe'],
@@ -76,7 +76,7 @@ class StockMovement extends \yii\db\ActiveRecord
             'name' => 'Name',
             'po_number' => 'Po Number',
             'rc_number' => 'Rc Number',
-            'product_id' => 'Product ID',
+            'asset_item' => 'Product ID',
             'from_warehouse_id' => 'From Warehouse ID',
             'to_warehouse_id' => 'To Warehouse ID',
             'qty' => 'Qty',
@@ -179,9 +179,10 @@ class StockMovement extends \yii\db\ActiveRecord
     // นับจำนวนที่เคยที่รับเข้าคลังแล้ว
     public function QtyCheck()
     {
-        // return $this->product_id;
-        $stockOrder = self::find()->where(['po_number' => $this->po_number, 'product_id' => $this->product_id])->sum('qty');
-        $Order = Order::findOne(['name' => 'order_item', 'product_id' => $this->product_id, 'po_number' => $this->po_number]);
+        // return $this->asset_item;
+        $stockOrder = self::find()->where(['po_number' => $this->po_number, 'asset_item' => $this->asset_item])->sum('qty');
+        $Order = Order::findOne(['name' => 'order_item', 'asset_item' => $this->asset_item, 'po_number' => $this->po_number]);
+        return $Order;
         $summeryQty = ($Order->qty - $stockOrder);
 
         return $stockOrder ? $summeryQty : $Order->qty;
@@ -207,9 +208,9 @@ class StockMovement extends \yii\db\ActiveRecord
     //แสดงรายการวัสดุจากคัลงที่เลือก
     public function ListProductFormwarehouse(){
         return self::find()
-        ->select('id,product_id,sum(qty) as sum_qty')
+        ->select('id,asset_item,sum(qty) as sum_qty')
         ->where(['name' => 'receive_item','to_warehouse_id' => $this->from_warehouse_id])
-        ->groupBy('product_id')
+        ->groupBy('asset_item')
         ->all();
     }
 //แสดงรายการรับสินค้าเข้าคลัง
@@ -224,11 +225,11 @@ class StockMovement extends \yii\db\ActiveRecord
         return self::find()->where(['name' => 'request_item', 'rq_number' => $this->rq_number])->all();
     }
     public function getPoQty(){
-        return Order::findOne(['po_number' => $this->po_number,'product_id' => $this->product_id]);
+        return Order::findOne(['po_number' => $this->po_number,'asset_item' => $this->asset_item]);
     }
 
     public function getProduct(){
-        $model = Product::findOne($this->product_id);
+        $model = Product::findOne($this->asset_item);
         if($model){
             return $model;
         }else{
