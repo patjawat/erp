@@ -176,6 +176,26 @@ class StockMovement extends \yii\db\ActiveRecord
         ];
     }
 
+
+        //  ภาพทีมคณะกรรมการ
+        public function StackComittee()
+        {
+            try {
+                $data = '';
+                $data .= '<div class="avatar-stack">';
+                foreach (self::find()->where(['name' => 'committee_detail'])->all() as $key => $avatar) {
+                    $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
+                    $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
+                    $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+                    $data .= '</a>';
+                }
+                $data .= '</div>';
+                return $data;
+            } catch (\Throwable $th) {
+            }
+        }
+
+        
     // นับจำนวนที่เคยที่รับเข้าคลังแล้ว
     public function QtyCheck()
     {

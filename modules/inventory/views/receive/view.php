@@ -25,82 +25,55 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory']); ?>
-<div class="card">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <h5><i class="fa-solid fa-shop"></i> รับวัสดุ</h5>
-        <div>
-            <?php Html::a('เลือกรายการ', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-            <?php Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-            <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก', ['cancel-order', 'id' => $model->id], [
-                'class' => 'btn btn-danger',
-                'id' => 'cancelOrder',
-                'data' => [
-                    // 'confirm' => 'Are you sure you want to delete this item?',
-                    // 'method' => 'post',
-                ],
-            ]) ?>
 
-        </div>
-    </div>
-</div>
+<div class="row">
+    <div class="col-8">
 
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <h5><i class="fa-solid fa-shop"></i> รับวัสดุ</h5>
+                    <div>
+                        <?php Html::a('เลือกรายการ', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                        <?php Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                        <?=Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-danger rounded-pill shadow text-center open-modal shadow me-5','data' => ['size' => 'modal-md']])?>
+                        
+                    </div>
+                    
+                </div>
 
 
 <div class="row">
-    <!-- <div class="col-7">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6><i class="fa-solid fa-file-lines"></i> ข้อมูลตรวจรับ</h6>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="">
-                            <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['/inventory/receive/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
-                                'class' => 'dropdown-item  delete-item',
-                            ]) ?>
-                        </div>
-                    </div>
-                </div>
-                <?= DetailView::widget([
-                    'model' => $model,
-                    'attributes' => [
-                        [
-                            'label' => 'เลขที่ขอซื้อ',
-                            'value' => function ($model) {
-                    // return $model->pr_number;
-                }
-                        ],
-                        [
-                            'label' => 'เลขที่สั่งซื้อ',
-                            'value' => function ($model) {
-                    // return $model->po_number;
-                }
-                        ],
-                        [
-                            'label' => 'สานะ',
-                            'value' => function ($model) {
-                    // return $model->viewStatus();
-                }
-                        ],
-                    ],
-                ]) ?>
-            </div>
+<div class="col-6">
+    <div class="card border border-primary">
+        <div class="card-body">
+            <h4 class="card-title">Title</h4>
+            <p class="card-text">Text</p>
         </div>
     </div>
-    <div class="col-5">
-        <?= $this->render('list_committee', ['model' => $model]) ?>
-    </div> -->
-    <div class="col-12">
+    
+</div>
+<div class="col-6">
+
+<div class="card border border-primary">
+        <div class="card-body">
+            <h4 class="card-title">Title</h4>
+            <p class="card-text">Text</p>
+        </div>
+    </div>
+</div>
+</div>
+    
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-body">
                 <?php if($model->order_status != 'success') : ?>
                 <div class="d-flex justify-content-between">
                     <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
-                   
+
 
                 </div>
                 <?php else:?>
@@ -111,18 +84,18 @@ $this->params['breadcrumbs'][] = $this->title;
                         <thead>
                             <tr>
                                 <th scope="col">
-                                <div>
-                        <?php if ($model->receive_type == 'receive'): ?>
-                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-product','id' => $model->id, 'po_number' => $model->po_number, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        <?php else: ?>
-                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-product-order', 'id' => $model->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการใบสั่งซื้อเลขที่ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        <?php endif ?>
-                    </div>
-                </th>
-                <th scope="col">ประเภท</th>
-                <?php if ($model->receive_type == 'purchase'): ?>
-                    <th scope="col">จำนวนสั่งซื้อ</th>
-                    <?php endif ?>
+                                    <div>
+                                        <?php if ($model->receive_type == 'receive'): ?>
+                                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-product','id' => $model->id, 'po_number' => $model->po_number, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                        <?php else: ?>
+                                        <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/receive/list-product-order', 'id' => $model->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> รายการใบสั่งซื้อเลขที่ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                        <?php endif ?>
+                                    </div>
+                                </th>
+                                <th scope="col">ประเภท</th>
+                                <?php if ($model->receive_type == 'purchase'): ?>
+                                <th scope="col">จำนวนสั่งซื้อ</th>
+                                <?php endif ?>
                                 <th scope="col">จำนวนรับเข้า</th>
                                 <th scope="col">ล็อต</th>
                                 <?php if($model->order_status != 'success') : ?>
@@ -153,7 +126,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ?>
                                 </td>
                                 <?php if ($model->receive_type == 'purchase'): ?>
-                                <td><?= $item->getPoQty()->qty ?></td>
+                                <td><?php //  $item->getPoQty()->qty ?></td>
                                 <?php endif;?>
                                 <td><?= $item->qty ?></td>
                                 <td>R1C3</td>
@@ -173,6 +146,40 @@ $this->params['breadcrumbs'][] = $this->title;
 
             </div>
         </div>
+
+
+    </div>
+    <div class="col-4">
+
+
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6><i class="bi bi-person-circle"></i> กรรมการตรวจรับวัสดุเข้าคลัง</h6>
+
+                </div>
+                <?=$model->StackComittee()?>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <h6>กรรมการ</h6>
+                <?= Html::a('ดำเนินการ', [
+                            '/purchase/order-item/committee-detail','title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
+                        ], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+            </div>
+        </div>
+
+        <?php // $this->render('list_committee', ['model' => $model]) ?>
+
+
+    </div>
+</div>
+
+
+
+<div class="row">
+
+    <div class="col-12">
+
     </div>
     <!-- ถ้าหามีรายการรับเข้าให้แสดงปุ่ม บันทึกรับเข้าคลัง -->
     <?php if (count($model->ListItemFormRcNumber()) > 0 AND $model->order_status != 'success'): ?>
