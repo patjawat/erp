@@ -47,6 +47,21 @@ class OrderController extends Controller
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'pr_number', $searchModel->q],
+            ['like', 'pq_number', $searchModel->q],
+            ['like', 'po_number', $searchModel->q],
+        ]);
+        // $dataProvider->query->andFilterWhere([
+        //     'or',
+        //     ['like', 'user.doctor_id', $searchModel->q_doctor],
+        //     ['like', 'user.fullname', $searchModel->q_doctor],
+        //     ['like', 'doctor_consult', $searchModel->q_doctor],
+        //     ['like', 'doctor_consult_name', $searchModel->q_doctor],
+        //     ['like', 'ipd_admit.vn', $searchModel->q_doctor],
+        //     ['like', 'opd_visit.pcc_vn', $searchModel->q_doctor],
+        // ]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

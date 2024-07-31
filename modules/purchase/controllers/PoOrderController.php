@@ -132,7 +132,7 @@ class PoOrderController extends Controller
                     $model->data_json,
                 );
                 // return $model->data_json;
-                $model->status = 4;
+                $model->status = 3;
                 $model->save(false);
 
                 //  update pr po pq on items

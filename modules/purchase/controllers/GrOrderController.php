@@ -119,24 +119,50 @@ class GrOrderController extends Controller
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post()) ) {
+        $thaiYear = substr((date('Y') + 543), 2);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                if ($model->gr_number == '') {
+                    $model->gr_number = \mdm\autonumber\AutoNumber::generate('GR-' . $thaiYear . '????');
+                }  // validate all models
+                $model->data_json = ArrayHelper::merge(
+                    $oldObj,
+                    $model->data_json,
+                );
+                if($model->data_json['order_item_checker'] == 'Y'){
+                    $model->status = 4;
+                }else{
+                    // $model->status = 3;
+                }
+                $model->save(false);
 
-            if($model->data_json['order_item_checker'] == 'Y'){
-                $model->status = 5;
-            }else{
-                $model->status = 4;
+              
+                    return [
+                        'status' => 'success',
+                        'container' => '#purchase-container',
+                    ];
+    
+            } else {
+                return false;
             }
-            $model->data_json = ArrayHelper::merge(
-                $oldObj,
-                $model->data_json,
-            );
-            $model->save(false);
-            return $this->redirect(['/purchase/po-order']);
+        } else {
+            $model->loadDefaultValues();
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

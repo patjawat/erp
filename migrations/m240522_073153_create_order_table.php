@@ -67,12 +67,12 @@ class m240522_073153_create_order_table extends Migration
         $sqlOrderStatus = Yii::$app->db->createCommand("select * from categorise where name = 'order_status'")->queryAll();
         if (count($sqlOrderStatus) < 1) {
             // สถานะคำสั่งซื้อ
-            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'order_status', 'title' => 'ขอซื้อ-ขอจ้าง(PR)', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'order_status', 'title' => 'ลงทะเบียนคุม', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'order_status', 'title' => 'ออกใบสั่งซื้อ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'order_status', 'title' => 'ตรวจรับวัสดุ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'order_status', 'title' => 'วัสดุเข้าคลัง', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'order_status', 'title' => 'ส่งบัญชี', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'order_status', 'title' => 'ขอซื้อ-ขอจ้าง(PR)', 'active' => 1,'data_json' => ['color' => 'danger']]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'order_status', 'title' => 'ลงทะเบียนคุม', 'active' => 1,'data_json' => ['color' => 'warning']]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'order_status', 'title' => 'ออกใบสั่งซื้อ', 'active' => 1,'data_json' => ['color' => 'primary']]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'order_status', 'title' => 'ตรวจรับวัสดุ', 'active' => 1,'data_json' => ['color' => 'info']]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'order_status', 'title' => 'วัสดุเข้าคลัง', 'active' => 1,'data_json' => ['color' => 'info']]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'order_status', 'title' => 'ส่งบัญชี', 'active' => 1,'data_json' => ['color' => 'success']]);
         }
 
 

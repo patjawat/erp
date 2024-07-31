@@ -40,6 +40,7 @@ use Yii;
 class Order extends \yii\db\ActiveRecord
 {
 
+    public $q;
     public $vatType;
     /**
      * {@inheritdoc}
@@ -70,7 +71,8 @@ class Order extends \yii\db\ActiveRecord
                 'to_stock',
                 'group_id',
                 'asset_item',
-                'discount_price'
+                'discount_price',
+                'q'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
@@ -169,7 +171,7 @@ class Order extends \yii\db\ActiveRecord
             data-bs-title="ดูเพิ่มเติม..."><span>'
             . $employee->fullname . '</span>
             </h6>
-            <p class="text-muted mb-0 fs-13">' . $this->data_json['product_type_name'] . ' (<code>' . $this->viewCreatedAt() . '</code>)</p>
+            <p class="text-muted mb-0 fs-13">' . $this->data_json['product_type_name'] . ' <span class="text-primary">' . $this->po_number . '</span> '.$this->viewCreated().'ที่แล้ว</p>
         </div>
     </div>';
     }
@@ -354,7 +356,7 @@ class Order extends \yii\db\ActiveRecord
                 $name =  'Vat ใน';
                 break;
             case 'EX':
-                $name =  'Vat ใน';
+                $name =  'Vat นอก';
                 break;
             default:
             $name =  'ไม่ระบุ';
@@ -526,20 +528,6 @@ class Order extends \yii\db\ActiveRecord
         return CategoriseHelper::Vendor();
     }
 
-    // public function viewPrStatus()
-    // {
-    //     $status = Categorise::findOne(['code' => $this->status, 'name' => 'pr_status']);
-    //     if ($status) {
-    //         if ($this->approve == 'N') {
-    //             return '<label class="badge rounded-pill text-primary-emphasis bg-danger-subtle fs-6 text-truncate"><i class="fa-regular fa-circle-xmark text-danger"></i> ' . $status->title . ' | ไม่อนุมัติ</label>';
-    //         } else {
-    //             return '<label class="badge rounded-pill text-primary-emphasis bg-success-subtle fs-6 text-truncate"><i class="bi bi-clipboard-check"></i> ' . $status->title . '</label>';
-    //         }
-    //     } else {
-    //         return '';
-    //     }
-    // }
-
 
     //ร้อยละดำเนินการ
     function OrderProgress() {
@@ -551,13 +539,22 @@ class Order extends \yii\db\ActiveRecord
         return number_format((($status / $total) * 100),0);
     }
     
-    
+    public function viewCreated(){
+            return AppHelper::timeDifference($this->created_at);
+    }
+
+    public function viewUpdated(){
+        return AppHelper::timeDifference($this->updated_at);
+}
+
+    //แสดงสถานะ
     public function viewStatus()
     {
         $status = Categorise::find()->where(['name' => 'order_status','code' => $this->status])->one();
         return [
             'status_name' => isset($status->title) ? $status->title : 'รอดำเนินการ',
-            'progress' => $this->OrderProgress()
+            'progress' => $this->OrderProgress(),
+            'color' =>  isset($status->data_json['color']) ? $status->data_json['color'] : '',
         ];
     }
 

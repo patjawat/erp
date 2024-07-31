@@ -167,6 +167,28 @@ class AppHelper extends Component
         return implode($ex, $returnText);
     }
 
+//ใช้คำนวนวันเวลาที่ผ่านมา 
+    public static function timeDifference($dateTime) {
+        $currentDateTime = new DateTime();
+        $targetDateTime = new DateTime($dateTime);
+    
+        $interval = $currentDateTime->diff($targetDateTime);
+        
+        if ($interval->y >= 1) {
+            return $interval->y . " ปี";
+        } elseif ($interval->m >= 1) {
+            return $interval->m . " เดือน";
+        } elseif ($interval->d >= 7) {
+            return floor($interval->d / 7) . " สัปดาห์";
+        } elseif ($interval->d >= 1) {
+            return $interval->d . " วัน";
+        } elseif ($interval->h >= 1) {
+            return $interval->h . " ชั่วโมง";
+        } else {
+            return $interval->i . " นาที";
+        }
+    }
+
     public static function CompareDate($array)
     {
         if (!is_array($array)) {

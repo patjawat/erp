@@ -17,26 +17,21 @@ use yii\web\View;
     'validationUrl' => ['/purchase/gr-order/validator']
 ]); ?>
 <div class="row">
-    
-
     <div class="col-xl-5 col-lg-6 col-md-6 col-sm-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex">
-                    <div class="rounded-pill bg-primary-subtle p-2 me-2">
-                        <i class="fa-solid fa-file-circle-question text-primary fs-5"></i>
-                    </div>
-                    <div class="avatar-detail">
-                        <h6 class="mb-1 fs-15"><span class="" href="/hr/employees/view?id=1">ข้อมูลผู้ขาย
-                                : <?=$model->data_json['vendor_name']?></span></h6>
-                        <p class="text-muted mb-0 fs-13"><?=isset($model->data_json['vendor_address']) ? $model->data_json['vendor_address'] : '-'?></p>
-                    </div>
+        <div class="card border border-primary">
+            <div class="d-flex p-3">
+                <img class="avatar" src="/img/placeholder-img.jpg" alt="">
+                <div class="avatar-detail">
+                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                        <?= $model->data_json['vendor_name'] ?>
+                    </h6>
+                    <p class="text-primary mb-0 fs-13">
+                        <?=isset($model->data_json['vendor_address']) ? $model->data_json['vendor_address'] : '-'?></p>
                 </div>
-
+            </div>
+            <div class="card-body pb-1">
                 <table class="table table-sm table-striped-columns">
-
                     <tbody>
-
                         <tr class="">
                             <td style="width: 150px;">กำหนดวันส่งมอบ</td>
                             <td><?=$model->data_json['delivery_date']?></td>
@@ -45,51 +40,39 @@ use yii\web\View;
                             <td style="width: 108px;">ใบสั่งซื้อเลขที่</td>
                             <td><?=$model->po_number?></td>
                         </tr>
-                        <tr class="">
-                            <td>ทะเบียนคุม</td>
-                            <td><?=$model->pq_number?></td>
-                        </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="card-footer text-muted d-flex justify-content-between">
+                <p>ผู้ขาย</p>
 
             </div>
-
-            <div class="card-footer text-muted">ข้อมูลการจัดซื้อจัดจ้าง</div>
         </div>
+
     </div>
 
     <div class="col-xl-7 col-lg-6 col-md-12 col-sm-12">
-        <div class="card">
+        <div class="card border border-primary">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        <?= $model->getMe()['avatar'] ?>
-                    </div>
-                    <div class="col-6">
-
-                        <?= $form->field($model, 'data_json[do_date]')->widget(DateControl::classname(), [
-                        'type' => DateControl::FORMAT_DATE,
-                        'language' => 'th',
-                        'widgetOptions' => [
-                            'options' => ['placeholder' => 'ระบุวันที่ตรวจรับ ...'],
-                            'pluginOptions' => [
-                                'autoclose' => true
-                                ]
-                                ]
-                                ])->label('วันที่ตรวจรับ') ?>
-     
-
+                <div class="d-flex justify-conent-between">
+                    <?= $model->getMe()['avatar'] ?>
+                    <div class="d-flex ms-auto p-2">
+                        เลขที่ : <span class="ms-2 fw-semibold"><?=$model->gr_number?></span>
                     </div>
                 </div>
-
-                <div class="row">
-                   
+                <div class="row mt-4">
                     <div class="col-6">
-                        <?=$form->field($model, 'data_json[order_item_checker]')->radioList(
-                                    ['Y' => 'ครบถ้วน', 'N' => 'ไม่ครบถ้วน'],
-                                    ['custom' => true, 'inline' => true]
-                                )->label('ผลการตรวจสอบ ');
-                            ?>
+                        <?= $form->field($model, 'data_json[do_date]')->widget(DateControl::classname(), [
+'type' => DateControl::FORMAT_DATE,
+'language' => 'th',
+'widgetOptions' => [
+    'options' => ['placeholder' => 'ระบุวันที่ตรวจรับ ...'],
+    'pluginOptions' => [
+        'autoclose' => true
+        ]
+        ]
+        ])->label('วันที่ตรวจรับ') ?>
+
 
                     </div>
                     <div class="col-6">
@@ -99,8 +82,13 @@ use yii\web\View;
 
             </div>
             <div class="card-footer text-muted d-flex justify-content-between">
-            <p>ผู้ตรวจรับ</p>    
-           
+                <p>ผลการตรวจสอบ</p>
+                <?=$form->field($model, 'data_json[order_item_checker]')->radioList(
+                                    ['Y' => 'ครบถ้วน', 'N' => 'ไม่ครบถ้วน'],
+                                    ['custom' => true, 'inline' => true]
+                                )->label(false);
+                            ?>
+
             </div>
         </div>
     </div>
@@ -110,12 +98,12 @@ use yii\web\View;
 <?= $this->render('@app/modules/purchase/views/order/order_items', ['model' => $model]) ?>
 
 <div class="row d-flex justify-content-end">
-            <div class="col-md-4 gap-3">
-                <div class="d-grid gap-2">
-                <?= Html::submitButton('บันทึกตรวจรับ', ['class' => 'btn btn-primary shadow']) ?>
-                </div>
-            </div>
+    <div class="col-md-4 gap-3">
+        <div class="d-grid gap-2">
+            <?= Html::submitButton('บันทึกตรวจรับ', ['class' => 'btn btn-primary shadow']) ?>
         </div>
+    </div>
+</div>
 
 <?php ActiveForm::end(); ?>
 <?php

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -18,6 +19,7 @@ use yii\helpers\ArrayHelper;
 use \yii\helpers\FileHelper;
 use yii\helpers\BaseFileHelper;
 use yii\db\Expression;
+use yii\helpers\BaseConsole;
 use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\Employees;
@@ -39,11 +41,11 @@ class ImportAssetController extends Controller
      */
     public function actionIndex()
     {
-        
+
         $this->Util();
         $this->Land();
         $this->Building();
-       
+
         // ** Query 
         $sql = "SELECT 
         person.HR_CID,
@@ -96,18 +98,18 @@ class ImportAssetController extends Controller
 
             $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             $checkItem = Asset::findOne(['code' => $asset['code']]);
-            $vendor = Categorise::findOne(['title' => $asset['VENDOR_NAME'],'name' => 'vendor']);
+            $vendor = Categorise::findOne(['title' => $asset['VENDOR_NAME'], 'name' => 'vendor']);
             $model = $checkItem ? $checkItem : new Asset([
-                    'ref' => $ref
+                'ref' => $ref
             ]);
 
-            if(!$checkItem){
+            if (!$checkItem) {
                 $this->CreateDir($ref);
                 if ($asset['IMG']) {
-                    
+
                     $name = time() . '.jpg';
                     file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $asset['IMG']);
-                    
+
                     $upload = new Uploads;
                     $upload->ref = $ref;
                     $upload->name = 'asset';
@@ -116,7 +118,7 @@ class ImportAssetController extends Controller
                     $upload->type = 'jpg';
                     $upload->save(false);
                 }
-        }
+            }
             $model->asset_group = '3';
             $model->code = $asset['code'];
             $model->asset_item = $asset['asset_item'];
@@ -133,7 +135,7 @@ class ImportAssetController extends Controller
             $model->department = isset($department) ? $department->id : '';
             $model->data_json = [
                 'owner_name' => isset($employee) ? $employee->fullname : '',
-                'department_name' => isset($department)? $department->name : '',
+                'department_name' => isset($department) ? $department->name : '',
                 'department_name_old' => $asset['HR_DEPARTMENT_SUB_SUB_NAME'],
                 'asset_group_name' => 'ครุภัณฑ์',
                 'detail' => $asset['detail'],
@@ -142,8 +144,8 @@ class ImportAssetController extends Controller
                 'budget_type_text' => $asset['budget_name'],
                 'serial_number' => $asset['serial_number'],
                 'asset_name' => $asset['asset_name'],
-                'asset_type' => $asset['DECLINE_ID'], 
-                'asset_type_text' => $asset['DECLINE_NAME'], 
+                'asset_type' => $asset['DECLINE_ID'],
+                'asset_type_text' => $asset['DECLINE_NAME'],
                 'decine_type' => $asset['DECLINE_ID'],
                 'decine_text' => $asset['DECLINE_NAME'],
                 'purchase_text' => $asset['purchase_name'],
@@ -152,14 +154,13 @@ class ImportAssetController extends Controller
                 'depreciation' => $asset['DECLINE_PERSEN'],
                 'vendor_id' =>  isset($vendor) ? $vendor->code : ''
             ];
-           
+
             if ($model->save(false)) {
                 // echo "นำเข้า " . (isset($department) ? $department->id : '-') . "\n";
                 echo "นำเข้า " . $model->data_json['asset_name'] . "\n";
             } else {
                 $asset['code'] . "เกิดข้อผิดพลาก \n";
             }
-
         }
 
         return ExitCode::OK;
@@ -170,7 +171,7 @@ class ImportAssetController extends Controller
     {
         $sql = "SELECT * FROM asset_land";
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
-        foreach($querys as $query){
+        foreach ($querys as $query) {
             $checkItem = Asset::findOne(['code' => $query['LAND_RAWANG']]);
             $model = $checkItem ? $checkItem : new Asset();
             $model->data_json = [
@@ -185,17 +186,16 @@ class ImportAssetController extends Controller
             $model->code =  $query['LAND_RAWANG'];
             echo $model->save(false);
         }
-       
     }
 
 
-     //นำเข้าที่ดิน
-     public  function Building()
-     {
-        
-         $sql = "SELECT * FROM asset_building";
-         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
-         foreach($querys as $query){
+    //นำเข้าที่ดิน
+    public  function Building()
+    {
+
+        $sql = "SELECT * FROM asset_building";
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        foreach ($querys as $query) {
             $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             // $checkItem = Asset::findOne(['code' => $query['BUILD_NAME']]);
             // $checkItem = Asset::findOne([new Expression("JSON_EXTRACT(data_json, '$.asset_name')") => $query['BUILD_NAME']]);
@@ -204,13 +204,13 @@ class ImportAssetController extends Controller
                 'ref' =>  $ref
             ]);
 
-            if(!$checkItem){
+            if (!$checkItem) {
                 $this->CreateDir($ref);
                 if ($query['IMG']) {
-                    
+
                     $name = time() . '.jpg';
                     file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $query['IMG']);
-                    
+
                     $upload = new Uploads;
                     $upload->ref = $ref;
                     $upload->name = 'asset';
@@ -219,10 +219,10 @@ class ImportAssetController extends Controller
                     $upload->type = 'jpg';
                     $upload->save(false);
                 }
-        }
+            }
 
 
-            
+
             $model->asset_group = 2;
             $model->asset_item = $query['LAND_RAWANG'];
             $model->asset_item = $query['BUILD_NAME'];
@@ -231,16 +231,14 @@ class ImportAssetController extends Controller
             $model->data_json = [
                 'asset_name' => $query['BUILD_NAME']
             ];
-            if( $model->save(false)){
-               
-                echo "นำเข้า ".$query['BUILD_NAME']. "\n";
-            }else{
-                echo "ผิดพลาด \n";
+            if ($model->save(false)) {
 
+                echo "นำเข้า " . $query['BUILD_NAME'] . "\n";
+            } else {
+                echo "ผิดพลาด \n";
             }
-            
         }
-     }
+    }
 
     public static function Util()
     {
@@ -286,9 +284,9 @@ class ImportAssetController extends Controller
                         WHERE a.TYPE_ID IS NOT NULL
                             GROUP by a.DECLINE_ID;")->queryAll();
         foreach ($typeQuerys as $type) {
-            $checkType =  Categorise::findOne(['title' => $type['DECLINE_NAME'],'name' => 'asset_type']);
-            $getGroup =  Categorise::findOne(['title' => $type['SUP_TYPE_MASTER_NAME'],'name' => 'asset_group']);
-            
+            $checkType =  Categorise::findOne(['title' => $type['DECLINE_NAME'], 'name' => 'asset_type']);
+            $getGroup =  Categorise::findOne(['title' => $type['SUP_TYPE_MASTER_NAME'], 'name' => 'asset_group']);
+
             $assetType = $checkType ? $checkType : new Categorise();
             $assetType->category_id = $getGroup->code;
             $assetType->code = $type['DECLINE_ID'];
@@ -299,14 +297,12 @@ class ImportAssetController extends Controller
                 'service_life' => $type['OLD_YEAR'],
                 'depreciation' => $type['DECLINE_PERSEN'],
             ];
-            if( $assetType->save(false)){
-               
-                echo "นำเข้า ".$assetType->title. "\n";
-            }else{
-                echo "ผิดพลาด \n";
+            if ($assetType->save(false)) {
 
+                echo "นำเข้า " . $assetType->title . "\n";
+            } else {
+                echo "ผิดพลาด \n";
             }
-            
         }
 
 
@@ -351,13 +347,13 @@ class ImportAssetController extends Controller
                         LEFT JOIN asset_status  ON asset_status.STATUS_ID = a.STATUS_ID 
                             GROUP by a.SUP_FSN;")->queryAll();
         foreach ($itemQuerys as $item) {
-            $checkItem =  Categorise::findOne(['code' => $item['asset_item'],'name' => 'asset_item']);
-            $itemGroup =  Categorise::findOne(['title' => $item['DECLINE_NAME'],'name' => 'asset_type']);
-            
-            
+            $checkItem =  Categorise::findOne(['code' => $item['asset_item'], 'name' => 'asset_item']);
+            $itemGroup =  Categorise::findOne(['title' => $item['DECLINE_NAME'], 'name' => 'asset_type']);
+
+
             $assetItem = $checkItem ? $checkItem : new Categorise();
             // $assetType->category_id = isset($itemGroup->code) ? $itemGroup->code : '';
-            if($itemGroup){
+            if ($itemGroup) {
                 $assetItem->category_id = $itemGroup->code;
                 // echo "นำเข้า ".$itemGroup->code. "\n";
 
@@ -370,22 +366,20 @@ class ImportAssetController extends Controller
             //     'service_life' => $type['OLD_YEAR'],
             //     'depreciation' => $type['DECLINE_PERSEN'],
             // ];
-            if( $assetItem->save(false)){
-               
-                echo "นำเข้า ".$assetItem->title. "\n";
-            }else{
-                echo "ผิดพลาด \n";
+            if ($assetItem->save(false)) {
 
+                echo "นำเข้า " . $assetItem->title . "\n";
+            } else {
+                echo "ผิดพลาด \n";
             }
-            
         }
 
 
-        
-        
+
+
         $unitQuerys = Yii::$app->db2->createCommand("SELECT * FROM supplies_unit")->queryAll();
         foreach ($unitQuerys as $unit) {
-            $checkUnit =  Categorise::findOne(['title' => $unit['SUP_UNIT_NAME'],'name' => 'unit']);
+            $checkUnit =  Categorise::findOne(['title' => $unit['SUP_UNIT_NAME'], 'name' => 'unit']);
             $assetUnit = $checkUnit ? $checkUnit : new Categorise();
             $assetUnit->name = 'unit';
             $assetUnit->title = $unit['SUP_UNIT_NAME'];
@@ -433,34 +427,51 @@ class ImportAssetController extends Controller
                                 LEFT JOIN asset_status  ON asset_status.STATUS_ID = a.STATUS_ID  
                                 LEFT JOIN supplies_vendor v ON v.VENDOR_ID = a.VENDOR_ID 
                 ORDER BY v.VENDOR_ID ASC";
-                 $vendorQuerys = Yii::$app->db2->createCommand($sqlVendor)->queryAll();
-                 foreach ($vendorQuerys as $vendor) {
-                     $checkVendor =  Categorise::findOne(['title' => $vendor['VENDOR_NAME'],'name' => 'vendor']);
-                     $vendorModel = $checkVendor ? $checkVendor : new Categorise();
-                     $vendorModel->name = 'vendor';
-                     $vendorModel->code = $vendor['VENDOR_TAX_NUM'];
-                     $vendorModel->title = $vendor['VENDOR_NAME'];
-                     if($vendorModel->save(false)){
+        $vendorQuerys = Yii::$app->db2->createCommand($sqlVendor)->queryAll();
+        foreach ($vendorQuerys as $vendor) {
+            $checkVendor =  Categorise::findOne(['title' => $vendor['VENDOR_NAME'], 'name' => 'vendor']);
+            $vendorModel = $checkVendor ? $checkVendor : new Categorise();
+            $vendorModel->name = 'vendor';
+            $vendorModel->code = $vendor['VENDOR_TAX_NUM'];
+            $vendorModel->title = $vendor['VENDOR_NAME'];
+            if ($vendorModel->save(false)) {
 
-                        echo "นำเข้า ".$vendorModel->title. "\n";
-                    }else{
-                        echo "ผิดพลาด \n";
-        
-                    }
-                     
-                 }
-        
+                echo "นำเข้า " . $vendorModel->title . "\n";
+            } else {
+                echo "ผิดพลาด \n";
+            }
+        }
+    }
+
+    //นำเข้ทรัพย์สิน
+    public function actionProduct()
+    {
+
+        $sql = "SELECT * from supplies WHERE SUP_TYPE_KIND_ID = '1' OR SUP_TYPE_KIND_ID = '2'";
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        if (BaseConsole::confirm('วัสดุ '.count($querys).' รายการ ยืนยัน ??')) {
+            foreach ($querys as $item) {
+                // $checkVendor =  Categorise::findOne(['name' => $vendor['VENDOR_NAME'], 'name' => 'asset_item']);
+              
+                // if ($vendorModel->save(false)) {
+    
+                    echo "นำเข้า " . $item['SUP_NAME'] . "\n";
+                // } else {
+                //     echo "ผิดพลาด \n";
+                // }
+            }
+
+        }
     }
 
     public static function CreateDir($folderName)
-{
-    if ($folderName != null) {
-        $basePath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/';
-        if (BaseFileHelper::createDirectory($basePath . $folderName, 0777)) {
-            BaseFileHelper::createDirectory($basePath . $folderName . '/thumbnail', 0777);
+    {
+        if ($folderName != null) {
+            $basePath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/';
+            if (BaseFileHelper::createDirectory($basePath . $folderName, 0777)) {
+                BaseFileHelper::createDirectory($basePath . $folderName . '/thumbnail', 0777);
+            }
         }
+        return;
     }
-    return;
-}
-
 }

@@ -18,7 +18,7 @@ class OrderSearch extends Order
     {
         return [
             [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
             [['price'], 'number'],
         ];
     }

@@ -24,15 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="row d-flex justify-content-center">
         <div class="col-5">
-
-            <div class="alert alert-primary" role="alert">
-                <h4 class="alert-heading"><i class="fa-solid fa-triangle-exclamation text-primary"></i>
-                    ไม่พบข้อมูล</h4>
-                <p>ไม่พบคำว่า (<span class="text-danger"> <?= $searchModel->title ?> </span>) ในฐานข้อมูล
-                </p>
-                <hr>
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/purchase/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-            </div>
+                <h4 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> ไม่พบข้อมูล</h4>
         </div>
     </div>
 </div>
