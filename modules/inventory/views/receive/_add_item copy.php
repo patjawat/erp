@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
     /* padding: 0 !important */
 }
 
-#stockmovement-qty {
+#Stock-qty {
     font-size: 45px;
     font-weight: 500;
 }
@@ -139,13 +139,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-    $('#stockmovement-qty').keyup(function (e) { 
+    $('#Stock-qty').keyup(function (e) { 
         
     if (e.keyCode === 8) { // Check if the key pressed is Backspace
         // Your code here
-        // $('#stockmovement-data_json-po_qty').val();
-        var qty = $('#stockmovement-data_json-po_qty').val();
-        $('#stockmovement-qty_check').val(qty)
+        // $('#Stock-data_json-po_qty').val();
+        var qty = $('#Stock-data_json-po_qty').val();
+        $('#Stock-qty_check').val(qty)
     }
     });
 

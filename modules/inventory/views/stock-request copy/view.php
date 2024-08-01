@@ -6,7 +6,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
 
-/** @var app\modules\inventory\models\StockMovement $model */
+/** @var app\modules\inventory\models\Stock $model */
 /** @var yii\web\View $this */
 
 $this->title = $model->name;

@@ -3,8 +3,7 @@
 namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockMovement;
-use app\modules\inventory\models\StockMovementSearch;
+use app\modules\inventory\models\StockSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -13,9 +12,9 @@ use app\modules\sm\models\Product;
 use Yii;
 
 /**
- * StockMovementController implements the CRUD actions for StockMovement model.
+ * StockController implements the CRUD actions for Stock model.
  */
-class StockMovementController extends Controller
+class StockController extends Controller
 {
     /**
      * @inheritDoc
@@ -36,13 +35,13 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Lists all StockMovement models.
+     * Lists all Stock models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new StockMovementSearch();
+        $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
@@ -52,7 +51,7 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Displays a single StockMovement model.
+     * Displays a single Stock model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -75,13 +74,13 @@ class StockMovementController extends Controller
 
 
     /**
-     * Creates a new StockMovement model.
+     * Creates a new Stock model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new StockMovement([
+        $model = new Stock([
             'name' => $this->request->get('name'),
             'movement_type' => $this->request->get('name'),
             'po_number' => $this->request->get('category_id'),
@@ -118,7 +117,7 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Updates an existing StockMovement model.
+     * Updates an existing Stock model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -154,7 +153,7 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Deletes an existing StockMovement model.
+     * Deletes an existing Stock model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -168,15 +167,15 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Finds the StockMovement model based on its primary key value.
+     * Finds the Stock model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return StockMovement the loaded model
+     * @return Stock the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = StockMovement::findOne(['id' => $id])) !== null) {
+        if (($model = Stock::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

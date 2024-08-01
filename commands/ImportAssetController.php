@@ -447,18 +447,77 @@ class ImportAssetController extends Controller
     public function actionProduct()
     {
 
-        $sql = "SELECT * from supplies WHERE SUP_TYPE_KIND_ID = '1' OR SUP_TYPE_KIND_ID = '2'";
+        $sql = "SELECT 
+        supplies.IMG,
+    supplies.ID,
+    supplies.ACTIVE,
+    supplies.SUP_FSN_NUM,
+    supplies.SUP_NAME,
+    supplies_type_kind.SUP_TYPE_KIND_NAME,
+    supplies_type.SUP_TYPE_NAME,
+    supplies.SUP_PROP,
+    supplies.TPU_NUMBER,
+    supplies_unit.SUP_UNIT_NAME,
+    supplies_continue.CONTINUE_PRICE_NAME
+    
+FROM 
+    supplies
+LEFT JOIN 
+    supplies_type ON supplies.SUP_TYPE_ID = supplies_type.SUP_TYPE_ID
+LEFT JOIN 
+    supplies_continue ON supplies.CONTINUE_PRICE_ID = supplies_continue.CONTINUE_PRICE_ID
+LEFT JOIN 
+    supplies_type_kind ON supplies.SUP_TYPE_KIND_ID = supplies_type_kind.SUP_TYPE_KIND_ID
+LEFT JOIN 
+    supplies_unit ON supplies.SUP_UNIT_ID = supplies_unit.SUP_UNIT_ID
+WHERE supplies.SUP_TYPE_KIND_ID IN('2','4')";
+
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
         if (BaseConsole::confirm('วัสดุ '.count($querys).' รายการ ยืนยัน ??')) {
             foreach ($querys as $item) {
-                // $checkVendor =  Categorise::findOne(['name' => $vendor['VENDOR_NAME'], 'name' => 'asset_item']);
-              
-                // if ($vendorModel->save(false)) {
+                $checker =  Categorise::findOne(['name' => 'asset_item','group_id' => 4,'title' => $item['SUP_TYPE_NAME']]);
+                $category = Categorise::findOne(['name' => 'asset_type','category_id' => 4,'title' => $item['SUP_TYPE_NAME']]);
+                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                if ($checker) {
+                    $model = $checker;
+                   
+                } else {
+                    $model = new Categorise([
+                        'ref' => $ref
+                    ]);
+
+                    $this->CreateDir($ref);
+                    if (isset($item['IMG'])) {
+
+                        $name = time() . '.jpg';
+                        file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $item['IMG']);
     
-                    echo "นำเข้า " . $item['SUP_NAME'] . "\n";
-                // } else {
-                //     echo "ผิดพลาด \n";
-                // }
+                        $upload = new Uploads;
+                        $upload->ref = $ref;
+                        $upload->name = 'asset_item';
+                        $upload->file_name = $name;
+                        $upload->real_filename = $name;
+                        $upload->type = 'jpg';
+                        $upload->save(false);
+                    }
+
+                    // echo "ผิดพลาด \n";
+                }
+                $model->code = $item['SUP_FSN_NUM'];
+                $model->title = $item['SUP_NAME'];
+                $model->name ='asset_item';
+                $model->category_id = isset($category) ? $category->code : '';
+                $model->group_id = 4;
+                $model->data_json = [
+                    'asset_type_name' => $item['SUP_TYPE_KIND_NAME'],
+                    'category_name' => $item['SUP_TYPE_NAME'],
+                    'sub_title' => $item['SUP_PROP'],
+                    'unit' => $item['SUP_UNIT_NAME'],
+                    'price_name' => $item['CONTINUE_PRICE_NAME']
+                ];
+                $model->save(false);
+                echo "นำเข้า " . $item['SUP_NAME'] .' '.$item['SUP_TYPE_NAME']. "\n";
+                
             }
 
         }

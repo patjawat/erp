@@ -6,7 +6,7 @@ use kartik\widgets\ActiveForm;
 use app\modules\inventory\models\Warehouse;
 use yii\helpers\ArrayHelper;
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockMovement $model */
+/** @var app\modules\inventory\models\Stock $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 

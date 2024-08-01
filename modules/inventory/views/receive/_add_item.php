@@ -27,9 +27,9 @@ $this->params['breadcrumbs'][] = $this->title;
     /* padding: 0 !important */
 }
 
-#stockmovement-qty {
-    font-size: 45px;
-    font-weight: 500;
+#stock-qty {
+    height: 110px !important;
+    font-size: 100px !important;
 }
 </style>
 <?php $form = ActiveForm::begin([
@@ -39,11 +39,22 @@ $this->params['breadcrumbs'][] = $this->title;
     'validationUrl' => ['/inventory/receive/validator']
 ]); ?>
 
-<?=$product->AvatarXl()?>
-<hr>
-
-<?=$form->field($model, 'data_json[item_type]')->radioList(['ยอดยกมา' => 'ยอดยกมา','ของแถม' => 'ของแถม','ของบริจาค' => 'ของบริจาค'], ['inline'=>true,'custom' => true])->label('ประเภท');?>
-
+<div class="row">
+    <div class="col-8">
+        <div class="card border border-primary">
+            <div class="card-body">
+                <?=$product->AvatarXl()?>
+            </div>
+        </div>
+</div>
+<div class="col-4">    
+    <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
+    <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
+</div>
+</div>
+<div class="ms-5">
+    <?php // $form->field($model, 'data_json[item_type]')->radioList(['จัดซื้อ' => 'จัดซื้อ','ยอดยกมา' => 'ยอดยกมา','ของแถม' => 'ของแถม','ของบริจาค' => 'ของบริจาค'], ['inline'=>true,'custom' => true])->label('ประเภท');?>
+</div>
         <div class="row">
             <div class="col-6">
             <?php
@@ -61,10 +72,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันผลิต');
         ?>
-                <?= $form->field($model, 'lot_number')->textInput()->label('ล็อตผลิต'); ?>
-            </div>
-            <div class="col-6">
-            <?php
+         <?php
             echo $form
                 ->field($model, 'data_json[exp_date]')
                 ->widget(DateControl::classname(), [
@@ -79,9 +87,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันหมดอายุ');
         ?>
-            <div class="mt-5 mb-0">
-                <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
             </div>
+            <div class="col-6">
+           <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+
             </div>
       
          
@@ -93,25 +102,24 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
 
 
-<?= $form->field($model, 'qty_check')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'po_number')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'to_warehouse_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'data_json[product_name]')->hiddenInput(['value' => $product->title])->label(false); ?>
-<?= $form->field($model, 'data_json[unit]')->hiddenInput(['value' => isset($product->data_json['unut']) ? $product->data_json['unut'] : null])->label(false); ?>
-<?= $form->field($model, 'data_json[product_type_name]')->hiddenInput(['value' => $product->productType->title])->label(false); ?>
+<?= $form->field($model, 'qty_check')->textInput()->label(false) ?>
+<?= $form->field($model, 'name')->textInput()->label(false) ?>
+<?= $form->field($model, 'category_id')->textInput()->label(false); ?>
+<?= $form->field($model, 'po_number')->textInput()->label(false); ?>
+<?= $form->field($model, 'to_warehouse_id')->textInput()->label(false); ?>
+<?= $form->field($model, 'data_json[product_name]')->textInput(['value' => $product->title])->label(false); ?>
+<?= $form->field($model, 'data_json[unit]')->textInput(['value' => isset($product->data_json['unut']) ? $product->data_json['unut'] : null])->label(false); ?>
+<?= $form->field($model, 'data_json[product_type_name]')->textInput(['value' => $product->productType->title])->label(false); ?>
 
-<?= $form->field($model, 'data_json[po_qty]')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'data_json[po_qty]')->textInput()->label(false); ?>
 
-<?= $form->field($model, 'asset_item')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'movement_type')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'asset_item')->textInput()->label(false); ?>
+<?= $form->field($model, 'movement_type')->textInput()->label(false); ?>
 
-<div class="d-grid gap-2">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+<div class="d-flex justify-content-center">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow rounded-pill', 'id' => 'summit']) ?>
 </div>
 
 <?php ActiveForm::end(); ?>
@@ -119,13 +127,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-    $('#stockmovement-qty').keyup(function (e) { 
+    $('#Stock-qty').keyup(function (e) { 
         
     if (e.keyCode === 8) { // Check if the key pressed is Backspace
         // Your code here
-        // $('#stockmovement-data_json-po_qty').val();
-        var qty = $('#stockmovement-data_json-po_qty').val();
-        $('#stockmovement-qty_check').val(qty)
+        // $('#Stock-data_json-po_qty').val();
+        var qty = $('#Stock-data_json-po_qty').val();
+        $('#Stock-qty_check').val(qty)
     }
     });
 

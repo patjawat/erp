@@ -136,8 +136,6 @@ class GrOrderController extends Controller
                     // $model->status = 3;
                 }
                 $model->save(false);
-
-              
                     return [
                         'status' => 'success',
                         'container' => '#purchase-container',

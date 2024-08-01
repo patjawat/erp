@@ -1,8 +1,8 @@
 <?php
-use app\modules\inventory\models\StockMovement;
+use app\modules\inventory\models\Stock;
 use yii\helpers\Html;
 
-$StockLists = StockMovement::find()->where(['name' => 'issue', 'from_warehouse_id' => $model->id])->all();
+$StockLists = Stock::find()->where(['name' => 'issue', 'from_warehouse_id' => $model->id])->all();
 ?>
 
 <div class="card">

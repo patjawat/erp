@@ -2,14 +2,14 @@
 
 namespace app\modules\inventory\models;
 
-use app\modules\inventory\models\StockMovement;
+use app\modules\inventory\models\Stock;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 /**
- * StockMovementSearch represents the model behind the search form of `app\modules\inventory\models\StockMovement`.
+ * StockSearch represents the model behind the search form of `app\modules\inventory\models\Stock`.
  */
-class StockMovementSearch extends StockMovement
+class StockSearch extends Stock
 {
     /**
      * {@inheritdoc}
@@ -42,7 +42,7 @@ class StockMovementSearch extends StockMovement
      */
     public function search($params)
     {
-        $query = StockMovement::find();
+        $query = Stock::find();
 
         // add conditions that should always apply here
 

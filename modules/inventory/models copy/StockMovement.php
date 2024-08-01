@@ -28,7 +28,7 @@ use Yii;
  * @property int|null $created_by ผู้สร้าง
  * @property int|null $updated_by ผู้แก้ไข
  */
-class StockMovement extends \yii\db\ActiveRecord
+class Stock extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
@@ -37,7 +37,7 @@ class StockMovement extends \yii\db\ActiveRecord
 
     public static function tableName()
     {
-        return 'stock_movements';
+        return 'stock';
     }
 
     /**

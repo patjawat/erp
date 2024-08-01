@@ -33,6 +33,7 @@ class m240522_073153_create_order_table extends Migration
             'status' => $this->integer(255)->comment('สถานะ'),
             'approve' => $this->string(1)->comment('อนุมัติ'),
             'data_json' => $this->json(),
+            'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),

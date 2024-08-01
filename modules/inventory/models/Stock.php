@@ -38,7 +38,7 @@ use app\modules\hr\models\Employees;
  * @property int|null $created_by ผู้สร้าง
  * @property int|null $updated_by ผู้แก้ไข
  */
-class StockMovement extends \yii\db\ActiveRecord
+class Stock extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
@@ -48,7 +48,7 @@ class StockMovement extends \yii\db\ActiveRecord
 
     public static function tableName()
     {
-        return 'stock_movements';
+        return 'stock';
     }
 
     /**
@@ -201,11 +201,11 @@ class StockMovement extends \yii\db\ActiveRecord
     {
         // return $this->asset_item;
         $stockOrder = self::find()->where(['po_number' => $this->po_number, 'asset_item' => $this->asset_item])->sum('qty');
-        $Order = Order::findOne(['name' => 'order_item', 'asset_item' => $this->asset_item, 'po_number' => $this->po_number]);
-        return $Order;
-        $summeryQty = ($Order->qty - $stockOrder);
+        $order = Order::findOne(['name' => 'order_item', 'asset_item' => $this->asset_item, 'po_number' => $this->po_number]);
+        return $this->asset_item;
+        $summeryQty = ($order->qty - $stockOrder);
 
-        return $stockOrder ? $summeryQty : $Order->qty;
+        return $stockOrder ? $summeryQty : $order->qty;
     }
 
     //แสดงรายการสั่งซื้อจาก PO
@@ -261,7 +261,7 @@ class StockMovement extends \yii\db\ActiveRecord
     public function OrderSuccess(){
         $sql = "SELECT 
         (SELECT SUM(o.qty) FROM `order` o WHERE o.po_number = :po_number AND o.name = 'order_item') AS po,
-        (SELECT SUM(s.qty) FROM stock_movements s WHERE s.po_number = :po_number AND s.name = 'receive_item') AS stock";
+        (SELECT SUM(s.qty) FROM stock s WHERE s.po_number = :po_number AND s.name = 'receive_item') AS stock";
 
     $query =   Yii::$app->db->createCommand($sql)
     ->bindValue(':po_number', $this->po_number)

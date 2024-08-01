@@ -1,13 +1,13 @@
 <?php
 
-use app\modules\inventory\models\StockMovement;
+use app\modules\inventory\models\Stock;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockMovementSearch $searchModel */
+/** @var app\modules\inventory\models\StockSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Stock Movements';
@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'updated_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, StockMovement $model, $key, $index, $column) {
+                'urlCreator' => function ($action, Stock $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

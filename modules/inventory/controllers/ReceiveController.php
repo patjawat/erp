@@ -3,8 +3,7 @@
 namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockMovement;
-use app\modules\inventory\models\StockMovementSearch;
+use app\modules\inventory\models\StockSearch;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
@@ -47,7 +46,7 @@ class ReceiveController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new StockMovementSearch();
+        $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterwhere(['name' => 'receive']);
 
@@ -66,6 +65,7 @@ class ReceiveController extends Controller
     public function actionView($id)
     {
         $model = $this->findModel($id);
+        $order = Order::findOne(['po_number' => $model->po_number]);
         Yii::$app->session->set('receive',$model);
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -74,18 +74,20 @@ class ReceiveController extends Controller
                 'title' => '<i class="fa-solid fa-eye"></i> แสดง',
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
+                    'order' => $order
                 ]),
             ];
         } else {
             return $this->render('view', [
                 'model' => $model,
+                'order' => $order
             ]);
         }
     }
 
     public function actionCreate()
     {
-        $model = new StockMovement([
+        $model = new Stock([
             'name' => 'receive',
             'po_number' => $this->request->get('category_id'),
             'receive_type' => $this->request->get('receive_type')
@@ -281,14 +283,14 @@ class ReceiveController extends Controller
         $product = Product::findOne($id);
 
         $order = new Order();
-        $StockMovement =  StockMovement::findOne($receive->id);
+        $Stock =  Stock::findOne($receive->id);
 
-        $model = new StockMovement([
+        $model = new Stock([
             'po_number' => $order->po_number,
-            'rc_number' => $StockMovement->rc_number,
-            'to_warehouse_id' => $StockMovement->to_warehouse_id,
+            'rc_number' => $Stock->rc_number,
+            'to_warehouse_id' => $Stock->to_warehouse_id,
             'name' => 'receive_item',
-            'asset_item' => $product->id,
+            'asset_item' => $product->code,
             'movement_type' => 'receive',
             'order_status' => 'pending',
             'data_json' => [
@@ -339,14 +341,14 @@ class ReceiveController extends Controller
         // ตรวจสอบ order จาก ID
         $order = Order::findOne($id);
         // ถ้ามีรายการเดิมที่ยังรับเข้าไม่หมด
-        $StockMovement = StockMovement::find()->where(['name' => 'receive', 'po_number' => $order->po_number,'order_status' => 'pending'])->One();
+        $Stock = Stock::find()->where(['name' => 'receive', 'po_number' => $order->po_number,'order_status' => 'pending'])->One();
         // ค้นหารายการสินค่าจาก asset_item ที่เก็บไว้ใน Order po_number
         $product = Product::findOne(['code' => $order->asset_item]);
 
-        $model = new StockMovement([
+        $model = new Stock([
             'po_number' => $order->po_number,
-            'rc_number' => $StockMovement->rc_number,
-            'to_warehouse_id' => $StockMovement->to_warehouse_id,
+            'rc_number' => $Stock->rc_number,
+            'to_warehouse_id' => $Stock->to_warehouse_id,
             'name' => 'receive_item',
             'asset_item' => $product->id,
             'movement_type' => 'receive',
@@ -399,7 +401,7 @@ class ReceiveController extends Controller
     public function actionUpdateItem($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = StockMovement::findOne(['id' => $id]);
+        $model = Stock::findOne(['id' => $id]);
 
         //เมื่อเป็นการรับเข้าจากการสั่งซื้อให้ตรวจสอบจำนวนด้วย
         if($model->movement_type == 'po_receive'){
@@ -447,7 +449,7 @@ class ReceiveController extends Controller
         $id = $this->request->get('id');
         $model = $this->findModel($id);
 
-        $updateStock = StockMovement::updateAll(['order_status' => 'success'], ['rc_number' => $model->rc_number]);
+        $updateStock = Stock::updateAll(['order_status' => 'success'], ['rc_number' => $model->rc_number]);
 
         if($model->OrderSuccess()['status'] == true){
             $order = Order::findOne(['po_number' => $model->po_number]);
@@ -491,7 +493,7 @@ class ReceiveController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = StockMovement::findOne(['id' => $id])) !== null) {
+        if (($model = Stock::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
@@ -502,7 +504,7 @@ class ReceiveController extends Controller
     public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new StockMovement();
+        $model = new Stock();
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $requiredName = 'ต้องระบุ';

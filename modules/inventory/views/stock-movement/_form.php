@@ -8,7 +8,7 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockMovement $model */
+/** @var app\modules\inventory\models\Stock $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 

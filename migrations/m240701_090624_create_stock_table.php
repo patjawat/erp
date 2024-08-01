@@ -3,16 +3,16 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%stock_movements}}`.
+ * Handles the creation of table `{{%stock}}`.
  */
-class m240701_090624_create_stock_movements_table extends Migration
+class m240701_090624_create_stock_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('stock_movements', [
+        $this->createTable('stock', [
             'id' => $this->primaryKey()->comment('รหัสการเคลื่อนไหวสินค้า'),
             'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น stock_order, stock_item'),
             'rq_number' => $this->string(50)->comment('รหัสร้องขอ'),
@@ -49,16 +49,16 @@ class m240701_090624_create_stock_movements_table extends Migration
 
         // $this->createIndex('idx-warehouses-warehouse_name', 'warehouses', 'warehouse_name');
         // $this->createIndex('idx-products-product_name', 'products', 'product_name');
-        // $this->addForeignKey('fk-stock_movements-product_id', 'stock_movements', 'product_id', 'products', 'product_id', 'CASCADE', 'CASCADE');
-        // $this->addForeignKey('fk-stock_movements-from_warehouse_id', 'stock_movements', 'from_warehouse_id', 'warehouses', 'warehouse_id', 'SET NULL', 'CASCADE');
-        // $this->addForeignKey('fk-stock_movements-to_warehouse_id', 'stock_movements', 'to_warehouse_id', 'warehouses', 'warehouse_id', 'SET NULL', 'CASCADE');
+        // $this->addForeignKey('fk-stock-product_id', 'stock', 'product_id', 'products', 'product_id', 'CASCADE', 'CASCADE');
+        // $this->addForeignKey('fk-stock-from_warehouse_id', 'stock', 'from_warehouse_id', 'warehouses', 'warehouse_id', 'SET NULL', 'CASCADE');
+        // $this->addForeignKey('fk-stock-to_warehouse_id', 'stock', 'to_warehouse_id', 'warehouses', 'warehouse_id', 'SET NULL', 'CASCADE');
 
-        // $this->createIndex('idx-stock_movements-product_id', 'stock_movements', 'product_id');
-        // $this->createIndex('idx-stock_movements-from_warehouse_id', 'stock_movements', 'from_warehouse_id');
-        // $this->createIndex('idx-stock_movements-to_warehouse_id', 'stock_movements', 'to_warehouse_id');
-        // $this->createIndex('idx-stock_movements-movement_date', 'stock_movements', 'movement_date');
-        // $this->createIndex('idx-stock_movements-lot_number', 'stock_movements', 'lot_number');
-        // $this->createIndex('idx-stock_movements-expiry_date', 'stock_movements', 'expiry_date');
+        // $this->createIndex('idx-stock-product_id', 'stock', 'product_id');
+        // $this->createIndex('idx-stock-from_warehouse_id', 'stock', 'from_warehouse_id');
+        // $this->createIndex('idx-stock-to_warehouse_id', 'stock', 'to_warehouse_id');
+        // $this->createIndex('idx-stock-movement_date', 'stock', 'movement_date');
+        // $this->createIndex('idx-stock-lot_number', 'stock', 'lot_number');
+        // $this->createIndex('idx-stock-expiry_date', 'stock', 'expiry_date');
     }
 
     /**
@@ -66,6 +66,6 @@ class m240701_090624_create_stock_movements_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%stock_movements}}');
+        $this->dropTable('{{%stock}}');
     }
 }

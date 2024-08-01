@@ -7,7 +7,7 @@
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use app\modules\inventory\models\StockMovement;
+use app\modules\inventory\models\Stock;
 use app\models\Categorise;
 
 $this->title = $model->warehouse_name;
@@ -74,10 +74,10 @@ $this->title = $model->warehouse_name;
           <h6 class="card-title">วัสดุ</h6>
           <?php
           $warehouse = Yii::$app->session->get('warehouse');
-          $models = StockMovement::find()
-          ->select(['p.id','stock_movements.asset_item', 'sum(stock_movements.qty) as sum_qty'])
-          ->join('INNER JOIN', 'categorise p', 'p.id = stock_movements.asset_item')
-          ->where(['stock_movements.to_warehouse_id' => $warehouse['warehouse_id']])
+          $models = Stock::find()
+          ->select(['p.id','stock.asset_item', 'sum(stock.qty) as sum_qty'])
+          ->join('INNER JOIN', 'categorise p', 'p.id = stock.asset_item')
+          ->where(['stock.to_warehouse_id' => $warehouse['warehouse_id']])
           ->groupBy('p.id')
           ->all();
           

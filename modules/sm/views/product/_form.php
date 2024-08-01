@@ -55,7 +55,7 @@ use unclead\multipleinput\MultipleInputColumn;
                                         'allowClear' => true,
                                         'dropdownParent' => '#main-modal',
                                     ],
-                                ])->label('ประเภท')
+                                ])->label('หมวดหมู่')
                             ?>
                         </div>
                         <div class="col-6">

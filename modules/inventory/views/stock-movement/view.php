@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockMovement $model */
+/** @var app\modules\inventory\models\Stock $model */
 $this->title = $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Stock Movements', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;

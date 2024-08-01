@@ -6,6 +6,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\widgets\Pjax;
 
 $this->title = 'บริหารพัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
@@ -20,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'purchase-container']); ?>
 <div class="row">
     <div class="col-9">
         <div class="card">
@@ -175,3 +176,4 @@ $js = <<< JS
     JS;
 $this->registerJS($js, View::POS_END);
 ?>
+<?php Pjax::end(); ?>

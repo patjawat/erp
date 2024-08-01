@@ -805,18 +805,31 @@ class m230720_072431_create_categorise_table extends Migration
         $this->insert('categorise', ['category_id' => '', 'code' => '20', 'name' => 'asset_type', 'title' => 'สินทรัพย์ไม่มีตัวตัน', 'data_json' => ['depreciation' => '33.3', 'service_life' => '3'], 'active' => 1]);
 
         // ประเถทวัสดุ
-        $this->insert('categorise', ['category_id' => '4', 'code' => '1', 'name' => 'product_type', 'title' => 'วัสดุสำนักงาน', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '2', 'name' => 'product_type', 'title' => 'วัสดุไฟฟูาและวิทยุ', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '3', 'name' => 'product_type', 'title' => 'วัสดุงานบ้านงานครัว', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '4', 'name' => 'product_type', 'title' => 'วัสดุก่อสร้าง', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '5', 'name' => 'product_type', 'title' => 'วัสดุยานพาหนะและขนส่ง', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '6', 'name' => 'product_type', 'title' => 'วัสดุเชื้อเพลิงและหล่อลื่น', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '7', 'name' => 'product_type', 'title' => 'วัสดุวิทยาศาสตร์หรือการแพทย์', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '8', 'name' => 'product_type', 'title' => 'วัสดุการเกษตร', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '9', 'name' => 'product_type', 'title' => 'วัสดุโฆษณาและเผยแพร่', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '10', 'name' => 'product_type', 'title' => 'วัสดุเครื่องแต่งกาย', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '11', 'name' => 'product_type', 'title' => 'วัสดุกีฬา', 'active' => 1]);
-        $this->insert('categorise', ['category_id' => '4', 'code' => '12', 'name' => 'product_type', 'title' => 'วัสดุคอมพิวเตอร์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M1', 'name' => 'asset_type', 'title' => 'วัสดุสำนักงาน', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M2', 'name' => 'asset_type', 'title' => 'วัสดุไฟฟ้าและวิทยุ', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M3', 'name' => 'asset_type', 'title' => 'วัสดุงานบ้านงานครัว', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M4', 'name' => 'asset_type', 'title' => 'วัสดุก่อสร้างและประปา', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M5', 'name' => 'asset_type', 'title' => 'วัสดุยานพาหนะและขนส่ง', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M6', 'name' => 'asset_type', 'title' => 'วัสดุเชื้อเพลิงและหล่อลื่น', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M7', 'name' => 'asset_type', 'title' => 'วัสดุวิทยาศาสตร์หรือการแพทย์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M8', 'name' => 'asset_type', 'title' => 'วัสดุการเกษตร', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M9', 'name' => 'asset_type', 'title' => 'วัสดุโฆษณาและเผยแพร่', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M10', 'name' => 'asset_type', 'title' => 'วัสดุเครื่องแต่งกาย', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M11', 'name' => 'asset_type', 'title' => 'วัสดุกีฬา', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M12', 'name' => 'asset_type', 'title' => 'วัสดุคอมพิวเตอร์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M13', 'name' => 'asset_type', 'title' => 'วัสดุสนาม', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M14', 'name' => 'asset_type', 'title' => 'วัสดุการศึกษา', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M15', 'name' => 'asset_type', 'title' => 'วัสดุสำรวจ', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M16', 'name' => 'asset_type', 'title' => 'วัสดุอื่นๆ', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M17', 'name' => 'asset_type', 'title' => 'วัสดุแบบพิมพ์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M18', 'name' => 'asset_type', 'title' => 'วัสดุบริโภค', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M19', 'name' => 'asset_type', 'title' => 'วัสดุทันตกรรม', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M20', 'name' => 'asset_type', 'title' => 'วัสดุวิทยาศาสตร์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M21', 'name' => 'asset_type', 'title' => 'วัสดุรังสี', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M22', 'name' => 'asset_type', 'title' => 'วัสดุการแพทย์ทั่วไป', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M23', 'name' => 'asset_type', 'title' => 'ยาเวชภัณฑ์', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M24', 'name' => 'asset_type', 'title' => 'วัสดุเภสัชกรรม', 'active' => 1]);
+        $this->insert('categorise', ['category_id' => '4', 'code' => 'M25', 'name' => 'asset_type', 'title' => 'จ้างเหมาอื่นๆ', 'active' => 1]);
 
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_type.sql'));
         // Yii::$app->db->pdo->exec(file_get_contents(__DIR__ . '/positions/position_group.sql'));

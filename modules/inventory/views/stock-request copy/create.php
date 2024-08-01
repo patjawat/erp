@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockMovement $model */
+/** @var app\modules\inventory\models\Stock $model */
 
 $this->title = 'Create Stock Movement';
 $this->params['breadcrumbs'][] = ['label' => 'Stock Movements', 'url' => ['index']];
