@@ -18,7 +18,7 @@ class m240701_090624_create_stock_table extends Migration
             'rq_number' => $this->string(50)->comment('รหัสร้องขอ'),
             'rc_number' => $this->string(50)->comment('รหัสใบรับเข้าคลัง'),
             'po_number' => $this->string(50)->comment('รหัสใบสั่งซื้อ'),
-            'asset_item' => $this->integer()->comment('รหัสสินค้า'),
+            'asset_item' => $this->string(255)->comment('รหัสสินค้า'),
             'from_warehouse_id' => $this->integer()->comment('รหัสคลังสินค้าต้นทาง'),
             'to_warehouse_id' => $this->integer()->comment('รหัสคลังสินค้าปลายทาง'),
             'qty' => $this->integer()->comment('จำนวนสินค้าที่เคลื่อนย้าย'),

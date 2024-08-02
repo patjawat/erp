@@ -19,8 +19,8 @@ use yii\helpers\Url;
                                 <a href="<?= Url::to(['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม']); ?>"
                                     class="open-modal" data-title="xxx">
                                     <div
-                                        class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
-                                        <i class="fa-solid fa-triangle-exclamation fs-3"></i>
+                                        class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
+                                        <i class="fa-solid fa-triangle-exclamation fs-2"></i>
                                         <div>แจ้งซ่อม</div>
                                     </div>
                                 </a>
@@ -30,13 +30,23 @@ use yii\helpers\Url;
                                 <a href="<?= Url::to(['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง']); ?>"
                                 class="open-modal" data-title="xxx" data-size="modal-md">
                                     <div
-                                        class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">
-                                        <i class="fa-solid fa-bag-shopping fs-3"></i>
+                                        class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
+                                        <i class="fa-solid fa-bag-shopping fs-2"></i>
                                         <div>ข้อซื้อ-ขอจ้าง</div>
                                     </div>
                                 </a>
                             </div>
-
+                            
+                            <div class="col-4 mt-1">
+                                <a href="<?= Url::to(['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง']); ?>"
+                                class="open-modal" data-title="xxx" data-size="modal-md">
+                                    <div
+                                        class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
+                                        <i class="fa-solid fa-cart-plus fs-2"></i>
+                                        <div>เบิกวัสดุอุปกรณ์</div>
+                                    </div>
+                                </a>
+                            </div>
                             <!-- <div class="col-4">
                                 <div
                                     class="d-flex flex-column align-items-center justify-content-center bg-light p-3 rounded-2">

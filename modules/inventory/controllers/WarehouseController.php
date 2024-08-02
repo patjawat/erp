@@ -60,6 +60,9 @@ class WarehouseController extends Controller
         }
     }
 
+        
+
+
     /**
      * Displays a single Warehouse model.
      * @param int $id Warehouse ID

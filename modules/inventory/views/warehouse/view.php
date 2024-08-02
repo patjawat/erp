@@ -68,10 +68,19 @@ $this->title = $model->warehouse_name;
                 </div>
             </div>
         </div>
-        
-        <div class="card">
+        <div id="showReceivePendingOrder"></div>
+        <div id="showlistOrderRequest"></div>
+      </div>
+      <!-- end col-6 -->
+    </div>
+    
+    <div class="row">
+      <div class="col-12">
+
+
+    <div class="card">
+      <h6>วัสดุรอรับเข้า</h6>
           <div class="card-body">
-          <h6 class="card-title">วัสดุ</h6>
           <?php
           $warehouse = Yii::$app->session->get('warehouse');
           $models = Stock::find()
@@ -115,14 +124,8 @@ $this->title = $model->warehouse_name;
           <!-- End Card body -->
         </div>
         <!-- End Card -->
-        
 
-    </div>
-    <!-- end col-6 -->
-</div>
 
-<div class="row">
-    <div class="col-12">
         <?= $this->render(
           'list_request',
           ['model' => $model]
@@ -132,10 +135,35 @@ $this->title = $model->warehouse_name;
 
 <?php
 use yii\web\View;
-
+$showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
+$listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 $js = <<< JS
+  getPendingOrder()
+  getlistOrderRequest()
 
+  //รายการวัสดุรอรับเข้าคลัง
+  async function getPendingOrder(){
+    await $.ajax({
+      type: "get",
+      url: "$showReceivePendingOrderUrl",
+      dataType: "json",
+      success: function (res) {
+        $('#showReceivePendingOrder').html(res.content)
+      }
+    });
+  }
 
+  // รายการขอเบิกวัสดุ
+  async function getlistOrderRequest(){
+    await $.ajax({
+      type: "get",
+      url: "$listOrderRequestUrl",
+      dataType: "json",
+      success: function (res) {
+        $('#showlistOrderRequest').html(res.content)
+      }
+    });
+  }
   var options = {
       plotOptions: {
             bar: { 

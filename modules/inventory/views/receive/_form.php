@@ -31,17 +31,9 @@ $receive_type_name = $model->receive_type == 'receive' ? 'รับเข้า�
         'id' => 'form-rc',
         'fieldConfig' => ['options' => ['class' => 'form-group mb-3']]
     ]); ?>
-    <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'receive_type')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'to_warehouse_id')->hiddenInput()->label(false) ?>
 
     <div class="row">
-
         <div class="col-12">
-
             <?php
                 echo $form
                     ->field($model, 'data_json[to_stock_date]')
@@ -108,6 +100,14 @@ $receive_type_name = $model->receive_type == 'receive' ? 'รับเข้า�
             ?>
         </div>
     </div>
+
+    <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'po_number')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'receive_type')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'to_warehouse_id')->hiddenInput()->label(false) ?>
+
     <div class="form-group mt-3 d-flex justify-content-center">
         <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
     </div>

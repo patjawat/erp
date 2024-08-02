@@ -32,9 +32,7 @@ $warehouse = Yii::$app->session->get('warehouse');
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
-
                     <h5><i class="fa-solid fa-shop"></i> รับเข้า<?=$warehouse['warehouse_name']?></h5>
-
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
@@ -53,49 +51,64 @@ $warehouse = Yii::$app->session->get('warehouse');
                     <!-- </div> -->
 
                 </div>
-
-
                 <div class="row">
                     <div class="col-6">
                         <div class="card border border-primary">
-                            <div class="d-flex p-3">
-                                <img class="avatar" src="/img/placeholder-img.jpg" alt="">
-                                <div class="avatar-detail">
-                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
-                                        <?= $order->data_json['vendor_name'] ?>
-                                    </h6>
-                                    <p class="text-primary mb-0 fs-13">
-                                        <?=isset($model->data_json['vendor_address']) ? $order->data_json['vendor_address'] : '-'?>
-                                    </p>
-                                </div>
-                            </div>
+                           
                             <div class="card-body pb-1">
                                 <table class="table table-sm table-striped-columns">
                                     <tbody>
                                         <tr class="">
                                             <td style="width: 150px;">กำหนดวันส่งมอบ</td>
-                                            <td><?=$order->data_json['delivery_date']?></td>
+                                            <td><?=$model->order->data_json['delivery_date']?></td>
                                         </tr>
                                         <tr class="">
                                             <td style="width: 108px;">ใบสั่งซื้อเลขที่</td>
-                                            <td><?=$order->po_number?></td>
+                                            <td><?=$model->order->po_number?></td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="card-footer text-muted d-flex justify-content-between">
-                                <p>ผู้ขาย</p>
+                            <div class="card-footer text-muted d-flex justify-content-between p-1">
+                            <div class="d-flex p-1">
+                                <img class="avatar avatar-sm bg-primary text-white" src="/img/placeholder-img.jpg" alt="">
+                                <div class="avatar-detail">
+                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <?= $model->order->data_json['vendor_name'] ?>
+                                    </h6>
+                                    <p class="text-primary mb-0 fs-13">
+                                        <?=isset($model->data_json['vendor_address']) ? $model->order->data_json['vendor_address'] : '-'?>
+                                    </p>
+                                </div>
+                            </div>
+                                <p>ผู้จำหน่าย</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-6">
 
                         <div class="card border border-primary">
+
                             <div class="card-body">
-                                <h4 class="card-title">Title</h4>
-                                <p class="card-text">Text</p>
+                                <table class="table table-sm table-striped-columns">
+                                    <tbody>
+                                        <tr class="">
+                                            <td style="width: 150px;">วันรับเข้าคลัง</td>
+                                            <td><?=$model->order->data_json['delivery_date']?></td>
+                                            <td style="width: 150px;">เลขที่รับ</td>
+                                            <td><?=$model->rc_number?></td>
+                                        </tr>
+                                        <tr class="">
+                                        </tr>
+                                        <tr class="">
+                                            <td style="width: 108px;">ตรวจรับ</td>
+                                            <td><?=$model->data_json['checked_date']?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                             <div class="card-footer text-muted d-flex justify-content-between">
+                                <?=$model->createBy()['avatar']?>
                                 <p>ผู้ดำเนินการ</p>
                             </div>
                         </div>
@@ -110,8 +123,6 @@ $warehouse = Yii::$app->session->get('warehouse');
                 <?php if($model->order_status != 'success') : ?>
                 <div class="d-flex justify-content-between">
                     <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
-
-
                 </div>
                 <?php else:?>
                 <h6><i class="fa-solid fa-file-circle-plus"></i> รายการตรวจรับ</h6>
@@ -147,7 +158,7 @@ $warehouse = Yii::$app->session->get('warehouse');
                                 <td scope="row">
                                     <?php
                                         try {
-                                            echo $item->product->Avatar(false);
+                                            echo $item->orderItem->product->Avatar(false);
                                         } catch (\Throwable $th) {
                                             echo '-';
                                         }
@@ -155,11 +166,11 @@ $warehouse = Yii::$app->session->get('warehouse');
                                 </td>
                                 <td>
                                     <?php
-                                        // try {
-                                        //     echo $item->data_json['product_type_name'];
-                                        // } catch (\Throwable $th) {
-                                        //     echo '-';
-                                        // }
+                                        try {
+                                            echo $item->orderItem->data_json['product_type_name'];
+                                        } catch (\Throwable $th) {
+                                            echo '-';
+                                        }
                                         ?>
                                 </td>
                                 <?php if ($model->receive_type == 'purchase'): ?>
@@ -169,7 +180,6 @@ $warehouse = Yii::$app->session->get('warehouse');
                                 <td>R1C3</td>
                                 <?php if($model->order_status != 'success') : ?>
                                 <td>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/receive/update-item', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?= Html::a('<i class="bi bi-trash"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
                                             'class' => 'btn btn-sm btn-danger delete-item',
                                         ]) ?>
@@ -187,21 +197,29 @@ $warehouse = Yii::$app->session->get('warehouse');
 
     </div>
     <div class="col-4">
-
-
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-person-circle"></i> กรรมการตรวจรับวัสดุเข้าคลัง</h6>
-
+                    <div class="dropdown float-end">
+                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <?= Html::a('<i class="bi bi-plus-circle-fill me-2"></i> เพิ่มกรรมการ', [
+                            '/inventory/receive/add-committee','rc_number' => $model->rc_number,'name' => 'receive_committee','title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'
+                        ], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-md']]) ?>
+                    <?=Html::a('<i class="fa-solid fa-list-ul me-2"></i> แสดงรายชื่อ',['/inventory/receive/list-committee','id' => $model->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับวัสดุ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>    
+                    </div>
+                    </div>
                 </div>
                 <?=$model->StackComittee()?>
             </div>
             <div class="card-footer d-flex justify-content-between">
-                <h6>กรรมการ</h6>
-                <?= Html::a('ดำเนินการ', [
-                            '/purchase/order-item/committee-detail','title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
-                        ], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+                วันที่ตรวจรับ :  <?=$model->data_json['checked_date']?>
+                
+               
             </div>
         </div>
         <div id="showProductOrder"></div>

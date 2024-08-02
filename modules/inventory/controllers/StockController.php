@@ -10,7 +10,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use app\modules\sm\models\Product;
 use Yii;
-
+use app\modules\inventory\models\Warehouse;
 /**
  * StockController implements the CRUD actions for Stock model.
  */
@@ -50,6 +50,71 @@ class StockController extends Controller
         ]);
     }
 
+
+    // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
+    public function actionListOrderRequest()
+    {
+
+        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+       
+        $searchModel = new StockSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        if ($this->request->isAjax) {
+
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_order_request', [
+                     'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('list_order_request', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+
+    //Form ขอเบิกวัสดุ
+    public function actionOrderRequest()
+    {
+        $model = new Stock([
+            'name' => 'request',
+        ]);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                // $thaiYear = substr((date('Y') + 543), 2);
+                // if ($model->rq_number == '') {
+                //     $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
+                // }
+                $model->save(false);
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_order_request', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_order_request', [
+                'model' => $model,
+            ]);
+        }
+    }
     /**
      * Displays a single Stock model.
      * @param int $id ID

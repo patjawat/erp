@@ -97,7 +97,6 @@ $(".progress-bar").each(function(i){
         Counter: $(this).text()
     }, {
         duration: delay,
-        easing: 'easeInOutSine',
         step: function (now) {
             $(this).text(Math.ceil(now)+'%');
         }

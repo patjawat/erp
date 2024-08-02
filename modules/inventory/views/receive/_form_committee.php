@@ -77,13 +77,13 @@ $resultsJs = <<< JS
             'size' => Select2::LARGE,
             'pluginEvents' => [
                 'select2:unselect' => 'function() {
-            $("#order-data_json-board_fullname").val("")
+            $("#order-data_json-committee_fullname").val("")
 
          }',
                 'select2:select' => 'function() {
                 var fullname = $(this).select2("data")[0].fullname;
                 var position_name = $(this).select2("data")[0].position_name;
-                $("#order-data_json-board_fullname").val(fullname)
+                $("#order-data_json-committee_fullname").val(fullname)
                 $("#order-data_json-position_name").val(position_name)
                
          }',
@@ -108,7 +108,7 @@ $resultsJs = <<< JS
     ?>
 
 <?php
-echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
+echo $form->field($model, 'data_json[committee_position]')->widget(Select2::classname(), [
     'data' => $model->ListBoard(),
     'options' => ['placeholder' => 'กรุณาเลือก'],
     'pluginOptions' => [
@@ -118,15 +118,15 @@ echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
     'pluginEvents' => [
         'select2:select' => "function(result) { 
                             var data = \$(this).select2('data')[0].text;
-                            \$('#order-data_json-board_position').val(data)
+                            \$('#stock-data_json-committee_position_name').val(data)
                         }",
     ]
 ])->label('คณะกรรมการ');
 ?>
     <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[board_position]')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[board_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[committee_position_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[committee_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[position_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
    
     

@@ -13596,4 +13596,9 @@ small, .small {
   margin-top: 0 !important;
 }
 
+.tooltip-inner {
+  background-color: white !important;
+  color: black;
+}
+
 /*# sourceMappingURL=custom.css.map */

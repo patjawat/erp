@@ -3,6 +3,7 @@
 namespace app\modules\inventory\models;
 
 use app\components\AppHelper;
+use app\components\AssetHelper;
 use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
 use DateTime;
@@ -15,6 +16,7 @@ use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use app\modules\hr\models\Employees;
+use app\models\Categorise;
 /**
  * This is the model class for table "stock_order".
  *
@@ -57,10 +59,10 @@ class Stock extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['asset_item', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
+            [['from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             // [['movement_type'], 'required'],
             [['movement_type'], 'string'],
-            [['movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty'], 'safe'],
+            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
             [['category_id', 'ref'], 'string', 'max' => 255],
         ];
@@ -133,12 +135,24 @@ class Stock extends \yii\db\ActiveRecord
         // $this->movement_date = AppHelper::convertToThaiBuddhist($this->movement_date);
     }
 
+    
     // แสดงวันที่ส่งซ่อม
     public function viewCreateDate()
     {
         return Yii::$app->thaiFormatter->asDate($this->created_at, 'php:d/m/Y เวลา H:i:s');
     }
 
+//  Relation 
+// เชื่อกับใบสั่งซื้อ
+    public function getOrder()
+    {
+        return $this->hasOne(Order::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'order']);
+    }
+// เชื่อมกับรายการ order
+    public function getOrderItem()
+    {
+        return $this->hasOne(Order::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'order_item']);
+    }
 
     // ผู้ขอ
     public function CreateBy()
@@ -176,18 +190,45 @@ class Stock extends \yii\db\ActiveRecord
         ];
     }
 
+    //แสดงระยะเวลาที่ผ่านมา
+    public function viewCreated(){
+        return AppHelper::timeDifference($this->created_at);
+}
 
+    // คณะกรรมการ
+    public function ShowCommittee()
+    {
+        try {
+            $employee = Employees::find()->where(['id' => $this->data_json['employee_id']])->one();
+
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'department' => $employee->departmentName()
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'department' => ''
+            ];
+        }
+    }
         //  ภาพทีมคณะกรรมการ
         public function StackComittee()
         {
             try {
                 $data = '';
                 $data .= '<div class="avatar-stack">';
-                foreach (self::find()->where(['name' => 'committee_detail'])->all() as $key => $avatar) {
-                    $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
-                    $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
-                    $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
-                    $data .= '</a>';
+                foreach (self::find()->where(['name' => 'receive_committee'])->all() as $key => $item) {
+                    $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
+                    $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),['/inventory/receive/update-committee','id' => $item->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'],['class' => 'open-modal','data' => [
+                        'size' => 'model-md',
+                        'bs-toggle'=>"tooltip",
+                        'bs-placement'=>"top",
+                        'bs-title' => $emp->fullname.'('.$item->data_json['committee_position_name'].')'
+                    ]]);
+                    // $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
+                    // $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+                    // $data .= '</a>';
                 }
                 $data .= '</div>';
                 return $data;
@@ -206,6 +247,28 @@ class Stock extends \yii\db\ActiveRecord
         $summeryQty = ($order->qty - $stockOrder);
 
         return $stockOrder ? $summeryQty : $order->qty;
+    }
+
+        // คณะกรรมการ
+        public function ListBoard()
+        {
+            return ArrayHelper::map(Categorise::find()->where(['name' => 'board'])->all(), 'code', 'title');
+        }
+
+
+           // คณะกรรมการ
+           public function ListAssetType()
+           {
+               return AssetHelper::ListAssetType();
+           }
+   
+
+            //แสดงรายชื่อกรรมการตรวจรับ
+    public function ListCommittee()
+    {
+        return self::find()
+            ->where(['name' => 'receive_committee', 'rc_number' => $this->rc_number])
+            ->all();
     }
 
     //แสดงรายการสั่งซื้อจาก PO

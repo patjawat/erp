@@ -31,11 +31,21 @@ use yii\widgets\Pjax;
                         <!-- <td class="align-middle text-center"><?= $item->qty; ?></td>
                         <td class="align-middle text-center"><?= $checkStock; ?></td> -->
                         <!-- <td class="align-middle text-center"><?= $item->qty - $checkStock; ?></td> -->
+                         
                         <td class="align-middle gap-2">
                             <div class="d-flex justify-content-center gap-2">
                                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/receive/add-po-item', 'id' => $item->id, 'title' => '<i class="bi bi-ui-checks-grid"></i> เลือกรายการวัสดุเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             </div>
                         </td>
+                    </tr>
+                    <?php else:?>
+                        <tr class="text-center">
+                       <td  colspan="2"> 
+                        <span class="text-success fs-5">
+                           ดำเนินการเรียบร้อย !
+
+                       </span>
+                    </td>
                     </tr>
                     <?php  endif; ?>
                     <?php endforeach; ?>

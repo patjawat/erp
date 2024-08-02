@@ -11,6 +11,7 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\inventory\models\Stock;
 use app\modules\sm\models\Product;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -133,6 +134,18 @@ class Order extends \yii\db\ActiveRecord
 
 
     // relation
+
+
+    //เชื่อมกับ รับเข้า Stock
+    public function getReceive()
+    {
+        return $this->hasOne(Stock::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'receive']);
+    }
+//เชื่อมกับ รับเข้า Stock Item
+    public function getReceiveItem()
+    {
+        return $this->hasOne(Stock::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'receive_item']);
+    }
 
     public function getProductType()
     {

@@ -6,6 +6,7 @@ use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use yii\web\View;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
@@ -107,11 +108,12 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<?php Pjax::end(); ?>
 
 
 <?php
 $js = <<< JS
-var delay = 500;
+var delay = 300;
 $(".progress-bar").each(function(i){
     $(this).delay( delay*i ).animate( { width: $(this).attr('aria-valuenow') + '%' }, delay );
 
@@ -119,13 +121,11 @@ $(".progress-bar").each(function(i){
         Counter: $(this).text()
     }, {
         duration: delay,
-        easing: 'easeInOutSine',
         step: function (now) {
             $(this).text(Math.ceil(now)+'%');
         }
     });
 });
 JS;
-$this->registerJS($js)
+$this->registerJS($js,View::POS_END)
 ?>
-<?php Pjax::end(); ?>
