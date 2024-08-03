@@ -79,7 +79,8 @@
         "softark/yii2-dual-listbox": "dev-master",
         "chillerlan/php-qrcode": "dev-main",
         "kartik-v/php-date-formatter": "dev-master",
-        "kartik-v/yii2-popover-x": "dev-master"
+        "kartik-v/yii2-popover-x": "dev-master",
+        "asyou99/yii2-cart": "dev-master"
         
     },
     "require-dev": {

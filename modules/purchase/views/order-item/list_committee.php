@@ -11,10 +11,10 @@ use yii\widgets\Pjax;
 <?php
 $model = Yii::$app->session->get('order');
 
-$listcommittee = Order::find()
-    ->where(['name' => 'committee'])
-    ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
-    ->all();
+// $listcommittee = Order::find()
+//     ->where(['name' => 'committee'])
+//     ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
+//     ->all();
 ?>
 
 <table class="table table-primary">

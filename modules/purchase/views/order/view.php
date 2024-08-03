@@ -174,10 +174,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?=$model->StackComitteeDetail()?>
             </div>
             <div class="card-footer d-flex justify-content-between">
-                <h6>กรรมการ</h6>
-                <?= Html::a('ดำเนินการ', [
-                            '/purchase/order-item/committee-detail','title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
-                        ], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('รายการ', [
+                            '/purchase/order-item/committee-detail','category_id' => $model->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
+                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee_detail', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
         </div>
 
@@ -189,10 +189,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?=$model->StackComittee()?>
             </div>
             <div class="card-footer d-flex justify-content-between">
-                <h6>กรรมการ</h6>
-                <?= Html::a('ดำเนินการ', [
-                            '/purchase/order-item/committee','title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'
-                        ], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+                <?=  Html::a('รายการ', [
+                            '/purchase/order-item/committee','category_id' => $model->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'
+                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
         </div>
 

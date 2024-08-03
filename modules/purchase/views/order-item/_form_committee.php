@@ -153,10 +153,7 @@ $js = <<< JS
             success: async function (response) {
                 form.yiiActiveForm('updateMessages', response, true);
                 if(response.status == 'success') {
-                    $("#main-modal-label").html(response.title);
-                    $(".modal-body").html(response.content);
-                    $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                    $(".modal-dialog").addClass("modal-lg");
+                    $("#main-modal").modal("toggle");
                     success()
                     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                 }

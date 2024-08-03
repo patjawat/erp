@@ -28,6 +28,9 @@ $config = [
     ],
     'language' => 'th_TH',  // เปิดใช้งานภาษาไทย
     'components' => [
+        'cart' => [
+			'class' => 'asyou99\cart\Cart',
+		],
         'employee' => 'app\components\UserHelper',
         // แจ่งเตือน line Group
         'lineNotify' => [
@@ -269,7 +272,7 @@ if (YII_ENV_DEV) {
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
         'allowedIPs' => ['127.0.0.1', '::1'],
-        // 'allowedIPs' => ['*'],
+        'allowedIPs' => ['*'],
     ];
 }
 

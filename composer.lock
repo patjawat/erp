@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "529de504d57573d2217f3be15f5dab55",
+    "content-hash": "9e96c71f05265e9fa1a0ecc5f4558e1b",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -49,6 +49,51 @@
                 "source": "https://github.com/ColorlibHQ/AdminLTE/tree/v3"
             },
             "time": "2023-05-09T20:38:52+00:00"
+        },
+        {
+            "name": "asyou99/yii2-cart",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/asyou99/yii2-cart.git",
+                "reference": "9666a7c27b069e2886bf1f0077d049addbc72e5e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/asyou99/yii2-cart/zipball/9666a7c27b069e2886bf1f0077d049addbc72e5e",
+                "reference": "9666a7c27b069e2886bf1f0077d049addbc72e5e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0",
+                "yiisoft/yii2": "*"
+            },
+            "default-branch": true,
+            "type": "yii2-extension",
+            "autoload": {
+                "psr-4": {
+                    "asyou99\\cart\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stas Kurman",
+                    "email": "asyou1985@gmail.com"
+                }
+            ],
+            "description": "Yii2 extension that adds shopping cart functions",
+            "keywords": [
+                "shopping cart",
+                "yii"
+            ],
+            "support": {
+                "source": "https://github.com/ASYOU99/yii2-cart/tree/master"
+            },
+            "time": "2017-12-09T17:32:24+00:00"
         },
         {
             "name": "beaten-sect0r/yii2-flatpickr",
@@ -2164,12 +2209,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-imagine/Imagine.git",
-                "reference": "ebf9bb024fcf3dde22182942b8eb5bc8008db05d"
+                "reference": "ce4748abe26c8f887e0dab1746adff2f57354f9b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-imagine/Imagine/zipball/ebf9bb024fcf3dde22182942b8eb5bc8008db05d",
-                "reference": "ebf9bb024fcf3dde22182942b8eb5bc8008db05d",
+                "url": "https://api.github.com/repos/php-imagine/Imagine/zipball/ce4748abe26c8f887e0dab1746adff2f57354f9b",
+                "reference": "ce4748abe26c8f887e0dab1746adff2f57354f9b",
                 "shasum": ""
             },
             "require": {
@@ -2219,7 +2264,7 @@
                 "issues": "https://github.com/php-imagine/Imagine/issues",
                 "source": "https://github.com/php-imagine/Imagine/tree/develop"
             },
-            "time": "2024-02-17T23:16:37+00:00"
+            "time": "2024-07-30T14:56:13+00:00"
         },
         {
             "name": "insolita/yii2-adminlte-widgets",
@@ -6661,12 +6706,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "a3c5c9e7ce3a2a8577bfa9e69960fbccbd2d4a9e"
+                "reference": "1c77e0049902b245c92c233aadcc834f50d246af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/a3c5c9e7ce3a2a8577bfa9e69960fbccbd2d4a9e",
-                "reference": "a3c5c9e7ce3a2a8577bfa9e69960fbccbd2d4a9e",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/1c77e0049902b245c92c233aadcc834f50d246af",
+                "reference": "1c77e0049902b245c92c233aadcc834f50d246af",
                 "shasum": ""
             },
             "require": {
@@ -6756,9 +6801,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/2.2.1"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/master"
             },
-            "time": "2024-07-29T07:56:06+00:00"
+            "time": "2024-08-02T15:45:44+00:00"
         },
         {
             "name": "phpoffice/phpword",
@@ -6952,12 +6997,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "38b617210dd5238935800f9ee3d20bc32a479b89"
+                "reference": "45b98d8cb39230019612ddcca3abbdc574152834"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/38b617210dd5238935800f9ee3d20bc32a479b89",
-                "reference": "38b617210dd5238935800f9ee3d20bc32a479b89",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/45b98d8cb39230019612ddcca3abbdc574152834",
+                "reference": "45b98d8cb39230019612ddcca3abbdc574152834",
                 "shasum": ""
             },
             "require": {
@@ -7054,7 +7099,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-25T01:06:20+00:00"
+            "time": "2024-08-02T14:04:47+00:00"
         },
         {
             "name": "piwik/device-detector",
@@ -11624,12 +11669,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "9c42d47c1c173496e7553e617805149a53adbc1c"
+                "reference": "d83130070127e5bc064b96b815ba03bb7e0200e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9c42d47c1c173496e7553e617805149a53adbc1c",
-                "reference": "9c42d47c1c173496e7553e617805149a53adbc1c",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d83130070127e5bc064b96b815ba03bb7e0200e1",
+                "reference": "d83130070127e5bc064b96b815ba03bb7e0200e1",
                 "shasum": ""
             },
             "require": {
@@ -11719,7 +11764,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-28T07:34:52+00:00"
+            "time": "2024-08-02T05:57:17+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -12989,12 +13034,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "0724c51fa067b198e36506d2864e09a52180998a"
+                "reference": "4f3b0f734f5680e62683ab9a027320c6f29ccc83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/0724c51fa067b198e36506d2864e09a52180998a",
-                "reference": "0724c51fa067b198e36506d2864e09a52180998a",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/4f3b0f734f5680e62683ab9a027320c6f29ccc83",
+                "reference": "4f3b0f734f5680e62683ab9a027320c6f29ccc83",
                 "shasum": ""
             },
             "require": {
@@ -13044,7 +13089,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-22T08:53:29+00:00"
+            "time": "2024-07-31T20:38:58+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -13208,12 +13253,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "909cec913edea162a3b2836788228ad45fcab337"
+                "reference": "8be1d484951ff5ca995eaf8edcbcb8b9a5888450"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/909cec913edea162a3b2836788228ad45fcab337",
-                "reference": "909cec913edea162a3b2836788228ad45fcab337",
+                "url": "https://api.github.com/repos/symfony/string/zipball/8be1d484951ff5ca995eaf8edcbcb8b9a5888450",
+                "reference": "8be1d484951ff5ca995eaf8edcbcb8b9a5888450",
                 "shasum": ""
             },
             "require": {
@@ -13286,7 +13331,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-20T18:38:32+00:00"
+            "time": "2024-08-01T10:24:28+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -13717,7 +13762,8 @@
         "softark/yii2-dual-listbox": 20,
         "chillerlan/php-qrcode": 20,
         "kartik-v/php-date-formatter": 20,
-        "kartik-v/yii2-popover-x": 20
+        "kartik-v/yii2-popover-x": 20,
+        "asyou99/yii2-cart": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

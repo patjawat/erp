@@ -73,10 +73,11 @@ use app\components\UserHelper;
 
 <?=$this->render('app_service')?>
 <?=$this->render('app_manage')?>
+<?=$this->render('app_cart')?>
             
             <div class="d-none d-lg-inline-flex ms-2" data-aos="zoom-in" data-aos-delay="200">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
-                    <i class="bx bx-fullscreen"></i>
+                <i class="fa-solid fa-expand"></i>
                 </button>
             </div>
             <?=$this->render('notification');?>

@@ -172,6 +172,12 @@ class Order extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
+    //แสดงข้อมูลผู่ตรวจสอบ
+    public function showChecker()
+    {
+            // $charker
+    }
+
     public function orderAvatar()
     {
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
@@ -279,7 +285,7 @@ class Order extends \yii\db\ActiveRecord
         try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach (self::find()->where(['name' => 'committee'])->all() as $key => $avatar) {
+            foreach (Order::find()->where(['name' => 'committee','category_id' => $this->id])->all() as $key => $avatar) {
                 $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
                 $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
                 $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
@@ -298,7 +304,7 @@ class Order extends \yii\db\ActiveRecord
         try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach (self::find()->where(['name' => 'committee_detail'])->all() as $key => $avatar) {
+            foreach (Order::find()->where(['name' => 'committee_detail','category_id' => $this->id])->all() as $key => $avatar) {
                 $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
                 $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
                 $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);

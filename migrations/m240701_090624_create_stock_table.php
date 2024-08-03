@@ -32,6 +32,7 @@ class m240701_090624_create_stock_table extends Migration
             'category_id' => $this->string(255)->comment('หมวดหมูหลักที่เก็บ'),
             'order_status' => $this->string(255)->comment('สถานะของ order (หัวรายการ)'),
             'ref' => $this->string(255),
+            'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'data_json' => $this->json(),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),

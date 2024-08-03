@@ -49,9 +49,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-primary">
                 <thead>
                     <tr>
-                        <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>
+                        <th class="fw-semibold" style="width:280px">ผู้ขอซื้อ</th>
                         <th class="fw-semibold">มูลค่า</th>
                         <th class="fw-semibold">ผู้ขาย</th>
+                        <th class="fw-semibold">กรรมการตรวจรับ</th>
+                        <th class="fw-semibold">ผู้อนุมัติ</th>
+                        <th class="fw-semibold">พัสดุตรวจสอบ</th>
+                        <th class="fw-semibold">ผู้อำนวยการ</th>
                         <th class="fw-semibold">ความคืบหน้า</th>
                         <th class="fw-semibold text-center" style="width:176px">ดำเนินการ</th>
                     </tr>
@@ -64,6 +68,10 @@ $this->params['breadcrumbs'][] = $this->title;
    <div class="fw-semibold"><?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?></div>
                         </td>
                         <td class="fw-light align-middle"><?= $model->data_json['vendor_name'] ?></td>
+                        <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
+                        <td class="fw-light align-middle"><?=$model->viewLeaderUser()['avatar']?></td>
+                        <td class="fw-light align-middle"> <?= $model->getMe()['avatar'] ?></td>
+                        <td class="fw-light align-middle"></td>
                         <td class="fw-light align-bottom">
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">

@@ -20,7 +20,7 @@ $listBoard = Order::find()
 <table class="table">
     <thead class="table-primary">
         <tr>
-            <th scope="col"><?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> กรรมการกำหนดรายละเอียด', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee_detail', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?></th>
+            <th scope="col">รายการ</th>
             <th scope="col">ตำแหน่ง</th>
             <th scope="col" style="width: 120px;">
             ดำเนินการ

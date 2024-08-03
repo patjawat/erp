@@ -25,7 +25,7 @@ use app\models\Categorise;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class FixEmployeeController extends Controller
+class FixController extends Controller
 {
     /**
      * This command echoes what you have entered as the message.
@@ -33,6 +33,10 @@ class FixEmployeeController extends Controller
      * @return int Exit code
      */
     public function actionIndex()
+    {
+        
+    }
+    public function actionEmployee()
     {
         if (BaseConsole::confirm("Are you sure?")) {
             $data = [];
@@ -53,4 +57,27 @@ class FixEmployeeController extends Controller
         }
         // echo  $data;
     }
+
+    public function actionAssetItem()
+    {
+        if (BaseConsole::confirm("Are you sure?")) {
+            $data = [];
+            $employees = Categorise::find()->where(['name' => 'asset_item'])->all();
+            foreach ($employees as $model) {
+                if ($model->ref == '') {
+                    $item = Categorise::findOne($model->id);
+                    $item->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                    if($item->save(false)){
+                        echo $item->title . "\n";
+                    }else{
+                        echo 'ผิดพลาด'. "\n";
+
+                    }
+                    
+                }
+            }
+        }
+        // echo  $data;
+    }
+
 }

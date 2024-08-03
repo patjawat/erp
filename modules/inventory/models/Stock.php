@@ -154,6 +154,14 @@ class Stock extends \yii\db\ActiveRecord
         return $this->hasOne(Order::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'order_item']);
     }
 
+// เชื่อมกับรายการ ทรัพสินและวัสดุ
+public function getProduct()
+{
+    return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
+}
+
+
+
     // ผู้ขอ
     public function CreateBy()
     {
@@ -311,7 +319,7 @@ class Stock extends \yii\db\ActiveRecord
         return Order::findOne(['po_number' => $this->po_number,'asset_item' => $this->asset_item]);
     }
 
-    public function getProduct(){
+    public function getProductItem(){
         $model = Product::findOne($this->asset_item);
         if($model){
             return $model;

@@ -38,15 +38,6 @@ use yii\widgets\Pjax;
                             </div>
                         </td>
                     </tr>
-                    <?php else:?>
-                        <tr class="text-center">
-                       <td  colspan="2"> 
-                        <span class="text-success fs-5">
-                           ดำเนินการเรียบร้อย !
-
-                       </span>
-                    </td>
-                    </tr>
                     <?php  endif; ?>
                     <?php endforeach; ?>
                 </tbody>

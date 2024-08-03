@@ -11,16 +11,17 @@ $this->title = "แผนงานและโครงการ";
         <p class="card-text">อยู่ระหว่างการพัฒนา</p>
     </div>
 </div>
+<div class="row d-flex justify-content-center">
+<div class="col-3">
+    <div class="card flex justify-content-center text-center">
 
-<div class="pm-default-index">
-    <h1><?= $this->context->action->uniqueId ?></h1>
-    <p>
-        This is the view content for action "<?= $this->context->action->id ?>".
-        The action belongs to the controller "<?= get_class($this->context) ?>"
-        in the "<?= $this->context->module->id ?>" module.
-    </p>
-    <p>
-        You may customize this page by editing the following file:<br>
-        <code><?= __FILE__ ?></code>
-    </p>
+        <div class="card-body">
+            <img src="https://themesdesign.in/pricepeg/layouts/images/pricing-img/img-1.png"/>
+            <h6 class="mt-5">แผนงาน</h6>
+            <p class="card-text">Text</p>
+        </div>
+    </div>
+    
+</div>
+
 </div>

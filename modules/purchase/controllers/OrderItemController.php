@@ -53,9 +53,15 @@ class OrderItemController extends Controller
     public function actionCommittee()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        $category_id = $this->request->get('category_id');
+
+        $listcommittee = Order::find()
+            ->where(['name' => 'committee','category_id' => $category_id])
+            ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
+            ->all();
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_committee'),
+            'content' => $this->renderAjax('list_committee',['listcommittee' => $listcommittee]),
         ];
     }
 
@@ -98,17 +104,17 @@ class OrderItemController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('list_'.$model->name),
-                    'status' => 'success',
-                    'container' => '#' . $model->name,
-                ];
                 // return [
                 //     'title' => $this->request->get('title'),
+                //     'content' => $this->renderAjax('list_'.$model->name),
                 //     'status' => 'success',
                 //     'container' => '#' . $model->name,
                 // ];
+                return [
+                    'title' => $this->request->get('title'),
+                    'status' => 'success',
+                    'container' => '#' . $model->name,
+                ];
             }
         } else {
             $model->loadDefaultValues();
