@@ -72,7 +72,8 @@ class StoreController extends \yii\web\Controller
             // return  $this->redirect(['/inventory/store']);
             return [
                 'container' => '#viewCart',
-                'status' => 'success'
+                'status' => 'success',
+                'data' => $model
             ];
         }
         throw new NotFoundHttpException();

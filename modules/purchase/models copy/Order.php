@@ -173,10 +173,73 @@ class Order extends \yii\db\ActiveRecord
     }
 
     //แสดงข้อมูลผู่ตรวจสอบ
-    public function showChecker()
+    public function getChecker()
     {
-            // $charker
+       
+           return [
+            'checker_leader' => $this->getCheckerLeader(),
+            'checker_officer' => $this->getCheckerOffer()
+           ];
     }
+
+      // จนท.พัสดุตรวจสอบ
+      public  function getEmp($userId)
+      {
+          try {
+             
+              $employee = Employees::find()->where(['user_id' =>  $userId])->one();
+              return [
+                  'avatar' => $employee->getAvatar(false),
+                  'photo' => $employee->showAvatar(false),
+                  'department' => $employee->departmentName(),
+                  'fullname' => $employee->fullname,
+              ];
+
+          } catch (\Throwable $th) {
+              return [
+                  'avatar' => '',
+                  'department' => '',
+                  'fullname' => '',
+              ];
+          }
+      }
+
+//หัวหน้าเห็นชอบ
+    public function getCheckerLeader()
+    {
+        try {
+            $userId = $this->data_json['leader1'];
+            $img = Html::img($this->getEmp($userId)['photo'], ['class' => 'avatar avatar-sm bg-primary text-white']);
+            return '<div class="d-flex">'. $img . '<div class="avatar-detail text-truncate">
+                <h6 class="mb-1 fs-13">'. $this->getLeaderUser()['fullname'] . '</h6>
+                <p class="text-muted mb-0 fs-13">'.($this->data_json['pr_leader_confirm'] == 'Y' ? '<i class="bi bi-check2-circle text-success fs-6"></i> เห็นชอบ' : '<i class="fa-regular fa-circle-stop fs-6 text-danger"></i> ไม่เห็นชอบ') .'</p>
+                    </div>
+                </div>'
+               ;
+        } catch (\Throwable $th) {
+            return null;
+        }
+      
+    }
+
+    //พัสดุตรวจสอบ
+    public function getCheckerOffer()
+    {
+        try {
+            $userId = $this->data_json['pr_officer_id'];
+            $img = Html::img($this->getEmp($userId)['photo'], ['class' => 'avatar avatar-sm bg-primary text-white']);
+            return '<div class="d-flex">'. $img . '<div class="avatar-detail text-truncate">
+                <h6 class="mb-1 fs-13">'. $this->getOffcerChecker()['fullname'] . '</h6>
+                <p class="text-muted mb-0 fs-13">'.($this->data_json['pr_officer_checker'] == 'Y' ? '<i class="bi bi-check2-circle text-success fs-6"></i> เห็นชอบ' : '<i class="fa-regular fa-circle-stop fs-6 text-danger"></i> ไม่เห็นชอบ') .'</p>
+                    </div>
+                </div>'
+               ;
+        } catch (\Throwable $th) {
+            return null;
+        }
+      
+    }
+
 
     public function orderAvatar()
     {
@@ -213,6 +276,9 @@ class Order extends \yii\db\ActiveRecord
             ];
         }
     }
+
+      
+
     // ผู้ขอ
     public function getUserReq()
     {
@@ -238,7 +304,7 @@ class Order extends \yii\db\ActiveRecord
     }
 
     // หัวหน้าผู้ตรวจสแบ
-    public function viewLeaderUser()
+    public function getLeaderUser()
     {
         try {
             $employee = Employees::find()->where(['id' => $this->data_json['leader1']])->one();
@@ -246,6 +312,7 @@ class Order extends \yii\db\ActiveRecord
             return [
                 'id' => $employee->user_id,
                 'avatar' => $employee->getAvatar(false),
+                'photo' => $employee->showAvatar(false),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName()
@@ -515,14 +582,6 @@ class Order extends \yii\db\ActiveRecord
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'purchase_condition'])->all(), 'code', 'title');
     }
-
-    // หมวดเงิน
-    public function ListBudgetGroup()
-    {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_group'])->all(), 'code', 'title');
-    }
-
-    
 
     // ประเภท
     public function ListBudgetdetail()

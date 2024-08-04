@@ -44,16 +44,31 @@ class m240211_091342_insert_assetselect extends Migration
             $this->insert('categorise',['name'=>'purchase','code' =>'19','title'=>'จ้างออกแบบหรือควบคุมงานก่อสร้างโดยวิธีประกวดแบบ','active' => 1]);
         }
 
+
+        $budgetGroup = Yii::$app->db->createCommand("select * from categorise where name = 'budget_group'")->queryAll();
+        if(count($budgetGroup) < 1){
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG1','title'=>'งบบุคลากร','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG2','title'=>'งบดำเนินงาน (ค่าตอนแทน)','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG3','title'=>'งบดำเนินงาน (ค่าใช้สอย)','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG4','title'=>'งบดำเนินงาน (ค่าวัสดุ)','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG5','title'=>'งบดำเนินงาน (ค่าสาธารณูปโภค)','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG6','title'=>'งบลงทุน (ค่าครุภัณฑ์)','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG7','title'=>'งบลงทุน (ค่าที่ดินและสิ่งก่อสร้าง)','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG8','title'=>'งบเงินอุดหนุน','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG8','title'=>'งบรายจ่ายอื่น','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_group','code' =>'BG10','title'=>'งบค่าเสื่อม','active' => 1]);
+        }
+
         $sql3 = Yii::$app->db->createCommand("select * from categorise where name = 'budget_type'")->queryAll();
         if(count($sql3) < 1){
-            $this->insert('categorise',['name'=>'budget_type','code' =>'1','title'=>'งบประมาณ','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'2','title'=>'งบค่าเสื่อม','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'3','title'=>'เงินบริจาค','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'4','title'=>'เงินบำรุง','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'5','title'=>'เงิน อปท.','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'6','title'=>'เงิน UC','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'7','title'=>'เงินอื่นๆ','active' => 1]);
-            $this->insert('categorise',['name'=>'budget_type','code' =>'8','title'=>'เงินค่าบริการทางการแพทย์ที่เบิกจ่ายในลักษณะงบลงทุน','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT1','title'=>'งบประมาณ','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT2','title'=>'งบค่าเสื่อม','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT3','title'=>'เงินบริจาค','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT4','title'=>'เงินบำรุง','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT5','title'=>'เงิน อปท.','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT6','title'=>'เงิน UC','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT7','title'=>'เงินอื่นๆ','active' => 1]);
+            $this->insert('categorise',['name'=>'budget_type','code' =>'BT8','title'=>'เงินค่าบริการทางการแพทย์ที่เบิกจ่ายในลักษณะงบลงทุน','active' => 1]);
         }
 
         $sql4 = Yii::$app->db->createCommand("select * from categorise where name = 'asset_status'")->queryAll();

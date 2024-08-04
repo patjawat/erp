@@ -6,6 +6,12 @@ use yii\helpers\Url;
 
 ?>
 
+
+<style>
+
+
+</style>
+
 <div class="row">
     <div class="col-12">
         <div id="storeProductShow">
@@ -15,6 +21,13 @@ use yii\helpers\Url;
                 </div>
             </div>
         </div>
+
+
+
+        <div id="cart" class="cart" data-totalitems="0">
+  <i class="fas fa-shopping-cart"></i>
+</div>
+
     </div>
 </div>
 
@@ -47,10 +60,31 @@ $js = <<< JS
         dataType: "json",
         success: function (response) {
             getViewCar()
+            success('เพิ่มลงในตะกร้าแล้ว')
         //   $.pjax.reload({container:response.container, history:false});
         }
     });
 });
+
+
+$(document).ready(function(){
+  $('#addtocart').on('click',function(){
+    
+    var button = $(this);
+    var cart = $('#cart');
+    var cartTotal = cart.attr('data-totalitems');
+    var newCartTotal = parseInt(cartTotal) + 1;
+    
+    button.addClass('sendtocart');
+    setTimeout(function(){
+      button.removeClass('sendtocart');
+      cart.addClass('shake').attr('data-totalitems', newCartTotal);
+      setTimeout(function(){
+        cart.removeClass('shake');
+      },500)
+    },1000)
+  })
+})
 
 
     //     $("body").on("click", ".update-cart", function (e) {

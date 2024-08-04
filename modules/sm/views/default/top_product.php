@@ -20,9 +20,9 @@ use yii\helpers\Html;
                         <?php for ($i = 0; $i < 12; $i++): ?>
                         <div class="col-3">
                             <div class="card">
-                                <img class="card-img-top"
+                                <!-- <img class="card-img-top"
                                     src="https://angular.spruko.com/vexel/preview/assets/images/shop/1.png"
-                                    alt="Title" />
+                                    alt="Title" /> -->
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="d-flex flex-column">

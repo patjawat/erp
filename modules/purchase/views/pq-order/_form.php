@@ -1,8 +1,8 @@
 <?php
 
-use kartik\datecontrol\DateControl;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
+use iamsaint\datetimepicker\Datetimepicker;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
@@ -19,13 +19,14 @@ use yii\widgets\Pjax;
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
-    'fieldConfig' => ['labelSpan' => 3, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
+    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/purchase/pq-order/validator'],
 ]); ?>
 
 
 <div class="row">
     <div class="col-6">
-        <div class="border border-secondary rounded p-4" style="height: 276px;">
+        <div class="border border-secondary rounded p-4" style="height: 311px;">
             <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> คำสั่ง</h6>
             <div class="row">
                 <div class="col-12">
@@ -35,16 +36,17 @@ use yii\widgets\Pjax;
                     <?= $form->field($model, 'data_json[order_number]')->textInput()->label('เลขที่คำสั่ง') ?>
                 </div>
                 <div class="col-6">
-                    <?= $form->field($model, 'data_json[order_date]')->widget(DateControl::classname(), [
-                        'type' => DateControl::FORMAT_DATE,
-                        'language' => 'th',
-                        'widgetOptions' => [
-                            'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                            'pluginOptions' => [
-                                'autoclose' => true
-                            ]
-                        ]
-                    ])->label('ลงวันที่') ?>
+                <?=$form->field($model, 'data_json[order_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ลงวันที่');
+                ?>
                 </div>
             </div>
         </div>
@@ -76,17 +78,39 @@ use yii\widgets\Pjax;
         <div class="border border-secondary rounded p-4 mt-3">
             <h6 class=" text-center"><i class="fa-solid fa-circle-info text-primary"></i> วิธีการซื้อ/จ้าง</h6>
             <div class="row">
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[pq_reason]')->textArea(['style' => 'height: 107px;'])->label('เหตุผลความจำเป็น') ?>
+<div class="col-6">
+<?php
+                                        echo $form->field($model, 'data_json[pq_purchase_type]')->widget(Select2::classname(), [
+                                            'data' => $model->ListPurchase(),
+                                            'options' => ['placeholder' => 'กรุณาเลือก'],
+                                            'pluginOptions' => [
+                                                'allowClear' => true,
+                                                'dropdownParent' => '#main-modal',
+                                            ],
+                                            'pluginEvents' => [
+                                                'select2:select' => "function(result) { 
+                                        var data = \$(this).select2('data')[0]
+                                        \$('#order-data_json-pq_purchase_type_name').val(data.text)
+                                        }",
+                                            ]
+                                        ])->label('วิธีซื้อหรือจ้าง');
+                                    ?>
 
 
-                    <?php
+
+
+</div>
+
+<div class="col-6">
+
+<?php
                         $conditionUrl = Url::to(['/depdrop/categorise-by-code']);
                         echo $form->field($model, 'data_json[pq_condition]')->widget(Select2::classname(), [
                             'data' => $model->ListPurchaseCondition(),
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => 'function(result) { 
@@ -107,35 +131,21 @@ use yii\widgets\Pjax;
                         ])->label('เงื่อนไข')
                     ?>
 
-                </div>
 
-                <div class="col-6">
-                    <div class="d-flex justify-content-between">
-                                <div class="w-50">
+</div>
 
-                                    <?php
-                                        echo $form->field($model, 'data_json[pq_purchase_type]')->widget(Select2::classname(), [
-                                            'data' => $model->ListPurchase(),
-                                            'options' => ['placeholder' => 'กรุณาเลือก'],
-                                            'pluginOptions' => [
-                                                'allowClear' => true,
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => "function(result) { 
-                                        var data = \$(this).select2('data')[0]
-                                        \$('#order-data_json-pq_purchase_type_name').val(data.text)
-                                        }",
-                                            ]
-                                        ])->label('วิธีซื้อหรือจ้าง');
-                                    ?>
-                                        </div>
-                                        <div class="w-50">
-                        <?php
+<div class="col-12">
+<?= $form->field($model, 'data_json[pq_income_reason]')->textArea(['rows' => 5, 'style' => 'height: 106px;'])->label('เหตุผลการจัดหา') ?>
+</div>
+            <div class="col-6">
+
+            <?php
                             echo $form->field($model, 'data_json[pq_method_get]')->widget(Select2::classname(), [
                                 'data' => $model->ListMethodget(),
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
+                                    'dropdownParent' => '#main-modal',
                                 ],
                                 'pluginEvents' => [
                                     'select2:select' => "function(result) { 
@@ -146,16 +156,13 @@ use yii\widgets\Pjax;
                             ])->label('วิธีจัดหา');
                         ?>
 
-
-                    </div>
-                    </div>
-
-                    <?=
+            <?=
                         $form->field($model, 'data_json[pq_budget_group]')->widget(Select2::classname(), [
-                            'data' => $model->ListBudgetdetail(),
+                            'data' => $model->ListBudgetGroup(),
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => "function(result) { 
@@ -165,14 +172,13 @@ use yii\widgets\Pjax;
                             ]
                         ])->label('หมวดเงิน');
                     ?>
-
-
-                    <?=
+          <?=
                         $form->field($model, 'data_json[pq_budget_type]')->widget(Select2::classname(), [
                             'data' => $model->ListBudgetdetail(),
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => "function(result) { 
@@ -182,16 +188,19 @@ use yii\widgets\Pjax;
                             ]
                         ])->label('ประเภทเงิน');
                     ?>
-
-
-
-
-
-
+                                    
+                                    
+                                </div>
+                                <div class="col-6">
+                                <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['1' => 'เกณฑ์ราคา', '2' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'],['custom' => true, 'inline' => true])->label('การพิจารณา') ?>
+                    <?= $form->field($model, 'data_json[pq_reason]')->textArea(['style' => 'height: 130px;'])->label('เหตุผลความจำเป็น') ?>
+                
+ 
                 </div>
                 <div class="col-12">
-                    <?= $form->field($model, 'data_json[pq_income_reason]')->textArea(['rows' => 5, 'style' => 'height: 106px;'])->label('เหตุผลการจัดหา') ?>
-                    <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['1' => 'เกณฑ์ราคา', '2' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'])->label('การพิจารณา') ?>
+               
+                 
+                  
                     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
                     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
                     <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
@@ -238,6 +247,36 @@ $js = <<< JS
         });
         return false;
     });
+
+
+
+    var thaiYear = function (ct) {
+        var leap=3;  
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+        if(ct){  
+            var yearL=new Date(ct).getFullYear()-543;  
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+            if(leap==2){  
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+            }  
+        }              
+        this.setOptions({  
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+        })                
+    };    
+     
+   
+    $("#order-data_json-order_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });   
+
+
 
     JS;
 $this->registerJS($js, View::POS_END)

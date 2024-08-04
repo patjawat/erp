@@ -4,8 +4,7 @@ use app\modules\hr\models\Employees;
 use kartik\datecontrol\DateControl;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
-use app\models\Categorise;
+use iamsaint\datetimepicker\Datetimepicker;
 use yii\helpers\Html;
 use yii\web\View;
 use yii\helpers\Url;
@@ -77,106 +76,54 @@ $resultsJs = <<< JS
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
-    // 'type' => ActiveForm::TYPE_HORIZONTAL,
-    // 'fieldConfig' => ['labelSpan' => 3, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
+     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/purchase/pr-order/createvalidator'],
 ]); ?>
-
-<!-- ชื่อของประเภท -->
-
-<div class="row">
-    <div class="col-4">
-    <?php
-
-     
-// echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-//     'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(),'code','title'),
-//     'options' => ['placeholder' => 'กรุณาเลือก','id' => 'category-id'],
-//     'pluginOptions' => [
-//         'allowClear' => true,
-//         'dropdownParent' => '#main-modal',
-//     ],
-//     'pluginEvents' => [
-//         'select2:select' => "function(result) { 
-//                             var data = \$(this).select2('data')[0].text;
-//                             \$('#order-data_json-product_type_name').val(data)
-//                             console.log($(this).val())
-//                         }",
-//     ]
-// ])->label('กลุ่ม');
-?>
-    </div>
-<div class="col-8">
-
-
-
-<?php
-
-// echo $form->field($model, 'data_json[item_type]')->widget(kartik\depdrop\DepDrop::classname(), [
-//     // 'options'=>['id'=>'category-id'],
-//     'type' => kartik\depdrop\DepDrop::TYPE_SELECT2,
-//     'select2Options' => ['pluginOptions' => ['allowClear' => true,'dropdownParent' => '#main-modal',]],
-//     'pluginOptions'=>[
-//         'dropdownParent' => '#main-modal',
-//         'depends'=>['category-id'],
-//         'placeholder'=>'Select...',
-//         'url'=>Url::to(['/depdrop/asset-type'])
-//     ]
-// ])->label('ประเ');
-
-// echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
-//     'data' => $model->ListProductType(),
-//     'options' => ['placeholder' => 'กรุณาเลือก'],
-//     'pluginOptions' => [
-//         'allowClear' => true,
-//         'dropdownParent' => '#main-modal',
-//     ],
-//     'pluginEvents' => [
-//         'select2:select' => "function(result) { 
-//                             var data = \$(this).select2('data')[0].text;
-//                             \$('#order-data_json-product_type_name').val(data)
-//                             console.log($(this).val())
-//                         }",
-//     ]
-// ])->label('ขอซื้อ/ขอจ้าง');
-?>
-</div>
-</div>
 
 <div class="row">
     <div class="col-6">
 
+    <?=$form->field($model, 'data_json[pr_create_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่ขอซื้อ');
+                ?>
+
+
         <?php
-        echo $form
-            ->field($model, 'data_json[po_create_date]')
-            ->widget(DateControl::classname(), [
-                'type' => DateControl::FORMAT_DATE,
-                'language' => 'th',
-                'widgetOptions' => [
-                    'options' => ['placeholder' => 'ระบุวันที่ขอซื้อ ...'],
-                    'pluginOptions' => [
-                        'autoclose' => true
-                    ]
-                ]
-            ])
-            ->label('วันที่ขอซื้อ');
+        // echo $form
+        //     ->field($model, 'data_json[po_create_date]')
+        //     ->widget(DateControl::classname(), [
+        //         'type' => DateControl::FORMAT_DATE,
+        //         'language' => 'th',
+        //         'widgetOptions' => [
+        //             'options' => ['placeholder' => 'ระบุวันที่ขอซื้อ ...'],
+        //             'pluginOptions' => [
+        //                 'autoclose' => true
+        //             ]
+        //         ]
+        //     ])
+        //     ->label('วันที่ขอซื้อ');
     ?>
 </div>
         <div class="col-6">
-            <?php
-echo $form
-    ->field($model, 'data_json[due_date]')
-    ->widget(DateControl::classname(), [
-        'type' => DateControl::FORMAT_DATE,
-        'language' => 'th',
-        'widgetOptions' => [
-            'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-            'pluginOptions' => [
-                'autoclose' => true
-            ]
-        ]
-    ])
-    ->label('วันที่ต้องการ');
-?>
+        <?=$form->field($model, 'data_json[due_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่ต้องการ');
+                ?>
 
 
     </div>
@@ -258,7 +205,7 @@ try {
     ?>
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
-<?php // $form->field($model, 'data_json[leader1]')->hiddenInput(['value' => $employee->leaderUser()['leader1']])->label(false) ?>
+
 <?= $form->field($model, 'data_json[item_type]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
@@ -284,31 +231,80 @@ try {
 <?php ActiveForm::end(); ?>
 
 
+
 <?php
+    $ref = $model->ref;
+    $urlUpload = Url::to('/filemanager/uploads/single');
+    $getAvatar = Url::to(['/filemanager/uploads/show','id' => 1]);
+    $js = <<<JS
 
 
-// $js = <<< JS
-
-//     \$('#form-order').on('beforeSubmit', function (e) {
-//         var form = \$(this);
-//         \$.ajax({
-//             url: form.attr('action'),
-//             type: 'post',
-//             data: form.serialize(),
-//             dataType: 'json',
-//             success: async function (response) {
-//                 form.yiiActiveForm('updateMessages', response, true);
-//                 if(response.status == 'success') {
-//                     closeModal()
-//                     success()
-//                     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-//                 }
-//             }
-//         });
-//         return false;
-//     });
 
 
-//     JS;
-// $this->registerJS($js, View::POS_END)
-?>
+\$('#form-order').on('beforeSubmit', function (e) {
+                var form = \$(this);
+                \$.ajax({
+                    url: form.attr('action'),
+                    type: 'post',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: async function (response) {
+                        console.log(response)
+                        form.yiiActiveForm('updateMessages', response, true);
+                        if(response.status == 'success') {
+                            // closeModal()
+                            // success()
+                            try {
+                                // loadRepairHostory()
+                            } catch (error) {
+                                
+                            }
+                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                        }
+                    }
+                });
+                return false;
+            });
+
+
+
+    var thaiYear = function (ct) {
+        var leap=3;  
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+        if(ct){  
+            var yearL=new Date(ct).getFullYear()-543;  
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+            if(leap==2){  
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+            }  
+        }              
+        this.setOptions({  
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+        })                
+    };    
+     
+   
+    $("#order-data_json-pr_create_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });   
+
+    $("#order-data_json-due_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });       
+
+
+JS;
+$this->registerJS($js, View::POS_END)
+    ?>

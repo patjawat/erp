@@ -65,6 +65,63 @@ class PqOrderController extends Controller
         }
     }
 
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['order_date'])) {
+                preg_replace('/\D/', '', $model->data_json['order_date']) == "" ? $model->addError('data_json[order_date]', 'ลงวันที่ต้องระบุ') : null;
+            }
+            if (isset($model->data_json['order'])) {
+                $model->data_json['order'] == "" ? $model->addError('data_json[order]', 'ต้องระบุคำสั่ง') : null;
+            }
+
+            if (isset($model->data_json['order_number'])) {
+                $model->data_json['order_number'] == "" ? $model->addError('data_json[order_number]', 'ต้องระบุเลขที่คำสั่ง') : null;
+            }
+            
+            if (isset($model->data_json['pq_purchase_type'])) {
+                $model->data_json['pq_purchase_type'] == "" ? $model->addError('data_json[pq_purchase_type]', 'ต้องระบุวิธีซื้อหรือจ้าง') : null;
+            }
+
+            if (isset($model->data_json['pq_method_get'])) {
+                $model->data_json['pq_method_get'] == "" ? $model->addError('data_json[pq_method_get]', 'ต้องระบุวิธีจัดหา') : null;
+            }
+
+            if (isset($model->data_json['pq_budget_group'])) {
+                $model->data_json['pq_budget_group'] == "" ? $model->addError('data_json[pq_budget_group]', 'ต้องระบุหมวดเงินที่ใช้') : null;
+            }
+
+            if (isset($model->data_json['pq_budget_type'])) {
+                $model->data_json['pq_budget_type'] == "" ? $model->addError('data_json[pq_budget_type]', 'ต้องระบุประเภทเงิน') : null;
+            }
+
+            if (isset($model->data_json['pq_reason'])) {
+                $model->data_json['pq_reason'] == "" ? $model->addError('data_json[pq_reason]', 'ต้องระบุเหตุผลความจำเป็น') : null;
+            }
+            if (isset($model->data_json['pq_condition'])) {
+                $model->data_json['pq_condition'] == "" ? $model->addError('data_json[pq_condition]', 'ต้องระบุเงื่อนไข') : null;
+            }
+            if (isset($model->data_json['pq_consideration'])) {
+                $model->data_json['pq_consideration'] == "" ? $model->addError('data_json[pq_consideration]', 'ต้องระบุการพิจารณา') : null;
+            }
+            
+
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
     /**
      * Displays a single Order model.
      * @param int $id ID
@@ -137,8 +194,12 @@ class PqOrderController extends Controller
                 if ($model->pq_number == '') {
                     $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 }  // validate all models
+
+                $model->data_json = [
+                    'order_date' =>  AppHelper::convertToGregorian($model->data_json['order_date']),
+                ];
+
                 $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
-                // return $model->data_json;
                 if($model->status == 1){
                     $model->status = 2;
                 }
@@ -153,6 +214,15 @@ class PqOrderController extends Controller
         } else {
             $model->loadDefaultValues();
 
+            try {
+                $model->data_json = [
+                    'order_date' =>  AppHelper::convertToThai($model->data_json['order_date']),
+                ];
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+     
+            $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
             if ($this->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [

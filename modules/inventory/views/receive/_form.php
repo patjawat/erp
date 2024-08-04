@@ -5,6 +5,8 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
 // use kartik\date\DatePicker;
 use kartik\datecontrol\DateControl;
+use iamsaint\datetimepicker\Datetimepicker;
+
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use kato\AirDatepicker;
@@ -29,58 +31,38 @@ $receive_type_name = $model->receive_type == 'receive' ? 'รับเข้า�
 
     <?php $form = ActiveForm::begin([
         'id' => 'form-rc',
-        'fieldConfig' => ['options' => ['class' => 'form-group mb-3']]
+        'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
+        'validationUrl' => ['/inventory/receive/create-validator']
+
     ]); ?>
 
     <div class="row">
         <div class="col-12">
-            <?php
-                echo $form
-                    ->field($model, 'data_json[to_stock_date]')
-                    ->widget(DateControl::classname(), [
-                        'type' => DateControl::FORMAT_DATE,
-                        'language' => 'th',
-                        'ajaxConversion' => false,
-                        'options' => [
-                            'pluginOptions' => [
-                                'autoclose' => true,
-                                'format' => 'dd/mm/yyyy',
-                                'language' => 'th',
-                                'todayHighlight' => true,
-                                'calendarWeeks' => true,
-                                'todayBtn' => 'linked',
-                                'daysOfWeekHighlighted' => [0, 6],
-                                'orientation' => 'bottom left',
-                                'startDate' => '01/01/2564',  // ใส่วันที่เริ่มต้นที่เป็น พ.ศ.
-                                'endDate' => '31/12/2564',  // ใส่วันที่สิ้นสุดที่เป็น พ.ศ.
-                                'yearRange' => '2450:2564',  // ใส่ช่วงปีที่เป็น พ.ศ.
-                            ],
-                            'pluginEvents' => [
-                                'changeDate' => "function(e) {
-                    var year = e.date.getFullYear();
-                    e.date.setFullYear(year - 543);
-                    \$('#yourmodel-your_date_field').val(e.date.toISOString().slice(0, 10));
-                }",
-                            ],
-                        ],
-                    ])
-                    ->label('วันรับเข้าคลัง');
-            ?>
-            <?php
-                echo $form
-                    ->field($model, 'data_json[checked_date]')
-                    ->widget(DateControl::classname(), [
-                        'type' => DateControl::FORMAT_DATE,
-                        'language' => 'th',
-                        'widgetOptions' => [
-                            'options' => ['placeholder' => 'ระบุวันที่กรรมการคลังตรวจรับ ...'],
-                            'pluginOptions' => [
-                                'autoclose' => true
-                            ]
-                        ]
-                    ])
-                    ->label('วันที่กรรมการคลังตรวจรับ');
-            ?>
+        <?=$form->field($model, 'data_json[to_stock_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันรับเข้าคลัง');
+                ?>
+           
+           <?=$form->field($model, 'data_json[checked_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่กรรมการคลังตรวจรับ');
+                ?>
+           
+        
         </div>
         <div class="col-6">
             <div class="mb-3 highlight-addon has-success">
@@ -136,6 +118,44 @@ $receive_type_name = $model->receive_type == 'receive' ? 'รับเข้า�
                                 });
                                 return false;
                             });
+
+
+                    var thaiYear = function (ct) {
+                    var leap=3;  
+                    var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+                    if(ct){  
+                        var yearL=new Date(ct).getFullYear()-543;  
+                        leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+                        if(leap==2){  
+                            dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+                        }  
+                    }              
+                    this.setOptions({  
+                        i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+                    })                
+                };    
+                
+            
+                $("#stock-data_json-to_stock_date").datetimepicker({
+                    timepicker:false,
+                    format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+                    lang:'th',  // แสดงภาษาไทย
+                    onChangeMonth:thaiYear,          
+                    onShow:thaiYear,                  
+                    yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+                    closeOnDateSelect:true,
+                }); 
+
+                $("#stock-data_json-checked_date").datetimepicker({
+                    timepicker:false,
+                    format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+                    lang:'th',  // แสดงภาษาไทย
+                    onChangeMonth:thaiYear,          
+                    onShow:thaiYear,                  
+                    yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+                    closeOnDateSelect:true,
+                }); 
+
             JS;
         $this->registerJS($js)
     ?>

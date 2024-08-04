@@ -92,13 +92,13 @@ echo $form
 
 <?php
 $storeProductUrl = Url::to(['/inventory/store/product']);
-$viewCartUrl = Url::to(['/inventory/store/view-cart']);
+$getOrderUrl = Url::to(['/inventory/store/view-cart']);
 $deleteItemUrl = Url::to(['/inventory/store/delete']);
 $updateItemUrl = Url::to(['/inventory/store/update']);
 $js = <<< JS
 
     getStoreProduct()
-    getViewCar()
+    getOrder()
     async function getStoreProduct()
     {
     await $.ajax({
@@ -111,14 +111,14 @@ $js = <<< JS
     });
     }
 
-    async function getViewCar()
+    async function getOrder()
     {
     await $.ajax({
         type: "get",
-        url: "$viewCartUrl",
+        url: "$getOrderUrl",
         dataType: "json",
         success: function (res) {
-            $('#viewCartShow').html(res.content)
+            $('#viewOrder').html(res.content)
         }
     });
     }

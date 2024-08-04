@@ -99,19 +99,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?= $form->field($model, 'qty_check')->textInput()->label(false) ?>
-<?= $form->field($model, 'name')->textInput()->label(false) ?>
-<?= $form->field($model, 'category_id')->textInput()->label(false); ?>
-<?= $form->field($model, 'po_number')->textInput()->label(false); ?>
-<?= $form->field($model, 'to_warehouse_id')->textInput()->label(false); ?>
-<?= $form->field($model, 'data_json[product_name]')->textInput(['value' => $model->orderItem->product->title])->label(false); ?>
-<?= $form->field($model, 'data_json[unit]')->textInput(['value' => isset($model->orderItem->product->data_json['unut']) ? $model->orderItem->product->data_json['unut'] : null])->label(false); ?>
-<?= $form->field($model, 'data_json[product_type_name]')->textInput(['value' => $model->orderItem->product->productType->title])->label(false); ?>
+<?= $form->field($model, 'qty_check')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'category_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'po_number')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'to_warehouse_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'data_json[product_name]')->hiddenInput(['value' => $model->orderItem->product->title])->label(false); ?>
+<?= $form->field($model, 'data_json[unit]')->hiddenInput(['value' => isset($model->orderItem->product->data_json['unut']) ? $model->orderItem->product->data_json['unut'] : null])->label(false); ?>
+<?= $form->field($model, 'data_json[product_type_name]')->hiddenInput(['value' => $model->orderItem->product->productType->title])->label(false); ?>
 
-<?= $form->field($model, 'data_json[po_qty]')->textInput()->label(false); ?>
+<?= $form->field($model, 'data_json[po_qty]')->hiddenInput()->label(false); ?>
 
-<?= $form->field($model, 'asset_item')->textInput()->label('asset_item'); ?>
-<?= $form->field($model, 'movement_type')->textInput()->label(false); ?>
+<?= $form->field($model, 'asset_item')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'movement_type')->hiddenInput()->label(false); ?>
 
 <div class="d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow rounded-pill', 'id' => 'summit']) ?>

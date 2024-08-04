@@ -9,6 +9,7 @@ use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use app\components\AppHelper;
 use Yii;
 
 /**
@@ -34,6 +35,7 @@ class GrOrderController extends Controller
         );
     }
 
+
     /**
      * Lists all Order models.
      *
@@ -58,8 +60,11 @@ class GrOrderController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $requiredName = 'ต้องระบุ';
-            $model->data_json['do_date'] == '' ? $model->addError('data_json[do_date]', 'ต้องระบุอาการ...') : null;
-            $model->data_json['do_number'] == '' ? $model->addError('data_json[do_number]', 'ต้องระบุอาการ...') : null;
+
+            if (isset($model->data_json['gr_date'])) {
+                preg_replace('/\D/', '', $model->data_json['gr_date']) == "" ? $model->addError('data_json[gr_date]', $requiredName) : null;
+            }
+            $model->data_json['gr_number'] == '' ? $model->addError('data_json[gr_number]', 'ต้องระบุอาการ...') : null;
             $model->data_json['order_item_checker'] == '' ? $model->addError('data_json[order_item_checker]', 'ต้องระบุอาการ...') : null;
 
             foreach ($model->getErrors() as $attribute => $errors) {
@@ -118,18 +123,21 @@ class GrOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $oldObj = $model->data_json;
         $thaiYear = substr((date('Y') + 543), 2);
+        $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->gr_number == '') {
                     $model->gr_number = \mdm\autonumber\AutoNumber::generate('GR-' . $thaiYear . '????');
                 }  // validate all models
-                $model->data_json = ArrayHelper::merge(
-                    $oldObj,
-                    $model->data_json,
-                );
+                
+                $model->data_json = [
+                    'gr_date' =>  AppHelper::convertToGregorian($model->data_json['gr_date']),
+                    'order_item_checker' => $model->data_json['order_item_checker']
+                ];
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                
                 if($model->data_json['order_item_checker'] == 'Y'){
                     $model->status = 4;
                 }else{
@@ -146,6 +154,13 @@ class GrOrderController extends Controller
             }
         } else {
             $model->loadDefaultValues();
+            try {
+                $model->data_json = [
+                    'gr_date' =>  AppHelper::convertToThai($model->data_json['gr_date']),
+                ];
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
 
         if ($this->request->isAjax) {

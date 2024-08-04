@@ -51,7 +51,7 @@ class AppHelper extends Component
 
     // แปลง ค.ศ. เป็น พ.ศ.
 
-    public static function convertToThaiBuddhist($date)
+    public static function convertToThai($date)
     {
         if ($date !== null) {
             $dateTime = new DateTime($date);

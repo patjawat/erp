@@ -39,6 +39,60 @@ class ReceiveController extends Controller
         );
     }
 
+
+        // ตรวจสอบความถูกต้อง
+        public function actionCreateValidator()
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = new Stock();
+            $requiredName = "ต้องระบุ";
+            if ($this->request->isPost && $model->load($this->request->post())) {
+    
+            if (isset($model->data_json['to_stock_date'])) {
+                preg_replace('/\D/', '', $model->data_json['to_stock_date']) == "" ? $model->addError('data_json[to_stock_date]', $requiredName) : null;
+            }
+
+            if (isset($model->data_json['checked_date'])) {
+                preg_replace('/\D/', '', $model->data_json['checked_date']) == "" ? $model->addError('data_json[checked_date]', $requiredName) : null;
+            }
+            }
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+
+            // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Stock();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $requiredName = 'ต้องระบุ';
+            // ตรวจสอบตำแหน่ง
+            if ($model->name == 'receive_item') {
+                $model->qty == '' ? $model->addError('qty', $requiredName) : null;
+                $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
+                // $model->data_json['position_name'] == '' ? $model->addError('data_json[position_name]', $requiredName) : null;
+                // $model->data_json['position_number'] == '' ? $model->addError('data_json[position_number]', $requiredName) : null;
+                if ($model->po_number) {
+                    $model->qty > $model->qty_check ? $model->addError('qty', 'เกินจำนวนที่สั่งซื้อ(' . $model->qty_check . ')') : null;
+                }
+            }
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+    
+        
     /**
      * Lists all ir models.
      *
@@ -540,31 +594,5 @@ class ReceiveController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    // ตรวจสอบความถูกต้อง
-    public function actionValidator()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Stock();
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            $requiredName = 'ต้องระบุ';
-            // ตรวจสอบตำแหน่ง
-            if ($model->name == 'receive_item') {
-                $model->qty == '' ? $model->addError('qty', $requiredName) : null;
-                $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
-                // $model->data_json['position_name'] == '' ? $model->addError('data_json[position_name]', $requiredName) : null;
-                // $model->data_json['position_number'] == '' ? $model->addError('data_json[position_number]', $requiredName) : null;
-                if ($model->po_number) {
-                    $model->qty > $model->qty_check ? $model->addError('qty', 'เกินจำนวนที่สั่งซื้อ(' . $model->qty_check . ')') : null;
-                }
-            }
-
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-            }
-            if (!empty($result)) {
-                return $this->asJson($result);
-            }
-        }
-    }
 }

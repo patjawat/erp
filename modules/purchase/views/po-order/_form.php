@@ -3,6 +3,7 @@
 use app\modules\purchase\models\Order;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
+use iamsaint\datetimepicker\Datetimepicker;
 use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
 use yii\helpers\Html;
@@ -29,90 +30,98 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
                     'action' => ['/purchase/po-order/update', 'id' => $model->id],
-                    // 'type' => ActiveForm::TYPE_HORIZONTAL,
-                    'fieldConfig' => ['labelSpan' => 4, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
+                    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+                    'validationUrl' => ['/purchase/po-order/validator'],
                 ]); ?>
 
 <div class="row">
-<div class="col-6">
-<?= $form->field($model, 'data_json[po_date]')
-                                ->widget(DateControl::classname(), [
-                                    'type' => DateControl::FORMAT_DATE,
-                                    'language' => 'th',
-                                    'widgetOptions' => [
-                                        'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                                        'pluginOptions' => [
-                                            'autoclose' => true
-                                        ]
-                                    ]
-                                ])->label('ลงวันที่') ?>
+    <div class="col-6">
+    <?=$form->field($model, 'data_json[po_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ลงวันที่');
+                ?>
+     
+     <?=$form->field($model, 'data_json[delivery_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('กำหนดวันส่งมอบ');
+                ?>
+     
+      
+        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
+    </div>
+    <div class="col-6">
 
-<?= $form->field($model, 'data_json[delivery_date]')->widget(DateControl::classname(), [
-                                    'type' => DateControl::FORMAT_DATE,
-                                    'language' => 'th',
-                                    'widgetOptions' => [
-                                        'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                                        'pluginOptions' => [
-                                            'autoclose' => true
-                                        ]
-                                    ]
-                                ])->label('กำหนดวันส่งมอบ') ?>
-                        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
-</div>
-<div class="col-6">
-<?= $form->field($model, 'data_json[order_receipt_date]')->widget(DateControl::classname(), [
-                                    'type' => DateControl::FORMAT_DATE,
-                                    'language' => 'th',
-                                    'widgetOptions' => [
-                                        'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                                        'pluginOptions' => [
-                                            'autoclose' => true
-                                        ]
-                                    ]
-                                ])->label('วันที่รับใบสั่ง') ?>
+    <?=$form->field($model, 'data_json[order_receipt_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่รับใบสั่ง');
+                ?>
+     
 
-<?= $form->field($model, 'data_json[warranty]')
-                                                    ->widget(DateControl::classname(), [
-                                    'type' => DateControl::FORMAT_DATE,
-                                    'language' => 'th',
-                                    'widgetOptions' => [
-                                        'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                                        'pluginOptions' => [
-                                            'autoclose' => true
-                                        ]
-                                    ]
-                                ])->label('การรับประกัน') ?>
-                                    <?= $form->field($model, 'data_json[signing_date]')->widget(DateControl::classname(), [
-                                    'type' => DateControl::FORMAT_DATE,
-                                    'language' => 'th',
-                                    'widgetOptions' => [
-                                        'options' => ['placeholder' => 'ระบุวันที่ดำเนินการ ...'],
-                                        'pluginOptions' => [
-                                            'autoclose' => true
-                                        ]
-                                    ]
-                                ])->label('วันที่ลงนาม') ?>
-</div>
-</div>
-                    
-                     
-                    
-                    
+     <?=$form->field($model, 'data_json[warranty_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('การรับประกัน');
+                ?>
+     
 
-               
-        <div class="row d-flex justify-content-center mt-5">
-            <div class="col-md-4 gap-3">
-                <div class="d-grid gap-2">
-                    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
-                </div>
-            </div>
+     <?=$form->field($model, 'data_json[signing_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่ลงนาม');
+                ?>
+     
+
+    </div>
+</div>
+
+<?= $form->field($model, 'data_json[po_recipient]')->textInput()->label('ผู้รับใบสั่งซื้อ') ?>
+
+<div class="row d-flex justify-content-center mt-5">
+    <div class="col-md-4 gap-3">
+        <div class="d-grid gap-2">
+            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
         </div>
-        <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
+    </div>
+</div>
+<?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
 
 
-        <?php ActiveForm::end(); ?>
+<?php ActiveForm::end(); ?>
 
 
 <?php
@@ -142,9 +151,78 @@ $js = <<< JS
         });
         return false;
     });
+
+
+    var thaiYear = function (ct) {
+        var leap=3;  
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+        if(ct){  
+            var yearL=new Date(ct).getFullYear()-543;  
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+            if(leap==2){  
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+            }  
+        }              
+        this.setOptions({  
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+        })                
+    };    
+     
+   
+    $("#order-data_json-po_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    }); 
+    
+    $("#order-data_json-delivery_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });   
+
+    $("#order-data_json-signing_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });   
+
+    $("#order-data_json-order_receipt_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });   
+
+    $("#order-data_json-warranty").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    });   
+
+
+
     JS;
 $this->registerJS($js)
 ?>
 
 <?php  Pjax::end() ?>
-

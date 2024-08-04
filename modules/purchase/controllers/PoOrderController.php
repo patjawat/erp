@@ -10,6 +10,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;
+use app\components\AppHelper;
 
 /**
  * PoOrderController implements the CRUD actions for Order model.
@@ -34,6 +35,55 @@ class PoOrderController extends Controller
         );
     }
 
+
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['po_date'])) {
+                preg_replace('/\D/', '', $model->data_json['po_date']) == "" ? $model->addError('data_json[po_date]', 'ลงวันที่ต้องระบุ') : null;
+            }
+
+            if (isset($model->data_json['credit_days'])) {
+                $model->data_json['credit_days'] == "" ? $model->addError('data_json[credit_days]', 'ครดิต (วัน)ต้องระบุ') : null;
+            }
+
+            if (isset($model->data_json['order_receipt_date'])) {
+                preg_replace('/\D/', '', $model->data_json['order_receipt_date']) == "" ? $model->addError('data_json[order_receipt_date]', 'วันที่รับใบสั่งต้องระบุ') : null;
+            }
+
+
+            if (isset($model->data_json['delivery_date'])) {
+                preg_replace('/\D/', '', $model->data_json['delivery_date']) == "" ? $model->addError('delivery_date[delivery_date]', 'กำหนดวันส่งมอบต้องระบุ') : null;
+            }
+
+
+            if (isset($model->data_json['warranty_date'])) {
+                preg_replace('/\D/', '', $model->data_json['warranty_date']) == "" ? $model->addError('data_json[warranty_date]', 'การรับประกันต้องระบุ') : null;
+            }
+            if (isset($model->data_json['signing_date'])) {
+                preg_replace('/\D/', '', $model->data_json['signing_date']) == "" ? $model->addError('data_json[signing_date]', 'วันที่ลงนามต้องระบุ') : null;
+            }
+
+
+            if (isset($model->data_json['po_recipient'])) {
+                $model->data_json['po_recipient'] == "" ? $model->addError('data_json[po_recipient]', 'ผู้รับใบสั่งซื้อต้องระบุ') : null;
+            }
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
     /**
      * Lists all Order models.
      *
@@ -51,6 +101,7 @@ class PoOrderController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
 
     /**
      * Displays a single Order model.
@@ -127,11 +178,21 @@ class PoOrderController extends Controller
                 if ($model->po_number == '') {
                     $model->po_number = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
                 }  // validate all models
-                $model->data_json = ArrayHelper::merge(
-                    $oldObj,
-                    $model->data_json,
-                );
+                // $model->data_json = ArrayHelper::merge(
+                //     $oldObj,
+                //     $model->data_json,
+                // );
                 // return $model->data_json;
+
+                // $oldObj = $model->data_json;
+                $model->data_json = [
+                    'po_date' =>  AppHelper::convertToGregorian($model->data_json['po_date']),
+                    'delivery_date' =>  AppHelper::convertToGregorian($model->data_json['delivery_date']),
+                    'order_receipt_date' =>  AppHelper::convertToGregorian($model->data_json['order_receipt_date']),
+                    'warranty_date' =>  AppHelper::convertToGregorian($model->data_json['warranty_date']),
+                    'signing_date' =>  AppHelper::convertToGregorian($model->data_json['signing_date']),
+                ];
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->status = 3;
                 $model->save(false);
 
@@ -146,16 +207,27 @@ class PoOrderController extends Controller
                     ->bindValues([':category_id' => $model->id])
                     ->execute();
 
-                    return [
-                        'status' => 'success',
-                        'container' => '#purchase-container',
-                    ];
-    
+                return [
+                    'status' => 'success',
+                    'container' => '#purchase-container',
+                ];
             } else {
                 return false;
             }
         } else {
             $model->loadDefaultValues();
+            try {
+                $model->data_json = [
+                    'po_date' =>  AppHelper::convertToThai($model->data_json['po_date']),
+                    'delivery_date' =>  AppHelper::convertToThai($model->data_json['delivery_date']),
+                    'order_receipt_date' =>  AppHelper::convertToThai($model->data_json['order_receipt_date']),
+                    'warranty_date' =>  AppHelper::convertToThai($model->data_json['warranty_date']),
+                    'signing_date' =>  AppHelper::convertToThai($model->data_json['signing_date']),
+                ];
+                //code...
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
 
         if ($this->request->isAjax) {

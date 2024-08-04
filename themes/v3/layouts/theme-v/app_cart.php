@@ -21,13 +21,9 @@ $products = $cart->getItems();
                 data-bs-content="รายการที่ขอเบิกวัสดุ จจากคลังหลัก"> 
     <i class="fa-solid fa-cart-shopping"></i>
     </div>
-    
+
         <span class="badge bg-danger badge-pill notify-icon-badge bg-danger rounded-pill text-white" id="countItemCart" ></span>
     </button>
-    <span class="dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
-
-    </span>
-
     <div class="dropdown-menu-lg dropdown-menu-right dropdown-menu" style="width: 600px;">
         <div id="viewCartShow"></div>
         <div class="d-flex justify-content-center">
@@ -70,6 +66,7 @@ $js = <<< JS
             $('#viewCartShow').html(res.content)
             if(res.countItem == 0){
                 $('#viewCart').hide()
+                // $('#viewCart').dropdown('toggle');
                 $('#countItemCart').hide()
             }else{
                 $('#viewCart').show()

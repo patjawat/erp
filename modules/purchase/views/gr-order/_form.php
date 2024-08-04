@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use kartik\widgets\ActiveForm;
 use kartik\datecontrol\DateControl;
+use iamsaint\datetimepicker\Datetimepicker;
 use yii\web\View;
 
 /** @var yii\web\View $this */
@@ -23,7 +24,7 @@ use yii\web\View;
                 <img class="avatar" src="/img/placeholder-img.jpg" alt="">
                 <div class="avatar-detail">
                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
-                        <?= $model->data_json['vendor_name'] ?>
+                        <?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?>
                     </h6>
                     <p class="text-primary mb-0 fs-13">
                         <?=isset($model->data_json['vendor_address']) ? $model->data_json['vendor_address'] : '-'?></p>
@@ -34,7 +35,7 @@ use yii\web\View;
                     <tbody>
                         <tr class="">
                             <td style="width: 150px;">กำหนดวันส่งมอบ</td>
-                            <td><?=$model->data_json['delivery_date']?></td>
+                            <td><?php // $model->data_json['delivery_date']?></td>
                         </tr>
                         <tr class="">
                             <td style="width: 108px;">ใบสั่งซื้อเลขที่</td>
@@ -62,21 +63,21 @@ use yii\web\View;
                 </div>
                 <div class="row mt-4">
                     <div class="col-6">
-                        <?= $form->field($model, 'data_json[do_date]')->widget(DateControl::classname(), [
-'type' => DateControl::FORMAT_DATE,
-'language' => 'th',
-'widgetOptions' => [
-    'options' => ['placeholder' => 'ระบุวันที่ตรวจรับ ...'],
-    'pluginOptions' => [
-        'autoclose' => true
-        ]
-        ]
-        ])->label('วันที่ตรวจรับ') ?>
-
+                    <?=$form->field($model, 'data_json[gr_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่ตรวจรับ');
+                ?>
 
                     </div>
                     <div class="col-6">
-                        <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า') ?>
+                        <?= $form->field($model, 'data_json[gr_number]')->textInput()->label('เลขที่ส่งสินค้า') ?>
                     </div>
                 </div>
 
@@ -162,6 +163,33 @@ $js = <<< JS
         });
         return false;
         });
+
+
+        var thaiYear = function (ct) {
+        var leap=3;  
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+        if(ct){  
+            var yearL=new Date(ct).getFullYear()-543;  
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+            if(leap==2){  
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+            }  
+        }              
+        this.setOptions({  
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+        })                
+    };    
+     
+   
+    $("#order-data_json-gr_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    }); 
 
     JS;
 $this->registerJS($js,View::POS_END)

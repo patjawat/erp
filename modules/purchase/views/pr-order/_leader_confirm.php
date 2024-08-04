@@ -22,7 +22,9 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $form = ActiveForm::begin([
-    'id' => 'form-leader-confirm'
+    'id' => 'form-leader-confirm',
+    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/purchase/pr-order/checkervalidator'],
 ])
 ?>
 
