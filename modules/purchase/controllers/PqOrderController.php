@@ -51,7 +51,7 @@ class PqOrderController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/purchase/views/order/list', [
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),
@@ -186,8 +186,8 @@ class PqOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $oldObj = $model->data_json;
         $thaiYear = substr((date('Y') + 543), 2);
+        $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -195,11 +195,12 @@ class PqOrderController extends Controller
                     $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
                 }  // validate all models
 
-                $model->data_json = [
+                $convertDate =[
                     'order_date' =>  AppHelper::convertToGregorian($model->data_json['order_date']),
                 ];
 
-                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
+                $model->data_json =  ArrayHelper::merge($oldObj,$convertDate,$model->data_json,);
+
                 if($model->status == 1){
                     $model->status = 2;
                 }
@@ -213,6 +214,7 @@ class PqOrderController extends Controller
             }
         } else {
             $model->loadDefaultValues();
+            $oldObj = $model->data_json;
 
             try {
                 $model->data_json = [

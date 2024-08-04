@@ -118,7 +118,7 @@ class PrOrderController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/purchase/views/order/list', [
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),
@@ -211,9 +211,10 @@ class PrOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                $oldObj = $model->data_json;
+
                 // validate all models
                 $model->data_json = [
                     'pr_create_date' =>  AppHelper::convertToGregorian($model->data_json['pr_create_date']),
@@ -222,12 +223,6 @@ class PrOrderController extends Controller
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
-                // return $this->redirect(['view', 'id' => $model->id]);
-                // Yii::$app->response->format = Response::FORMAT_JSON;
-                // return [
-                //     'status' => 'success',
-                //     'container' => '#purchase-container',
-                // ];
             } else {
                 return false;
             }
@@ -235,6 +230,7 @@ class PrOrderController extends Controller
             // Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->loadDefaultValues();
+            $oldObj = $model->data_json;
             $model->data_json = [
                 'pr_create_date' =>  AppHelper::convertToThai($model->data_json['pr_create_date']),
                 'due_date' =>  AppHelper::convertToThai($model->data_json['due_date'])

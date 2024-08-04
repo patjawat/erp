@@ -178,21 +178,18 @@ class PoOrderController extends Controller
                 if ($model->po_number == '') {
                     $model->po_number = \mdm\autonumber\AutoNumber::generate('PO-' . $thaiYear . '????');
                 }  // validate all models
-                // $model->data_json = ArrayHelper::merge(
-                //     $oldObj,
-                //     $model->data_json,
-                // );
-                // return $model->data_json;
-
-                // $oldObj = $model->data_json;
-                $model->data_json = [
+              
+                $convertDate = [
                     'po_date' =>  AppHelper::convertToGregorian($model->data_json['po_date']),
                     'delivery_date' =>  AppHelper::convertToGregorian($model->data_json['delivery_date']),
                     'order_receipt_date' =>  AppHelper::convertToGregorian($model->data_json['order_receipt_date']),
                     'warranty_date' =>  AppHelper::convertToGregorian($model->data_json['warranty_date']),
                     'signing_date' =>  AppHelper::convertToGregorian($model->data_json['signing_date']),
                 ];
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+
+
+                $model->data_json =  ArrayHelper::merge($oldObj,$convertDate,$model->data_json,);
+
                 $model->status = 3;
                 $model->save(false);
 

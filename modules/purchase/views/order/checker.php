@@ -59,7 +59,6 @@ use app\components\SiteHelper;
                 <!-- Start Flex Contriler -->
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="text-truncate">
-                        <h6>ผู้ตรวจสอบ</h6>
                         <?= $model->getMe()['avatar'] ?>
                     </div>
                 </div>

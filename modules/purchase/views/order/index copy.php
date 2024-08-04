@@ -52,9 +52,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" style="width:280px">ผู้ขอซื้อ</th>
                         <th class="fw-semibold">ประเภท/มูลค่า</th>
                         <th class="fw-semibold">ผู้ขาย</th>
-                        <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
-                        <th class="fw-semibold" style="width: 200px;">ผู้เห็นชอบ</th>
-                        <th class="fw-semibold"  style="width: 300px;">ความคืบหน้า</th>
+                        <th class="fw-semibold" style="width: 160px;">กรรมการตรวจรับ</th>
+                        <th class="fw-semibold" style="width: 160px;">ผู้อนุมัติ</th>
+                        <th class="fw-semibold" style="width: 160px;">จนท.พัสดุ</th>
+                        <th class="fw-semibold" style="width: 160px;">ผู้อำนวยการ</th>
+                        <th class="fw-semibold">ความคืบหน้า</th>
                         <th class="fw-semibold text-center" style="width:176px">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -63,17 +65,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="">
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                         <td class="fw-light align-middle">
-                        <div class="d-felx flex-column">
-                                <div class="text-muted mb-0 fs-14"><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?></div>
-                                <div class="fw-semibold ">
-                                    <?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?>    
-                                </div>
-                                
+                        <div class="fw-semibold">
+                            <span class="text-muted mb-0 fs-14"><?=$model->data_json['order_type_name']?></span>
+                            <?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?>
                         </div>
                         </td>
-                        <td class="fw-light align-middle"><?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?></td>
+                        <td class="fw-light align-middle"><?= $model->data_json['vendor_name'] ?></td>
                         <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
                         <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
+                        <td class="fw-light align-middle"> <?=$model->showChecker()['leader']?></td>
+                        <td class="fw-light align-middle"> <?=$model->showChecker()['leader']?></td>
                         <td class="fw-light align-bottom">
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">

@@ -175,7 +175,80 @@ class Order extends \yii\db\ActiveRecord
     //แสดงข้อมูลผู่ตรวจสอบ
     public function showChecker()
     {
-            // $charker
+           return [
+            'leader' => $this->getCheckerLeader(),
+            'officer' => $this->getCheckerOfficer(),
+           ];
+    }
+
+   
+    public function getCheckerLeader()
+    {
+        try {
+            $userId = $this->data_json['leader1'];
+        $emp = $this->getEmp($userId);
+        if($this->data_json['pr_leader_confirm']  == 'Y'){
+            $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
+        }else{
+            $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+        }
+        return '<div class="d-flex">'. $emp['avatar'] . '
+            <div class="avatar-detail text-truncate">
+                <h6 class="mb-1 fs-13">'. $emp['fullname'] . '</h6>
+                <p class="text-muted mb-0 fs-13">' . $text.'</p>
+            </div>
+        </div>';
+        } catch (\Throwable $th) {
+            return null;
+        }
+       
+    }
+
+    public function getCheckerOfficer()
+    {
+        try {
+
+        $userId = $this->data_json['pr_officer_checker_id'];
+        $emp = $this->getEmp($userId);
+        if($this->data_json['pr_officer_checker']  == 'Y'){
+            $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
+        }else{
+            $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+        }
+        return '<div class="d-flex">'. $emp['avatar'] . '
+            <div class="avatar-detail text-truncate">
+                <h6 class="mb-1 fs-13">'. $emp['fullname'] . '</h6>
+                <p class="text-muted mb-0 fs-13">' . $text.'</p>
+            </div>
+        </div>';
+                    //code...
+                } catch (\Throwable $th) {
+                   return null;
+                }
+    }
+
+
+    public function getEmp($userId)
+    {
+
+        $employee = Employees::find()->where(['id' => $userId])->one();
+        $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
+        return [
+            'avatar' =>$img,
+            'department' => $employee->departmentName(),
+            'fullname' => $employee->fullname,
+        ];
+        // try {
+           
+        // } catch (\Throwable $th) {
+        //     return [
+        //         'avatar' => '',
+        //         'department' => '',
+        //         'fullname' => '',
+        //     ];
+        // }
+
+
     }
 
     public function orderAvatar()

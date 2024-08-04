@@ -132,11 +132,12 @@ class GrOrderController extends Controller
                     $model->gr_number = \mdm\autonumber\AutoNumber::generate('GR-' . $thaiYear . '????');
                 }  // validate all models
                 
-                $model->data_json = [
+                $convertDate = [
                     'gr_date' =>  AppHelper::convertToGregorian($model->data_json['gr_date']),
                     'order_item_checker' => $model->data_json['order_item_checker']
                 ];
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+
+                $model->data_json =  ArrayHelper::merge($oldObj,$convertDate,$model->data_json,);
                 
                 if($model->data_json['order_item_checker'] == 'Y'){
                     $model->status = 4;

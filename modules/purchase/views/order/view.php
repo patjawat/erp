@@ -97,7 +97,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <!-- Tab panes -->
                             <div class="tab-content p-0">
-                                <div id="home1" class="tab-pane <?=$model->data_json['pr_director_confirm'] == '' ? 'active' : null;?>">
+                                <div id="home1" class="tab-pane <?=(isset($model->data_json['pr_director_confirm']) && $model->data_json['pr_director_confirm'] == '') ? 'active' : null;?>">
                                     <?= $this->render('detail', ['model' => $model]) ?>
                                 </div>
                                 <div id="pq_detail" class="tab-pane <?=($model->status == 1 && $model->data_json['pr_director_confirm'] == 'Y') ? 'active' : null;?>">
