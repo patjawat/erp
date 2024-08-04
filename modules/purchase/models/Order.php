@@ -291,9 +291,14 @@ class Order extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-
+            $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
             return [
-                'avatar' => $this->orderAvatar(),
+                'avatar' => '<div class="d-flex">'. $img . '
+                <div class="avatar-detail text-truncate">
+                    <h6 class="mb-1 fs-13">'. $employee->fullname . '</h6>
+                    <p class="text-muted mb-0 fs-13">' . $employee->departmentName().'</p>
+                </div>
+            </div>',
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
