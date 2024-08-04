@@ -443,7 +443,7 @@ class ImportAssetController extends Controller
         }
     }
 
-    //นำเข้ทรัพย์สิน
+    //นำเข้าวัสดุ
     public function actionProduct()
     {
 

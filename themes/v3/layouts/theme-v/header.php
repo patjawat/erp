@@ -19,6 +19,15 @@ use app\components\UserHelper;
     cursor: pointer;
     background: #4070F4;
 }
+
+.custom-popover {
+    /* --bs-popover-max-width: 200px;
+  --bs-popover-border-color: var(--bs-primary);
+  --bs-popover-header-bg: var(--bs-secondary);
+  --bs-popover-header-color: var(--bs-white);
+  --bs-popover-body-padding-x: 1rem;
+  --bs-popover-body-padding-y: .5rem; */
+}
 </style>
 <header id="page-topbar" class="topbar-header">
     <div class="navbar-header">
@@ -71,13 +80,22 @@ use app\components\UserHelper;
                 </div>
             </div>
 
-<?=$this->render('app_service')?>
-<?=$this->render('app_manage')?>
-<?=$this->render('app_cart')?>
-            
+            <?=$this->render('app_service')?>
+            <?=$this->render('app_manage')?>
+                <?=$this->render('app_cart')?>
+            <div class="d-none d-lg-inline-flex ms-2" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="fa-solid fa-store"></i>',['/inventory/store'],['class' => 'btn header-item notify-icon','data' => [
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"right",
+                        "bs-title"=>"คลังวัสดุ/ครุภัณฑ์",
+                         "bs-content"=>"เบิกวัสดุ/ครุภัฑ์เพื่อใช้ใหน่วยงาน"
+                ]])?>
+            </div>
+
             <div class="d-none d-lg-inline-flex ms-2" data-aos="zoom-in" data-aos-delay="200">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
-                <i class="fa-solid fa-expand"></i>
+                    <i class="fa-solid fa-expand"></i>
                 </button>
             </div>
             <?=$this->render('notification');?>
@@ -123,3 +141,16 @@ use app\components\UserHelper;
         </div>
     </div>
 </header>
+
+
+<?php
+use yii\web\View;
+$js = <<< JS
+
+const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+// const exampleEl = document.getElementById('popStore')
+// const popover = new bootstrap.Popover(exampleEl, options)
+JS;
+$this->registerJS($js, View::POS_END);
+?>

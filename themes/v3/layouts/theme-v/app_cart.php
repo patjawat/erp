@@ -1,3 +1,4 @@
+
 <?php
 
 use yii\helpers\Url;
@@ -9,11 +10,19 @@ $products = $cart->getItems();
 
 
 ?>
+
 <div class="d-none d-lg-inline-flex ms-2 dropdown">
-    <button data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false"
-        class="btn header-item notify-icon">
-        <i class="fa-solid fa-cart-shopping"></i>
-        <span class="badge bg-danger badge-pill notify-icon-badge bg-danger rounded-pill text-white" id="countItemCart"></span>
+
+
+    <button id="viewCart" 
+    data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false" class="btn header-item notify-icon" id="viewCart" <?= ($cart->getCount() == 0) ? 'style="display:none"' : null?>>
+    <div data-bs-trigger="hover" data-bs-toggle="popover" data-bs-placement="right"
+                data-bs-custom-class="custom-popover" data-bs-title="รายการขอเบิก"
+                data-bs-content="รายการที่ขอเบิกวัสดุ จจากคลังหลัก"> 
+    <i class="fa-solid fa-cart-shopping"></i>
+    </div>
+    
+        <span class="badge bg-danger badge-pill notify-icon-badge bg-danger rounded-pill text-white" id="countItemCart" ></span>
     </button>
     <span class="dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
 
@@ -60,8 +69,10 @@ $js = <<< JS
         success: function (res) {
             $('#viewCartShow').html(res.content)
             if(res.countItem == 0){
+                $('#viewCart').hide()
                 $('#countItemCart').hide()
             }else{
+                $('#viewCart').show()
                 $('#countItemCart').show()
                 $('#countItemCart').html(res.countItem)
             }
@@ -100,3 +111,6 @@ $js = <<< JS
 JS;
 $this->registerJS($js, View::POS_END);
 ?>
+
+
+
