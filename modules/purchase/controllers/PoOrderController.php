@@ -60,7 +60,7 @@ class PoOrderController extends Controller
 
 
             if (isset($model->data_json['delivery_date'])) {
-                preg_replace('/\D/', '', $model->data_json['delivery_date']) == "" ? $model->addError('delivery_date[delivery_date]', 'กำหนดวันส่งมอบต้องระบุ') : null;
+                preg_replace('/\D/', '', $model->data_json['delivery_date']) == "" ? $model->addError('data_json[delivery_date]', 'กำหนดวันส่งมอบต้องระบุ') : null;
             }
 
 
