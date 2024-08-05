@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ['custom' => true, 'inline' => true]
     )->label(false);
 ?>
-<?= $form->field($model, 'data_json[pr_officer_checker_id]')->textInput(['value' => Yii::$app->user->id])->label('หมายเหตุ') ?>
+<?= $form->field($model, 'data_json[pr_officer_checker_id]')->hiddenInput(['value' => Yii::$app->user->id])->label(false) ?>
 <?= $form->field($model, 'data_json[pr_officer_checker_comment]')->textArea()->label('หมายเหตุ') ?>
 
 <div class="form-group mt-3 d-flex justify-content-center">
