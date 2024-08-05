@@ -118,16 +118,29 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+
+
 <?php Pjax::end(); ?>
-
-
 <?php
 $js = <<< JS
-var delay = 300;
-$(".progress-bar").each(function(i){
-    $(this).delay( delay*i ).animate( { width: $(this).attr('aria-valuenow') + '%' }, delay );
 
-    $(this).prop('Counter',0).animate({
+jQuery(document).on("pjax:start", function () {
+    // startProgres()
+    
+});
+jQuery(document).on("pjax:end", function () {
+    startProgres()
+});
+
+startProgres()
+
+function startProgres(){
+
+    var delay = 300;
+    $(".progress-bar").each(function(i){
+        $(this).delay( delay*i ).animate( { width: $(this).attr('aria-valuenow') + '%' }, delay );
+
+        $(this).prop('Counter',0).animate({
         Counter: $(this).text()
     }, {
         duration: delay,
@@ -136,6 +149,7 @@ $(".progress-bar").each(function(i){
         }
     });
 });
+}
 JS;
 $this->registerJS($js,View::POS_END)
 ?>
