@@ -2,6 +2,7 @@
 
 namespace app\modules\purchase\models;
 
+use app\components\SiteHelper;
 use app\components\AppHelper;
 use app\components\CategoriseHelper;
 use app\models\Categorise;
@@ -189,13 +190,23 @@ class Order extends \yii\db\ActiveRecord
     public function getCheckerLeader()
     {
         try {
-            $userId = $this->data_json['leader1'];
+            
+            if($this->data_json['pr_leader_confirm'] == ''){
+                $userId = $this->data_json['leader1'];
+                $text = '<i class="fa-regular fa-clock text-warning"></i> รอเห็นชอบ';
+            }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == ''){
+                $userId = $this->data_json['leader1'];
+                $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ | <i class="fa-regular fa-clock text-warning"></i> รอตรวจสอบ';
+            }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == ''){
+                $userId = $this->data_json['pr_officer_checker_id'];
+                $text = '<i class="fa-regular fa-circle-check text-success"></i> ตรวจสอบผ่าน | <i class="fa-regular fa-clock text-warning"></i> รออนุมัติ';
+            }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == 'Y'){
+                return  '<i class="fa-regular fa-circle-check text-success"></i> อนุมัติ';
+
+        }
+            
             $employee = Employees::find()->where(['id' => $userId])->one();
-        if($this->data_json['pr_leader_confirm']  == 'Y'){
-            $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบxx';
-        }else{
-            $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
-        }   
+            
         return $employee->getAvatar(false,$text);
         } catch (\Throwable $th) {
             return null;
@@ -350,8 +361,9 @@ class Order extends \yii\db\ActiveRecord
                         "bs-trigger"=>"hover focus",
                         "bs-toggle"=> "popover",
                         "bs-placement"=>"top",
-                        "bs-title"=>$emp->fullname,
-                        "bs-content"=>$item->data_json['committee_name']
+                        "bs-title"=>$item->data_json['committee_name'],
+                        "bs-html"=>"true",
+                        "bs-content"=>$emp->fullname."<br>".$emp->positionName()
                     ]
             ]
         );
@@ -378,8 +390,9 @@ class Order extends \yii\db\ActiveRecord
                         "bs-trigger"=>"hover focus",
                         "bs-toggle"=> "popover",
                         "bs-placement"=>"top",
-                        "bs-title"=>$emp->fullname,
-                        "bs-content"=>$item->data_json['committee_name']
+                        "bs-title"=>$item->data_json['committee_name'],
+                        "bs-html"=>"true",
+                        "bs-content"=>$emp->fullname."<br>".$emp->positionName()
                     ]
             ]
         );

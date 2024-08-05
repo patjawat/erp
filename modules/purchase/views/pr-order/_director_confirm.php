@@ -12,6 +12,7 @@ use unclead\multipleinput\MultipleInputColumn;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use app\components\SiteHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
@@ -34,6 +35,8 @@ $this->params['breadcrumbs'][] = $this->title;
     )->label(false);
 ?>
 <?= $form->field($model, 'data_json[pr_director_comment]')->textArea()->label('หมายเหตุ') ?>
+<?= $form->field($model, 'data_json[pr_director_checker_id]')->hiddenInput(['value' => SiteHelper::viewDirector()['id']])->label(false) ?>
+<?= $form->field($model, 'data_json[pr_director_fullname]')->hiddenInput(['value' => SiteHelper::viewDirector()['fullname']])->label(false) ?>
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
