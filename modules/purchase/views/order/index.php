@@ -64,9 +64,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                         <td class="fw-light align-middle">
                         <div class="d-felx flex-column">
-                                <div class="text-muted mb-0 fs-14"><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?></div>
+                                <div class="text-primary mb-0 fs-15"><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?></div>
                                 <div class="fw-semibold ">
-                                    <?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?>    
+                                <i class="fa-solid fa-tag"></i> <?= number_format($model->calculateVAT()['priceAfterVAT'],2)?>
                                 </div>
                                 
                         </div>

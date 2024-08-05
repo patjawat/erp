@@ -190,13 +190,27 @@ class Order extends \yii\db\ActiveRecord
     public function getCheckerLeader()
     {
         try {
-            
+            if($this->data_json['pr_leader_confirm'] == 'N'){
+                $userId = $this->data_json['leader1'];
+                $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+            }
+
+            if($this->data_json['pr_officer_checker'] == 'N'){
+                $userId = $this->data_json['leader1'];
+                $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ตรวจสอบไม่ผ่าน';
+            }
+
+            if($this->data_json['pr_director_confirm'] == 'N'){
+                // $userId = $this->data_json['leader1'];
+                return '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่อนุมัติ';
+            }
+
             if($this->data_json['pr_leader_confirm'] == ''){
                 $userId = $this->data_json['leader1'];
                 $text = '<i class="fa-regular fa-clock text-warning"></i> รอเห็นชอบ';
             }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == ''){
                 $userId = $this->data_json['leader1'];
-                $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ | <i class="fa-regular fa-clock text-warning"></i> รอตรวจสอบ';
+                $text = '<i class="fa-regular fa-circle-check text-success fs-6"></i> เห็นชอบ | <i class="fa-regular fa-clock text-warning"></i> รอตรวจสอบ';
             }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == ''){
                 $userId = $this->data_json['pr_officer_checker_id'];
                 $text = '<i class="fa-regular fa-circle-check text-success"></i> ตรวจสอบผ่าน | <i class="fa-regular fa-clock text-warning"></i> รออนุมัติ';
@@ -286,8 +300,9 @@ class Order extends \yii\db\ActiveRecord
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
             $a = $this->data_json['product_type_name'];
+            $msg = $this->viewCreatedAt().' | '. $employee->departmentName();
             return [
-                'avatar' => $employee->getAvatar(false,$employee->departmentName()),
+                'avatar' => $employee->getAvatar(false,$msg),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),

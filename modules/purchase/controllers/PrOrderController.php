@@ -157,12 +157,13 @@ class PrOrderController extends Controller
      */
     public function actionCreate()
     {
+        $userCreate = UserHelper::GetEmployee();
         $model = new Order([
             'name' => 'order',
             'status' => $this->request->get('status'),
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'data_json' => [
-                'leader1' => 260
+                'leader1' => $userCreate->leaderUser()['leader1']
             ]
         ]);
 
