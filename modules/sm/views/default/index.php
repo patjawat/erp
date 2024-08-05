@@ -51,7 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="col-6">
         <?php //  $this->render('top_product') ?>
-        <?= $this->render('list_pr_order') ?>
+        <?php $this->render('list_pr_order') ?>
     </div>
     <div class="col-3">
         <?php //  $this->render('pr_order_list') ?>
