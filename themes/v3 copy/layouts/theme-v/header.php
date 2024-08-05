@@ -82,39 +82,9 @@ use app\components\UserHelper;
 
             <?=$this->render('app_service')?>
             <?=$this->render('app_manage')?>
-           
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
-                <?=Html::a('<i class="bi bi-people-fill fs-4"></i>',['/hr/employees'],['class' => 'btn header-item notify-icon','data' => [
-                        "bs-trigger"=>"hover focus",
-                        "bs-toggle"=> "popover",
-                        "bs-placement"=>"right",
-                        "bs-title"=>"บุคลากร",
-                         "bs-content"=>"ข้อมูลบุคลากรในองค์กร"
-                ]])?>
-            </div>
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
-                <?=Html::a('<i class="bi bi-folder-check fs-4"></i>',['/am/asset'],['class' => 'btn header-item notify-icon','data' => [
-                        "bs-trigger"=>"hover focus",
-                        "bs-toggle"=> "popover",
-                        "bs-placement"=>"right",
-                        "bs-title"=>"ทรัพย์สิน",
-                         "bs-content"=>"ข้อมูลทรัพย์สินในองค์กร"
-                ]])?>
-            </div>
-
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
-                <?=Html::a('<i class="bi bi-box fs-4"></i>',['/sm'],['class' => 'btn header-item notify-icon','data' => [
-                        "bs-trigger"=>"hover focus",
-                        "bs-toggle"=> "popover",
-                        "bs-placement"=>"right",
-                        "bs-title"=>"พัสดุ",
-                         "bs-content"=>"พัสดุ"
-                ]])?>
-            </div>
-
-
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
-                <?=Html::a('<i class="fa-solid fa-store"></i>',['/inventory/warehouse'],['class' => 'btn header-item notify-icon','data' => [
+                <?=$this->render('app_cart')?>
+            <div class="d-none d-lg-inline-flex ms-2" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="fa-solid fa-store"></i>',['/inventory/store'],['class' => 'btn header-item notify-icon','data' => [
                         "bs-trigger"=>"hover focus",
                         "bs-toggle"=> "popover",
                         "bs-placement"=>"right",
@@ -123,29 +93,12 @@ use app\components\UserHelper;
                 ]])?>
             </div>
 
-
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
-                <?=Html::a('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>',
-                ['/pm'],['class' => 'btn header-item notify-icon','data' => [
-                        "bs-trigger"=>"hover focus",
-                        "bs-toggle"=> "popover",
-                        "bs-placement"=>"right",
-                        "bs-title"=>"แผนงานโครงการ",
-                         "bs-content"=>"แผนงานโครงการ"
-                ]])?>
-            </div>
-
-
-
-            
- 
-            <!-- <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+            <div class="d-none d-lg-inline-flex ms-2" data-aos="zoom-in" data-aos-delay="200">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
                 </button>
-            </div> -->
+            </div>
             <?=$this->render('notification');?>
-            <?=$this->render('app_cart')?>
             <div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="400">
                 <?php if(!Yii::$app->user->isGuest):?>
                 <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-profile-dropdown"

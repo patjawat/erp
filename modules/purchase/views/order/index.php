@@ -75,14 +75,26 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
                         <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
                         <td class="fw-light align-bottom">
+                        <?php if($model->deleted_at == null):?>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">
                                     <?=$model->viewStatus()['status_name']?><span class="text-primary">
                                         <?=$model->viewStatus()['progress']?>%</span>
                                 </span>
                                 <span class="text-muted mb-0 fs-13"><?=$model->viewUpdated()?>ที่แล้ว</span>
-
                             </div>
+
+                            <?php else:?>
+
+                                <div class="d-flex justify-content-between">
+                                <span class="text-muted mb-0 fs-13">
+                                <i class="fa-regular fa-circle-stop text-danger"></i> ยกเลิกรายการ<span class="text-primary">
+                                        <?=$model->viewStatus()['progress']?>%</span>
+                                </span>
+                                <span class="text-muted mb-0 fs-13"><?=$model->viewUpdated()?>ที่แล้ว</span>
+                            </div>
+
+                    <?php endif;?>
                             <div class="progress" style="height: 5px;">
                                 <div class="progress-bar bg-<?=$model->viewStatus()['color']?>" role="progressbar"
                                     aria-label="Progress" aria-valuenow="<?=$model->viewStatus()['progress']?>"
@@ -90,6 +102,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                         </td>
+
+                       
                 
                         <td class="fw-light">
                             <div class="btn-group">

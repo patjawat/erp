@@ -3,7 +3,7 @@
 -- Dumping data for table `supplies_type`
 -- ประเภทของวัสดุ
 --
-
+DELETE FROM `categorise` WHERE `category_id` LIKE '4' AND `name` LIKE 'asset_type';
 INSERT INTO `categorise` (`code`, `title`, `active`,`category_id`,`name`) VALUES
 ('M1', 'วัสดุสำนักงาน','1', 4,'asset_type'),
 ('M2', 'วัสดุไฟฟ้าและวิทยุ','1', 4,'asset_type'),

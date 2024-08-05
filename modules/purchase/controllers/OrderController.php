@@ -433,9 +433,72 @@ class OrderController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+
+
+      // ตรวจสอบความถูกต้อง
+    public function actionCancelOrderValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+        $requiredName = "ต้องระบุเหตุผล";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['cancel_order_note'])) {
+                $model->data_json['cancel_order_note'] == "" ? $model->addError('data_json[cancel_order_note]', $requiredName) : null;
+            }
+
+        
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+    
+     public function actionCancelOrder($id){
+
+        $model = $this->findModel($id);
+
+        $oldObj = $model->data_json;
+        if ($model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            $model->save(false);
+            return [
+                'status' => 'success',
+                'container' => '#purchase-container',
+                'model' => $model
+            ];
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $model->getMe('ยกเลิอกรายการนี้')['avatar'],
+                'content' => $this->renderAjax('_form_cancel_order', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_form_cancel_order', [
+                'model' => $model,
+            ]);
+        }
+
+        //  $model = $this->findModel($id);
+        // $model->deleted_at = Date('Y-m-d H:i:s');
+        // $model->deleted_by =Yii::$app->user->id;
+        // $model->save();
+     }
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
 
         return $this->redirect(['index']);
     }

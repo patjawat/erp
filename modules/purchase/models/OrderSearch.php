@@ -17,8 +17,8 @@ class OrderSearch extends Order
     public function rules()
     {
         return [
-            [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
+            [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by','deleted_by'], 'integer'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['price'], 'number'],
         ];
     }

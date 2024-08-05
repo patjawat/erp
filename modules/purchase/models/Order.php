@@ -60,12 +60,13 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['qty', 'created_by', 'updated_by'], 'integer'],
+            [['qty', 'created_by', 'updated_by','deleted_by'], 'integer'],
             [['price'], 'number'],
             [[
                 'data_json',
                 'created_at',
                 'updated_at',
+                'deleted_at',
                 'pr_number',
                 'pq_number',
                 'po_number',
@@ -277,12 +278,12 @@ class Order extends \yii\db\ActiveRecord
     }
 
     // Avatar ของฉัน
-    public static function getMe()
+    public static function getMe($msg=null)
     {
         try {
             $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
             return [
-                'avatar' => $employee->getAvatar(false),
+                'avatar' => $employee->getAvatar(false,$msg),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
             ];

@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Order $model */
@@ -37,7 +38,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?=$orderTypeName?></h6>
-                <?=Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-danger rounded-pill shadow text-center open-modal shadow me-5','data' => ['size' => 'modal-md']])?>
+              
+                <?= Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ', ['/purchase/order/cancel-order', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill shadow open-modal','data' => ['size' => 'modal-md']]) ?>
+
             </div>
         </div>
 

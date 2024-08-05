@@ -17,8 +17,8 @@ $products = $cart->getItems();
     <button id="viewCart" 
     data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false" class="btn header-item notify-icon" id="viewCart" <?= ($cart->getCount() == 0) ? 'style="display:none"' : null?>>
     <div data-bs-trigger="hover" data-bs-toggle="popover" data-bs-placement="right"
-                data-bs-custom-class="custom-popover" data-bs-title="ตะกร้าเบิกวัสดุ"
-                data-bs-content="รายการที่ขอเบิกวัสดุ คลังหลัก"> 
+                data-bs-custom-class="custom-popover" data-bs-title="รายการขอเบิก"
+                data-bs-content="รายการที่ขอเบิกวัสดุ จจากคลังหลัก"> 
     <i class="fa-solid fa-cart-shopping"></i>
     </div>
 

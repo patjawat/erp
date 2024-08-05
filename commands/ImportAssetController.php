@@ -487,19 +487,19 @@ WHERE supplies.SUP_TYPE_KIND_ID IN('2','4')";
                     ]);
 
                     $this->CreateDir($ref);
-                    if (isset($item['IMG'])) {
+                    // if (isset($item['IMG'])) {
 
-                        $name = time() . '.jpg';
-                        file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $item['IMG']);
+                    //     $name = time() . '.jpg';
+                    //     file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $item['IMG']);
     
-                        $upload = new Uploads;
-                        $upload->ref = $ref;
-                        $upload->name = 'asset_item';
-                        $upload->file_name = $name;
-                        $upload->real_filename = $name;
-                        $upload->type = 'jpg';
-                        $upload->save(false);
-                    }
+                    //     $upload = new Uploads;
+                    //     $upload->ref = $ref;
+                    //     $upload->name = 'asset_item';
+                    //     $upload->file_name = $name;
+                    //     $upload->real_filename = $name;
+                    //     $upload->type = 'jpg';
+                    //     $upload->save(false);
+                    // }
 
                     // echo "ผิดพลาด \n";
                 }
