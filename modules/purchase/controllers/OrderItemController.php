@@ -49,6 +49,44 @@ class OrderItemController extends Controller
         ]);
     }
 
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $checkEmp = Order::find()
+            ->andwhere(['name' => $model->name,'category_id' => $model->category_id])
+            ->andwhere(['=', 'JSON_UNQUOTE(JSON_EXTRACT(data_json, "$.employee_id"))', $model->data_json['employee_id']])
+            ->one();
+
+
+            if($model->action == 'create' && $checkEmp){
+               $model->addError('data_json[employee_id]', 'กรรมการต้องไม่ซ้ำ');
+            }
+
+
+            if (isset($model->data_json['employee_id'])) {
+                    $model->data_json['employee_id']  == "" ? $model->addError('data_json[employee_id]', $requiredName) : null;
+            }
+
+            if (isset($model->data_json['board'])) {
+                $model->data_json['board']  == "" ? $model->addError('data_json[board]', $requiredName) : null;
+            }
+
+            
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
+
     //แสดงคณะกรรมการตรวจรับพัสดุ
     public function actionCommittee()
     {
@@ -98,22 +136,17 @@ class OrderItemController extends Controller
     {
         $model = new Order([
             'category_id' => $this->request->get('id'),
-            'name' => $this->request->get('name')
+            'name' => $this->request->get('name'),
+            'action' => 'create'
         ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                // return [
-                //     'title' => $this->request->get('title'),
-                //     'content' => $this->renderAjax('list_'.$model->name),
-                //     'status' => 'success',
-                //     'container' => '#' . $model->name,
-                // ];
                 return [
                     'title' => $this->request->get('title'),
                     'status' => 'success',
-                    'container' => '#' . $model->name,
+                    'container' => '#purchase-container',
                 ];
             }
         } else {
@@ -149,16 +182,16 @@ class OrderItemController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('list_'.$model->name),
-                    'status' => 'success',
-                ];
                 // return [
                 //     'title' => $this->request->get('title'),
+                //     'content' => $this->renderAjax('list_'.$model->name),
                 //     'status' => 'success',
-                //     'container' => '#' . $model->name,
                 // ];
+                return [
+                    'title' => $this->request->get('title'),
+                    'status' => 'success',
+                    'container' => '#' . $model->name,
+                ];
             }
         } else {
             $model->loadDefaultValues();
@@ -189,13 +222,14 @@ class OrderItemController extends Controller
     public function actionDelete($id)
     {
         $container = $this->request->get('container');
+        $url = $this->request->get('url');
         $model = $this->findModel($id);
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model->delete();
         return [
             'status' => 'success',
-            // 'container' => '#' . $model->name,
             'container' => '#committee',
+            'url' => $url
         ];
     }
 

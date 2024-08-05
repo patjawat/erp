@@ -65,6 +65,8 @@ $resultsJs = <<< JS
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
+    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/purchase/order-item/validator'],
 ]); ?>
 
     <?php
@@ -118,14 +120,15 @@ echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
     'pluginEvents' => [
         'select2:select' => "function(result) { 
                             var data = \$(this).select2('data')[0].text;
-                            \$('#order-data_json-board_position').val(data)
+                            \$('#order-data_json-committee_name').val(data)
                         }",
     ]
 ])->label('คณะกรรมการ');
 ?>
+    <?= $form->field($model, 'action')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[board_position]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[committee_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[board_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[position_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
    
@@ -155,7 +158,8 @@ $js = <<< JS
                 if(response.status == 'success') {
                     $("#main-modal").modal("toggle");
                     success()
-                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                    // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});      
+                    await $.pjax.reload({container:'#purchase-container', history:false,timeout: false});                         
                 }
             }
         });

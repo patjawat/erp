@@ -203,11 +203,14 @@ try {
             ],
         ])->label('ผู้เห็นชอบ')
     ?>
+<?php
+print_r($employee)
+?>
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
 
 <?= $form->field($model, 'data_json[item_type]')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
+<?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => ''])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[vendor_name]')->hiddenInput()->label(false) ?>

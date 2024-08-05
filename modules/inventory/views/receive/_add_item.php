@@ -46,18 +46,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?=$model->orderItem->product->AvatarXl()?>
             </div>
         </div>
-</div>
-<div class="col-4">    
-    <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
-    <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
-</div>
+    </div>
+    <div class="col-4">
+        <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
+        <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
+    </div>
 </div>
 <div class="ms-5">
     <?php // $form->field($model, 'data_json[item_type]')->radioList(['จัดซื้อ' => 'จัดซื้อ','ยอดยกมา' => 'ยอดยกมา','ของแถม' => 'ของแถม','ของบริจาค' => 'ของบริจาค'], ['inline'=>true,'custom' => true])->label('ประเภท');?>
 </div>
-        <div class="row">
-            <div class="col-6">
-            <?php
+<div class="row">
+    <div class="col-6">
+        <?php
             echo $form
                 ->field($model, 'data_json[mfg_date]')
                 ->widget(DateControl::classname(), [
@@ -72,7 +72,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันผลิต');
         ?>
-         <?php
+        <?php
             echo $form
                 ->field($model, 'data_json[exp_date]')
                 ->widget(DateControl::classname(), [
@@ -87,15 +87,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])
                 ->label('วันหมดอายุ');
         ?>
-            </div>
-            <div class="col-6">
-           <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+    </div>
+    <div class="col-6">
+        <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
 
-            </div>
-      
-         
- 
-        </div>
+    </div>
+
+
+
+</div>
 
 
 

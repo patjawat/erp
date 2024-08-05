@@ -43,6 +43,8 @@ class Order extends \yii\db\ActiveRecord
 
     public $q;
     public $vatType;
+    public $action;
+    public $old_data;
     /**
      * {@inheritdoc}
      */
@@ -73,6 +75,8 @@ class Order extends \yii\db\ActiveRecord
                 'group_id',
                 'asset_item',
                 'discount_price',
+                'action',
+                'old_data',
                 'q'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
@@ -181,46 +185,36 @@ class Order extends \yii\db\ActiveRecord
            ];
     }
 
-   
+//    หัวหน้าเห็นชอบ
     public function getCheckerLeader()
     {
         try {
             $userId = $this->data_json['leader1'];
-        $emp = $this->getEmp($userId);
+            $employee = Employees::find()->where(['id' => $userId])->one();
         if($this->data_json['pr_leader_confirm']  == 'Y'){
-            $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
+            $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบxx';
         }else{
             $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
-        }
-        return '<div class="d-flex">'. $emp['avatar'] . '
-            <div class="avatar-detail text-truncate">
-                <h6 class="mb-1 fs-13">'. $emp['fullname'] . '</h6>
-                <p class="text-muted mb-0 fs-13">' . $text.'</p>
-            </div>
-        </div>';
+        }   
+        return $employee->getAvatar(false,$text);
         } catch (\Throwable $th) {
             return null;
         }
-       
     }
 
     public function getCheckerOfficer()
     {
-        try {
 
+        try {
         $userId = $this->data_json['pr_officer_checker_id'];
-        $emp = $this->getEmp($userId);
+        $employee = Employees::find()->where(['user_id' => $userId])->one();
         if($this->data_json['pr_officer_checker']  == 'Y'){
             $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
         }else{
             $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
         }
-        return '<div class="d-flex">'. $emp['avatar'] . '
-            <div class="avatar-detail text-truncate">
-                <h6 class="mb-1 fs-13">'. $emp['fullname'] . '</h6>
-                <p class="text-muted mb-0 fs-13">' . $text.'</p>
-            </div>
-        </div>';
+       
+        return $employee->getAvatar(false,$text);
                     //code...
                 } catch (\Throwable $th) {
                    return null;
@@ -254,18 +248,7 @@ class Order extends \yii\db\ActiveRecord
     public function orderAvatar()
     {
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-        $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
-        return '<div class="d-flex">'
-            . $img . '
-        <div class="avatar-detail text-truncate">
-            <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-custom-class="custom-tooltip"
-            data-bs-title="ดูเพิ่มเติม..."><span>'
-            . $employee->fullname . '</span>
-            </h6>
-            <p class="text-muted mb-0 fs-13">' . $this->data_json['order_type_name'].'</p>
-        </div>
-    </div>';
+        return $employee->getAvatar(false,$this->data_json['order_type_name']);
     }
 
     // Avatar ของฉัน
@@ -291,14 +274,9 @@ class Order extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-            $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
+            $a = $this->data_json['product_type_name'];
             return [
-                'avatar' => '<div class="d-flex">'. $img . '
-                <div class="avatar-detail text-truncate">
-                    <h6 class="mb-1 fs-13">'. $employee->fullname . '</h6>
-                    <p class="text-muted mb-0 fs-13">' . $employee->departmentName().'</p>
-                </div>
-            </div>',
+                'avatar' => $employee->getAvatar(false,$employee->departmentName()),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
@@ -360,19 +338,28 @@ class Order extends \yii\db\ActiveRecord
     //  ภาพทีมคณะกรรมการ
     public function StackComittee()
     {
-        try {
+        // try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach (Order::find()->where(['name' => 'committee','category_id' => $this->id])->all() as $key => $avatar) {
-                $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
-                $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
-                $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
-                $data .= '</a>';
+            foreach (Order::find()->where(['name' => 'committee','category_id' => $this->id])->all() as $key => $item) {
+                $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
+                $data.=Html::a( Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], 
+                ['class' => 'open-modal', 
+                    'data' => [
+                        'size' => 'modal-md',
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"top",
+                        "bs-title"=>$emp->fullname,
+                        "bs-content"=>$item->data_json['committee_name']
+                    ]
+            ]
+        );
             }
             $data .= '</div>';
             return $data;
-        } catch (\Throwable $th) {
-        }
+        // } catch (\Throwable $th) {
+        // }
     }
 
 
@@ -382,10 +369,20 @@ class Order extends \yii\db\ActiveRecord
         try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach (Order::find()->where(['name' => 'committee_detail','category_id' => $this->id])->all() as $key => $avatar) {
-                $emp = Employees::findOne(['id' => $avatar->data_json['employee_id']]);
-                $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
-                $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+            foreach (Order::find()->where(['name' => 'committee_detail','category_id' => $this->id])->all() as $key => $item) {
+                $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
+                $data.=Html::a( Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], 
+                ['class' => 'open-modal', 
+                    'data' => [
+                        'size' => 'modal-md',
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"top",
+                        "bs-title"=>$emp->fullname,
+                        "bs-content"=>$item->data_json['committee_name']
+                    ]
+            ]
+        );
                 $data .= '</a>';
             }
             $data .= '</div>';

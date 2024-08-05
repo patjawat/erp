@@ -25,36 +25,35 @@ $this->params['breadcrumbs'][] = $this->title;
     'id' => 'form-order-item',
 ]); ?>
 
-<div
-    class="card"
->
-    <?= Html::img($product->ShowImg(), ['class' => 'card-img-top']) ?>
+<div class="card border border-primary">
     <div class="card-body">
-        
-<div class="row">
-    <div class="col-8">
-        <?= $form->field($model, 'qty')->textInput()->label('จำนวน'); ?>
-    </div>
-    <div class="col-4">
-        <div class="mb-3 highlight-addon field-order-qty has-success">
-            <label class="form-label has-star" for="order-qty">หน่วย</label>
-            <input type="text" class="form-control is-valid" value="<?=$model->data_json['asset_item_unit_name']?>" disabled=true>
-            <div class="invalid-feedback"></div>
-        </div>
-    </div>
-    <div class="col-8">
-        <?= $form->field($model, 'price')->textInput()->label('ราคา'); ?>
-    </div>
-    <div class="col-4">
-        <div class="mb-3 highlight-addon field-order-qty has-success">
-            <label class="form-label has-star" for="order-qty">ราคา</label>
-            <input type="text" class="form-control is-valid" value="บาท" disabled=true>
-            <div class="invalid-feedback"></div>
-        </div>
+        <?=$product->AvatarXl()?>
     </div>
 </div>
-    </div>
-</div>
+
+        <div class="row">
+            <div class="col-8">
+                <?= $form->field($model, 'qty')->textInput()->label('จำนวน'); ?>
+            </div>
+            <div class="col-4">
+                <div class="mb-3 highlight-addon field-order-qty has-success">
+                    <label class="form-label has-star" for="order-qty">หน่วย</label>
+                    <input type="text" class="form-control is-valid"
+                        value="<?=$model->data_json['asset_item_unit_name']?>" disabled=true>
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+            <div class="col-8">
+                <?= $form->field($model, 'price')->textInput()->label('ราคา'); ?>
+            </div>
+            <div class="col-4">
+                <div class="mb-3 highlight-addon field-order-qty has-success">
+                    <label class="form-label has-star" for="order-qty">ราคา</label>
+                    <input type="text" class="form-control is-valid" value="บาท" disabled=true>
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+        </div>
 
 
 
@@ -68,7 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $form->field($model, 'data_json[asset_item_unit_name]')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'data_json[asset_item_name]')->hiddenInput()->label(false); ?>
 
-<div class="form-group mt-3 d-flex justify-content-center">
+<div class="d-grid gap-2">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
 </div>
 

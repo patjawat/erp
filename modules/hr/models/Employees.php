@@ -242,25 +242,34 @@ class Employees extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
-    public function getAvatar($showAge = true)
+    public function getAvatar($showAge = true, $msg = '')
     {
         $img = Html::img($this->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
-        return '<div class="d-flex">'
-            . $img . '
+        if ($msg != '') {
+            return '<div class="d-flex">' . $img . '
+            <div class="avatar-detail text-truncate">
+                <h6 class="mb-1 fs-13">' . $this->fullname . '</h6>
+                <p class="text-muted mb-0 fs-13">' . $msg . '</p>
+            </div>
+        </div>';
+        } else {
+            return '<div class="d-flex">'
+                . $img . '
         <div class="avatar-detail">
             <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
-            . Html::a(
-                $this->fullname,
-                ['/hr/employees/view', 'id' => $this->id],
-                ['class' => '']
-            ) . '
+                . Html::a(
+                    $this->fullname,
+                    ['/hr/employees/view', 'id' => $this->id],
+                    ['class' => '']
+                ) . '
             </h6>
             <p class="text-muted mb-0 fs-13">' . $this->positionName() . ' <code>(' . $this->positionTypeName() . ')</code></p>
             ' . ($showAge ? '<p class="text-muted mb-0 fs-13">อายุ ' . $this->age . '</p>' : '') . '
         </div>
     </div>';
+        }
     }
 
     /**
