@@ -37,7 +37,9 @@ class m240522_073153_create_order_table extends Migration
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),
-            'updated_by' => $this->integer()->comment('ผู้แก้ไข')
+            'updated_by' => $this->integer()->comment('ผู้แก้ไข'),
+            'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
+            'deleted_by' => $this->integer()->comment('ผู้ลบ')
         ]);
 
         // เงื่อนไขการจัดซื้อ
