@@ -70,7 +70,7 @@ use yii\helpers\Html;
                     ],
                 ]); ?>
                 <div>
-                <?=Html::a('แสดงทั้งหมด',['/purchase/'.$container],['data' => ['pjax' => 0]])?>
+                <?=Html::a('แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['data' => ['pjax' => 0]])?>
             </div>
         </div>
     </div>
