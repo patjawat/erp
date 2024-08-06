@@ -54,6 +54,7 @@ class PqOrderController extends Controller
                 'content' => $this->renderAjax('@app/modules/purchase/views/order/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'isAjax' => true
                 ]),
             ];
         } else {
@@ -61,6 +62,7 @@ class PqOrderController extends Controller
         return $this->render('@app/modules/purchase/views/order/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'isAjax' => false
         ]);
         }
     }

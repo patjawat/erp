@@ -21,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-<?php Pjax::begin(['id' => 'purchase-container']); ?>
+<?php // Pjax::begin(['id' => 'purchase-container']); ?>
 <div class="row">
     <div class="col-9">
         <div class="card">
@@ -48,26 +48,22 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $this->render('budget_balanced') ?>
     </div>
 </div>
+<?php // yii\widgets\Pjax::begin(['id' => 'order','timeout' => 50000 ]); ?>
+<?php //yii\widgets\Pjax::begin(['id' => 'order-list','timeout' => 50000,'enablePushState' => true ]); ?>
 <div class="row">
     <div class="col-6">
-        <?php //  $this->render('top_product') ?>
-        <?php $this->render('list_pr_order') ?>
+    <?php  // yii\widgets\Pjax::begin(['enablePushState' => false ]); ?>
+      <div id="showPrOrderList"></div>
+      <?php  // yii\widgets\Pjax::end(); ?>
+      <div id="showPrAcceptOrderList"></div>
     </div>
-    <div class="col-3">
+    <div class="col-6">
+      <div id="showPqOrder"></div>
         <?php //  $this->render('pr_order_list') ?>
-        <div id="showPrOrderList"></div>
-    </div>
-    <div class="col-3">
-                <div id="showOrderList"></div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-     <!-- รายการใบขอซื้อ -->
-        <div id="showPqOrder"></div>
-    </div>
-</div>
+
 
 
 
@@ -75,19 +71,23 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 use yii\web\View;
 
-$PrOrderListUrl = Url::to(['/purchase/pr-order/list?status=1']);
+$PrOrderListUrl = Url::to(['/sm/default/pr-order']);
+$PrAcceptOrderListUrl = Url::to(['/sm/default/accept-pr-order']);
+$PqOrderListUrl = Url::to(['/sm/default/pq-order']);
 $AcceptOrderListUrl = Url::to(['/purchase/pr-order/accept-order-list']);
 $ListPqOrderUrl = Url::to(['/purchase/pq-order']);
 $js = <<< JS
          
-         getPQOrderList() 
          getPrOrderList()  
-         getAcceptOrderList()
+         getAcceptPrOrderList()
+         getPQOrderList() 
+
          async function getPQOrderList()
          {
             await \$.ajax({
                 type: "get",
-                url: "$ListPqOrderUrl",
+                // url: "$ListPqOrderUrl",
+                url: "$PqOrderListUrl",
                 dataType: "json",
                 success: function (res) {
                     \$('#showPqOrder').html(res.content)
@@ -107,14 +107,14 @@ $js = <<< JS
             });
          }
 
-         async function getAcceptOrderList()
+         async function getAcceptPrOrderList()
          {
             await \$.ajax({
                 type: "get",
-                url: "$AcceptOrderListUrl",
+                url: "$PrAcceptOrderListUrl",
                 dataType: "json",
                 success: function (res) {
-                    \$('#showOrderList').html(res.content)
+                    \$('#showPrAcceptOrderList').html(res.content)
                 }
             });
          }
@@ -177,4 +177,4 @@ $js = <<< JS
     JS;
 $this->registerJS($js, View::POS_END);
 ?>
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>

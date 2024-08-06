@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
-
+<?php if(!$isAjax):?>
 <div class="card">
     <div class="card-body d-flex align-middle flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
         <div class="d-flex gap-3 justify-content-start">
@@ -41,12 +41,12 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-
+<?php endif;?>
 <div class="card">
     <div class="card-body">
-        <h6>ทะเบียนคุม</h6>
-        <div class="table-responsive" style="height:800px">
-            <table class="table table-primary">
+        <h6>ทะเบียนคุม <?=$dataProvider->getTotalCount()?> รายการ</h6>
+        <div class="table-responsive">
+            <table class="table">
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:280px">ผู้ขอซื้อ</th>
@@ -128,9 +128,29 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+         
+
         </div>
+
+        <div class="d-flex justify-content-center">
+
+    <?= yii\bootstrap5\LinkPager::widget([
+        'pagination' => $dataProvider->pagination,
+        'firstPageLabel' => 'หน้าแรก',
+        'lastPageLabel' => 'หน้าสุดท้าย',
+        'options' => [
+            'class' => 'pagination pagination-sm',
+        ],
+    ]); ?>
+    </div>
+
+    
     </div>
 </div>
+
+
+
 
 
 

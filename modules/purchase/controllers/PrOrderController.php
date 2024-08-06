@@ -40,68 +40,6 @@ class PrOrderController extends Controller
     }
 
 
-
-    // ตรวจสอบความถูกต้อง
-    public function actionCreatevalidator()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Order();
-        $requiredName = "ต้องระบุ";
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            if (isset($model->data_json['pr_create_date'])) {
-                preg_replace('/\D/', '', $model->data_json['pr_create_date']) == "" ? $model->addError('data_json[pr_create_date]', $requiredName) : null;
-            }
-            if (isset($model->data_json['due_date'])) {
-                preg_replace('/\D/', '', $model->data_json['due_date']) == "" ? $model->addError('data_json[due_date]', $requiredName) : null;
-            }
-
-            if (isset($model->data_json['leader1'])) {
-                $model->data_json['leader1'] == "" ? $model->addError('data_json[leader1]', $requiredName) : null;
-            }
-
-            if (isset($model->vendor_id)) {
-                $model->vendor_id  == "" ? $model->addError('vendor_id', $requiredName) : null;
-            }
-
-        }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-        }
-        if (!empty($result)) {
-            return $this->asJson($result);
-        }
-    }
-
-
-    // ตรวจสอบความถูกต้อง
-    public function actionCheckervalidator()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Order();
-        $requiredName = "ต้องระบุ";
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            if (isset($model->data_json['pr_leader_confirm'])) {
-                $model->data_json['pr_leader_confirm'] == "" ? $model->addError('data_json[pr_leader_confirm]', $requiredName) : null;
-            }
-
-            if (isset($model->data_json['pr_officer_checker'])) {
-                $model->data_json['pr_officer_checker'] == "" ? $model->addError('data_json[pr_officer_checker]', $requiredName) : null;
-            }
-            if (isset($model->data_json['pr_director_confirm'])) {
-                $model->data_json['pr_director_confirm'] == "" ? $model->addError('data_json[pr_director_confirm]', $requiredName) : null;
-            } 
-        }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-        }
-        if (!empty($result)) {
-            return $this->asJson($result);
-        }
-    }
-    
-
     /**
      * Lists all Order models.
      *
@@ -112,7 +50,9 @@ class PrOrderController extends Controller
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andwhere(['is not', 'pr_number', null]);
+        $dataProvider->query->andwhere(['status' => 1]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
+        $dataProvider->pagination->pageSize = 8;
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -121,6 +61,7 @@ class PrOrderController extends Controller
                 'content' => $this->renderAjax('@app/modules/purchase/views/order/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'isAjax' => $this->request->isAjax
                 ]),
             ];
         } else {
@@ -128,6 +69,7 @@ class PrOrderController extends Controller
             return $this->render('@app/modules/purchase/views/order/index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'isAjax' => $this->request->isAjax
             ]);
         }
     }
@@ -273,32 +215,32 @@ class PrOrderController extends Controller
 
 
     // รายการที่ขอซื้อ
-    // public function actionList()
-    // {
-    //     $searchModel = new OrderSearch();
-    //     $dataProvider = $searchModel->search($this->request->queryParams);
-    //     $dataProvider->query->andFilterwhere(['name' => 'order','status' => 1]);
-    //     $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm') = ''"));
+    public function actionList()
+    {
+        $searchModel = new OrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterwhere(['name' => 'order','status' => 1]);
+        $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm') = ''"));
 
-    //     if ($this->request->isAjax) {
-    //         Yii::$app->response->format = Response::FORMAT_JSON;
-    //         return [
-    //             'title' => $this->request->get('title'),
-    //             'content' => $this->renderAjax('@app/modules/purchase/views/order/list_style1', [
-    //                 'searchModel' => $searchModel,
-    //                 'dataProvider' => $dataProvider,
-    //                  'title' => 'ขอซื้อ/ขอจ้าง'
-    //             ]),
-    //         ];
-    //     } else {
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/purchase/views/order/list_style1', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                     'title' => 'ขอซื้อ/ขอจ้าง'
+                ]),
+            ];
+        } else {
 
-    //     return $this->render('@app/modules/purchase/views/order/list_style1', [
-    //         'searchModel' => $searchModel,
-    //         'dataProvider' => $dataProvider,
-    //          'title' => 'ขอซื้อ/ขอจ้าง'
-    //     ]);
-    //     } 
-    // }
+        return $this->render('@app/modules/purchase/views/order/list_style1', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+             'title' => 'ขอซื้อ/ขอจ้าง'
+        ]);
+        } 
+    }
 
 
     // public function actionAcceptOrderList()
@@ -327,6 +269,71 @@ class PrOrderController extends Controller
     //     ]);
     //     } 
     // }
+
+
+
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionCreatevalidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['pr_create_date'])) {
+                preg_replace('/\D/', '', $model->data_json['pr_create_date']) == "" ? $model->addError('data_json[pr_create_date]', $requiredName) : null;
+            }
+            if (isset($model->data_json['due_date'])) {
+                preg_replace('/\D/', '', $model->data_json['due_date']) == "" ? $model->addError('data_json[due_date]', $requiredName) : null;
+            }
+
+            if (isset($model->data_json['leader1'])) {
+                $model->data_json['leader1'] == "" ? $model->addError('data_json[leader1]', $requiredName) : null;
+            }
+
+            if (isset($model->vendor_id)) {
+                $model->vendor_id  == "" ? $model->addError('vendor_id', $requiredName) : null;
+            }
+
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionCheckervalidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Order();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['pr_leader_confirm'])) {
+                $model->data_json['pr_leader_confirm'] == "" ? $model->addError('data_json[pr_leader_confirm]', $requiredName) : null;
+            }
+
+            if (isset($model->data_json['pr_officer_checker'])) {
+                $model->data_json['pr_officer_checker'] == "" ? $model->addError('data_json[pr_officer_checker]', $requiredName) : null;
+            }
+            if (isset($model->data_json['pr_director_confirm'])) {
+                $model->data_json['pr_director_confirm'] == "" ? $model->addError('data_json[pr_director_confirm]', $requiredName) : null;
+            } 
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+    
 
     /**
      * Finds the Order model based on its primary key value.
