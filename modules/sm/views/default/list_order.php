@@ -2,7 +2,8 @@
 use yii\helpers\Html;
 ?>
 <?php  yii\widgets\Pjax::begin(['id' => $container,'enablePushState' => false,'timeout' => 88888 ]); ?>
-<div class="card">
+
+<div class="card" <?=($container == 'pq-order' ? 'style="height: 1018px;"' : null)?>>
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> <?=$title?>
@@ -70,7 +71,7 @@ use yii\helpers\Html;
                     ],
                 ]); ?>
                 <div>
-                <?=Html::a('แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
+                <?=$dataProvider->getTotalCount() <= 0 ? null :  Html::a('แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
             </div>
         </div>
     </div>
