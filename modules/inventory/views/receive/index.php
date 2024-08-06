@@ -26,84 +26,131 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<div class="order-index">
 
-    <div class="card">
-        <div class="card-body">
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> รับเข้า', ['/inventory/receive/create', 'receive_type' => 'receive', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['id' => 'btn-add1', 'class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-            <?= Html::a('<i class="fa-solid fa-file-circle-plus"></i> รับจากใบสั่งซื้อ', ['/inventory/receive/list-order-by-po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รายการรอรับเข้าคลัง'], ['id' => 'btn-add2', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <div class="card">
+            <div class="card-body">
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> รับเข้า', ['/inventory/receive/create', 'receive_type' => 'receive', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['id' => 'btn-add1', 'class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-file-circle-plus"></i> รับจากใบสั่งซื้อ', ['/inventory/receive/list-order-by-po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รายการรอรับเข้าคลัง'], ['id' => 'btn-add2', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            </div>
         </div>
-    </div>
 
 
-    <?php Pjax::begin(['id' => 'inventory']); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+        <div class="row">
+<div class="col-8">
 
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            [
-                'header' => 'วันที่',
-                'value' => function ($model) {
-                    return $model->movement_date;
-                }
-            ],
-            [
-                // 'attribute' => 'code',
-                'header' => 'เลขที่เอกสาร',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    return Html::a($model->rc_number, ['view', 'id' => $model->id]);
-                }
-            ],
-            [
-                // 'attribute' => 'code',
-                'header' => 'เลขที่สั่งซื้อ',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    return $model->po_number;
-                }
-            ],
-            [
-                'attribute' => 'category_id',
-                'header' => 'ประเภท',
-                'value' => function ($model) {
-                    return $model->viewReceiveType();
-                }
-            ],
-            [
-                // 'attribute' => 'category_id',
-                'header' => 'สาขา',
-                'value' => function ($model) {
-                    return $model->tomWarehouse();
-                }
-            ],
-            [
-                'header' => 'ผู้จำหน่วย',
-                'value' => function ($model) {
-                    // return $model->category_id;
-                }
-            ],
-            [
-                'header' => 'หมายเหตุ',
-                'value' => function ($model) {
-                    // return $model->category_id;
-                }
-            ],
-            [
-                'header' => 'สถานะ',
-                'value' => function ($model) {
-                    return $model->viewStatus();
-                }
-            ],
-        ],
+<?php Pjax::begin(['id' => 'inventory']); ?>
+
+<div class="card">
+    <div class="card-body">
+
+<?= GridView::widget([
+'dataProvider' => $dataProvider,
+'filterModel' => $searchModel,
+'columns' => [
+    ['class' => 'yii\grid\SerialColumn'],
+    [
+        'header' => 'วันที่',
+        'value' => function ($model) {
+            return $model->movement_date;
+        }
+    ],
+    [
+        // 'attribute' => 'code',
+        'header' => 'เลขที่เอกสาร',
+        'format' => 'raw',
+        'value' => function ($model) {
+            return Html::a($model->rc_number, ['view', 'id' => $model->id]);
+        }
+    ],
+    [
+        // 'attribute' => 'code',
+        'header' => 'เลขที่สั่งซื้อ',
+        'format' => 'raw',
+        'value' => function ($model) {
+            return $model->po_number;
+        }
+    ],
+    [
+        'attribute' => 'category_id',
+        'header' => 'ประเภท',
+        'value' => function ($model) {
+            return $model->viewReceiveType();
+        }
+    ],
+    [
+        // 'attribute' => 'category_id',
+        'header' => 'สาขา',
+        'value' => function ($model) {
+            return $model->tomWarehouse();
+        }
+    ],
+    [
+        'header' => 'ผู้จำหน่วย',
+        'value' => function ($model) {
+            // return $model->category_id;
+        }
+    ],
+    [
+        'header' => 'หมายเหตุ',
+        'value' => function ($model) {
+            // return $model->category_id;
+        }
+    ],
+    [
+        'header' => 'สถานะ',
+        'value' => function ($model) {
+            return $model->viewStatus();
+        }
+    ],
+],
     ]); ?>
+
+</div>
+</div>
+
+<?php Pjax::end(); ?>
+
+
+</div>
+<div class="col-4">
+    <div id="showReceivePendingOrder"></div>
+</div>
+        </div>
+       
 
 <?php
 
+
+        $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
+        $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 $js = <<< JS
+        getPendingOrder()
+        getlistOrderRequest()
+
+        //รายการวัสดุรอรับเข้าคลัง
+        async function getPendingOrder(){
+            await $.ajax({
+            type: "get",
+            url: "$showReceivePendingOrderUrl",
+            dataType: "json",
+            success: function (res) {
+                $('#showReceivePendingOrder').html(res.content)
+            }
+            });
+        }
+
+        // รายการขอเบิกวัสดุ
+        async function getlistOrderRequest(){
+            await $.ajax({
+            type: "get",
+            url: "$listOrderRequestUrl",
+            dataType: "json",
+            success: function (res) {
+                $('#showlistOrderRequest').html(res.content)
+            }
+            });
+        }
+
       const steps = [{
         content: "การรับเข้าทั่วไป",
         title: "การรับเข้าทั่วไป 👋",
@@ -164,14 +211,6 @@ $js = <<< JS
         backdropColor: string = "rgba(20,20,21,0.50)"
     })
 
-    // const triggerBtn = document.getElementById('tourTrigger')
-
-    // tg.onBeforeStepChange(()=>{
-    //     return new Promise((resolve, reject) => {
-    //         setTimeout(function () {  resolve(); }, 3000);
-    //     })
-    // })
-
 
     function openTour(){
         tg.start()
@@ -182,6 +221,3 @@ $this->registerJS($js, View::POS_END);
 ?>
 
 
-    <?php Pjax::end(); ?>
-
-</div>

@@ -46,6 +46,7 @@ class Order extends \yii\db\ActiveRecord
     public $vatType;
     public $action;
     public $old_data;
+    public $auto_lot;
     /**
      * {@inheritdoc}
      */
@@ -79,6 +80,7 @@ class Order extends \yii\db\ActiveRecord
                 'discount_price',
                 'action',
                 'old_data',
+                'auto_lot',
                 'q'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],

@@ -4,7 +4,8 @@ use yii\helpers\Url;
 ?>
 <div class="d-flex gap-2">
     <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลัง', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับเข้า', ['/inventory/receive'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ตรวจรับ', ['/inventory/receive'], ['class' => 'btn btn-light']) ?>
+    <?php //  Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับเข้า', ['/inventory/receive'], ['class' => 'btn btn-light']) ?>
     <?= Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่ายออก', ['/inventory/stock-request'], ['class' => 'btn btn-light']) ?>
     <button class="btn btn-light" onclick="openTour()">
         <span>แนะนำ</span>

@@ -7,7 +7,7 @@ use yii\helpers\Html;
 
     <div class="card-body">
     <div class="d-flex justify-content-between">
-        <h6><i class="fa-solid fa-right-left"></i> รายการรอรับเข้าคลัง</h6>
+        <h6><i class="bi bi-ui-checks"></i> รายการตรวจรับ</h6>
     </div>
     <?php if(count($models) >=1): ?>
         <table class="table table-striped">
@@ -24,6 +24,7 @@ use yii\helpers\Html;
                     <td scope="row"><?= $model->po_number ?></td>
                     <td><?= $model->data_json['order_type_name'] ?></td>
                     <td class="text-end">
+                    <?php echo  Html::a('ดำเนินการ', ['/inventory/receive/view-order', 'id' => $model->id, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-md']]) ?>
                         <?= Html::a('ดำเนินการ', ['/inventory/receive/create', 'category_id' => $model->po_number, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                     </td>
                 </tr>

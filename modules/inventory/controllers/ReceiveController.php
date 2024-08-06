@@ -7,11 +7,13 @@ use app\modules\inventory\models\StockSearch;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
+use app\components\AppHelper;
 use app\modules\sm\models\ProductSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\helpers\ArrayHelper;
 use Yii;
 use yii\db\Expression;
 use app\modules\inventory\models\Warehouse;
@@ -40,14 +42,14 @@ class ReceiveController extends Controller
     }
 
 
-        // ตรวจสอบความถูกต้อง
-        public function actionCreateValidator()
-        {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            $model = new Stock();
-            $requiredName = "ต้องระบุ";
-            if ($this->request->isPost && $model->load($this->request->post())) {
-    
+    // ตรวจสอบความถูกต้อง
+    public function actionCreateValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Stock();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
             if (isset($model->data_json['to_stock_date'])) {
                 preg_replace('/\D/', '', $model->data_json['to_stock_date']) == "" ? $model->addError('data_json[to_stock_date]', $requiredName) : null;
             }
@@ -55,16 +57,16 @@ class ReceiveController extends Controller
             if (isset($model->data_json['checked_date'])) {
                 preg_replace('/\D/', '', $model->data_json['checked_date']) == "" ? $model->addError('data_json[checked_date]', $requiredName) : null;
             }
-            }
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-            }
-            if (!empty($result)) {
-                return $this->asJson($result);
-            }
         }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
 
-            // ตรวจสอบความถูกต้อง
+    // ตรวจสอบความถูกต้อง
     public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -91,8 +93,8 @@ class ReceiveController extends Controller
             }
         }
     }
-    
-        
+
+
     /**
      * Lists all ir models.
      *
@@ -137,6 +139,97 @@ class ReceiveController extends Controller
             ]);
         }
     }
+
+    //แสดงรายการรอรับเข้าคลัง
+    public function actionViewOrder($id)
+    {
+        $model = Order::findOne($id);
+        Yii::$app->session->set('receive', $model);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'content' => $this->renderAjax('view_order', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view_order', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+    //แก้ไขรายการรับเข้า ระบุบ lot วันหมดอายุ
+    public function actionUpdateOrderItem($id)
+    {
+        $model = Order::findOne($id);
+        $oriObj = $model->data_json;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                $thaiYear = date('dm').substr((date('Y') + 543), 2);
+                // return $model->data_json['lot_number'];
+                if($model->auto_lot == "1"){
+                    $lotNumber  = \mdm\autonumber\AutoNumber::generate('LOT' . $thaiYear . '-?????');
+                }else{
+                    $lotNumber = $model->data_json['lot_number'];
+                    // return $model->data_json;
+                }
+
+                $convertDate = [
+                    'mfg_date' =>  AppHelper::convertToGregorian($model->data_json['mfg_date']),
+                    'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
+                    'lot_number' => $lotNumber
+                ];
+            
+
+                $model->data_json =  ArrayHelper::merge($oriObj, $model->data_json, $convertDate);
+              
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'container' => '#purchase-container',
+                        'model' => $model
+                    ];
+                }
+                // return $this->redirect(['view', 'id' => $model->id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+            try {
+                $oldObj = $model->data_json;
+               
+                $model->data_json = [
+                    'mfg_date' =>  AppHelper::convertToThai($model->data_json['mfg_date']),
+                    'exp_date' =>  AppHelper::convertToThai($model->data_json['exp_date'])
+                ];
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_item', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_form_item', [
+                'model' => $model,
+
+            ]);
+        }
+    }
+
+
+
+
 
     public function actionCreate()
     {
@@ -296,7 +389,7 @@ class ReceiveController extends Controller
         $model = $this->findModel($id);
         return [
             'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_committee_receive',['model' => $model]),
+            'content' => $this->renderAjax('list_committee_receive', ['model' => $model]),
         ];
     }
 
@@ -593,6 +686,4 @@ class ReceiveController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-
-
 }
