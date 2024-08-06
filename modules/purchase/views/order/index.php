@@ -27,7 +27,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
-<?php if(!$isAjax):?>
 <div class="card">
     <div class="card-body d-flex align-middle flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
         <div class="d-flex gap-3 justify-content-start">
@@ -41,10 +40,9 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-<?php endif;?>
 <div class="card">
     <div class="card-body">
-        <h6>ทะเบียนคุม <?=$dataProvider->getTotalCount()?> รายการ</h6>
+        <h6><i class="bi bi-ui-checks"></i> ทะเบียนคุม <?=$dataProvider->getTotalCount()?> รายการ</h6>
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -55,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
                         <th class="fw-semibold" style="width: 200px;">ผู้เห็นชอบ</th>
                         <th class="fw-semibold"  style="width: 300px;">ความคืบหน้า</th>
-                        <th class="fw-semibold text-center" style="width:176px">ดำเนินการ</th>
+                        <th class="fw-semibold text-center" style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -102,12 +100,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                         </td>
-
-                       
-                
                         <td class="fw-light">
                             <div class="btn-group">
-                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
@@ -134,7 +129,6 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
         <div class="d-flex justify-content-center">
-
     <?= yii\bootstrap5\LinkPager::widget([
         'pagination' => $dataProvider->pagination,
         'firstPageLabel' => 'หน้าแรก',
@@ -144,8 +138,6 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]); ?>
     </div>
-
-    
     </div>
 </div>
 

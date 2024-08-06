@@ -5,7 +5,7 @@ use yii\helpers\Html;
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-            <h6><?=$title?>
+            <h6><i class="bi bi-ui-checks"></i> <?=$title?>
             <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span>
             รายการ</h6>
         </div>
@@ -37,7 +37,7 @@ use yii\helpers\Html;
                     <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
                     <td class="fw-light">
                         <div class="btn-group">
-                            <?= Html::a('<i class="bi bi-clock"></i>', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
                             <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                 data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                 <i class="bi bi-caret-down-fill"></i>
@@ -70,7 +70,7 @@ use yii\helpers\Html;
                     ],
                 ]); ?>
                 <div>
-                <?=Html::a('แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['data' => ['pjax' => 0]])?>
+                <?=Html::a('แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
             </div>
         </div>
     </div>

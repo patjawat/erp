@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <p>ภาพรวมการสั่งซื้อ</p>
+                    <p><i class="fa-solid fa-chart-simple me-1"></i>ภาพรวมการสั่งซื้อ</p>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
