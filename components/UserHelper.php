@@ -47,6 +47,31 @@ class UserHelper extends Component
       return Employees::findOne(['user_id' => Yii::$app->user->id]);
    }
 
+
+
+    // Avatar ของฉัน
+    public static function getMe($msg=null)
+    {
+        try {
+            $employee = self::GetEmployee();
+            return [
+                'avatar' => $employee->getAvatar(false,$msg),
+                'emp_id' => $employee->id,
+                'user_id' => $employee->user_id,
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'emp_id' => '',
+                'user_id' => '',
+                'department' => '',
+                'fullname' => '',
+            ];
+        }
+    }
+
    public static function phone()
    {
       return self::GetEmployee()->phone;

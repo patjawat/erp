@@ -34,11 +34,10 @@ $this->params['breadcrumbs'][] = $this->title;
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
-    // 'type' => ActiveForm::TYPE_HORIZONTAL,
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/inventory/receive/validator']
+    'validationUrl' => ['/inventory/receive/add-item-validator']
 ]); ?>
-
+ปปป
 <div class="row">
     <div class="col-8">
         <div class="card border border-primary">

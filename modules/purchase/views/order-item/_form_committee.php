@@ -125,11 +125,11 @@ echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
     ]
 ])->label('คณะกรรมการ');
 ?>
-    <?= $form->field($model, 'action')->hiddenInput()->label(false) ?>
+    <?php //  $form->field($model, 'action')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[committee_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[board_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?php $form->field($model, 'data_json[board_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[position_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
    
     

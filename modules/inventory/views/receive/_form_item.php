@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <style>
 
-#order-data_json-qty {
+#stock-qty {
     height: 110px !important;
     font-size: 100px !important;
 }
@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/inventory/receive/validator']
+    'validationUrl' => ['/inventory/receive/add-item-validator']
 ]); ?>
 <div class="row">
     <div class="col-8">
@@ -75,12 +75,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
     <div class="col-6">
-        <?= $form->field($model, 'data_json[qty]')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+        <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
 
     </div>
 </div>
 
-
+<?= $form->field($model, 'data_json[qty]')->hiddenInput()->label(false) ?>
 <div class="d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow rounded-pill', 'id' => 'summit']) ?>
 </div>
@@ -90,29 +90,29 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-    console.log($("#order-auto_lot").val())
-    if($("#order-auto_lot").val()){
-    $( "#order-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
-    $('#order-data_json-lot_number').prop('disabled',localStorage.getItem('lot_auto') == 1 ? true : false );
+    console.log($("#stock-auto_lot").val())
+    if($("#stock-auto_lot").val()){
+    $( "#stock-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
+    $('#stock-data_json-lot_number').prop('disabled',localStorage.getItem('lot_auto') == 1 ? true : false );
 
     if(localStorage.getItem('fsn_auto') == true)
     {
-        $('#order-data_json-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+        $('#stock-data_json-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
     }
 
     }
 
-    $("#order-auto_lot").change(function() {
+    $("#stock-auto_lot").change(function() {
         //ตั้งค่า Run Lot Auto
         if(this.checked) {
             console.log('lot_auto');
             localStorage.setItem('lot_auto',1);
-            $('#order-data_json-lot_number').prop('disabled',this.checked);
-            $('#order-data_json-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+            $('#stock-data_json-lot_number').prop('disabled',this.checked);
+            $('#stock-data_json-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
         }else{
             localStorage.setItem('lot_auto',0);
-            $('#order-data_json-lot_number').prop('disabled',this.checked);
-            $('#order-data_json-lot_number').val('')
+            $('#stock-data_json-lot_number').prop('disabled',this.checked);
+            $('#stock-data_json-lot_number').val('')
             console.log('lot_manual');
         }
     });
@@ -169,7 +169,7 @@ $js = <<< JS
     };    
      
    
-    $("#order-data_json-mfg_date").datetimepicker({
+    $("#stock-data_json-mfg_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
@@ -179,7 +179,7 @@ $js = <<< JS
         closeOnDateSelect:true,
     }); 
     
-    $("#order-data_json-exp_date").datetimepicker({
+    $("#stock-data_json-exp_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย

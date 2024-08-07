@@ -85,6 +85,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                             class="badge bg-primary rounded-pill text-white">4</span> คลัง</a>
                                         </li>
                                         <?php endif?>
+                                        <?php if($model->status >= 5):?>
+                                        <li class="nav-item">
+                                            <a class="nav-link <?=$model->status == 5 ? 'active' : null;?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
+                                            class="badge bg-primary rounded-pill text-white">5</span> ส่งบัญชี</a>
+                                        </li>
+                                        <?php endif?>
                                 </ul>
                                 <div class="dropdown float-end">
                                     <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
@@ -116,7 +122,13 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
 
                                 <div id="warehouse_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
+                                    
                                     <?= $this->render('warehouse_detail', ['model' => $model]) ?>
+                                </div>
+
+                                <div id="accounting_detail" class="container tab-pane <?=$model->status == 5 ? 'active' : null;?>">
+                                    
+                                    <?= $this->render('accounting_detail', ['model' => $model]) ?>
                                 </div>
                             </div>
                         </div>

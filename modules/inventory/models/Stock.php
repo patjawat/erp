@@ -3,6 +3,7 @@
 namespace app\modules\inventory\models;
 
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\AssetHelper;
 use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
@@ -47,6 +48,7 @@ class Stock extends \yii\db\ActiveRecord
      */
     public $qty_check;
     public $sum_qty;
+    public $auto_lot;
 
     public static function tableName()
     {
@@ -62,7 +64,7 @@ class Stock extends \yii\db\ActiveRecord
             [['from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             // [['movement_type'], 'required'],
             [['movement_type'], 'string'],
-            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty'], 'safe'],
+            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty','auto_lot'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
             [['category_id', 'ref'], 'string', 'max' => 255],
         ];
@@ -134,6 +136,12 @@ class Stock extends \yii\db\ActiveRecord
         // แปลงวันที่จาก ค.ศ. เป็น พ.ศ. หลังจากดึงข้อมูลจากฐานข้อมูล
         // $this->movement_date = AppHelper::convertToThaiBuddhist($this->movement_date);
     }
+
+        // Avatar ของฉัน
+        public  function getMe($msg=null)
+        {
+            return UserHelper::getMe($msg);
+        }
 
     
     // แสดงวันที่ส่งซ่อม
@@ -270,6 +278,14 @@ public function getProduct()
                return AssetHelper::ListAssetType();
            }
    
+
+
+    public function ListStockItems()
+    {
+        return self::find()
+            ->where(['name' => 'stock_item', 'category_id' => $this->id])
+            ->all();
+    }
 
             //แสดงรายชื่อกรรมการตรวจรับ
     public function ListCommittee()

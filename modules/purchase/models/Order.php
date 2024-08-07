@@ -5,6 +5,7 @@ namespace app\modules\purchase\models;
 use app\components\SiteHelper;
 use app\components\AppHelper;
 use app\components\CategoriseHelper;
+use app\components\UserHelper;
 use app\models\Categorise;
 use app\modules\am\models\AssetItem;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -46,7 +47,7 @@ class Order extends \yii\db\ActiveRecord
     public $vatType;
     public $action;
     public $old_data;
-    public $auto_lot;
+
     /**
      * {@inheritdoc}
      */
@@ -280,22 +281,9 @@ class Order extends \yii\db\ActiveRecord
     }
 
     // Avatar ของฉัน
-    public static function getMe($msg=null)
+    public  function getMe($msg=null)
     {
-        try {
-            $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
-            return [
-                'avatar' => $employee->getAvatar(false,$msg),
-                'department' => $employee->departmentName(),
-                'fullname' => $employee->fullname,
-            ];
-        } catch (\Throwable $th) {
-            return [
-                'avatar' => '',
-                'department' => '',
-                'fullname' => '',
-            ];
-        }
+        return UserHelper::getMe($msg);
     }
     // ผู้ขอ
     public function getUserReq()
@@ -638,7 +626,10 @@ class Order extends \yii\db\ActiveRecord
 
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type', 'food_type', 'service_type']])->all(), 'code', 'title');
+        // return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type', 'food_type', 'service_type']])->all(), 'code', 'title');
+        // return ArrayHelper::map(Categorise::find()->andWhere(['name' =>'asst_item'])->all(), 'code',function($model){
+        //     return $model->category_id.' - '.$model->title;
+        // });
     }
 
     public function ListPr()
