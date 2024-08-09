@@ -19,7 +19,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <i class="bi bi-ui-checks"></i> ทะเบียนวัสดุ <?=$dataProvider->getTotalCount()?> รายการ
+                        <i class="bi bi-ui-checks"></i> ทะเบียนวัสดุ <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?></span> รายการ
                     </div>
                     <div>
                 <?=$this->render('_search', ['model' => $searchModel])?>
