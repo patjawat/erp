@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body d-flex align-middle flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
         <div class="d-flex gap-3 justify-content-start">
-        <?= Html::a('<i class="fa-solid fa-triangle-exclamation"></i> แจ้งซ่อม ', ['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อม ', ['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
         </div>
         <div class="d-flex align-items-center gap-2">
             <?=$this->render('_search', ['model' => $searchModel])?>
@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <div class="card">
     <div class="card-body">
-        <h6><i class="bi bi-ui-checks"></i> แจ้งซ่อม <?=$dataProvider->getTotalCount()?> รายการ</h6>
+        <h6><i class="bi bi-ui-checks"></i> แจ้งซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
         <div class="table-responsive">
             <table class="table">
                 <thead>
