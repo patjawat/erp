@@ -15,7 +15,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
     <div class="card">
         <div class="card-body d-flex align-middle flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
             <div class="d-flex gap-3 justify-content-start">
-                <?= Html::a('<i class="fa-solid fa-cart-plus"></i> เบิกวัสดุ ', ['/me/store/product','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'], ['class' => 'btn btn-primary rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-solid fa-cart-plus"></i> เลือกรายการเบิก ', ['/me/store/product','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'], ['class' => 'btn btn-primary rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
         </div>
         <div class="d-flex align-items-center gap-2">
             <?=$this->render('_search', ['model' => $searchModel])?>

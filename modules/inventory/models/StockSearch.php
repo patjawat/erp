@@ -18,7 +18,7 @@ class StockSearch extends Stock
     {
         return [
             [['id', 'asset_item', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by'], 'integer'],
-            [['name', 'rc_number', 'po_number', 'movement_type', 'receive_type', 'movement_date', 'lot_number', 'expiry_date', 'category_id', 'ref', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['name', 'rc_number', 'po_number', 'movement_type', 'receive_type', 'movement_date', 'lot_number', 'expiry_date', 'category_id', 'ref', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
             [['total_price', 'unit_price'], 'number'],
         ];
     }

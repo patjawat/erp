@@ -49,6 +49,7 @@ class Stock extends \yii\db\ActiveRecord
     public $qty_check;
     public $sum_qty;
     public $auto_lot;
+    public $q;
 
     public static function tableName()
     {
@@ -64,7 +65,7 @@ class Stock extends \yii\db\ActiveRecord
             [['from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             // [['movement_type'], 'required'],
             [['movement_type'], 'string'],
-            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty','auto_lot','unit_price','total_price'], 'safe'],
+            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty','auto_lot','unit_price','total_price','q'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
             [['category_id', 'ref'], 'string', 'max' => 255],
         ];

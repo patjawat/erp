@@ -15,7 +15,10 @@ class StoreController extends \yii\web\Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
         $dataProvider->query->andFilterWhere(['name' => 'stock_detail']);
+        $dataProvider->query->andFilterWhere(['like','at.title' => $searchModel->q]);
+
         return $this->render('index',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -26,7 +29,9 @@ class StoreController extends \yii\web\Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'stock_item']);
+        $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
+        $dataProvider->query->andFilterWhere(['stock.name' => 'stock_item']);
+        $dataProvider->query->andFilterWhere(['like','at.title',$searchModel->q]);
         $dataProvider->query->groupBy('asset_item');
         // $dataProvider->pagination->pageSize = 4;
 

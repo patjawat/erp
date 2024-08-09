@@ -11,24 +11,17 @@ use yii\widgets\ActiveForm;
 <div class="order-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['index'],
+        'action' => ['product'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1
         ],
     ]); ?>
+    <div class="d-flex justofy-content-between gap-2">
 
-    <?= $form->field($model, 'id')->label(false) ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
+        
+        <?= $form->field($model, 'q')->label(false) ?>
+    </div>
 
     <!-- <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
