@@ -13,7 +13,13 @@ class StoreController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        return $this->render('index');
+        $searchModel = new StockSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'stock_detail']);
+        return $this->render('index',[
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     public function actionProduct()
