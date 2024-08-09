@@ -159,6 +159,29 @@ class StoreController extends \yii\web\Controller
 
     public function actionCheckout()
     {
+
+        $cart = \Yii::$app->cart;
+        $items = $cart->getItems();
+
+        $stock = new Stock([
+            'name' => 'stock_detail',
+            'movement_type' => 'OUT',
+        ]);
+        $thaiYear = date('dm') . substr((date('Y') + 543), 2);
+
+        $stock->rq_number  = \mdm\autonumber\AutoNumber::generate('RQ' . $thaiYear . '-?????');
+        $stock->save(false);
+        foreach ($items as $item) {
+           $model = new Stock([
+                'name' => 'stock_item',
+                'category_id' => $stock->id,
+                'rq_number' => $stock->rq_number,
+                'asset_item' => $item->code,
+                'movement_type' => 'OUT'
+           ]);
+           $model->save(false);
+        }
+
         \Yii::$app->cart->checkOut(false);
         $this->redirect(['index']);
     }

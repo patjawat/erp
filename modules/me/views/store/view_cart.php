@@ -23,7 +23,9 @@ use yii\helpers\Html;
                 <tbody>
                     <?php foreach($products as $item):?>
                     <tr class="">
-                        <td scope="row"><?=$item->Avatar()?></td>
+                        <td scope="row">
+                        <?=$item->code?>    
+                        <?=$item->Avatar()?></td>
                         <td>
                             <div class="d-flex d-flex flex-row">
                                 <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/me/store/update','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
