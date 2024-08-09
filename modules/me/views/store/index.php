@@ -34,7 +34,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
             <div class="card-body">
                 <div class="d-flex justofy-content-between">
 
-                    <h6><i class="bi bi-ui-checks"></i> ทะเบียนเบิกวัสดุ 0 รายการ</h6>
+                    <h6><i class="bi bi-ui-checks"></i> ทะเบียนเบิกวัสดุ <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 </div>
                 <div class="table-responsive">
 

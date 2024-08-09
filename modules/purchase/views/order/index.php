@@ -43,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <div class="card">
     <div class="card-body">
-        <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <?=$dataProvider->getTotalCount()?> รายการ</h6>
+        <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
         <div class="table-responsive">
             <table class="table">
                 <thead>
