@@ -73,62 +73,61 @@ class ReceiveController extends Controller
     public function actionAddItemValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Stock();
+        $model = new Order();
+
+       
+
         $requiredName = "ต้องระบุ";
         if ($this->request->isPost && $model->load($this->request->post())) {
 
             if (isset($model->data_json['mfg_date'])) {
-                preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName.'วันผลิต') : null;
+                preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName . 'วันผลิต') : null;
             }
-            
+
             if (isset($model->data_json['exp_date'])) {
-                preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName.'วันหมดอายุ') : null;
+                preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName . 'วันหมดอายุ') : null;
+            }
+
+            if ($model->qty !== $model->data_json['qty']) {
+                $model->addError('data_json[qty]', 'จำนวนไม่ตรง');
             }
             
-                if($model->qty != $model->data_json['qty']){
-                    $model->addError('qty', 'จำนวนไม่ตรง');
-                }
-
-                $model->qty == "" ? $model->addError('qty', $requiredName) : null;
-                $model->qty == "0" ? $model->addError('qty', $requiredName.'มากกว่า 0') : null;
-
-
+            $model->data_json['qty'] == "" ? $model->addError('data_json[qty]', $requiredName) : null;
+            $model->data_json['qty']  == "0" ? $model->addError('data_json[qty]', $requiredName . 'มากกว่า 0') : null;
         }
+        
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
         }
+
+        // ตรวจสอบควาใถูกต้องรับเข้า Stock
+        $stock = new Stock();
+        if ($this->request->isPost && $stock->load($this->request->post())) {
+
+            if (isset($stock->data_json['mfg_date'])) {
+                preg_replace('/\D/', '', $stock->data_json['mfg_date']) == "" ? $stock->addError('data_json[mfg_date]', $requiredName . 'วันผลิต') : null;
+            }
+
+            if (isset($stock->data_json['exp_date'])) {
+                preg_replace('/\D/', '', $stock->data_json['exp_date']) == "" ? $stock->addError('data_json[exp_date]', $requiredName . 'วันหมดอายุ') : null;
+            }
+
+            $stock->qty == "" ? $stock->addError('qty', $requiredName) : null;
+            $stock->qty  == "0" ? $stock->addError('qty', $requiredName . 'มากกว่า 0') : null;
+        }
+
+        foreach ($stock->getErrors() as $attribute => $errors) {
+            $resultStock[\yii\helpers\Html::getInputId($stock, $attribute)] = $errors;
+        }
+        if (!empty($resultStock)) {
+            return $this->asJson($resultStock);
+        }
+
+
     }
-
-    // ตรวจสอบความถูกต้อง เก่า
-    // public function actionValidator()
-    // {
-    //     Yii::$app->response->format = Response::FORMAT_JSON;
-    //     $model = new Stock();
-
-    //     if ($this->request->isPost && $model->load($this->request->post())) {
-    //         $requiredName = 'ต้องระบุ';
-    //         // ตรวจสอบตำแหน่ง
-    //         if ($model->name == 'receive_item') {
-    //             $model->qty == '' ? $model->addError('qty', $requiredName) : null;
-    //             $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
-    //             // $model->data_json['position_name'] == '' ? $model->addError('data_json[position_name]', $requiredName) : null;
-    //             // $model->data_json['position_number'] == '' ? $model->addError('data_json[position_number]', $requiredName) : null;
-    //             if ($model->po_number) {
-    //                 $model->qty > $model->qty_check ? $model->addError('qty', 'เกินจำนวนที่สั่งซื้อ(' . $model->qty_check . ')') : null;
-    //             }
-    //         }
-
-    //         foreach ($model->getErrors() as $attribute => $errors) {
-    //             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-    //         }
-    //         if (!empty($result)) {
-    //             return $this->asJson($result);
-    //         }
-    //     }
-    // }
 
 
     /**
@@ -147,43 +146,29 @@ class ReceiveController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-
-public function actionFormCommittee()
-{
     
-    $model = new Stock([
-        'category_id' => $this->request->get('id'),
-        'name' => $this->request->get('name'),
-    ]);
 
-    if ($this->request->isPost) {
-        if ($model->load($this->request->post()) && $model->save()) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+    //แสดงรายการรอรับเข้าคลัง
+    public function actionView($id)
+    {
+        $model =  $this->findModel($id);
+
+        Yii::$app->session->set('receive', $model);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $this->request->get('title'),
-                'status' => 'success',
-                'container' => '#receive',
+                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
             ];
-        }
-    } else {
-        $model->loadDefaultValues();
-    }
-
-    if ($this->request->isAjax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('_form_committee', [
+        } else {
+            return $this->render('view', [
                 'model' => $model,
-            ]),
-        ];
-    } else {
-        return $this->render('_form_committee', [
-            'model' => $model,
-        ]);
+            ]);
+        }
     }
 
-}
 
     /**
      * Displays a single ir model.
@@ -191,45 +176,28 @@ public function actionFormCommittee()
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($id)
+    public function actionViewByPo($id)
     {
         $model = $this->findModel($id);
-        $order = Order::findOne(['po_number' => $model->po_number]);
+        if($model->po_number){
+            $order = Order::findOne(['po_number' => $model->po_number]);
+        }else{
+            $order = new Order();
+        }
         Yii::$app->session->set('receive', $model);
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="fa-solid fa-eye"></i> แสดง',
-                'content' => $this->renderAjax('view_order', [
+                'content' => $this->renderAjax('view_by_po', [
                     'model' => $model,
                     'order' => $order
                 ]),
             ];
         } else {
-            return $this->render('view_order', [
+            return $this->render('view_by_po', [
                 'model' => $model,
                 'order' => $order
-            ]);
-        }
-    }
-
-    //แสดงรายการรอรับเข้าคลัง
-    public function actionViewOrder($id)
-    {
-        $model = Order::findOne($id);
-        
-        Yii::$app->session->set('receive', $model);
-        if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
-                'content' => $this->renderAjax('view_order', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('view_order', [
-                'model' => $model,
             ]);
         }
     }
@@ -238,16 +206,16 @@ public function actionFormCommittee()
     //แก้ไขรายการรับเข้า ระบุบ lot วันหมดอายุ
     public function actionUpdateOrderItem($id)
     {
-        $model = $this->findModel($id);
+        $model = Order::findOne($id);
         $oriObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-                $thaiYear = date('dm').substr((date('Y') + 543), 2);
+                $thaiYear = date('dm') . substr((date('Y') + 543), 2);
                 // return $model->data_json['lot_number'];
-                if($model->auto_lot == "1"){
+                if ($model->auto_lot == "1") {
                     $lotNumber  = \mdm\autonumber\AutoNumber::generate('LOT' . $thaiYear . '-?????');
-                }else{
+                } else {
                     $lotNumber = $model->data_json['lot_number'];
                     // return $model->data_json;
                 }
@@ -257,10 +225,10 @@ public function actionFormCommittee()
                     'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
                     'lot_number' => $lotNumber
                 ];
-            
+
 
                 $model->data_json =  ArrayHelper::merge($oriObj, $model->data_json, $convertDate);
-              
+
                 if ($model->save()) {
                     return [
                         'status' => 'success',
@@ -274,7 +242,7 @@ public function actionFormCommittee()
             $model->loadDefaultValues();
             try {
                 $oldObj = $model->data_json;
-               
+
                 $model->data_json = [
                     'mfg_date' =>  AppHelper::convertToThai($model->data_json['mfg_date']),
                     'exp_date' =>  AppHelper::convertToThai($model->data_json['exp_date'])
@@ -289,27 +257,77 @@ public function actionFormCommittee()
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_item', [
+                'content' => $this->renderAjax('_form_po_item', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('_form_item', [
+            return $this->render('_form_po_item', [
                 'model' => $model,
 
             ]);
         }
     }
 
-
-
-
-
     public function actionCreate()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        $model = new Stock([
+            'name' => 'stock_detail',
+            'po_number' => $this->request->get('po_number'),
+            'movement_type' => 'IN',
+            'to_warehouse_id' => $warehouse['warehouse_id']
+        ]);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+                $thaiYear = substr((date('Y') + 543), 2);
+
+                if ($model->rc_number == '') {
+                    $model->rc_number = \mdm\autonumber\AutoNumber::generate('RC-' . $thaiYear . '????');
+                }
+                $model->order_status = 'pending';
+
+                $convertDate = [
+                    'to_stock_date' =>  AppHelper::convertToGregorian($model->data_json['to_stock_date']),
+                    'checked_date' =>  AppHelper::convertToGregorian($model->data_json['checked_date']),
+                ];
+
+                $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
+                $model->save(false);
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+
+    // รับเข้าจากการจัดซื้อ
+    public function actionCreateByPo()
     {
         $model = new Stock([
             'name' => 'receive',
-            'po_number' => $this->request->get('category_id'),
+            'po_number' => $this->request->get('po_number'),
             'receive_type' => $this->request->get('receive_type')
         ]);
 
@@ -326,7 +344,7 @@ public function actionFormCommittee()
                 }
                 $model->order_status = 'pending';
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['view-by-po', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
@@ -334,6 +352,7 @@ public function actionFormCommittee()
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+
 
             return [
                 'title' => $this->request->get('title'),
@@ -349,38 +368,7 @@ public function actionFormCommittee()
     }
 
 
-    public function actionCreateOrder()
-    {
-        $thaiYear = substr((date('Y') + 543), 2);
-        $po_number  = $this->request->get('category_id');
-        $receive_type  = $this->request->get('receive_type');
-        $order = Order::findOne(['name' => 'order','po_number' => $po_number]);
-        $model = new Stock();
-        $model->name = 'receive';
-        $model->po_number = $po_number;
-        $model->rc_number = \mdm\autonumber\AutoNumber::generate('RC-' . $thaiYear . '????');
-        $model->order_status = 'pending';
-        
-        if($model->save(false)){
-            Yii::$app->response->format = Response::FORMAT_JSON;
 
-
-            foreach ($order->ListOrderItems() as $item){
-                $stockItem = new Stock([
-                    'category_id' => $model->id,
-                    'po_number' => $model->po_number,
-                    'name' => 'stock_item',
-                    'asset_item' => $item->asset_item,
-                    'unit_price' => $item->price,
-                    'data_json' => [
-                        'qty' => $item->qty
-                    ]
-                ]);
-                $stockItem->save(false);
-            }
-            return $this->redirect(['view', 'id' => $model->id]);   
-        }
-    }
 
     public function actionUpdate($id)
     {
@@ -490,67 +478,139 @@ public function actionFormCommittee()
         }
     }
 
-    //คณะกรรมการตรวจรับพัสดุเข้าคลัง
-    public function actionListCommittee($id)
+
+
+
+
+    public function actionProductList()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $id = $this->request->get('id');
         $model = $this->findModel($id);
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_committee_receive', ['model' => $model]),
-        ];
-    }
-
-
-    // เพิ่มคณะกรรมการ ตรวจรับ
-    public function actionAddCommittee()
-    {
-        $model = new Stock([
-            'rc_number' => $this->request->get('rc_number'),
-            'name' => $this->request->get('name')
-        ]);
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'title' => $this->request->get('title'),
-                    'status' => 'success',
-                    'container' => '#inventory',
-                ];
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
+        $searchModel = new ProductSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
+        $dataProvider->pagination->pageSize = 10;
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_committee', [
-                    'model' => $model,
+                'content' => $this->renderAjax('product_list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                    'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('_form_committee', [
-                'model' => $model,
+            return $this->render('product_list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'model' => $model
             ]);
         }
     }
 
 
-    // public function actionUpdateCommittee()
+    //เพิ่มรายการวสดุรับเข้า
+    public function actionAddItem()
+    {
+        // Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $asset_item = $this->request->get('asset_item');
+
+        $product = Product::findOne(['code' => $asset_item]);
+        // return $product;
+
+        $Stock =  Stock::findOne($id);
+
+        $model = new Stock([
+
+            'rc_number' => $Stock->rc_number,
+            'to_warehouse_id' => $Stock->to_warehouse_id,
+            'name' => 'stock_item',
+            'asset_item' => $product->code,
+            'movement_type' => 'in',
+            'order_status' => 'pending',
+        ]);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'container' => '#inventory',
+                    ];
+                }
+            } else {
+                return $model->getErrors();
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_item', [
+                    'model' => $model,
+                    'product' => $product
+                ]),
+            ];
+        } else {
+            return $this->render('_form_item', [
+                'model' => $model,
+                'product' => $product
+            ]);
+        }
+    }
+
+
+
+    // เพิ่มรายการวัสดุจาก PO
+    // public function actionAddPoItem()
     // {
-    //     $model = Stock::findOne($this->request->get('id'));
+    //     $id = $this->request->get('id');
+    //     // ตรวจสอบ order จาก ID
+    //     $order = Order::findOne($id);
+    //     // ถ้ามีรายการเดิมที่ยังรับเข้าไม่หมด
+    //     $Stock = Stock::find()->where(['name' => 'receive', 'po_number' => $order->po_number, 'order_status' => 'pending'])->One();
+    //     // ค้นหารายการสินค่าจาก asset_item ที่เก็บไว้ใน Order po_number
+    //     // $product = Product::findOne(['code' => $order->asset_item]);
+
+    //     $model = new Stock([
+    //         'po_number' => $order->po_number,
+    //         'rc_number' => $Stock->rc_number,
+    //         'to_warehouse_id' => $Stock->to_warehouse_id,
+    //         'name' => 'receive_item',
+    //         'asset_item' => $order->asset_item,
+    //         'movement_type' => 'receive',
+    //         'order_status' => 'pending',
+    //         'data_json' => [
+    //             'po_qty' => $order->qty
+    //         ]
+    //     ]);
+
+    //     $model->qty_check = $model->QtyCheck();
 
     //     if ($this->request->isPost) {
-    //         if ($model->load($this->request->post()) && $model->save()) {
+    //         if ($model->load($this->request->post())) {
     //             Yii::$app->response->format = Response::FORMAT_JSON;
-    //             return [
-    //                 'title' => $this->request->get('title'),
-    //                 'status' => 'success',
-    //                 'container' => '#inventory',
-    //             ];
+
+    //             if ($model->save()) {
+    //                 $order->save(false);
+    //                 // return $model->save();
+    //                 return [
+    //                     'status' => 'success',
+    //                     'container' => '#inventory',
+    //                 ];
+    //             }
+    //         } else {
+    //             return $model->getErrors();
     //         }
     //     } else {
     //         $model->loadDefaultValues();
@@ -560,139 +620,18 @@ public function actionFormCommittee()
     //         Yii::$app->response->format = Response::FORMAT_JSON;
     //         return [
     //             'title' => $this->request->get('title'),
-    //             'content' => $this->renderAjax('_form_committee', [
+    //             'content' => $this->renderAjax('_add_item', [
     //                 'model' => $model,
+    //                 'order' => $order
     //             ]),
     //         ];
     //     } else {
-    //         return $this->render('_form_committee', [
+    //         return $this->render('_add_item', [
     //             'model' => $model,
+    //             'order' => $order
     //         ]);
     //     }
     // }
-
-    //เพิ่มรายการวสดุรับเข้า
-    public function actionAddItem()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $receive = Yii::$app->session->get('receive');
-        $id = $this->request->get('id');
-
-        $product = Product::findOne($id);
-
-        $order = new Order();
-        $Stock =  Stock::findOne($receive->id);
-
-        $model = new Stock([
-            'po_number' => $order->po_number,
-            'rc_number' => $Stock->rc_number,
-            'to_warehouse_id' => $Stock->to_warehouse_id,
-            'name' => 'receive_item',
-            'asset_item' => $product->code,
-            'movement_type' => 'receive',
-            'order_status' => 'pending',
-            'data_json' => [
-                'po_qty' => $order->qty
-            ]
-        ]);
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-
-                if ($model->save()) {
-                    return [
-                        'status' => 'success',
-                        'container' => '#inventory',
-                    ];
-                }
-            } else {
-                return $model->getErrors();
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_add_item', [
-                    'model' => $model,
-                    'product' => $product,
-                    'order' => $order
-                ]),
-            ];
-        } else {
-            return $this->render('_add_item', [
-                'model' => $model,
-                'product' => $product,
-                'order' => $order
-            ]);
-        }
-    }
-    // เพิ่มรายการวัสดุจาก PO
-    public function actionAddPoItem()
-    {
-        $id = $this->request->get('id');
-        // ตรวจสอบ order จาก ID
-        $order = Order::findOne($id);
-        // ถ้ามีรายการเดิมที่ยังรับเข้าไม่หมด
-        $Stock = Stock::find()->where(['name' => 'receive', 'po_number' => $order->po_number, 'order_status' => 'pending'])->One();
-        // ค้นหารายการสินค่าจาก asset_item ที่เก็บไว้ใน Order po_number
-        // $product = Product::findOne(['code' => $order->asset_item]);
-
-        $model = new Stock([
-            'po_number' => $order->po_number,
-            'rc_number' => $Stock->rc_number,
-            'to_warehouse_id' => $Stock->to_warehouse_id,
-            'name' => 'receive_item',
-            'asset_item' => $order->asset_item,
-            'movement_type' => 'receive',
-            'order_status' => 'pending',
-            'data_json' => [
-                'po_qty' => $order->qty
-            ]
-        ]);
-
-        $model->qty_check = $model->QtyCheck();
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-
-                if ($model->save()) {
-                    $order->save(false);
-                    // return $model->save();
-                    return [
-                        'status' => 'success',
-                        'container' => '#inventory',
-                    ];
-                }
-            } else {
-                return $model->getErrors();
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_add_item', [
-                    'model' => $model,
-                    'order' => $order
-                ]),
-            ];
-        } else {
-            return $this->render('_add_item', [
-                'model' => $model,
-                'order' => $order
-            ]);
-        }
-    }
 
     public function actionUpdateItem($id)
     {
@@ -725,14 +664,14 @@ public function actionFormCommittee()
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'แก้ไข <i class="fa-solid fa-circle-info text-primary"></i> ' . $product->title,
-                'content' => $this->renderAjax('_add_item', [
+                'title' => 'แก้ไข <i class="fa-solid fa-circle-info text-primary"></i> ',
+                'content' => $this->renderAjax('_form_item', [
                     'model' => $model,
                     'product' => $product
                 ]),
             ];
         } else {
-            return $this->render('_add_item', [
+            return $this->render('_form_item', [
                 'model' => $model,
                 'product' => $product
             ]);
@@ -744,32 +683,46 @@ public function actionFormCommittee()
         Yii::$app->response->format = Response::FORMAT_JSON;
         $user = UserHelper::getMe();
         $id = $this->request->get('id');
-        $order = Order::findOne($id);
+        $stock = $this->findModel($id);
+        if($stock->po_number){
+            $order = Order::findOne(['name' => 'order','po_number' => $stock->po_number]);   
+        }
+
         $receiveObj =  [
             'recipient_id' => $user['user_id'],
             'recipient_name' => $user['fullname'],
             'recipient_department' => $user['department'],
         ];
-        $stock = new Stock([
-            'name' => 'receive',
-            'po_number' => $order->po_number,
-            'data_json' => $receiveObj
-        ]);
-        $stock->save(false);
-        foreach ($order->ListOrderItems() as $item) {
-            $stockItem = new Stock([
-                'asset_item' => $item->asset_item,
-                'category_id' => $stock->id,
-                'po_number' => $stock->po_number,
-                'name' => 'receive_item',
-                'qty' => $item->data_json['qty'],
-                'unit_price' => $item->price
-            ]);
-            $stockItem->save(false);
+
+        $stock->name  = 'receive';
+        $stock->order_status = 'success';
+        
+        if($stock->po_number){
+        $stock->po_number = $order->po_number;
+        //ถ้าเป็นการรับจ้าใบสั่่งซื้อ
+            foreach ($order->ListOrderItems() as $item) {
+                $stockItem = new Stock([
+                    'asset_item' => $item->asset_item,
+                    'category_id' => $stock->id,
+                    'po_number' => $stock->po_number,
+                    'name' => 'receive_item',
+                    'qty' => $item->data_json['qty'],
+                    'unit_price' => $item->price,
+                    'order_status' => 'success'
+                ]);
+                $stockItem->save(false);
+            }
+            $order->data_json =  ArrayHelper::merge($order->data_json, $receiveObj);
+            $order->status = 5;
+            $order->save(false);
+
+        }else{
+            //ถ้าเป็นการรับเข้าเอง
+             Stock::updateAll(['order_status' => 'success'], ['rc_number' => $stock->rc_number]);
         }
-        $order->data_json =  ArrayHelper::merge($order->data_json,$receiveObj);
-        $order->status = 5;
-        $order->save(false);
+
+        $stock->data_json = $receiveObj;
+        $stock->save(false);
         return $this->redirect(['/inventory/receive']);
         // return [
         //     'stock' => $stock,

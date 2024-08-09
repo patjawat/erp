@@ -65,6 +65,7 @@ class DefaultController extends Controller
          $dataProvider->query->andwhere(['is not', 'pr_number', null]);
          $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), 'Y']);
          $dataProvider->query->andFilterwhere(['name' => 'order']);
+         $dataProvider->query->andFilterwhere(['status' => '1']);
         $dataProvider->pagination->pageSize = 5;
 
          if ($this->request->isAjax) {

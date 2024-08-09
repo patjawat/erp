@@ -49,6 +49,8 @@ class WarehouseController extends Controller
 
         if ($warehouse) {
             return $this->render('view', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
                 'model' => $this->findModel($warehouse['warehouse_id']),
                 'warehouse' => $warehouse
             ]);

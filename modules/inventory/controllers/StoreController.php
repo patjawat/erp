@@ -21,7 +21,7 @@ class StoreController extends \yii\web\Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'receive_item']);
+        $dataProvider->query->andFilterWhere(['name' => 'stock_item']);
         $dataProvider->query->groupBy('asset_item');
         // $dataProvider->pagination->pageSize = 4;
 

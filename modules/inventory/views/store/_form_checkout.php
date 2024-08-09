@@ -9,86 +9,29 @@ use kartik\datecontrol\DateControl;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
+$warehouse = Yii::$app->session->get('warehouse');
 ?>
-<div class="row">
-    <div class="col-8">
-        
-    <div class="card">
-        <div class="card-body">
 
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <?=$model->getMe('ผู้ขอเบิก')['avatar']?>
 
-<div class="stock-movement-form">
+            
 
-    <?php $form = ActiveForm::begin(); ?>
-    <div class="row">
-        <div class="col-6">
-    <?php
-        echo $form->field($model, 'from_warehouse_id')->widget(Select2::classname(), [
-            'data' => ArrayHelper::map(warehouse::find()->all(), 'id', 'warehouse_name'),
-            'options' => ['placeholder' => 'กรุณาเลือก'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-        ])->label('เบิกจากคลัง');
-    ?>
-
-         </div>
-         <div class="col-6">
-         <?php
-echo $form->field($model, 'to_warehouse_id')->widget(Select2::classname(), [
-    'data' => ArrayHelper::map(warehouse::find()->all(), 'id', 'warehouse_name'),
-    'options' => ['placeholder' => 'กรุณาเลือก'],
-    'pluginOptions' => [
-        'allowClear' => true,
-        'dropdownParent' => '#main-modal',
-    ],
-])->label('เข้าคลัง');
-?>
-         </div>
-    </div>
-
-
-<?php
-echo $form
-    ->field($model, 'data_json[due_date]')
-    ->widget(DateControl::classname(), [
-        'type' => DateControl::FORMAT_DATE,
-        'language' => 'th',
-        'widgetOptions' => [
-            'options' => ['placeholder' => 'ระบุวันที่ต้องการ ...'],
-            'pluginOptions' => [
-                'autoclose' => true
-            ]
-        ]
-    ])
-    ->label('วันที่ต้องการ');
-?>
-    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'movement_type')->hiddenInput()->label(false) ?>
-
-    <div class="form-group mt-3 d-flex justify-content-center">
-        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
-    </div>
-    <?php ActiveForm::end(); ?>
-
-</div>
-
-</div>
-    </div>
-    
-
-    </div>
-    <div class="col-4">
-        <div id="viewCartShow">
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="text-center">กำลังโหลด...</h6>
-                </div>
-            </div>
         </div>
+        <div id="viewOrder">
+            <h6 class="text-center">กำลังโหลด...</h6>
+        </div>
+        <?php echo Html::a('บันทึกเบิก',['/inventory/receive/save-to-stock','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill shadow btn-confirm','data' => [
+                        'title' => 'ยืนยัน',
+                        'text' => 'ยืนยันการเบิก'
+                        ]])?>
     </div>
 </div>
+
+
+
 
 <?php
 $storeProductUrl = Url::to(['/inventory/store/product']);
@@ -164,6 +107,45 @@ $js = <<< JS
         }
     });
 });
+
+
+\$('.btn-confirm').click(function (e) { 
+        e.preventDefault();
+        var title = \$(this).data('title');
+        var text = \$(this).data('text');
+        var imageUrl = \$(this).data('img');
+        var warehouse_id = \$(this).data('warehouse_id');
+        Swal.fire({
+            imageUrl: imageUrl,
+            imageWidth: 400,
+            imageHeight: 200,
+            title: title,
+            text: text,
+            icon: "info",
+
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            cancelButtonText: "<i class='bi bi-x-circle'></i> ยกเลิก",
+            confirmButtonText: "<i class='bi bi-check-circle'></i> ยืนยัน"
+            }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.showLoading();
+                \$.ajax({
+                    type:"get",
+                    url: $(this).attr('href'),
+                    // data: {id:warehouse_id},
+                    dataType: "json",
+                    success: async function (response) {
+                       
+                    }
+                });
+            }
+            });
+        
+    });
+
+
 JS;
 $this->registerJS($js, View::POS_END);
 

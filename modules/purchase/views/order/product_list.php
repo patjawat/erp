@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['enablePushState' => false]); ?>
 
 
-<?php echo $this->render('_search_product', ['model' => $searchModel, 'order' => $order]); ?>
+<?php echo $this->render('_search_product', ['searchModel' => $searchModel, 'model' => $model]); ?>
 
 
 <?php if (count($dataProvider->getModels()) == 0): ?>
@@ -43,14 +43,14 @@ $this->params['breadcrumbs'][] = $this->title;
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($dataProvider->getModels() as $model): ?>
+            <?php foreach ($dataProvider->getModels() as $item): ?>
             <tr class="">
                 <td scope="row">
-                    <?=$model->Avatar()?>
+                    <?=$item->Avatar()?>
                 </td>
-                <td><?=(isset($model->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">'.$model->data_json['unit'].'</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>')?></td>
+                <td><?=(isset($item->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">'.$item->data_json['unit'].'</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>')?></td>
                 <td class="align-middle">
-                    <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $model->title, 'asset_item' => $model->id, 'code' => $order->code, 'order_id' => $order->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
+                    <?= Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->id, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']) ?>
                 </td>
             </tr>
             <?php endforeach; ?>

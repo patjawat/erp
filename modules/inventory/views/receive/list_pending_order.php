@@ -25,8 +25,9 @@ use yii\web\View;
                     <td scope="row"><?= $model->po_number ?></td>
                     <td><?= $model->data_json['order_type_name'] ?></td>
                     <td class="text-end">
-                    <?php   Html::a('ดำเนินการ', ['/inventory/receive/view-order', 'id' => $model->id, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-md']]) ?>
-                        <?= Html::a('ดำเนินการ', ['/inventory/receive/create-order', 'category_id' => $model->po_number, 'receive_type' => 'po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill create-confirm', 'data' => [
+                    <?php   echo Html::a('ดำเนินการ', ['/inventory/receive/create-by-po', 'po_number' =>  $model->po_number, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?php   Html::a('ดำเนินการ', ['/inventory/receive/view-order', 'id' => $model->id, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill create-confirm', 'data' => ['size' => 'modal-md']]) ?>
+                        <?php Html::a('ดำเนินการ', ['/inventory/receive/create', 'category_id' => $model->po_number, 'receive_type' => 'po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill create-confirm', 'data' => [
                             'size' => 'modal-md',
                             'title' => 'รับเข้า'
                             ]]) ?>
@@ -69,16 +70,17 @@ $js = <<< JS
             confirmButtonText: "<i class='bi bi-check-circle'></i> ยืนยัน"
             }).then((result) => {
             if (result.isConfirmed) {
-                Swal.showLoading();
-                \$.ajax({
-                    type:"get",
-                    url: $(this).attr('href'),
-                    // data: {id:warehouse_id},
-                    dataType: "json",
-                    success: async function (response) {
+                window.location.href = $(this).attr('href')
+                // Swal.showLoading();
+                // \$.ajax({
+                //     type:"get",
+                //     url: $(this).attr('href'),
+                //     // data: {id:warehouse_id},
+                //     dataType: "json",
+                //     success: async function (response) {
                        
-                    }
-                });
+                //     }
+                // });
             }
             });
         

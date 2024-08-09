@@ -65,6 +65,7 @@ $modules['inventory'] = ['class' => 'app\modules\inventory\Module'];  // คล�
 $modules['stock'] = ['class' => 'app\modules\stock\Module'];  // คลัง by โอ๋
 $modules['helpdesk'] = ['class' => 'app\modules\helpdesk\Module'];  // บริการช่วยเหลือ (งานซ่อม)
 $modules['purchase'] = ['class' => 'app\modules\purchase\Module'];  // ระบบจัดซื้อ
+$modules['me'] = ['class' => 'app\modules\me\Module'];  // โปรไฟล์ของฉัน
 $modules['backoffice'] = ['class' => 'app\modules\backoffice\Module'];  // backoffice เดิม
 $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module

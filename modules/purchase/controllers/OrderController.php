@@ -227,22 +227,14 @@ class OrderController extends Controller
 
         $order_id = $this->request->get('order_id');
 
-        $order = Order::findOne($order_id);
-        //     $checkOrderItem = [];
-        // foreach(Order::find()->where(['category_id' => $order->id])->all() as $order_item){
-        //     $checkOrderItem[] = $order_item->asset_item;
-        // }
-        // return $checkOrderItem;
-        
-
-
+        $model = Order::findOne($order_id);
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
-        if($order->category_id == ""){
+        if($model->category_id == ""){
             $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
         }else{
-            $dataProvider->query->andFilterWhere(['category_id' => $order->category_id]);
+            $dataProvider->query->andFilterWhere(['category_id' => $model->category_id]);
             // $dataProvider->query->andFilterWhere(['name' => 'asset_item','category_id' => $order->category_id]);
             // $dataProvider->query->andFilterWhere(['NOT IN' , 'code',$checkOrderItem]);
             
@@ -255,14 +247,14 @@ class OrderController extends Controller
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('product_list', [
-                    'order' => $order,
+                    'model' => $model,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),
             ];
         } else {
             return $this->render('product_list', [
-                'order' => $order,
+                'model' => $model,
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);

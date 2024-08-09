@@ -24,13 +24,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'inventory']); ?>
 
 
         <div class="card">
             <div class="card-body">
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> รับเข้า', ['/inventory/receive/create', 'receive_type' => 'receive', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['id' => 'btn-add1', 'class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                <?= Html::a('<i class="fa-solid fa-file-circle-plus"></i> รับจากใบสั่งซื้อ', ['/inventory/receive/list-order-by-po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รายการรอรับเข้าคลัง'], ['id' => 'btn-add2', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> รับวัสดุ', ['/inventory/receive/create', 'receive_type' => 'receive', 'title' => '<i class="fa-solid fa-cubes-stacked"></i> ใบรับสินค้า'], ['id' => 'btn-add1', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
         </div>
 
@@ -38,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
 <div class="col-8">
 
-<?php Pjax::begin(['id' => 'inventory']); ?>
+
 
 <div class="card">
     <div class="card-body">
@@ -59,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'header' => 'เลขที่เอกสาร',
         'format' => 'raw',
         'value' => function ($model) {
-            return Html::a($model->rc_number, ['view', 'id' => $model->id]);
+            return Html::a($model->rc_number, ['view', 'id' => $model->id],['data' => ['pjax' => false]]);
         }
     ],
     [
@@ -108,7 +107,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 </div>
 
-<?php Pjax::end(); ?>
+
 
 
 </div>
@@ -221,3 +220,5 @@ $this->registerJS($js, View::POS_END);
 ?>
 
 
+
+<?php Pjax::end(); ?>

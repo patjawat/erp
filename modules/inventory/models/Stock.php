@@ -64,7 +64,7 @@ class Stock extends \yii\db\ActiveRecord
             [['from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by', 'lot_number'], 'integer'],
             // [['movement_type'], 'required'],
             [['movement_type'], 'string'],
-            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty','auto_lot'], 'safe'],
+            [['asset_item','movement_date', 'expiry_date', 'data_json', 'created_at', 'updated_at', 'qty_check', 'receive_type','sum_qty','auto_lot','unit_price','total_price'], 'safe'],
             [['name', 'po_number', 'rc_number', 'lot_number'], 'string', 'max' => 50],
             [['category_id', 'ref'], 'string', 'max' => 255],
         ];
@@ -234,7 +234,7 @@ public function getProduct()
             try {
                 $data = '';
                 $data .= '<div class="avatar-stack">';
-                foreach (self::find()->where(['name' => 'receive_committee'])->all() as $key => $item) {
+                foreach (self::find()->where(['name' => 'receive_committee','category_id' => $this->id])->all() as $key => $item) {
                     $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
                     $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),['/inventory/receive/update-committee','id' => $item->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'],['class' => 'open-modal','data' => [
                         'size' => 'model-md',
@@ -283,24 +283,29 @@ public function getProduct()
     public function ListStockItems()
     {
         return self::find()
-            ->where(['name' => 'stock_item', 'category_id' => $this->id])
+            ->where(['name' => 'stock_item', 'rc_number' => $this->rc_number])
             ->all();
     }
 
-            //แสดงรายชื่อกรรมการตรวจรับ
+    //แสดงรายชื่อกรรมการตรวจรับ
     public function ListCommittee()
     {
         return self::find()
-            ->where(['name' => 'receive_committee', 'rc_number' => $this->rc_number])
+            ->where(['name' => 'receive_committee', 'category_id' => $this->id])
             ->all();
     }
 
     //แสดงรายการสั่งซื้อจาก PO
-    public function ListOrderItems()
+    public function ListPoOrderItems()
     {
         return Order::find()
             ->where(['name' => 'order_item', 'po_number' => $this->po_number])
             ->all();
+    }
+
+    public function ListProductType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->all(), 'code', 'title');
     }
 
     public function ListPoOrder()
@@ -334,6 +339,7 @@ public function getProduct()
     public function getPoQty(){
         return Order::findOne(['po_number' => $this->po_number,'asset_item' => $this->asset_item]);
     }
+
 
     public function getProductItem(){
         $model = Product::findOne($this->asset_item);

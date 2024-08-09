@@ -24,42 +24,30 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
+    <table
+        class="table table-primary"
+    >
+        <thead>
+            <tr>
+                <th scope="col">รายการ</th>
+                <th scope="col">รับเข้า</th>
+                <th scope="col">เบิก</th>
+                <th scope="col">Column 3</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach($dataProvider->getModels() as $item):?>
+            <tr class="">
+                <td scope="row"><?=$item->product->Avatar()?></td>
+                <td><?=$item->movement_type?></td>
+                <td><?=$item->movement_type?></td>
+                <td>R1C3</td>
+            </tr>
+<?php endforeach;?>
+        </tbody>
+    </table>
 
-            'id',
-            'name',
-            'rc_number',
-            'po_number',
-            'product_id',
-            //'from_warehouse_id',
-            //'to_warehouse_id',
-            //'qty',
-            //'total_price',
-            //'unit_price',
-            //'movement_type',
-            //'receive_type',
-            //'movement_date',
-            //'lot_number',
-            //'expiry_date',
-            //'category_id',
-            //'ref',
-            //'data_json',
-            //'created_at',
-            //'updated_at',
-            //'created_by',
-            //'updated_by',
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Stock $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
+
 
     <?php Pjax::end(); ?>
 

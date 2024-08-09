@@ -47,6 +47,7 @@ class Order extends \yii\db\ActiveRecord
     public $vatType;
     public $action;
     public $old_data;
+    public $auto_lot;
 
     /**
      * {@inheritdoc}

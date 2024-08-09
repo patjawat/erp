@@ -43,6 +43,7 @@ class StockController extends Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'stock_item']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

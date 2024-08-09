@@ -24,27 +24,37 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <style>
 
-#stock-qty {
+/* #stock-qty {
     height: 110px !important;
     font-size: 100px !important;
-}
+} */
+
+
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order-item',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/inventory/receive/add-item-validator']
 ]); ?>
+
 <div class="row">
-    <div class="col-8">
+    <div class="col-9">
         <div class="card border border-primary">
             <div class="card-body">
                 <?php  echo $model->product->AvatarXl()?>
             </div>
         </div>
     </div>
-    <div class="col-4">
-        <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
-        <?= $form->field($model, 'data_json[lot_number]')->textInput()->label(false); ?>
+    <div class="col-3">
+        <div style="margin-top:-13px">
+
+            <?php
+     echo $form->field($model, 'data_json[item_type]')->radioList(
+         ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม','บริจาค' => 'บริจาค'], 
+         ['custom' => true, 'id' => 'custom-radio-list']
+         )->label('ประเภท');
+         ?>
+</div>
     </div>
 </div>
 <div class="row">
@@ -72,15 +82,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     ])->label('วันหมดอายุ');
                 ?>
-
+     <?= $form->field($model, 'unit_price')->textInput(['type' => 'number', 'maxlength' => 2])->label('ราคาต่อหน่วย'); ?>
     </div>
     <div class="col-6">
+    <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
+    <?= $form->field($model, 'data_json[lot_number]')->textInput()->label(false); ?>
         <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+   
 
     </div>
 </div>
 
-<?= $form->field($model, 'data_json[qty]')->hiddenInput()->label(false) ?>
 <div class="d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow rounded-pill', 'id' => 'summit']) ?>
 </div>
@@ -109,21 +121,29 @@ $js = <<< JS
             localStorage.setItem('lot_auto',1);
             $('#stock-data_json-lot_number').prop('disabled',this.checked);
             $('#stock-data_json-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+
+            $('#stock-data_json-lot_number').prop('disabled',this.checked);
+            $('#stock-data_json-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+
         }else{
             localStorage.setItem('lot_auto',0);
             $('#stock-data_json-lot_number').prop('disabled',this.checked);
             $('#stock-data_json-lot_number').val('')
+
+            $('#stock-data_json-lot_number').prop('disabled',this.checked);
+            $('#stock-data_json-lot_number').val('')
+
             console.log('lot_manual');
         }
     });
 
-    $('#Stock-qty').keyup(function (e) { 
+    $('#stock-qty').keyup(function (e) { 
         
     if (e.keyCode === 8) { // Check if the key pressed is Backspace
         // Your code here
-        // $('#Stock-data_json-po_qty').val();
-        var qty = $('#Stock-data_json-po_qty').val();
-        $('#Stock-qty_check').val(qty)
+        // $('#stock-data_json-po_qty').val();
+        var qty = $('#stock-data_json-po_qty').val();
+        $('#stock-qty_check').val(qty)
     }
     });
 

@@ -12,8 +12,7 @@ use yii\web\View;
                 <li class="side-nav-title side-nav-item menu-title">Menu</li>
                 <li class="">
                     <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
-                        <i class="bx bx-home-circle fs-4"></i>
-                        <span> Dashboard</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> <span>&nbsp;Main Dashboard</span>
                         <!-- <span class="menu-arrow"></span> -->
                     </a>
                     <!-- <ul aria-expanded="false" class="nav-second-level mm-collapse" style="height: 0px;">
@@ -30,11 +29,31 @@ use yii\web\View;
                 </li>
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
-                    <i class="fa-solid fa-user-tie fs-4"></i>
+                    <i class="fa-solid fa-user-tie"></i>
                         <span> My Dashboard</span>
                     </a>
                 </li>
-                <li class="side-nav-title side-nav-item menu-title">Apps</li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/repair']) ?>">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span> แจ้งซ่อม</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/store']) ?>">
+                    <i class="fa-solid fa-cart-plus"></i>
+                        <span> เบิกวัสดุอุปกรณ์</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/purchase']) ?>">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                        <span>ข้อซื้อ-ขอจ้าง</span>
+                    </a>
+                </li>
+
+                <li class="side-nav-title side-nav-item menu-title">Module</li>
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/hr']) ?>">
                         <i class="bi bi-people-fill fs-4"></i>

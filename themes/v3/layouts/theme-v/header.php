@@ -83,7 +83,7 @@ use app\components\UserHelper;
             <?=$this->render('app_service')?>
             <?=$this->render('app_manage')?>
            
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+            <!-- <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
                 <?=Html::a('<i class="bi bi-people-fill fs-4"></i>',['/hr/employees'],['class' => 'btn header-item notify-icon','data' => [
                         "bs-trigger"=>"hover focus",
                         "bs-toggle"=> "popover",
@@ -114,7 +114,7 @@ use app\components\UserHelper;
 
 
             <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
-                <?=Html::a('<i class="fa-solid fa-store"></i>',['/inventory/warehouse'],['class' => 'btn header-item notify-icon','data' => [
+                <?=Html::a('<i class="fa-solid fa-store"></i>',['/inventory/store'],['class' => 'btn header-item notify-icon','data' => [
                         "bs-trigger"=>"hover focus",
                         "bs-toggle"=> "popover",
                         "bs-placement"=>"right",
@@ -133,17 +133,17 @@ use app\components\UserHelper;
                         "bs-title"=>"แผนงานโครงการ",
                          "bs-content"=>"แผนงานโครงการ"
                 ]])?>
-            </div>
+            </div> -->
 
 
 
             
  
-            <!-- <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
                 </button>
-            </div> -->
+            </div>
             <?=$this->render('notification');?>
             <?=$this->render('app_cart')?>
             <div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="400">

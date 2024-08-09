@@ -12,7 +12,7 @@ use kartik\select2\Select2;
 <div class="product-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['product-list', 'order_id' => $order->id],
+        'action' => ['product-list', 'order_id' => $model->id],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1
@@ -22,15 +22,15 @@ use kartik\select2\Select2;
 <div class="d-flex flex-row gap-3">
   <div class="w-50">
   
-  <?php echo $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
+  <?php echo $form->field($searchModel, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
   </div>
   <div class="w-50">
   <?php
   
-        echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+        echo $form->field($searchModel, 'category_id')->widget(Select2::classname(), [
             'data' => $model->ListProductType(),
-            'options' => ['placeholder' => ($order->category_id ?  $order->data_json['order_type_name'] : 'ระบุประเภท'),
-            'disabled' => ($order->category_id ?  true : false)
+            'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
+            'disabled' => ($model->category_id ?  true : false)
         ],
             'pluginOptions' => [
                 'allowClear' => true,

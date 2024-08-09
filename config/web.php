@@ -31,6 +31,10 @@ $config = [
         'cart' => [
 			'class' => 'asyou99\cart\Cart',
 		],
+        'committee' => [
+			'class' => 'asyou99\cart\Cart',
+		],
+        
         'employee' => 'app\components\UserHelper',
         // แจ่งเตือน line Group
         'lineNotify' => [

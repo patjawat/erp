@@ -25,7 +25,7 @@ $this->title = $model->warehouse_name;
 <?php $this->endBlock(); ?>
 
 <div class="row">
-    <div class="col-6 col-md-6 col-sm-12">
+    <div class="col-8">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -44,7 +44,7 @@ $this->title = $model->warehouse_name;
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-6 col-sm-12">
+    <div class="col-4">
 
         <div class="d-flex justify-conent-betwee gap-3">
             <div class="card w-100">

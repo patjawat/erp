@@ -3,6 +3,7 @@
 namespace app\modules\helpdesk\models;
 
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\CategoriseHelper;
 use app\models\Categorise;
 use app\modules\am\models\Asset;
@@ -144,18 +145,19 @@ class Helpdesk extends \yii\db\ActiveRecord
     }
 
     // ผู้แจ่งซ่อม
-    public function getUserReq()
+    public function getUserReq($msg=null)
     {
-        try {
-            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+                    return UserHelper::getMe($msg);
+        // try {
+        //     $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
 
-            return [
-                'avatar' => $employee->getAvatar(false),
-                'department' => $employee->departmentName()
-            ];
-        } catch (\Throwable $th) {
-            return null;
-        }
+        //     return [
+        //         'avatar' => $employee->getAvatar(false),
+        //         'department' => $employee->departmentName()
+        //     ];
+        // } catch (\Throwable $th) {
+        //     return null;
+        // }
     }
 
     // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
