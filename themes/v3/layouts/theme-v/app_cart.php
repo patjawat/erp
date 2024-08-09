@@ -70,6 +70,7 @@ $js = <<< JS
                 $('#countItemCart').hide()
             }else{
                 $('#viewCart').show()
+                $('#viewCart2').show()
                 $('#countItemCart').show()
                 $('#countItemCart').html(res.countItem)
             }

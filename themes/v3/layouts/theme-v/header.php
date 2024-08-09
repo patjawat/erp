@@ -145,7 +145,7 @@ use app\components\UserHelper;
                 </button>
             </div>
             <?=$this->render('notification');?>
-            <?=$this->render('app_cart')?>
+            <?php // $this->render('app_cart')?>
             <div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="400">
                 <?php if(!Yii::$app->user->isGuest):?>
                 <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-profile-dropdown"

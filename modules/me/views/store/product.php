@@ -13,32 +13,28 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
 <?php $this->endBlock(); ?>
 <?php yii\widgets\Pjax::begin(['id' => 'me','enablePushState' => false,'timeout' => 88888]); ?>
 
-<div class="card">
-    <div
-        class="card-body d-flex align-middle flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-        <div class="d-flex gap-3 justify-content-start">
-            <?= Html::a('<i class="fa-solid fa-cart-plus"></i> เบิกวัสดุ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">10</span> ', ['/helpdesk/default/repair-select'], ['class' => 'btn btn-primary rounded-pill shadow position-relative', 'data' => ['size' => 'modal-md']]) ?>
+<div class="row">
+    <div class="col-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <i class="bi bi-ui-checks"></i> ทะเบียนวัสดุ <?=$dataProvider->getTotalCount()?> รายการ
+                    </div>
+                    <div>
+                <?=$this->render('_search', ['model' => $searchModel])?>
 
-            <?php //  Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ขอซื้อ/ขอจ้าง', ['/purchase/pr-order/create', 'name' => 'pr', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง'], ['class' => 'btn btn-light open-modal','data' =>['size' => 'modal-md']]) ?>
+            </div>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <?=$this->render('_search', ['model' => $searchModel])?>
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
-            <?php //  Html::a('<i class="fa-solid fa-gear"></i>', ['#', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
         <div class="table-responsive">
             <table class="table table-primary">
                 <thead>
                     <tr>
-                        <th><i class="bi bi-ui-checks"></i> ทะเบียนวัสดุ <?=$dataProvider->getTotalCount()?> รายการ</th>
-                        <th style="width:250px">คงเหลือ</th>
-                        <th style="width:40px">ดำเนินการ</th>
+                        <th>ชื่อรายการ</th>
+                        <th style="width:350px">คงเหลือ</th>
+                        <!-- <th style="width:100px">MaxStock</th>
+                        <th style="width:100px">MinStock</th> -->
+                        <th class="text-center" style="width:120px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,14 +42,14 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                     <tr class="">
                         <td>
                             <?=$item->product->Avatar()?>
+                            
                         </td>
-                        <td class="fw-light align-bottom">
-                            <div class="d-flex justify-content-between">
+                    <td>
+                    <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">
-                                    คงเหลือ<span class="text-primary">
-                                        83%</span>
+                                    คงเหลือ <span class="text-primary">10</span>
                                 </span>
-                                <span class="text-muted mb-0 fs-13">MAX 20</span>
+                                <span class="text-muted mb-0 fs-13">80%</span>
                             </div>
 
                             <div class="progress" style="height: 5px;">
@@ -61,16 +57,142 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                                     aria-valuenow="83" aria-valuemin="0" aria-valuemax="100" style="width: 83%;">
                                 </div>
                             </div>
-                        </td>
-                        <td><?=Html::a('เลือก',['/me/store/create'],['class' => 'btn btn-sm btn-primary shadow rounded-pill'])?></td>
+                    </td>
+                        <td class="text-center"><?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/me/store/add-to-cart','id' => $item->asset_item],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?></td>
                         <?php endforeach;?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+    </div>
+    <div class="col-4">
+        <div id="viewCartMe"></div>
+        
+
+    
+</div>
+</div>
+
+
+<?php
+
+$viewCartMeUrl = Url::to(['/me/store/view-cart']);
+$storeProductUrl = Url::to(['/me/store/product']);
+// $getOrderUrl = Url::to(['/me/store/view-cart']);
+$deleteItemUrl = Url::to(['/me/store/delete']);
+$updateItemUrl = Url::to(['/me/store/update']);
+$js = <<< JS
+
+getViewCartMe()
+// getOrder()
+async function getViewCartMe()
+    {
+    await $.ajax({
+        type: "get",
+        url: "$viewCartMeUrl",
+        dataType: "json",
+        success: function (res) {
+            $('#viewCartMe').html(res.content)
+            if(res.countItem == 0){
+                $('#viewCart').hide()
+                // $('#viewCart').dropdown('toggle');
+                $('#countItemCart2').hide()
+            }else{
+                $('#countItemCart2').show()
+                $('#countItemCart2').html(res.countItem)
+            }
+            console.log(res.countItem);
+        }
+    });
+    }
 
 
 
+    $("body").on("click", ".add-cart", function (e) {
+    e.preventDefault();
+    $.ajax({
+        type: "get",
+        url: $(this).attr('href'),
+        dataType: "json",
+        success: async function (response) {
+            await success('เพิ่มลงในตะกร้าแล้ว')
+            await getViewCartMe()
+        //   $.pjax.reload({container:response.container, history:false});
+        }
+    });
+});
+
+
+
+        $("body").on("click", ".update-cart", function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: "get",
+            url: $(this).attr('href'),
+            data: {},
+            dataType: "json",
+            success: function (res) {
+                getViewCartMe()
+            }
+        });
+        
+    });
+    $("body").on("click", ".delete-item-cart", function (e) {
+    e.preventDefault();
+    $.ajax({
+        type: "get",
+        url: $(this).attr('href'),
+        dataType: "json",
+        success: function (response) {
+            getViewCartMe()
+            // $.pjax.reload({container:response.container, history:false});
+        }
+    });
+});
+
+
+    $("body").on("click", ".btn-confirm", function (e) {
+// \$('.btn-confirm').click(function (e) { 
+        e.preventDefault();
+        var title = \$(this).data('title');
+        var text = \$(this).data('text');
+        var imageUrl = \$(this).data('img');
+        var warehouse_id = \$(this).data('warehouse_id');
+        Swal.fire({
+            imageUrl: imageUrl,
+            imageWidth: 400,
+            imageHeight: 200,
+            title: title,
+            text: text,
+            icon: "info",
+
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            cancelButtonText: "<i class='bi bi-x-circle'></i> ยกเลิก",
+            confirmButtonText: "<i class='bi bi-check-circle'></i> ยืนยัน"
+            }).then((result) => {
+            if (result.isConfirmed) {
+                \$.ajax({
+                    type:"get",
+                    url: $(this).attr('href'),
+                    // data: {id:warehouse_id},
+                    dataType: "json",
+                    success: async function (response) {
+                       
+                    }
+                });
+            }
+            });
+        
+    });
+
+
+
+JS;
+$this->registerJS($js, View::POS_END);
+
+?>
 
 <?php yii\widgets\Pjax::end()?>
