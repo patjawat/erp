@@ -24,7 +24,6 @@ use yii\helpers\Html;
                     <?php foreach($products as $item):?>
                     <tr class="">
                         <td scope="row">
-                        <?=$item->code?>    
                         <?=$item->Avatar()?></td>
                         <td>
                             <div class="d-flex d-flex flex-row">
