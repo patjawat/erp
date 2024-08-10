@@ -279,7 +279,13 @@ public function getProduct()
                return AssetHelper::ListAssetType();
            }
    
-
+//แสดงรายการย่อยของ stock
+           public function ListItems()
+           {
+               return self::find()
+                   ->where(['name' => 'stock_item', 'category_id' => $this->id])
+                   ->all();
+           }
 
     public function ListStockItems()
     {

@@ -4,6 +4,8 @@ namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
+use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\StockSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -197,6 +199,28 @@ class WarehouseController extends Controller
         ];
     }
 
+    public function actionListOrderRequest()
+    {
+        $searchModel = new StockSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_order_request', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('list_order_request', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+    
     /**
      * Finds the Warehouse model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

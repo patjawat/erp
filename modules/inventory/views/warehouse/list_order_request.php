@@ -2,7 +2,7 @@
 use app\modules\inventory\models\Stock;
 use yii\helpers\Html;
 
-$StockLists = Stock::find()->where(['name' => 'issue', 'from_warehouse_id' => $model->id])->all();
+// $StockLists = Stock::find()->where(['name' => 'issue', 'from_warehouse_id' => $model->id])->all();
 ?>
 
 <div class="card">
@@ -10,7 +10,7 @@ $StockLists = Stock::find()->where(['name' => 'issue', 'from_warehouse_id' => $m
 
         <div class="table-responsive">
             <div class="d-flex justify-content-between">
-                <h6><i class="fa-solid fa-file-circle-plus"></i> รายการ</h6>
+            <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 <div>
                     <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
                                 เลือกรายการ</button> -->
@@ -29,10 +29,10 @@ $StockLists = Stock::find()->where(['name' => 'issue', 'from_warehouse_id' => $m
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($StockLists as $item): ?>
+                    <?php foreach ($dataProvider->getModels() as $item): ?>
                     <tr class="">
                         <td scope="row"></td>
-                        <td><?= $item->rq_number ?></td>
+                        <td><?= $item->id ?></td>
                         <td>Item</td>
                         <td>Item</td>
                         <td>Item</td>

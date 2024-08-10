@@ -82,8 +82,12 @@ $this->title = $model->warehouse_name;
         </div>
     </div>
     <div class="col-6">
-
+<div class="card">
+  <div class="card-body">
+<h6><i class="bi bi-ui-checks"></i> วัสดุในคลัง <span class="badge rounded-pill text-bg-primary">1 </span> รายการ</h6>
 <div id="showStoreInWarehouse"></div>
+  </div>
+</div>
 
     </div>
     
@@ -92,7 +96,54 @@ $this->title = $model->warehouse_name;
 
 <div class="row">
     <div class="col-12">
-        <div id="showOrderRequestInWarehouse"></div>
+        <div class="card">
+            <h6>วัสดุรอรับเข้า</h6>
+            <div class="card-body">
+                <?php
+          $warehouse = Yii::$app->session->get('warehouse');
+          $models = Stock::find()
+          ->select(['p.id','stock.asset_item', 'sum(stock.qty) as sum_qty'])
+          ->join('INNER JOIN', 'categorise p', 'p.id = stock.asset_item')
+          ->where(['stock.to_warehouse_id' => $warehouse['warehouse_id']])
+          ->groupBy('p.id')
+          ->all();
+          
+          ?>
+                <div class="table-responsive">
+                    <table class="table table-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">รายการ</th>
+                                <th scope="col">คงเหลือ</th>
+                                <th scope="col">ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($models as $model):?>
+                            <tr class="">
+                                <td scope="row"><?=$model->getProductItem()->Avatar()?></td>
+                                <td><?=$model['sum_qty']?></td>
+                                <td>
+                                    <?=Html::a('<i class="bi bi-clock-history"></i>',['/inventory/stock-movement/product','id' => $model->id])?>
+                                </td>
+                            </tr>
+                            <?php endforeach;?>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+            </div>
+            <!-- End Card body -->
+        </div>
+        <!-- End Card -->
+
+
+        <?= $this->render(
+          'list_request',
+          ['model' => $model]
+        ) ?>
     </div>
 </div>
 
@@ -102,17 +153,13 @@ use yii\web\View;
 // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 
 $StoreInWarehouseUrl = Url::to(['/inventory/store/list-in-warehouse']);
-$OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
 $js = <<< JS
   // getPendingOrder()
   // getlistOrderRequest()
 
 
   getStoreInWarehouse()
-  getOrderRequestInWarehouse()
-
-  //รายการใน Stock
-  async function getOrderRequestInWarehouse(){
+  async function getStoreInWarehouse(){
     await $.ajax({
       type: "get",
       url: "$StoreInWarehouseUrl",
@@ -123,19 +170,30 @@ $js = <<< JS
     });
   }
 
-  // รายการขอเบิก
-  async function getStoreInWarehouse(){
-    await $.ajax({
-      type: "get",
-      url: "$OrderRequestInWarehouseUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showOrderRequestInWarehouse').html(res.content)
-      }
-    });
-  }
 
+  // //รายการวัสดุรอรับเข้าคลัง
+  // async function getPendingOrder(){
+  //   await $.ajax({
+  //     type: "get",
+  //     url: "$showReceivePendingOrderUrl",
+  //     dataType: "json",
+  //     success: function (res) {
+  //       $('#showReceivePendingOrder').html(res.content)
+  //     }
+  //   });
+  // }
 
+  // // รายการขอเบิกวัสดุ
+  // async function getlistOrderRequest(){
+  //   await $.ajax({
+  //     type: "get",
+  //     url: "$listOrderRequestUrl",
+  //     dataType: "json",
+  //     success: function (res) {
+  //       $('#showlistOrderRequest').html(res.content)
+  //     }
+  //   });
+  // }
   var options = {
       plotOptions: {
             bar: { 
@@ -153,7 +211,7 @@ $js = <<< JS
           colors: ["#0966ad", "#EA5455"],
           chart: {
             type: "bar",
-            height: 450,
+            height: 350,
             stacked: true,
             zoom: { enabled: true },
           },

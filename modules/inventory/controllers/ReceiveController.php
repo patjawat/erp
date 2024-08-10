@@ -4,6 +4,7 @@ namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\Store;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
@@ -139,7 +140,7 @@ class ReceiveController extends Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'receive']);
+        $dataProvider->query->andFilterwhere(['movement_type' => 'IN']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -282,6 +283,7 @@ class ReceiveController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+          
 
                 $thaiYear = substr((date('Y') + 543), 2);
 
@@ -325,10 +327,12 @@ class ReceiveController extends Controller
     // รับเข้าจากการจัดซื้อ
     public function actionCreateByPo()
     {
+        $warehouse = Yii::$app->session->get('warehouse');
         $model = new Stock([
             'name' => 'receive',
             'po_number' => $this->request->get('po_number'),
-            'receive_type' => $this->request->get('receive_type')
+            'receive_type' => $this->request->get('receive_type'),
+            'to_warehouse_id' => $warehouse['warehouse_id']
         ]);
 
         if ($this->request->isPost) {
@@ -684,6 +688,8 @@ class ReceiveController extends Controller
         $user = UserHelper::getMe();
         $id = $this->request->get('id');
         $stock = $this->findModel($id);
+        // return $stock->to_warehouse_id;
+
         if($stock->po_number){
             $order = Order::findOne(['name' => 'order','po_number' => $stock->po_number]);   
         }
@@ -696,9 +702,9 @@ class ReceiveController extends Controller
 
         $stock->name  = 'receive';
         $stock->order_status = 'success';
-        
         if($stock->po_number){
-        $stock->po_number = $order->po_number;
+            $stock->po_number = $order->po_number;
+            $data = [];
         //ถ้าเป็นการรับจ้าใบสั่่งซื้อ
             foreach ($order->ListOrderItems() as $item) {
                 $stockItem = new Stock([
@@ -711,41 +717,48 @@ class ReceiveController extends Controller
                     'order_status' => 'success'
                 ]);
                 $stockItem->save(false);
+
+              $this->updateStore($stock,$item);
+
             }
+     
+           
             $order->data_json =  ArrayHelper::merge($order->data_json, $receiveObj);
             $order->status = 5;
-            $order->save(false);
+             $order->save(false);
 
         }else{
             //ถ้าเป็นการรับเข้าเอง
-             Stock::updateAll(['order_status' => 'success'], ['rc_number' => $stock->rc_number]);
+            $stocks  = Stock::find()->where(['name' => 'stock_item','rc_number' => $stock->rc_number])->all();
+            foreach($stocks as $item){
+                $item->order_status = 'success';
+                $item->save(false);
+                $this->updateStore($stock,$item);
+
+            }
         }
 
         $stock->data_json = $receiveObj;
-        $stock->save(false);
+        // $this->updateStore($stock);
+        //$stock->save(false);
         return $this->redirect(['/inventory/receive']);
-        // return [
-        //     'stock' => $stock,
-        //     'item' => $stockItem
-        // ];
-        // $model = $this->findModel($id);
-
-        // $updateStock = Stock::updateAll(['order_status' => 'success'], ['rc_number' => $model->rc_number]);
-
-        // if ($model->OrderSuccess()['status'] == true) {
-        //     $order = Order::findOne(['po_number' => $model->po_number]);
-        //     $order->status = 6;
-        //     $order->save(false);
-        // }
-
-        // if ($updateStock) {
-        //     return [
-        //         'status' => 'success',
-        //         'container' => '#inventory',
-        //     ];
-        // }
+        
     }
 
+
+    protected function updateStore($stock,$item)
+    {
+        $store = Store::findOne(['asset_item' => $item->asset_item,'warehouse_id' => $stock->to_warehouse_id]);
+        if($store){
+            $storeModel = $store;
+        }else{
+            $storeModel = new Store();
+        }
+        $storeModel->asset_item  = $item->asset_item;
+        $storeModel->qty = $storeModel->qty + $item->qty;
+        $storeModel->warehouse_id = $stock->to_warehouse_id;
+        $storeModel->save(false);
+    }
     /**
      * Deletes an existing ir model.
      * If deletion is successful, the browser will be redirected to the 'index' page.

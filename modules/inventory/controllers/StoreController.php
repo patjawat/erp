@@ -2,155 +2,161 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\modules\inventory\models\Product;
-use Yii;
+use app\modules\inventory\models\Store;
+use app\modules\inventory\models\StoreSearch;
+use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
 use yii\web\Response;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockSearch;
+use Yii;
 
-class StoreController extends \yii\web\Controller
+/**
+ * StoreController implements the CRUD actions for Store model.
+ */
+class StoreController extends Controller
 {
-    public function actionIndex()
+    /**
+     * @inheritDoc
+     */
+    public function behaviors()
     {
-        return $this->render('index');
+        return array_merge(
+            parent::behaviors(),
+            [
+                'verbs' => [
+                    'class' => VerbFilter::className(),
+                    'actions' => [
+                        'delete' => ['POST'],
+                    ],
+                ],
+            ]
+        );
     }
 
-
-    public function actionProduct()
+    /**
+     * Lists all Store models.
+     *
+     * @return string
+     */
+    public function actionIndex()
     {
-        $searchModel = new StockSearch();
+        $searchModel = new StoreSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'stock_item']);
-        $dataProvider->query->groupBy('asset_item');
-        // $dataProvider->pagination->pageSize = 4;
 
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionListInWarehouse()
+    {
+        $searchModel = new StoreSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->pagination->pageSize = 5;
         if ($this->request->isAjax) {
-
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/inventory/views/store/product/index', [
+                'content' => $this->renderAjax('list_in_warehouse', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ])
             ];
         } else {
-            return $this->render('@app/modules/inventory/views/store/product/index', [
+            return $this->render('list_in_warehouse', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
+
     }
 
 
-    public function actionViewCart()
+
+
+    /**
+     * Displays a single Store model.
+     * @param int $id ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionView($id)
     {
-        $cart = \Yii::$app->cart;
-        if ($this->request->isAjax) {
-
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('view_cart'),
-                'countItem' => $cart->getCount()
-            ];
-        } else {
-            return $this->render('view_cart');
-        }
-    }
-
- 
-    public function actionAddToCart($id)
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $model = Product::findOne(['code' => $id]);
-        $model->qty = 1;
-        if ($model) {
-            \Yii::$app->cart->create($model, 1);
-            // return  $this->redirect(['/inventory/store']);
-            return [
-                'container' => '#viewCart',
-                'status' => 'success',
-                'data' => $model
-            ];
-        }
-        throw new NotFoundHttpException();
-    }
-
-    public function actionDelete($id)
-    {
-        $product = Product::findOne($id);
-        if ($product) {
-            \Yii::$app->cart->delete($product);
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'container' => '#viewCart',
-                'status' => 'success'
-            ];
-        }
-    }
-    // public function actionUpdate($id, $quantity)
-    public function actionUpdate($id, $quantity)
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = Product::findOne($id);
-        // return $model->qty;
-        if ($model) {
-             \Yii::$app->cart->update($model,$quantity);
-
-            return [
-                'container' => '#viewCart',
-                'status' => 'success'
-            ];
-        }
-    }
-
-    public function actionFormCheckout(){
-        $model = new Stock([
-            // 'name' => $this->request->get('name'),
-            // 'movement_type' => $this->request->get('name'),
-            // 'po_number' => $this->request->get('category_id'),
-            // 'receive_type' => $this->request->get('receive_type')
+        return $this->render('view', [
+            'model' => $this->findModel($id),
         ]);
+    }
+
+    /**
+     * Creates a new Store model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return string|\yii\web\Response
+     */
+    public function actionCreate()
+    {
+        $model = new Store();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $thaiYear = substr((date('Y') + 543), 2);
-                if ($model->rq_number == '') {
-                    $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
-                }
-                $model->save(false);
+            if ($model->load($this->request->post()) && $model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+        return $this->render('create', [
+            'model' => $model,
+        ]);
+    }
 
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_checkout', [
-                    'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('_form_checkout', [
-                'model' => $model,
-            ]);
+    /**
+     * Updates an existing Store model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id ID
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
         }
 
+        return $this->render('update', [
+            'model' => $model,
+        ]);
     }
 
-    public function actionCheckout()
+    /**
+     * Deletes an existing Store model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param int $id ID
+     * @return \yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionDelete($id)
     {
-        \Yii::$app->cart->checkOut(false);
-        $this->redirect(['index']);
+        $this->findModel($id)->delete();
+
+        return $this->redirect(['index']);
     }
 
+    /**
+     * Finds the Store model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param int $id ID
+     * @return Store the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findModel($id)
+    {
+        if (($model = Store::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
 
-
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
 }

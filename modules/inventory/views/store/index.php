@@ -1,118 +1,56 @@
 <?php
 
+use app\modules\inventory\models\Store;
 use yii\helpers\Html;
-use yii\web\View;
 use yii\helpers\Url;
+use yii\grid\ActionColumn;
+use yii\grid\GridView;
+use yii\widgets\Pjax;
+/** @var yii\web\View $this */
+/** @var app\modules\inventory\models\StoreSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
 
+$this->title = 'Stores';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
+<div class="store-index">
 
+    <h1><?= Html::encode($this->title) ?></h1>
 
-<style>
+    <p>
+        <?= Html::a('Create Store', ['create'], ['class' => 'btn btn-success']) ?>
+    </p>
 
+    <?php Pjax::begin(); ?>
+    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
-</style>
+    <?= GridView::widget([
+        'dataProvider' => $dataProvider,
+        'filterModel' => $searchModel,
+        'columns' => [
+            ['class' => 'yii\grid\SerialColumn'],
 
-<div class="row">
-    <div class="col-12">
-        <div id="storeProductShow">
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="text-center">กำลังโหลด...</h6>
-                </div>
-            </div>
-        </div>
+            'id',
+            'name',
+            'asset_item',
+            'warehouse_id',
+            'qty',
+            //'ref',
+            //'thai_year',
+            //'data_json',
+            //'created_at',
+            //'updated_at',
+            //'created_by',
+            //'updated_by',
+            [
+                'class' => ActionColumn::className(),
+                'urlCreator' => function ($action, Store $model, $key, $index, $column) {
+                    return Url::toRoute([$action, 'id' => $model->id]);
+                 }
+            ],
+        ],
+    ]); ?>
 
+    <?php Pjax::end(); ?>
 
-
-        <div id="cart" class="cart" data-totalitems="0">
-  <i class="fas fa-shopping-cart"></i>
 </div>
-
-    </div>
-</div>
-
-<?php
-$storeProductUrl = Url::to(['/inventory/store/product']);
-$viewCartUrl = Url::to(['/inventory/store/view-cart']);
-$deleteItemUrl = Url::to(['/inventory/store/delete']);
-$updateItemUrl = Url::to(['/inventory/store/update']);
-$js = <<< JS
-
-    getStoreProduct()
-    async function getStoreProduct()
-    {
-    await $.ajax({
-        type: "get",
-        url: "$storeProductUrl",
-        dataType: "json",
-        success: function (res) {
-            $('#storeProductShow').html(res.content)
-        }
-    });
-    }
-
-
-    $("body").on("click", ".add-cart", function (e) {
-    e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: function (response) {
-            getViewCar()
-            success('เพิ่มลงในตะกร้าแล้ว')
-        //   $.pjax.reload({container:response.container, history:false});
-        }
-    });
-});
-
-
-$(document).ready(function(){
-  $('#addtocart').on('click',function(){
-    
-    var button = $(this);
-    var cart = $('#cart');
-    var cartTotal = cart.attr('data-totalitems');
-    var newCartTotal = parseInt(cartTotal) + 1;
-    
-    button.addClass('sendtocart');
-    setTimeout(function(){
-      button.removeClass('sendtocart');
-      cart.addClass('shake').attr('data-totalitems', newCartTotal);
-      setTimeout(function(){
-        cart.removeClass('shake');
-      },500)
-    },1000)
-  })
-})
-
-
-    //     $("body").on("click", ".update-cart", function (e) {
-    //     e.preventDefault();
-    //     $.ajax({
-    //         type: "get",
-    //         url: $(this).attr('href'),
-    //         data: {},
-    //         dataType: "json",
-    //         success: function (res) {
-    //             getViewCar()
-    //         }
-    //     });
-        
-    // });
-    // $("body").on("click", ".delete-item-cart", function (e) {
-    // e.preventDefault();
-    // $.ajax({
-    //     type: "get",
-    //     url: $(this).attr('href'),
-    //     dataType: "json",
-    //     success: function (response) {
-    //         getViewCar()
-    //         // $.pjax.reload({container:response.container, history:false});
-    //     }
-    // });
-// });
-JS;
-$this->registerJS($js, View::POS_END);
-
-?>
