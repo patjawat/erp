@@ -15,7 +15,7 @@ class StoreController extends \yii\web\Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'stock_detail']);
+        $dataProvider->query->andFilterWhere(['name' => 'order']);
 
         return $this->render('index',[
             'searchModel' => $searchModel,
@@ -28,7 +28,7 @@ class StoreController extends \yii\web\Controller
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
-        $dataProvider->query->andFilterWhere(['stock.name' => 'stock_item']);
+        $dataProvider->query->andFilterWhere(['stock.name' => 'order_item']);
         $dataProvider->query->andFilterWhere(['like','at.title',$searchModel->q]);
         $dataProvider->query->groupBy('asset_item');
         // $dataProvider->pagination->pageSize = 4;
@@ -38,6 +38,7 @@ class StoreController extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
+                'count' => $dataProvider->getTotalCount(),
                 'content' => $this->renderAjax('product', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
@@ -164,7 +165,7 @@ class StoreController extends \yii\web\Controller
         $items = $cart->getItems();
 
         $stock = new Stock([
-            'name' => 'stock_detail',
+            'name' => 'order',
             'movement_type' => 'OUT',
         ]);
         $thaiYear = date('dm') . substr((date('Y') + 543), 2);
@@ -173,7 +174,7 @@ class StoreController extends \yii\web\Controller
         $stock->save(false);
         foreach ($items as $item) {
            $model = new Stock([
-                'name' => 'stock_item',
+                'name' => 'order_item',
                 'category_id' => $stock->id,
                 'rq_number' => $stock->rq_number,
                 'asset_item' => $item->code,

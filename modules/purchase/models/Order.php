@@ -315,7 +315,7 @@ class Order extends \yii\db\ActiveRecord
     public function viewLeaderUser()
     {
         try {
-            $employee = Employees::find()->where(['id' => $this->data_json['leader1']])->one();
+            $employee = Employees::find()->where(['user_id' => $this->data_json['leader1']])->one();
 
             return [
                 'id' => $employee->user_id,

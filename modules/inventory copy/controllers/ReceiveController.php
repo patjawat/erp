@@ -369,7 +369,7 @@ public function actionFormCommittee()
                 $stockItem = new Stock([
                     'category_id' => $model->id,
                     'po_number' => $model->po_number,
-                    'name' => 'stock_item',
+                    'name' => 'order_item',
                     'asset_item' => $item->asset_item,
                     'unit_price' => $item->price,
                     'data_json' => [

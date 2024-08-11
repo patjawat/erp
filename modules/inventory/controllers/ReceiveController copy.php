@@ -274,7 +274,7 @@ class ReceiveController extends Controller
     {
         $warehouse = Yii::$app->session->get('warehouse');
         $model = new Stock([
-            'name' => 'stock_detail',
+            'name' => 'order',
             'po_number' => $this->request->get('po_number'),
             'movement_type' => 'IN',
             'to_warehouse_id' => $warehouse['warehouse_id']
@@ -532,7 +532,7 @@ class ReceiveController extends Controller
 
             'rc_number' => $Stock->rc_number,
             'to_warehouse_id' => $Stock->to_warehouse_id,
-            'name' => 'stock_item',
+            'name' => 'order_item',
             'asset_item' => $product->code,
             'movement_type' => 'in',
             'order_status' => 'pending',
@@ -729,7 +729,7 @@ class ReceiveController extends Controller
 
         }else{
             //ถ้าเป็นการรับเข้าเอง
-            $stocks  = Stock::find()->where(['name' => 'stock_item','rc_number' => $stock->rc_number])->all();
+            $stocks  = Stock::find()->where(['name' => 'order_item','rc_number' => $stock->rc_number])->all();
             foreach($stocks as $item){
                 $item->order_status = 'success';
                 $item->save(false);

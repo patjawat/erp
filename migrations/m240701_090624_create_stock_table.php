@@ -14,7 +14,7 @@ class m240701_090624_create_stock_table extends Migration
     {
         $this->createTable('stock', [
             'id' => $this->primaryKey()->comment('รหัสการเคลื่อนไหวสินค้า'),
-            'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น stock_order, stock_item'),
+            'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น stock_order, order_item'),
             'rq_number' => $this->string(50)->comment('รหัสร้องขอ'),
             'rc_number' => $this->string(50)->comment('รหัสใบรับเข้าคลัง'),
             'po_number' => $this->string(50)->comment('รหัสใบสั่งซื้อ'),

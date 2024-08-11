@@ -163,6 +163,7 @@ class WarehouseController extends Controller
         Yii::$app->session->set('warehouse', [
             'warehouse_id' => $model->id,
             'warehouse_name' => $model->warehouse_name,
+            'checker' => $model->data_json['checker'],
         ]);
         return $this->redirect(['index']);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);

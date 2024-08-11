@@ -37,15 +37,17 @@ $this->title = 'My DashBoard';
 
     </div>
     <div class="col-6">
+        <div id="viewApproveStock">Loading...</div>
+        <div id="viewApprovePurchase">Loading...</div>
     <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
-        <div class="card" style="height:300px;">
+        <!-- <div class="card" style="height:300px;">
             <div class="card-body">
-                <h5>กิจกรรม/ความเคลื่อนไหว</h5>
+                <h5>กิจกรรม/ความเคลื่อนไหวss</h5>
                 <div id="viewRepair" class="mt-4"></div>
                 <?php //  $this->render('activity') ?>
 
             </div>
-        </div>
+        </div> -->
         <?php Pjax::end(); ?>
         <div class="card">
             <div class="card-body">
@@ -101,11 +103,15 @@ $this->title = 'My DashBoard';
         </div>
 <?php
 $urlRepair = Url::to(['/me/repair']);
+$ApproveStockUrl = Url::to(['/me/approve/stock']);
+$ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
 // $urlRepair = Url::to(['/me/repair-me']);
 $js = <<< JS
 
-    loadRepairHostory()
-
+    loadRepairHostory();
+    loadApproveStock();
+    loadPurchase();
+    
     //ประวัติการซ่อม
     function  loadRepairHostory(){
         \$.ajax({
@@ -123,6 +129,41 @@ $js = <<< JS
             }
         });
     }
+
+     //ขอเบิกวัสดุ
+     function  loadApproveStock(){
+        \$.ajax({
+            type: "get",
+            url: "$ApproveStockUrl",
+            dataType: "json",
+            success: function (res) {
+                if(res.count != 0){
+                    \$('#viewApproveStock').html(res.content);
+                }else{
+                    $('#viewApproveStock').hide()
+                }
+            }
+        });
+    }
+
+         //ขออนุมิติจัดซื้อจัดจ้าง
+         function  loadPurchase(){
+        \$.ajax({
+            type: "get",
+            url: "$ApprovePurchaseUrl",
+            dataType: "json",
+            success: function (res) {
+                console.log(res.count)
+                if(res.count != 0){
+                    \$('#viewApprovePurchase').html(res.content);
+                }else{
+                    $('#viewApprovePurchase').hide();
+                }
+            }
+        });
+    }
+
+
 
 
     JS;

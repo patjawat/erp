@@ -198,6 +198,8 @@ class WarehouseController extends Controller
             'warehouse_name' => $model->warehouse_name,
             'warehouse_type' => $model->warehouse_type,
             'category_id' => $model->category_id,
+            'checker' => isset($model->data_json['checker']) ?  $model->data_json['checker'] : '',
+            'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
         ]);
         return $this->redirect(['index']);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
@@ -205,19 +207,19 @@ class WarehouseController extends Controller
 
 
     //เลือกคลังที่จะดำเนินการเบิก
-    public function actionSelectWarehouse()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = $this->request->get('id');
-        $model = Warehouse::find()->where(['id' => $id])->One();
-        Yii::$app->session->set('select-warehouse', [
-            'warehouse_id' => $model->id,
-            'warehouse_name' => $model->warehouse_name,
-        ]);
-        \Yii::$app->cart->checkOut(false);
-        return $this->redirect(['/inventory/store']);
-        // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
-    }
+    // public function actionSelectWarehouse()
+    // {
+    //     Yii::$app->response->format = Response::FORMAT_JSON;
+    //     $id = $this->request->get('id');
+    //     $model = Warehouse::find()->where(['id' => $id])->One();
+    //     Yii::$app->session->set('select-warehouse', [
+    //         'warehouse_id' => $model->id,
+    //         'warehouse_name' => $model->warehouse_name,
+    //     ]);
+    //     \Yii::$app->cart->checkOut(false);
+    //     return $this->redirect(['/inventory/store']);
+    //     // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
+    // }
     
     public function actionClearSelectWarehouse()
     {
@@ -259,12 +261,13 @@ class WarehouseController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'stock_detail','to_warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->where(['name' => 'order','to_warehouse_id' => $warehouse['warehouse_id']]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
+                'count' => $dataProvider->getTotalCount(),
                 'content' => $this->renderAjax('list_order_request', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,

@@ -30,7 +30,7 @@ $this->title = $model->warehouse_name;
         <div class="d-flex justify-conent-betwee gap-3">
             <div class="card w-100">
                 <div class="card-body">
-                    <h4 class="card-title">100 เรื่อง</h4>
+                    <h2 id="OrderCount">0</h2>
                     <p class="card-text">จำนวนการขอเบิกวัสดุ</p>
                 </div>
             </div>
@@ -131,6 +131,7 @@ $js = <<< JS
       dataType: "json",
       success: function (res) {
         $('#showOrderRequestInWarehouse').html(res.content)
+        $('#OrderCount').html(res.count)
       }
     });
   }

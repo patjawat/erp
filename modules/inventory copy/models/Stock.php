@@ -22,7 +22,7 @@ use app\models\Categorise;
  * This is the model class for table "stock_order".
  *
  * @property int $id รหัสการเคลื่อนไหวสินค้า
- * @property string|null $name ชื่อการเก็บของข้อมูล เช่น stock_order, stock_item
+ * @property string|null $name ชื่อการเก็บของข้อมูล เช่น stock_order, order_item
  * @property string|null $po_number รหัสใบสั่งซื้อ
  * @property string|null $rc_number รหัสใบรับสินค้า
  * @property int|null $asset_item รหัสสินค้า
@@ -283,7 +283,7 @@ public function getProduct()
     public function ListStockItems()
     {
         return self::find()
-            ->where(['name' => 'stock_item', 'category_id' => $this->id])
+            ->where(['name' => 'order_item', 'category_id' => $this->id])
             ->all();
     }
 

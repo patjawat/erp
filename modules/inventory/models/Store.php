@@ -10,7 +10,7 @@ use asyou99\cart\ItemInterface;
  * This is the model class for table "store".
  *
  * @property int $id รหัสการเคลื่อนไหวสินค้า
- * @property string|null $name ชื่อการเก็บของข้อมูล เช่น stock_order, stock_item
+ * @property string|null $name ชื่อการเก็บของข้อมูล เช่น stock_order, order_item
  * @property string|null $asset_item รหัสสินค้า
  * @property int|null $warehouse_id รหัสคลังสินค้าปลายทาง
  * @property int|null $stock_qty จำนวนสินค้าที่เคลื่อนย้าย

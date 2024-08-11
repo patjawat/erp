@@ -139,13 +139,13 @@ class DepdropController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Employees::find()
             ->Where(['or', ['LIKE', 'fname', $q]])
-            // ->andWhere(['name' => 'position_group'])
+            ->andWhere(['<>','user_id','0'])
             ->limit(10)
             ->all();
         $data = [['id' => '', 'text' => '']];
         foreach ($models as $model) {
             $data[] = [
-                'id' => $model->id,
+                'id' => $model->user_id,
                 'text' => $model->getAvatar(false),
                 'fullname' => $model->fullname,
                 'position_name' => $model->positionName(),
@@ -158,6 +158,32 @@ class DepdropController extends \yii\web\Controller
             'items' => $model
         ];
     }
+
+    public function actionEmployeeByUserId($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $models = Employees::find()->where(['is not', 'user_id', null])
+            ->andWhere(['or', ['LIKE', 'fname', $q]])
+            // ->andWhere(['name' => 'position_group'])
+            ->limit(10)
+            ->all();
+        $data = [['id' => '', 'text' => '']];
+        foreach ($models as $model) {
+            $data[] = [
+                'id' => $model->user_id,
+                'text' => $model->getAvatar(false),
+                'fullname' => $model->fullname,
+                'position_name' => $model->positionName(),
+                // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
+                'avatar' => $model->getAvatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $model
+        ];
+    }
+
 
     // ตำแหน่งกลุ่มบุคลากร
     public function actionPositionGroupList($q = null, $id = null)

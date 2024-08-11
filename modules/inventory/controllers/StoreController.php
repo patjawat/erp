@@ -112,15 +112,35 @@ class StoreController extends Controller
     {
         $warehouse = Yii::$app->session->get('warehouse');
         $model = new Stock([
+            'name' => 'order',
             'movement_type' => 'OUT',
             'order_status' => 'pending',
             'from_warehouse_id' => $warehouse['category_id'],
-            'to_warehouse_id' => $warehouse['warehouse_id']
+            'to_warehouse_id' => $warehouse['warehouse_id'],
+            'data_json' => [
+                'checker' => $warehouse['checker'],
+                'checker_name' => $warehouse['checker_name'],
+            ]
         ]);
+        $cart = \Yii::$app->cart;
+        $items = $cart->getItems();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post()) ) {
+                if($model->save()){
+                    foreach ($items as $item) {
+                       $orderItem = new Stock([
+                        'name' => 'order_item',
+                        'movement_type' => 'OUT',
+                        'category_id' => $model->id,
+                        'asset_item' => $item->asset_item,
+                        'qty' => $item->qty
+                       ]);
+                       $orderItem->save(false);
+                    }
+                }
+                return $this->redirect(['/inventory/warehouse']);
+                // return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
