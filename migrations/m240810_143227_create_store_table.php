@@ -17,7 +17,7 @@ class m240810_143227_create_store_table extends Migration
             'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น stock_order, stock_item'),
             'asset_item' => $this->string(255)->comment('รหัสสินค้า'),
             'warehouse_id' => $this->integer()->comment('รหัสคลังสินค้าปลายทาง'),
-            'qty' => $this->integer()->comment('จำนวนสินค้าที่เคลื่อนย้าย'),
+            'stock_qty' => $this->integer()->comment('จำนวนสินค้าที่'),
             'ref' => $this->string(255),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'data_json' => $this->json(),

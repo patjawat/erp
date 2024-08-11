@@ -17,8 +17,8 @@ class StoreSearch extends Store
     public function rules()
     {
         return [
-            [['id', 'warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
-            [['name', 'asset_item', 'ref', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['id', 'warehouse_id', 'stock_qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
+            [['name', 'asset_item', 'ref', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
         ];
     }
 
@@ -60,7 +60,7 @@ class StoreSearch extends Store
         $query->andFilterWhere([
             'id' => $this->id,
             'warehouse_id' => $this->warehouse_id,
-            'qty' => $this->qty,
+            'stock_qty' => $this->stock_qty,
             'thai_year' => $this->thai_year,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

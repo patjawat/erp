@@ -18,30 +18,47 @@ use app\modules\purchase\models\Order;
     <?php $form = ActiveForm::begin(['id' => 'form']); ?>
 
     <div class="row">
-        <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
-            <div class="row">
-                <div class="col-6">
-                    <?= $form->field($model, 'warehouse_name')->textInput(['maxlength' => true]) ?>
+        <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12">
+            <div class="d-flex justify-content-between gap-1">
+                <?=$form->field($model, 'warehouse_type')->radioList(['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],['custom' => true,'inline' => true]);?>
 
+                <?php
+                echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+                    'data' => $model->ListGroup(),
+                    'options' => ['placeholder' => 'Select a state ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true                    ],
+                ])->label('คลังหลัก');
+            ?>
+                 
+            </div>
+            <div class="row">
+                <div class="col-7">
+                    <?= $form->field($model, 'warehouse_name')->textInput(['maxlength' => true]) ?>
                 </div>
-                <div class="col-6">
+                <div class="col-5">
+               
                     <?= $form->field($model, 'warehouse_code')->textInput(['maxlength' => true]) ?>
                 </div>
             </div>
         
             <?php
-                echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
-                    'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย', 'BRANCH' => 'คลังนอก'],
-                    'options' => ['placeholder' => 'Select a state ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ]);
+                // echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
+                //     'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย', 'BRANCH' => 'คลังนอก'],
+                //     'options' => ['placeholder' => 'Select a state ...'],
+                //     'pluginOptions' => [
+                //         'allowClear' => true
+                //     ],
+                // ]);
+                  
             ?>
+
+
+
            
 
         </div>
-        <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+        <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
             <input type="file" id="my_file" style="display: none;" />
 
             <a href="#" class="select-photo">

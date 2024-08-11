@@ -64,6 +64,32 @@ class WarehouseController extends Controller
         }
     }
 
+
+    public function actionList()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        $searchModel = new WarehouseSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['delete' => null]);
+
+        if ($this->request->isAJax) {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
         
 
 
@@ -159,18 +185,47 @@ class WarehouseController extends Controller
         }
     }
 
+    //เลือกคลังที่จะทำงาน
     public function actionSetWarehouse()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         $model = Warehouse::find()->where(['id' => $id])->One();
-        Yii::$app->session->set('warehouse', [
+        Yii::$app->session->set('warehouse',[
+            'id' => $model->id,
             'warehouse_id' => $model->id,
+            'warehouse_code' => $model->warehouse_code,
             'warehouse_name' => $model->warehouse_name,
+            'warehouse_type' => $model->warehouse_type,
+            'category_id' => $model->category_id,
         ]);
         return $this->redirect(['index']);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
+
+
+    //เลือกคลังที่จะดำเนินการเบิก
+    public function actionSelectWarehouse()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $model = Warehouse::find()->where(['id' => $id])->One();
+        Yii::$app->session->set('select-warehouse', [
+            'warehouse_id' => $model->id,
+            'warehouse_name' => $model->warehouse_name,
+        ]);
+        \Yii::$app->cart->checkOut(false);
+        return $this->redirect(['/inventory/store']);
+        // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
+    }
+    
+    public function actionClearSelectWarehouse()
+    {
+        Yii::$app->session->remove('select-warehouse');
+        \Yii::$app->cart->checkOut(false);
+        return $this->redirect(['/inventory/store']);
+    }
+
 
     public function actionClear()
     {
@@ -201,8 +256,10 @@ class WarehouseController extends Controller
 
     public function actionListOrderRequest()
     {
+        $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['name' => 'stock_detail','to_warehouse_id' => $warehouse['warehouse_id']]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

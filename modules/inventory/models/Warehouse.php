@@ -42,7 +42,7 @@ class Warehouse extends \yii\db\ActiveRecord
             [['warehouse_name', 'warehouse_type'], 'required'],
             [['warehouse_type'], 'string'],
             [['is_main'], 'integer'],
-            [['data_json', 'created_at', 'updated_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at','category_id'], 'safe'],
             [['warehouse_name', 'warehouse_code'], 'string', 'max' => 100],
         ];
     }
@@ -113,5 +113,10 @@ class Warehouse extends \yii\db\ActiveRecord
     public function ListOrderType()
     {
         return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['asset_type']])->all(), 'code', 'title');
+    }
+
+    public function ListGroup()
+    {
+        return ArrayHelper::map(self::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name');
     }
 }

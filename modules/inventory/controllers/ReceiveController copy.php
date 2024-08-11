@@ -138,10 +138,9 @@ class ReceiveController extends Controller
      */
     public function actionIndex()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'stock_detail','movement_type' => 'IN','to_warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->andFilterwhere(['movement_type' => 'IN']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -574,6 +573,69 @@ class ReceiveController extends Controller
         }
     }
 
+
+
+    // เพิ่มรายการวัสดุจาก PO
+    // public function actionAddPoItem()
+    // {
+    //     $id = $this->request->get('id');
+    //     // ตรวจสอบ order จาก ID
+    //     $order = Order::findOne($id);
+    //     // ถ้ามีรายการเดิมที่ยังรับเข้าไม่หมด
+    //     $Stock = Stock::find()->where(['name' => 'receive', 'po_number' => $order->po_number, 'order_status' => 'pending'])->One();
+    //     // ค้นหารายการสินค่าจาก asset_item ที่เก็บไว้ใน Order po_number
+    //     // $product = Product::findOne(['code' => $order->asset_item]);
+
+    //     $model = new Stock([
+    //         'po_number' => $order->po_number,
+    //         'rc_number' => $Stock->rc_number,
+    //         'to_warehouse_id' => $Stock->to_warehouse_id,
+    //         'name' => 'receive_item',
+    //         'asset_item' => $order->asset_item,
+    //         'movement_type' => 'receive',
+    //         'order_status' => 'pending',
+    //         'data_json' => [
+    //             'po_qty' => $order->qty
+    //         ]
+    //     ]);
+
+    //     $model->qty_check = $model->QtyCheck();
+
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post())) {
+    //             Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //             if ($model->save()) {
+    //                 $order->save(false);
+    //                 // return $model->save();
+    //                 return [
+    //                     'status' => 'success',
+    //                     'container' => '#inventory',
+    //                 ];
+    //             }
+    //         } else {
+    //             return $model->getErrors();
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
+
+    //     if ($this->request->isAjax) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'content' => $this->renderAjax('_add_item', [
+    //                 'model' => $model,
+    //                 'order' => $order
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('_add_item', [
+    //             'model' => $model,
+    //             'order' => $order
+    //         ]);
+    //     }
+    // }
 
     public function actionUpdateItem($id)
     {

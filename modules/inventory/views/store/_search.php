@@ -1,14 +1,14 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
-
+use yii\bootstrap5\ActiveForm;
+use kartik\select2\Select2;
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StoreSearch $model */
+/** @var app\modules\sm\models\OrderSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="store-search">
+<div class="order-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -17,35 +17,17 @@ use yii\widgets\ActiveForm;
             'data-pjax' => 1
         ],
     ]); ?>
+<div class="d-flex justify-content-between gap-3">
+    <div class="d-flex justify-content-end">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
+    </div>
+</div>
 
-    <?= $form->field($model, 'id') ?>
 
-    <?= $form->field($model, 'name') ?>
-
-    <?= $form->field($model, 'asset_item') ?>
-
-    <?= $form->field($model, 'warehouse_id') ?>
-
-    <?= $form->field($model, 'qty') ?>
-
-    <?php // echo $form->field($model, 'ref') ?>
-
-    <?php // echo $form->field($model, 'thai_year') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <div class="form-group">
+    <!-- <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
         <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
-    </div>
+    </div> -->
 
     <?php ActiveForm::end(); ?>
 
