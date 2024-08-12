@@ -8,6 +8,11 @@ $this->title = 'My DashBoard';
 <i class="bi bi-folder-check"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
+<style>
+#pr-order>.card {
+    height: 291px;
+}
+</style>
 <div class="row">
     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-sx-12">
         <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
@@ -24,7 +29,7 @@ $this->title = 'My DashBoard';
                 <div class="card" style="height:300px;">
                     <div class="card-body">
                         <h5>กิจกรรม/ความเคลื่อนไหว</h5>
-                       
+
                         <?php // $this->render('activity') ?>
 
                     </div>
@@ -39,7 +44,8 @@ $this->title = 'My DashBoard';
     <div class="col-6">
         <div id="viewApproveStock">Loading...</div>
         <div id="viewApprovePurchase">Loading...</div>
-    <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
+
+        <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
         <!-- <div class="card" style="height:300px;">
             <div class="card-body">
                 <h5>กิจกรรม/ความเคลื่อนไหวss</h5>
@@ -49,72 +55,40 @@ $this->title = 'My DashBoard';
             </div>
         </div> -->
         <?php Pjax::end(); ?>
-        <div class="card">
-            <div class="card-body">
-                <h5>ขออนุมัติ</h5>
-                <?php // $this->render('req_approve') ?>
-            </div>
-        </div>
-
     </div>
-
 </div>
 
-
-
 <div class="row">
-    <div class="col-4">
+    <div class="col-6">
         <div class="card" style="height:300px;">
             <div class="card-body">
-                <h5>ทรัพย์สินที่รับมอบหมาย</h5>
+                <h6>กลุ่ม/ทีมประสาน</h6>
                 <?php // $this->render('activity') ?>
-
             </div>
         </div>
     </div>
-    <div class="col-4">
-        <div class="card" style="height:300px;">
-            <div class="card-body">
-                <h5>กลุ่ม/ทีมประสาน</h5>
-                <?php // $this->render('activity') ?>
-
-            </div>
-        </div>
-
-    </div>
-    <div class="col-4">
-        <div class="card" style="height:300px;">
-            <div class="card-body">
-                <h5>กิจกรรม/ความเคลื่อนไหว</h5>
-                <?php // $this->render('activity') ?>
-            </div>
-        </div>
-
+    <div class="col-6">
+        <div id="viewOwnerAsset">Loading...</div>
     </div>
 </div>
 
 
-
-<div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div id="viewRepairHistory" class="mt-4">xxx</div>
-            </div>
-            <div class="col-lg-6 col-md-6 col-sm-12"></div>
-        </div>
 <?php
 $urlRepair = Url::to(['/me/repair']);
 $ApproveStockUrl = Url::to(['/me/approve/stock']);
 $ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
+$ownerAssetUrl = Url::to(['/me/owner']);
 // $urlRepair = Url::to(['/me/repair-me']);
 $js = <<< JS
 
     loadRepairHostory();
     loadApproveStock();
     loadPurchase();
+    loadOwnerAsset();
     
     //ประวัติการซ่อม
-    function  loadRepairHostory(){
-        \$.ajax({
+    async function  loadRepairHostory(){
+        await \$.ajax({
             type: "get",
             url: "$urlRepair",
             data:{
@@ -131,8 +105,8 @@ $js = <<< JS
     }
 
      //ขอเบิกวัสดุ
-     function  loadApproveStock(){
-        \$.ajax({
+     async function  loadApproveStock(){
+        await \$.ajax({
             type: "get",
             url: "$ApproveStockUrl",
             dataType: "json",
@@ -147,21 +121,39 @@ $js = <<< JS
     }
 
          //ขออนุมิติจัดซื้อจัดจ้าง
-         function  loadPurchase(){
-        \$.ajax({
+        async  function  loadPurchase(){
+            await \$.ajax({
+                type: "get",
+                url: "$ApprovePurchaseUrl",
+                dataType: "json",
+                success: function (res) {
+                    console.log(res.count)
+                    if(res.count != 0){
+                        \$('#viewApprovePurchase').html(res.content);
+                    }else{
+                        $('#viewApprovePurchase').hide();
+                    }
+                }
+            });
+    }
+
+    //ทรัพย์สินที่รับผิดขอบ
+    async function  loadOwnerAsset(){
+       await  \$.ajax({
             type: "get",
-            url: "$ApprovePurchaseUrl",
+            url: "$ownerAssetUrl",
             dataType: "json",
             success: function (res) {
                 console.log(res.count)
                 if(res.count != 0){
-                    \$('#viewApprovePurchase').html(res.content);
+                    \$('#viewOwnerAsset').html(res.content);
                 }else{
-                    $('#viewApprovePurchase').hide();
+                    $('#viewOwnerAsset').hide();
                 }
             }
         });
     }
+
 
 
 

@@ -17,6 +17,7 @@ use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use Yii;
+use yii\helpers\Html;
 
 /**
  * This is the model class for table "asset".
@@ -124,6 +125,19 @@ class Asset extends \yii\db\ActiveRecord
             'created_by' => 'ผู้สร้าง',
             'updated_by' => 'ผู้แก้ไข',
         ];
+    }
+
+//แสดงรูปภาพแบบวงกลม
+    public function Avatar(){
+        return '<div class="d-flex">
+        '.Html::img($this->ShowImg(),['class' => 'avatar border border-secondary']).'
+                                <div class="avatar-detail">
+                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        '.$this->AssetitemName().'
+                                    </h6>
+                                    <p class="text-primary mb-0 fs-13">'. $this->code.'</p>
+                                </div>
+                            </div>';
     }
 
     // แสดงรูปภาพ
