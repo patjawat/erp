@@ -32,16 +32,29 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'name',
             'asset_item',
-            'warehouse_id',
-            'qty',
-            'ref',
-            'thai_year',
-            'data_json',
-            'created_at',
-            'updated_at',
-            'created_by',
-            'updated_by',
+          
         ],
     ]) ?>
 
 </div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">First</th>
+      <th scope="col">Last</th>
+      <th scope="col">Handle</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach($model->ListItems() as $item):?>
+    <tr>
+      <th scope="row">1</th>
+      <td>Mark</td>
+      <td>Otto</td>
+      <td>@mdo</td>
+    </tr>
+    <?php endforeach;?>
+  </tbody>
+</table>

@@ -180,7 +180,7 @@ $warehouse = Yii::$app->session->get('warehouse');
                                 <td>R1C3</td>
                                 <?php if($model->order_status != 'success') : ?>
                                 <td>
-                                    <?= Html::a('<i class="bi bi-trash"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
+                                    <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/receive/delete', 'id' => $item->id, 'container' => 'rc_commitee'], [
                                             'class' => 'btn btn-sm btn-danger delete-item',
                                         ]) ?>
                                 </td>

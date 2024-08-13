@@ -82,17 +82,17 @@ $this->title = $model->warehouse_name;
         </div>
     </div>
     <div class="col-6">
+      <div id="showOrderRequestInWarehouse"></div>
 
-<div id="showStoreInWarehouse"></div>
-
+      
     </div>
     
     <!-- end col-6 -->
-</div>
-
-<div class="row">
+  </div>
+  
+  <div class="row">
     <div class="col-12">
-        <div id="showOrderRequestInWarehouse"></div>
+      <div id="showStoreInWarehouse"></div>
     </div>
 </div>
 

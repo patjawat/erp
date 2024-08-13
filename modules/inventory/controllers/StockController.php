@@ -4,6 +4,8 @@ namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\Store;
+use app\modules\inventory\models\StoreSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -43,7 +45,7 @@ class StockController extends Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'order_item']);
+        $dataProvider->query->andFilterWhere(['name' => 'order','movement_type' => 'IN']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -51,6 +53,26 @@ class StockController extends Controller
         ]);
     }
 
+
+    public function actionShop()
+    {
+        $selectWarehouse = Yii::$app->session->get('warehouse');
+        $searchModel = new StoreSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise at', 'at.code=store.asset_item');
+        if(isset($selectWarehouse) && $selectWarehouse['warehouse_type'] == 'SUB'){
+            $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
+        }
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['LIKE', 'at.title', $searchModel->q],
+            // ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '$.asset_name')"), $searchModel->q],
+        ]);
+        return $this->render('shop', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
 
     // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
     public function actionListOrderRequest()

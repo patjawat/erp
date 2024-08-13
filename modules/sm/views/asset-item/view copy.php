@@ -158,8 +158,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=Html::img($model->showImg(), ['class' => '', 'style' => 'max-width:100%'])?>
 <hr>
 <div class="d-flex gap-2  justify-content-center">
-    <?=Html::a('<i class="bx bx-edit-alt me-1"></i>แก้ไข', ['/am/asset-item/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-md']])?>
-    <?=Html::a('<i class="bi bi-trash"></i>ลบ', ['/am/asset-item/delete', 'id' => $model->id], [
+    <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>แก้ไข', ['/am/asset-item/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning  open-modal', 'data' => ['size' => 'modal-md']])?>
+    <?=Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['/am/asset-item/delete', 'id' => $model->id], [
     'class' => 'btn btn-danger  delete-item',
 ])?>
 </div>

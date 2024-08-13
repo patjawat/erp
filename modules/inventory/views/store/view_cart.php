@@ -55,7 +55,7 @@ use yii\helpers\Html;
 <?php if($cart->getCount() == 0):?>
         <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
 <?php else:?>
-        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> เบิก', ['create','title' => 'เบิก'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
+        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['create','title' => 'คำขอเบิก'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
         <?php endif?>
     </div>
 

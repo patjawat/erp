@@ -15,9 +15,9 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
+use app\models\Categorise;
 use yii\helpers\Json;
 use app\modules\hr\models\Employees;
-use app\models\Categorise;
 /**
  * This is the model class for table "stock_order".
  *
@@ -279,7 +279,7 @@ public function getProduct()
                return AssetHelper::ListAssetType();
            }
    
-//แสดงรายการย่อยของ stock
+            //แสดงรายการย่อยของ stock
            public function ListItems()
            {
                return self::find()
@@ -312,7 +312,7 @@ public function getProduct()
 
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => '4'])->all(), 'code', 'title');
     }
 
     public function ListPoOrder()

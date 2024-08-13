@@ -9,6 +9,7 @@ use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use yii\db\Expression;
 use yii\web\Response;
+use yii\helpers\ArrayHelper;
 
 class ApproveController extends \yii\web\Controller
 {
@@ -25,7 +26,6 @@ class ApproveController extends \yii\web\Controller
         $dataProvider->query->where(['=', new Expression("JSON_EXTRACT(data_json, '$.checker')"),  (string) Yii::$app->user->id]);
 
         if ($this->request->isAjax) {
-
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -42,6 +42,61 @@ class ApproveController extends \yii\web\Controller
             ]);
         }
     }
+    public function actionStockOrderConfirm($id)
+    {
+        $model  =  Stock::findOne($id);
+
+        $oldObj = $model->data_json;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->save(false);
+                return [
+                    'status' => 'success',
+                    'container' => '#me'
+                ];
+            } else {
+                return false;
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $model->CreateBy('ผู้ขอเบิก')['avatar'],
+                'content' => $this->renderAjax('_form_stock_order_confirm', ['model' => $model])
+            ];
+        } else {
+            return $this->render('_form_stock_order_confirm',['model' => $model]);
+        }
+    }
+
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionStockConfirmValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Stock();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['order_confirm'])) {
+                $model->data_json['order_confirm'] == "" ? $model->addError('data_json[order_confirm]', $requiredName) : null;
+            }
+
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
+
 
     public function actionPurchase()
     {
@@ -62,8 +117,8 @@ class ApproveController extends \yii\web\Controller
                 'content' => $this->renderAjax('@app/modules/sm/views/default/list_order', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                     'container' => 'pr-order',
-                     'title' => 'รายการขอซื้อ/ขอจ้าง',
+                    'container' => 'pr-order',
+                    'title' => 'รายการขอซื้อ/ขอจ้าง',
                 ])
             ];
         } else {
@@ -71,12 +126,8 @@ class ApproveController extends \yii\web\Controller
                 'title' => 'รายการขอซื้อ/ขอจ้าง',
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                 'container' => 'pr-order'
+                'container' => 'pr-order'
             ]);
         }
     }
-
-
-
-
 }

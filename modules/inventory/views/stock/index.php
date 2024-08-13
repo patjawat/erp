@@ -29,8 +29,8 @@ $this->params['breadcrumbs'][] = $this->title;
     >
         <thead>
             <tr>
-                <th scope="col">รายการ</th>
-                <th scope="col">รับเข้า</th>
+                <th scope="col">ผู้ดำเนินการ</th>
+                <th scope="col">คลัง</th>
                 <th scope="col">เบิก</th>
                 <th scope="col">Column 3</th>
             </tr>
@@ -38,8 +38,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <tbody>
             <?php foreach($dataProvider->getModels() as $item):?>
             <tr class="">
-                <td scope="row"><?=$item->product->Avatar()?></td>
-                <td><?=$item->movement_type?></td>
+                <td scope="row"><?=$item->CreateBy()['avatar']?></td>
+                <td><?=$item->tomWarehouse()?></td>
                 <td><?=$item->movement_type?></td>
                 <td>R1C3</td>
             </tr>

@@ -3,6 +3,8 @@
 use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
 use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use app\models\Categorise;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductSearch $model */
@@ -28,7 +30,7 @@ use kartik\select2\Select2;
   <?php
   
         echo $form->field($searchModel, 'category_id')->widget(Select2::classname(), [
-            'data' => $searchModel->ListProductType(),
+            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => '4'])->all(), 'code', 'title'),
             'options' => ['placeholder' =>  'ระบุประเภท',
         ],
             'pluginOptions' => [

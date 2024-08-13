@@ -42,7 +42,7 @@ $listcommittee = Order::findOne(['name' => 'committee'])
 
                     <?php // Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                     <?php
-                    //  Html::a('<i class="bi bi-trash"></i>', ['/purchase/order-item/delete', 'id' => $item->id, 'container' => 'committee','url' => Url::to(['/purchase/order-item/committee','category_id' => $item->category_id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'])], [
+                    //  Html::a('<i class="fa-solid fa-trash"></i>', ['/purchase/order-item/delete', 'id' => $item->id, 'container' => 'committee','url' => Url::to(['/purchase/order-item/committee','category_id' => $item->category_id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'])], [
                     //     'class' => 'btn btn-sm btn-danger rounded-pill delete-committee',
                     //     ])
                          ?>

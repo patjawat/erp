@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\controllers;
 
+
 use app\modules\inventory\models\Store;
 use app\modules\inventory\models\StoreSearch;
 use app\modules\inventory\models\Warehouse;
@@ -14,6 +15,7 @@ use Yii;
 use app\modules\inventory\models\Product;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
+use app\components\UserHelper;
 /**
  * StoreController implements the CRUD actions for Store model.
  */
@@ -44,13 +46,20 @@ class StoreController extends Controller
      */
     public function actionIndex()
     {
-        $selectWarehouse = Yii::$app->session->get('warehouse');
-        $searchModel = new StoreSearch();
+        $warehouse = Yii::$app->session->get('select-warehouse');
+        $searchModel = new StoreSearch([
+            'warehouse_id' => isset($warehouse['warehouse_id']) ? $warehouse['warehouse_id'] : 0
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=store.asset_item');
-        if(isset( $selectWarehouse)){
-            $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
+
+        if(isset($selectWarehouse)){
+            // $dataProvider->query->where(['warehouse_id' => $selectWarehouse['warehouse_id']]);
         }
+
+        // if(isset($selectWarehouse) && $selectWarehouse['warehouse_type'] == 'SUB'){
+        //     $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
+        // }
         $dataProvider->query->andFilterWhere([
             'or',
             ['LIKE', 'at.title', $searchModel->q],
@@ -59,7 +68,27 @@ class StoreController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'warehouse' => $warehouse
         ]);
+    }
+
+
+        //เลือกคลังที่จะดำเนินการเบิก
+    public function actionSelectWarehouse()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $model = Warehouse::find()->where(['id' => $id])->One();
+        Yii::$app->session->set('select-warehouse', [
+            'warehouse_id' => $model->id,
+            'warehouse_name' => $model->warehouse_name,
+        ]);
+        \Yii::$app->cart->checkOut(false);
+        return [
+            'container' => '#store'
+        ];
+        // return $this->redirect(['/inventory/store']);
+        // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
 
     public function actionListInWarehouse()
@@ -110,15 +139,17 @@ class StoreController extends Controller
      */
     public function actionCreate()
     {
+        $userCreate = UserHelper::GetEmployee();
         $warehouse = Yii::$app->session->get('warehouse');
+        $warehouseSelect = Yii::$app->session->get('select-warehouse');
         $model = new Stock([
             'name' => 'order',
             'movement_type' => 'OUT',
             'order_status' => 'pending',
-            'from_warehouse_id' => $warehouse['category_id'],
-            'to_warehouse_id' => $warehouse['warehouse_id'],
+            'from_warehouse_id' => $warehouse['warehouse_id'],
+            'to_warehouse_id' => $warehouseSelect['warehouse_id'],
             'data_json' => [
-                'checker' => $warehouse['checker'],
+                'checker' => (int)$userCreate->leaderUser()['leader1'],
                 'checker_name' => $warehouse['checker_name'],
             ]
         ]);
@@ -137,6 +168,7 @@ class StoreController extends Controller
                         'qty' => $item->qty
                        ]);
                        $orderItem->save(false);
+                       \Yii::$app->cart->checkOut(false);
                     }
                 }
                 return $this->redirect(['/inventory/warehouse']);

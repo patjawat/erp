@@ -14,28 +14,32 @@ use yii\helpers\Html;
                 <div>
                     <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
                                 เลือกรายการ</button> -->
-                    <?= Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/stock-movement/create', 'name' => 'issue', 'title' => '<i class="fa-regular fa-pen-to-square"></i> ขอเบิกวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?php  Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/stock-movement/create', 'name' => 'issue', 'title' => '<i class="fa-regular fa-pen-to-square"></i> ขอเบิกวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </div>
 
             </div>
             <table class="table table-primary">
                 <thead>
                     <tr>
-                        <th scope="col">สถานะ</th>
-                        <th scope="col">รหัส</th>
-                        <th scope="col">วันที่ต้องการ</th>
-                        <th scope="col">หมายเหตุ</th>
-                        <th scope="col">ดำเนินการ</th>
+                        <th scope="col">รายการ</th>
+                        <th>คลัง</th>
+                        <th>จำนวน</th>
+                        <th>สถานะ</th>
+                        <th style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($dataProvider->getModels() as $item): ?>
                     <tr class="">
-                        <td scope="row"></td>
-                        <td><?= $item->id ?></td>
-                        <td>Item</td>
-                        <td>Item</td>
-                        <td>Item</td>
+                        <td><?php
+                        $msg  ='ขอเบิกวัสดุสำนักงาน';
+                       echo $item->CreateBy($msg)['avatar'] ?></td>
+                        <td><?=$item->from_warehouse_id?></td>
+                        <td>2</td>
+                        <td><?= $item->order_status == 'pending' ? '<i class="fa-regular fa-hourglass text-danger"></i> รออนุมัติ' : 'อนุมัติ'?></td>
+                        <td class="text-center">
+                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

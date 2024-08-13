@@ -84,9 +84,9 @@ $this->params['breadcrumbs'][] = $this->title;
 																class="bx bx-dots-vertical-rounded fw-bold"></i></button>
 														<div class="dropdown-menu" style="">
 															<??>
-															<?=Html::a('<i class="bx bx-edit-alt me-1"></i>รายละเอียด', ['#'], ['class' => 'dropdown-item'])?>
+															<?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>รายละเอียด', ['#'], ['class' => 'dropdown-item'])?>
 
-															<?=Html::a('<i class="bi bi-trash"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
+															<?=Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
 														</div>
 													</div>
 												</td>
@@ -123,9 +123,9 @@ $this->params['breadcrumbs'][] = $this->title;
 																class="bx bx-dots-vertical-rounded fw-bold"></i></button>
 														<div class="dropdown-menu" style="">
 															<??>
-															<?=Html::a('<i class="bx bx-edit-alt me-1"></i>รายละเอียด', ['#'], ['class' => 'dropdown-item'])?>
+															<?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>รายละเอียด', ['#'], ['class' => 'dropdown-item'])?>
 
-															<?=Html::a('<i class="bi bi-trash"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
+															<?=Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['#'], ['class' => 'dropdown-item'])?>
 														</div>
 													</div>
 												</td>

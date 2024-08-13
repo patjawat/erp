@@ -206,20 +206,7 @@ class WarehouseController extends Controller
     }
 
 
-    //เลือกคลังที่จะดำเนินการเบิก
-    // public function actionSelectWarehouse()
-    // {
-    //     Yii::$app->response->format = Response::FORMAT_JSON;
-    //     $id = $this->request->get('id');
-    //     $model = Warehouse::find()->where(['id' => $id])->One();
-    //     Yii::$app->session->set('select-warehouse', [
-    //         'warehouse_id' => $model->id,
-    //         'warehouse_name' => $model->warehouse_name,
-    //     ]);
-    //     \Yii::$app->cart->checkOut(false);
-    //     return $this->redirect(['/inventory/store']);
-    //     // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
-    // }
+
     
     public function actionClearSelectWarehouse()
     {

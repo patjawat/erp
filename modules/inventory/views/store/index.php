@@ -15,7 +15,7 @@ $this->title = 'Stores';
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
-<?php Pjax::begin(); ?>
+
 <?php
 // $selectWarehouse = Yii::$app->session->get('select-warehouse');
 $cart = \Yii::$app->cart;
@@ -27,7 +27,10 @@ $selectWarehouse = Yii::$app->session->get('warehouse');
 ?>
     <div class="card">
         <div class="card-body d-flex justify-content-between">
-        <?=Html::a('<i class="bi bi-check2-square"></i> เลือกคลังที่ต้องการเบิก',['/inventory/warehouse/list','title' => '<i class="bi bi-check2-square"></i> เลือกคลังที่ต้องการเบิก'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-sm']])?>
+        <div>
+            เบิกวัสดุ
+        </div>
+        <?php Html::a('<i class="bi bi-check2-square"></i> เลือกคลังที่ต้องการเบิก',['/inventory/warehouse/list','title' => '<i class="bi bi-check2-square"></i> เลือกคลังที่ต้องการเบิก'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-sm']])?>
             <div class="d-flex align-items-center gap-2">
                 <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
                 <?= Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
@@ -38,7 +41,7 @@ $selectWarehouse = Yii::$app->session->get('warehouse');
     </div>
 <div class="row">
 <div class="col-8">
-
+<?php Pjax::begin(['id' => 'store']); ?>
     <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between">
@@ -73,8 +76,9 @@ $selectWarehouse = Yii::$app->session->get('warehouse');
             </div>
 
         </div>
+        
     </div>
-
+    <?php Pjax::end(); ?>
 
         
 </div>
@@ -183,6 +187,6 @@ $this->registerJS($js, View::POS_END);
 ?>
 
 
-<?php Pjax::end(); ?>
+
 
 
