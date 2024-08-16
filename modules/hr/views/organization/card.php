@@ -8,7 +8,7 @@ use yii\helpers\Url;
                 aria-expanded="false">
                 <i class="fa-solid fa-sliders"></i>
             </a>
-            <div class="dropdown-menu dropdown-menu-right" style="">
+            <div class="dropdown-menu dropdown-menu-right">
              
                     <?=app\components\AppHelper::Btn([
                         'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> เพิ่ม node',

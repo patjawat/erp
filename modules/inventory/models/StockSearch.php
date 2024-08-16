@@ -17,9 +17,8 @@ class StockSearch extends Stock
     public function rules()
     {
         return [
-            [['id', 'asset_item', 'from_warehouse_id', 'to_warehouse_id', 'qty', 'created_by', 'updated_by'], 'integer'],
-            [['name', 'rc_number', 'po_number', 'movement_type', 'receive_type', 'movement_date', 'lot_number', 'expiry_date', 'category_id', 'ref', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
-            [['total_price', 'unit_price'], 'number'],
+            [['id', 'warehouse_id', 'qty', 'created_by'], 'integer'],
+            [['name', 'code', 'asset_item', 'data_json', 'created_at', 'updated_at'], 'safe'],
         ];
     }
 
@@ -60,28 +59,16 @@ class StockSearch extends Stock
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'asset_item' => $this->asset_item,
-            'from_warehouse_id' => $this->from_warehouse_id,
-            'to_warehouse_id' => $this->to_warehouse_id,
+            'warehouse_id' => $this->warehouse_id,
             'qty' => $this->qty,
-            'total_price' => $this->total_price,
-            'unit_price' => $this->unit_price,
-            'movement_date' => $this->movement_date,
-            'expiry_date' => $this->expiry_date,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
-            'updated_by' => $this->updated_by,
         ]);
 
         $query->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'rc_number', $this->rc_number])
-            ->andFilterWhere(['like', 'po_number', $this->po_number])
-            ->andFilterWhere(['like', 'movement_type', $this->movement_type])
-            ->andFilterWhere(['like', 'receive_type', $this->receive_type])
-            ->andFilterWhere(['like', 'lot_number', $this->lot_number])
-            ->andFilterWhere(['like', 'category_id', $this->category_id])
-            ->andFilterWhere(['like', 'ref', $this->ref])
+            ->andFilterWhere(['like', 'code', $this->code])
+            ->andFilterWhere(['like', 'asset_item', $this->asset_item])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;

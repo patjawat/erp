@@ -70,7 +70,7 @@ use yii\web\View;
                             aria-expanded="false">
                             <i class="fa-solid fa-ellipsis"></i>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="">
+                        <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/receive/update','id' => $model->id,'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-md']]) ?>
                         </div>
                     </div>

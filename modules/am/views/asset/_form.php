@@ -41,7 +41,7 @@ $group = Yii::$app->request->get('group');
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa-solid fa-ellipsis"></i>
                     </div>
-                    <div class="dropdown-menu dropdown-menu-right" style="">
+                    <div class="dropdown-menu dropdown-menu-right">
                         <a href="#" class="dropdown-item select-photo">
                             <i class="fa-solid fa-file-image me-2 fs-5"></i>
                             <span>อัพโหลดภาพ</span>

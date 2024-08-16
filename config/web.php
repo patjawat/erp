@@ -31,6 +31,9 @@ $config = [
         'cart' => [
 			'class' => 'asyou99\cart\Cart',
 		],
+        'cart2' => [
+			'class' => 'asyou99\cart\Cart',
+		],
         'committee' => [
 			'class' => 'asyou99\cart\Cart',
 		],

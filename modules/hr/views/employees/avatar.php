@@ -27,7 +27,7 @@ use yii\helpers\Url;
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-sliders"></i>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right" style="">
+                            <div class="dropdown-menu dropdown-menu-right">
                                 <?= AppHelper::Btn([
                                     'type' => 'update',
                                     'url' => ['/hr/employees/update', 'id' => $model->id],

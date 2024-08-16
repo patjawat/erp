@@ -67,7 +67,7 @@ use yii\widgets\Pjax;
             //             <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
             //                 data-bs-toggle="dropdown" aria-expanded="false"><i
             //                     class="bx bx-dots-vertical-rounded fw-bold"></i></button>
-            //             <div class="dropdown-menu" style="">
+            //             <div class="dropdown-menu">
             //                 '.Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>แก้ไข', ['/hr/position/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]).'
 
             //                 '.Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['/hr/position/delete', 'id' => $model->id], [

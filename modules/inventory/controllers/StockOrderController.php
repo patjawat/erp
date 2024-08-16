@@ -49,14 +49,14 @@ class StockOrderController extends Controller
 
     /**
      * Displays a single StockOrder model.
-     * @param int $stock_order_id Stock Order ID
+     * @param int $id Stock Order ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($stock_order_id)
+    public function actionView($id)
     {
         return $this->render('view', [
-            'model' => $this->findModel($stock_order_id),
+            'model' => $this->findModel($id),
         ]);
     }
 
@@ -85,13 +85,13 @@ class StockOrderController extends Controller
     /**
      * Updates an existing StockOrder model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $stock_order_id Stock Order ID
+     * @param int $id Stock Order ID
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($stock_order_id)
+    public function actionUpdate($id)
     {
-        $model = $this->findModel($stock_order_id);
+        $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return $this->redirect(['view', 'stock_order_id' => $model->stock_order_id]);
@@ -105,13 +105,13 @@ class StockOrderController extends Controller
     /**
      * Deletes an existing StockOrder model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $stock_order_id Stock Order ID
+     * @param int $id Stock Order ID
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($stock_order_id)
+    public function actionDelete($id)
     {
-        $this->findModel($stock_order_id)->delete();
+        $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
     }
@@ -119,13 +119,13 @@ class StockOrderController extends Controller
     /**
      * Finds the StockOrder model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $stock_order_id Stock Order ID
+     * @param int $id Stock Order ID
      * @return StockOrder the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($stock_order_id)
+    protected function findModel($id)
     {
-        if (($model = StockOrder::findOne(['stock_order_id' => $stock_order_id])) !== null) {
+        if (($model = StockOrder::findOne(['stock_order_id' => $id])) !== null) {
             return $model;
         }
 

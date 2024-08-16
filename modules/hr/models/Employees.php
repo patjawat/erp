@@ -430,6 +430,7 @@ class Employees extends \yii\db\ActiveRecord
                 return [
                     'avatar' => $employee->getAvatar(false),
                     'leader1' => $model->data_json['leader1'],
+                    'leader1_user_id' => $model->user_id,
                     'leader1_fullname' => $model->data_json['leader1_fullname'],
                     'leader2' => $model->data_json['leader2'],
                     'leader2_fullname' => $model->data_json['leader2_fullname'],
@@ -437,6 +438,7 @@ class Employees extends \yii\db\ActiveRecord
             } else {
                 return [
                     'avatar' => '',
+                    'leader1_user_id' => '',
                     'leader1' => '',
                     'leader1_fullname' => '',
                     'leader2' => '',
@@ -447,6 +449,7 @@ class Employees extends \yii\db\ActiveRecord
             return [
                 'avatar' => '',
                 'leader1' => '',
+                'leader1_user_id' => '',
                 'leader1_fullname' => '',
                 'leader2' => '',
                 'leader2_fullname' => '',

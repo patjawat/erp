@@ -20,7 +20,7 @@ $listAssetGroups = Categorise::find()
     <a href="javascript:void(0)" class="dropdown-toggle me-0" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="fa-solid fa-file-circle-check"></i> ดำเนินการ
     </a>
-    <div class="dropdown-menu dropdown-menu-right" style="">
+    <div class="dropdown-menu dropdown-menu-right">
         <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> เบิกจ่ายครุภัณฑ์',['/am/asset-disbursement'],['class' => 'btn btn-light dropdown-item'])?>
         <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> ยืมคืนครุภัณฑ์',['/am/asset-borrow'],['class' => 'btn btn-light dropdown-item'])?>
         <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> ขายทอดตลาด',['/am/asset-sell'],['class' => 'btn btn-light dropdown-item'])?>

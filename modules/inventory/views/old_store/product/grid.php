@@ -12,7 +12,7 @@ use app\modules\inventory\models\Product;
                     aria-expanded="false">
                     <i class="fa-solid fa-ellipsis"></i>
                 </a>
-                <div class="dropdown-menu dropdown-menu-right" style="">
+                <div class="dropdown-menu dropdown-menu-right">
                     <?= Html::a('<i class="bi bi-gear me-2"></i>ตั้งค่า', ['/sm/product'], ['class' => 'dropdown-item']) ?>
                 </div>
             </div>

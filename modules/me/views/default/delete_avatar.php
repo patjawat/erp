@@ -25,7 +25,7 @@ $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-sliders"></i>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right" style="">
+                            <div class="dropdown-menu dropdown-menu-right">
                                 <?php 
                                 // AppHelper::Btn([
                                 //     'type' => 'update',

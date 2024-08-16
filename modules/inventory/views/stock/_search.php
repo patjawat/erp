@@ -8,7 +8,7 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="stock-movement-search">
+<div class="stock-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -22,35 +22,13 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name') ?>
 
-    <?= $form->field($model, 'rc_number') ?>
+    <?= $form->field($model, 'code') ?>
 
-    <?= $form->field($model, 'po_number') ?>
+    <?= $form->field($model, 'asset_item') ?>
 
-    <?= $form->field($model, 'product_id') ?>
-
-    <?php // echo $form->field($model, 'from_warehouse_id') ?>
-
-    <?php // echo $form->field($model, 'to_warehouse_id') ?>
+    <?= $form->field($model, 'warehouse_id') ?>
 
     <?php // echo $form->field($model, 'qty') ?>
-
-    <?php // echo $form->field($model, 'total_price') ?>
-
-    <?php // echo $form->field($model, 'unit_price') ?>
-
-    <?php // echo $form->field($model, 'movement_type') ?>
-
-    <?php // echo $form->field($model, 'receive_type') ?>
-
-    <?php // echo $form->field($model, 'movement_date') ?>
-
-    <?php // echo $form->field($model, 'lot_number') ?>
-
-    <?php // echo $form->field($model, 'expiry_date') ?>
-
-    <?php // echo $form->field($model, 'category_id') ?>
-
-    <?php // echo $form->field($model, 'ref') ?>
 
     <?php // echo $form->field($model, 'data_json') ?>
 
@@ -59,8 +37,6 @@ use yii\widgets\ActiveForm;
     <?php // echo $form->field($model, 'updated_at') ?>
 
     <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
 
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>

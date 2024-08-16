@@ -13,7 +13,7 @@ use yii\helpers\Url;
                     aria-expanded="false">
                     <i class="fa-solid fa-ellipsis"></i>
                 </a>
-                <div class="dropdown-menu dropdown-menu-right" style="">
+                <div class="dropdown-menu dropdown-menu-right">
                     <?= Html::a('<i class="bi bi-plus-circle-fill  text-primary me-2"></i> สร้างใบขอซื้อ-ขอจ้าง', ['/sm/order/create'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                     <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
                 </div>

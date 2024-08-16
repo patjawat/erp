@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             aria-expanded="false">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="">
+                        <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </div>
@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fa-solid fa-ellipsis"></i>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-right" style="">
+                                <div class="dropdown-menu dropdown-menu-right">
                                     <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square me-1 text-warning"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                     <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [

@@ -97,7 +97,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </a>
-                                    <div class="dropdown-menu dropdown-menu-right" style="">
+                                    <div class="dropdown-menu dropdown-menu-right">
                                        
                                     </div>
                                 </div>

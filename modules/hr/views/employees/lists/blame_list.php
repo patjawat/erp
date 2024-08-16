@@ -38,7 +38,7 @@ $this->title = "การรับโทษทางวินัย";
                         <td class="text-center align-middle">
                             <div class="dropdown">
                                 <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false"><i class="bx bx-dots-vertical-rounded fw-bold"></i></button>
-                                <div class="dropdown-menu" style="">
+                                <div class="dropdown-menu">
                                     <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>แก้ไข', ['/hr/employee-detail/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-fire"></i> '.$this->title], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
                                     <?=Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item'])?>
                                 </div>

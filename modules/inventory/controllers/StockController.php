@@ -4,15 +4,12 @@ namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
-use app\modules\inventory\models\Store;
-use app\modules\inventory\models\StoreSearch;
-use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
+use Yii;;
 use yii\web\Response;
-use app\modules\sm\models\Product;
-use Yii;
-use app\modules\inventory\models\Warehouse;
+
 /**
  * StockController implements the CRUD actions for Stock model.
  */
@@ -45,7 +42,6 @@ class StockController extends Controller
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'order','movement_type' => 'IN']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -53,91 +49,34 @@ class StockController extends Controller
         ]);
     }
 
-
-    public function actionShop()
+    public function actionListProduct()
     {
-        $selectWarehouse = Yii::$app->session->get('warehouse');
-        $searchModel = new StoreSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=store.asset_item');
-        if(isset($selectWarehouse) && $selectWarehouse['warehouse_type'] == 'SUB'){
-            $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
-        }
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['LIKE', 'at.title', $searchModel->q],
-            // ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '$.asset_name')"), $searchModel->q],
-        ]);
-        return $this->render('shop', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
-    public function actionListOrderRequest()
-    {
-
-        $warehouse = Yii::$app->session->get('warehouse');
-        $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
-       
+        $id = $this->request->get('id');
+        $model = $this->findModel($id);
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         if ($this->request->isAjax) {
-
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('list_order_request', [
-                     'searchModel' => $searchModel,
+                'content' => $this->renderAjax('list_product', [
+                    'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                ])
+                    'model' => $model
+                ]),
             ];
         } else {
-            return $this->render('list_order_request', [
+            return $this->render('list_product', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'model' => $model
             ]);
         }
+
     }
 
 
-    //Form ขอเบิกวัสดุ
-    public function actionOrderRequest()
-    {
-        $model = new Stock([
-            'name' => 'request',
-        ]);
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                // $thaiYear = substr((date('Y') + 543), 2);
-                // if ($model->rq_number == '') {
-                //     $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
-                // }
-                $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_order_request', [
-                    'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('_form_order_request', [
-                'model' => $model,
-            ]);
-        }
-    }
     /**
      * Displays a single Stock model.
      * @param int $id ID
@@ -151,16 +90,6 @@ class StockController extends Controller
         ]);
     }
 
-
-    public function actionProduct($id)
-    {
-        $model = Product::findOne($id);
-        return $this->render('product_history', [
-            'model' => $model,
-        ]);
-    }
-
-
     /**
      * Creates a new Stock model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -168,40 +97,19 @@ class StockController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Stock([
-            'name' => $this->request->get('name'),
-            'movement_type' => $this->request->get('name'),
-            'po_number' => $this->request->get('category_id'),
-            'receive_type' => $this->request->get('receive_type')
-        ]);
+        $model = new Stock();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $thaiYear = substr((date('Y') + 543), 2);
-                if ($model->rq_number == '') {
-                    $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
-                }
-                $model->save(false);
+            if ($model->load($this->request->post()) && $model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -222,22 +130,6 @@ class StockController extends Controller
         return $this->render('update', [
             'model' => $model,
         ]);
-    }
-
-    public function actionListInStock()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $po_number = $this->request->get('po_number');
-        // $po_number = 'PO-670005';
-        $listItem = Stock::find()->all();
-
-        return [
-            'title' => $this->request->get('tilte'),
-            'content' => $this->renderAjax('list_in_stock', [
-                'listItem' => $listItem,
-            ])
-        ];
     }
 
     /**

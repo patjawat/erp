@@ -24,7 +24,7 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                     <i class="bi bi-caret-down-fill"></i>
                 </button>
-                <ul class="dropdown-menu" style="">
+                <ul class="dropdown-menu">
                     <?= Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่', ['/am/asset-detail/create', 'id' => $model->id, 'name' => 'ma', 'title' => 'เพิ่มการบำรุงรักษา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </li>
         <li>
@@ -56,7 +56,7 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                 aria-expanded="false" data-bs-reference="parent">
                 <i class="bi bi-caret-down-fill"></i>
             </button>
-            <ul class="dropdown-menu" style="">
+            <ul class="dropdown-menu">
 
                 <a class="dropdown-item open-modal" href="/am/asset-detail?name=calibration_items" data-size="modal-lg">
                     <i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่ </a>

@@ -12,6 +12,7 @@ use app\models\Profile;
 use app\models\ProfileSearch;
 use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
+use app\modules\sm\models\Product;
 use yii\filters\VerbFilter;
 use yii\helpers\Html;
 use yii\web\Controller;
@@ -183,6 +184,30 @@ class DepdropController extends \yii\web\Controller
             'items' => $model
         ];
     }
+
+
+    public function actionProduct($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $models = Product::find()->where(['name' => 'asset_item'])
+            ->andWhere(['or', ['LIKE', 'title',$q]])
+            ->limit(10)
+            ->all();
+        $data = [['id' => '', 'text' => '']];
+        foreach ($models as $model) {
+            $data[] = [
+                'id' => $model->code,
+                'text' => $model->Avatar(false),
+                'fullname' => $model->title,
+                'avatar' => $model->Avatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $model
+        ];
+    }
+
 
 
     // ตำแหน่งกลุ่มบุคลากร

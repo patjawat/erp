@@ -4,14 +4,14 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\Store $model */
+/** @var app\modules\inventory\models\Stock $model */
 
 $this->title = $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Stores', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Stocks', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="store-view">
+<div class="stock-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -31,32 +31,15 @@ $this->params['breadcrumbs'][] = $this->title;
         'attributes' => [
             'id',
             'name',
+            'code',
             'asset_item',
-          
+            'warehouse_id',
+            'qty',
+            'data_json',
+            'created_at',
+            'updated_at',
+            'created_by',
         ],
     ]) ?>
 
 </div>
-
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">รายการ</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <?php foreach($model->ListItems() as $item):?>
-    <tr>
-      <th scope="row">
-    <?=$item->product->Avatar()?>
-      </th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <?php endforeach;?>
-  </tbody>
-</table>

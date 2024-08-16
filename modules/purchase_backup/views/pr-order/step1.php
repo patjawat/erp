@@ -9,7 +9,7 @@ use yii\helpers\Html;
                 aria-expanded="false">
                 <i class="fa-solid fa-ellipsis"></i>
             </a>
-            <div class="dropdown-menu dropdown-menu-right" style="">
+            <div class="dropdown-menu dropdown-menu-right">
                 <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                 <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                 <?= Html::a('<i class="bx bx-trash text-danger me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [

@@ -43,7 +43,7 @@ $items = Categorise::find()->where(['name' => 'position_name','category_id' => $
                             <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right" style="">
+                            <div class="dropdown-menu dropdown-menu-right">
                             <?=app\components\AppHelper::Btn([
                                 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',
                                 'url' => ['update','id' => $item->id],

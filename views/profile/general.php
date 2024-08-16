@@ -16,7 +16,7 @@ $title = '<i class="fa-regular fa-address-card"></i> ข้อมูลพื้
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa-solid fa-sliders"></i> ดำเนินการ
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right" style="">
+                    <div class="dropdown-menu dropdown-menu-right">
                         <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']])?>
                         <?=Html::a('<i
                                 class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id,'title' => $title], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']])?>

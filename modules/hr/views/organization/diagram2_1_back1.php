@@ -174,7 +174,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-sliders"></i>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right" style="">
+                            <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item open-modal" href="/hr/employees/update?id=5" data-pjax="1" data-size="modal-lg"><i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข</a>
 <a class="dropdown-item open-modal" href="/usermanager/user/update-employee?id=0" data-size="modal-md"><i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า</a>
                                                             </div>
