@@ -173,48 +173,48 @@ try {
 <?php
 $js = <<< JS
 
-    console.log($("#StockEvent-auto_lot").val())
-    if($("#StockEvent-auto_lot").val()){
-    $( "#StockEvent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
-    $('#StockEvent-lot_number').prop('disabled',localStorage.getItem('lot_auto') == 1 ? true : false );
+    console.log($("#stockevent-auto_lot").val())
+    if($("#stockevent-auto_lot").val()){
+    $( "#stockevent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
+    $('#stockevent-lot_number').prop('disabled',localStorage.getItem('lot_auto') == 1 ? true : false );
 
     if(localStorage.getItem('fsn_auto') == true)
     {
-        $('#StockEvent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+        $('#stockevent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
     }
 
     }
 
-    $("#StockEvent-auto_lot").change(function() {
+    $("#stockevent-auto_lot").change(function() {
         //ตั้งค่า Run Lot Auto
         if(this.checked) {
             console.log('lot_auto');
             localStorage.setItem('lot_auto',1);
-            $('#StockEvent-lot_number').prop('disabled',this.checked);
-            $('#StockEvent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+            $('#stockevent-lot_number').prop('disabled',this.checked);
+            $('#stockevent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
 
-            $('#StockEvent-lot_number').prop('disabled',this.checked);
-            $('#StockEvent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+            $('#stockevent-lot_number').prop('disabled',this.checked);
+            $('#stockevent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
 
         }else{
             localStorage.setItem('lot_auto',0);
-            $('#StockEvent-lot_number').prop('disabled',this.checked);
-            $('#StockEvent-lot_number').val('')
+            $('#stockevent-lot_number').prop('disabled',this.checked);
+            $('#stockevent-lot_number').val('')
 
-            $('#StockEvent-lot_number').prop('disabled',this.checked);
-            $('#StockEvent-lot_number').val('')
+            $('#stockevent-lot_number').prop('disabled',this.checked);
+            $('#stockevent-lot_number').val('')
 
             console.log('lot_manual');
         }
     });
 
-    $('#StockEvent-qty').keyup(function (e) { 
+    $('#stockevent-qty').keyup(function (e) { 
         
     if (e.keyCode === 8) { // Check if the key pressed is Backspace
         // Your code here
-        // $('#StockEvent-data_json-po_qty').val();
-        var qty = $('#StockEvent-data_json-po_qty').val();
-        $('#StockEvent-qty_check').val(qty)
+        // $('#stockevent-data_json-po_qty').val();
+        var qty = $('#stockevent-data_json-po_qty').val();
+        $('#stockevent-qty_check').val(qty)
     }
     });
 
@@ -260,7 +260,7 @@ $js = <<< JS
     };    
      
    
-    $("#StockEvent-data_json-mfg_date").datetimepicker({
+    $("#stockevent-data_json-mfg_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
@@ -270,7 +270,7 @@ $js = <<< JS
         closeOnDateSelect:true,
     }); 
     
-    $("#StockEvent-data_json-exp_date").datetimepicker({
+    $("#stockevent-data_json-exp_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
