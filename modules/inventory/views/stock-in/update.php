@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockIn $model */
+/** @var app\modules\inventory\models\StockEvent $model */
 
 $this->title = 'Update Stock In: ' . $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];

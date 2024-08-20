@@ -23,7 +23,6 @@ use yii\helpers\Html;
                     <tr>
                         <th scope="col">รายการ</th>
                         <th>คลัง</th>
-                        <th>จำนวน</th>
                         <th>สถานะ</th>
                         <th style="width:100px">ดำเนินการ</th>
                     </tr>
@@ -33,12 +32,12 @@ use yii\helpers\Html;
                     <tr class="">
                         <td><?php
                         $msg  ='ขอเบิกวัสดุสำนักงาน';
-                       echo $item->CreateBy($msg)['avatar'] ?></td>
-                        <td><?=$item->from_warehouse_id?></td>
-                        <td>2</td>
-                        <td><?= $item->order_status == 'pending' ? '<i class="fa-regular fa-hourglass text-danger"></i> รออนุมัติ' : 'อนุมัติ'?></td>
+                       echo $item->CreateBy($msg)['avatar'] ?>
+                       </td>
+                        <td><?=$item->fromWarehouse->warehouse_name?></td>
+                        <td><?= $item->viewChecker()['status']?></td>
                         <td class="text-center">
-                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-out/view','id' => $item->id],['class'=> 'btn btn-light'])?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

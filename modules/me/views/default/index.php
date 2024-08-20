@@ -75,7 +75,7 @@ $this->title = 'My DashBoard';
 
 <?php
 $urlRepair = Url::to(['/me/repair']);
-$ApproveStockUrl = Url::to(['/me/approve/stock']);
+$ApproveStockUrl = Url::to(['/me/approve/stock-out']);
 $ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
 $ownerAssetUrl = Url::to(['/me/owner']);
 // $urlRepair = Url::to(['/me/repair-me']);

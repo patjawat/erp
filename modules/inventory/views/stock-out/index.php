@@ -1,13 +1,13 @@
 <?php
 
-use app\modules\inventory\models\StockOut;
+use app\modules\inventory\models\StockEvent;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockInSearch $searchModel */
+/** @var app\modules\inventory\models\StockEventSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Stock Ins';
@@ -18,7 +18,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <div class="card">
   <div class="card-body">
     <div class="d-flex gap-3">
-      <?=Html::a($createIcon.' สร้างเอกการเบิก',['/inventory/stock-out/create','name' => 'order','title' => $createIcon.' สร้างเอกสารเบิกวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+      <?=Html::a($createIcon.' สร้างเอกการเบิก',['/inventory/stock-out/create','name' => 'order','type' => 'OUT','title' => $createIcon.' สร้างเอกสารเบิกวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
     </div>
   </div>
 </div>
@@ -57,7 +57,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
             //'updated_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, StockOut $model, $key, $index, $column) {
+                'urlCreator' => function ($action, StockEvent $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

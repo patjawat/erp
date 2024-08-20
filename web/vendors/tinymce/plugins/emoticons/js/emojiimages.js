@@ -1970,7 +1970,7 @@ window.tinymce.Resource.add("tinymce.plugins.emoticons", {
     category: "people"
   },
   socks: {
-    keywords: [ "stockings", "clothes" ],
+    keywords: [ "StockEventgs", "clothes" ],
     "char": '<img data-emoticon="true" style="width:1em;height:1em;margin:0 .05em 0 .1em;vertical-align:-.1em" draggable="false" alt="\ud83e\udde6" src="1f9e6.png"/>',
     fitzpatrick_scale: false,
     category: "people"

@@ -3,8 +3,8 @@
 namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockIn;
-use app\modules\inventory\models\StockInSearch;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
 use app\modules\sm\models\Product;
 use app\modules\sm\models\ProductSearch;
 use app\components\AppHelper;
@@ -18,7 +18,7 @@ use Yii;
 use yii\helpers\ArrayHelper;
 
 /**
- * StockInController implements the CRUD actions for StockIn model.
+ * StockEventController implements the CRUD actions for StockEvent model.
  */
 class StockInController extends Controller
 {
@@ -41,15 +41,16 @@ class StockInController extends Controller
     }
 
     /**
-     * Lists all StockIn models.
+     * Lists all StockEvent models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new StockInSearch();
+        $warehouse = Yii::$app->session->get('warehouse');
+        $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'order']);
+        $dataProvider->query->where(['name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -58,7 +59,7 @@ class StockInController extends Controller
     }
 
     /**
-     * Displays a single StockIn model.
+     * Displays a single StockEvent model.
      * @param int $id รหัสการเคลื่อนไหวสินค้า
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -71,19 +72,24 @@ class StockInController extends Controller
     }
 
     /**
-     * Creates a new StockIn model.
+     * Creates a new StockEvent model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
+        
         $warehouse = Yii::$app->session->get('warehouse');
         $name = $this->request->get('name');
+        $type = $this->request->get('type');
         $order_id = $this->request->get('order_id');
-        $model = new StockIn([
+        $order =  StockEvent::findOne($order_id);
+        $model = new StockEvent([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'category_id' => $order_id,
-            'name' => $name
+            'code' => $order ? $order->code : '',
+            'name' => $name,
+            'transaction_type' => $order ? $order->transaction_type : $type
         ]);
 
         if ($this->request->isPost) {
@@ -91,7 +97,7 @@ class StockInController extends Controller
 
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
-                    $model->code = \mdm\autonumber\AutoNumber::generate('RC-' . (substr((date('Y') + 543), 2)) . '????');
+                    $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr((date('Y') + 543), 2)) . '????');
                 }
 
                 if ($model->name == 'order_item') {
@@ -153,7 +159,7 @@ class StockInController extends Controller
         $order = Order::findOne($id);
         $warehouse = Yii::$app->session->get('warehouse');
         $po_number = $this->request->get('po_number');
-        $model = new StockIn([
+        $model = new StockEvent([
             'name' => 'order',
             'po_number' =>$order->po_number,
             'vendor_id' =>$order->vendor_id,
@@ -164,19 +170,19 @@ class StockInController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $thaiYear = substr((date('Y') + 543), 2);
+                $model->code = \mdm\autonumber\AutoNumber::generate('RC-' . (substr((date('Y') + 543), 2)) . '????');
                     if ($order) {
                         // $order->status = 5;
                         // $order->save(false);
                         
                          //ถ้าเป็นการรับจ้าใบสั่่งซื้อ
 
-
                     }
             
                 $model->order_status = 'pending';
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {
-                    $stockItem = new StockIn([
+                    $stockItem = new StockEvent([
                         'asset_item' => $item->asset_item,
                         'category_id' => $model->id,
                         'po_number' => $model->po_number,
@@ -213,7 +219,7 @@ class StockInController extends Controller
 
 
     /**
-     * Updates an existing StockIn model.
+     * Updates an existing StockEvent model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id รหัสการเคลื่อนไหวสินค้า
      * @return string|\yii\web\Response
@@ -232,6 +238,10 @@ class StockInController extends Controller
                     'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
                 ];
                 $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
+            }
+
+            if ($model->name == 'order_item' && $model->auto_lot == "1" && $model->lot_number == '') {
+                $model->lot_number  = \mdm\autonumber\AutoNumber::generate('LOT' . (substr((date('Y') + 543), 2)) . '-?????');
             }
 
             if ($model->save(false)) {
@@ -286,7 +296,7 @@ class StockInController extends Controller
     }
 
     /**
-     * Deletes an existing StockIn model.
+     * Deletes an existing StockEvent model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id รหัสการเคลื่อนไหวสินค้า
      * @return \yii\web\Response
@@ -306,21 +316,21 @@ class StockInController extends Controller
     public function actionConfirmOrder($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+
         $this->updateStock($id);
-        $model = StockIn::updateAll(['order_status' => 'success'], ['category_id' => $id]);
-        if ($model) {
-            return [
-                'status' => 'success',
-                'container' => '#inventory',
-            ];
-        }
+        StockEvent::updateAll(['order_status' => 'success'], ['category_id' => $id]);
+        return $this->redirect(['/inventory/stock-in']);
+            // return [
+            //     'status' => 'success',
+            //     'container' => '#inventory',
+            // ];
     }
 
     // ตรวจสอบความถูกต้อง
     public function actionCreateValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new StockIn();
+        $model = new StockEvent();
         $requiredName = "ต้องระบุ";
         if ($this->request->isPost && $model->load($this->request->post())) {
 
@@ -392,31 +402,39 @@ class StockInController extends Controller
 
     protected function updateStock($id)
     {
-        $order = StockIn::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
-        $store = Stock::findOne(['asset_item' => $order->asset_item]);
-        if($store){
-            $storeModel = $store;
-        }else{
-            $storeModel = new Stock();
+
+        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
+        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
+        $model = $this->findModel($id);
+
+        foreach($model->getItems() as $item){
+            $store = Stock::findOne(['asset_item' => $item->asset_item,'id' => $item->lot_number]);
+            if($store){
+                $storeModel = $store;
+            }else{
+                $storeModel = new Stock();
+                $storeModel->lot_number  = $item->lot_number;
+
+            }
+            $storeModel->asset_item  = $item->asset_item;
+            $storeModel->qty = $storeModel->qty + $item->qty;
+            $storeModel->warehouse_id = $item->warehouse_id;
+            $storeModel->save(false);
         }
-        $storeModel->asset_item  = $order->asset_item;
-        $storeModel->qty = $storeModel->qty + $order->qty;
-        $storeModel->warehouse_id = $order->warehouse_id;
-        $storeModel->save(false);
-    }
+        }
 
 
 
     /**
-     * Finds the StockIn model based on its primary key value.
+     * Finds the StockEvent model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id รหัสการเคลื่อนไหวสินค้า
-     * @return StockIn the loaded model
+     * @return StockEvent the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = StockIn::findOne(['id' => $id])) !== null) {
+        if (($model = StockEvent::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

@@ -21,7 +21,7 @@ use yii\widgets\Pjax;
         </tr>
       </thead>
       <tbody>
-        <?php foreach($model->ListItems() as $item):?>
+        <?php foreach($model->getItems() as $item):?>
         <tr>
           <th scope="row"><?=$item->product->Avatar()?></th>
           <td><?=isset($item->data_json['amount_withdrawal']) ? $item->data_json['amount_withdrawal'] : 0 ?></td>

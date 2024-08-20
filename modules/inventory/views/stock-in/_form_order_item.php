@@ -84,7 +84,7 @@ try {
 }
         echo $form->field($model, 'asset_item')->widget(Select2::classname(), [
             'initValueText' => $initProduct,
-            'options' => ['placeholder' => 'เลือก ...'],
+            'options' => ['placeholder' => 'เลือกวัสดุ ...'],
             'size' => Select2::LARGE,
             'pluginEvents' => [
                 'select2:unselect' => 'function() {
@@ -115,7 +115,7 @@ try {
                 'templateSelection' => new JsExpression('function (item) { return item.text; }'),
                 'templateResult' => new JsExpression('formatRepo'),
             ],
-        ])->label('ผู้เห็นชอบ')
+        ])->label('วัสดุ')
     ?>
                 <?php
      echo $form->field($model, 'data_json[item_type]')->radioList(
@@ -163,6 +163,7 @@ try {
     <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
     <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
         <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+        <?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
    
 
     </div>
@@ -172,48 +173,48 @@ try {
 <?php
 $js = <<< JS
 
-    console.log($("#stockin-auto_lot").val())
-    if($("#stockin-auto_lot").val()){
-    $( "#stockin-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
-    $('#stockin-lot_number').prop('disabled',localStorage.getItem('lot_auto') == 1 ? true : false );
+    console.log($("#StockEvent-auto_lot").val())
+    if($("#StockEvent-auto_lot").val()){
+    $( "#StockEvent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
+    $('#StockEvent-lot_number').prop('disabled',localStorage.getItem('lot_auto') == 1 ? true : false );
 
     if(localStorage.getItem('fsn_auto') == true)
     {
-        $('#stockin-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+        $('#StockEvent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
     }
 
     }
 
-    $("#stockin-auto_lot").change(function() {
+    $("#StockEvent-auto_lot").change(function() {
         //ตั้งค่า Run Lot Auto
         if(this.checked) {
             console.log('lot_auto');
             localStorage.setItem('lot_auto',1);
-            $('#stockin-lot_number').prop('disabled',this.checked);
-            $('#stockin-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+            $('#StockEvent-lot_number').prop('disabled',this.checked);
+            $('#StockEvent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
 
-            $('#stockin-lot_number').prop('disabled',this.checked);
-            $('#stockin-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
+            $('#StockEvent-lot_number').prop('disabled',this.checked);
+            $('#StockEvent-lot_number').val('สร้างล็อตผลิตอัตโนมัติ')
 
         }else{
             localStorage.setItem('lot_auto',0);
-            $('#stockin-lot_number').prop('disabled',this.checked);
-            $('#stockin-lot_number').val('')
+            $('#StockEvent-lot_number').prop('disabled',this.checked);
+            $('#StockEvent-lot_number').val('')
 
-            $('#stockin-lot_number').prop('disabled',this.checked);
-            $('#stockin-lot_number').val('')
+            $('#StockEvent-lot_number').prop('disabled',this.checked);
+            $('#StockEvent-lot_number').val('')
 
             console.log('lot_manual');
         }
     });
 
-    $('#stockin-qty').keyup(function (e) { 
+    $('#StockEvent-qty').keyup(function (e) { 
         
     if (e.keyCode === 8) { // Check if the key pressed is Backspace
         // Your code here
-        // $('#stockin-data_json-po_qty').val();
-        var qty = $('#stockin-data_json-po_qty').val();
-        $('#stockin-qty_check').val(qty)
+        // $('#StockEvent-data_json-po_qty').val();
+        var qty = $('#StockEvent-data_json-po_qty').val();
+        $('#StockEvent-qty_check').val(qty)
     }
     });
 
@@ -259,7 +260,7 @@ $js = <<< JS
     };    
      
    
-    $("#stockin-data_json-mfg_date").datetimepicker({
+    $("#StockEvent-data_json-mfg_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
@@ -269,7 +270,7 @@ $js = <<< JS
         closeOnDateSelect:true,
     }); 
     
-    $("#stockin-data_json-exp_date").datetimepicker({
+    $("#StockEvent-data_json-exp_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย

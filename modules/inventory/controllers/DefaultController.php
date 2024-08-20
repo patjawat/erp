@@ -17,4 +17,14 @@ class DefaultController extends Controller
     {
         return $this->render('index');
     }
+
+    public function actionChart()
+    {
+
+      
+        return $this->render('chart',[
+            'model' => $model
+        ]);
+    }
+
 }

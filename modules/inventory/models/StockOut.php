@@ -53,9 +53,9 @@ class StockOut extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by'], 'integer'],
+            [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['movement_date', 'data_json', 'created_at', 'updated_at', 'checker'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -90,11 +90,11 @@ class StockOut extends \yii\db\ActiveRecord
     public function behaviors()
     {
         return [
-            // [
-            //     'class' => BlameableBehavior::className(),
-            //     'createdByAttribute' => 'created_by',
-            //     'updatedByAttribute' => 'updated_by',
-            // ],
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
             [
                 'class' => TimestampBehavior::className(),
                 'createdAtAttribute' => 'created_at',
@@ -115,12 +115,104 @@ class StockOut extends \yii\db\ActiveRecord
         }
     }
 
-        //แสดงรายกาผู้ขาย/ผู้บริจาค
-        public function listWareHouse()
-        {
-            return ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name');
+
+
+    public function getAvatar($user_id, $msg = '')
+    {
+        try {
+            $employee = Employees::find()->where(['user_id' => $user_id])->one();
+
+            return [
+                'avatar' => $employee->getAvatar(false, $msg),
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+                'position_name' => $employee->positionName(),
+                // 'product_type_name' => $this->data_json['product_type_name']
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'department' => '',
+                'fullname' => '',
+                'position_name' => '',
+                'product_type_name' => ''
+            ];
         }
-    
+    }
+    // ผู้ขอ
+    public  function CreateBy($msg = null)
+    {
+        return  $this->getAvatar($this->created_by, $msg);
+    }
+
+    // แสดงผู้ตรวจสอบ
+    public  function viewChecker($msg = null)
+    {
+
+        $status = '';
+        switch ($this->data_json['checker_confirm']) {
+            case 'Y':
+                $status =  '<i class="fa-regular fa-circle-check text-success fs-6"></i> อนุมัติ';
+                break;
+
+            case 'N':
+                $status = '<i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ';
+                break;
+
+            default:
+            $status = '<i class="fa-regular fa-clock fs-6"></i> รอดำเนินการ';
+                break;
+        }
+        return 
+        [
+            'status' => $status,
+            'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
+        ];
+    }
+
+
+    // เชื่อมกับรายการ ทรัพสินและวัสดุ
+    public function getProduct()
+    {
+        return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
+    }
+
+    public function getWarehouse()
+    {
+        return $this->hasOne(Warehouse::class, ['id' => 'warehouse_id']);
+    }
+
+    public function getFromWarehouse()
+    {
+        return $this->hasOne(Warehouse::class, ['id' => 'from_warehouse_id']);
+    }
+
+
+    // เชื่อมกับรายการ ทรัพสินและวัสดุหลายชิ้น
+    public function getStocks()
+    {
+        return $this->hasMany(Stock::class, ['warehouse_id' => 'warehouse_id']);
+    }
+
+        // เชื่อมกับรายการ ทรัพสินและวัสดุ
+        public function getStock()
+        {
+            return $this->hasOne(Stock::class, ['warehouse_id' => 'warehouse_id']);
+        }
+
+    // เชื่อมกับรายการ lot สินค้า
+    public function listLots()
+    {
+        return  StockEvent::find()->where(['asset_item' => $this->asset_item])->all();
+    }
+
+
+    //แสดงรายกาผู้ขาย/ผู้บริจาค
+    public function listWareHouse()
+    {
+        return ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name');
+    }
+
 
     //นับจำนวนรายการที่มีสถานะเป็น Pending อยู่
     public function isPending()
@@ -137,12 +229,10 @@ class StockOut extends \yii\db\ActiveRecord
 
 
 
-    
-            //แสดงรายการย่อยของ stock
+
+    //แสดงรายการย่อยของ stock
     public function listItems()
     {
         return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->all();
     }
-
-
 }

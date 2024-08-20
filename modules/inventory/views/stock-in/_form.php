@@ -7,7 +7,7 @@ use kartik\select2\Select2;
 use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockIn $model */
+/** @var app\modules\inventory\models\StockEvent $model */
 /** @var yii\widgets\ActiveForm $form */
 
 ?>
@@ -29,6 +29,7 @@ use iamsaint\datetimepicker\Datetimepicker;
     <?php endif; ?>
 
     <?= $form->field($model, 'name')->hiddenInput()->label(false);?>
+    <?= $form->field($model, 'transaction_type')->hiddenInput()->label(false);?>
     <?= $model->isNewRecord ? $form->field($model, 'category_id')->hiddenInput()->label(false) : null;?>
 
     <div class="form-group mt-3 d-flex justify-content-center">

@@ -3,11 +3,11 @@
 use app\components\AppHelper;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
-use app\modules\inventory\models\StockIn;
+use app\modules\inventory\models\StockEvent;
 use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockIn $model */
+/** @var app\modules\inventory\models\StockEvent $model */
 
 $this->title = 'เลขที่รับเข้า : ' . $model->code;
 $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->listItems())?> </span> รายการ</h6>
+                    <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ</h6>
                     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
                 </div>
                 <table class="table table-striped mt-3">
@@ -41,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
-                    <?php foreach ($model->listItems() as $item): ?>
+                    <?php foreach ($model->getItems() as $item): ?>
                     <tr class="<?=$item->order_status == 'pending' ? 'bg-warning-subtle' : ''?>">
                         <td class="align-middle">
                             <?php

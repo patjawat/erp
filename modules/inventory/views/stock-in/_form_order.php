@@ -7,7 +7,7 @@ use kartik\select2\Select2;
 use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockIn $model */
+/** @var app\modules\inventory\models\StockEvent $model */
 /** @var yii\widgets\ActiveForm $form */
 
 ?>

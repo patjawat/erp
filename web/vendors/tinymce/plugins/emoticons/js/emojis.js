@@ -1957,7 +1957,7 @@ window.tinymce.Resource.add("tinymce.plugins.emoticons", {
     category: "people"
   },
   socks: {
-    keywords: [ "stockings", "clothes" ],
+    keywords: [ "StockEventgs", "clothes" ],
     "char": "\ud83e\udde6",
     fitzpatrick_scale: false,
     category: "people"

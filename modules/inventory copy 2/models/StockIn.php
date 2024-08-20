@@ -40,7 +40,7 @@ use app\modules\sm\models\Product;
  * @property int|null $created_by ผู้สร้าง
  * @property int|null $updated_by ผู้แก้ไข
  */
-class StockIn extends \yii\db\ActiveRecord
+class StockEvent extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}

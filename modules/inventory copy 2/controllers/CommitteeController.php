@@ -2,7 +2,7 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\modules\inventory\models\StockIn;
+use app\modules\inventory\models\StockEvent;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use Yii;
@@ -18,7 +18,7 @@ class CommitteeController extends \yii\web\Controller
 
     public function actionCreate()
     {
-        $model = new StockIn([
+        $model = new StockEvent([
             'category_id' => $this->request->get('id'),
             'name' => $this->request->get('name'),
         ]);
@@ -87,7 +87,7 @@ class CommitteeController extends \yii\web\Controller
     public function actionList($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        // $model = StockIn::findOne(['id' => $id,'name' => 'receive_committee']);
+        // $model = StockEvent::findOne(['id' => $id,'name' => 'receive_committee']);
         $model = $this->findModel($id);
         return [
             'title' => $this->request->get('title'),
@@ -96,7 +96,7 @@ class CommitteeController extends \yii\web\Controller
     }
     protected function findModel($id)
     {
-        if (($model = StockIn::findOne(['id' => $id])) !== null) {
+        if (($model = StockEvent::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

@@ -3,8 +3,10 @@
 namespace app\modules\me\controllers;
 
 use Yii;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\models\StockOut;
+use app\modules\inventory\models\StockOutSearch;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use yii\db\Expression;
@@ -17,34 +19,35 @@ class ApproveController extends \yii\web\Controller
     {
         return $this->render('index');
     }
-    public function actionStock()
-    {
-        $searchModel = new StockSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'order']);
-        // $dataProvider->pagination = ['pageSize' => 20];
-        $dataProvider->query->where(['=', new Expression("JSON_EXTRACT(data_json, '$.checker')"),  (string) Yii::$app->user->id]);
 
+    //รายการขอเบิกวัสดุที่ต้องอนุมัติ
+    public function actionStockOut()
+    {
+        $searchModel = new StockEventSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'order', 'checker' => Yii::$app->user->id]);
         if ($this->request->isAjax) {
+
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('stock', [
+                'content' => $this->renderAjax('list_stock_out', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ])
             ];
         } else {
-            return $this->render('stock', [
+            return $this->render('list_stock_out', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
     }
-    public function actionStockOrderConfirm($id)
+    // แสดงรายละเอียดและรายการขอเบิกและบันทึก
+    public function actionViewStockOut($id)
     {
-        $model  =  Stock::findOne($id);
+        $model = StockEvent::findOne($id);
 
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
@@ -62,14 +65,20 @@ class ApproveController extends \yii\web\Controller
         } else {
             $model->loadDefaultValues();
         }
+
         if ($this->request->isAjax) {
+
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $model->CreateBy('ผู้ขอเบิก')['avatar'],
-                'content' => $this->renderAjax('_form_stock_order_confirm', ['model' => $model])
+                'title' =>  'เรื่องขอเบิกวัสดุ',
+                'content' => $this->renderAjax('view_stock_out', [
+                    'model' => $model
+                ])
             ];
         } else {
-            return $this->render('_form_stock_order_confirm',['model' => $model]);
+            return $this->render('view_stock_out', [
+                'model' => $model
+            ]);
         }
     }
 
@@ -79,14 +88,13 @@ class ApproveController extends \yii\web\Controller
     public function actionStockConfirmValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Stock();
+        $model = new StockEvent();
         $requiredName = "ต้องระบุ";
         if ($this->request->isPost && $model->load($this->request->post())) {
 
-            if (isset($model->data_json['order_confirm'])) {
-                $model->data_json['order_confirm'] == "" ? $model->addError('data_json[order_confirm]', $requiredName) : null;
+            if (isset($model->data_json['checker_confirm'])) {
+                $model->data_json['checker_confirm'] == "" ? $model->addError('data_json[checker_confirm]', $requiredName) : null;
             }
-
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;

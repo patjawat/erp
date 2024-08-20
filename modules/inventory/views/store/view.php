@@ -48,7 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </tr>
   </thead>
   <tbody>
-    <?php foreach($model->ListItems() as $item):?>
+    <?php foreach($model->getItems() as $item):?>
     <tr>
       <th scope="row">1</th>
       <td>Mark</td>

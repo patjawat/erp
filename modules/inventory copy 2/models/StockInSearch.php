@@ -4,12 +4,12 @@ namespace app\modules\inventory\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\inventory\models\StockIn;
+use app\modules\inventory\models\StockEvent;
 
 /**
- * StockInSearch represents the model behind the search form of `app\modules\inventory\models\StockIn`.
+ * StockEventSearch represents the model behind the search form of `app\modules\inventory\models\StockEvent`.
  */
-class StockInSearch extends StockIn
+class StockEventSearch extends StockEvent
 {
     /**
      * {@inheritdoc}
@@ -41,7 +41,7 @@ class StockInSearch extends StockIn
      */
     public function search($params)
     {
-        $query = StockIn::find();
+        $query = StockEvent::find();
 
         // add conditions that should always apply here
 

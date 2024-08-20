@@ -67,4 +67,20 @@ public function getProduct()
 {
     return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
 }
+
+public function getStockOut()
+{
+    return $this->hasOne(StockOut::class, ['warehouse_id' => 'warehouse_id']);
+}
+
+public function listAssets()
+{
+    return StockEvent::find()->where(['name' => 'order_item', 'asset_item' => $this->asset_item,'warehouse_id' => $this->warehouse_id])->all();
+}
+
+public function SumQty()
+{
+    return self::find()->where(['warehouse_id' => $this->warehouse_id,'asset_item' => $this->asset_item])->sum('qty');
+}
+
 }

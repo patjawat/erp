@@ -7,6 +7,7 @@
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Json;
 use app\modules\inventory\models\Stock;
 use app\models\Categorise;
 
@@ -101,8 +102,10 @@ use yii\web\View;
 // $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
 // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 
-$StoreInWarehouseUrl = Url::to(['/inventory/store/list-in-warehouse']);
+$StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
+$chartSummeryIn = Json::encode($chartSummary['in']);
+$chartSummeryOut = Json::encode($chartSummary['out']);
 $js = <<< JS
   // getPendingOrder()
   // getlistOrderRequest()
@@ -148,8 +151,8 @@ $js = <<< JS
               },
           },
           series: [
-            { name: "เบิก", data: [50, 45, 60, 70, 50, 45, 60, 70,30,40,23,19] },
-            { name: "จ่าย", data: [-21, -54, -45, -35, -21, -54, -45, -35,-87,-40,-23,-34] },
+            { name: "เบิก", data: $chartSummeryIn },
+            { name: "จ่าย", data: $chartSummeryOut },
           ],
           colors: ["#0966ad", "#EA5455"],
           chart: {
@@ -167,6 +170,10 @@ $js = <<< JS
 
           xaxis: {
             categories: [
+              "ก.ย.",
+              "ต.ค.",
+              "พ.ย.",
+              "ธ.ค.",
               "ม.ค.",
               "ก.พ.",
               "มี.ค.",
@@ -175,10 +182,6 @@ $js = <<< JS
               "มิ.ย.",
               "ก.ค.",
               "ส.ค.",
-              "ก.ย.",
-              "ต.ค.",
-              "พ.ย.",
-              "ธ.ค.",
             ],
           },
           legend: { position: "bottom"},

@@ -1,13 +1,13 @@
 <?php
 
-use app\modules\inventory\models\StockIn;
+use app\modules\inventory\models\StockEvent;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use kartik\grid\GridView;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockInSearch $searchModel */
+/** @var app\modules\inventory\models\StockEventSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Stock Ins';
@@ -18,7 +18,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <div class="card">
   <div class="card-body">
     <div class="d-flex gap-3">
-      <?=Html::a($createIcon.' สร้างเอกสารตรวจรับ',['/inventory/stock-in/create','name' => 'order','title' => $createIcon.' สร้างเอกสารรับวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+      <?=Html::a($createIcon.' สร้างเอกสารตรวจรับ',['/inventory/stock-in/create','name' => 'order','type' => 'IN','title' => $createIcon.' สร้างเอกสารรับวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
       <?=Html::a($createIcon.' ตรวจรับจากการสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">99</span>',['/inventory/stock-in/list-pending-order','name' => 'order','title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'],['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative','data' => ['size' => 'modal-xl']])?>
     </div>
   </div>
@@ -37,20 +37,29 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            'code',
-            //'from_warehouse_id',
-            //'qty',
-            //'total_price',
-            //'unit_price',
-            //'receive_type',
-            //'movement_date',
-            //'lot_number',
-            //'expiry_date',
-            //'category_id',
-            //'order_status',
-            //'ref',
-            'thai_year',
+          [
+            'class'=>'kartik\grid\SerialColumn',
+            'contentOptions'=>['class'=>'kartik-sheet-style'],
+            'width'=>'36px',
+            'pageSummary'=>'Total',
+            'pageSummaryOptions' => ['colspan' => 6],
+            'header'=>'',
+            'headerOptions'=>['class'=>'kartik-sheet-style']
+        ],
+            [
+              'attribute' => 'code',
+              'width' => '100px',
+              'value' => function($model){
+                  return $model->code;
+              }
+            ],
+            [
+              'attribute' => 'thai_year',
+              'width' => '100px',
+              'value' => function($model){
+                  return $model->thai_year;
+              }
+            ],
             //'data_json',
             //'created_at',
             //'updated_at',
@@ -58,7 +67,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
             //'updated_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, StockIn $model, $key, $index, $column) {
+                'urlCreator' => function ($action, StockEvent $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9e96c71f05265e9fa1a0ecc5f4558e1b",
+    "content-hash": "7a52b59fe951d71fb2edcd8b4e7eea73",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -146,16 +146,16 @@
         },
         {
             "name": "bower-asset/bootstrap",
-            "version": "v5.3.3",
+            "version": "v5.3.0-alpha1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/twbs/bootstrap.git",
-                "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
+                "url": "git@github.com:twbs/bootstrap.git",
+                "reference": "cf9454caa00872899215603e5e036d9a824b1b11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/6e1f75f420f68e1d52733b8e407fc7c3766c9dba",
-                "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
+                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/cf9454caa00872899215603e5e036d9a824b1b11",
+                "reference": "cf9454caa00872899215603e5e036d9a824b1b11"
             },
             "type": "bower-asset"
         },
@@ -204,12 +204,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/RobinHerbots/Inputmask.git",
-                "reference": "f0b9bb582dbebb82b8823f5cd617f723c988ce0f"
+                "reference": "40f7b1b424994dbe9a75ef67797f947552cd6adb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/f0b9bb582dbebb82b8823f5cd617f723c988ce0f",
-                "reference": "f0b9bb582dbebb82b8823f5cd617f723c988ce0f"
+                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/40f7b1b424994dbe9a75ef67797f947552cd6adb",
+                "reference": "40f7b1b424994dbe9a75ef67797f947552cd6adb"
             },
             "require": {
                 "bower-asset/jquery": ">=1.7"
@@ -1265,12 +1265,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/giggsey/libphonenumber-for-php.git",
-                "reference": "b7ee848bbd1958ff7464522d5c6e3688cca2a125"
+                "reference": "62250ef492ea8afedf534381844194f43ff1f7f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/b7ee848bbd1958ff7464522d5c6e3688cca2a125",
-                "reference": "b7ee848bbd1958ff7464522d5c6e3688cca2a125",
+                "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/62250ef492ea8afedf534381844194f43ff1f7f2",
+                "reference": "62250ef492ea8afedf534381844194f43ff1f7f2",
                 "shasum": ""
             },
             "require": {
@@ -1333,7 +1333,7 @@
                 "issues": "https://github.com/giggsey/libphonenumber-for-php/issues",
                 "source": "https://github.com/giggsey/libphonenumber-for-php"
             },
-            "time": "2024-07-29T07:19:22+00:00"
+            "time": "2024-08-13T12:17:37+00:00"
         },
         {
             "name": "giggsey/locale",
@@ -1461,7 +1461,7 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.366.0",
+            "version": "v0.368.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
@@ -1499,7 +1499,7 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.366.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.368.0"
             },
             "time": "2024-07-11T01:08:44+00:00"
         },
@@ -2209,12 +2209,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-imagine/Imagine.git",
-                "reference": "ce4748abe26c8f887e0dab1746adff2f57354f9b"
+                "reference": "93bdd9ad420bfbf2aa5c33fe70d134b3c9cc081b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-imagine/Imagine/zipball/ce4748abe26c8f887e0dab1746adff2f57354f9b",
-                "reference": "ce4748abe26c8f887e0dab1746adff2f57354f9b",
+                "url": "https://api.github.com/repos/php-imagine/Imagine/zipball/93bdd9ad420bfbf2aa5c33fe70d134b3c9cc081b",
+                "reference": "93bdd9ad420bfbf2aa5c33fe70d134b3c9cc081b",
                 "shasum": ""
             },
             "require": {
@@ -2264,7 +2264,7 @@
                 "issues": "https://github.com/php-imagine/Imagine/issues",
                 "source": "https://github.com/php-imagine/Imagine/tree/develop"
             },
-            "time": "2024-07-30T14:56:13+00:00"
+            "time": "2024-08-16T06:28:32+00:00"
         },
         {
             "name": "insolita/yii2-adminlte-widgets",
@@ -2474,12 +2474,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/kartik-v/bootstrap-fileinput.git",
-                "reference": "387635d6149b42932c6c55c34421983bae008e2b"
+                "reference": "305180ca8a484a4025d28fbf85c473a8b2aa0067"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kartik-v/bootstrap-fileinput/zipball/387635d6149b42932c6c55c34421983bae008e2b",
-                "reference": "387635d6149b42932c6c55c34421983bae008e2b",
+                "url": "https://api.github.com/repos/kartik-v/bootstrap-fileinput/zipball/305180ca8a484a4025d28fbf85c473a8b2aa0067",
+                "reference": "305180ca8a484a4025d28fbf85c473a8b2aa0067",
                 "shasum": ""
             },
             "default-branch": true,
@@ -2530,7 +2530,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-07-24T05:08:41+00:00"
+            "time": "2024-08-10T08:44:25+00:00"
         },
         {
             "name": "kartik-v/bootstrap-popover-x",
@@ -5903,12 +5903,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "f4393b648b78a5408747de94fca38beb5f7e9ef8"
+                "reference": "b914d02a9d86fda9625320c0e8f426fade86928e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/f4393b648b78a5408747de94fca38beb5f7e9ef8",
-                "reference": "f4393b648b78a5408747de94fca38beb5f7e9ef8",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/b914d02a9d86fda9625320c0e8f426fade86928e",
+                "reference": "b914d02a9d86fda9625320c0e8f426fade86928e",
                 "shasum": ""
             },
             "require": {
@@ -5985,7 +5985,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/monolog/issues",
-                "source": "https://github.com/Seldaek/monolog/tree/3.7.0"
+                "source": "https://github.com/Seldaek/monolog/tree/main"
             },
             "funding": [
                 {
@@ -5997,7 +5997,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-06-28T09:40:51+00:00"
+            "time": "2024-08-17T08:11:50+00:00"
         },
         {
             "name": "mpdf/mpdf",
@@ -6649,16 +6649,16 @@
         },
         {
             "name": "phpoffice/math",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/Math.git",
-                "reference": "f0f8cad98624459c540cdd61d2a174d834471773"
+                "reference": "fc2eb6d1a61b058d5dac77197059db30ee3c8329"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/Math/zipball/f0f8cad98624459c540cdd61d2a174d834471773",
-                "reference": "f0f8cad98624459c540cdd61d2a174d834471773",
+                "url": "https://api.github.com/repos/PHPOffice/Math/zipball/fc2eb6d1a61b058d5dac77197059db30ee3c8329",
+                "reference": "fc2eb6d1a61b058d5dac77197059db30ee3c8329",
                 "shasum": ""
             },
             "require": {
@@ -6673,8 +6673,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "PhpOffice\\Math\\": "src/Math/",
-                    "Tests\\PhpOffice\\Math\\": "tests/Math/"
+                    "PhpOffice\\Math\\": "src/Math/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -6696,9 +6695,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/Math/issues",
-                "source": "https://github.com/PHPOffice/Math/tree/0.1.0"
+                "source": "https://github.com/PHPOffice/Math/tree/0.2.0"
             },
-            "time": "2023-09-25T12:08:20+00:00"
+            "time": "2024-08-12T07:30:45+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -6706,12 +6705,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "1c77e0049902b245c92c233aadcc834f50d246af"
+                "reference": "f9837aa4b7152ac376713cf77ffcc2c3ef044940"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/1c77e0049902b245c92c233aadcc834f50d246af",
-                "reference": "1c77e0049902b245c92c233aadcc834f50d246af",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/f9837aa4b7152ac376713cf77ffcc2c3ef044940",
+                "reference": "f9837aa4b7152ac376713cf77ffcc2c3ef044940",
                 "shasum": ""
             },
             "require": {
@@ -6803,7 +6802,7 @@
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
                 "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/master"
             },
-            "time": "2024-08-02T15:45:44+00:00"
+            "time": "2024-08-14T15:15:38+00:00"
         },
         {
             "name": "phpoffice/phpword",
@@ -6811,12 +6810,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PHPWord.git",
-                "reference": "2daa50c6f34c9cb6c532f72350e4bd8d466d6c71"
+                "reference": "a7b90305a3379f0d469dd2ad063f6feaf7adeb44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/2daa50c6f34c9cb6c532f72350e4bd8d466d6c71",
-                "reference": "2daa50c6f34c9cb6c532f72350e4bd8d466d6c71",
+                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/a7b90305a3379f0d469dd2ad063f6feaf7adeb44",
+                "reference": "a7b90305a3379f0d469dd2ad063f6feaf7adeb44",
                 "shasum": ""
             },
             "require": {
@@ -6824,7 +6823,7 @@
                 "ext-json": "*",
                 "ext-xml": "*",
                 "php": "^7.1|^8.0",
-                "phpoffice/math": "^0.1"
+                "phpoffice/math": "^0.2"
             },
             "require-dev": {
                 "dompdf/dompdf": "^2.0",
@@ -6913,7 +6912,7 @@
                 "issues": "https://github.com/PHPOffice/PHPWord/issues",
                 "source": "https://github.com/PHPOffice/PHPWord/tree/master"
             },
-            "time": "2024-05-15T11:26:52+00:00"
+            "time": "2024-08-15T14:26:15+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -6997,12 +6996,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "45b98d8cb39230019612ddcca3abbdc574152834"
+                "reference": "d5931858b6d03d19fcc4c8f62b03f0aa2fb0298b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/45b98d8cb39230019612ddcca3abbdc574152834",
-                "reference": "45b98d8cb39230019612ddcca3abbdc574152834",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/d5931858b6d03d19fcc4c8f62b03f0aa2fb0298b",
+                "reference": "d5931858b6d03d19fcc4c8f62b03f0aa2fb0298b",
                 "shasum": ""
             },
             "require": {
@@ -7099,7 +7098,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-08-02T14:04:47+00:00"
+            "time": "2024-08-16T13:01:09+00:00"
         },
         {
             "name": "piwik/device-detector",
@@ -8390,12 +8389,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mime.git",
-                "reference": "b4e40038781ffa226357cfc75d082daf2aa3b8e3"
+                "reference": "52dc06994d8ee1f97bdc6a80c758c1a6bc482f78"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mime/zipball/b4e40038781ffa226357cfc75d082daf2aa3b8e3",
-                "reference": "b4e40038781ffa226357cfc75d082daf2aa3b8e3",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/52dc06994d8ee1f97bdc6a80c758c1a6bc482f78",
+                "reference": "52dc06994d8ee1f97bdc6a80c758c1a6bc482f78",
                 "shasum": ""
             },
             "require": {
@@ -8466,7 +8465,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-06T07:57:47+00:00"
+            "time": "2024-08-13T14:29:53+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -11669,12 +11668,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "d83130070127e5bc064b96b815ba03bb7e0200e1"
+                "reference": "846c7cefad8824f281f521b9625dd301064ead88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d83130070127e5bc064b96b815ba03bb7e0200e1",
-                "reference": "d83130070127e5bc064b96b815ba03bb7e0200e1",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/846c7cefad8824f281f521b9625dd301064ead88",
+                "reference": "846c7cefad8824f281f521b9625dd301064ead88",
                 "shasum": ""
             },
             "require": {
@@ -11764,7 +11763,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-08-02T05:57:17+00:00"
+            "time": "2024-08-14T08:16:04+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -13034,12 +13033,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "4f3b0f734f5680e62683ab9a027320c6f29ccc83"
+                "reference": "ae25a9145a900764158d439653d5630191155ca0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/4f3b0f734f5680e62683ab9a027320c6f29ccc83",
-                "reference": "4f3b0f734f5680e62683ab9a027320c6f29ccc83",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/ae25a9145a900764158d439653d5630191155ca0",
+                "reference": "ae25a9145a900764158d439653d5630191155ca0",
                 "shasum": ""
             },
             "require": {
@@ -13089,7 +13088,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-31T20:38:58+00:00"
+            "time": "2024-08-13T14:03:51+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -13339,12 +13338,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "81cad0ceab3d61fe14fe941ff18a230ac9c80f83"
+                "reference": "62f96e1cfd4cf518882a36bfedcf1fe4093c1299"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/81cad0ceab3d61fe14fe941ff18a230ac9c80f83",
-                "reference": "81cad0ceab3d61fe14fe941ff18a230ac9c80f83",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/62f96e1cfd4cf518882a36bfedcf1fe4093c1299",
+                "reference": "62f96e1cfd4cf518882a36bfedcf1fe4093c1299",
                 "shasum": ""
             },
             "require": {
@@ -13406,7 +13405,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-05-31T14:33:22+00:00"
+            "time": "2024-08-11T17:40:32+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -13725,13 +13724,13 @@
         "kartik-v/yii2-tabs-x": 20,
         "kartik-v/yii2-datecontrol": 20,
         "kartik-v/yii2-date-range": 20,
-        "kartik-v/yii2-editors": 20,
         "dektrium/yii2-rbac": 20,
         "kartik-v/yii2-widget-activeform": 20,
         "kartik-v/yii2-krajee-base": 20,
         "kartik-v/yii2-grid": 20,
         "kartik-v/yii2-widget-select2": 20,
         "kartik-v/yii2-widget-datepicker": 20,
+        "kartik-v/yii2-editors": 20,
         "kartik-v/yii2-report": 20,
         "kartik-v/yii2-icons": 20,
         "kartik-v/yii2-widget-growl": 20,

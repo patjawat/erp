@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\controllers;
 
+use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
 use yii\web\Controller;
@@ -49,31 +50,55 @@ class StockController extends Controller
         ]);
     }
 
-    public function actionListProduct()
+    public function actionWarehouse()
     {
-        $id = $this->request->get('id');
-        $model = $this->findModel($id);
+        $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->groupBy('asset_item');
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('list_product', [
+                'count' => $dataProvider->getTotalCount(),
+                'content' => $this->renderAjax('list', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'model' => $model
-                ]),
+                ])
             ];
         } else {
-            return $this->render('list_product', [
+            return $this->render('list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'model' => $model
             ]);
         }
+    }
 
+    public function actionListStock($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $models = Stock::find()
+        ->leftJoin('categorise p', 'p.code=stock.asset_item')
+        ->where(['warehouse_id' => 1])
+            // ->andWhere(['or', ['LIKE', 'title',$q]])
+            ->limit(10)
+            ->all();
+            $data = [['id' => '', 'text' => '']];
+            foreach ($models as $model) {
+                $data[] = [
+                    'id' => $model->id,
+                    // 'text' => $model->Avatar(false),
+                    // 'fullname' => $model->title,
+                    // 'avatar' => $model->Avatar(false)
+                ];
+            }
+            return $data;
+            // return [
+        //     'results' => $data,
+        //     'items' => $model
+        // ];
     }
 
 

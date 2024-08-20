@@ -3,11 +3,11 @@
 use app\components\AppHelper;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
-use app\modules\inventory\models\StockIn;
+use app\modules\inventory\models\StockEvent;
 use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockIn $model */
+/** @var app\modules\inventory\models\StockEvent $model */
 
 $this->title = 'เลขที่รับเข้า : ' . $model->code;
 $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
@@ -19,8 +19,9 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-8">
         <div class="card">
             <div class="card-body">
+
                 <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->listItems())?> </span> รายการ</h6>
+                    <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ</h6>
                     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
                 </div>
                 <table class="table table-striped mt-3">
@@ -32,7 +33,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="text-center">หน่วย</th>
                         <th class="text-center">ประเภท</th>
                         <th class="text-end">ราคาต่อหน่วย</th>
-
                         <th class="text-center">จำนวน</th>
                         <th class="text-center">ล็อตผลิต</th>
                         <th class="text-center">วันผลิต</th>
@@ -41,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
-                    <?php foreach ($model->listItems() as $item): ?>
+                    <?php foreach ($model->getItems() as $item): ?>
                     <tr class="<?=$item->order_status == 'pending' ? 'bg-warning-subtle' : ''?>">
                         <td class="align-middle">
                             <?php
@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
-            <?=$model->isPending() >= 1 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-in/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order']) : ''?>
+            <?=($model->isPending() >= 1) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกรับเข้า',['/inventory/stock-in/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order']) : ''?>
     </div>
     </div>
     <div class="col-4">
