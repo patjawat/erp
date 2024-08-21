@@ -83,4 +83,28 @@ public function SumQty()
     return self::find()->where(['warehouse_id' => $this->warehouse_id,'asset_item' => $this->asset_item])->sum('qty');
 }
 
+
+public function getStockCard()
+{
+    $warehouse = Yii::$app->session->get('warehouse');
+    $sql = "SELECT 
+           t.*,
+           w.warehouse_name,
+            @running_total := IF(t.transaction_type = 'IN', @running_total + t.qty, @running_total - t.qty) AS total
+        FROM 
+            stock_events t
+        JOIN 
+            (SELECT @running_total := 0) r
+        LEFT JOIN warehouses w ON w.id =  t.from_warehouse_id
+            WHERE t.asset_item = :asset_item AND t.name = 'order_item' AND warehouse_id = :warehouse_id
+        ORDER BY 
+            t.created_at, t.id";
+    return  Yii::$app->db->createCommand($sql)
+    ->bindValue(':asset_item',$this->asset_item)
+    ->bindValue(':warehouse_id', $warehouse['warehouse_id'])
+    ->queryAll();
+
+}
+
+
 }

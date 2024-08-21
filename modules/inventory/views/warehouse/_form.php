@@ -7,6 +7,7 @@ use yii\helpers\Url;
 use kartik\select2\Select2;
 use yii\db\Expression;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use yii\web\View;
 use yii\web\JsExpression;
 /** @var yii\web\View $this */
@@ -62,13 +63,17 @@ $resultsJs = <<< JS
 .col-form-label {
     text-align: end;
 }
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
     background-color: #eaecee !important;
     color: #fff;
 }
-:not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+
+:not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
+:not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
     height: calc(2.875rem + 12px) !important;
 }
+
 .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
     background-color: #eaecee !important;
     color: #3F51B5;
@@ -91,21 +96,21 @@ $resultsJs = <<< JS
                         'allowClear' => true                    ],
                 ])->label('คลังหลัก');
             ?>
-                 
+
             </div>
             <div class="row">
                 <div class="col-7">
                     <?= $form->field($model, 'warehouse_name')->textInput(['maxlength' => true]) ?>
                 </div>
                 <div class="col-5">
-               
+
                     <?= $form->field($model, 'warehouse_code')->textInput(['maxlength' => true]) ?>
                 </div>
             </div>
-        
 
 
-<?php
+
+            <?php
 try {
     //code...
     $initEmployee =  Employees::find()->where(['id' => $model->data_json['checker']])->one()->getAvatar(false);
@@ -147,7 +152,7 @@ try {
             ],
         ])->label('หัวหน้าตรวจสอบ')
     ?>
-<?= $form->field($model, 'data_json[checker_name]')->textInput()->label(false) ?>
+            <?= $form->field($model, 'data_json[checker_name]')->textInput()->label(false) ?>
 
             <?php
                 // echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
@@ -162,7 +167,7 @@ try {
 
 
 
-           
+
 
         </div>
         <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
@@ -179,7 +184,24 @@ try {
             <small>อัตรส่วนที่เหมาะสม 7360 × 4912</small>
         </div>
         <div class="col-12">
-            <div
+
+
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">กำหนดผู้รับผิดชอบคลัง</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">กำหนดประเภทที่รับเข้า</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">กำหนดหน่วยงานเบิก</button>
+  </li>
+</ul>
+<div class="tab-content" id="pills-tabContent">
+  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
+
+
+  <div
                 class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between mt-3">
                 <h5><i class="fa-solid fa-circle-info text-primary"></i> กำหนดผู้รับผิดชอบคลัง</h5>
 
@@ -200,12 +222,16 @@ try {
                     ],
                 ]);
             ?>
- <div
+
+  </div>
+  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
+
+  <div
                 class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between mt-3">
                 <h5><i class="fa-solid fa-circle-info text-primary"></i> กำหนดประเภทที่รับเข้า</h5>
 
             </div>
-<?php
+            <?php
                 echo DualListbox::widget([
                     'model' => $model,
                     'attribute' => 'data_json[item_type]',
@@ -223,6 +249,35 @@ try {
             ?>
         </div>
     </div>
+
+
+
+  </div>
+  <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab" tabindex="0">
+
+
+
+  <?=$form->field($model, 'data_json[department]')->widget(\kartik\tree\TreeViewInput::className(), [
+    'query' => Organization::find()->addOrderBy('root, lft'),
+    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+    'fontAwesome' => true,
+    'asDropdown' => true,
+    'multiple' => true,
+    'options' => ['disabled' => false],
+])->label('หน่วยงานภายในตามโครงสร้าง');?>
+
+
+
+  </div>
+</div>
+
+
+
+
+
+          
+          
 
     <?= $form->field($model, 'is_main')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>

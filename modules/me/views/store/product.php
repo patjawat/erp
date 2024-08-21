@@ -76,6 +76,10 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
 
 
 <?php
+$warehouse = Yii::$app->session->get('warehouse');
+print_r($warehouse);
+?>
+<?php
 
 $viewCartMeUrl = Url::to(['/me/store/view-cart']);
 $storeProductUrl = Url::to(['/me/store/product']);

@@ -29,6 +29,7 @@ $this->title = $model->warehouse_name;
 <div class="row">
     <div class="col-3">
         <div class="d-flex justify-conent-betwee gap-3">
+          
             <div class="card w-100">
                 <div class="card-body">
                     <h2 id="OrderCount">0</h2>

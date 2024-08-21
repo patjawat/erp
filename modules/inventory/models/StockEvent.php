@@ -227,7 +227,7 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->all();
     }
-
+    
 
 
     //แสดงรายกาผู้ขาย/ผู้บริจาค

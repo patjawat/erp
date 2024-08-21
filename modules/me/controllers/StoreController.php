@@ -9,6 +9,7 @@ use yii\web\Response;
 use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\StockOutSearch;
 use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
 
 class StoreController extends \yii\web\Controller
@@ -103,7 +104,7 @@ class StoreController extends \yii\web\Controller
 
 
     public function actionFormCheckout(){
-        $model = new Stock([
+        $model = new StockEvent([
             // 'name' => $this->request->get('name'),
             // 'movement_type' => $this->request->get('name'),
             // 'po_number' => $this->request->get('category_id'),
@@ -192,7 +193,7 @@ class StoreController extends \yii\web\Controller
         $cart = \Yii::$app->cart;
         $items = $cart->getItems();
 
-        $stock = new Stock([
+        $stock = new StockEvent([
             'name' => 'order',
             'movement_type' => 'OUT',
         ]);
