@@ -12,6 +12,8 @@ use app\modules\sm\models\Product;
 use asyou99\cart\ItemTrait;
 use asyou99\cart\ItemInterface;
 use yii\db\Expression;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\Warehouse;
 /**
  * This is the model class for table "stock".
  *
@@ -159,12 +161,12 @@ public function SumQty()
     return self::find()->where(['warehouse_id' => $this->warehouse_id,'asset_item' => $this->asset_item])->sum('qty');
 }
 
-public function SumPrice()
+public function SumPriceByItem()
 {
     $warehouse = Yii::$app->session->get('warehouse');
     $model =  self::find()
     ->where(['>', 'qty', 0])
-    ->andWhere(['warehouse_id' => $warehouse['warehouse_id']])
+    ->andWhere(['warehouse_id' => $this->warehouse_id,'asset_item' => $this->asset_item])
     ->select(['total' => new Expression('SUM(unit_price * qty)')])
     ->scalar();
     if($model){
@@ -176,9 +178,25 @@ public function SumPrice()
 
 public function getStockCard()
 {
-    $warehouse = Yii::$app->session->get('warehouse');
-    $sql = "SELECT 
-           t.*,
+
+    // $query = StockEvent::find()
+    // ->alias('t')
+    // ->select([
+    //     't.*',
+    //     'o.category_id as category_code',
+    //     'w.warehouse_name',
+    //     new Expression("@running_total := IF(t.transaction_type = 'IN', @running_total + t.qty, @running_total - t.qty) AS total"),
+    //     new Expression("(t.unit_price * t.qty) as total_price")
+    // ])
+    // ->leftJoin(['r' => new Expression('(SELECT @running_total := 0)')])
+    // ->leftJoin(['w' => Warehouse::tableName()], 'w.id = t.from_warehouse_id')
+    // ->leftJoin(['o' => StockEvent::tableName()], 'o.id = t.category_id AND o.name = :orderName', [':orderName' => 'order'])
+    // ->where(['t.asset_item' => $this->asset_item, 't.name' => 'order_item', 't.warehouse_id' => $this->warehouse_id])
+    // ->orderBy(['t.created_at' => SORT_ASC, 't.id' => SORT_ASC])->all();
+    // return $query;
+
+    $sql = "SELECT x.*,(x.unit_price * qty) as total_price FROM(SELECT 
+          t.*,o.category_id as category_code,
            w.warehouse_name,
             @running_total := IF(t.transaction_type = 'IN', @running_total + t.qty, @running_total - t.qty) AS total
         FROM 
@@ -186,12 +204,13 @@ public function getStockCard()
         JOIN 
             (SELECT @running_total := 0) r
         LEFT JOIN warehouses w ON w.id =  t.from_warehouse_id
-            WHERE t.asset_item = :asset_item AND t.name = 'order_item' AND warehouse_id = :warehouse_id
+        LEFT JOIN stock_events o ON o.id = t.category_id AND o.name = 'order'
+            WHERE t.asset_item = :asset_item AND t.name = 'order_item' AND t.warehouse_id = :warehouse_id
         ORDER BY 
-            t.created_at, t.id";
+            t.created_at, t.id) as x";
     return  Yii::$app->db->createCommand($sql)
     ->bindValue(':asset_item',$this->asset_item)
-    ->bindValue(':warehouse_id', $warehouse['warehouse_id'])
+    ->bindValue(':warehouse_id', $this->warehouse_id)
     ->queryAll();
 
 }

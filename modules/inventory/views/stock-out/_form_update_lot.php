@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 use app\modules\sm\models\Product;
 use iamsaint\datetimepicker\Datetimepicker;
@@ -32,11 +33,13 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-12">
 
                 <?php
-
+$lot = ArrayHelper::map(Stock::find()->where(['asset_item' => $model->asset_item])->andWhere(['>','qty',0])->all(),'lot_number',function($model){
+    return $model->lot_number.' คงเหลือ : '.$model->qty;
+});
 
         echo $form->field($model, 'lot_number')->widget(Select2::classname(), [
             'options' => ['placeholder' => 'เลือกล็อตผลิต ...'],
-            'data' => ArrayHelper::map(StockEvent::find()->where(['asset_item' => $model->asset_item])->all(),'lot_number','lot_number'),
+            'data' => $lot,
             'size' => Select2::LARGE,
             'pluginOptions' => [
                 'dropdownParent' => '#main-modal',

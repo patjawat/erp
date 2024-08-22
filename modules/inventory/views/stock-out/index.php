@@ -80,7 +80,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 ?></td>
                 <td><?=$item->order_status?></td>
                 <td>
-                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-in/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-out/view','id' => $item->id],['class'=> 'btn btn-light'])?>
                 </td>
               </tr>
             <?php endforeach; ?>

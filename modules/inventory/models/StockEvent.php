@@ -50,6 +50,9 @@ class StockEvent extends \yii\db\ActiveRecord
     }
 
     public $auto_lot;
+    public $category_code;
+    public $warehouse_name;
+    public $total;
     public $q;
     public $mfgDate;
     public $expDate;
@@ -64,7 +67,7 @@ class StockEvent extends \yii\db\ActiveRecord
             [['vendor_id', ''], 'required'],
             [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker'], 'safe'],
+            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker','category_code','warehouse_name','total'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];

@@ -11,38 +11,34 @@ use yii\widgets\ActiveForm;
 <div class="stock-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['index'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1
         ],
     ]); ?>
+<div class="d-flex gap-3">
+    <?= $form->field($model, 'thai_year')->label(false) ?>
+    <div class="btn-group">
+    <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-light']) ?>
+                                <?php  Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent"> <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <?= Html::a('พิมพ์สต๊อกการ์ด', ['/ms-word/stockcard', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                        <?php // Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
 
-    <?= $form->field($model, 'id') ?>
+                                    </li>
+                                </ul>
+                            </div>
 
-    <?= $form->field($model, 'name') ?>
-
-    <?= $form->field($model, 'code') ?>
-
-    <?= $form->field($model, 'asset_item') ?>
-
-    <?= $form->field($model, 'warehouse_id') ?>
-
-    <?php // echo $form->field($model, 'qty') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+       
     </div>
-
+</div>
+    
     <?php ActiveForm::end(); ?>
 
 </div>

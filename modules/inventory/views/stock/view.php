@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="col-3">
 <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
       <div class="card-body">
-        <h1 class="text-center"><?=$model->SumPrice()?></h1>
+        <h1 class="text-center"><?=$model->SumPriceByItem()?></h1>
       </div>
       <div class="card-footer border-0">
         มูลค่าวัสดุคงเหลือ
@@ -61,25 +61,28 @@ $this->params['breadcrumbs'][] = $this->title;
   <div class="card-body">
   <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทั้งหมดจำนวน <span class="badge rounded-pill text-bg-primary"> <?=count($model->getStockCard())?> </span> รายการ</h6>
-          <?=Html::a('สงออกข้อมูล',['/inventory/stock/export'],['class' => 'btn btn-sm btn-primary shadow rounded-pill'])?>  
+            <div>
+            <?php  echo $this->render('_search', ['searchModel' => $searchModel,'model' => $model]); ?>
+            </div>
           </div>
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">ความเคลื่อไหว</th>
-      <th scope="col">ปีงบประมาณ</th>
-      <th scope="col">วันที่</th>
+      <th scope="col" style="width:130px">ความเคลื่อไหว</th>
+      <th scope="col" style="width:120px">ปีงบประมาณ</th>
+      <th scope="col" style="width:180px">วันที่</th>
+      <th scope="col" style="width:120px">เลขที่อ้างอิง</th>
       <th scope="col">เลขที่เอกสาร</th>
       <th scope="col">ผู้ติดต่อ</th>
       <th class="text-end" scope="col">ราคาต่อหน่วย</th>
-      <th class="text-end" scope="col">รวมเป็นเงิน</th>
       <th scope="col" class="text-center">จำนวนเข้า</th>
       <th scope="col" class="text-center">จำนวนออก</th>
       <th scope="col" class="text-center">คงเหลือ</th>
+      <th class="text-end" scope="col">รวมมูลค่า</th>
     </tr>
   </thead>
   <tbody>
-    <?php foreach($model->getStockCard() as $item):?>
+    <?php foreach($dataProvider->getModels() as $item):?>
     <tr>
       <th scope="row">
         <?php
@@ -92,6 +95,7 @@ $this->params['breadcrumbs'][] = $this->title;
       ?></th>
       <td><?=$item['thai_year']?></td>
       <td><?=$item['created_at']?></td>
+      <td><?=$item['category_code']?></td>
       <td><?=$item['code']?></td>
       <td><?=$item['warehouse_name']?></td>
       <td class="text-end"><?php
@@ -101,13 +105,7 @@ $this->params['breadcrumbs'][] = $this->title;
         //throw $th;
       }
       ?></td>
-      <td class="text-end"><?php
-      try {
-        echo number_format($item['qty'] * $item['unit_price'],2);
-      } catch (\Throwable $th) {
-        //throw $th;
-      }
-      ?></td>
+ 
       <td class="text-center"><?=
       $item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
       <td class="text-center"><?php
@@ -119,6 +117,13 @@ echo $item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : '';
       }
       ?></td>
       <td class="text-center"><?=$item['total']?></td>
+      <td class="text-end"><?php
+      try {
+        echo number_format($item['total_price'],2);
+      } catch (\Throwable $th) {
+        //throw $th;
+      }
+      ?></td>
     </tr>
   <?php endforeach;?>
   </tbody>

@@ -51,6 +51,7 @@ try {
     </div>
 </div>
 <?= $form->field($model, 'warehouse_id')->textInput()->label(false);?>
+<?= $form->field($model, 'code')->textInput()->label(false); ?>
 <?php
 $js = <<< JS
 

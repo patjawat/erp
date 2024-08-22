@@ -14,6 +14,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+
 use Yii;
 use yii\helpers\ArrayHelper;
 
@@ -66,9 +67,12 @@ class StockOutController extends Controller
      */
     public function actionView($id)
     {
+
+
+
         $model = StockEvent::findOne($id);
         return $this->render('view', [
-            'model' => $model,
+            'model' => $model
         ]);
     }
 
@@ -90,7 +94,8 @@ class StockOutController extends Controller
             'warehouse_id' => $order ? $order->warehouse_id : '',
             'category_id' => $order_id,
             'name' => $name,
-            'transaction_type' => $order ? $order->transaction_type : $type
+            'transaction_type' => $order ? $order->transaction_type : $type,
+            'code' => $order ? $order->code : '',
         ]);
 
         if ($this->request->isPost) {
@@ -239,6 +244,7 @@ class StockOutController extends Controller
 
             $newStockItem = new StockEvent;
             $newStockItem->name = 'order_item';
+            $newStockItem->code = $newStockModel->code;
             $newStockItem->asset_item = $item->asset_item;
             $newStockItem->qty = $item->qty;
             $newStockItem->unit_price = $item->unit_price;
@@ -307,7 +313,7 @@ class StockOutController extends Controller
     public function actionConfirmOrder($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = StockOut::updateAll(['order_status' => 'success'], ['category_id' => $id]);
+        // $model = StockOut::updateAll(['order_status' => 'success'], ['category_id' => $id]);
         return $this->updateStock($id);
         return $this->redirect(['/inventory/stock-out']);
 

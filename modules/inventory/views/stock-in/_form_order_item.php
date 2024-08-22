@@ -163,7 +163,7 @@ try {
         <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
         <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
         <?= $form->field($model, 'unit_price')->textInput(['type' => 'number', 'maxlength' => 2])->label('ราคาต่อหน่วย'); ?>
-        <?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
+        <?= $form->field($model, 'code')->textInput()->label(false); ?>
    
 
     </div>

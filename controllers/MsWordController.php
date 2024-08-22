@@ -7,6 +7,7 @@ use app\components\Processor;
 use app\components\SiteHelper;
 use app\modules\am\components\AssetHelper;
 use app\modules\am\models\Asset;
+use app\modules\inventory\models\Stock;
 use app\modules\purchase\models\Order;
 use PhpOffice\PhpWord\Settings;
 use yii\helpers\Html;
@@ -563,6 +564,72 @@ class MsWordController extends \yii\web\Controller
         ];
         return $this->CreateFile($data);
     }
+
+    public function actionStockcard()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $id = $this->request->get('id');
+        $model = Stock::findOne($id);
+       
+        $sql = "SELECT x.*,(x.unit_price * qty) as total_price FROM(SELECT 
+        t.*,o.category_id as category_code,t.data_json->>'$.employee_fullname' as fullname,
+         w.warehouse_name,
+          @running_total := IF(t.transaction_type = 'IN', @running_total + t.qty, @running_total - t.qty) AS total
+      FROM 
+          stock_events t
+      JOIN 
+          (SELECT @running_total := 0) r
+      LEFT JOIN warehouses w ON w.id =  t.from_warehouse_id
+      LEFT JOIN stock_events o ON o.id = t.category_id AND o.name = 'order'
+          WHERE t.asset_item = :asset_item AND t.name = 'order_item' AND t.warehouse_id = :warehouse_id
+      ORDER BY 
+          t.created_at, t.id) as x";
+        $stockList =   Yii::$app->db->createCommand($sql)
+        ->bindValue(':asset_item',$model->asset_item)
+        ->bindValue(':warehouse_id', $model->warehouse_id)
+        ->queryAll();
+        $user = Yii::$app->user->id;
+        $word_name = 'stockcard.docx';
+        $result_name = 'stock_result-'.$model->id.'.docx';
+
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+
+        $templateProcessor->setValue('asset_name', $model->product->title);
+        $templateProcessor->setValue('asset_type', $model->product->ViewTypeName()['title']);
+        $templateProcessor->setValue('code', $model->asset_item);
+     
+
+        $templateProcessor->cloneRow('asset_item', count($stockList));
+        $i = 1;
+        $num = 1;
+        foreach ($stockList as $item) {
+            
+            $templateProcessor->setValue('asset_item#' . $i,$item['asset_item']);
+            $templateProcessor->setValue('created_at#' . $i,AppHelper::convertToThai($item['created_at']));
+            $templateProcessor->setValue('created_name#' . $i,$item['fullname']);
+            $templateProcessor->setValue('in#' . $i, $item['transaction_type'] == 'IN' ? $item['qty'] : '');
+            $templateProcessor->setValue('out#' . $i, $item['transaction_type'] == 'OUT' ? $item['qty'] : '');
+            $templateProcessor->setValue('total#' . $i, $item['total'] );
+            $i++;
+        }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'content' => $this->renderAjax('word', ['filename' => $result_name]),
+            ];
+        } else {
+            echo '<p>';
+            echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $result_name), ['class' => 'btn btn-info']);  // สร้าง link download
+            echo '</p>';
+            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+        }
+
+    }
+
 
     // function สร้าง Word
     public function CreateFile($data)

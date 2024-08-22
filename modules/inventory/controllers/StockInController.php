@@ -94,10 +94,16 @@ class StockInController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-               
+               $user = Yii::$app->user->identity->employee;
+                $created = [
+                    'employee_fullname' => $user->fullname,
+                    'employee_position' => $user->positionName(),
+                    'employee_department' => $user->departmentName(),
+                ];
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
                     $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr((date('Y') + 543), 2)) . '????');
+                    $model->data_json =  ArrayHelper::merge($model->data_json, $created);
                 }
 
                 if ($model->name == 'order_item') {
@@ -106,7 +112,7 @@ class StockInController extends Controller
                         'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
                         'req_qty' => $model->qty
                     ];
-                    $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
+                    $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate,$created);
 
                     if ($model->auto_lot == "1") {
                         $model->lot_number  = \mdm\autonumber\AutoNumber::generate('LOT' . (substr((date('Y') + 543), 2)) . '-?????');

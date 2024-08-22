@@ -162,8 +162,7 @@ $this->params['breadcrumbs'][] = $this->title;
          <?php endif;?>
          <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
             <?php echo Html::a('<i class="bi bi-check2-circle"></i> checkout',['/inventory/stock-out/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
-            <?php else:?>
-                <h6>รออนุมัติ</h6>
+        
         <?php endif;?>
         </div>
     </div>

@@ -36,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
           <tr>
             <th scope="row">
               <?=Html::a($item->product->Avatar(),['/inventory/stock/view','id' => $item->id])?></th>
-            <td class="text-center"><?=$item->SumPrice()?></td>
+            <td class="text-center"><?=$item->SumPriceByItem()?></td>
             <td class="text-center"><?=$item->SumQty()?></td>
           </tr>
           <?php endforeach;?>

@@ -5,11 +5,13 @@ namespace app\modules\inventory\controllers;
 use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\StockEventSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use Yii;;
 use yii\web\Response;
+use yii\db\Expression;
 
 /**
  * StockController implements the CRUD actions for Stock model.
@@ -110,10 +112,31 @@ class StockController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
+
+        $model = $this->findModel($id);
+        $searchModel = new StockEventSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->select([
+            't.*',
+            'o.category_id AS category_code',
+            'w.warehouse_name',
+            new \yii\db\Expression('@running_total := IF(t.transaction_type = "IN", @running_total + t.qty, @running_total - t.qty) AS total'),
+            new \yii\db\Expression('(t.unit_price * t.qty) AS total_price')
         ]);
-    }
+
+        $dataProvider->query->from(['t' => 'stock_events'])
+            ->leftJoin('warehouses w', 'w.id = t.from_warehouse_id')
+            ->leftJoin('stock_events o', 'o.id = t.category_id AND o.name = "order"')
+            ->join('JOIN', ['r' => new \yii\db\Expression('(SELECT @running_total := 0)')])
+            ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item', 't.warehouse_id' => $model->warehouse_id])
+            ->orderBy(['t.created_at' => SORT_ASC, 't.id' => SORT_ASC]);
+
+                return $this->render('view', [
+                    'model' => $model,
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]);
+            }
 
     /**
      * Creates a new Stock model.

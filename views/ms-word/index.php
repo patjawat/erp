@@ -35,6 +35,7 @@ use yii\web\View;
     <li><?= Html::a('<i class="fa-regular fa-file-word"></i> ทะเบียนทรัพย์สิน', ['/ms-word/asset'], ['class' => 'open-modal-x', 'data' => ['size' => 'modal-xl']]) ?></li>
     <li><?= Html::a('ตัวอย่าง', ['/ms-word/example'], ['class' => 'open-modal-x', 'data' => ['size' => 'modal-xl']]) ?></li>
     <li><?= Html::a('ใบขอซื้อ', ['/ms-word/bill'], ['class' => 'open-modal-x', 'data' => ['size' => 'modal-xl']]) ?></li>
+    <li><?= Html::a('Stockcard', ['/ms-word/stockcard','id' => 1], ['class' => 'open-modal-x', 'data' => ['size' => 'modal-xl']]) ?></li>
 
 </ul>
 
