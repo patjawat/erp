@@ -94,8 +94,20 @@ $this->params['breadcrumbs'][] = $this->title;
       <td><?=$item['created_at']?></td>
       <td><?=$item['code']?></td>
       <td><?=$item['warehouse_name']?></td>
-      <td class="text-end"><?=number_format($item['unit_price'],2)?></td>
-      <td class="text-end"><?=number_format($item['qty'] * $item['unit_price'],2)?></td>
+      <td class="text-end"><?php
+      try {
+        echo number_format($item['unit_price'],2);
+      } catch (\Throwable $th) {
+        //throw $th;
+      }
+      ?></td>
+      <td class="text-end"><?php
+      try {
+        echo number_format($item['qty'] * $item['unit_price'],2);
+      } catch (\Throwable $th) {
+        //throw $th;
+      }
+      ?></td>
       <td class="text-center"><?=
       $item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
       <td class="text-center"><?php
