@@ -161,8 +161,10 @@ public function SumQty()
 
 public function SumPrice()
 {
+    $warehouse = Yii::$app->session->get('warehouse');
     $model =  self::find()
     ->where(['>', 'qty', 0])
+    ->andWhere(['warehouse_id' => $warehouse['warehouse_id']])
     ->select(['total' => new Expression('SUM(unit_price * qty)')])
     ->scalar();
     return number_format($model,2);
