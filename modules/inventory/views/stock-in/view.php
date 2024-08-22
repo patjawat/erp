@@ -22,7 +22,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ</h6>
+                   
+                   <?php if($model->order_status == 'success'):?>
+                    <?=Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก',['/inventory/stock-event/cancel-order','id' => $model->id],['class' => 'btn btn-sm btn-danger rounded-pill shadow confirm-order','data' => ['title' => 'ยืนยัน','text' => 'ยืนยันยกเลิกรายการนี้']])?>
+                    <?php else:?>
                     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+                <?php endif?>
                 </div>
                 <table class="table table-striped mt-3">
                 <thead class="table-primary">
@@ -141,35 +146,35 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = <<< JS
 
                
-$('.confirm-order').click(async function (e) { 
-    e.preventDefault();
+// $('.confirm-order').click(async function (e) { 
+//     e.preventDefault();
 
-  await Swal.fire({
-    title: "ยืนยัน?",
-    text: "บันทึกรายการนี้!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "ใช่, ยืนยัน!",
-    cancelButtonText: "ยกเลิก",
-  }).then(async (result) => {
-    if (result.value == true) {
-      await $.ajax({
-        type: "post",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: async function (response) {
-          if (response.status == "success") {
-            await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            success("บันสำเร็จ!.");
-          }
-        },
-      });
-    }
-  });
+//   await Swal.fire({
+//     title: "ยืนยัน?",
+//     text: "บันทึกรายการนี้!",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#3085d6",
+//     cancelButtonColor: "#d33",
+//     confirmButtonText: "ใช่, ยืนยัน!",
+//     cancelButtonText: "ยกเลิก",
+//   }).then(async (result) => {
+//     if (result.value == true) {
+//       await $.ajax({
+//         type: "post",
+//         url: $(this).attr('href'),
+//         dataType: "json",
+//         success: async function (response) {
+//           if (response.status == "success") {
+//             await  $.pjax.reload({container:response.container, history:false,url:response.url});
+//             success("บันสำเร็จ!.");
+//           }
+//         },
+//       });
+//     }
+//   });
 
-  });
+//   });
 
 JS;
 $this->registerJS($js)

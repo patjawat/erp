@@ -134,6 +134,41 @@ $("body").on("click", ".open-modal", function (e) {
   });
 });
 
+
+$("body").on("click", ".confirm-order", async function (e) {
+  e.preventDefault();
+  var title = $(this).data('title');
+  var text = $(this).data('text');
+await Swal.fire({
+  title: title,
+  text: text,
+  icon: "warning",
+  showCancelButton: true,
+  confirmButtonColor: "#3085d6",
+  cancelButtonColor: "#d33",
+  confirmButtonText: "ใช่, ยืนยัน!",
+  cancelButtonText: "ยกเลิก",
+}).then(async (result) => {
+  if (result.value == true) {
+    await $.ajax({
+      type: "post",
+      url: $(this).attr('href'),
+      dataType: "json",
+      success: async function (response) {
+        if (response.status == "success") {
+          location.reload();
+          // await  $.pjax.reload({container:response.container, history:false,url:response.url});
+          success(text+"บัำเร็จ!.");
+        }
+      },
+    });
+  }
+});
+
+});
+
+
+
 $("body").on("click", ".delete-item", async function (e) {
   e.preventDefault();
   var url = $(this).attr("href");

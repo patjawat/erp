@@ -50,7 +50,7 @@ class StockInController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->where(['name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'transaction_type' => 'IN']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -94,7 +94,7 @@ class StockInController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-
+               
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
                     $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr((date('Y') + 543), 2)) . '????');
@@ -104,6 +104,7 @@ class StockInController extends Controller
                     $convertDate = [
                         'mfg_date' =>  AppHelper::convertToGregorian($model->data_json['mfg_date']),
                         'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
+                        'req_qty' => $model->qty
                     ];
                     $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
 
@@ -317,14 +318,45 @@ class StockInController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $this->updateStock($id);
         StockEvent::updateAll(['order_status' => 'success'], ['category_id' => $id]);
+        $this->updateStock($id);
         return $this->redirect(['/inventory/stock-in']);
-            // return [
-            //     'status' => 'success',
-            //     'container' => '#inventory',
-            // ];
     }
+
+
+
+    protected function updateStock($id)
+    {
+
+        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
+        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
+        $model = $this->findModel($id);
+        foreach($model->getItems() as $item){
+            $store = Stock::findOne(['asset_item' => $item->asset_item,'id' => $item->lot_number]);
+            if($store){
+                $storeModel = $store;
+            }else{
+                $storeModel = new Stock();
+                $storeModel->lot_number  = $item->lot_number;
+
+            }
+            $storeModel->asset_item  = $item->asset_item;
+            $storeModel->qty = $storeModel->qty + $item->qty;
+            $storeModel->unit_price = $item->unit_price;
+            $storeModel->warehouse_id = $item->warehouse_id;
+            $storeModel->save(false);
+        }
+
+        
+        $model->total_price = $model->getTotalPrice();
+        $model->order_status = 'success';
+        $model->save(false);
+       
+
+
+        }
+
+
 
     // ตรวจสอบความถูกต้อง
     public function actionCreateValidator()
@@ -398,30 +430,6 @@ class StockInController extends Controller
             ]);
         }
     }
-
-
-    protected function updateStock($id)
-    {
-
-        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
-        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
-        $model = $this->findModel($id);
-
-        foreach($model->getItems() as $item){
-            $store = Stock::findOne(['asset_item' => $item->asset_item,'id' => $item->lot_number]);
-            if($store){
-                $storeModel = $store;
-            }else{
-                $storeModel = new Stock();
-                $storeModel->lot_number  = $item->lot_number;
-
-            }
-            $storeModel->asset_item  = $item->asset_item;
-            $storeModel->qty = $storeModel->qty + $item->qty;
-            $storeModel->warehouse_id = $item->warehouse_id;
-            $storeModel->save(false);
-        }
-        }
 
 
 

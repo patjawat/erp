@@ -19,11 +19,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="card">
       <div class="card-body">
-      <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
+        <div class="d-flex justify-content-between">
+          <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
+          <?php echo Html::a('แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]]) ?>
+        </div>
       <table class="table">
         <thead>
           <tr>
             <th scope="col">ชื่อรายการ</th>
+            <th scope="col" class="text-center">มูลค่า</th>
             <th scope="col" class="text-center">คงเหลือ</th>
           </tr>
         </thead>
@@ -32,6 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
           <tr>
             <th scope="row">
               <?=Html::a($item->product->Avatar(),['/inventory/stock/view','id' => $item->id])?></th>
+            <td class="text-center"><?=$item->SumPrice()?></td>
             <td class="text-center"><?=$item->SumQty()?></td>
           </tr>
           <?php endforeach;?>

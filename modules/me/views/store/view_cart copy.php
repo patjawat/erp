@@ -43,7 +43,7 @@ use yii\helpers\Html;
         </div>
         <div class="d-grid gap-2">
             <?php if($cart->getCount() > 0):?>
-        <?= Html::a('<i class="fa-solid fa-cart-plus"></i> เบิกวัสดุ', ['/me/stock/create','title' => 'สร้างคำขอเบิกวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+        <?= Html::a('<i class="fa-solid fa-cart-plus"></i> เบิกวัสดุ', ['/me/store/checkout'], ['class' => 'btn btn-primary rounded-pill shadow position-relative btn-confirm', 'data' => ['title' => 'ยืนยัน','เบิกวัสดุ']]) ?>
         <?php else:?>
             <button type="button" class="btn btn-secondary rounded-pill shadow"><i class="fa-solid fa-cart-plus"></i> ไม่มีรายการ</button>
         <?php endif?>

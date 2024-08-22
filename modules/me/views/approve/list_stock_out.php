@@ -35,7 +35,7 @@ use yii\helpers\Html;
                         $msg  ='ขอเบิกวัสดุสำนักงาน';
                        echo $item->CreateBy($msg)['avatar'] ?>
                        </td>
-                        <td><?=$item->fromWarehouse->warehouse_name?></td>
+                        <td><?=$item->warehouse->warehouse_name?></td>
                         <td><?=$item->SumQty()?></td>
                         <td>
                             

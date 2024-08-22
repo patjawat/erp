@@ -100,7 +100,8 @@ $config = [
         //     'enableAutoLogin' => true,
         // ],
         'user' => [
-            'identityClass' => 'mdm\admin\models\User',
+            // 'identityClass' => 'mdm\admin\models\User',
+            'identityClass' => 'app\modules\usermanager\models\User',
             'loginUrl' => ['/site/login'],
             'enableAutoLogin' => false,
             'enableSession' => true,

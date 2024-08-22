@@ -54,12 +54,14 @@ class StoreController extends \yii\web\Controller
 
     public function actionProduct()
     {
+        $warehouse = Yii::$app->session->get('search_warehouse_id');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['>=','stock.qty',1]);
         $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
-        // $dataProvider->query->andFilterWhere(['stock.name' => 'order_item']);
+        $dataProvider->query->andFilterWhere(['stock.warehouse_id' => ($warehouse ? $warehouse  : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['like','at.title',$searchModel->q]);
-        $dataProvider->query->groupBy('asset_item');
+        $dataProvider->query->groupBy('asset_item,warehouse_id,lot_number');
         // $dataProvider->pagination->pageSize = 4;
 
         if ($this->request->isAjax) {
@@ -87,11 +89,14 @@ class StoreController extends \yii\web\Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $model = Product::findOne(['code' => $id]);
+        // $stock = Stock::findOne($id);
+        $model = Stock::findOne($id);
+        
         $model->qty = 1;
         if ($model) {
             \Yii::$app->cart->create($model, 1);
             // return  $this->redirect(['/inventory/store']);
+            $this->SetWarehouse($model->warehouse_id);
             return [
                 'container' => '#me',
                 'status' => 'success',
@@ -101,6 +106,22 @@ class StoreController extends \yii\web\Controller
         throw new NotFoundHttpException();
     }
 
+
+    public function SetWarehouse($id)
+    {
+        $warehouse = Yii::$app->session->get('search_warehouse_id');
+        if(!$warehouse){
+            Yii::$app->session->set('search_warehouse_id',$id);
+           return $this->redirect(['/me/store/product']);
+        }
+    }
+
+    public function actionRemoveWarehouse()
+    {
+     
+            Yii::$app->session->remove('search_warehouse_id');
+
+    }
 
 
     public function actionFormCheckout(){
@@ -179,6 +200,13 @@ class StoreController extends \yii\web\Controller
         $product = Product::findOne($id);
         if ($product) {
             \Yii::$app->cart->delete($product);
+            //ถ้าไม่มีรายดารให้ clear warehouse
+            $cart = \Yii::$app->cart;
+            if($cart->getCount() == 0){
+                Yii::$app->session->remove('search_warehouse_id');
+                $this->redirect(['/me/store/product']);
+            }
+
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'container' => '#me',

@@ -6,16 +6,17 @@ use app\modules\inventory\models\Product;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
 
 class StockController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        $searchModel = new StockSearch();
+        $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere(['created_by' => Yii::$app->user->id]);
 
         return $this->render('index',[
             'searchModel' => $searchModel,
@@ -23,73 +24,52 @@ class StockController extends \yii\web\Controller
         ]);
     }
 
-    public function actionProduct()
-    {
-        $searchModel = new StockSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
-        $dataProvider->query->andFilterWhere(['stock.name' => 'order_item']);
-        $dataProvider->query->andFilterWhere(['like','at.title',$searchModel->q]);
-        $dataProvider->query->groupBy('asset_item');
-        // $dataProvider->pagination->pageSize = 4;
 
-        if ($this->request->isAjax) {
+    public function actionCreate(){
+        $model = new StockEvent;
+        $warehouse = Yii::$app->session->get('search_warehouse_id');
+        $cart = \Yii::$app->cart;
+        $items = $cart->getItems();
 
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('product', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ])
-            ];
-        } else {
-            return $this->render('product', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
-
-
-
-    public function actionAddToCart($id)
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $model = Product::findOne(['code' => $id]);
-        $model->qty = 1;
-        if ($model) {
-            \Yii::$app->cart->create($model, 1);
-            // return  $this->redirect(['/inventory/store']);
-            return [
-                'container' => '#me',
-                'status' => 'success',
-                'data' => $model
-            ];
-        }
-        throw new NotFoundHttpException();
-    }
-
-
-
-    public function actionFormCheckout(){
-        $model = new Stock([
-            // 'name' => $this->request->get('name'),
-            // 'movement_type' => $this->request->get('name'),
-            // 'po_number' => $this->request->get('category_id'),
-            // 'receive_type' => $this->request->get('receive_type')
-        ]);
-
+        
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $thaiYear = substr((date('Y') + 543), 2);
-                if ($model->rq_number == '') {
-                    $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
-                }
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $model->name = 'order';
+                $model->order_status = 'pending';
+                $model->transaction_type = 'OUT';
+                $model->warehouse_id = $warehouse;
+                $model->from_warehouse_id = $warehouse;
+                $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . (substr((date('Y') + 543), 2)) . '????');
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                
+                // update Stock
+                foreach ($items as $item) {
+                    
+                    $newStockItem = new StockEvent;
+                    $newStockItem->code = $model->code;
+                    $newStockItem->name = 'order_item';
+                    $newStockItem->order_status = 'pending';
+            $newStockItem->lot_number = $item['lot_number'];
+            $newStockItem->asset_item = $item['asset_item'];
+            $newStockItem->qty = $item->getQuantity();
+            $newStockItem->data_json = [
+                'req_qty' =>  $item->getQuantity()
+            ];
+            $newStockItem->transaction_type = 'OUT';
+            $newStockItem->warehouse_id = $item['warehouse_id'];
+            $newStockItem->from_warehouse_id = $item['warehouse_id'];
+            $newStockItem->category_id = $model->id;
+            $newStockItem->save(false);
+
+           
+            // ตัด stock และทำการ update
+            // $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
+            // $checkStock->qty = $checkStock->qty - $item->qty;
+            // $checkStock->save(false);
+        }
+
+                return $this->redirect(['/me/stock']);
             }
         } else {
             $model->loadDefaultValues();
@@ -112,22 +92,6 @@ class StockController extends \yii\web\Controller
 
     }
     
-    public function actionViewCart()
-    {
-        $cart = \Yii::$app->cart;
-        if ($this->request->isAjax) {
-
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('view_cart'),
-                'countItem' => $cart->getCount()
-            ];
-        } else {
-            return $this->render('view_cart');
-        }
-    }
-
      // public function actionUpdate($id, $quantity)
      public function actionUpdate($id, $quantity)
      {

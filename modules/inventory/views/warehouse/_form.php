@@ -257,7 +257,7 @@ try {
 
 
 
-  <?=$form->field($model, 'data_json[department]')->widget(\kartik\tree\TreeViewInput::className(), [
+  <?=$form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
     'query' => Organization::find()->addOrderBy('root, lft'),
     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
     'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],

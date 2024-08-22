@@ -64,7 +64,7 @@ class StockEvent extends \yii\db\ActiveRecord
             [['vendor_id', ''], 'required'],
             [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at','auto_lot','po_number','checker'], 'safe'],
+            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -160,6 +160,18 @@ class StockEvent extends \yii\db\ActiveRecord
     }
 
 
+    // ราวมราคาทั้งหมด
+    public function getTotalPrice()
+    {
+        try {
+
+            $sql = "SELECT SUM(unit_price * qty) AS total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' GROUP BY code;";
+            return Yii::$app->db->createCommand($sql)->queryScalar($sql);
+
+        } catch (\Throwable $th) {
+            return 0;
+        }
+    }
 
     //  ภาพทีมคณะกรรมการ
     public function StackComittee()
@@ -189,10 +201,43 @@ class StockEvent extends \yii\db\ActiveRecord
     }
 
 
+    // นับจำนวนที่หัวหน้าอนุมัติแล้ว
+    public function getTotalCheckerY()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        return self::find()
+        ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending'])
+        ->andWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = 'Y'"))
+        ->count();
+    }
+
+    public function getTotalOrderPrice()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        $model =  self::find()
+        ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'success'])
+        ->sum('total_price');
+        if($model){
+            return number_format($model,2);
+        }else{
+            return 0;
+        }
+    }
+
+    public function getTotalSuccessOrder()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        return self::find()
+        ->where(['name' => 'order_item', 'warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'success'])
+        ->count('qty');
+    }
+
+
+
     //นับจำนวนที่เบิก
     public function SumQty()
     {
-     return self::find()->where(['category_id' => $this->id])->sum('qty');
+        return self::find()->where(['category_id' => $this->id])->sum('qty');
     }
     //ตรวจสอบรายการว่ากรอบขอ้มูลตรบหรือไม่
     public function checkItem()
@@ -202,12 +247,12 @@ class StockEvent extends \yii\db\ActiveRecord
         // ->andWhere(['=','qty',''])
         // ->andWhere(["IS NULL",new Expression("JSON_EXTRACT(data_json, '$.exp_date')"),""])
         // ->count('id');
-    //     $sql = "SELECT count(id) as total FROM `stock_in` 
-    //     WHERE lot_number IS NULL  
-    //     AND category_id = :category_id OR qty IS NULL OR JSON_EXTRACT(data_json, '$.mfg_date') IS NULL OR JSON_EXTRACT(data_json, '$.exp_date') IS NULL";
-    //    return  Yii::$app->db->createCommand($sql)
-    //    ->bindValue(':category_id', $this->id)
-    //    ->queryScalar();
+        //     $sql = "SELECT count(id) as total FROM `stock_in` 
+        //     WHERE lot_number IS NULL  
+        //     AND category_id = :category_id OR qty IS NULL OR JSON_EXTRACT(data_json, '$.mfg_date') IS NULL OR JSON_EXTRACT(data_json, '$.exp_date') IS NULL";
+        //    return  Yii::$app->db->createCommand($sql)
+        //    ->bindValue(':category_id', $this->id)
+        //    ->queryScalar();
     }
 
     // คณะกรรมการ
@@ -227,7 +272,7 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->all();
     }
-    
+
 
 
     //แสดงรายกาผู้ขาย/ผู้บริจาค
@@ -236,19 +281,19 @@ class StockEvent extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'vendor'])->all(), 'code', 'title');
     }
 
-        //แสดงรายชื่อกรรมการตรวจรับ
-        public function ListCommittee()
-        {
-            return self::find()
-                ->where(['name' => 'receive_committee', 'category_id' => $this->id])
-                ->all();
-        }
+    //แสดงรายชื่อกรรมการตรวจรับ
+    public function ListCommittee()
+    {
+        return self::find()
+            ->where(['name' => 'receive_committee', 'category_id' => $this->id])
+            ->all();
+    }
 
-        //แสดงรายละเอียดของแต่ละ lot
-        public function LotNumberDetail()
-        {
-          return $this->lot_number.' ผลิต : '.$this->mfgDate.' หมดอายุ : '.$this->expDate;
-        }
+    //แสดงรายละเอียดของแต่ละ lot
+    public function LotNumberDetail()
+    {
+        return $this->lot_number . ' ผลิต : ' . $this->mfgDate . ' หมดอายุ : ' . $this->expDate;
+    }
 
     // คณะกรรมการ
     public function ShowCommittee()
@@ -267,7 +312,7 @@ class StockEvent extends \yii\db\ActiveRecord
             ];
         }
     }
-    
+
 
     // แสดงผู้ตรวจสอบ
     public  function viewChecker($msg = null)
@@ -284,14 +329,14 @@ class StockEvent extends \yii\db\ActiveRecord
                 break;
 
             default:
-            $status = '<i class="fa-regular fa-clock fs-6"></i> รอดำเนินการ';
+                $status = '<i class="fa-regular fa-clock fs-6"></i> รออนุมัติ';
                 break;
         }
-        return 
-        [
-            'status' => $status,
-            'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
-        ];
+        return
+            [
+                'status' => $status,
+                'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
+            ];
     }
 
 
@@ -322,7 +367,4 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         return  $this->getAvatar($this->created_by, $msg);
     }
-
-
-        
 }

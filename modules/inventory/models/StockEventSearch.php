@@ -47,6 +47,11 @@ class StockEventSearch extends StockEvent
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => [
+                'defaultOrder' => [
+                    'created_at' => 'SORT_DESC',
+                ],
+            ]
         ]);
 
         $this->load($params);
@@ -84,5 +89,11 @@ class StockEventSearch extends StockEvent
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
+    }
+
+    public  function getDemo()
+    {
+        
+        return 100;
     }
 }

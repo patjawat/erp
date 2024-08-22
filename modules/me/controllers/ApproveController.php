@@ -3,6 +3,7 @@
 namespace app\modules\me\controllers;
 
 use Yii;
+use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\StockOut;
@@ -26,6 +27,7 @@ class ApproveController extends \yii\web\Controller
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'order', 'checker' => Yii::$app->user->id]);
+        $dataProvider->query->andWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"));
         if ($this->request->isAjax) {
 
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -54,7 +56,16 @@ class ApproveController extends \yii\web\Controller
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                if ($model->data_json['checker_confirm'] == 'Y') {
+                    
+                    if ($model->warehouse_id == $model->from_warehouse_id) {
+                        $this->UpdateStock($model);
+                    }
+                }
                 $model->save(false);
+
+
+
                 return [
                     'status' => 'success',
                     'container' => '#me'
@@ -80,6 +91,24 @@ class ApproveController extends \yii\web\Controller
                 'model' => $model
             ]);
         }
+    }
+
+    private function UpdateStock($model)
+    {
+        // update Stock
+        foreach ($model->getItems() as $item) {
+
+            $item->order_status = 'success';
+            $item->save(false);
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            // ตัด stock และทำการ update
+            $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $item->warehouse_id]);
+            $checkStock->qty = $checkStock->qty - $item->qty;
+            $checkStock->save(false);
+        }
+        // End update Stock{
+
     }
 
 

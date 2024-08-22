@@ -62,7 +62,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                                 </td>
                                 <td class="fw-light">
                                     <div class="btn-group">
-                                        <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
+                                        <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/me/stock/view', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
                                         <button type="button"
                                             class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                             data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">

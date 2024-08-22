@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="col-3">
 <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
       <div class="card-body">
-        <h1 class="text-center">8,888</h1>
+        <h1 class="text-center"><?=$model->SumPrice()?></h1>
       </div>
       <div class="card-footer border-0">
         มูลค่าวัสดุคงเหลือ
@@ -100,8 +100,8 @@ $this->params['breadcrumbs'][] = $this->title;
       <td><?=$item['created_at']?></td>
       <td><?=$item['code']?></td>
       <td><?=$item['warehouse_name']?></td>
-      <td>-</td>
-      <td>-</td>
+      <td><?=$item['unit_price']?></td>
+      <td><?=$item['qty'] * $item['unit_price']?></td>
       <td class="text-center"><?=$item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
       <td class="text-center"><?=$item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : ''?></td>
       <td class="text-center"><?=$item['total']?></td>

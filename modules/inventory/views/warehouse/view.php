@@ -28,39 +28,38 @@ $this->title = $model->warehouse_name;
 
 <div class="row">
     <div class="col-3">
-        <div class="d-flex justify-conent-betwee gap-3">
-          
-            <div class="card w-100">
-                <div class="card-body">
-                    <h2 id="OrderCount">0</h2>
-                    <p class="card-text">จำนวนการขอเบิกวัสดุ</p>
-                </div>
+        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+            <div class="card-body">
+                <h2 id="OrderCount">0</h2>
             </div>
+            <div class="card-footer border-0">จำนวนการขอเบิกวัสดุ</div>
         </div>
     </div>
     <div class="col-3">
-        <div class="card">
+        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-                <h4 class="card-title">50 เรื่อง</h4>
-                <p class="card-text">หัวหน้าเห็นชอบ</p>
+                <h2 id="OrderConfirm">0</h2>
             </div>
+            <div class="card-footer border-0">หัวหน้าเห็นชอบ</div>
         </div>
     </div>
     <div class="col-3">
-        <div class="card">
+        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-                <h4 class="card-title">50 เรื่อง</h4>
-                <p class="card-text">หัวหน้าเห็นชอบ</p>
+                <h2 id="showTotalPrice">0</h2>
             </div>
+            <div class="card-footer border-0">มูลค่ารวม</div>
         </div>
+
     </div>
     <div class="col-3">
-        <div class="card">
+        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-                <h4 class="card-title">50 เรื่อง</h4>
-                <p class="card-text">หัวหน้าเห็นชอบ</p>
+                <h2 id="showTotalOrder">0</h2>
             </div>
+            <div class="card-footer border-0">จำนวนรับเข้า</div>
         </div>
+
     </div>
 </div>
 <div class="row">
@@ -84,17 +83,17 @@ $this->title = $model->warehouse_name;
         </div>
     </div>
     <div class="col-6">
-      <div id="showOrderRequestInWarehouse"></div>
+        <div id="showOrderRequestInWarehouse"></div>
 
-      
+
     </div>
-    
+
     <!-- end col-6 -->
-  </div>
-  
-  <div class="row">
+</div>
+
+<div class="row">
     <div class="col-12">
-      <div id="showStoreInWarehouse"></div>
+        <div id="showStoreInWarehouse"></div>
     </div>
 </div>
 
@@ -136,6 +135,9 @@ $js = <<< JS
       success: function (res) {
         $('#showOrderRequestInWarehouse').html(res.content)
         $('#OrderCount').html(res.count)
+        $('#OrderConfirm').html(res.confirm)
+        $('#showTotalOrder').html(res.totalOrder)
+        $('#showTotalPrice').html(res.totalPrice)
       }
     });
   }
@@ -152,8 +154,8 @@ $js = <<< JS
               },
           },
           series: [
-            { name: "เบิก", data: $chartSummeryIn },
-            { name: "จ่าย", data: $chartSummeryOut },
+            { name: "เข้า", data: $chartSummeryIn },
+            { name: "ออก", data: $chartSummeryOut },
           ],
           colors: ["#0966ad", "#EA5455"],
           chart: {
@@ -171,7 +173,6 @@ $js = <<< JS
 
           xaxis: {
             categories: [
-              "ก.ย.",
               "ต.ค.",
               "พ.ย.",
               "ธ.ค.",
@@ -183,6 +184,7 @@ $js = <<< JS
               "มิ.ย.",
               "ก.ค.",
               "ส.ค.",
+              "ก.ย.",
             ],
           },
           legend: { position: "bottom"},

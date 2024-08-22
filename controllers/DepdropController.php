@@ -189,7 +189,7 @@ class DepdropController extends \yii\web\Controller
     public function actionProduct($q = null, $id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $models = Product::find()->where(['name' => 'asset_item'])
+        $models = Product::find()->where(['name' => 'asset_item','group_id' => 4])
             ->andWhere(['or', ['LIKE', 'title',$q]])
             ->limit(10)
             ->all();

@@ -31,6 +31,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                 <thead>
                     <tr>
                         <th>ชื่อรายการ</th>
+                        <th style="width:350px">ล๊อต</th>
                         <th style="width:350px">คงเหลือ</th>
                         <!-- <th style="width:100px">MaxStock</th>
                         <th style="width:100px">MinStock</th> -->
@@ -42,8 +43,8 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                     <tr class="">
                         <td>
                             <?=$item->product->Avatar()?>
-                            
                         </td>
+                        <td><?=$item->lot_number?></td>
                     <td>
                     <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">

@@ -171,7 +171,12 @@ class StockOutController extends Controller
     public function actionUpdateLot($id)
     {
         $model = StockEvent::findOne($id);
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $lot = Stock::findOne(['lot_number'=> $model->lot_number]);
+            $model->unit_price = $lot->unit_price;
+            $model->total_price = ($lot->unit_price* $model->qty);
+            $model->save(false);
+
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',
@@ -217,6 +222,7 @@ class StockOutController extends Controller
         // สร้างรายการคำสั่งเข้าเข้าคลังที่ขอเบิก
         $newStockModel = new StockEvent;
         $newStockModel->name = 'order';
+        $newStockModel->order_status = 'success';
         $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr((date('Y') + 543), 2)) . '????');
         $newStockModel->from_warehouse_id = $model->warehouse_id;
         $newStockModel->warehouse_id = $model->from_warehouse_id;
@@ -235,6 +241,7 @@ class StockOutController extends Controller
             $newStockItem->name = 'order_item';
             $newStockItem->asset_item = $item->asset_item;
             $newStockItem->qty = $item->qty;
+            $newStockItem->unit_price = $item->unit_price;
             $newStockItem->transaction_type = 'IN';
             $newStockItem->warehouse_id = $model->from_warehouse_id;
             $newStockItem->category_id = $newStockModel->id;
@@ -250,6 +257,7 @@ class StockOutController extends Controller
             $toStock->asset_item = $item->asset_item;
             $toStock->lot_number = $item->lot_number;
             $toStock->warehouse_id = $newStockItem->warehouse_id;
+            $toStock->unit_price = $item->unit_price;
             $toStock->qty = $toStock->qty + $newStockItem->qty;
             $toStock->save(false);
 
@@ -258,6 +266,9 @@ class StockOutController extends Controller
             $checkStock->qty = $checkStock->qty - $item->qty;
             $checkStock->save(false);
         }
+
+        $model->order_status = 'success';
+        $model->save(false);
         // End update Stock
 
         // To New Stock

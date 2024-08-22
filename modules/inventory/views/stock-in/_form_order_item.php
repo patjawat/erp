@@ -104,7 +104,7 @@ try {
                 'allowClear' => true,
                 'minimumInputLength' => 1,
                 'ajax' => [
-                    'url' => Url::to(['/depdrop/product']),
+                    'url' => Url::to(['/inventory/stock-event/product']),
                     'dataType' => 'json',
                     'delay' => 250,
                     'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
@@ -157,12 +157,12 @@ try {
                     ],
                     ])->label('วันหมดอายุ');
                 ?>
-     <?= $form->field($model, 'unit_price')->textInput(['type' => 'number', 'maxlength' => 2])->label('ราคาต่อหน่วย'); ?>
+    <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
     </div>
     <div class="col-6">
-    <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
-    <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
-        <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+        <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
+        <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
+        <?= $form->field($model, 'unit_price')->textInput(['type' => 'number', 'maxlength' => 2])->label('ราคาต่อหน่วย'); ?>
         <?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
    
 

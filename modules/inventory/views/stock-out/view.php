@@ -89,7 +89,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h6><i class="bi bi-ui-checks"></i> รับเข้า <span
                             class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ
                     </h6>
+                    <?php if($model->order_status == 'await'):?>
                     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-out/create','order_id' => $model->id,'name' => 'order_item','title' => 'สร้างรายการเบิก'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                    <?php endif;?>
                 </div>
                 <table class="table table-striped mt-3">
                     <thead class="table-primary">
@@ -98,12 +100,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 รายการ
                             </th>
                             <th class="text-center">หน่วย</th>
-                            <!-- <th class="text-center">ประเภท</th> -->
-                            <!-- <th class="text-end">ราคาต่อหน่วย</th> -->
+                            <th class="text-center">มูลค่า</th>
                             <th class="text-center">จำนวนเบิก</th>
                             <th class="text-center">จำนวนจ่าย</th>
                             <th class="text-center">ล็อตผลิต</th>
-                            <th class="text-center">วันผลิต</th>
                             <th class="text-center">วันหมดอายุ</th>
                             <th class="text-center" scope="col" style="width: 120px;">ดำเนินการ</th>
                         </tr>
@@ -122,14 +122,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <?=isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'?>
                             </td>
+                            <td class="align-middle text-end"><?= $item->total_price ?></td>
        
                             <td class="align-middle text-center"><?= $item->data_json['req_qty']?></td>
                             <td class="align-middle text-center"><?= $item->qty ?></td>
 
                             <td class="align-middle text-center"><?= $item->lot_number ?></td>
-                            <td class="align-middle text-center">
-                                <?= isset($item->data_json['mfg_date']) ? AppHelper::convertToThai($item->stock->data_json['mfg_date']) : '-' ?>
-                            </td>
                             <td class="align-middle text-center">
                                 <?= isset($item->data_json['exp_date']) ? AppHelper::convertToThai($item->stock->data_json['exp_date']) : '-' ?>
                             </td>
@@ -137,7 +135,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <!-- ถ้าเป็็นคลังของผู้จ่ายให้แสดงปุ่มจ่าย -->
                                 <?php if($model->warehouse_id == $warehouse['warehouse_id']):?>
-                                <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-out/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']])?>
+                                <?= $model->data_json['checker_confirm'] == 'Y' ? Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-out/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']]) : '-'?>
                                 <?php else:?>
                                 <!-- ถ้า้ป็รคลังของผู้ขอเบิกของให้แสดงปุ่มแก้ไขและลบได้ -->
                                 <div class="d-flex justify-content-center gap-2">
@@ -159,10 +157,14 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
+        <?php if($model->order_status == 'await'):?>
             <?php echo Html::a('<i class="bi bi-check2-circle"></i> saveOrder',['/inventory/stock-out/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+         <?php endif;?>
+         <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
             <?php echo Html::a('<i class="bi bi-check2-circle"></i> checkout',['/inventory/stock-out/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
-            <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-out/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order'])?>
-            <?php // $model->isPending() >= 1 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-out/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order']) : ''?>
+            <?php else:?>
+                <h6>รออนุมัติ</h6>
+        <?php endif;?>
         </div>
     </div>
 

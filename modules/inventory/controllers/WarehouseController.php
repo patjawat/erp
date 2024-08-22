@@ -296,19 +296,23 @@ try {
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
-
+        
         if ($this->request->isAjax) {
+            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending']);
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'count' => $dataProvider->getTotalCount(),
+                'confirm' => $searchModel->getTotalCheckerY(),
+                'totalOrder' => $searchModel->getTotalSuccessOrder(),
+                'totalPrice' => $searchModel->getTotalOrderPrice(),
                 'content' => $this->renderAjax('list_order_request', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                ])
-            ];
-        } else {
+                    ])
+                ];
+            } else {
+            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
             return $this->render('list_order_request', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,

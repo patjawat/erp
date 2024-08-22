@@ -31,6 +31,8 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                 <thead>
                     <tr>
                         <th>ชื่อรายการ</th>
+                        <th style="width:350px">คลัง</th>
+                        <th >ล๊อต</th>
                         <th style="width:350px">คงเหลือ</th>
                         <!-- <th style="width:100px">MaxStock</th>
                         <th style="width:100px">MinStock</th> -->
@@ -42,12 +44,12 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                     <tr class="">
                         <td>
                             <?=$item->product->Avatar()?>
-                            
                         </td>
+                        <td><?=$item->lot_number?></td>
+                        <td><?=$item->warehouse->warehouse_name?></td>
                     <td>
                     <div class="d-flex justify-content-between">
-                                <span class="text-muted mb-0 fs-13">
-                                    คงเหลือ <span class="text-primary">10</span>
+                                <span class="text-muted mb-0 fs-13"><span class="text-primary"><?=$item->qty?></span>
                                 </span>
                                 <span class="text-muted mb-0 fs-13">80%</span>
                             </div>
@@ -58,7 +60,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                                 </div>
                             </div>
                     </td>
-                        <td class="text-center"><?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/me/store/add-to-cart','id' => $item->asset_item],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?></td>
+                        <td class="text-center"><?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/me/store/add-to-cart','id' => $item->id],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?></td>
                         <?php endforeach;?>
                 </tbody>
             </table>
@@ -74,11 +76,6 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
 </div>
 </div>
 
-
-<?php
-$warehouse = Yii::$app->session->get('warehouse');
-print_r($warehouse);
-?>
 <?php
 
 $viewCartMeUrl = Url::to(['/me/store/view-cart']);
@@ -87,6 +84,7 @@ $storeProductUrl = Url::to(['/me/store/product']);
 $deleteItemUrl = Url::to(['/me/store/delete']);
 $updateItemUrl = Url::to(['/me/store/update']);
 $js = <<< JS
+
 
 getViewCartMe()
 // getOrder()
