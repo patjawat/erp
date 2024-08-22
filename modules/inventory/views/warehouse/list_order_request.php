@@ -11,10 +11,6 @@ use yii\helpers\Html;
         <div class="table-responsive">
             <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-                <div>
-                    
-                </div>
-
             </div>
             <table class="table table-primary">
                 <thead>

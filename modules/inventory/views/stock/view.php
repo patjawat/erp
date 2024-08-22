@@ -54,32 +54,25 @@ $this->params['breadcrumbs'][] = $this->title;
         ]) ?>
     </p>
 
-    <?php DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'id',
-            'name',
-            'code',
-            'asset_item',
-            'warehouse_id',
-            'qty',
-        ],
-    ]) ?>
 
 </div>
 
 <div class="card">
   <div class="card-body">
-
+  <div class="d-flex justify-content-between">
+            <h6><i class="bi bi-ui-checks"></i> ทั้งหมดจำนวน <span class="badge rounded-pill text-bg-primary"> <?=count($model->getStockCard())?> </span> รายการ</h6>
+          <?=Html::a('สงออกข้อมูล',['/inventory/stock/export'],['class' => 'btn btn-sm btn-primary shadow rounded-pill'])?>  
+          </div>
 <table class="table">
   <thead>
     <tr>
       <th scope="col">ความเคลื่อไหว</th>
+      <th scope="col">ปีงบประมาณ</th>
       <th scope="col">วันที่</th>
       <th scope="col">เลขที่เอกสาร</th>
       <th scope="col">ผู้ติดต่อ</th>
-      <th scope="col">ราคาต่อหน่วย</th>
-      <th scope="col">รวมเป็นเงิน</th>
+      <th class="text-end" scope="col">ราคาต่อหน่วย</th>
+      <th class="text-end" scope="col">รวมเป็นเงิน</th>
       <th scope="col" class="text-center">จำนวนเข้า</th>
       <th scope="col" class="text-center">จำนวนออก</th>
       <th scope="col" class="text-center">คงเหลือ</th>
@@ -97,13 +90,22 @@ $this->params['breadcrumbs'][] = $this->title;
         echo '<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-output"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 7V4a2 2 0 0 1 2-2 2 2 0 0 0-2 2"/><path d="M4.063 20.999a2 2 0 0 0 2 1L18 22a2 2 0 0 0 2-2V7l-5-5H6"/><path d="m5 11-3 3"/><path d="m5 17-3-3h10"/></svg> ออก';
       }
       ?></th>
+      <td><?=$item['thai_year']?></td>
       <td><?=$item['created_at']?></td>
       <td><?=$item['code']?></td>
       <td><?=$item['warehouse_name']?></td>
-      <td><?=$item['unit_price']?></td>
-      <td><?=$item['qty'] * $item['unit_price']?></td>
-      <td class="text-center"><?=$item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
-      <td class="text-center"><?=$item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : ''?></td>
+      <td class="text-end"><?=number_format($item['unit_price'],2)?></td>
+      <td class="text-end"><?=number_format($item['qty'] * $item['unit_price'],2)?></td>
+      <td class="text-center"><?=
+      $item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
+      <td class="text-center"><?php
+      try {
+
+echo $item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : '';
+      } catch (\Throwable $th) {
+        //throw $th;
+      }
+      ?></td>
       <td class="text-center"><?=$item['total']?></td>
     </tr>
   <?php endforeach;?>

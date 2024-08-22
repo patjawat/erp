@@ -167,7 +167,11 @@ public function SumPrice()
     ->andWhere(['warehouse_id' => $warehouse['warehouse_id']])
     ->select(['total' => new Expression('SUM(unit_price * qty)')])
     ->scalar();
-    return number_format($model,2);
+    if($model){
+        return number_format($model,2);
+    }else{
+        return 0;
+    }
 }
 
 public function getStockCard()

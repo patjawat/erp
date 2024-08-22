@@ -48,7 +48,7 @@ $this->title = $model->warehouse_name;
             <div class="card-body">
                 <h2 id="showTotalPrice">0</h2>
             </div>
-            <div class="card-footer border-0">มูลค่ารวม</div>
+            <div class="card-footer border-0">รวมมูลค่ารับเข้า</div>
         </div>
 
     </div>
