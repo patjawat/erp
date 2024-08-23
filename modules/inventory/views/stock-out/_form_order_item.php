@@ -50,8 +50,8 @@ try {
         <?= $form->field($model, 'data_json[req_qty]')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนเบิก'); ?>
     </div>
 </div>
-<?= $form->field($model, 'warehouse_id')->textInput()->label(false);?>
-<?= $form->field($model, 'code')->textInput()->label(false); ?>
+<?= $form->field($model, 'warehouse_id')->hiddenInput()->label(false);?>
+<?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
 <?php
 $js = <<< JS
 

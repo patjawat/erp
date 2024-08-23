@@ -158,10 +158,10 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
         <?php if($model->order_status == 'await'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> saveOrder',['/inventory/stock-out/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-out/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
          <?php endif;?>
          <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> checkout',['/inventory/stock-out/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-out/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
         
         <?php endif;?>
         </div>

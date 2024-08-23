@@ -60,9 +60,9 @@ class ApproveController extends \yii\web\Controller
                     
                     if ($model->warehouse_id == $model->from_warehouse_id) {
                         $this->UpdateStock($model);
+                        $model->order_status = 'success';
                     }
                 }
-                $model->order_status = 'success';
                 $model->save(false);
 
 

@@ -6,6 +6,8 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use yii\widgets\Pjax;
+use app\modules\inventory\models\Warehouse;
+use app\modules\purchase\models\Order;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEventSearch $searchModel */
@@ -25,13 +27,28 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php
 
+ $warehouse = Yii::$app->session->get('warehouse');
+ $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+ if(isset($warehouseModel->data_json['item_type'])){
+     
+
+ $item = $warehouseModel->data_json['item_type'];
+
+ $models = Order::find()
+     ->where(['name' => 'order', 'status' => 4])
+     ->andWhere(['IN', 'category_id', $item])
+     ->all();
+ }
+
+?>
 
 <div class="card">
   <div class="card-body">
     <div class="d-flex gap-3">
       <?= Html::a($createIcon . ' สร้างเอกสารตรวจรับ', ['/inventory/stock-in/create', 'name' => 'order', 'type' => 'IN', 'title' => $createIcon . ' สร้างเอกสารรับวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
-      <?= Html::a($createIcon . ' ตรวจรับจากการสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">99</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
+      <?= Html::a($createIcon . ' ตรวจรับจากการสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'.count($models).'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
     </div>
   </div>
 </div>

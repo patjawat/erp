@@ -18,10 +18,12 @@ class StoreController extends \yii\web\Controller
     {
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('warehouses w', 'w.id=stock_events.warehouse_id');
         $dataProvider->query->andFilterWhere([
-            'name' => 'order',
+            'warehouse_type' => 'SUB',
+            'stock_events.name' => 'order',
             'transaction_type' => 'OUT',
-            'created_by' =>  Yii::$app->user->id]);
+            'stock_events.created_by' =>  Yii::$app->user->id]);
 
         return $this->render('index',[
             'searchModel' => $searchModel,
@@ -68,6 +70,8 @@ class StoreController extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['>=','stock.qty',1]);
         $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
+        $dataProvider->query->leftJoin('warehouses w', 'w.id=stock.warehouse_id');
+        $dataProvider->query->andFilterWhere(['warehouse_type' => 'SUB']);
         $dataProvider->query->andFilterWhere(['stock.warehouse_id' => ($warehouse ? $warehouse  : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['like','at.title',$searchModel->q]);
         $dataProvider->query->groupBy('asset_item,warehouse_id,lot_number');

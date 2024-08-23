@@ -82,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php if($model->status >= 4):?>
                                         <li class="nav-item">
                                             <a class="nav-link <?=$model->status == 4 ? 'active' : null;?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
-                                            class="badge bg-primary rounded-pill text-white">4</span> คลัง</a>
+                                            class="badge bg-primary rounded-pill text-white">4</span> <?=$model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง'?></a>
                                         </li>
                                         <?php endif?>
                                         <?php if($model->status >= 5):?>

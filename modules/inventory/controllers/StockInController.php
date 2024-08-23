@@ -186,17 +186,21 @@ class StockInController extends Controller
 
                     }
             
+                $model->transaction_type = 'IN';
                 $model->order_status = 'pending';
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {
                     $stockItem = new StockEvent([
+                        'code' =>  $model->code,
                         'asset_item' => $item->asset_item,
+                        'transaction_type' => 'IN',
+                        'warehouse_id' => $model->warehouse_id,
                         'category_id' => $model->id,
                         'po_number' => $model->po_number,
                         'name' => 'order_item',
                         'qty' => $item->qty,
                         'unit_price' => $item->price,
-                        'order_status' => 'pending'
+                        'order_status' => 'pending',
                     ]);
                     $stockItem->save(false);
                 }
@@ -413,28 +417,41 @@ class StockInController extends Controller
     {
         $warehouse = Yii::$app->session->get('warehouse');
         $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+        if(isset($warehouseModel->data_json['item_type'])){
+            
+       
         $item = $warehouseModel->data_json['item_type'];
 
-        $po_number = $this->request->get('po_number');
         $models = Order::find()
             ->where(['name' => 'order', 'status' => 4])
             // ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
             ->andWhere(['IN', 'category_id', $item])
             ->all();
-        if ($this->request->isAjax) {
 
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('list_pending_order', [
+                        'models' => $models,
+                    ])
+                ];
+            } else {
+                return $this->render('list_pending_order', [
+                    'models' => $models,
+                ]);
+            }
+
+        }else{
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('list_pending_order', [
-                    'models' => $models,
-                ])
+                'content' => 'not content'
             ];
-        } else {
-            return $this->render('list_pending_order', [
-                'models' => $models,
-            ]);
+
         }
+
+       
     }
 
 
