@@ -142,41 +142,41 @@ class PqOrderController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
-    {
-        $model = new Order([
-            'name' => 'pq',
-            'category_id' => $this->request->get('category_id'),
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-        ]);
+    // public function actionCreate()
+    // {
+    //     $model = new Order([
+    //         'name' => 'pq',
+    //         'category_id' => $this->request->get('category_id'),
+    //         'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+    //     ]);
 
-        $thaiYear = substr((date('Y') + 543), 2);
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
-                $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
-            } else {
-                return false;
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
+    //     $thaiYear = substr((date('Y') + 543), 2);
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post())) {
+    //             $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
+    //             $model->save(false);
+    //             return $this->redirect(['view', 'id' => $model->id]);
+    //         } else {
+    //             return false;
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
 
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
-    }
+    //     if ($this->request->isAjax) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'content' => $this->renderAjax('create', [
+    //                 'model' => $model,
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('create', [
+    //             'model' => $model,
+    //         ]);
+    //     }
+    // }
 
     /**
      * Updates an existing Order model.
@@ -201,7 +201,7 @@ class PqOrderController extends Controller
                     'order_date' =>  AppHelper::convertToGregorian($model->data_json['order_date']),
                 ];
 
-                $model->data_json =  ArrayHelper::merge($oldObj,$convertDate,$model->data_json,);
+                $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
 
                 if($model->status == 1){
                     $model->status = 2;

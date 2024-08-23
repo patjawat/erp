@@ -2,6 +2,10 @@
 
 namespace app\modules\purchase\controllers;
 
+use app\models\Categorise;
+use app\modules\am\models\Asset;
+use app\modules\am\models\AssetItem;
+use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use yii\filters\VerbFilter;
@@ -141,6 +145,7 @@ class GrOrderController extends Controller
                 
                 if($model->data_json['order_item_checker'] == 'Y'){
                     $model->status = 4;
+                  
                 }else{
                     // $model->status = 3;
                 }
@@ -178,6 +183,8 @@ class GrOrderController extends Controller
             ]);
         }
     }
+
+    
 
     /**
      * Deletes an existing Order model.

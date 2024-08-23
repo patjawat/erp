@@ -62,7 +62,7 @@ class AssetController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
 
-        if(!isset($this->request->queryParams['AssetSearch'])){
+    if(!isset($this->request->queryParams['AssetSearch'])){
 
               //หายังไม่มีการค้นหาใดๆ ให้ แสดงเฉพาะทรัพย์สินที่ตัวเองรับผิดชอบ
               $user  = UserHelper::GetEmployee();
@@ -70,6 +70,7 @@ class AssetController extends Controller
     } else{
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '$.budget_type')"), $searchModel->budget_type]);
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '$.method_get')"), $searchModel->method_get]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '$.po_number')"), $searchModel->po_number]);
         $dataProvider->query->andFilterWhere(['receive_date' => AppHelper::DateToDb($searchModel->q_receive_date)]);
 
         // ค้นหาคามกลุ่มโครงสร้าง
@@ -114,7 +115,8 @@ class AssetController extends Controller
 
         $dataProvider->setSort([
             'defaultOrder' => [
-                'receive_date' => SORT_DESC,
+                'code' => 'SORT_DESC',
+                'receive_date' => 'SORT_DESC',
                 // 'service_start_time' => SORT_DESC
             ],
         ]);
@@ -289,6 +291,7 @@ class AssetController extends Controller
             $model->receive_date = AppHelper::DateToDb($model->receive_date);
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
             if ($model->save()) {
+                return $model;
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -731,4 +734,6 @@ class AssetController extends Controller
             "data" => AppHelper::GetDepreciation(5, 10000, 40),
         ]);
     }
+
+
 }

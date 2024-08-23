@@ -10,7 +10,7 @@ use yii\helpers\Html;
 .card-img-top {}
 </style>
 
-<div class="row row-cols-1 row-cols-xl-4 row-cols-lg-3 row-cols-md-4">
+<div class="row row-cols-1 row-cols-xl-12 row-cols-lg-3 row-cols-md-4">
     <?php foreach($dataProvider->getModels() as $key => $model):?>
     <div class="col">
 
@@ -25,10 +25,10 @@ use yii\helpers\Html;
             <div class="card-body">
                 <div class="text-center">
                     <h5 class="card-title text-truncate">
-                        <?=Html::a($model->AssetitemName(), ['view','id' => $model->id],['class' => '', ])?></h5>
+                        <?=Html::a($model->AssetitemName(), ['/am/asset/view','id' => $model->id],['class' => '', ])?></h5>
                     <p class="text-muted mb-4"><?=$model->AssetTypeName();?></p>
                 </div>
-                <?= Html::a(Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']), ['view','id' => $model->id],['class' => '', ]) ?>
+                <?= Html::a(Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']), ['/am/asset/view','id' => $model->id],['class' => '', ]) ?>
                 <div>
                     <ul class="list-inline">
                         <li>

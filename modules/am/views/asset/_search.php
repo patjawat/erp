@@ -202,6 +202,9 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
 
 <?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
 </div>
+<div class="col-12">
+<?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
+</div>
 </div>
 
                                     

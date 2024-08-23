@@ -188,7 +188,7 @@ class PoOrderController extends Controller
                 ];
 
 
-                $model->data_json =  ArrayHelper::merge($oldObj,$convertDate,$model->data_json,);
+                $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
 
                 $model->status = 3;
                 $model->save(false);
@@ -221,6 +221,7 @@ class PoOrderController extends Controller
                     'warranty_date' =>  AppHelper::convertToThai($model->data_json['warranty_date']),
                     'signing_date' =>  AppHelper::convertToThai($model->data_json['signing_date']),
                 ];
+                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
                 //code...
             } catch (\Throwable $th) {
                 //throw $th;

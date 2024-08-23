@@ -131,6 +131,18 @@ class Order extends \yii\db\ActiveRecord
     }
 
 
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            // แปลงวันที่จาก พ.ศ. เป็น ค.ศ. ก่อนบันทึกในฐานข้อมูล
+            $this->thai_year = AppHelper::YearBudget();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    
     public function afterFind()
     {
         try {

@@ -321,25 +321,35 @@ class StockEvent extends \yii\db\ActiveRecord
     public  function viewChecker($msg = null)
     {
 
-        $status = '';
-        switch ($this->data_json['checker_confirm']) {
-            case 'Y':
-                $status =  '<i class="fa-regular fa-circle-check text-success fs-6"></i> อนุมัติ';
-                break;
-
-            case 'N':
-                $status = '<i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ';
-                break;
-
-            default:
-                $status = '<i class="fa-regular fa-clock fs-6"></i> รออนุมัติ';
-                break;
-        }
-        return
+        try {
+            $status = '';
+            switch ($this->data_json['checker_confirm']) {
+                case 'Y':
+                    $status =  '<i class="fa-regular fa-circle-check text-success fs-6"></i> อนุมัติ';
+                    break;
+    
+                case 'N':
+                    $status = '<i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ';
+                    break;
+    
+                default:
+                    $status = '<i class="fa-regular fa-clock fs-6"></i> รออนุมัติ';
+                    break;
+            }
+            return
             [
                 'status' => $status,
                 'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
             ];
+        } catch (\Throwable $th) {
+            return
+            [
+                'status' => '',
+                'avatar' => ''
+            ];
+        }
+       
+      
     }
 
 

@@ -7,7 +7,7 @@ use Yii;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use app\modules\inventory\models\StockOut;
-use app\modules\inventory\models\StockOutSearch;
+use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
@@ -16,9 +16,12 @@ class StoreController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        $searchModel = new StockSearch();
+        $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere([
+            'name' => 'order',
+            'transaction_type' => 'OUT',
+            'created_by' =>  Yii::$app->user->id]);
 
         return $this->render('index',[
             'searchModel' => $searchModel,
@@ -26,6 +29,12 @@ class StoreController extends \yii\web\Controller
         ]);
     }
 
+
+    public function actionView($id)
+    {
+        $model = StockEvent::findOne($id);
+        return $this->render('@app/modules/inventory/views/stock-out/view',['model' => $model]);
+    }
     //รายการขอเบิกวัสดุรอตรวจสอบ
     public function actionChecker()
     {
@@ -91,7 +100,6 @@ class StoreController extends \yii\web\Controller
 
         // $stock = Stock::findOne($id);
         $model = Stock::findOne($id);
-        
         $model->qty = 1;
         if ($model) {
             \Yii::$app->cart->create($model, 1);

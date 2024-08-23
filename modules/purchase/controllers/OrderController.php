@@ -3,15 +3,21 @@
 namespace app\modules\purchase\controllers;
 
 use app\models\Categorise;
+use app\modules\am\models\Asset;
+use app\modules\am\models\AssetSearch;
+use app\modules\am\models\AssetItem;
+use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\Product;
 use app\modules\sm\models\ProductSearch;
+use app\components\AppHelper;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\db\Expression;
 use Yii;
 
 /**
@@ -118,7 +124,7 @@ class OrderController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            $order->data_json = ArrayHelper::merge($old,$newObj);
+            $order->data_json = ArrayHelper::merge($old, $newObj);
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -135,7 +141,7 @@ class OrderController extends Controller
         $old = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
             // $model->data_json = ArrayHelper::merge($model->data_json,$old);
-            $model->data_json = ArrayHelper::merge($old,$model->data_json);
+            $model->data_json = ArrayHelper::merge($old, $model->data_json);
             $model->save();
             return [
                 'status' => 'success',
@@ -149,7 +155,6 @@ class OrderController extends Controller
                 'model' => $model,
             ]),
         ];
-
     }
 
     public function actionFormVat($id)
@@ -160,7 +165,7 @@ class OrderController extends Controller
 
         $old = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $model->data_json = ArrayHelper::merge($old,$model->data_json);
+            $model->data_json = ArrayHelper::merge($old, $model->data_json);
             $model->save();
             return [
                 'status' => 'success',
@@ -174,7 +179,6 @@ class OrderController extends Controller
                 'model' => $model,
             ]),
         ];
-
     }
 
 
@@ -231,13 +235,13 @@ class OrderController extends Controller
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
-        if($model->category_id == ""){
+        if ($model->category_id == "") {
             $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
-        }else{
+        } else {
             $dataProvider->query->andFilterWhere(['category_id' => $model->category_id]);
             // $dataProvider->query->andFilterWhere(['name' => 'asset_item','category_id' => $order->category_id]);
             // $dataProvider->query->andFilterWhere(['NOT IN' , 'code',$checkOrderItem]);
-            
+
         }
 
         $dataProvider->pagination->pageSize = 10;
@@ -269,7 +273,7 @@ class OrderController extends Controller
         $order = $this->findModel($order_id);
         $asset_item = $this->request->get('asset_item');
         $product = Product::findOne($asset_item);
-        
+
         $model = new Order([
             'group_id' => $product->group_id,
             'category_id' =>  $order_id,
@@ -285,7 +289,7 @@ class OrderController extends Controller
                 'asset_item_name' => $product->title
             ]
         ]);
-     
+
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -293,16 +297,16 @@ class OrderController extends Controller
                 if ($model->save()) {
                     // return $order->group_id;
                     //ถ้ายังไม่มีการจัดประเภทของ order
-                    if($order->group_id == null){
+                    if ($order->group_id == null) {
                         $old = $order->data_json;
                         $newObj = $order->data_json = [
                             'order_type_name' => $product->productType->title
                         ];
-                        
+
                         $order->group_id = $product->group_id;
                         $order->category_id = $product->category_id;
-                        
-                        $order->data_json = ArrayHelper::merge($old,$newObj);
+
+                        $order->data_json = ArrayHelper::merge($old, $newObj);
                         $order->save(false);
                     }
 
@@ -399,14 +403,14 @@ class OrderController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        
+
         if ($model->delete()) {
             $order = Order::findOne($model->category_id);
-            if(count($order->ListOrderItems())  == 0){
-            $order->data_json =  ArrayHelper::merge($order->data_json, ['order_type_name' => '']);
-            $order->group_id = NULL;
-            $order->category_id = NULL;
-            $order->save();
+            if (count($order->ListOrderItems())  == 0) {
+                $order->data_json =  ArrayHelper::merge($order->data_json, ['order_type_name' => '']);
+                $order->group_id = NULL;
+                $order->category_id = NULL;
+                $order->save();
             }
             return [
                 'status' => 'success',
@@ -429,7 +433,7 @@ class OrderController extends Controller
      */
 
 
-      // ตรวจสอบความถูกต้อง
+    // ตรวจสอบความถูกต้อง
     public function actionCancelOrderValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -440,8 +444,6 @@ class OrderController extends Controller
             if (isset($model->data_json['cancel_order_note'])) {
                 $model->data_json['cancel_order_note'] == "" ? $model->addError('data_json[cancel_order_note]', $requiredName) : null;
             }
-
-        
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
@@ -450,8 +452,9 @@ class OrderController extends Controller
             return $this->asJson($result);
         }
     }
-    
-     public function actionCancelOrder($id){
+
+    public function actionCancelOrder($id)
+    {
 
         $model = $this->findModel($id);
 
@@ -488,12 +491,99 @@ class OrderController extends Controller
         // $model->deleted_at = Date('Y-m-d H:i:s');
         // $model->deleted_by =Yii::$app->user->id;
         // $model->save();
-     }
+    }
+
+
+
+    public  function actionRegisterAsset($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = Order::findOne($id);
+        $owner = Employees::findOne(['user_id' => $model->created_by]);
+
+        foreach ($model->ListOrderItems() as $item) {
+            for ($x = 1; $x <= $item->qty; $x++) {
+                // $assetItem = AssetItem::find()->where(['code' => $model->asset_item,'name' => 'asset_item','group_id' => 3])->one();
+                $assetItem = AssetItem::find()->where(['code' => $item->asset_item, 'name' => 'asset_item', 'group_id' => 3])->one();
+                $newAsset = new Asset([
+                    'fsn_auto' => '1',
+                    'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+                    "asset_group" =>  $model->group_id,
+                    "asset_item" =>  $item->asset_item,
+                    "code" =>  "5130-007-0004/67.02",
+                    "fsn_number" =>  null,
+                    "qty" =>  null,
+                    "receive_date" =>  AppHelper::convertToGregorian($model->data_json['gr_date']),
+                    "price" =>  $item->price,
+                    "purchase" =>  $model->data_json['pq_purchase_type'],
+                    "department" =>  $owner->department,
+                    "owner" =>  $owner->cid,
+                    "life" =>  null,
+                    "on_year" =>  $model->thai_year,
+                    "dep_id" =>  null,
+                    "depre_type" =>  null,
+                    "budget_year" =>  null,
+                    "asset_status" =>  "1",
+                    "data_json" =>  [
+                        "detail" =>  null,
+                        "fsn_old" =>  "",
+                        "vendor_id" =>  $model->vendor_id,
+                        "asset_name" =>  $assetItem->title,
+                        "asset_type" =>  $assetItem->category_id,
+                        "method_get" =>  $model->data_json['pq_method_get'],
+                        "owner_name" =>  $owner->fullname,
+                        "budget_type" =>  $model->data_json['pq_budget_type'],
+                        // "decine_text"=>  "ครุภัณฑ์ไฟฟ้าและวิทยุ ",
+                        // "decine_text"=>  $assetItem->AssetType->title,
+                        // "decine_type"=>  "7",
+                        "expire_date" =>  "",
+                        "status_name" =>  "ปกติ",
+                        "asset_option" =>  "",
+                        "asset_group_name" =>  "ครุภัณฑ์",
+                        "department_name_old" =>  "",
+                        "po_number" =>  $model->po_number
+                    ],
+                    "device_items" =>  [""],
+                ]);
+                $newAsset->save(false);
+            }
+        }
+        $model->status = 5;
+        if($model->save(false)){
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+    }
+
+
+    public function actionViewAsset($po_number)
+    {
+   
+        $searchModel = new AssetSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '$.po_number')"), $po_number]);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'รายการจากใบสั่งซื้อเลขที่ : '.$po_number,
+                'content' => $this->renderAjax('@app/modules/am/views/asset/show/grid', [
+                    'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/am/views/asset/show/grid', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+        
+    }
+
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-
-
         return $this->redirect(['index']);
     }
 

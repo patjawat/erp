@@ -68,8 +68,8 @@ class StockController extends \yii\web\Controller
             // $checkStock->qty = $checkStock->qty - $item->qty;
             // $checkStock->save(false);
         }
-
-                return $this->redirect(['/me/stock']);
+        \Yii::$app->cart->checkOut(false);
+                return $this->redirect(['/me/store']);
             }
         } else {
             $model->loadDefaultValues();

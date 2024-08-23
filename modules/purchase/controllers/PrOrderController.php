@@ -120,6 +120,7 @@ class PrOrderController extends Controller
                     'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date'])
                 ];
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->thai_year = 
                 $model->save(false);
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {

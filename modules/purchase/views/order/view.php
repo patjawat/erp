@@ -122,7 +122,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
 
                                 <div id="warehouse_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
-                                    
+                                    <!-- คลัง -->
                                     <?= $this->render('warehouse_detail', ['model' => $model]) ?>
                                 </div>
 

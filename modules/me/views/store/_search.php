@@ -24,10 +24,11 @@ $warehouse = Yii::$app->session->get('search_warehouse_id');
             'data-pjax' => 1
         ],
     ]); ?>
-    <div class="d-flex justofy-content-between gap-2">
+    <div class="d-flex justify-content-between gap-2">
         <?= $form->field($model, 'q')->label('ค้นหา') ?>
         <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-                                        'data' => $model->listWarehouseMe(),
+                                        // 'data' => $model->listWarehouseMe(),
+                                        'data' => [],
                                         
                                         'options' => ['placeholder' => 'เลือกคลังวัสดุ','value' => $warehouse,'style' => 'width:400px;'],
                                         'pluginEvents' => [

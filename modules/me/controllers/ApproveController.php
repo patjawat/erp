@@ -62,6 +62,7 @@ class ApproveController extends \yii\web\Controller
                         $this->UpdateStock($model);
                     }
                 }
+                $model->order_status = 'success';
                 $model->save(false);
 
 

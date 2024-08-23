@@ -58,6 +58,7 @@ class Asset extends \yii\db\ActiveRecord
     public $budget_year;
     public $supvendor;
     public $method_get;
+    public $po_number;
     public $budget_type;
     public $asset_option;
     public $serial_number;
@@ -91,7 +92,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status'], 'required'],
-            [['on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_department', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'q_lastDay', 'item_options','group_id'], 'safe'],
+            [['on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_department', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get','po_number','q_lastDay', 'item_options','group_id'], 'safe'],
             [['price'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by'], 'integer'],

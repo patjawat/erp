@@ -184,10 +184,7 @@ use app\modules\am\models\AssetItem;
                                     ]
                                 ])->label('วิธีได้มา');
                         ?>
-
-                        </div>
-                        <div class="col-6">
-                            <?php
+ <?php
                                 echo $form->field($model, 'purchase')->widget(Select2::classname(), [
                                     'data' => $model->ListPurchase(),
                                     'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -202,10 +199,11 @@ use app\modules\am\models\AssetItem;
                                         ]
                                         ])->label('วิธีการได้มา');
                                         ?>
-
                         </div>
                         <div class="col-6">
-                            <?php
+                        <?= $form->field($model, 'data_json[po_number]')->textInput(['maxlength' => true])->label('เลขที่สั่งซื้อ') ?>
+                           
+                        <?php
                                 echo $form->field($model, 'data_json[budget_type]')->widget(Select2::classname(), [
                                     'data' => $model->ListBudgetdetail(),
                                     'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -222,12 +220,12 @@ use app\modules\am\models\AssetItem;
                         ?>
 
                         </div>
-
-
-                        <div class="col-3">
+                        <div class="col-6">
                             <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('ราคาแรกรับ') ?>
+                    
                         </div>
-                        <div class="col-3">
+
+                        <div class="col-6">
                             <?= $form->field($model, 'on_year')->widget(MaskedInput::className(),['mask'=>'9999'])->label('ปีงบประมาณ') ?>
 
                         </div>
@@ -251,6 +249,7 @@ use app\modules\am\models\AssetItem;
 
                         </div>
                         <div class="col-6">
+                       
                             <?php
                                 echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
                                     'data' => $model->ListAssetStatus(),
