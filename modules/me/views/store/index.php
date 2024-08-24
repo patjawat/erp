@@ -55,7 +55,6 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
                             <tr class="">
                                 <td><?php echo $item->CreateBy()['avatar']?></td>
                                 <td>
-                                    <?=$item->transaction_type?>
                                     <?=$item->warehouse->warehouse_name?></td>
                                 <td><?php
                                 try {

@@ -35,7 +35,7 @@ class StoreController extends \yii\web\Controller
     public function actionView($id)
     {
         $model = StockEvent::findOne($id);
-        return $this->render('@app/modules/inventory/views/stock-out/view',['model' => $model]);
+        return $this->render('view',['model' => $model]);
     }
     //รายการขอเบิกวัสดุรอตรวจสอบ
     public function actionChecker()
@@ -191,11 +191,10 @@ class StoreController extends \yii\web\Controller
     }
 
      // public function actionUpdate($id, $quantity)
-     public function actionUpdate($id, $quantity)
+     public function actionUpdateItem($id, $quantity)
      {
          Yii::$app->response->format = Response::FORMAT_JSON;
          $model = Product::findOne($id);
-         // return $model->qty;
          if ($model) {
               \Yii::$app->cart->update($model,$quantity);
  

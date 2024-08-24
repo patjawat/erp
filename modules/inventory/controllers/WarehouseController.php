@@ -46,63 +46,67 @@ class WarehouseController extends Controller
     public function actionIndex()
     {
         $warehouse = Yii::$app->session->get('warehouse');
+        $id = Yii::$app->user->id;
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['delete' => null]);
+        if(!Yii::$app->user->can('admin')){
+            $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
+        }
+
 
         if ($warehouse) {
-
-            $sql = "SELECT thai_year,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10 ) as in10,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10 ) as out10,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as in11,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as out11,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as in12,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as out12,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 1 ) as in1,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 1 ) as out1,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 2 ) as in2,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 2 ) as out2,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 3 ) as in3,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 3 ) as out3,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 4 ) as in4,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 4 ) as out4,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 5 ) as in5,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 5 ) as out5,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 6 ) as in6,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 6 ) as out6,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 7 ) as in7,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 7 ) as out7,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 8 ) as in8,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 8 ) as out8,
-                (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 ) as in9,
-                (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 ) as out9
-                FROM stock_events
-                GROUP BY thai_year";
-            $query = \Yii::$app->db
-            ->createCommand($sql)
-            ->bindValue(':warehouse_id',$warehouse['warehouse_id'])
-            ->queryOne();
-try {
-         $chartSummary = [
-                'in' => [$query['in10'],$query['in11'],$query['in12'],$query['in1'],$query['in3'],$query['in3'],$query['in4'],$query['in5'],$query['in6'],$query['in7'],$query['in8'],$query['in9']],
-                'out' => [$query['out10'],$query['out11'],$query['out12'],$query['out1'],$query['out3'],$query['out3'],$query['out4'],$query['out5'],$query['out6'],$query['out7'],$query['out8'],$query['out9']]
-            ]; 
-                //code...
-} catch (\Throwable $th) {
-    $chartSummary = [
-        'in' => [],
-        'out' => [],
-    ];
-}
-   
+            // $sql = "SELECT thai_year,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10 ) as in10,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10 ) as out10,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as in11,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as out11,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as in12,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11 ) as out12,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 1 ) as in1,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 1 ) as out1,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 2 ) as in2,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 2 ) as out2,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 3 ) as in3,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 3 ) as out3,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 4 ) as in4,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 4 ) as out4,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 5 ) as in5,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 5 ) as out5,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 6 ) as in6,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 6 ) as out6,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 7 ) as in7,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 7 ) as out7,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 8 ) as in8,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 8 ) as out8,
+            //     (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 ) as in9,
+            //     (SELECT IFNULL(-ABS(CONVERT(SUM(qty), UNSIGNED)),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 ) as out9
+            //     FROM stock_events
+            //     GROUP BY thai_year";
+            // $query = \Yii::$app->db
+            // ->createCommand($sql)
+            // ->bindValue(':warehouse_id',$warehouse['warehouse_id'])
+            // ->queryOne();
+            // try {
+            //         $chartSummary = [
+            //                 'in' => [$query['in10'],$query['in11'],$query['in12'],$query['in1'],$query['in3'],$query['in3'],$query['in4'],$query['in5'],$query['in6'],$query['in7'],$query['in8'],$query['in9']],
+            //                 'out' => [$query['out10'],$query['out11'],$query['out12'],$query['out1'],$query['out3'],$query['out3'],$query['out4'],$query['out5'],$query['out6'],$query['out7'],$query['out8'],$query['out9']]
+            //             ]; 
+            //                 //code...
+            // } catch (\Throwable $th) {
+            //     $chartSummary = [
+            //         'in' => [],
+            //         'out' => [],
+            //     ];
+            // }
+            
 
             return $this->render('view', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 'model' => $this->findModel($warehouse['warehouse_id']),
-                'warehouse' => $warehouse,
-                'chartSummary' =>$chartSummary
+                // 'warehouse' => $warehouse,
+                // 'chartSummary' =>$chartSummary
             ]);
         } else {
             return $this->render('index', [

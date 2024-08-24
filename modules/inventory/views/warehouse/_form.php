@@ -89,12 +89,12 @@ $resultsJs = <<< JS
                 <?=$form->field($model, 'warehouse_type')->radioList(['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],['custom' => true,'inline' => true]);?>
 
                 <?php
-                echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-                    'data' => $model->ListGroup(),
-                    'options' => ['placeholder' => 'Select a state ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true                    ],
-                ])->label('คลังหลัก');
+                // echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+                //     'data' => $model->ListGroup(),
+                //     'options' => ['placeholder' => 'Select a state ...'],
+                //     'pluginOptions' => [
+                //         'allowClear' => true                    ],
+                // ])->label('คลังหลัก');
             ?>
 
             </div>

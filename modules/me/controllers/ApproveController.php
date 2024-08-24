@@ -62,11 +62,12 @@ class ApproveController extends \yii\web\Controller
                         $this->UpdateStock($model);
                         $model->order_status = 'success';
                     }
+                }else{
+                    $model->order_status = 'cancel';
                 }
                 $model->save(false);
-
-
-
+                
+                StockEvent::updateAll(['order_status' => $model->order_status], ['code' => $model->code]);
                 return [
                     'status' => 'success',
                     'container' => '#me'

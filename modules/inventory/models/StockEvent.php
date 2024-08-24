@@ -56,6 +56,7 @@ class StockEvent extends \yii\db\ActiveRecord
     public $q;
     public $mfgDate;
     public $expDate;
+    public $note;
 
 
     /**
@@ -67,7 +68,7 @@ class StockEvent extends \yii\db\ActiveRecord
             [['vendor_id', ''], 'required'],
             [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker','category_code','warehouse_name','total'], 'safe'],
+            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -129,6 +130,7 @@ class StockEvent extends \yii\db\ActiveRecord
 
         $this->mfgDate = isset($this->data_json['mfg_date']) ? AppHelper::convertToThai($this->data_json['mfg_date']) : '-';
         $this->expDate = isset($this->data_json['exp_date']) ? AppHelper::convertToThai($this->data_json['exp_date']) : '-';
+        $this->note = isset($this->data_json['note']) ? $this->data_json['note'] : '-';
         parent::afterFind();
     }
 
@@ -170,7 +172,6 @@ class StockEvent extends \yii\db\ActiveRecord
 
             $sql = "SELECT SUM(unit_price * qty) AS total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' GROUP BY code;";
             return Yii::$app->db->createCommand($sql)->queryScalar($sql);
-
         } catch (\Throwable $th) {
             return 0;
         }
@@ -209,20 +210,20 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         $warehouse = Yii::$app->session->get('warehouse');
         return self::find()
-        ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending'])
-        ->andWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = 'Y'"))
-        ->count();
+            ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'pending'])
+            ->andWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = 'Y'"))
+            ->count();
     }
 
     public function getTotalOrderPrice()
     {
         $warehouse = Yii::$app->session->get('warehouse');
         $model =  self::find()
-        ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'success'])
-        ->sum('total_price');
-        if($model){
-            return number_format($model,2);
-        }else{
+            ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success'])
+            ->sum('total_price');
+        if ($model) {
+            return number_format($model, 2);
+        } else {
             return 0;
         }
     }
@@ -231,8 +232,8 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         $warehouse = Yii::$app->session->get('warehouse');
         return self::find()
-        ->where(['name' => 'order_item', 'warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'success'])
-        ->count('qty');
+            ->where(['name' => 'order_item', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success'])
+            ->count('qty');
     }
 
 
@@ -316,6 +317,31 @@ class StockEvent extends \yii\db\ActiveRecord
         }
     }
 
+    public function viewStatus()
+    {
+        switch ($this->order_status) {
+            case 'await':
+                $msg = 'อยู่ระหว่างดำเนินการ';
+                break;
+
+            case 'pending':
+                $msg = 'รอดำเนินการ';
+                break;
+
+            case 'cancel':
+                $msg = 'ยกเลิก';
+                break;
+            case 'success':
+                $msg = 'เสร็จสิ้น';
+                break;
+
+
+            default:
+            $msg = '';
+                break;
+        }
+        return $msg;
+    }
 
     // แสดงผู้ตรวจสอบ
     public  function viewChecker($msg = null)
@@ -327,29 +353,27 @@ class StockEvent extends \yii\db\ActiveRecord
                 case 'Y':
                     $status =  '<i class="fa-regular fa-circle-check text-success fs-6"></i> อนุมัติ';
                     break;
-    
+
                 case 'N':
                     $status = '<i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ';
                     break;
-    
+
                 default:
                     $status = '<i class="fa-regular fa-clock fs-6"></i> รออนุมัติ';
                     break;
             }
             return
-            [
-                'status' => $status,
-                'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
-            ];
+                [
+                    'status' => $status,
+                    'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
+                ];
         } catch (\Throwable $th) {
             return
-            [
-                'status' => '',
-                'avatar' => ''
-            ];
+                [
+                    'status' => '',
+                    'avatar' => ''
+                ];
         }
-       
-      
     }
 
 
@@ -379,5 +403,21 @@ class StockEvent extends \yii\db\ActiveRecord
     public  function CreateBy($msg = null)
     {
         return  $this->getAvatar($this->created_by, $msg);
+    }
+
+    public function viewCreatedAt()
+    {
+        return Yii::$app->thaiFormatter->asDateTime($this->created_at, 'php:d/m/Y H:i:s');
+    }
+
+
+    public function viewCreated()
+    {
+        return AppHelper::timeDifference($this->created_at);
+    }
+
+    public function viewUpdated()
+    {
+        return AppHelper::timeDifference($this->updated_at);
     }
 }

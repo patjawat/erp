@@ -74,12 +74,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <!-- ถ้าเป็็นคลังของผู้จ่ายให้แสดงปุ่มจ่าย -->
                                 <?php if(isset($warehouse['warehouse_id']) && $model->warehouse_id == $warehouse['warehouse_id']):?>
-                                <?= $model->data_json['checker_confirm'] == 'Y' ? Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-out/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']]) : '-'?>
+                                <?= ($item->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y') ? Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-out/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']]) : '-'?>
                                 <?php else:?>
                                 <!-- ถ้า้ป็รคลังของผู้ขอเบิกของให้แสดงปุ่มแก้ไขและลบได้ -->
                                 <div class="d-flex justify-content-center gap-2">
                                     <?php if($item->order_status == 'pending'):?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-out/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-out/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-out/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
                                     <?php else:?>
                                     <span>เสร็จสิ้น</span>

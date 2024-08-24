@@ -6,6 +6,7 @@ use app\modules\inventory\models\Product;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\helpers\ArrayHelper;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -77,15 +78,14 @@ class StockController extends \yii\web\Controller
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_checkout', [
+                'content' => $this->renderAjax('_form', [
                     'model' => $model,
                 ])
             ];
         } else {
-            return $this->render('_form_checkout', [
+            return $this->render('_form', [
                 'model' => $model,
             ]);
         }
@@ -93,19 +93,38 @@ class StockController extends \yii\web\Controller
     }
     
      // public function actionUpdate($id, $quantity)
-     public function actionUpdate($id, $quantity)
+     public function actionUpdate($id)
      {
-         Yii::$app->response->format = Response::FORMAT_JSON;
-         $model = Product::findOne($id);
-         // return $model->qty;
-         if ($model) {
-              \Yii::$app->cart->update($model,$quantity);
- 
-             return [
-                 'container' => '#me',
-                 'status' => 'success'
-             ];
-         }
+
+         $model = StockEvent::findOne($id);
+         $oldObj = $model->data_json;
+            if ($this->request->isPost && $model->load($this->request->post())) {
+
+                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
+                if($model->save(false)){
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'container' => '#me',
+                        'status' => 'success'
+                    ];
+                    
+                }
+            }
+            
+            
+            if ($this->request->isAJax) {
+             Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form', [
+                'model' => $model,
+            ]);
+        }
      }
 
 
@@ -147,7 +166,9 @@ class StockController extends \yii\web\Controller
            $model->save(false);
         }
 
+
         \Yii::$app->cart->checkOut(false);
+        Yii::$app->session->remove('search_warehouse_id');
         $this->redirect(['index']);
     }
 

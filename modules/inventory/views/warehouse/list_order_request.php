@@ -5,9 +5,8 @@ use yii\helpers\Html;
 // $StockLists = Stock::find()->where(['name' => 'issue', 'from_warehouse_id' => $model->id])->all();
 ?>
 
-<div class="card">
+<div class="card" style="min-height: 463px;">
     <div class="card-body">
-
         <div class="table-responsive">
             <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
@@ -38,6 +37,9 @@ use yii\helpers\Html;
                 </tbody>
             </table>
         </div>
-        <?php echo Html::a('แสดงท้ังหมด', ['/inventory/warehouse/list-order-request'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
+       
+    </div>
+    <div class="card-footer">
+    <?php echo Html::a('แสดงท้ังหมด', ['/inventory/warehouse/list-order-request'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
     </div>
 </div>

@@ -23,14 +23,18 @@ use yii\helpers\Html;
                 <tbody>
                     <?php foreach($products as $item):?>
                     <tr class="">
+                        <?php
+                            echo "<pre>";
+                            // print_r($item);
+                            echo "</pre>";
+                        ?>
                         <td scope="row">
                         <?=$item->Avatar()?></td>
                         <td>
                             <div class="d-flex d-flex flex-row">
-                                <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/me/store/update','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
-                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control "
-                                    style="width:50px;font-weight: 600;" />
-                                <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/me/store/update','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
+                                <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/me/store/update-item','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
+                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control" style="width:50px;font-weight: 600;" />
+                                <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/me/store/update-item','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
                             </div>
                         </td>
                         <td>

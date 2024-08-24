@@ -109,7 +109,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
-            <?=$model->isPending() >= 1 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-out/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order']) : ''?>
+            <?php // $model->isPending() >= 1 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-out/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order']) : ''?>
         </div>
     </div>
 
