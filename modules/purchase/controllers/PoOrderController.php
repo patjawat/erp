@@ -75,6 +75,11 @@ class PoOrderController extends Controller
             if (isset($model->data_json['po_recipient'])) {
                 $model->data_json['po_recipient'] == "" ? $model->addError('data_json[po_recipient]', 'ผู้รับใบสั่งซื้อต้องระบุ') : null;
             }
+            if (isset($model->data_json['qr_number'])) {
+                $model->data_json['qr_number'] == "" ? $model->addError('data_json[qr_number]', 'ต้องระบุ') : null;
+            }
+
+            
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;

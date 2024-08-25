@@ -48,6 +48,12 @@ class Order extends \yii\db\ActiveRecord
     public $action;
     public $old_data;
     public $auto_lot;
+    public $vendor_name;
+    public $vendor_address;
+    public $vendor_phone;
+    public $vendor_tax;
+    public $account_name;
+    public $account_number;
 
     /**
      * {@inheritdoc}
@@ -63,7 +69,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['qty', 'created_by', 'updated_by','deleted_by'], 'integer'],
+            [['qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['price'], 'number'],
             [[
                 'data_json',
@@ -136,20 +142,31 @@ class Order extends \yii\db\ActiveRecord
         if (parent::beforeSave($insert)) {
             // แปลงวันที่จาก พ.ศ. เป็น ค.ศ. ก่อนบันทึกในฐานข้อมูล
             $this->thai_year = AppHelper::YearBudget();
+
             return true;
         } else {
             return false;
         }
     }
 
-    
+
+
     public function afterFind()
     {
-        try {
 
-            $this->vatType = isset($this->data_json['vat']) ? $this->data_json['vat'] : '-';
-        } catch (\Throwable $th) {
-        }
+        // try {
+
+        $this->vatType = isset($this->data_json['vat']) ? $this->data_json['vat'] : '-';
+
+        $vendor = $this->vendor;
+        $this->vendor_name = isset($this->data_json['vendor_name']) ? $this->data_json['vendor_name'] : '-';
+        $this->vendor_address = isset($this->data_json['vendor_address']) ? $this->data_json['vendor_address'] : '-';
+        $this->vendor_phone = isset($this->data_json['vendor_phone']) ? $this->data_json['vendor_phone'] : '-';
+        $this->account_name = isset($this->data_json['account_name']) ? $this->data_json['account_name']  : '-';
+        $this->account_number = isset($this->data_json['account_number']) ? $this->data_json['account_number']  : '-';
+
+        // } catch (\Throwable $th) {
+        // }
 
         parent::afterFind();
     }
@@ -157,13 +174,18 @@ class Order extends \yii\db\ActiveRecord
 
     // relation
 
+    //เชื่อมกับ ผู้จำหน่าย
+    public function getVendor()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])->andOnCondition(['name' => 'vendor']);
+    }
 
     //เชื่อมกับ รับเข้า Stock
     public function getReceive()
     {
         return $this->hasOne(Stock::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'receive']);
     }
-//เชื่อมกับ รับเข้า Stock Item
+    //เชื่อมกับ รับเข้า Stock Item
     public function getReceiveItem()
     {
         return $this->hasOne(Stock::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'receive_item']);
@@ -194,51 +216,73 @@ class Order extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
+    //คำนวนเวลารับประหัน
+    public function deliveryDay()
+    {
+
+
+        $sql = "SELECT 
+            CASE
+                WHEN TIMESTAMPDIFF(YEAR, :dateStart, :dateEnd) >= 1 THEN CONCAT(TIMESTAMPDIFF(YEAR, :dateStart, :dateEnd), ' ปี')
+                WHEN TIMESTAMPDIFF(MONTH, :dateStart, :dateEnd) >= 1 THEN CONCAT(TIMESTAMPDIFF(MONTH, :dateStart, :dateEnd), ' เดือน')
+                ELSE CONCAT(DATEDIFF(:dateEnd, :dateStart), ' วัน')
+            END AS time_difference;";
+
+        // $delivery_date = AppHelper::convertToGregorian($this->data_json['delivery_date']);
+        // $warranty_date = AppHelper::convertToGregorian($this->data_json['warranty_date']);
+        $delivery_date = $this->data_json['delivery_date'];
+        $warranty_date = $this->data_json['warranty_date'];
+
+        return Yii::$app->db->createCommand($sql)
+            ->bindValue(':dateStart', $delivery_date)
+            ->bindValue(':dateEnd', $warranty_date)
+            ->queryScalar();
+    }
+
     //แสดงข้อมูลผู่ตรวจสอบ
     public function showChecker()
     {
-           return [
+        return [
             'leader' => $this->getCheckerLeader(),
             'officer' => $this->getCheckerOfficer(),
-           ];
+        ];
     }
 
-//    หัวหน้าเห็นชอบ
+    //    หัวหน้าเห็นชอบ
     public function getCheckerLeader()
     {
         try {
-            if($this->data_json['pr_leader_confirm'] == 'N'){
+            if ($this->data_json['pr_leader_confirm'] == 'N') {
                 $userId = $this->data_json['leader1'];
                 $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
             }
 
-            if($this->data_json['pr_officer_checker'] == 'N'){
+            if ($this->data_json['pr_officer_checker'] == 'N') {
                 $userId = $this->data_json['leader1'];
                 $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ตรวจสอบไม่ผ่าน';
             }
 
-            if($this->data_json['pr_director_confirm'] == 'N'){
+            if ($this->data_json['pr_director_confirm'] == 'N') {
                 // $userId = $this->data_json['leader1'];
                 return '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่อนุมัติ';
             }
 
-            if($this->data_json['pr_leader_confirm'] == ''){
+            if ($this->data_json['pr_leader_confirm'] == '') {
                 $userId = $this->data_json['leader1'];
                 $text = '<i class="fa-regular fa-clock text-warning"></i> รอเห็นชอบ';
-            }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == ''){
+            } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == '') {
                 $userId = $this->data_json['leader1'];
                 $text = '<i class="fa-regular fa-circle-check text-success fs-6"></i> เห็นชอบ | <i class="fa-regular fa-clock text-warning"></i> รอตรวจสอบ';
-            }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == ''){
+            } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == '') {
                 $userId = $this->data_json['pr_officer_checker_id'];
                 $text = '<i class="fa-regular fa-circle-check text-success"></i> ตรวจสอบผ่าน | <i class="fa-regular fa-clock text-warning"></i> รออนุมัติ';
-            }elseif($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == 'Y'){
+            } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == 'Y') {
                 return  '<i class="fa-regular fa-circle-check text-success"></i> อนุมัติ';
+            }
 
-        }
-            
             $employee = Employees::find()->where(['id' => $userId])->one();
-            
-        return $employee->getAvatar(false,$text);
+
+            return $employee->getAvatar(false, $text);
         } catch (\Throwable $th) {
             return null;
         }
@@ -248,19 +292,19 @@ class Order extends \yii\db\ActiveRecord
     {
 
         try {
-        $userId = $this->data_json['pr_officer_checker_id'];
-        $employee = Employees::find()->where(['user_id' => $userId])->one();
-        if($this->data_json['pr_officer_checker']  == 'Y'){
-            $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
-        }else{
-            $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+            $userId = $this->data_json['pr_officer_checker_id'];
+            $employee = Employees::find()->where(['user_id' => $userId])->one();
+            if ($this->data_json['pr_officer_checker']  == 'Y') {
+                $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
+            } else {
+                $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+            }
+
+            return $employee->getAvatar(false, $text);
+            //code...
+        } catch (\Throwable $th) {
+            return null;
         }
-       
-        return $employee->getAvatar(false,$text);
-                    //code...
-                } catch (\Throwable $th) {
-                   return null;
-                }
     }
 
 
@@ -270,12 +314,12 @@ class Order extends \yii\db\ActiveRecord
         $employee = Employees::find()->where(['id' => $userId])->one();
         $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
         return [
-            'avatar' =>$img,
+            'avatar' => $img,
             'department' => $employee->departmentName(),
             'fullname' => $employee->fullname,
         ];
         // try {
-           
+
         // } catch (\Throwable $th) {
         //     return [
         //         'avatar' => '',
@@ -290,11 +334,11 @@ class Order extends \yii\db\ActiveRecord
     public function orderAvatar()
     {
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-        return $employee->getAvatar(false,$this->data_json['order_type_name']);
+        return $employee->getAvatar(false, $this->data_json['order_type_name']);
     }
 
     // Avatar ของฉัน
-    public  function getMe($msg=null)
+    public  function getMe($msg = null)
     {
         return UserHelper::getMe($msg);
     }
@@ -304,9 +348,9 @@ class Order extends \yii\db\ActiveRecord
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
             $a = $this->data_json['product_type_name'];
-            $msg = $this->viewCreatedAt().' | '. $employee->departmentName();
+            $msg = $this->viewCreatedAt() . ' | ' . $employee->departmentName();
             return [
-                'avatar' => $employee->getAvatar(false,$msg),
+                'avatar' => $employee->getAvatar(false, $msg),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
@@ -346,6 +390,13 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
+    //แสดงรายการกรรมการ
+    public function ListCommittee(){
+        return self::find()
+            ->where(['name' => 'committee','category_id' => $this->id])
+            ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
+            ->all();
+    }
     // คณะกรรมการ
     public function ShowCommittee()
     {
@@ -354,11 +405,13 @@ class Order extends \yii\db\ActiveRecord
 
             return [
                 'avatar' => $employee->getAvatar(false),
+                'fullname' => $employee->fullname,
                 'department' => $employee->departmentName()
             ];
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
+                'fullname' => '',
                 'department' => ''
             ];
         }
@@ -369,26 +422,29 @@ class Order extends \yii\db\ActiveRecord
     public function StackComittee()
     {
         // try {
-            $data = '';
-            $data .= '<div class="avatar-stack">';
-            foreach (Order::find()->where(['name' => 'committee','category_id' => $this->id])->all() as $key => $item) {
-                $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
-                $data.=Html::a( Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], 
-                ['class' => 'open-modal', 
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (Order::find()->where(['name' => 'committee', 'category_id' => $this->id])->all() as $key => $item) {
+            $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
+            $data .= Html::a(
+                Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),
+                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                [
+                    'class' => 'open-modal',
                     'data' => [
                         'size' => 'modal-md',
-                        "bs-trigger"=>"hover focus",
-                        "bs-toggle"=> "popover",
-                        "bs-placement"=>"top",
-                        "bs-title"=>$item->data_json['committee_name'],
-                        "bs-html"=>"true",
-                        "bs-content"=>$emp->fullname."<br>".$emp->positionName()
+                        "bs-trigger" => "hover focus",
+                        "bs-toggle" => "popover",
+                        "bs-placement" => "top",
+                        "bs-title" => $item->data_json['committee_name'],
+                        "bs-html" => "true",
+                        "bs-content" => $emp->fullname . "<br>" . $emp->positionName()
                     ]
-            ]
-        );
-            }
-            $data .= '</div>';
-            return $data;
+                ]
+            );
+        }
+        $data .= '</div>';
+        return $data;
         // } catch (\Throwable $th) {
         // }
     }
@@ -400,21 +456,24 @@ class Order extends \yii\db\ActiveRecord
         try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach (Order::find()->where(['name' => 'committee_detail','category_id' => $this->id])->all() as $key => $item) {
+            foreach (Order::find()->where(['name' => 'committee_detail', 'category_id' => $this->id])->all() as $key => $item) {
                 $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
-                $data.=Html::a( Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], 
-                ['class' => 'open-modal', 
-                    'data' => [
-                        'size' => 'modal-md',
-                        "bs-trigger"=>"hover focus",
-                        "bs-toggle"=> "popover",
-                        "bs-placement"=>"top",
-                        "bs-title"=>$item->data_json['committee_name'],
-                        "bs-html"=>"true",
-                        "bs-content"=>$emp->fullname."<br>".$emp->positionName()
+                $data .= Html::a(
+                    Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),
+                    ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                    [
+                        'class' => 'open-modal',
+                        'data' => [
+                            'size' => 'modal-md',
+                            "bs-trigger" => "hover focus",
+                            "bs-toggle" => "popover",
+                            "bs-placement" => "top",
+                            "bs-title" => $item->data_json['committee_name'],
+                            "bs-html" => "true",
+                            "bs-content" => $emp->fullname . "<br>" . $emp->positionName()
+                        ]
                     ]
-            ]
-        );
+                );
                 $data .= '</a>';
             }
             $data .= '</div>';
@@ -454,6 +513,25 @@ class Order extends \yii\db\ActiveRecord
             return 10;
         }
     }
+ //นับจำนวนทั้งหมด
+    public function SumQty()
+    {
+        try {
+            $query = Yii::$app
+                ->db
+                ->createCommand('SELECT sum(qty) as total FROM `orders` WHERE category_id = :category_id;')
+                ->bindValue(':category_id', $this->id)
+                ->queryScalar();
+            if ($query > 0) {
+                return $query;
+            } else {
+                return 0;
+            }
+        } catch (\Throwable $th) {
+            return 10;
+        }
+    }
+
 
 
     function Vat()
@@ -485,59 +563,60 @@ class Order extends \yii\db\ActiveRecord
                 $name =  'Vat นอก';
                 break;
             default:
-            $name =  'ไม่ระบุ';
+                $name =  'ไม่ระบุ';
                 break;
         }
-        return $name ;
+        return $name;
     }
 
 
     // คำนวน vat 
-    function calculateVAT() {
+    function calculateVAT()
+    {
         $price = $this->SumPo();
         $discountAmount = $this->discount_price;
         $vatType = $this->vatType;
         $vatRate = 0.07;
-    // ราคาก่อนหักส่วนลด
-    $priceBeforeDiscount = $price;
-    
-    // ราคาหลังหักส่วนลด
-    $priceAfterDiscount = $priceBeforeDiscount - $discountAmount;
-    
-    // คำนวณ VAT
-    $vatAmount = 0;
-    $priceBeforeVAT = $priceAfterDiscount;
-    $priceAfterVAT = $priceAfterDiscount;
+        // ราคาก่อนหักส่วนลด
+        $priceBeforeDiscount = $price;
 
-    switch ($vatType) {
-        case 'IN':
-            // ราคาที่ให้มาเป็นราคาหลังรวม VAT แล้ว
-            $priceBeforeVAT = $priceAfterDiscount / (1 + $vatRate);
-            $vatAmount = $priceAfterDiscount - $priceBeforeVAT;
-            $priceAfterVAT = $priceAfterDiscount;
-            break;
-        case 'EX':
-            // ราคาที่ให้มาเป็นราคาก่อน VAT
-            $vatAmount = $priceAfterDiscount * $vatRate;
-            $priceAfterVAT = $priceAfterDiscount + $vatAmount;
-            break;
-        case 'NONE':
-            // ไม่มีการคิด VAT
-            $vatAmount = 0;
-            $priceAfterVAT = $priceAfterDiscount;
-            break;
-        default:
-            // หากไม่ตรงกับกรณีใดๆ ให้ถือว่าไม่มีการคิด VAT
-            break;
-    }
+        // ราคาหลังหักส่วนลด
+        $priceAfterDiscount = $priceBeforeDiscount - $discountAmount;
 
-    return [
-        'priceBeforeVAT' => round($priceBeforeVAT, 2),
-        'priceAfterVAT' => round($priceAfterVAT, 2),
-        'vatAmount' => round($vatAmount, 2),
-        'priceBeforeDiscount' => round($priceBeforeDiscount, 2),
-        'priceAfterDiscount' => round($priceAfterDiscount, 2)
-    ];
+        // คำนวณ VAT
+        $vatAmount = 0;
+        $priceBeforeVAT = $priceAfterDiscount;
+        $priceAfterVAT = $priceAfterDiscount;
+
+        switch ($vatType) {
+            case 'IN':
+                // ราคาที่ให้มาเป็นราคาหลังรวม VAT แล้ว
+                $priceBeforeVAT = $priceAfterDiscount / (1 + $vatRate);
+                $vatAmount = $priceAfterDiscount - $priceBeforeVAT;
+                $priceAfterVAT = $priceAfterDiscount;
+                break;
+            case 'EX':
+                // ราคาที่ให้มาเป็นราคาก่อน VAT
+                $vatAmount = $priceAfterDiscount * $vatRate;
+                $priceAfterVAT = $priceAfterDiscount + $vatAmount;
+                break;
+            case 'NONE':
+                // ไม่มีการคิด VAT
+                $vatAmount = 0;
+                $priceAfterVAT = $priceAfterDiscount;
+                break;
+            default:
+                // หากไม่ตรงกับกรณีใดๆ ให้ถือว่าไม่มีการคิด VAT
+                break;
+        }
+
+        return [
+            'priceBeforeVAT' => round($priceBeforeVAT, 2),
+            'priceAfterVAT' => round($priceAfterVAT, 2),
+            'vatAmount' => round($vatAmount, 2),
+            'priceBeforeDiscount' => round($priceBeforeDiscount, 2),
+            'priceAfterDiscount' => round($priceAfterDiscount, 2)
+        ];
     }
 
     public function getVat()
@@ -550,26 +629,26 @@ class Order extends \yii\db\ActiveRecord
 
         $vat  = isset($this->data_json['vat'])  ? $this->data_json['vat'] : false;
         if ($vat == 'IN') {
-           
+
             return [
                 'price' => $this->SumPo(),
-                'vat' => number_format($vatAmount,2),
-                'total' => number_format($priceWithoutVAT,2)
+                'vat' => number_format($vatAmount, 2),
+                'total' => number_format($priceWithoutVAT, 2)
             ];
         } else if ($vat == 'EX') {
             $EX_vatAmount = $priceWithoutVAT * ($vatRate / 100);
             $EX_priceWithVAT =  $priceWithVAT + $vatAmount;
             return [
                 'price' => $this->SumPo(),
-                'vat' => number_format($EX_vatAmount,2),
-                'total' => number_format($EX_priceWithVAT,2)
+                'vat' => number_format($EX_vatAmount, 2),
+                'total' => number_format($EX_priceWithVAT, 2)
             ];
         } else {
             return [
                 'price' => $this->SumPo(),
                 'vat' =>  '-',
-                 'total' => $priceWithVAT
-             ];
+                'total' => $priceWithVAT
+            ];
         }
     }
 
@@ -629,7 +708,7 @@ class Order extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_group'])->all(), 'code', 'title');
     }
 
-    
+
 
     // ประเภท
     public function ListBudgetdetail()
@@ -668,27 +747,30 @@ class Order extends \yii\db\ActiveRecord
 
 
     //ร้อยละดำเนินการ
-    function OrderProgress() {
+    function OrderProgress()
+    {
         $total = Categorise::find()->where(['name' => 'order_status'])->count('id');
         $status = $this->status;
         if ($total == 0) {
             return 0;
         }
-        return number_format((($status / $total) * 100),0);
-    }
-    
-    public function viewCreated(){
-            return AppHelper::timeDifference($this->created_at);
+        return number_format((($status / $total) * 100), 0);
     }
 
-    public function viewUpdated(){
+    public function viewCreated()
+    {
+        return AppHelper::timeDifference($this->created_at);
+    }
+
+    public function viewUpdated()
+    {
         return AppHelper::timeDifference($this->updated_at);
-}
+    }
 
     //แสดงสถานะ
     public function viewStatus()
     {
-        $status = Categorise::find()->where(['name' => 'order_status','code' => $this->status])->one();
+        $status = Categorise::find()->where(['name' => 'order_status', 'code' => $this->status])->one();
         return [
             'status_name' => isset($status->title) ? $status->title : 'รอดำเนินการ',
             'progress' => $this->OrderProgress(),

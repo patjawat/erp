@@ -115,12 +115,19 @@ class PrOrderController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
 
                 $oldObj = $model->data_json;
+
+                $vendor = $model->vendor;
                 $model->data_json = [
                     'pr_create_date' =>  AppHelper::convertToGregorian($model->data_json['pr_create_date']),
-                    'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date'])
+                    'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date']),
+                    'vendor_name' => isset($vendor->data_json['title']) ? $vendor->data_json['title'] : '-',
+                    'vendor_address' => isset($vendor->data_json['address']) ? $vendor->data_json['address'] : '-',
+                    'vendor_phone' => isset($vendor->data_json['vendor_phone']) ? $vendor->data_json['phone'] : '',
+                    'account_name' => isset($vendor->data_json['account_name']) ? $vendor->data_json['account_name']  : '',
+                    'account_number' => isset($vendor->data_json['account_number']) ? $vendor->data_json['account_number']  : ''
                 ];
+
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-                $model->thai_year = 
                 $model->save(false);
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
@@ -155,17 +162,27 @@ class PrOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $oldObj = $model->data_json;
 
                 // validate all models
-                $model->data_json = [
+                $vendor = $model->vendor;
+                $newObj = [
                     'pr_create_date' =>  AppHelper::convertToGregorian($model->data_json['pr_create_date']),
-                    'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date'])
+                    'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date']),
+                    'vendor_name' => $vendor->title,
+                    'vendor_address' => isset($vendor->data_json['address']) ? $vendor->data_json['address'] : '-',
+                    'vendor_phone' => isset($vendor->data_json['phone']) ? $vendor->data_json['phone'] : '',
+                    'account_name' => isset($vendor->data_json['account_name']) ? $vendor->data_json['account_name']  : '',
+                    'account_number' => isset($vendor->data_json['account_number']) ? $vendor->data_json['account_number']  : ''
                 ];
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $newObj);
+                Yii::$app->response->format = Response::FORMAT_JSON;
+
                 $model->save(false);
+                return $model->data_json;
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;

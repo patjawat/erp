@@ -36,17 +36,8 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 
 <div class="row">
     <div class="col-6">
-    <?=$form->field($model, 'data_json[po_date]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('ลงวันที่');
-                ?>
+    <?= $form->field($model, 'data_json[qr_number]')->textInput()->label('ใบเสนอราคาเลขที่') ?>
+   
      
      <?=$form->field($model, 'data_json[delivery_date]')->widget(Datetimepicker::className(),[
                     'options' => [
@@ -62,9 +53,20 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
      
       
         <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
+        <?= $form->field($model, 'data_json[po_recipient]')->textInput()->label('ผู้รับใบสั่งซื้อ') ?>
     </div>
     <div class="col-6">
-
+    <?=$form->field($model, 'data_json[po_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ลงวันที่');
+                ?>
     <?=$form->field($model, 'data_json[order_receipt_date]')->widget(Datetimepicker::className(),[
                     'options' => [
                         'timepicker' => false,
@@ -104,10 +106,11 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                 ?>
      
 
+     <?= $form->field($model, 'data_json[po_recipient_position]')->textInput()->label('ตำแหน่ง') ?>
     </div>
 </div>
 
-<?= $form->field($model, 'data_json[po_recipient]')->textInput()->label('ผู้รับใบสั่งซื้อ') ?>
+
 
 <div class="row d-flex justify-content-center mt-5">
     <div class="col-md-4 gap-3">

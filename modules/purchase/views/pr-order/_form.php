@@ -152,7 +152,11 @@ $resultsJs = <<< JS
                                         data:{id:$(this).val()},
                                         dataType:'json',
                                         success: function (res) {
-                                            $('#order-data_json-vendor_address').val(res.data_json.address)
+                                            // $('#order-data_json-vendor_address').val(res.data_json.address)
+                                            // $('#order-data_json-vendor_phone').val(res.data_json.phone)
+                                            // $('#order-data_json-vendor_tax').val(res.code)
+                                            // $('#order-data_json-account_name').val(res.data_json.account_name)
+                                            // $('#order-data_json-account_number').val(res.data_json.account_number)
                                         }
                                     });
 
@@ -210,8 +214,7 @@ try {
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
 <?= $form->field($model, 'data_json[product_type_name]')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'data_json[vendor_name]')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'data_json[vendor_address]')->hiddenInput()->label(false) ?>
+
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[pr_leader_confirm]')->hiddenInput()->label(false) ?>

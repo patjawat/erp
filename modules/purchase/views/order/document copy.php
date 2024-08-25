@@ -13,7 +13,7 @@ use yii\helpers\Html;
         <div class="d-flex flex-column gap-2">
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">1</span>
-                <?= Html::a('ขออนุมัติจัดซื้อจัดจ้าง', ['/ms-word/purchase_3', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('ขออนุมัติจัดซื้อจัดจ้าง', ['/ms-word/purchase_1', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
             </div>
 
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
@@ -22,11 +22,15 @@ use yii\helpers\Html;
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">3</span>
-                <?= Html::a('คำสั่งจังหวัด...?', ['/ms-word/purchase_2', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('คำสั่งจังหวัด...', ['/ms-word/purchase_2', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">3</span>
                 <?= Html::a('ขอความเห็นชอบและรายงานผล', ['/ms-word/purchase_2', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+            </div>
+            <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
+                    class="badge rounded-pill bg-primary text-white me-1">4</span>
+                <?= Html::a('ขออนุมัติจัดซื้อจัดจ้าง', ['/ms-word/purchase_3', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">5</span>
