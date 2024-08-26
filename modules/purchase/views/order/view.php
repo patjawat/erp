@@ -37,6 +37,12 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-8">
         <div class="card">
             <div class="card-body d-flex justify-content-between align-items-center">
+            <?php
+    echo "<pre>";
+    print_r($model->getMe()['leader']['leader1_position']);
+    echo "</pre>";
+            
+            ?>
                 <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?=$orderTypeName?></h6>
               
                 <?= Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ', ['/purchase/order/cancel-order', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill shadow open-modal','data' => ['size' => 'modal-md']]) ?>

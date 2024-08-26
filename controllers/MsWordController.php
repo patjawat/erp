@@ -577,6 +577,7 @@ class MsWordController extends \yii\web\Controller
     public function actionPurchase_12()
     {
         $id = $this->request->get('id');
+        $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
         $word_name = 'purchase_12.docx';
         $result_name = 'ขออนุมัติจ่ายเงินบำรุง.docx';
@@ -584,7 +585,20 @@ class MsWordController extends \yii\web\Controller
             'word_name' => $word_name,
             'result_name' => $result_name,
             'items' => [
-                'title' => 'ขออนุมัติจ่ายเงินบำรุง'
+                'title' => 'ขออนุมัติจ่ายเงินบำรุง',
+                'org_name' => $this->GetInfo()['company_name'],
+                'org_name_full' => $this->GetInfo()['company_full'],
+                'order_type_name' => $model->data_json['order_type_name'].'('.$model->data_json['pq_budget_type_name'].')',
+                'budget_type' => $model->data_json['pq_budget_type_name'],
+                'province' => $this->GetInfo()['province'],
+                'price' =>  number_format($model->calculateVAT()['priceAfterVAT'],2),
+                'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2),
+                'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
+                'vendor' => $model->vendor_name,
+                'me' => $model->getMe()['fullname'],
+                'me_position' => $model->getMe()['position'],
+                'leader' => $model->getMe()['leader']['leader1_fullname'],
+                'leader_position' => $model->getMe()['leader']['leader1_position']
             ]
         ];
         return $this->CreateFile($data);

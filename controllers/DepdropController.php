@@ -146,7 +146,7 @@ class DepdropController extends \yii\web\Controller
         $data = [['id' => '', 'text' => '']];
         foreach ($models as $model) {
             $data[] = [
-                'id' => $model->user_id,
+                'id' => $model->id,
                 'text' => $model->getAvatar(false),
                 'fullname' => $model->fullname,
                 'position_name' => $model->positionName(),

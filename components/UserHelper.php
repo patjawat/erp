@@ -52,7 +52,7 @@ class UserHelper extends Component
     // Avatar ของฉัน
     public static function getMe($msg=null)
     {
-        try {
+      //   try {
             $employee = self::GetEmployee();
             return [
                 'avatar' => $employee->getAvatar(false,$msg),
@@ -60,16 +60,19 @@ class UserHelper extends Component
                 'user_id' => $employee->user_id,
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
+                'position' => isset($employee->data_json['position_name_text']) ? $employee->data_json['position_name_text'] : '',
+                'leader' => $employee->leaderUser()
             ];
-        } catch (\Throwable $th) {
-            return [
-                'avatar' => '',
-                'emp_id' => '',
-                'user_id' => '',
-                'department' => '',
-                'fullname' => '',
-            ];
-        }
+      //   } catch (\Throwable $th) {
+      //       return [
+      //           'avatar' => '',
+      //           'emp_id' => '',
+      //           'user_id' => '',
+      //           'department' => '',
+      //           'fullname' => '',
+      //           'position' => ''
+      //       ];
+      //   }
     }
 
    public static function phone()

@@ -421,17 +421,16 @@ class Employees extends \yii\db\ActiveRecord
     {
 
         try {
-            //code...
 
             $model = Organization::find()->where(['id' => $this->department])->one();
-            $employee = Employees::find()->where(['id' => $model->data_json['leader1']])->one();
+            $employee = self::find()->where(['id' => $model->data_json['leader1']])->one();
 
             if ($model) {
                 return [
                     'avatar' => $employee->getAvatar(false),
                     'leader1' => $model->data_json['leader1'],
-                    'leader1_user_id' => $model->user_id,
-                    'leader1_fullname' => $model->data_json['leader1_fullname'],
+                    'leader1_fullname' => $employee->fullname,
+                    'leader1_position' => isset($employee->data_json['position_name_text']) ? $employee->data_json['position_name_text'] : '',
                     'leader2' => $model->data_json['leader2'],
                     'leader2_fullname' => $model->data_json['leader2_fullname'],
                 ];
