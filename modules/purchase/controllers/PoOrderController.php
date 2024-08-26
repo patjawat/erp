@@ -50,6 +50,10 @@ class PoOrderController extends Controller
                 preg_replace('/\D/', '', $model->data_json['po_date']) == "" ? $model->addError('data_json[po_date]', 'ลงวันที่ต้องระบุ') : null;
             }
 
+            if (isset($model->data_json['po_expire_date'])) {
+                preg_replace('/\D/', '', $model->data_json['po_expire_date']) == "" ? $model->addError('data_json[po_expire_date]', 'วันสิ้นสุดต้องระบุ') : null;
+            }
+
             if (isset($model->data_json['credit_days'])) {
                 $model->data_json['credit_days'] == "" ? $model->addError('data_json[credit_days]', 'ครดิต (วัน)ต้องระบุ') : null;
             }
@@ -186,6 +190,7 @@ class PoOrderController extends Controller
               
                 $convertDate = [
                     'po_date' =>  AppHelper::convertToGregorian($model->data_json['po_date']),
+                    'po_expire_date' =>  AppHelper::convertToGregorian($model->data_json['po_expire_date']),
                     'delivery_date' =>  AppHelper::convertToGregorian($model->data_json['delivery_date']),
                     'order_receipt_date' =>  AppHelper::convertToGregorian($model->data_json['order_receipt_date']),
                     'warranty_date' =>  AppHelper::convertToGregorian($model->data_json['warranty_date']),
@@ -221,6 +226,7 @@ class PoOrderController extends Controller
             try {
                 $model->data_json = [
                     'po_date' =>  AppHelper::convertToThai($model->data_json['po_date']),
+                    'po_expire_date' =>  AppHelper::convertToThai($model->data_json['po_expire_date']),
                     'delivery_date' =>  AppHelper::convertToThai($model->data_json['delivery_date']),
                     'order_receipt_date' =>  AppHelper::convertToThai($model->data_json['order_receipt_date']),
                     'warranty_date' =>  AppHelper::convertToThai($model->data_json['warranty_date']),

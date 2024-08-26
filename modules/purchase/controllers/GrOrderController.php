@@ -137,11 +137,10 @@ class GrOrderController extends Controller
                 }  // validate all models
                 
                 $convertDate = [
-                    'gr_date' =>  AppHelper::convertToGregorian($model->data_json['gr_date']),
+                    'gr_date' =>  AppHelper::convertToGregorian(explode(" ",$model->data_json['gr_date'])[0]).' '.explode(" ",$model->data_json['gr_date'])[1],
                     'order_item_checker' => $model->data_json['order_item_checker']
                 ];
-
-                $model->data_json =  ArrayHelper::merge($oldObj,$convertDate,$model->data_json,);
+                $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
                 
                 if($model->data_json['order_item_checker'] == 'Y'){
                     $model->status = 4;
@@ -160,17 +159,19 @@ class GrOrderController extends Controller
             }
         } else {
             $model->loadDefaultValues();
-            try {
+            // try {
                 $model->data_json = [
-                    'gr_date' =>  AppHelper::convertToThai($model->data_json['gr_date']),
+                    'gr_date' =>  AppHelper::convertToThai(explode(" ",$model->data_json['gr_date'])[0]).' '.explode(" ",$model->data_json['gr_date'])[1],
                 ];
-            } catch (\Throwable $th) {
-                //throw $th;
-            }
+                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
+            // } catch (\Throwable $th) {
+            //     //throw $th;
+            // }
         }
-
+        
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+            // return $model->data_json;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [

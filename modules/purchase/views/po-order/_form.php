@@ -38,6 +38,18 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
     <div class="col-6">
     <?= $form->field($model, 'data_json[qr_number]')->textInput()->label('ใบเสนอราคาเลขที่') ?>
    
+    <?=$form->field($model, 'data_json[po_expire_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('สิ้นสุดวันที่');
+                ?>
+     
      
      <?=$form->field($model, 'data_json[delivery_date]')->widget(Datetimepicker::className(),[
                     'options' => [
@@ -181,6 +193,17 @@ $js = <<< JS
         yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
         closeOnDateSelect:true,
     }); 
+
+    $("#order-data_json-po_expire_date").datetimepicker({
+        timepicker:false,
+        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        lang:'th',  // แสดงภาษาไทย
+        onChangeMonth:thaiYear,          
+        onShow:thaiYear,                  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+        closeOnDateSelect:true,
+    }); 
+    
     
     $("#order-data_json-delivery_date").datetimepicker({
         timepicker:false,

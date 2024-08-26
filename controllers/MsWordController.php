@@ -532,6 +532,7 @@ class MsWordController extends \yii\web\Controller
     public function actionPurchase_10()
     {
         $id = $this->request->get('id');
+        $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
         $word_name = 'purchase_10.docx';
         $result_name = 'รายงานผลการตรวจรับ.docx';
@@ -539,7 +540,19 @@ class MsWordController extends \yii\web\Controller
             'word_name' => $word_name,
             'result_name' => $result_name,
             'items' => [
-                'title' => 'รายงานผลการตรวจรับ'
+                'title' => 'รายงานผลการตรวจรับ',
+                'org_name' => $this->GetInfo()['company_name'],
+                'org_name_full' => $this->GetInfo()['company_full'],
+                'order_type_name' => $model->data_json['order_type_name'],
+                'province' => $this->GetInfo()['province'],
+                'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long').' เวลา '.explode(" ",$model->data_json['gr_date'])[1],
+                'po_date' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'),
+                'po_expire' => Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long'),
+                'qty' => $model->SumQty(),
+                'price' =>  number_format($model->calculateVAT()['priceAfterVAT'],2),
+                'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2),
+                'po_number' => $model->po_number,
+                'director_name' => SiteHelper::viewDirector()['fullname'] // ชื่อผู้บริหาร ผอ.
             ]
         ];
         return $this->CreateFile($data);

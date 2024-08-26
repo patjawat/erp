@@ -65,15 +65,17 @@ use yii\web\View;
                     <div class="col-6">
                     <?=$form->field($model, 'data_json[gr_date]')->widget(Datetimepicker::className(),[
                     'options' => [
-                        'timepicker' => false,
+                        'timepicker' => true,
                         'datepicker' => true,
-                        'mask' => '99/99/9999',
+                        'mask' => '99/99/9999 99:99',
                         'lang' => 'th',
                         'yearOffset' => 543,
                         'format' => 'd/m/Y', 
                     ],
                     ])->label('วันที่ตรวจรับ');
                 ?>
+
+                
 
                     </div>
                     <div class="col-6">
@@ -182,8 +184,8 @@ $js = <<< JS
      
    
     $("#order-data_json-gr_date").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+        timepicker:true,
+        format:'d/m/Y H:i',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
         onChangeMonth:thaiYear,          
         onShow:thaiYear,                  
