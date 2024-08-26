@@ -58,7 +58,7 @@ $js = <<< JS
             stroke: {
                 lineCap: 'round'
             },
-            labels: ['อนุมัติแล้ว'],
+            labels: ['ดำเนินการ'],
             };
 
             var chartOrder = new ApexCharts(document.querySelector("#viewOrderAccept"), orderOptions);

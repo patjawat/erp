@@ -391,9 +391,10 @@ class Order extends \yii\db\ActiveRecord
     }
 
     //แสดงรายการกรรมการ
-    public function ListCommittee(){
+    public function ListCommittee()
+    {
         return self::find()
-            ->where(['name' => 'committee','category_id' => $this->id])
+            ->where(['name' => 'committee', 'category_id' => $this->id])
             ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
             ->all();
     }
@@ -513,7 +514,7 @@ class Order extends \yii\db\ActiveRecord
             return 10;
         }
     }
- //นับจำนวนทั้งหมด
+    //นับจำนวนทั้งหมด
     public function SumQty()
     {
         try {
@@ -783,39 +784,59 @@ class Order extends \yii\db\ActiveRecord
         return Categorise::find()->where(['name' => 'po_status'])->all();
     }
 
-    //รวมราคา
-    public static function SumOrderPrice()
-    {
-        return static::find()
-            ->where(['is not', 'pr_number', null])
-            ->andWhere(['name' => 'order_item'])
-            ->sum('price');
-    }
+    // //รวมราคา
+    // public static function SumOrderPrice()
+    // {
+    //     return static::find()
+    //         ->where(['is not', 'pr_number', null])
+    //         ->andWhere(['name' => 'order_item'])
+    //         ->sum('price');
+    // }
 
     //นับจำนวนใบขอซื้อ
-    public static function countPrOrder()
+    public static function prSummery()
     {
-        return static::find()
-            ->where(['is not', 'pr_number', null])
-            ->andWhere(['name' => 'order'])
-            ->count();
+        $total =  static::find()->where(['name' => 'order', 'status' => 1])->count();
+        $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 1")
+            ->queryScalar();
+        return [
+            'total' => $total,
+            'price' => $price
+        ];
     }
 
     //นับจำนวนทะเบียนคุม
-    public static function countPqOrder()
+    public static function pqSummery()
     {
-        return static::find()
-            ->where(['is not', 'pq_number', null])
-            ->andWhere(['name' => 'order'])
-            ->count();
+        $total =  $total =  static::find()->where(['name' => 'order', 'status' => 2])->count();
+        $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 2")->queryScalar();
+
+        return [
+            'total' => $total,
+            'price' => $price
+        ];
     }
 
     //นับจำนวนใบสั่งซื้อ
-    public static function countPoOrder()
+    public static function poSummery()
     {
-        return static::find()
-            ->where(['is not', 'po_number', null])
-            ->andWhere(['name' => 'order'])
-            ->count();
+        $total =  static::find()->where(['name' => 'order', 'status' => 3])->count();
+        $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+        return [
+            'total' => $total,
+            'price' => $price
+        ];
     }
+
+        //ดำเนินการสงบัญชี เสร็จสิ้น
+        public static function orderSuccess()
+        {
+            $total =  static::find()->where(['name' => 'order', 'status' => 6])->count();
+            $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+            return [
+                'total' => $total,
+                'price' => $price
+            ];
+        }
+
 }
