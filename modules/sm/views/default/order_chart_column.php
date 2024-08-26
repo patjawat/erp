@@ -1,81 +1,83 @@
 <div id="orderChartColumn"></div>
 <?php
+use yii\helpers\Url;
+$url = Url::to('/sm/default/chart');
 $js = <<< JS
 
-  var orderOptions = {
-            series: [{
-            name: 'วัสดุ',
-            data: [44, 55, 57, 56, 61, 58, 63, 60, 66,43,34,54]
-          }, {
-            name: 'ครุภัฑ์',
-            data: [76, 85, 101, 98, 87, 105, 91, 114, 94,43,12,78]
-          }, {
-            name: 'จ้างเหมา',
-            data: [35, 41, 36, 26, 45, 48, 52, 53, 41,54,55,12]
-          }],
-            chart: {
-            type: 'bar',
-            height: 350,
-            parentHeightOffset: 0,
-              toolbar: { show: false }
-          },
-          colors: ['#5655b7', '#3cebb4','#ffa73e'],
-          plotOptions: {
-              bar: {
-              borderRadius: 4,
-              distributed: false,
-              columnWidth: '40%',
-              endingShape: 'rounded',
-              startingShape: 'rounded',
-          },
-          },
-          grid: {
-              strokeDashArray: 7,
-              padding: {
-    top: -1,
-    right: 0,
-    left: -12,
-    bottom: 5
-  }
-          },
-          dataLabels: {
-            enabled: false
-          },
-          stroke: {
-            show: true,
-            width: 2,
-            colors: ['transparent']
-          },
-          xaxis: {
-            categories: ['ต.ต.','พ.ย.','ธ.ค.','ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.',],
-            tickPlacement: 'on',
-  labels: { show: true },
-  axisTicks: { show: false },
-  axisBorder: { show: false }
-          },
-          yaxis: { show: true,
-  tickAmount: 4,
-  labels: {
-    offsetX: -17,
-  },
-            title: {
-              text: '\$ (thousands)'
-            }
-          },
-          fill: {
-            opacity: 1
-          },
-          tooltip: {
-            y: {
-              formatter: function (val) {
-                return "\$ " + val + " บาท"
+  $.ajax({
+    type: "get",
+    url: "$url",
+    dataType: "json",
+    success: function (res) {
+
+    var orderOptions = {
+              series: res,
+              chart: {
+              type: 'bar',
+              height: 350,
+              parentHeightOffset: 0,
+                toolbar: { show: false }
+            },
+            colors: ['#5655b7', '#3cebb4','#ffa73e'],
+            plotOptions: {
+                bar: {
+                borderRadius: 4,
+                distributed: false,
+                columnWidth: '40%',
+                endingShape: 'rounded',
+                startingShape: 'rounded',
+            },
+            },
+            grid: {
+                strokeDashArray: 7,
+                padding: {
+      top: -1,
+      right: 0,
+      left: -12,
+      bottom: 5
+    }
+            },
+            dataLabels: {
+              enabled: false
+            },
+            stroke: {
+              show: true,
+              width: 2,
+              colors: ['transparent']
+            },
+            xaxis: {
+              categories: ['ต.ต.','พ.ย.','ธ.ค.','ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.',],
+              tickPlacement: 'on',
+    labels: { show: true },
+    axisTicks: { show: false },
+    axisBorder: { show: false }
+            },
+            yaxis: { show: true,
+    tickAmount: 4,
+    labels: {
+      offsetX: -17,
+    },
+              title: {
+                text: '\$ (thousands)'
+              }
+            },
+            fill: {
+              opacity: 1
+            },
+            tooltip: {
+              y: {
+                formatter: function (val) {
+                  return "\$ " + val + " บาท"
+                }
               }
             }
-          }
-          };
+            };
 
-          var chart = new ApexCharts(document.querySelector("#orderChartColumn"), orderOptions);
-          chart.render();
+            var chart = new ApexCharts(document.querySelector("#orderChartColumn"), orderOptions);
+            chart.render();
+      
+          }
+  });
 
   JS;
 $this->registerJS($js);

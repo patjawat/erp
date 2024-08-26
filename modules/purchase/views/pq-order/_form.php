@@ -192,7 +192,7 @@ use yii\widgets\Pjax;
                                     
                                 </div>
                                 <div class="col-6">
-                                <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['1' => 'เกณฑ์ราคา', '2' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'],['custom' => true, 'inline' => true])->label('การพิจารณา') ?>
+                                <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['เกณฑ์ราคา' => 'เกณฑ์ราคา', 'เกณฑ์ประเมินประสิทธิภาพต่อราคา' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'],['custom' => true, 'inline' => true])->label('การพิจารณา') ?>
                     <?= $form->field($model, 'data_json[pq_reason]')->textArea(['style' => 'height: 130px;'])->label('เหตุผลความจำเป็น') ?>
                 
  

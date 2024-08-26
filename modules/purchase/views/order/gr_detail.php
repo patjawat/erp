@@ -7,39 +7,17 @@ use yii\helpers\Html;
         <tr class="">
             <td class="text-end" style="width:150px;">ตรวจรับเลขที่</td>
             <td class="fw-semibold"><?= $model->gr_number ?></td>
-            <td class="text-end">ลงวันที่</td>
-            <td colspan="3">123</td>
-
+            <td class="text-end">เลขที่ส่งสินค้า</td>
+            <td><?=isset($model->data_json['gr_number']) ? $model->data_json['gr_number'] : '-'?></td>
         </tr>
-        <tr class="">
-            <td class="text-end">วันที่ลงนาม</td>
-            <td>
-                <?= isset($model->data_json['pq_purchase_type_name']) ? $model->data_json['pq_purchase_type_name'] : '' ?>
-            </td>
-            <td class="text-end">เลขที่คำสั่ง</td>
-            <td> กกน-123</td>
-            <td class="text-end">ลงวันที่</td>
-            <td> กกน-123</td>
-
+        <tr>
+        
+          <td class="text-end">วันที่ตรวจรับ</td>
+          <td> <?= isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') : '' ?>
+            <td class="text-end">ผลการตรวจสอบ</td>
+            <td colspan="3"><?=isset($model->data_json['order_item_checker']) ? ($model->data_json['order_item_checker']== 'Y' ? 'ครบถ้วน' : 'ไม่ครบถ้วน') : '-'?></td>
         </tr>
-        <tr class="">
-            <td class="text-end">วิธีจัดหา</td>
-            <td><?= isset($model->data_json['pq_method_get_name']) ? $model->data_json['pq_method_get_name'] : '' ?>
-            </td>
-            <td class="text-end">ลงวันที่</td>
-            <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') : '' ?>
-            </td>
-            <td class="text-end">เลขที่คำสั่ง</td>
-            <td> กกน-123</td>
-        </tr>
-        <tr class="">
-            <td class="text-end">ประเภทเงิน</td>
-            <td><?= isset($model->data_json['pq_budget_type_name']) ? $model->data_json['pq_budget_type_name'] : '' ?>
-            </td>
-            <td class="text-end">ชื่อโครงการ</td>
-            <td colspan="3">
-                <?= isset($model->data_json['pq_project_name']) ? $model->data_json['pq_project_name'] : '' ?></td>
-        </tr>
+       
 
     </tbody>
 </table>

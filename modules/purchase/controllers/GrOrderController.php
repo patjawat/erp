@@ -143,7 +143,13 @@ class GrOrderController extends Controller
                 $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
                 
                 if($model->data_json['order_item_checker'] == 'Y'){
-                    $model->status = 4;
+
+                    //ถ้าเป็นจ้างเหมา ไม่ต้องส่งคลัง
+                    if($model->category_id == 'M25'){
+                        $model->status = 5;
+                    }else{
+                        $model->status = 4;
+                    }
                   
                 }else{
                     // $model->status = 3;
@@ -161,7 +167,7 @@ class GrOrderController extends Controller
             $model->loadDefaultValues();
             // try {
                 $model->data_json = [
-                    'gr_date' =>  AppHelper::convertToThai(explode(" ",$model->data_json['gr_date'])[0]).' '.explode(" ",$model->data_json['gr_date'])[1],
+                    'gr_date' =>  isset($model->data_json['gr_date']) ? AppHelper::convertToThai(explode(" ",$model->data_json['gr_date'])[0]).' '.explode(" ",$model->data_json['gr_date'])[1] : '',
                 ];
                 $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
             // } catch (\Throwable $th) {

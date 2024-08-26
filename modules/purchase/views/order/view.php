@@ -37,19 +37,12 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-8">
         <div class="card">
             <div class="card-body d-flex justify-content-between align-items-center">
-            <?php
-    echo "<pre>";
-    print_r($model->getMe()['leader']['leader1_position']);
-    echo "</pre>";
-            
-            ?>
                 <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?=$orderTypeName?></h6>
               
                 <?= Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ', ['/purchase/order/cancel-order', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill shadow open-modal','data' => ['size' => 'modal-md']]) ?>
 
             </div>
         </div>
-
 
         <div class="card">
             <div class="card-body">
@@ -85,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         </li>
                                         <?php endif?>
 
-                                        <?php if($model->status >= 4):?>
+                                        <?php if($model->status >= 4 && $model->category_id != 'M25'):?>
                                         <li class="nav-item">
                                             <a class="nav-link <?=$model->status == 4 ? 'active' : null;?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
                                             class="badge bg-primary rounded-pill text-white">4</span> <?=$model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง'?></a>
@@ -126,11 +119,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div id="gr_detail" class="container tab-pane <?=$model->status == 3 ? 'active' : null;?>">
                                     <?= $this->render('gr_detail', ['model' => $model]) ?>
                                 </div>
-
+                                <?php if($model->category_id != 'M25'):?>
                                 <div id="warehouse_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
                                     <!-- คลัง -->
                                     <?= $this->render('warehouse_detail', ['model' => $model]) ?>
                                 </div>
+                                <?php endif;?>
 
                                 <div id="accounting_detail" class="container tab-pane <?=$model->status == 5 ? 'active' : null;?>">
                                     

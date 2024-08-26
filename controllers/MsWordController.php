@@ -505,7 +505,7 @@ class MsWordController extends \yii\web\Controller
         $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title','ใบตรวจรับการจัดซื้อ/จัดจ้าง');
-        $templateProcessor->setValue('date',isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate(AppHelper::convertToGregorian($model->data_json['gr_date']), 'long').count($model->ListCommittee()) : '-');
+        $templateProcessor->setValue('date',isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long').count($model->ListCommittee()) : '-');
         $templateProcessor->setValue('org_name',$this->GetInfo()['company_name']);
         $templateProcessor->setValue('po_number',$model->po_number);
         $templateProcessor->setValue('vendor_name',$model->vendor_name);
@@ -552,7 +552,11 @@ class MsWordController extends \yii\web\Controller
                 'price' =>  number_format($model->calculateVAT()['priceAfterVAT'],2),
                 'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2),
                 'po_number' => $model->po_number,
-                'director_name' => SiteHelper::viewDirector()['fullname'] // ชื่อผู้บริหาร ผอ.
+                'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
+                'me' => $model->getMe()['fullname'],
+                'me_position' => $model->getMe()['position'],
+                'leader' => $model->getMe()['leader']['leader1_fullname'],
+                'leader_position' => $model->getMe()['leader']['leader1_position']
             ]
         ];
         return $this->CreateFile($data);
@@ -562,6 +566,7 @@ class MsWordController extends \yii\web\Controller
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
+        $model = $this->findOrderModel($id);
         $word_name = 'purchase_11.docx';
         $result_name = 'แบบแสดงความบริสุทธิ์ใจ.docx';
         $data = [

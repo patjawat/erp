@@ -12,7 +12,7 @@ use yii\widgets\DetailView;
             <td class="text-end" style="width:150px;">ทะเบียนคุม</td>
             <td class="fw-semibold"><?= $model->pq_number ?></td>
             <td class="text-end">ตามคำสั่ง</td>
-            <td><?=$model->data_json['order']?></td>
+            <td colspan="3"><?=$model->data_json['order']?></td>
 
         </tr>
         <tr class="">
@@ -22,7 +22,8 @@ use yii\widgets\DetailView;
             </td>
             <td class="text-end">เลขที่คำสั่ง</td>
             <td> <?=$model->data_json['order_number']?></td>
-          
+            <td class="text-end">ลงวันที่</td>
+            <td>  <?= isset($model->data_json['order_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'long') : '' ?></td>
 
         </tr>
         <tr class="">
@@ -32,20 +33,15 @@ use yii\widgets\DetailView;
             <td class="text-end">ลงวันที่</td>
             <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'long') : '' ?>
             </td>
-         
-        </tr>
-        <tr>
-        <td class="text-end">เลขที่คำสั่ง</td>
-        <td> กกน-123</td>
-        <td class="text-end">การเบิกจ่ายเงิน</td>
-        <td><?= isset($model->data_json['pq_disbursement']) ? $model->data_json['pq_disbursement'] : '' ?></td>
+            <td class="text-end">เลขที่คำสั่ง</td>
+            <td> กกน-123</td>
         </tr>
         <tr class="">
             <td class="text-end">ประเภทเงิน</td>
             <td><?= isset($model->data_json['pq_budget_type_name']) ? $model->data_json['pq_budget_type_name'] : '' ?>
             </td>
             <td class="text-end">ชื่อโครงการ</td>
-            <td>
+            <td colspan="3">
                 <?= isset($model->data_json['pq_project_name']) ? $model->data_json['pq_project_name'] : '' ?></td>
         </tr>
 
@@ -54,7 +50,8 @@ use yii\widgets\DetailView;
             <td><?= isset($model->data_json['pq_consideration']) ? $model->data_json['pq_consideration'] : '' ?></td>
             <td class="text-end">โครงการเลขที่</td>
             <td><?= isset($model->data_json['pq_project_id']) ? $model->data_json['pq_project_id'] : '' ?></td>
-          
+            <td class="text-end">การเบิกจ่ายเงิน</td>
+            <td><?= isset($model->data_json['pq_disbursement']) ? $model->data_json['pq_disbursement'] : '' ?></td>
         </tr>
 
         <tr class="">
@@ -63,18 +60,14 @@ use yii\widgets\DetailView;
             </td>
             <td class="text-end">รหัสอ้างอิง EGP</td>
             <td><?= isset($model->data_json['pq_egp_number']) ? $model->data_json['pq_egp_number'] : '' ?></td>
-          
-        </tr>
-        <tr>
-            <td class="text-end">เหตุผลความจำเป็น</td>
-            <td>
-                <?=$model->data_json['pq_reason']?>
-            </td>
             <td class="text-end">รายการแผน EGP</td>
             <td><?= isset($model->data_json['pq_egp_report']) ? $model->data_json['pq_egp_report'] : '' ?></td>
         </tr>
+
         <tr>
-        <td class="text-end">เหตุผลการจัดหา</td>
+            <td class="text-end">เหตุผลความจำเป็น</td>
+            <td colspan="3"></td>
+            <td class="text-end">เหตุผลการจัดหา</td>
             <td colspan="3">
                 <?=$model->data_json['pq_income_reason']?>
             </td>

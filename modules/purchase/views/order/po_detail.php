@@ -8,37 +8,35 @@ use yii\helpers\Html;
             <td class="text-end" style="width:150px;">คำสั่งซื้อเลขที่</td>
             <td class="fw-semibold"><?= $model->po_number ?></td>
             <td class="text-end">ลงวันที่</td>
-            <td colspan="3">123</td>
+            <td> <?= isset($model->data_json['po_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long') : '' ?>
 
         </tr>
         <tr class="">
-            <td class="text-end">วันที่ลงนาม</td>
-            <td>
-                <?= isset($model->data_json['pq_purchase_type_name']) ? $model->data_json['pq_purchase_type_name'] : '' ?>
-            </td>
-            <td class="text-end">เลขที่คำสั่ง</td>
-            <td> กกน-123</td>
-            <td class="text-end">ลงวันที่</td>
-            <td> กกน-123</td>
+            <td class="text-end">สิ้นสุดวันที่</td>
+            <td> <?= isset($model->data_json['po_expire_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long') : '' ?>
+            <td class="text-end">วันที่รับใบสั่ง</td>
+            <td> <?= isset($model->data_json['order_receipt_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['order_receipt_date'], 'long') : '' ?>
 
         </tr>
         <tr class="">
-            <td class="text-end">วิธีจัดหา</td>
-            <td><?= isset($model->data_json['pq_method_get_name']) ? $model->data_json['pq_method_get_name'] : '' ?>
-            </td>
-            <td class="text-end">ลงวันที่</td>
-            <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') : '' ?>
-            </td>
-            <td class="text-end">เลขที่คำสั่ง</td>
-            <td> กกน-123</td>
+            <td class="text-end">กำหนดวันส่งมอบ</td>
+            <td> <?= isset($model->data_json['delivery_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['delivery_date'], 'long') : '' ?>
+        </td>
+        <td class="text-end">วันที่ลงนาม</td>
+        <td> <?= isset($model->data_json['signing_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['signing_date'], 'long') : '' ?>
+        
         </tr>
+
         <tr class="">
-            <td class="text-end">ประเภทเงิน</td>
-            <td><?= isset($model->data_json['pq_budget_type_name']) ? $model->data_json['pq_budget_type_name'] : '' ?>
-            </td>
-            <td class="text-end">ชื่อโครงการ</td>
-            <td colspan="3">
-                <?= isset($model->data_json['pq_project_name']) ? $model->data_json['pq_project_name'] : '' ?></td>
+        <td class="text-end">การรับประกัน</td>
+        <td> <?= isset($model->data_json['warranty_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['warranty_date'], 'long') : '' ?>
+        </td>
+       
+        </tr>
+
+        <tr>
+        <td class="text-end">ผู้รับใบสั่งซื้อ</td>
+        <td colspan="3"> <?= isset($model->data_json['po_recipient']) ? $model->data_json['po_recipient'] : '' ?> (<?= isset($model->data_json['po_recipient_position']) ? $model->data_json['po_recipient_position'] : '' ?>)
         </tr>
 
     </tbody>
