@@ -1,17 +1,5 @@
 <?php
-$sql = "SELECT 
-    b.code,
-    b.title,
-     SUM(CAST(JSON_UNQUOTE(o.data_json->'$.total_price') AS DECIMAL(10, 2))) AS total
-FROM 
-    `categorise` b
-LEFT JOIN 
-    orders o 
-    ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
-WHERE 
-    b.`name` LIKE 'budget_type'
-    GROUP BY 
-    b.code";
+
 ?>
 <div class="row">
     <div class="col-12">
@@ -31,18 +19,21 @@ WHERE
         </div>
 
     </div>
-   -->
-    <!-- <div class="col-6">
-        <?php //  $this->render('chart_order_success') ?>
-    </div> -->
 </div>
 <?php
+use yii\helpers\Url;
+$url = Url::to('/sm/default/budget-chart');
 $js = <<< JS
 
+  $.ajax({
+    type: "get",
+    url: "$url",
+    dataType: "json",
+    success: function (res) {
 
     var orderBudgetOption = {
             series: [{
-            data: [400, 430, 448, 470, 540, 580, 690, 1100, 1200, 1380]
+            data: res.data
           }],
             chart: {
             type: 'bar',
@@ -50,7 +41,7 @@ $js = <<< JS
           },
           plotOptions: {
             bar: {
-              borderRadius: 4,
+              borderRadius: 8,
               borderRadiusApplication: 'end',
               horizontal: true,
             }
@@ -59,14 +50,15 @@ $js = <<< JS
             enabled: false
           },
           xaxis: {
-            categories: ['South Korea', 'Canada', 'United Kingdom', 'Netherlands', 'Italy', 'France', 'Japan',
-              'United States', 'China', 'Germany'
-            ],
+            categories: res.categorise,
           }
           };
 
                     var chart = new ApexCharts(document.querySelector("#orderBudget"), orderBudgetOption);
                         chart.render();
-    JS;
+       
+          }
+  });
+
+  JS;
 $this->registerJS($js);
-?>
