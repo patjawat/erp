@@ -1,31 +1,20 @@
-<?php
-$sql = "SELECT 
-    b.code,
-    b.title,
-     SUM(CAST(JSON_UNQUOTE(o.data_json->'$.total_price') AS DECIMAL(10, 2))) AS total
-FROM 
-    `categorise` b
-LEFT JOIN 
-    orders o 
-    ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
-WHERE 
-    b.`name` LIKE 'budget_type'
-    GROUP BY 
-    b.code";
-?>
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <p style="margin-bottom:0px;">เงินงบประมาณ</p>
+                    <p style="margin-bottom:75px;">เงินงบประมาณ</p>
                     <i class="fa-solid fa-wallet fs-1 text-secondary"></i>
                 </div>
-                <div class="">
+                <div class="row">
+                    <div class="col-6">
                         <span class="h5 fw-semibold">$800000000.6k</span>
                         <p class="fw-lighter">ใช้จ่ายไปแล้วประมาณ 25% ของงบประมาณประจำปี</p>
                     </div>
-                    <div id="orderBudget"></div>
+                    <div class="col-6">
+                        <div id="orderBudget"></div>
+                    </div>
+                </div>
 
             </div>
         </div>

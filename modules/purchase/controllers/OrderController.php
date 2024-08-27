@@ -300,7 +300,8 @@ class OrderController extends Controller
                     if ($order->group_id == null) {
                         $old = $order->data_json;
                         $newObj = $order->data_json = [
-                            'order_type_name' => $product->productType->title
+                            'order_type_name' => $product->productType->title,
+                            'total_price' => $order->calculateVAT()['priceAfterVAT']
                         ];
 
                         $order->group_id = $product->group_id;
@@ -357,6 +358,17 @@ class OrderController extends Controller
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->save(false);
+
+                //ถ้ามีการเปลี่ยนแปลงให้ update ราคารวมด้วย
+                $order = $this->findModel($model->category_id);
+                $old = $order->data_json;
+                $newObj = $order->data_json = [
+                    'total_price' => $order->calculateVAT()['priceAfterVAT']
+                ];
+                $order->data_json = ArrayHelper::merge($old, $newObj);
+                $order->save();
+                // End
+
                 return [
                     'status' => 'success',
                     'container' => '#' . $model->name,
