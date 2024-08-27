@@ -20,8 +20,12 @@ class SiteHelper extends Component
                 $siteName = isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
                 return [
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
+                        'doc_number' => isset($model->data_json['doc_number']) ? $model->data_json['doc_number'] : null, //เลขที่หนังสือ
                         'director_name' => isset($model->data_json['director_name']) ? $model->data_json['director_name'] : null,
                         'director_position' => isset($model->data_json['director_position']) ? $model->data_json['director_position'] : null,
+                        'leader' => isset($model->data_json['leader']) ? $model->data_json['leader'] : null,
+                        'leader_fullname' => isset($model->data_json['leader_fullname']) ? $model->data_json['leader_fullname'] : null,
+                        'leader_position' => isset($model->data_json['leader_position']) ? $model->data_json['leader_position'] : null,
                         'address' => isset($model->data_json['address']) ? $model->data_json['address'] : null,
                         'province' => isset($model->data_json['province']) ? $model->data_json['province'] : null,
                         'phone' => isset($model->data_json['phone']) ? $model->data_json['phone'] : null,

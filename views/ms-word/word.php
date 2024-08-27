@@ -12,6 +12,8 @@ use yii\web\View;
 
 <?php
 $js = <<< JS
+
+   
     \$('.download-file').click(function (e) { 
         e.preventDefault();
         // beforLoadModal()

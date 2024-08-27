@@ -72,8 +72,8 @@ class OrderItemController extends Controller
                     $model->data_json['employee_id']  == "" ? $model->addError('data_json[employee_id]', $requiredName) : null;
             }
 
-            if (isset($model->data_json['board'])) {
-                $model->data_json['board']  == "" ? $model->addError('data_json[board]', $requiredName) : null;
+            if (isset($model->data_json['committee'])) {
+                $model->data_json['committee']  == "" ? $model->addError('data_json[committee]', $requiredName) : null;
             }
 
             

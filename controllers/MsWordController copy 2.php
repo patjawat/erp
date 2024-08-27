@@ -5,7 +5,6 @@ namespace app\controllers;
 use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
-use yii\helpers\ArrayHelper;
 use app\modules\am\components\AssetHelper;
 use app\modules\am\models\Asset;
 use app\modules\inventory\models\Stock;
@@ -49,8 +48,8 @@ class MsWordController extends \yii\web\Controller
             'company_full' => $info['company_name'] . ' ' . $info['address'],  // ที่อยู่
             'company_name' => $info['company_name'],  // ชื่อหน่วยงาน
             'doc_number' => $info['doc_number'],  // ชื่อหน่วยงาน
-            'leader_fullname' => $info['leader_fullname'], //
-            'leader_position' => $info['leader_position'], // 
+            'leader_fullname' => $info['leader_fullname'],//
+            'leader_position' => $info['leader_position'],// 
             'address' => $info['address'],  // ที่อยู่
             'phone' => $info['phone'],  // โทรศัพท์
             'province' => $info['province'],  // ที่อยู่
@@ -65,7 +64,6 @@ class MsWordController extends \yii\web\Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'status' => 'success',
                 'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
                 'content' => $this->renderAjax('word', ['filename' => $filename]),
             ];
@@ -183,139 +181,133 @@ class MsWordController extends \yii\web\Controller
     }
 
 
+public function actionSetDate()
+{
+    $id = $this->request->get('id');
+    $model = $this->findOrderModel($id);
+
+}
     public function actionPurchase_1()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
-        $oldObj = $model->data_json;
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
 
-            $setDate = [
-                'committee_detail_date' =>  AppHelper::convertToGregorian($model->set_date),
-            ];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
 
-            $listBoards = Order::find()->where(['category_id' => $model->id, 'name' => 'board_detail'])->all();
-            $user = Yii::$app->user->id;
-            $word_name = 'purchase_1.docx';
-            $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด' . $model->pr_number . '.docx';
-
-            $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
-
-            $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
-            $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
-            $templateProcessor->setValue('doc_number',  $this->getInfo()['doc_number']);
-            // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
-            $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
-            $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
-            $templateProcessor->setValue('org_name', $this->getInfo()['company_name']);
-            $templateProcessor->setValue('suptype', (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'));
-            $templateProcessor->setValue('budget_year', 'ปีงบประมาณ');
-            $templateProcessor->setValue('budget_amount', number_format($model->SumPo(), 2));
-            $templateProcessor->setValue('budget_letter', AppHelper::convertNumberToWords($model->SumPo(), 2));
-            $templateProcessor->setValue('board', 'คณะกรรมการกำหนดรายละเอียด');
-            $templateProcessor->setValue('emp_name', $model->getUserReq()['fullname']);
-            $templateProcessor->setValue('emp_position', $model->getUserReq()['position_name']);
-            $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
-            $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
-            $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);
-            $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-
-            $templateProcessor->cloneRow('emp_fullname', count($model->ListCommitteeDetail()));
-            $i = 1;
-            $num = 1;
-            foreach ($model->ListCommitteeDetail() as $board) {
-                $templateProcessor->setValue('num#' . $i, $num++);
-                $templateProcessor->setValue('emp_fullname#' . $i, $board->data_json['emp_fullname']);
-                $templateProcessor->setValue('com_position#' . $i, $board->data_json['emp_position']);
-                $templateProcessor->setValue('position#' . $i, $board->data_json['committee_name']);
-                $i++;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $model->save();
             }
-
-            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-            return $this->Show($result_name);
         } else {
             $model->loadDefaultValues();
         }
-
-        try {
-            $model->set_date  =  AppHelper::convertToThai($model->data_json['committee_detail_date']);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-
-        if ($this->request->isAjax) {
+    
+        if($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'วันที่ลงนาม',
-                'content' => $this->renderAjax('_form', ['model' => $model]),
-                'footer' => ''
+            return[
+                'title' => '<i class="fas fa-user-plus"></i> สร้างใหม่',
+                'content' => $this->renderAjax('create', ['model' => $model]),
+                'footer' =>''
             ];
-        } else {
-
-            return $this->render('_form', [
+        }else {
+    
+            return $this->render('looker', [
                 'model' => $model,
             ]);
         }
+
+
+        $listBoards = Order::find()->where(['category_id' => $model->id, 'name' => 'board_detail'])->all();
+        $user = Yii::$app->user->id;
+        $word_name = 'purchase_1.docx';
+        $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด' . $model->pr_number . '.docx';
+
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        // @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+
+        $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
+        $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
+        $templateProcessor->setValue('doc_number',  $this->getInfo()['doc_number']);
+        // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
+        $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium')) : '-');
+        $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
+        $templateProcessor->setValue('org_name', $this->getInfo()['company_name']);
+        $templateProcessor->setValue('suptype', (isset($model->data_json['product_type_name']) ? $model->data_json['product_type_name'] : '-'));
+        $templateProcessor->setValue('budget_year', 'ปีงบประมาณ');
+        $templateProcessor->setValue('budget_amount', number_format($model->SumPo(), 2));
+        $templateProcessor->setValue('budget_letter', AppHelper::convertNumberToWords($model->SumPo(), 2));
+        $templateProcessor->setValue('board', 'คณะกรรมการกำหนดรายละเอียด');
+        $templateProcessor->setValue('emp_name', $model->getUserReq()['fullname']);
+        $templateProcessor->setValue('emp_position', $model->getUserReq()['position_name']);
+        $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
+        $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
+        $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+
+        $templateProcessor->cloneRow('board_name', count($listBoards));
+        $i = 1;
+        $num = 1;
+        foreach ($listBoards as $board) {
+            $templateProcessor->setValue('num#' . $i, AppHelper::thainumDigit($num++));
+            $templateProcessor->setValue('board_name#' . $i, $board->data_json['board_fullname']);
+            $templateProcessor->setValue('position_name#' . $i, $board->data_json['position_name']);
+            $templateProcessor->setValue('board_position#' . $i, $board->data_json['board_position']);
+            $i++;
+        }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        return $this->Show($result_name);
+        // ],
+
+        // 'items' => [
+        //     'title' => 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด',
+        //     'org_name_full' => 'รายละเอียดโรงพยาบาล',
+        //     'doc_number' => 'เลขที่เอกสาร',
+        //     'date' => 'วันที่',
+        //     'doc_title' => 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ',
+        //     'org_name' => 'ชื่อโรงพยาบาล',
+        //     'suptype' => 'ประเภททรัพย์สิน',
+        //     'budget_year' => 'ปีงบประมาณ',
+        //     'budget_amount' => 'วงเงินงบประมาณ',
+        //     'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
+        //     'board' => 'คณะกรรมการกำหนดรายละเอียด',
+        //     'emp_name' => 'เจ้าหน้าที่พนักงาน',
+        //     'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
+        //     'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
+        //     'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
+        //     'director_name' => 'ผู้อำนวยการโรงพยาบาล',
+        //     'org_name' => 'ชื่อโรงพยาบาล',
+        // ]
+        // ];
+
+        // return $this->CreateFile($data);
     }
 
     public function actionPurchase_2()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
-        $model = $this->findOrderModel($id);
-        $oldObj = $model->data_json;
+        $word_name = 'purchase_2.docx';
+        $result_name = 'ขอความเห็นชอบและรายงานผล.docx';
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            $setDate = ['apporve_report_date' =>  AppHelper::convertToGregorian($model->set_date)];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
-
-            $word_name = 'purchase_2.docx';
-            $result_name = 'ขอความเห็นชอบและรายงานผล.docx';
-
-            $data = [
-                'word_name' => $word_name,
-                'result_name' => $result_name,
-                'items' => [
-                    'title' => 'ขอความเห็นชอบและรายงานผล',
-                    'org_name_full' => $this->GetInfo()['company_full'],
-                    'doc_number' =>  $this->getInfo()['doc_number'],
-                    'date' => isset($model->data_json['apporve_report_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['apporve_report_date'], 'long')) : '-',
-                    'doc_title' => 'หัวข้ออนุมัติการแต่งตั้ง',
-                    'org_name' => $this->GetInfo()['company_name'],
-                    'director_name' => SiteHelper::viewDirector()['fullname'],  // ชื่อผู้บริหาร ผอ.
-                    'director_position' => $this->GetInfo()['director_position'],
-                    'province' => $this->GetInfo()['province'],
-                ]
-            ];
-            return $this->CreateFile($data);
-        }
-
-        try {
-            $model->set_date  =  AppHelper::convertToThai($model->data_json['apporve_report_date']);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'ลงวันที่',
-                'content' => $this->renderAjax('_form', ['model' => $model]),
-                'footer' => ''
-            ];
-        } else {
-
-            return $this->render('_form', [
-                'model' => $model,
-            ]);
-        }
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'ขอความเห็นชอบและรายงานผล',
+                'org_name_full' => $this->GetInfo()['company_full'],
+                'doc_number' =>  $this->getInfo()['doc_number'],
+                'date' => 'วันที่',
+                'doc_title' => 'หัวข้ออนุมัติการแต่งตั้ง',
+                'org_name' => $this->GetInfo()['company_name'],
+                'director_name' => SiteHelper::viewDirector()['fullname'],  // ชื่อผู้บริหาร ผอ.
+                'director_position' => $this->GetInfo()['director_position'],
+                'province' => $this->GetInfo()['province'],
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     // ขออนุมัติจัดซื้อจัดจ้าง
@@ -329,8 +321,8 @@ class MsWordController extends \yii\web\Controller
 
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ขออนุมัติจัดซื้อจัดจ้าง');
-        $templateProcessor->setValue('director_fullname', SiteHelper::viewDirector()['fullname']);  // ชื่อผู้บริหาร ผอ.
-        $templateProcessor->setValue('doc_number', $this->getInfo()['doc_number']);
+        $templateProcessor->setValue('director_fullname',SiteHelper::viewDirector()['fullname']);  // ชื่อผู้บริหาร ผอ.
+        $templateProcessor->setValue('doc_number',$this->getInfo()['doc_number']);
         // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
         $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'long')) : '-');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
@@ -392,191 +384,93 @@ class MsWordController extends \yii\web\Controller
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
         $model = $this->findOrderModel($id);
-
-        $oldObj = $model->data_json;
-
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            $setDate = ['purchase_report_date' =>  AppHelper::convertToGregorian($model->set_date)];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
-
-            $word_name = 'purchase_5.docx';
-            $result_name = 'รายงานขอซื้อขอจ้าง.docx';
-            $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
-            $templateProcessor->setValue('org_name_full', $this->GetInfo()['company_full']);
-            $templateProcessor->setValue('doc_number', $this->getInfo()['doc_number']);
-            $templateProcessor->setValue('date', isset($model->data_json['purchase_report_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['purchase_report_date'], 'long')) : '-');
-            $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-            $templateProcessor->setValue('budget_type', $model->data_json['pq_budget_type_name']);
-            $templateProcessor->setValue('sup_detail', 'รายละเอียดพัสดุ');
-            $templateProcessor->setValue('detail', $model->data_json['comment']);
-            $templateProcessor->setValue('amount', 'จำนวน');
-            $templateProcessor->setValue('price', number_format($model->sumPo(), 2));
-            $templateProcessor->setValue('price_character', AppHelper::convertNumberToWords($model->SumPo(), 2));
-            $templateProcessor->setValue('sup_detailfull', 'รายละเอียดของพัสดุ');
-            $templateProcessor->setValue('board', 'คณะกรรมการตรวจรับพัสดุ');
-            $templateProcessor->setValue('me_name', $model->getMe()['fullname']);
-            $templateProcessor->setValue('me_position', $model->getMe()['position']);
-            $templateProcessor->setValue('emphead_name', $this->getInfo()['leader_fullname']);
-            $templateProcessor->setValue('emphead_position', $this->getInfo()['leader_position']);
-            $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);
-
-            $templateProcessor->cloneRow('emp_fullname', count($model->ListCommittee()));
-            $i = 1;
-            $num = 1;
-            foreach ($model->ListCommitteeDetail() as $board) {
-                $templateProcessor->setValue('num#' . $i, $num++);
-                $templateProcessor->setValue('emp_fullname#' . $i, $board->data_json['emp_fullname']);
-                $templateProcessor->setValue('com_position#' . $i, $board->data_json['emp_position']);
-                $templateProcessor->setValue('position#' . $i, $board->data_json['committee_name']);
-                $i++;
-            }
-
-            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-            return $this->Show($result_name);
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        try {
-            $model->set_date  =  AppHelper::convertToThai($model->data_json['purchase_report_date']);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'ลงวันที่',
-                'content' => $this->renderAjax('_form', ['model' => $model]),
-                'footer' => ''
-            ];
-        } else {
-
-            return $this->render('_form', [
-                'model' => $model,
-            ]);
-        }
+        $word_name = 'purchase_5.docx';
+        $result_name = 'รายงานขอซื้อขอจ้าง.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'org_name_full' => $this->GetInfo()['company_full'],
+                'doc_number' =>  $this->getInfo()['doc_number'],
+                'date' => 'วันที่',
+                'org_name' => $this->GetInfo()['company_name'],
+                'budget_type' => $model->data_json['pq_budget_type_name'],
+                'sup_detail' => 'รายละเอียดพัสดุ',
+                'detail' => $model->data_json['comment'],
+                'amount' => 'จำนวน',
+                'price' => number_format($model->sumPo(), 2),
+                'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
+                'sup_detailfull' => 'รายละเอียดของพัสดุ',
+                'board' => 'คณะกรรมการตรวจรับพัสดุ',
+                'emp_name' => 'เจ้าหน้าที่พนักงาน',
+                'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
+                'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
+                'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
+                'director_name' => $this->GetInfo()['director_fullname'],
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_6()
     {
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
-        $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post())) {
 
-            $setDate = ['purchase_report_order_date' =>  AppHelper::convertToGregorian($model->set_date)];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
-
-            $word_name = 'purchase_6.docx';
-            $result_name = 'รายงานผลการตรวจรับพัสดุ.docx';
-            $data = [
-                'word_name' => $word_name,
-                'result_name' => $result_name,
-                'items' => [
-                    'org_name' => $this->GetInfo()['company_name'],
-                    'org_name_full' => $this->GetInfo()['company_full'],
-                    'doc_number' => $this->getInfo()['doc_number'],
-                    'date' => isset($model->data_json['purchase_report_order_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['purchase_report_order_date'], 'long')) : '-',
-                    'sup_detail' => 'รายละเอียดพัสดุ',
-                    'amount' => $model->SumQty(),
-                    'price' => number_format($model->calculateVAT()['priceAfterVAT'], 2), //'ราคา',
-                    'price_character' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2), //'ราคาตัวอักษร',
-                    'bill_number' => $model->po_number, //'เลขใบสั่งซื้อ',
-                    'bill_datebegin' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'), //'ใบสั่งซื้อลงวันที่เริ่ม',
-                    'bill_dateend' => Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long'),
-                    'budget_type' => $model->data_json['pq_budget_type'], //'ประเภทเงินงบ',
-                    'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . ' เวลา ' . explode(" ", $model->data_json['gr_date'])[1],
-                    'me_name' => $model->getMe()['fullname'],
-                    'me_position' => $model->getMe()['position'],
-                    'emphead_name' => $this->getInfo()['leader_fullname'],
-                    'emphead_position' => $this->getInfo()['leader_position'],
-                    'director_name' => SiteHelper::viewDirector()['fullname'], //'ผู้อำนวยการโรงพยาบาล',
-                    'province' => $this->GetInfo()['province']
-                ]
-            ];
-            return $this->CreateFile($data);
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        try {
-            $model->set_date  =  AppHelper::convertToThai($model->data_json['purchase_report_order_date']);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'ลงวันที่',
-                'content' => $this->renderAjax('_form', ['model' => $model]),
-                'footer' => ''
-            ];
-        } else {
-
-            return $this->render('_form', [
-                'model' => $model,
-            ]);
-        }
+        $word_name = 'purchase_6.docx';
+        $result_name = 'รายงานผลการตรวจรับพัสดุ.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'org_name' => $this->GetInfo()['company_name'],
+                'org_name_full' => $this->GetInfo()['company_full'],
+                'doc_number' => 'เลขหนังสือ',
+                'date' => 'วันที่',
+                'sup_detail' => 'รายละเอียดพัสดุ',
+                'amount' => 'จำนวน',
+                'price' => number_format($model->calculateVAT()['priceAfterVAT'],2),//'ราคา',
+                'price_character' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2),//'ราคาตัวอักษร',
+                'bill_number' => $model->po_number,//'เลขใบสั่งซื้อ',
+                'bill_datebegin' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'),//'ใบสั่งซื้อลงวันที่เริ่ม',
+                'bill_dateend' => 'ใบสั่งซื้อลงวันที่สิ้นสุด',
+                'budget_type' => $model->data_json['pq_budget_type'],//'ประเภทเงินงบ',
+                'check_date' => isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') : '-',//'วันที่ตรวจรับ',
+                'check_time' => 'เวลาตรวจรับ',
+                'emp_name' => 'เจ้าหน้าที่พนักงาน',
+                'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
+                'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
+                'emphead_position' => 'ตำแหน่งหัวหน้าเจ้าหน้าที่',
+                'director_name' => SiteHelper::viewDirector()['fullname'],//'ผู้อำนวยการโรงพยาบาล',
+                'province' => $this->GetInfo()['province']
+            ]
+        ];
+        return $this->CreateFile($data);
     }
+
     public function actionPurchase_7()
     {
         $id = $this->request->get('id');
         $user = Yii::$app->user->id;
         $model = $this->findOrderModel($id);
-        $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            $setDate = ['report_winner_date' =>  AppHelper::convertToGregorian($model->set_date)];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
-
-
-            $word_name = 'purchase_7.docx';
-            $result_name = 'ประกาศผู้ชนะการเสนอราคา.docx';
-            $data = [
-                'word_name' => $word_name,
-                'result_name' => $result_name,
-                'items' => [
-                    'sup_type' => $model->data_json['product_type_name'],
-                    'org_name' => $this->GetInfo()['company_name'],
-                    'project_name' =>  $model->data_json['pq_project_name'],
-                    'budget_name' => $model->data_json['pq_budget_type_name'],
-                    'vendor' => $model->vendor_name,
-                    'price' => number_format($model->sumPo(), 2),
-                    'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
-                    'director_name' => SiteHelper::viewDirector()['fullname'], //'ผู้อำนวยการโรงพยาบาล',
-                    'date' => isset($model->data_json['report_winner_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['report_winner_date'], 'long')) : '-',
-                ]
-            ];
-            return $this->CreateFile($data);
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        try {
-            $model->set_date  =  AppHelper::convertToThai($model->data_json['report_winner_date']);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'ลงวันที่',
-                'content' => $this->renderAjax('_form', ['model' => $model]),
-                'footer' => ''
-            ];
-        } else {
-
-            return $this->render('_form', [
-                'model' => $model,
-            ]);
-        }
+        $word_name = 'purchase_7.docx';
+        $result_name = 'ประกาศผู้ชนะการเสนอราคา.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'sup_type' => $model->data_json['product_type_name'],
+                'org_name' => $this->GetInfo()['company_name'],
+                'project_name' => 'ชื่อโปรเจค',
+                'budget_name' => $model->data_json['pq_budget_type_name'],
+                'vendor' => $model->vendor_name,
+                'price' => number_format($model->sumPo(), 2),
+                'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
+                'director_name' => SiteHelper::viewDirector()['fullname'],//'ผู้อำนวยการโรงพยาบาล',
+                'date' => 'วันที่ประกาศ',
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_8()
@@ -608,17 +502,17 @@ class MsWordController extends \yii\web\Controller
         $templateProcessor->setValue('recipient_position', $model->data_json['po_recipient_position']);
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('province', $this->GetInfo()['province']);
-        $templateProcessor->setValue('director_fullname', SiteHelper::viewDirector()['fullname']);  // ชื่อผู้บริหาร ผอ.
-
+        $templateProcessor->setValue('director_fullname',SiteHelper::viewDirector()['fullname']);  // ชื่อผู้บริหาร ผอ.
+        
         $templateProcessor->setValue('address', $this->GetInfo()['address']);
         $templateProcessor->setValue('vendor_phone', $model->vendor_phone);
         $templateProcessor->setValue('tax', $model->vendor_id);
         $templateProcessor->setValue('account_name', $model->account_name);
         $templateProcessor->setValue('account_number',  $model->account_number);
-        $templateProcessor->setValue('discount',  number_format($model->calculateVAT()['priceBeforeDiscount'], 2));
-        $templateProcessor->setValue('vat',  number_format($model->calculateVAT()['vatAmount'], 2));
-        $templateProcessor->setValue('total_price',  number_format($model->calculateVAT()['priceAfterVAT'], 2));
-        $templateProcessor->setValue('total_price_text', AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2));
+        $templateProcessor->setValue('discount',  number_format($model->calculateVAT()['priceBeforeDiscount'],2));
+        $templateProcessor->setValue('vat',  number_format($model->calculateVAT()['vatAmount'],2));
+        $templateProcessor->setValue('total_price',  number_format($model->calculateVAT()['priceAfterVAT'],2));
+        $templateProcessor->setValue('total_price_text', AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2));
         $templateProcessor->cloneRow('asset_item', count($model->ListOrderItems()));
         $i = 1;
         $num = 1;
@@ -633,6 +527,7 @@ class MsWordController extends \yii\web\Controller
         }
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         return $this->Show($result_name);
+
     }
 
     //ใบสั่งซื้อสั่งจ้าง
@@ -643,18 +538,18 @@ class MsWordController extends \yii\web\Controller
         $word_name = 'purchase_9.docx';
         $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
-        $templateProcessor->setValue('title', 'ใบตรวจรับการจัดซื้อ/จัดจ้าง');
-        $templateProcessor->setValue('date', isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . count($model->ListCommittee()) : '-');
-        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('po_number', $model->po_number);
-        $templateProcessor->setValue('vendor_name', $model->vendor_name);
-        $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
-        $templateProcessor->setValue('province', $this->GetInfo()['province']);
-        $templateProcessor->setValue('asset_type', $model->assetType->title);
-        $templateProcessor->setValue('amonth', $model->SumQty());
-        $templateProcessor->setValue('budget_type', $model->data_json['pq_budget_type_name']);
-        $templateProcessor->setValue('total_price', number_format($model->calculateVAT()['priceAfterVAT'], 2));
-        $templateProcessor->setValue('total_price_text', AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2));
+        $templateProcessor->setValue('title','ใบตรวจรับการจัดซื้อ/จัดจ้าง');
+        $templateProcessor->setValue('date',isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long').count($model->ListCommittee()) : '-');
+        $templateProcessor->setValue('org_name',$this->GetInfo()['company_name']);
+        $templateProcessor->setValue('po_number',$model->po_number);
+        $templateProcessor->setValue('vendor_name',$model->vendor_name);
+        $templateProcessor->setValue('po_date',Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
+        $templateProcessor->setValue('province',$this->GetInfo()['province']);
+        $templateProcessor->setValue('asset_type',$model->assetType->title);
+        $templateProcessor->setValue('amonth',$model->SumQty());
+        $templateProcessor->setValue('budget_type',$model->data_json['pq_budget_type_name']);
+        $templateProcessor->setValue('total_price', number_format($model->calculateVAT()['priceAfterVAT'],2));
+        $templateProcessor->setValue('total_price_text',AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2));
         $templateProcessor->cloneRow('item', count($model->ListCommittee()));
         $i = 1;
         $num = 1;
@@ -673,66 +568,32 @@ class MsWordController extends \yii\web\Controller
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
-
-        $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            $setDate = ['report_checker_date' =>  AppHelper::convertToGregorian($model->set_date)];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
-
-
-            $word_name = 'purchase_10.docx';
-            $result_name = 'รายงานผลการตรวจรับ.docx';
-            $data = [
-                'word_name' => $word_name,
-                'result_name' => $result_name,
-                'items' => [
-                    'title' => 'รายงานผลการตรวจรับ',
-                    'doc_number' => $this->getInfo()['doc_number'],
-                    'date' => Yii::$app->thaiFormatter->asDate($model->data_json['report_checker_date'], 'long'),
-                    'org_name' => $this->GetInfo()['company_name'],
-                    'org_name_full' => $this->GetInfo()['company_full'],
-                    'order_type_name' => $model->data_json['order_type_name'],
-                    'province' => $this->GetInfo()['province'],
-                    'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . ' เวลา ' . explode(" ", $model->data_json['gr_date'])[1],
-                    'po_date' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'),
-                    'po_expire' => Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long'),
-                    'qty' => $model->SumQty(),
-                    'price' =>  number_format($model->calculateVAT()['priceAfterVAT'], 2),
-                    'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2),
-                    'po_number' => $model->po_number,
-                    'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
-                    'me' => $model->getMe()['fullname'],
-                    'me_position' => $model->getMe()['position'],
-                    'leader' => $model->getMe()['leader']['leader1_fullname'],
-                    'leader_position' => $model->getMe()['leader']['leader1_position']
-                ]
-            ];
-            return $this->CreateFile($data);
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        try {
-            $model->set_date  =  AppHelper::convertToThai($model->data_json['report_checker_date']);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'ลงวันที่',
-                'content' => $this->renderAjax('_form', ['model' => $model]),
-                'footer' => ''
-            ];
-        } else {
-
-            return $this->render('_form', [
-                'model' => $model,
-            ]);
-        }
+        $word_name = 'purchase_10.docx';
+        $result_name = 'รายงานผลการตรวจรับ.docx';
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'title' => 'รายงานผลการตรวจรับ',
+                'org_name' => $this->GetInfo()['company_name'],
+                'org_name_full' => $this->GetInfo()['company_full'],
+                'order_type_name' => $model->data_json['order_type_name'],
+                'province' => $this->GetInfo()['province'],
+                'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long').' เวลา '.explode(" ",$model->data_json['gr_date'])[1],
+                'po_date' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'),
+                'po_expire' => Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long'),
+                'qty' => $model->SumQty(),
+                'price' =>  number_format($model->calculateVAT()['priceAfterVAT'],2),
+                'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2),
+                'po_number' => $model->po_number,
+                'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
+                'me' => $model->getMe()['fullname'],
+                'me_position' => $model->getMe()['position'],
+                'leader' => $model->getMe()['leader']['leader1_fullname'],
+                'leader_position' => $model->getMe()['leader']['leader1_position']
+            ]
+        ];
+        return $this->CreateFile($data);
     }
 
     public function actionPurchase_11()
@@ -757,14 +618,6 @@ class MsWordController extends \yii\web\Controller
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
         $user = Yii::$app->user->id;
-
-        $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-            $setDate = ['request_pay_date' =>  AppHelper::convertToGregorian($model->set_date)];
-            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
-            $model->save(false);
-
         $word_name = 'purchase_12.docx';
         $result_name = 'ขออนุมัติจ่ายเงินบำรุง.docx';
         $data = [
@@ -772,15 +625,13 @@ class MsWordController extends \yii\web\Controller
             'result_name' => $result_name,
             'items' => [
                 'title' => 'ขออนุมัติจ่ายเงินบำรุง',
-                'doc_number' => $this->getInfo()['doc_number'],
-                'date' => Yii::$app->thaiFormatter->asDate($model->data_json['request_pay_date'], 'long'),
                 'org_name' => $this->GetInfo()['company_name'],
                 'org_name_full' => $this->GetInfo()['company_full'],
-                'order_type_name' => $model->data_json['order_type_name'] . '(' . $model->data_json['pq_budget_type_name'] . ')',
+                'order_type_name' => $model->data_json['order_type_name'].'('.$model->data_json['pq_budget_type_name'].')',
                 'budget_type' => $model->data_json['pq_budget_type_name'],
                 'province' => $this->GetInfo()['province'],
-                'price' =>  number_format($model->calculateVAT()['priceAfterVAT'], 2),
-                'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2),
+                'price' =>  number_format($model->calculateVAT()['priceAfterVAT'],2),
+                'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'],2),
                 'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
                 'vendor' => $model->vendor_name,
                 'me' => $model->getMe()['fullname'],
@@ -790,30 +641,8 @@ class MsWordController extends \yii\web\Controller
             ]
         ];
         return $this->CreateFile($data);
-    } else {
-        $model->loadDefaultValues();
     }
 
-    try {
-        $model->set_date  =  AppHelper::convertToThai($model->data_json['request_pay_date']);
-    } catch (\Throwable $th) {
-        //throw $th;
-    }
-
-    if ($this->request->isAjax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => 'ลงวันที่',
-            'content' => $this->renderAjax('_form', ['model' => $model]),
-            'footer' => ''
-        ];
-    } else {
-
-        return $this->render('_form', [
-            'model' => $model,
-        ]);
-    }
-}
     public function actionStockcard()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;

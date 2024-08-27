@@ -54,6 +54,7 @@ class Order extends \yii\db\ActiveRecord
     public $vendor_tax;
     public $account_name;
     public $account_number;
+    public $set_date; // set ค่าลงวันที่
 
     /**
      * {@inheritdoc}
@@ -89,7 +90,8 @@ class Order extends \yii\db\ActiveRecord
                 'action',
                 'old_data',
                 'auto_lot',
-                'q'
+                'q',
+                'set_date'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
@@ -371,7 +373,7 @@ class Order extends \yii\db\ActiveRecord
     public function viewLeaderUser()
     {
         try {
-            $employee = Employees::find()->where(['user_id' => $this->data_json['leader1']])->one();
+            $employee = Employees::find()->where(['id' => $this->data_json['leader1']])->one();
 
             return [
                 'id' => $employee->user_id,
@@ -398,6 +400,16 @@ class Order extends \yii\db\ActiveRecord
             ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
             ->all();
     }
+
+    // กรรมการกำหนดรายละเอียด
+    public function ListCommitteeDetail()
+    {
+        return self::find()
+            ->where(['name' => 'committee_detail', 'category_id' => $this->id])
+            ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
+            ->all();
+    }
+
     // คณะกรรมการ
     public function ShowCommittee()
     {
@@ -674,10 +686,10 @@ class Order extends \yii\db\ActiveRecord
     }
 
     // แสดงชื่อคณะกรรมการ
-    public function getBoard()
-    {
-        return self::find()->where(['category_id' => $this->id, 'name' => 'board'])->all();
-    }
+    // public function getBoard()
+    // {
+    //     return self::find()->where(['category_id' => $this->id, 'name' => 'board'])->all();
+    // }
 
     // วิธีซื้อหรือจ้าง
     public function ListPurchase()

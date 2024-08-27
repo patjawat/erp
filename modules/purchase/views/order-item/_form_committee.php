@@ -84,9 +84,9 @@ $resultsJs = <<< JS
          }',
                 'select2:select' => 'function() {
                 var fullname = $(this).select2("data")[0].fullname;
-                var position_name = $(this).select2("data")[0].position_name;
-                $("#order-data_json-board_fullname").val(fullname)
-                $("#order-data_json-position_name").val(position_name)
+                  var position_name = $(this).select2("data")[0].position_name_text;
+                $("#order-data_json-emp_fullname").val(fullname)
+                $("#order-data_json-emp_position").val(position_name)
                
          }',
             ],
@@ -110,7 +110,7 @@ $resultsJs = <<< JS
     ?>
 
 <?php
-echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
+echo $form->field($model, 'data_json[committee]')->widget(Select2::classname(), [
     'data' => $model->ListBoard(),
     'options' => ['placeholder' => 'กรุณาเลือก'],
     'pluginOptions' => [
@@ -129,8 +129,8 @@ echo $form->field($model, 'data_json[board]')->widget(Select2::classname(), [
     <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'data_json[committee_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?php $form->field($model, 'data_json[board_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'data_json[position_name]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[emp_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[emp_position]')->hiddenInput(['maxlength' => true])->label(false) ?>
    
     
     <div class="form-group mt-3 d-flex justify-content-center">

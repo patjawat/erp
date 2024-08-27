@@ -18,7 +18,7 @@ use yii\helpers\Html;
 
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">2</span>
-                <?= Html::a('ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด', ['/ms-word/purchase_1', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด', ['/ms-word/purchase_1', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">3</span>
@@ -26,7 +26,7 @@ use yii\helpers\Html;
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">3</span>
-                <?= Html::a('ขอความเห็นชอบและรายงานผล', ['/ms-word/purchase_2', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('ขอความเห็นชอบและรายงานผล', ['/ms-word/purchase_2', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">5</span>
@@ -34,7 +34,7 @@ use yii\helpers\Html;
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">6</span>
-                <?= Html::a('บันทึกข้อความรายงานการขอซื้อ', ['/ms-word/purchase_5', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('บันทึกข้อความรายงานการขอซื้อ', ['/ms-word/purchase_5', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
 
 
@@ -45,12 +45,12 @@ use yii\helpers\Html;
         <div class="d-flex flex-column gap-2">
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">7</span>
-                <?= Html::a('รายงานผลการพิจารณาและขออนุมัติสั่งซื้อสั่งจ้าง', ['/ms-word/purchase_6', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('รายงานผลการพิจารณาและขออนุมัติสั่งซื้อสั่งจ้าง', ['/ms-word/purchase_6', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
 
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">8</span>
-                <?= Html::a('ประกาศผู้ชนะการเสนอราคา', ['/ms-word/purchase_7', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('ประกาศผู้ชนะการเสนอราคา', ['/ms-word/purchase_7', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">9</span>
@@ -62,7 +62,7 @@ use yii\helpers\Html;
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">11</span>
-                <?= Html::a('รายงานผลการตรวจรับ', ['/ms-word/purchase_10', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('รายงานผลการตรวจรับ', ['/ms-word/purchase_10', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">12</span>
@@ -70,7 +70,7 @@ use yii\helpers\Html;
             </div>
             <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded doc-item"><span
                     class="badge rounded-pill bg-primary text-white me-1">13</span>
-                <?= Html::a('ขออนุมัติจ่ายเงินบำรุง', ['/ms-word/purchase_12', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('ขออนุมัติจ่ายเงินบำรุง', ['/ms-word/purchase_12', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
 
         </div>

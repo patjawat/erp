@@ -150,6 +150,7 @@ class DepdropController extends \yii\web\Controller
                 'text' => $model->getAvatar(false),
                 'fullname' => $model->fullname,
                 'position_name' => $model->positionName(),
+                'position_name_text' => $model->data_json['position_name_text'],
                 // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
                 'avatar' => $model->getAvatar(false)
             ];
