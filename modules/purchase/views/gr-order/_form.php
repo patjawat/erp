@@ -75,22 +75,37 @@ use yii\web\View;
                     ])->label('วันที่ตรวจรับ');
                 ?>
 
-                
-
+<div>
+                  
+                        </div>
                     </div>
                     <div class="col-6">
                         <?= $form->field($model, 'data_json[gr_number]')->textInput()->label('เลขที่ส่งสินค้า') ?>
+                        <div>
+                   
+                        </div>
                     </div>
                 </div>
 
             </div>
-            <div class="card-footer text-muted d-flex justify-content-between">
-                <p>ผลการตรวจสอบ</p>
-                <?=$form->field($model, 'data_json[order_item_checker]')->radioList(
-                                    ['Y' => 'ครบถ้วน', 'N' => 'ไม่ครบถ้วน'],
-                                    ['custom' => true, 'inline' => true]
-                                )->label(false);
-                            ?>
+            <div class="card-footer text-muted">
+               
+                        <div class="row">
+<div class="col-6">
+<?=$form->field($model, 'data_json[order_item_checker]')->radioList(
+                        ['ถูกต้องครบถ้วน' => 'ถูกต้องครบถ้วน', 'ไม่ครบถ้วน' => 'ไม่ครบถ้วน'],
+                        ['custom' => true, 'inline' => true]
+                        )->label('ผลการตรวจสอบ');
+                        ?>
+</div>
+<div class="col-6">
+<?=$form->field($model, 'data_json[fine]')->radioList(
+                        ['มี' => 'มี', 'ไม่มี' => 'ไม่มี'],
+                        ['custom' => true, 'inline' => true]
+                        )->label('ค่าปรับ');
+                        ?>
+</div>
+                        </div>
 
             </div>
         </div>

@@ -647,6 +647,8 @@ class MsWordController extends \yii\web\Controller
         $templateProcessor->setValue('date', isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . count($model->ListCommittee()) : '-');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('po_number', $model->po_number);
+        $templateProcessor->setValue('order_item_checker', isset($model->data_json['order_item_checker']) ? $model->data_json['order_item_checker'] : '-');
+        $templateProcessor->setValue('fine', isset($model->data_json['fine']) ? $model->data_json['fine'] : '-');
         $templateProcessor->setValue('vendor_name', $model->vendor_name);
         $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
         $templateProcessor->setValue('province', $this->GetInfo()['province']);
@@ -742,14 +744,33 @@ class MsWordController extends \yii\web\Controller
         $model = $this->findOrderModel($id);
         $word_name = 'purchase_11.docx';
         $result_name = 'แบบแสดงความบริสุทธิ์ใจ.docx';
-        $data = [
-            'word_name' => $word_name,
-            'result_name' => $result_name,
-            'items' => [
-                'title' => 'แบบแสดงความบริสุทธิ์ใจ'
-            ]
-        ];
-        return $this->CreateFile($data);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+
+        $templateProcessor->setValue('title', 'แบบแสดงความบริสุทธิ์ใจ');
+        $templateProcessor->setValue('me_name', $model->getMe()['fullname']);
+        $templateProcessor->setValue('me_position', $model->getMe()['position']);
+        $templateProcessor->setValue('emphead_name', $this->getInfo()['leader_fullname']);
+        $templateProcessor->setValue('emphead_position', $this->getInfo()['leader_position']);
+        $templateProcessor->cloneRow('emp_fullname', count($model->ListCommittee()));
+        $templateProcessor->cloneRow('emp_fullname2', count($model->ListCommittee()));
+            $i = 1;
+            $num = 1;
+            foreach ($model->ListCommittee() as $board) {
+                $templateProcessor->setValue('num#' . $i, $num++);
+                $templateProcessor->setValue('emp_fullname#' . $i, $board->data_json['emp_fullname']);
+                $templateProcessor->setValue('com_position#' . $i, $board->data_json['emp_position']);
+                $templateProcessor->setValue('position#' . $i, $board->data_json['committee_name']);
+
+                $templateProcessor->setValue('num2#' . $i, $num++);
+                $templateProcessor->setValue('emp_fullname2#' . $i, $board->data_json['emp_fullname']);
+                $templateProcessor->setValue('com_position2#' . $i, $board->data_json['emp_position']);
+                $templateProcessor->setValue('position2#' . $i, $board->data_json['committee_name']);
+                $i++;
+            }
+
+           
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+            return $this->Show($result_name);
     }
 
     public function actionPurchase_12()
@@ -785,8 +806,8 @@ class MsWordController extends \yii\web\Controller
                 'vendor' => $model->vendor_name,
                 'me' => $model->getMe()['fullname'],
                 'me_position' => $model->getMe()['position'],
-                'leader' => $model->getMe()['leader']['leader1_fullname'],
-                'leader_position' => $model->getMe()['leader']['leader1_position']
+                'leader' => $this->getInfo()['leader_fullname'],
+                'leader_position' => $this->getInfo()['leader_position']
             ]
         ];
         return $this->CreateFile($data);
