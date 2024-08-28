@@ -161,7 +161,7 @@ class Product extends \yii\db\ActiveRecord
     }
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => [3,4]])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => [4]])->all(), 'code', 'title');
     }
 
     public function ListUnit()
