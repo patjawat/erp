@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card border border-primary">
     <div class="card-body">
-        <?=$product->AvatarXl()?>
+        <?=$model->isNewRecord ? $product->Avatar() : $model->product->Avatar()?>
     </div>
 </div>
 
