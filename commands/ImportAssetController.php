@@ -529,7 +529,7 @@ WHERE supplies.SUP_TYPE_KIND_ID IN('2','4')";
 
         $sql = "SELECT * FROM supplies_vendor";
 
-        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $querys = Yii::$app->db->createCommand($sql)->queryAll();
         if (BaseConsole::confirm('วัสดุ '.count($querys).' รายการ ยืนยัน ??')) {
             foreach ($querys as $item) {
                 $checker =  Categorise::findOne(['name' => 'vendor','title' => $item['VENDOR_NAME']]);
