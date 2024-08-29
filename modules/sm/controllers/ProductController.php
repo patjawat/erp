@@ -214,10 +214,10 @@ class ProductController extends Controller
             
             if (isset($model->title)) {
                 $model->title  == "" ? $model->addError('title', $requiredName) : null;
-                $checkTitle = Product::findOne(['name' => 'asset_item','title' => $model->title]);
-                if($checkTitle){
-                    $model->addError('title', 'ชื่อซ้ำ');
-                }
+                // $checkTitle = Product::findOne(['name' => 'asset_item','title' => $model->title]);
+                // if($checkTitle){
+                //     $model->addError('title', 'ชื่อซ้ำ');
+                // }
             }
             
             if (isset($model->code) && $model->auto == 0) {
