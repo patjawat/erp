@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = $this->title;
      <?= $form->field($model, 'unit_price')->textInput(['type' => 'number', 'maxlength' => 2])->label('ราคาต่อหน่วย'); ?>
     </div>
     <div class="col-6">
-    <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอันโนมัติ');?>
+    <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
     <?= $form->field($model, 'data_json[lot_number]')->textInput()->label(false); ?>
         <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
    

@@ -50,6 +50,7 @@ class Product extends \yii\db\ActiveRecord
 
     public $q_category;
     public $unit_name;
+    public $auto;
 
     /**
      * {@inheritdoc}
@@ -58,7 +59,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items'], 'safe'],
+            [['data_json', 'q_category', 'unit_items','auto'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -155,7 +156,7 @@ class Product extends \yii\db\ActiveRecord
                         '.Html::img($this->ShowImg(),['class' => 'avatar']).'
                             <div class="avatar-detail">
                                 <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">'.$this->title.'</h5>
-                                    <p class="text-primary mb-0 fs-6">'.$this->productType->title.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
+                                    <p class="text-primary mb-0 fs-6">'.isset($this->productType) ? $this->productType->title : '-'.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
                             </div>
         </div>';
     }

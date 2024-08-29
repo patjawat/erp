@@ -20,7 +20,11 @@ use unclead\multipleinput\MultipleInputColumn;
 }
 </style>
 
-<?php $form = ActiveForm::begin(['id' => 'form-product']); ?>
+<?php $form = ActiveForm::begin([
+    'id' => 'form-product',
+    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/sm/product/createvalidator'],
+    ]); ?>
 
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
@@ -37,17 +41,34 @@ use unclead\multipleinput\MultipleInputColumn;
     <div class="col-8">
         <div class="card">
             <div class="card-body">
-                <h6><i class="fa-solid fa-circle-exclamation"></i> ข้อมูลรายการ</h5>
+                <div class="d-flex justify-content-between">
+                    <h6><i class="fa-solid fa-circle-exclamation"></i> ข้อมูลรายการ</h5>
+                        <?= $form->field($model, 'auto')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('รหัสอัตโนมัติ');?>
+                </div>
 
-                    <div class="row">
-                        <div class="col-8">
-                            <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อรายการ') ?>
+                <div class="row">
+                    <div class="col-8">
+                        <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อรายการ') ?>
+                    </div>
+                    <div class="col-4">
+
+                        <?php if($model->isNewRecord):?>
+
+                        <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสสินค้า/barcode'])->label('รหัสสินค้า') ?>
+                        <?php else:?>
+                        <div class="mb-3 highlight-addon field-product-code">
+                            <label class="form-label has-star" for="product-code">รหัสสินค้า</label>
+
+                            <input type="text" class="form-control" name="Product[code]" maxlength="255"
+                                placeholder="<?=$model->code?>" disabled="">
+
+                            <div class="invalid-feedback"></div>
+
                         </div>
-                        <div class="col-4">
-                            <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสสินค้า/barcode'])->label('รหัสสินค้า') ?>
-                        </div>
-                        <div class="col-6">
-                            <?php
+                        <?php endif?>
+                    </div>
+                    <div class="col-6">
+                        <?php
                                 echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                                     'data' => $model->listProductType(),
                                     'options' => ['placeholder' => 'ระบุ...'],
@@ -57,10 +78,10 @@ use unclead\multipleinput\MultipleInputColumn;
                                     ],
                                 ])->label('หมวดหมู่')
                             ?>
-                        </div>
-                        <div class="col-6">
+                    </div>
+                    <div class="col-6">
 
-                            <?php
+                        <?php
                                 echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
                                     'data' => $model->listUnit(),
                                     'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
@@ -76,16 +97,16 @@ use unclead\multipleinput\MultipleInputColumn;
                                     ]
                                 ])->label('หน่วยนับหลัก')
                             ?>
-                        </div>
-
                     </div>
-                    <div class="col-5">
-                        <?php // $form->field($model, 'data_json[unit_stock]')->textInput(['maxlength' => true, 'placeholder' => ''])->label('หน่วยรับเข้า/จ่ายออก') ?>
 
-                    </div>
-                    <div class="col-5">
+                </div>
+                <div class="col-5">
+                    <?php // $form->field($model, 'data_json[unit_stock]')->textInput(['maxlength' => true, 'placeholder' => ''])->label('หน่วยรับเข้า/จ่ายออก') ?>
 
-                        <?php
+                </div>
+                <div class="col-5">
+
+                    <?php
                             // echo $form->field($model, 'data_json[unit2]')->widget(Select2::classname(), [
                             //     'data' => $model->listUnit(),
                             //     'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
@@ -101,12 +122,12 @@ use unclead\multipleinput\MultipleInputColumn;
                             //     ]
                             // ])->label('หน่วยนับหลัก')
                         ?>
-                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    
+
 </div>
 
 <div class="form-group mt-3 d-flex justify-content-center">
@@ -119,6 +140,44 @@ use unclead\multipleinput\MultipleInputColumn;
  $urlUpload = Url::to('/filemanager/uploads/single');
 $ref = $model->ref;
 $js = <<< JS
+
+
+
+        console.log($("#product-auto").val())
+            if($("#product-auto").val()){
+            $( "#product-auto" ).prop( "checked", localStorage.getItem('auto') == 1 ? true : false );
+            $('#product-code').prop('disabled',localStorage.getItem('auto') == 1 ? true : false );
+
+            if(localStorage.getItem('fsn_auto') == true)
+            {
+                $('#product-code').val('')
+            }
+
+            }
+
+            $("#product-auto").change(function() {
+                //ตั้งค่า Run Lot Auto
+                if(this.checked) {
+                    console.log('auto');
+                    localStorage.setItem('auto',1);
+                    $('#product-code').prop('disabled',this.checked);
+                    $('#product-code').val('อัตโนมัติ')
+
+                    $('#product-code').prop('disabled',this.checked);
+                    $('#product-code').val('อัตโนมัติ')
+
+                }else{
+                    localStorage.setItem('auto',0);
+                    $('#product-code').prop('disabled',this.checked);
+                    $('#product-code').val('')
+
+                    $('#product-code').prop('disabled',this.checked);
+                    $('#product-code').val('')
+
+                    console.log('lot_manual');
+                }
+            });
+
 
         \$(".select-photo").click(function() {
             \$("input[id='my_file']").click();

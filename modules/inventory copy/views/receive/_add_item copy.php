@@ -100,7 +100,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ->label('วันหมดอายุ');
         ?>
             <div class="mt-4 mb-4">
-                <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอันโนมัติ');?>
+                <?= $form->field($model, 'data_json[auto_lot]')->checkbox(['custom' => true, 'switch' => true])->label('ล็อตอัตโนมัติ');?>
             </div>
             </div>
       
