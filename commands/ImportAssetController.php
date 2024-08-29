@@ -523,6 +523,47 @@ WHERE supplies.SUP_TYPE_KIND_ID IN('2','4')";
         }
     }
 
+    //นำเข้าวัสดุ
+    public function actionVendor()
+    {
+
+        $sql = "SELECT * FROM supplies_vendor";
+
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        if (BaseConsole::confirm('วัสดุ '.count($querys).' รายการ ยืนยัน ??')) {
+            foreach ($querys as $item) {
+                $checker =  Categorise::findOne(['name' => 'vendor','title' => $item['VENDOR_NAME']]);
+
+                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                if ($checker) {
+                    $model = $checker;
+                   
+                } else {
+                    $model = new Categorise([
+                        'ref' => $ref
+                    ]);
+
+                    $this->CreateDir($ref);
+                }
+                $model->code = $item['VENDOR_TAX_NUM'];
+                $model->title = $item['VENDOR_NAME'];
+                $model->name ='vendor';
+                $model->data_json = [
+                    'address' => ($item['VENDOR_ADDRESS'].' '.$item['VENDOR_POSTCODE']),
+                    'phone' =>  $item['VENDOR_PHONE'],
+                    'bank_name' => $item['VENDOR_BANK_NAME'],
+                    'account_name' => $item['VENDOR_BANK'],
+                    'contact_name',$item['VENDOR_CONTECT']
+                ];
+                $model->save(false);
+                echo "นำเข้า " . $item['VENDOR_NAME']. "\n";
+                
+            }
+
+        }
+    }
+
+
     public static function CreateDir($folderName)
     {
         if ($folderName != null) {
