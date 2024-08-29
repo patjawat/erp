@@ -81,6 +81,11 @@ class EmployeesController extends Controller
             foreach ($querys as $tree) {
                 $arrDepartment[] = $tree['id'];
             }
+            // Yii::$app->response->format = Response::FORMAT_JSON;
+            // $dataDepartment =  ArrayHelper::merge($arrDepartment,$org1->lft);
+            $arrDepartment;
+            $arrDepartment[]  =$org1->lft;
+
             if (count($arrDepartment) > 0) {
                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
             } else {

@@ -326,13 +326,14 @@ class MsWordController extends \yii\web\Controller
         $user = Yii::$app->user->id;
         $word_name = 'purchase_3.docx';
         $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
-
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ขออนุมัติจัดซื้อจัดจ้าง');
         $templateProcessor->setValue('director_fullname', SiteHelper::viewDirector()['fullname']);  // ชื่อผู้บริหาร ผอ.
         $templateProcessor->setValue('doc_number', $this->getInfo()['doc_number']);
         // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
-        $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'long')) : '-');
+        $templateProcessor->setValue('date', isset($model->data_json['pr_create_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['pr_create_date'], 'long')) : '-');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('department', $model->getUserReq()['department']);
         $templateProcessor->setValue('asset_detail', 'รายละเอียดวัสดุ');
