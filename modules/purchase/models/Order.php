@@ -345,14 +345,14 @@ class Order extends \yii\db\ActiveRecord
         return UserHelper::getMe($msg);
     }
     // ผู้ขอ
-    public function getUserReq()
+    public function getUserReq($msg =null)
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
             $a = $this->data_json['product_type_name'];
-            $msg = $this->viewCreatedAt() . ' | ' . $employee->departmentName();
+            $text = $msg ? $msg : ($this->viewCreatedAt() . ' | ' . $employee->departmentName());
             return [
-                'avatar' => $employee->getAvatar(false, $msg),
+                'avatar' => $employee->getAvatar(false, $text),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->data_json['position_name_text'],

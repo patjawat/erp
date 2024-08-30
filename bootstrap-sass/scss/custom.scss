@@ -9,6 +9,18 @@
 
 // @import "bootstrap";
 
+.zoom-in:hover {
+  transform: scale(1.03);
+  box-shadow: 0 20px 25px -5px #0000001a, 0 8px 10px -6px #0000001a;
+}
+.zoom-in {
+  transition-property: transform,box-shadow;
+  transition-duration: .3s;
+  transition-timing-function: cubic-bezier(.4,0,.2,1);
+  cursor: pointer
+}
+
+
 .text-pink {
   color: var(--bs-pink)
 }

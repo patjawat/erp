@@ -182,7 +182,6 @@ class PrOrderController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
 
                 $model->save(false);
-                return $model->data_json;
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
