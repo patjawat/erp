@@ -203,7 +203,7 @@ class MsWordController extends \yii\web\Controller
             $user = Yii::$app->user->id;
             $word_name = 'purchase_1.docx';
             $result_name = 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด' . $model->pr_number . '.docx';
-
+            @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
             $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
             $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
@@ -367,6 +367,7 @@ class MsWordController extends \yii\web\Controller
 
         $word_name = 'purchase_4.docx';
         $result_name = 'ขออนุมัติจัดซื้อจัดจ้าง.docx';
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('po_number', $model->po_number);
         $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
@@ -376,7 +377,7 @@ class MsWordController extends \yii\web\Controller
         $i = 1;
         $num = 1;
         foreach ($model->ListOrderItems() as $item) {
-            $templateProcessor->setValue('n#' . $i, AppHelper::thainumDigit($num++));
+            $templateProcessor->setValue('n#' . $i, $num++);
             $templateProcessor->setValue('item_name#' . $i, $item->product->title);
             $templateProcessor->setValue('qty#' . $i, $item->qty);
             $templateProcessor->setValue('price#' . $i, number_format($item->qty, 2));
@@ -404,12 +405,14 @@ class MsWordController extends \yii\web\Controller
 
             $word_name = 'purchase_5.docx';
             $result_name = 'รายงานขอซื้อขอจ้าง.docx';
+            @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
             $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
             $templateProcessor->setValue('org_name_full', $this->GetInfo()['company_full']);
             $templateProcessor->setValue('doc_number', $this->getInfo()['doc_number']);
             $templateProcessor->setValue('date', isset($model->data_json['purchase_report_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['purchase_report_date'], 'long')) : '-');
             $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
             $templateProcessor->setValue('budget_type', $model->data_json['pq_budget_type_name']);
+            $templateProcessor->setValue('order_type', $model->data_json['order_type_name']);
             $templateProcessor->setValue('sup_detail', 'รายละเอียดพัสดุ');
             $templateProcessor->setValue('detail', $model->data_json['comment']);
             $templateProcessor->setValue('amount', 'จำนวน');
@@ -589,6 +592,7 @@ class MsWordController extends \yii\web\Controller
         $user = Yii::$app->user->id;
         $word_name = 'purchase_8.docx';
         $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ใบสั่งซื้อสั่งจ้าง');
         $templateProcessor->setValue(
@@ -643,6 +647,7 @@ class MsWordController extends \yii\web\Controller
         $model = $this->findOrderModel($id);
         $word_name = 'purchase_9.docx';
         $result_name = 'ใบสั่งซื้อสั่งจ้าง.docx';
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ใบตรวจรับการจัดซื้อ/จัดจ้าง');
         $templateProcessor->setValue('date', isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . count($model->ListCommittee()) : '-');
@@ -745,6 +750,7 @@ class MsWordController extends \yii\web\Controller
         $model = $this->findOrderModel($id);
         $word_name = 'purchase_11.docx';
         $result_name = 'แบบแสดงความบริสุทธิ์ใจ.docx';
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
         $templateProcessor->setValue('title', 'แบบแสดงความบริสุทธิ์ใจ');
@@ -863,7 +869,7 @@ class MsWordController extends \yii\web\Controller
         $user = Yii::$app->user->id;
         $word_name = 'stockcard.docx';
         $result_name = 'stock_result-' . $model->id . '.docx';
-
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
         $templateProcessor->setValue('asset_name', $model->product->title);
@@ -894,11 +900,12 @@ class MsWordController extends \yii\web\Controller
     public function CreateFile($data)
     {
         $result_name = $data['result_name'];
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $data['word_name']);  // เลือกไฟล์ template ที่เราสร้างไว้
         foreach ($data['items'] as $key => $value) {
             $templateProcessor->setValue($key, $value);
         }
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+       
 
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         return $this->Show($result_name);

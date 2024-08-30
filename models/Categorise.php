@@ -87,6 +87,7 @@ class Categorise extends \yii\db\ActiveRecord
         return $this->hasMany(Employees::className(), ['id' => 'emp_id']);
     }
 
+
     // แสดงบุคลากรที่อยู่ในกลุ่ม
     public function EmpOnWorkGroup($groupId)
     {

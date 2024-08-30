@@ -18,6 +18,14 @@ class SiteHelper extends Component
                 $model = Categorise::findOne(['name' => 'site']);
                 $siteUrl = isset($model->data_json['website']) ? $model->data_json['website'] : '-';
                 $siteName = isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
+
+                try {
+                        $leader = Employees::findOne($model->data_json['leader']);
+                } catch (\Throwable $th) {
+                
+                }
+
+
                 return [
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
                         'doc_number' => isset($model->data_json['doc_number']) ? $model->data_json['doc_number'] : null, //เลขที่หนังสือ
@@ -25,7 +33,7 @@ class SiteHelper extends Component
                         'director_position' => isset($model->data_json['director_position']) ? $model->data_json['director_position'] : null,
                         'leader' => isset($model->data_json['leader']) ? $model->data_json['leader'] : null,
                         'leader_fullname' => isset($model->data_json['leader_fullname']) ? $model->data_json['leader_fullname'] : null,
-                        'leader_position' => isset($model->data_json['leader_position']) ? $model->data_json['leader_position'] : null,
+                        'leader_position' => $leader->data_json['position_name_text'].$leader->data_json['position_level_text'],
                         'address' => isset($model->data_json['address']) ? $model->data_json['address'] : null,
                         'province' => isset($model->data_json['province']) ? $model->data_json['province'] : null,
                         'phone' => isset($model->data_json['phone']) ? $model->data_json['phone'] : null,

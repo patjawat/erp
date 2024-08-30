@@ -355,7 +355,7 @@ class Order extends \yii\db\ActiveRecord
                 'avatar' => $employee->getAvatar(false, $text),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->data_json['position_name_text'],
+                'position_name' => $employee->data_json['position_name_text'].$employee->data_json['position_level_text'],
                 'product_type_name' => $this->data_json['product_type_name']
             ];
         } catch (\Throwable $th) {
@@ -380,7 +380,7 @@ class Order extends \yii\db\ActiveRecord
                 'avatar' => $employee->getAvatar(false),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->data_json['position_name_text']
+                'position_name' => $employee->data_json['position_name_text'].$employee->data_json['position_level_text']
             ];
         } catch (\Throwable $th) {
             return [
