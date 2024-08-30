@@ -32,7 +32,7 @@ use yii\helpers\Url;
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
                                         <i class="fa-solid fa-bag-shopping fs-2"></i>
-                                        <div>ข้อซื้อ-ขอจ้าง</div>
+                                        <div>ขอซื้อ-ขอจ้าง</div>
                                     </div>
                                 </a>
                             </div>

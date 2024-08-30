@@ -36,7 +36,7 @@ INSERT INTO `categorise` (`code`, `title`, `active`,`category_id`,`name`) VALUES
 ALTER TABLE `categorise` ADD `group_id` VARCHAR(255) NULL COMMENT 'กลุ่ม' AFTER `ref`;
 
 
-UPDATE `categorise`SET name = 'asset_type' WHERE `name` LIKE 'product_type'
+UPDATE `categorise`SET name = 'asset_type' WHERE `name` LIKE 'product_type';
 
 UPDATE categorise a 
 LEFT JOIN categorise t ON t.code  = a.category_id AND t.name = 'asset_type'

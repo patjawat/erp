@@ -16,6 +16,7 @@ class m230720_072431_create_categorise_table extends Migration
         $this->createTable('{{%categorise}}', [
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
+            'group_id' => $this->string(255),
             'category_id' => $this->string(),
             'code' => $this->string()->comment('รหัส'),
             'emp_id' => $this->string()->comment('พนักงาน'),

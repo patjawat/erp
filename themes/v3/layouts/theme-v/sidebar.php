@@ -49,7 +49,7 @@ use yii\web\View;
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me/purchase']) ?>">
                     <i class="fa-solid fa-bag-shopping"></i>
-                        <span>ข้อซื้อ-ขอจ้าง</span>
+                        <span>ขอซื้อ-ขอจ้าง</span>
                     </a>
                 </li>
 
