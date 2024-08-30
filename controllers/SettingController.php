@@ -1,6 +1,8 @@
 <?php
 
 namespace app\controllers;
+
+use app\components\SiteHelper;
 use Yii;
 use app\models\Categorise;
 use yii\web\Response;
@@ -120,6 +122,22 @@ public function actionLooker()
     }
 }
 
+
+public function actionSetView()
+{
+
+    if ($this->request->get('view')) {
+        SiteHelper::setDisplay($this->request->get('view'));
+    }
+
+    if($this->request->isAjax) {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'status' => 'success',
+            'view' => 'view'
+        ];
+    }
+}
 
 }
 

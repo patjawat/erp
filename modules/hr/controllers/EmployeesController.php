@@ -121,9 +121,7 @@ class EmployeesController extends Controller
 
         $dataProvider->pagination->pageSize = 16;
 
-        if ($this->request->get('view')) {
-            SiteHelper::setDisplay($this->request->get('view'));
-        }
+  
 
         $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
         $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();

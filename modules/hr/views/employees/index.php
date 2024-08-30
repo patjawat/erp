@@ -9,6 +9,7 @@ use yii\bootstrap5\LinkPager;
 use yii\grid\ActionColumn;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\web\View;
 use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
@@ -58,8 +59,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <?= $this->render('_search', ['model' => $searchModel]); ?>
 
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/hr/employees/index', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['/hr/employees/index', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
+            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+            <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
 <?= $this->render('export_employee', ['dataProvider' => $dataProvider]) ?>
 
 
@@ -101,18 +102,19 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <span id="totalCount" class="d-none"><?= $dataProvider->getTotalCount(); ?></span>
 
-<?php Pjax::end(); ?>
+
 <?php
 $js = <<< JS
 
-    \$('#hr-container').on('pjax:success', function() {
-        // Your code goes here ...
-        console.log('success',\$('#totalCount').text());
-        \$('#showTotalCount').text(\$('#totalCount').text())
-        // \$.pjax.reload({ container:'#title-container', history:false,replace: false});         
-    });
+        $('#hr-container').on('pjax:success', function() {
+            // Your code goes here ...
+            console.log('success',\$('#totalCount').text());
+            \$('#showTotalCount').text(\$('#totalCount').text())
+            // \$.pjax.reload({ container:'#title-container', history:false,replace: false});         
+        });
 
     JS;
-$this->registerJS($js)
+    $this->registerJS($js,View::POS_END)
 
 ?>
+<?php Pjax::end(); ?>

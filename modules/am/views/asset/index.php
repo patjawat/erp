@@ -73,8 +73,8 @@ $this->params['breadcrumbs'][] = $this->title;
         data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
         <i class="fa-solid fa-filter"></i>
     </span>
-                <?=Html::a('<i class="bi bi-list-ul"></i>',['/am/asset/','view'=> 'list'],['class' => 'btn btn-outline-primary'])?>
-                <?=Html::a('<i class="bi bi-grid"></i>',['/am/asset/','view'=> 'grid'],['class' => 'btn btn-outline-primary'])?>
+    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
                 <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
             'data' => [
                 'bs-placement' => 'top',

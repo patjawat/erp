@@ -92,6 +92,22 @@ function warning($msg = "") {
   });
 }
 
+$("body").on("click", ".setview", function (e) {
+  var url = $(this).attr('href');
+          e.preventDefault();
+          $.ajax({
+              type: "get",
+              url: url,
+              dataType: "json",
+              success: function (res) {
+                  console.log(res);
+                  location.reload();
+                  
+              }
+          });
+      });
+      
+
 $("body").on("click", ".open-modal", function (e) {
   e.preventDefault();
   var url = $(this).attr("href");
