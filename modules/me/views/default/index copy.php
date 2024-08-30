@@ -14,11 +14,14 @@ $this->title = 'My DashBoard';
 }
 </style>
 <div class="row">
-    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-sx-12">
-        <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
+    <div class="col-xl-9 col-lg-9 col-md-6 col-sm-12 col-sx-12">
 
+        
         <div class="row">
-            <div class="col-6">
+            <div class="col-4">
+                <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
+            </div>
+            <div class="col-4">
                 <div class="card" style="height:300px;">
                     <div class="card-body">
                         <?= $this->render('leave_total') ?>
@@ -41,9 +44,17 @@ $this->title = 'My DashBoard';
 
 
     </div>
+    <div class="col-3">
+        <div class="card mb-2">
+          <div class="card-body">
+            <h6>ความเคลื่อไว</h6>
+          </div>
+        </div>
+    <div id="viewApprovePurchase">Loading...</div>
+    </div>
     <div class="col-6">
         <div id="viewApproveStock">Loading...</div>
-        <div id="viewApprovePurchase">Loading...</div>
+        
 
         <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
         <!-- <div class="card" style="height:300px;">
