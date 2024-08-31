@@ -14,23 +14,16 @@ $this->title = 'My DashBoard';
 }
 </style>
 <div class="row">
-    <div class="col-xl-9 col-lg-9 col-md-9 col-sm-12 col-sx-12">
-       
-
-
-
-        <div id="viewApproveStock">Loading...</div>
-
-        <div id="viewApprovePurchase">Loading...</div>
+    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-sx-12">
+        <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
 
         <div class="row">
             <div class="col-6">
-            <div class="card" style="height:300px;">
-            <div class="card-body">
-                <h6>กลุ่ม/ทีมประสาน</h6>
-                <?php // $this->render('activity') ?>
-            </div>
-        </div>
+                <div class="card" style="height:300px;">
+                    <div class="card-body">
+                        <?= $this->render('leave_total') ?>
+                    </div>
+                </div>
             </div>
             <div class="col-6">
                 <div class="card" style="height:300px;">
@@ -44,14 +37,14 @@ $this->title = 'My DashBoard';
             </div>
         </div>
 
+
+
+
     </div>
-    <div class="col-3">
-    <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
-    <div class="card" style="height:300px;">
-                    <div class="card-body">
-                        <?= $this->render('leave_total') ?>
-                    </div>
-                </div>
+    <div class="col-6">
+        <div id="viewApproveStock">Loading...</div>
+        <div id="viewApprovePurchase">Loading...</div>
+
         <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
         <!-- <div class="card" style="height:300px;">
             <div class="card-body">
@@ -67,7 +60,12 @@ $this->title = 'My DashBoard';
 
 <div class="row">
     <div class="col-6">
-       
+        <div class="card" style="height:300px;">
+            <div class="card-body">
+                <h6>กลุ่ม/ทีมประสาน</h6>
+                <?php // $this->render('activity') ?>
+            </div>
+        </div>
     </div>
     <div class="col-6">
         <div id="viewOwnerAsset">Loading...</div>
