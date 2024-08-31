@@ -22,6 +22,7 @@ class m140209_132017_init extends Migration
             'id' => $this->primaryKey(),
             'username' => $this->string(25)->notNull(),
             'email' => $this->string(255),
+            'line_id' => $this->string(255),
             'password_hash' => $this->string(60)->notNull(),
             'auth_key' => $this->string(32)->notNull(),
             'confirmation_token' => $this->string(32)->null(),

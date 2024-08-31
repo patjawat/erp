@@ -34,7 +34,7 @@ class ImportHelpdeskController extends Controller
         $sql = "SELECT
                 a.ARTICLE_NUM as code,
                 ('repair') as name,
-                i.YEAR_ID as year_budget,
+                i.YEAR_ID as thai_year,
                 CAST(e.id as UNSIGNED) as empoyee_id,
                 concat(e.fname,' ',e.lname) as create_name,
                 person.HR_CID,i.DATE_TIME_REQUEST,i.YEAR_ID,
@@ -82,7 +82,7 @@ class ImportHelpdeskController extends Controller
                 $model = new Helpdesk();
                 $model->code = $item['code'];
                 $model->name = 'repair';
-                $model->year_budget = $item['year_budget'];
+                $model->thai_year = $item['thai_year'];
                 $model->status = 4;
                 $model->repair_group = $repair_group;
                 $model->created_by = $item['empoyee_id'];

@@ -54,7 +54,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'year_budget'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -73,7 +73,7 @@ class Helpdesk extends \yii\db\ActiveRecord
             'date_end' => 'Date End',
             'name' => 'Name',
             'title' => 'Title',
-            'year_budget' => 'ปีงบประมาณ',
+            'thai_year' => 'ปีงบประมาณ',
             'move_out' => 'จำหน่าย',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
@@ -102,7 +102,7 @@ class Helpdesk extends \yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
-        $this->year_budget = AppHelper::YearBudget();
+        $this->thai_year = AppHelper::YearBudget();
         return parent::beforeSave($insert);
     }
 

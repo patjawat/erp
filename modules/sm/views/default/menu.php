@@ -22,7 +22,7 @@ use yii\helpers\Url;
             <li><?= Html::a('<i class="bi bi-box-fill me-1"></i> ทรัพย์สิน', ['/sm/asset-item', 'group' => 3, 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?>
             <li><?= Html::a('<i class="bi bi-box-fill me-1"></i> จ้างเหมาบริการ', ['/sm/service-item', 'group' => 5, 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?>
             <li><?= Html::a('<i class="bi bi-box-fill me-1"></i> อาหารสด', ['/sm/food-item', 'group' => 6, 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?>
-            <li><?= Html::a('<i class="fa-solid fa-window-restore me-1"></i> หน่วยนับ', ['/sm/product-unit','title' => 'หน่วยนับ'], ['id' => 'unit', 'class' => 'dropdown-item open-modal modal-lg']) ?>
+            <li><?= Html::a('<i class="fa-solid fa-window-restore me-1"></i> หน่วยนับ', ['/sm/product-unit','title' => 'หน่วยนับ'], ['id' => 'unit', 'class' => 'dropdown-item']) ?>
             <li><?= Html::a('<i class="fa-solid fa-file-import me-1"></i> นำเข้า', ['/sm/vendor/import-csv'], ['class' => 'dropdown-item']) ?>
             </li>
         </ul>
