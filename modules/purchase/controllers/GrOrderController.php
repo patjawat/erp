@@ -142,7 +142,7 @@ class GrOrderController extends Controller
                 ];
                 $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
                 
-                if($model->data_json['order_item_checker'] == 'Y'){
+                if($model->data_json['order_item_checker'] == 'ถูกต้องครบถ้วน'){
 
                     //ถ้าเป็นจ้างเหมา ไม่ต้องส่งคลัง
                     if($model->category_id == 'M25'){
