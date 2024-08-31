@@ -45,3 +45,35 @@ use iamsaint\datetimepicker\Datetimepicker;
                                     
                                     ?>
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า');?>
+<?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
+
+
+<?php
+$js = <<< JS
+
+    console.log($("#stockevent-auto_lot").val())
+    if($("#stockevent-auto_lot").val()){
+    $( "#stockevent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
+
+
+
+    }
+
+
+    $("#stockevent-auto_lot").change(function() {
+        //ตั้งค่า Run Lot Auto
+        if(this.checked) {
+            console.log('lot_auto');
+            localStorage.setItem('lot_auto',1);
+         
+
+        }else{
+            localStorage.setItem('lot_auto',0);
+          
+        }
+    });
+
+
+    JS;
+$this->registerJS($js)
+?>

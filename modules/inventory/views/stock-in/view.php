@@ -14,6 +14,17 @@ $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
+
 <?php Pjax::begin(['id' => 'inventory']); ?>
 <div class="row">
     <div class="col-8">
@@ -23,11 +34,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ</h6>
                    
-                   <?php if($model->order_status == 'success'):?>
+                   <!-- <?php if($model->order_status == 'success'):?>
                     <?=Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก',['/inventory/stock-event/cancel-order','id' => $model->id],['class' => 'btn btn-sm btn-danger rounded-pill shadow confirm-order','data' => ['title' => 'ยืนยัน','text' => 'ยืนยันยกเลิกรายการนี้']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-                <?php endif?>
+                <?php endif?> -->
                 </div>
                 <table class="table table-striped mt-3">
                 <thead class="table-primary">
@@ -67,9 +78,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
                         <td class="align-middle text-center"><?= $item->lot_number ?></td>
                         <td class="align-middle text-center">
-                            <?= isset($item->data_json['mfg_date']) ? AppHelper::convertToThai($item->data_json['mfg_date']) : '-' ?></td>
+                            <?= $item->mfgDate; ?></td>
                         <td class="align-middle text-center">
-                            <?= isset($item->data_json['exp_date']) ? AppHelper::convertToThai($item->data_json['exp_date']) : '-' ?></td>
+                            <?=$item->expDate?></td>
 
                         <td class="align-middle">
                             <div class="d-flex justify-content-center gap-2">
@@ -113,9 +124,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= DetailView::widget([
                     'model' => $model,
                     'attributes' => [
-                        'order_status',
-                        'name',
-                        'code',
+                        [
+                            'label' => 'สถานะ',
+                            'value' => $model->viewStatus()
+                        ],
+                        [
+                            'label' => 'มูลค่า',
+                            'value' => number_format($model->getTotalPrice(),2)
+                        ]
                     ],
                 ]) ?>
 

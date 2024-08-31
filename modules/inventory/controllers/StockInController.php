@@ -190,8 +190,11 @@ class StockInController extends Controller
                 $model->order_status = 'pending';
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {
+
+                
                     $stockItem = new StockEvent([
                         'code' =>  $model->code,
+                        'lot_number' => $model->auto_lot == "1" ? \mdm\autonumber\AutoNumber::generate('LOT' . (substr((date('Y') + 543), 2)) . '-?????') : '',
                         'asset_item' => $item->asset_item,
                         'transaction_type' => 'IN',
                         'warehouse_id' => $model->warehouse_id,
@@ -199,6 +202,9 @@ class StockInController extends Controller
                         'po_number' => $model->po_number,
                         'name' => 'order_item',
                         'qty' => $item->qty,
+                        'data_json' => [
+                        'order_qty' => $item->qty
+                    ],
                         'unit_price' => $item->price,
                         'order_status' => 'pending',
                     ]);
@@ -244,9 +250,10 @@ class StockInController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
 
             if ($model->name == 'order_item') {
+                
                 $convertDate = [
-                    'mfg_date' =>  AppHelper::convertToGregorian($model->data_json['mfg_date']),
-                    'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
+                    'mfg_date' =>  $model->data_json['mfg_date'] == '__/__/____' ? "" : AppHelper::convertToGregorian($model->data_json['mfg_date']),
+                    'exp_date' =>  $model->data_json['exp_date'] == '__/__/____' ? "" : AppHelper::convertToGregorian($model->data_json['exp_date']),
                 ];
                 $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
             }
@@ -254,9 +261,11 @@ class StockInController extends Controller
             if ($model->name == 'order_item' && $model->auto_lot == "1" && $model->lot_number == '') {
                 $model->lot_number  = \mdm\autonumber\AutoNumber::generate('LOT' . (substr((date('Y') + 543), 2)) . '-?????');
             }
+            Yii::$app->response->format = Response::FORMAT_JSON;
 
             if ($model->save(false)) {
                 if ($model->name == 'order') {
+                    return $model->data_json;
                     return $this->redirect(['view', 'id' => $model->id]);
                 } else {
                     Yii::$app->response->format = Response::FORMAT_JSON;
@@ -273,8 +282,8 @@ class StockInController extends Controller
             try {
             $oldObj = $model->data_json;
             $model->data_json = [
-                'mfg_date' =>  AppHelper::convertToThai($model->data_json['mfg_date']),
-                'exp_date' =>  AppHelper::convertToThai($model->data_json['exp_date'])
+                'mfg_date' =>  $model->mfgDate,
+                'exp_date' => $model->expDate
             ];
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             } catch (\Throwable $th) {
@@ -341,6 +350,11 @@ class StockInController extends Controller
         // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
         // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
         $model = $this->findModel($id);
+        $order = Order::findOne(['name' => 'order','po_number' => $model->po_number]);
+        if($order){
+            $order->status = 5;
+            $order->save(false);
+        }
         foreach($model->getItems() as $item){
             $store = Stock::findOne(['asset_item' => $item->asset_item,'id' => $item->lot_number]);
             if($store){
@@ -378,12 +392,12 @@ class StockInController extends Controller
 
             if ($model->name == 'order_item') {
 
-                if (isset($model->data_json['mfg_date'])) {
-                    preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
-                }
-                if (isset($model->data_json['exp_date'])) {
-                    preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
-                }
+                // if (isset($model->data_json['mfg_date'])) {
+                //     preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
+                // }
+                // if (isset($model->data_json['exp_date'])) {
+                //     preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
+                // }
             }
 
             if (isset($model->asset_item)) {

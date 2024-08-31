@@ -128,8 +128,8 @@ class StockEvent extends \yii\db\ActiveRecord
     public function afterFind()
     {
 
-        $this->mfgDate = isset($this->data_json['mfg_date']) ? AppHelper::convertToThai($this->data_json['mfg_date']) : '-';
-        $this->expDate = isset($this->data_json['exp_date']) ? AppHelper::convertToThai($this->data_json['exp_date']) : '-';
+        $this->mfgDate = (isset($this->data_json['mfg_date']) && $this->data_json['mfg_date'] !=="") ? AppHelper::convertToThai($this->data_json['mfg_date']) : '-';
+        $this->expDate = (isset($this->data_json['exp_date']) && $this->data_json['exp_date'] !=="") ? AppHelper::convertToThai($this->data_json['exp_date']) : '-';
         $this->note = isset($this->data_json['note']) ? $this->data_json['note'] : '-';
         parent::afterFind();
     }
@@ -168,13 +168,19 @@ class StockEvent extends \yii\db\ActiveRecord
     // ราวมราคาทั้งหมด
     public function getTotalPrice()
     {
-        try {
+        // try {
 
-            $sql = "SELECT SUM(unit_price * qty) AS total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' GROUP BY code;";
-            return Yii::$app->db->createCommand($sql)->queryScalar($sql);
-        } catch (\Throwable $th) {
-            return 0;
-        }
+            // $sql = "SELECT SUM(unit_price * qty) AS total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' GROUP BY code;";
+            // $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE `code` LIKE 'RC-670016';";
+            $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' AND `code` = :code;";
+            $query = Yii::$app->db
+            ->createCommand($sql)
+            ->bindValue(':code', $this->code)
+            ->queryScalar();
+            return $query;
+        // } catch (\Throwable $th) {
+        //     return 0;
+        // }
     }
 
     //  ภาพทีมคณะกรรมการ
@@ -319,6 +325,7 @@ class StockEvent extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
+
         switch ($this->order_status) {
             case 'await':
                 $msg = 'อยู่ระหว่างดำเนินการ';
@@ -332,7 +339,7 @@ class StockEvent extends \yii\db\ActiveRecord
                 $msg = 'ยกเลิก';
                 break;
             case 'success':
-                $msg = 'เสร็จสิ้น';
+                $msg = 'สำเร็จ';
                 break;
 
 

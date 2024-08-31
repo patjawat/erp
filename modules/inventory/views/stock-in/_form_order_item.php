@@ -54,85 +54,8 @@ $resultsJs = <<< JS
     JS;
 
 ?>
-<style>
-.col-form-label {
-    text-align: end;
-}
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #eaecee !important;
-    color: #fff;
-}
-:not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-    height: calc(2.875rem + 12px) !important;
-}
-.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #eaecee !important;
-    color: #3F51B5;
-}
-</style>
 
 
-<div class="row">
-    <div class="col-12">
-
-                <?php
-
-try {
-    $initProduct =  Product::find()->where(['code' => $model->asset_item])->one()->Avatar(false);
-} catch (\Throwable $th) {
-    $initProduct = '';
-}
-        echo $form->field($model, 'asset_item')->widget(Select2::classname(), [
-            'initValueText' => $initProduct,
-            'options' => ['placeholder' => 'เลือกวัสดุ ...'],
-            'size' => Select2::LARGE,
-            'pluginEvents' => [
-                'select2:unselect' => 'function() {
-                $("#order-data_json-board_fullname").val("")
-
-         }',
-                'select2:select' => 'function() {
-                var fullname = $(this).select2("data")[0].fullname;
-                var position_name = $(this).select2("data")[0].position_name;
-                $("#order-data_json-board_fullname").val(fullname)
-                $("#order-data_json-position_name").val(position_name)
-               
-         }',
-            ],
-            'pluginOptions' => [
-                'dropdownParent' => '#main-modal',
-                'allowClear' => true,
-                'minimumInputLength' => 1,
-                'ajax' => [
-                    'url' => Url::to(['/inventory/stock-event/product']),
-                    'dataType' => 'json',
-                    'delay' => 250,
-                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                    'processResults' => new JsExpression($resultsJs),
-                    'cache' => true,
-                ],
-                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                'templateResult' => new JsExpression('formatRepo'),
-            ],
-        ])->label('วัสดุ')
-    ?>
-                <?php
-                    echo $form->field($model, 'data_json[item_type]')->radioList(
-                        ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม','บริจาค' => 'บริจาค'], 
-                        ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
-                        )->label('ประเภท');
-                    
-         ?>
-
-    </div>
-    <div class="col-3">
-        <div style="margin-top:-13px">
-
-
-</div>
-    </div>
-</div>
 <div class="row">
     <div class="col-6">
 <?=$form->field($model, 'data_json[mfg_date]')->widget(Datetimepicker::className(),[

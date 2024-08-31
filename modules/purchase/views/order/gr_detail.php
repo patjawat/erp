@@ -15,7 +15,9 @@ use yii\helpers\Html;
           <td class="text-end">วันที่ตรวจรับ</td>
           <td> <?= isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') : '' ?>
             <td class="text-end">ผลการตรวจสอบ</td>
-            <td colspan="3"><?=isset($model->data_json['order_item_checker']) ? ($model->data_json['order_item_checker']== 'Y' ? 'ครบถ้วน' : 'ไม่ครบถ้วน') : '-'?></td>
+            <td colspan="3">
+                <?php //  $model->data_json['order_item_checke']?>
+                <?=isset($model->data_json['order_item_checker']) ? $model->data_json['order_item_checker'] : '-'?></td>
         </tr>
        
 
