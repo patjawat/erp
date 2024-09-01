@@ -139,13 +139,26 @@ class ApproveController extends \yii\web\Controller
 
     public function actionPurchase()
     {
+
+        // 
+        
+
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andwhere(['is not', 'pr_number', null]);
         $dataProvider->query->andwhere(['status' => 1]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
+        //ถ้าเป็นผู้อำนวยการ
+        if(Yii::$app->user->can('director')){
+            $dataProvider->query->andwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), ""]);
+            $dataProvider->query->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_officer_checker')"),"Y"]);
+            $dataProvider->query->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), "Y"]);
+
+        }else{
+            // $dataProvider->query->where(['=', new Expression("JSON_EXTRACT(data_json, '$.leader1')"),  (string) Yii::$app->user->id]);
+        }
+
         $dataProvider->pagination->pageSize = 8;
-        $dataProvider->query->where(['=', new Expression("JSON_EXTRACT(data_json, '$.leader1')"),  (string) Yii::$app->user->id]);
 
         if ($this->request->isAjax) {
 

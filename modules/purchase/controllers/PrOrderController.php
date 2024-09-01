@@ -405,7 +405,11 @@ class PrOrderController extends Controller
 
     public function actionLeaderConfirm($id)
     {
+        // Yii::$app->response->format = Response::FORMAT_JSON;
+
         $model = $this->findModel($id);
+        $user = UserHelper::GetEmployee();
+        // return $user->id;
 
         $oldObj = $model->data_json;
         if ($model->load($this->request->post())) {

@@ -1,5 +1,6 @@
 <?php
 
+use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use kartik\datecontrol\DateControl;
 use kartik\form\ActiveField;
@@ -19,8 +20,10 @@ $this->title = 'ราการขอซื้อ';
 $this->params['breadcrumbs'][] = ['label' => 'Inventories', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+$user = UserHelper::GetEmployee();
 ?>
 
+<?php if($model->data_json['leader1'] == $user->id):?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-leader-confirm',
     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
@@ -40,7 +43,9 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <?php ActiveForm::end(); ?>
-
+<?php else:?>
+<h6 class="text-center">ไม่อนุญาติ</h6>
+<?php endif;?>
 <?php
 $js = <<< JS
 
