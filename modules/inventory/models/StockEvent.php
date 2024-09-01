@@ -384,10 +384,10 @@ class StockEvent extends \yii\db\ActiveRecord
     }
 
 
-    public function getAvatar($user_id, $msg = '')
+    public function getAvatar($empid, $msg = '')
     {
         try {
-            $employee = Employees::find()->where(['user_id' => $user_id])->one();
+            $employee = Employees::find()->where(['id' => $empid])->one();
 
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
