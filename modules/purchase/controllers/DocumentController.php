@@ -85,15 +85,15 @@ class DocumentController extends \yii\web\Controller
 
     // Action สำหรับดาวน์โหลดไฟล์ ZIP
     // public function actionDownloadZip($filename)
-    public function actionDownloadZip()
+    public function actionDownloadZip($filename)
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
 
         // กำหนดเส้นทางของไฟล์ที่จะดาวน์โหลด
-        // return 'Download zip';
-        $x = 'purchase-2.zip';
-        // $filePath = Yii::getAlias('@webroot/downloads/' . $filename);
-        $filePath = Yii::getAlias('@webroot/downloads/' . $x);
+        // return $filename;
+        // $x = 'purchase-2.zip';
+        $filePath = Yii::getAlias('@webroot/downloads/' . $filename);
+        // $filePath = Yii::getAlias('@webroot/downloads/' . $x);
         // $filePath = Yii::getAlias('@app/web/downloads/' . $filename);
 
         // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
@@ -107,18 +107,18 @@ class DocumentController extends \yii\web\Controller
     public function actionDownload($id)
     {
 
-        $this->Purchase1($id);
-        $this->Purchase2($id);
-        $this->Purchase3($id);
-        $this->Purchase4($id);
-        $this->Purchase5($id);
-        $this->Purchase6($id);
-        $this->Purchase7($id);
-        $this->Purchase8($id);
-        $this->Purchase9($id);
-        $this->Purchase10($id);
-        $this->Purchase11($id);
-        $this->Purchase12($id);
+        // $this->Purchase1($id);
+        // $this->Purchase2($id);
+        // $this->Purchase3($id);
+        // $this->Purchase4($id);
+        // $this->Purchase5($id);
+        // $this->Purchase6($id);
+        // $this->Purchase7($id);
+        // $this->Purchase8($id);
+        // $this->Purchase9($id);
+        // $this->Purchase10($id);
+        // $this->Purchase11($id);
+        // $this->Purchase12($id);
 
         $filename = 'purchase-'.$id.'.zip';
         $sourcePath = Yii::getAlias('@app/web/msword/results/purchase/'.$id.'/'); // โฟลเดอร์ที่จะบีบอัด
