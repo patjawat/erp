@@ -87,21 +87,46 @@ class DocumentController extends \yii\web\Controller
     // public function actionDownloadZip($filename)
     public function actionDownloadFile($id)
     {
+
+          $this->Purchase1($id);
+        $this->Purchase2($id);
+        $this->Purchase3($id);
+        $this->Purchase4($id);
+        $this->Purchase5($id);
+        $this->Purchase6($id);
+        $this->Purchase7($id);
+        $this->Purchase8($id);
+        $this->Purchase9($id);
+        $this->Purchase10($id);
+        $this->Purchase11($id);
+        $this->Purchase12($id);
+
+        $filename = 'purchase-'.$id.'.zip';
+        $sourcePath = Yii::getAlias('@app/web/msword/results/purchase/'.$id.'/'); // โฟลเดอร์ที่จะบีบอัด
+        $zipPath = Yii::getAlias('@app/web/downloads/'.$filename); // ไฟล์ ZIP ที่จะสร้าง
+
+        // เรียกใช้ Component สำหรับสร้างไฟล์ ZIP
+        if (Yii::$app->zip->createZip($sourcePath, $zipPath)) {
+            
+            $filePath = Yii::getAlias('@webroot/downloads/' . $filename);
+
+            // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+            if (file_exists($filePath)) {
+                return Yii::$app->response->sendFile($filePath);
+            } else {
+                return 'File not found.';
+            }
+            
+            // return $this->redirect('downloads/purchase-2.zip');
+        } else {
+            return 'Failed to create ZIP file.';
+        }
+
         // Yii::$app->response->format = Response::FORMAT_JSON;
 
         // กำหนดเส้นทางของไฟล์ที่จะดาวน์โหลด
-        // return $filename;
-        $filename = 'purchase-'.$id.'.zip';
-        $filePath = Yii::getAlias('@webroot/downloads/' . $filename);
-        // $filePath = Yii::getAlias('@webroot/downloads/' . $x);
-        // $filePath = Yii::getAlias('@app/web/downloads/' . $filename);
 
-        // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
-        if (file_exists($filePath)) {
-            return Yii::$app->response->sendFile($filePath);
-        } else {
-            return 'File not found.';
-        }
+      
     }
 
     public function actionDownload($id)

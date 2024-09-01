@@ -90,7 +90,6 @@ $js = <<< JS
 
         $('#download-btn').click(function (e) {
             e.preventDefault();
- console.log('click download');
  
             // Set the filename you want to download
             const filename = 'myfile.zip';
