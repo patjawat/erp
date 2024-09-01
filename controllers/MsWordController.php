@@ -659,7 +659,7 @@ class MsWordController extends \yii\web\Controller
         $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
         $this->CreateDir($model->id);
-        $result_name = $model->id . '/ใบสั่งซื้อสั่งจ้าง.docx';
+        $result_name = $model->id . '/ใบตรวจรับสั่งซื้อสั่งจ้าง.docx';
         $word_name = 'purchase_9.docx';
 
         @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);

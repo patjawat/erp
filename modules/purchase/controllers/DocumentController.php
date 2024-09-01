@@ -54,7 +54,7 @@ class DocumentController extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',
-                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/purchase/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
                 'content' => $this->renderAjax('word', ['filename' => $filename]),
             ];
         } else {
@@ -66,28 +66,64 @@ class DocumentController extends \yii\web\Controller
         }
     }
 
-    // $setDate = [
-    //     'committee_detail_date' =>  AppHelper::convertToGregorian($model->set_date),
-    // ];
-    // $setDate = ['apporve_report_date' =>  AppHelper::convertToGregorian($model->set_date)];
-    // $setDate = ['purchase_report_date' =>  AppHelper::convertToGregorian($model->set_date)];
-    // $setDate = ['purchase_report_order_date' =>  AppHelper::convertToGregorian($model->set_date)];
-    // $setDate = ['report_winner_date' =>  AppHelper::convertToGregorian($model->set_date)];
-    // $setDate = ['report_checker_date' =>  AppHelper::convertToGregorian($model->set_date)];
-    // $setDate = ['request_pay_date' =>  AppHelper::convertToGregorian($model->set_date)];
 
-    public function actionAllFile($id)
+
+    // Action สำหรับสร้างไฟล์ ZIP
+    // public function actionCreateZip($id)
+    // {
+    //     $filename = 'purchase-'.$id.'.zip';
+    //     $sourcePath = Yii::getAlias('@app/web/msword/results/purchase/'.$id); // โฟลเดอร์ที่จะบีบอัด
+    //     $zipPath = Yii::getAlias('@app/web/downloads/purchase/'.$filename); // ไฟล์ ZIP ที่จะสร้าง
+
+    //     // เรียกใช้ Component สำหรับสร้างไฟล์ ZIP
+    //     if (Yii::$app->zip->createZip($sourcePath, $zipPath)) {
+    //         return $this->redirect(['download-zip', 'filename' => $filename]);
+    //     } else {
+    //         return 'Failed to create ZIP file.';
+    //     }
+    // }
+
+    // Action สำหรับดาวน์โหลดไฟล์ ZIP
+    public function actionDownloadZip($filename)
     {
+        // กำหนดเส้นทางของไฟล์ที่จะดาวน์โหลด
+        $filePath = Yii::getAlias('@app/web/downloads/' . $filename);
+
+        // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            return 'File not found.';
+        }
+    }
+
+    public function actionDownload($id)
+    {
+
         $this->Purchase1($id);
         $this->Purchase2($id);
         $this->Purchase3($id);
         $this->Purchase4($id);
         $this->Purchase5($id);
-        // $this->Purchase6($id);
-        // $this->Purchase7($id);
-        // $this->Purchase8($id);
-        // $this->Purchase9($id);
-        // $this->Purchase10($id);
+        $this->Purchase6($id);
+        $this->Purchase7($id);
+        $this->Purchase8($id);
+        $this->Purchase9($id);
+        $this->Purchase10($id);
+        $this->Purchase11($id);
+        $this->Purchase12($id);
+
+        $filename = 'purchase-'.$id.'.zip';
+        $sourcePath = Yii::getAlias('@app/web/msword/results/purchase/'.$id.'/'); // โฟลเดอร์ที่จะบีบอัด
+        $zipPath = Yii::getAlias('@app/web/downloads/'.$filename); // ไฟล์ ZIP ที่จะสร้าง
+
+        // เรียกใช้ Component สำหรับสร้างไฟล์ ZIP
+        if (Yii::$app->zip->createZip($sourcePath, $zipPath)) {
+            return $this->redirect(['download-zip', 'filename' => $filename]);
+        } else {
+            return 'Failed to create ZIP file.';
+        }
+
     }
     //ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด
     protected function Purchase1($id)
@@ -95,11 +131,21 @@ class DocumentController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['committee_detail_date']) || $model->data_json['committee_detail_date'] == "")
+        {
+            $setDate = [
+                'committee_detail_date' =>   date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
+
         $this->CreateDir($model->id);
         $result_name = $model->id . '/ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด.docx';
         $word_name = 'purchase_1.docx';
 
-            @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+            @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
             $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
             $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
@@ -132,7 +178,7 @@ class DocumentController extends \yii\web\Controller
                 $i++;
             }
 
-            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
 
        
     }
@@ -140,6 +186,16 @@ class DocumentController extends \yii\web\Controller
     protected function Purchase2($id)
     {
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['apporve_report_date']) || $model->data_json['apporve_report_date'] == "")
+        {
+            $setDate = [
+                'apporve_report_date' =>  date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
+
         $this->CreateDir($model->id);
         $result_name = $model->id . '/ขอความเห็นชอบและรายงานผล.docx';
         $word_name = 'purchase_2.docx';
@@ -171,7 +227,7 @@ class DocumentController extends \yii\web\Controller
         $this->CreateDir($model->id);
         $result_name = $model->id . '/ขออนุมัติจัดซื้อจัดจ้าง.docx';
         $word_name = 'purchase_3.docx';
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
 
 
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
@@ -201,7 +257,7 @@ class DocumentController extends \yii\web\Controller
             $i++;
         }
 
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
     }
     // รายละเอียดขอบเขตงานหรือรายละเอียดคุณลักษณะของพัสดุที่จะซื้อหรือจ้าง
     protected function Purchase4($id)
@@ -211,7 +267,7 @@ class DocumentController extends \yii\web\Controller
         $result_name = $model->id . '/ขอบเขตงานหรือรายละเอียดคุณลักษณะ.docx';
         $word_name = 'purchase_4.docx';
 
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('po_number', $model->po_number);
         $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
@@ -229,16 +285,26 @@ class DocumentController extends \yii\web\Controller
             $templateProcessor->setValue('unit#' . $i, isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-');
             $i++;
         }
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
     }
 
     protected function Purchase5($id)
     {
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['purchase_report_date']) || $model->data_json['purchase_report_date'] == "")
+        {
+            $setDate = [
+                'purchase_report_date' =>   date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
+
         $this->CreateDir($model->id);
         $result_name = $model->id . '/รายงานขอซื้อขอจ้าง.docx';
         $word_name = 'purchase_5.docx';
-            @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+            @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
             $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
             $templateProcessor->setValue('org_name_full', $this->GetInfo()['company_full']);
             $templateProcessor->setValue('doc_number', $this->getInfo()['doc_number']);
@@ -270,13 +336,22 @@ class DocumentController extends \yii\web\Controller
                 $i++;
             }
 
-            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
  
     }
 
     protected function Purchase6($id)
     {
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['purchase_report_order_date']) || $model->data_json['purchase_report_order_date'] == "")
+        {
+            $setDate = [
+                'purchase_report_order_date' =>   date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
         $this->CreateDir($model->id);
         $result_name = $model->id . '/รายงานผลการตรวจรับพัสดุ.docx';
         $word_name = 'purchase_6.docx';
@@ -312,6 +387,15 @@ class DocumentController extends \yii\web\Controller
     protected function Purchase7($id)
     {
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['report_winner_date']) || $model->data_json['report_winner_date'] == "")
+        {
+            $setDate = [
+                'report_winner_date' =>   date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
         $this->CreateDir($model->id);
         $result_name = $model->id . '/ประกาศผู้ชนะการเสนอราคา.docx';
         $word_name = 'purchase_7.docx';
@@ -331,7 +415,7 @@ class DocumentController extends \yii\web\Controller
                     'date' => isset($model->data_json['report_winner_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['report_winner_date'], 'long')) : '-',
                 ]
             ];
-            return $this->CreateFile($data);
+             $this->CreateFile($data);
       
     }
 
@@ -343,7 +427,7 @@ class DocumentController extends \yii\web\Controller
         $result_name = $model->id . '/ใบสั่งซื้อสั่งจ้าง.docx';
         $word_name = 'purchase_8.docx';
 
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ใบสั่งซื้อสั่งจ้าง');
         $templateProcessor->setValue(
@@ -387,19 +471,18 @@ class DocumentController extends \yii\web\Controller
             $templateProcessor->setValue('unit#' . $i, isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-');
             $i++;
         }
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        return $this->Show($result_name);
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
     }
 
-    //ใบสั่งซื้อสั่งจ้าง
+    //ใบตรวจรับสั่งซื้อสั่งจ้าง
     protected function Purchase9($id)
     {
         $model = $this->findOrderModel($id);
         $this->CreateDir($model->id);
-        $result_name = $model->id . '/ใบสั่งซื้อสั่งจ้าง.docx';
+        $result_name = $model->id . '/ใบตรวจรับสั่งซื้อสั่งจ้าง.docx';
         $word_name = 'purchase_9.docx';
 
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('title', 'ใบตรวจรับการจัดซื้อ/จัดจ้าง');
         $templateProcessor->setValue('date', isset($model->data_json['gr_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . count($model->ListCommittee()) : '-');
@@ -424,14 +507,21 @@ class DocumentController extends \yii\web\Controller
             $templateProcessor->setValue('item_name#' . $i, $item->ShowCommittee()['fullname']);
             $i++;
         }
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        return $this->Show($result_name);
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
     }
 
     protected function Purchase10($id)
     {
-        $id = $this->request->get('id');
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['report_checker_date']) || $model->data_json['report_checker_date'] == "")
+        {
+            $setDate = [
+                'report_checker_date' =>   date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
         $this->CreateDir($model->id);
         $result_name = $model->id . '/รายงานผลการตรวจรับ.docx';
         $word_name = 'purchase_10.docx';
@@ -460,7 +550,7 @@ class DocumentController extends \yii\web\Controller
                     'leader_position' => $model->getMe()['leader']['leader1_position']
                 ]
             ];
-            return $this->CreateFile($data);
+             $this->CreateFile($data);
        
     }
 
@@ -471,7 +561,7 @@ class DocumentController extends \yii\web\Controller
         $this->CreateDir($model->id);
         $result_name = $model->id . '/แบบแสดงความบริสุทธิ์ใจ.docx';
         $word_name = 'purchase_11.docx';
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
         $templateProcessor->setValue('title', 'แบบแสดงความบริสุทธิ์ใจ');
@@ -497,12 +587,21 @@ class DocumentController extends \yii\web\Controller
         }
 
 
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
     }
 
     protected function Purchase12($id)
     {
         $model = $this->findOrderModel($id);
+        $oldObj = $model->data_json;
+        if(!isset($model->data_json['request_pay_date']) || $model->data_json['request_pay_date'] == "")
+        {
+            $setDate = [
+                'request_pay_date' =>   date('Y-m-d'),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
+            $model->save(false);
+        }
         $this->CreateDir($model->id);
         $result_name = $model->id . '/ขออนุมัติจ่ายเงินบำรุง.docx';
         $word_name = 'purchase_12.docx';
@@ -512,7 +611,7 @@ class DocumentController extends \yii\web\Controller
                 'items' => [
                     'title' => 'ขออนุมัติจ่ายเงินบำรุง',
                     'doc_number' => $this->getInfo()['doc_number'],
-                    'date' => Yii::$app->thaiFormatter->asDate($model->data_json['request_pay_date'], 'long'),
+                    'date' => isset($model->data_json['request_pay_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['request_pay_date'], 'long') : '',
                     'org_name' => $this->GetInfo()['company_name'],
                     'org_name_full' => $this->GetInfo()['company_full'],
                     'order_type_name' => $model->data_json['order_type_name'] . '(' . $model->data_json['pq_budget_type_name'] . ')',
@@ -528,7 +627,7 @@ class DocumentController extends \yii\web\Controller
                     'leader_position' => $this->getInfo()['leader_position']
                 ]
             ];
-            return $this->CreateFile($data);
+             $this->CreateFile($data);
        
     }
     
@@ -536,19 +635,19 @@ class DocumentController extends \yii\web\Controller
     public function CreateFile($data)
     {
         $result_name = $data['result_name'];
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $data['word_name']);  // เลือกไฟล์ template ที่เราสร้างไว้
         foreach ($data['items'] as $key => $value) {
             $templateProcessor->setValue($key, $value);
         }
 
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
     }
 
     public static function CreateDir($folderName)
     {
         if ($folderName != null) {
-            $basePath = Yii::getAlias('@app') . '/web/msword/results/';
+            $basePath = Yii::getAlias('@app') . '/web/msword/results/purchase/';
             BaseFileHelper::createDirectory($basePath . $folderName, 0777);
         }
         return;
