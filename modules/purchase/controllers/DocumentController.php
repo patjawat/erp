@@ -120,7 +120,7 @@ class DocumentController extends \yii\web\Controller
         // เรียกใช้ Component สำหรับสร้างไฟล์ ZIP
         if (Yii::$app->zip->createZip($sourcePath, $zipPath)) {
             // return $this->redirect(['download-zip', 'filename' => $filename]);
-            return $this->redirect(['/downloads/purchase-2.zip']);
+            return $this->redirect(['downloads/purchase-2.zip']);
         } else {
             return 'Failed to create ZIP file.';
         }
