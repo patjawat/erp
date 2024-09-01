@@ -88,8 +88,9 @@ use yii\web\View;
 $js = <<< JS
 
 
-        $('#download-btn').click(function (e) {
+        $('.download-btn').click(function (e) {
             e.preventDefault();
+            beforLoadModal();
  
             // Set the filename you want to download
             const filename = 'myfile.zip';
@@ -115,6 +116,14 @@ $js = <<< JS
 
                     // Release the blob URL
                     window.URL.revokeObjectURL(url);
+                    
+                    $("#main-modal").modal("toggle");
+                        Swal.fire({
+                            icon: "success",
+                            title: "ดาวน์โหลดสำเร็จ!",
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
                 },
                 error: function () {
                     alert('Failed to download the file.');
