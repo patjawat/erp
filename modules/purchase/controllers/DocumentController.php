@@ -85,13 +85,13 @@ class DocumentController extends \yii\web\Controller
 
     // Action สำหรับดาวน์โหลดไฟล์ ZIP
     // public function actionDownloadZip($filename)
-    public function actionDownloadZip($filename)
+    public function actionDownloadFile($id)
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
 
         // กำหนดเส้นทางของไฟล์ที่จะดาวน์โหลด
         // return $filename;
-        // $x = 'purchase-2.zip';
+        $filename = 'purchase-'.$id.'.zip';
         $filePath = Yii::getAlias('@webroot/downloads/' . $filename);
         // $filePath = Yii::getAlias('@webroot/downloads/' . $x);
         // $filePath = Yii::getAlias('@app/web/downloads/' . $filename);

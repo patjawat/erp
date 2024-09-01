@@ -1,6 +1,8 @@
 <?php
 
 use yii\helpers\Html;
+use yii\web\View;
+
 ?>
 
 <style>
@@ -74,10 +76,53 @@ use yii\helpers\Html;
             </div>
 
             <div class="d-flex justify-content-between align-items-center bg-primary  p-2 rounded zoom-in">
-                <?= Html::a('ดาวน์โหลดทั้งหมด', ['/purchase/document/download','id' => $model->id], ['class' => 'text-white','target'=>'_blank']) ?>
+                <?= Html::a('ดาวน์โหลดทั้งหมด', ['/purchase/document/download-file','id' => $model->id], ['class' => 'text-white download-btn']) ?>
                 <i class="fa-regular fa-circle-down fs-3 text-white"></i>
             </div>
 
         </div>
     </div>
 </div>
+
+<?php
+$js = <<< JS
+
+
+        $('#download-btn').click(function (e) {
+            e.preventDefault();
+ console.log('click download');
+ 
+            // Set the filename you want to download
+            const filename = 'myfile.zip';
+
+            // Make the AJAX request to your Yii2 download action
+            $.ajax({
+                url: $(this).attr('href'), // Replace with your correct endpoint URL
+                type: 'GET',
+                xhrFields: {
+                    responseType: 'blob' // Important to receive the file as a blob
+                },
+                success: function (data) {
+                    // Create a URL for the blob
+                    const url = window.URL.createObjectURL(new Blob([data]));
+
+                    // Create a temporary link element
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename; // Set the filename for download
+                    document.body.appendChild(a);
+                    a.click(); // Simulate click to start download
+                    a.remove(); // Remove the link after download
+
+                    // Release the blob URL
+                    window.URL.revokeObjectURL(url);
+                },
+                error: function () {
+                    alert('Failed to download the file.');
+                }
+            });
+        });
+
+JS;
+$this->registerJS($js,View::POS_END);
+?>
