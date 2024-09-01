@@ -116,7 +116,7 @@ class DocumentController extends \yii\web\Controller
             } else {
                 return 'File not found.';
             }
-            
+
             // return $this->redirect('downloads/purchase-2.zip');
         } else {
             return 'Failed to create ZIP file.';
@@ -303,7 +303,7 @@ class DocumentController extends \yii\web\Controller
         @unlink(Yii::getAlias('@webroot') . '/msword/results/purchase/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
         $templateProcessor->setValue('po_number', $model->po_number);
-        $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
+        $templateProcessor->setValue('po_date', isset($model->data_json['po_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long') : '');
         $templateProcessor->setValue('number', 'ลำดับ');
         $templateProcessor->setValue('amount', 'จำนวน');
         $templateProcessor->cloneRow('item_name', count($model->ListOrderItems()));
@@ -402,8 +402,8 @@ class DocumentController extends \yii\web\Controller
                     'price' => number_format($model->calculateVAT()['priceAfterVAT'], 2), //'ราคา',
                     'price_character' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2), //'ราคาตัวอักษร',
                     'bill_number' => $model->po_number, //'เลขใบสั่งซื้อ',
-                    'bill_datebegin' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'), //'ใบสั่งซื้อลงวันที่เริ่ม',
-                    'bill_dateend' => Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long'),
+                    'bill_datebegin' => isset($model->data_json['po_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long') : '', //'ใบสั่งซื้อลงวันที่เริ่ม',
+                    'bill_dateend' => isset($model->data_json['po_expire_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long') : '',
                     'budget_type' => $model->data_json['pq_budget_type'], //'ประเภทเงินงบ',
                     'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . ' เวลา ' . explode(" ", $model->data_json['gr_date'])[1],
                     'me_name' => $model->getMe()['fullname'],
