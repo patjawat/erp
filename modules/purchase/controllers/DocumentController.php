@@ -87,7 +87,8 @@ class DocumentController extends \yii\web\Controller
     public function actionDownloadZip($filename)
     {
         // กำหนดเส้นทางของไฟล์ที่จะดาวน์โหลด
-        $filePath = Yii::getAlias('@app/web/downloads/' . $filename);
+        $filePath = Yii::getAlias('@webroot/downloads/' . $filename);
+        // $filePath = Yii::getAlias('@app/web/downloads/' . $filename);
 
         // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
         if (file_exists($filePath)) {
@@ -119,8 +120,8 @@ class DocumentController extends \yii\web\Controller
 
         // เรียกใช้ Component สำหรับสร้างไฟล์ ZIP
         if (Yii::$app->zip->createZip($sourcePath, $zipPath)) {
-            // return $this->redirect(['download-zip', 'filename' => $filename]);
-            return $this->redirect(['downloads/purchase-2.zip']);
+            return $this->redirect(['download-zip', 'filename' => $filename]);
+            // return $this->redirect('downloads/purchase-2.zip');
         } else {
             return 'Failed to create ZIP file.';
         }
