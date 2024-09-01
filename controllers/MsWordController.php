@@ -930,6 +930,12 @@ class MsWordController extends \yii\web\Controller
 
     public static function CreateDir($folderName)
     {
+
+            $downloadPath = Yii::getAlias('@app') . '/web/downloads';
+        if ($downloadPath != null) {
+            BaseFileHelper::createDirectory($downloadPath ,0777);
+        }
+
         if ($folderName != null) {
             $basePath = Yii::getAlias('@app') . '/web/msword/results/';
             BaseFileHelper::createDirectory($basePath . $folderName, 0777);
