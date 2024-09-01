@@ -28,6 +28,9 @@ $config = [
     ],
     'language' => 'th_TH',  // เปิดใช้งานภาษาไทย
     'components' => [
+        'zip' => [
+            'class' => 'app\components\ZipComponent',
+        ],
         'cart' => [
 			'class' => 'asyou99\cart\Cart',
 		],
