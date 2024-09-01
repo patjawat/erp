@@ -172,7 +172,7 @@ class StockEvent extends \yii\db\ActiveRecord
 
             // $sql = "SELECT SUM(unit_price * qty) AS total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' GROUP BY code;";
             // $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE `code` LIKE 'RC-670016';";
-            $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND order_status = 'success' AND `code` = :code;";
+            $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND AND `code` = :code;";
             $query = Yii::$app->db
             ->createCommand($sql)
             ->bindValue(':code', $this->code)
