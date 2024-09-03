@@ -16,29 +16,31 @@ use yii\widgets\ActiveForm;
             'data-pjax' => 1
         ],
     ]); ?>
-<div class="d-flex gap-3">
-    <?= $form->field($model, 'q')->label(false) ?>
-    <div class="btn-group">
-    <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-light']) ?>
-                                <?php  Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent"> <i class="bi bi-caret-down-fill"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <?= Html::a('พิมพ์สต๊อกการ์ด', ['/ms-word/stockcard', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                        <?php // Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <div class="d-flex gap-3">
+        <?= $form->field($model, 'q')->label(false) ?>
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light']) ?>
+        <!-- <div class="btn-group">
+            <?php Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent"> <i class="bi bi-caret-down-fill"></i>
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <?php //  Html::a('พิมพ์สต๊อกการ์ด', ['/ms-word/stockcard', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) 
+                    ?>
+                    <?php // Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) 
+                    ?>
 
-                                    </li>
-                                </ul>
-                            </div>
+                </li>
+            </ul>
+        </div> -->
 
 
-    <div class="form-group">
-       
+        <div class="form-group">
+
+        </div>
     </div>
-</div>
-    
+
     <?php ActiveForm::end(); ?>
 
 </div>

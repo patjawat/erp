@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
           <div class="d-flex">
             
             <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?php echo Html::a('แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]]) ?>
+            <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light','data' => ['pjax' => 0]]) ?>
           </div>
         </div>
       <table class="table">

@@ -69,7 +69,7 @@ use yii\helpers\Html;
                     ],
                 ]); ?>
                 <div>
-                <?=$dataProvider->getTotalCount() <= 0 ? null :  Html::a('แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
+                <?=$dataProvider->getTotalCount() <= 0 ? null :  Html::a('<i class="fa-solid fa-angles-right"></i> แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
             </div>
         </div>
     </div>

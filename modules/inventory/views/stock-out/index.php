@@ -75,7 +75,20 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                
                 <td><?=$item->viewstatus()?></td>
                 <td>
-                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                <div class="btn-group">
+                  <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+
+                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+
+                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-out','id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?></li>
+
+
+                                </ul>
+                            </div>
                 </td>
               </tr>
             <?php endforeach; ?>

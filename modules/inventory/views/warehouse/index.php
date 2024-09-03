@@ -33,15 +33,15 @@ $this->title = 'ระบบคลัง';
 <?php foreach ($dataProvider->getModels() as $model): ?>
     <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12">
         <!-- Card -->
-        <div
-            class="p-2 bg-white rounded transform transition-all hover-translate-y-n2 duration-300 shadow-lg hover-shadow mt-3 zoom-in">
+        <div class="p-2 bg-white rounded transform transition-all hover-translate-y-n2 duration-300 shadow-lg hover-shadow mt-3 zoom-in">
             <!-- Image -->
 
             <?php echo Html::img($model->ShowImg(), ['class' => 'h-40 object-cover rounded img-fluid']) ?>
             <div class="p-2">
                 <!-- Heading -->
                  <div class="d-flex justify-content-between">
-                     <h2 class="font-weight-bold h5 mb-2"><?= $model->warehouse_name ?></h2>
+                     <!-- <h2 class="font-weight-bold h5 mb-2"><?=($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown text-warning"></i>' : 'คลังย่อย') ?></h2> -->
+                     <h2 class="font-weight-bold h5 mb-2"> <?=$model->warehouse_name ?></h2>
                      <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
@@ -61,19 +61,20 @@ $this->title = 'ระบบคลัง';
 
             <div class="d-grid gap-2 m-2" id="selectWarehouse<?= $model->id ?>">
 
-                <?= html::a('เลือก'.($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown text-warning"></i>' : 'คลังย่อย'), [
+                <?= html::a(($model->warehouse_type == 'MAIN' ? '<i class="fa-solid fa-crown text-warning"></i> คลังหลัก' : '<i class="fa-solid fa-store"></i> คลังย่อย'), [
                     '/inventory/warehouse/selct-warehouse',
                     'id' =>
                         $model->id
                 ], [
-                    'class' => 'btn '.($model->warehouse_type == "MAIN" ? "btn-primary" : "btn-secondary").' text-white bg-purple-600 rounded-md selct-warehouse',
+                    'class' => 'btn btn-primary text-white bg-purple-600 rounded-md selct-warehouse',
                     'data' => [
                         'title' => $model->warehouse_name,
                         'img' => $model->ShowImg(),
                         'warehouse_id' => $model->id
                     ]
                 ]) ?>
-            </div>
+
+        </div>
         </div>
     </div>
 <?php endforeach; ?>
@@ -81,7 +82,6 @@ $this->title = 'ระบบคลัง';
 
 </div>
 <?php Pjax::end(); ?>
-
 
 <?php
 $warehouseUrl = Url::to(['/inventory/warehouse/set-warehouse']);
