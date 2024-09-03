@@ -161,6 +161,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => 'html',
                         'value' => $model->viewStatus()
                      ],
+                     [
+                        'label' => 'มูลค่า',
+                        'format' => 'html',
+                        'value' => $model->getTotalOrderPrice()
+                     ],
                     ],
                 ]) ?>
 

@@ -38,19 +38,22 @@ class DocumentController extends \yii\web\Controller
 
             $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
             $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
-            $templateProcessor->setValue('doc_number',  $this->getInfo()['doc_number']);
+            $templateProcessor->setValue('department',  $model->CreateBy()['department']);
+            $templateProcessor->setValue('number',  $model->code);
+            $templateProcessor->setValue('total',  number_format($model->getTotalOrderPrice(),2));
             // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
             // $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
             $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
-
-            // $templateProcessor->setValue('emp_name', $model->getUserReq()['fullname']);
-            // $templateProcessor->setValue('emp_position', $model->getUserReq()['position_name']);
+            
+            $templateProcessor->setValue('drawer_name ', $model->CreateBy()['fullname']);
+            $templateProcessor->setValue('date_drawer', $model->CreateBy()['position_name']);
+            
             $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
             $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
-
+            
             $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);//ผู้อำนวยการโรงพยาบาล
             $templateProcessor->setValue('org_name', 'ผู้อำนวนยการ'.$this->GetInfo()['company_name']); //ชื่อโรงพยาบาล
-
+            
             $templateProcessor->cloneRow('detail', count($model->getItems()));
             $i = 1;
             $num = 1;
@@ -58,8 +61,9 @@ class DocumentController extends \yii\web\Controller
                 $templateProcessor->setValue('no#' . $i, $num++);
                 $templateProcessor->setValue('detail#' . $i, $item->product->title);
                 $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
+                $templateProcessor->setValue('qty#' . $i, $item->qty);
                 $templateProcessor->setValue('unitprice#' . $i, $item->unit_price);
-                $templateProcessor->setValue('total#' . $i, ($item->qty * $item->unit_price));
+                $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price),2));
                 $i++;
             }
 
