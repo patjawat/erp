@@ -178,7 +178,7 @@ class StockEvent extends \yii\db\ActiveRecord
         // $model =  self::find()
         //     ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success','category_id' => $this->id])
         //     ->sum('total_price');
-        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND `category_id` = :category_id;";
+        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
         $query = Yii::$app->db
         ->createCommand($sql)
         ->bindValue(':category_id', $this->id)
@@ -227,7 +227,15 @@ class StockEvent extends \yii\db\ActiveRecord
         // }
     }
     
+    //ตรวจสอบค่าวาง qty
+    public function countNullQty()
+{
+    return self::find()
+    ->where(['category_id' => $this->id, 'name' => 'order_item'])
+    ->andWhere(['qty' => null])
+    ->count();
 
+}
     
 
     //  ภาพทีมคณะกรรมการ
@@ -363,18 +371,18 @@ class StockEvent extends \yii\db\ActiveRecord
 
         switch ($this->order_status) {
             case 'await':
-                $msg = 'อยู่ระหว่างดำเนินการ';
+                $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
                 break;
 
             case 'pending':
-                $msg = 'รอดำเนินการ';
+                $msg = '<i class="fa-solid fa-hourglass"></i> <span>รอดำเนินการ</span>';
                 break;
 
             case 'cancel':
-                $msg = 'ยกเลิก';
+                $msg = '<i class="fa-regular fa-circle-xmark text-danger"></i> ยกเลิก';
                 break;
             case 'success':
-                $msg = 'สำเร็จ';
+                $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
                 break;
 
 

@@ -74,12 +74,12 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <td><?=$item->warehouse->warehouse_name?></td>
                 <td><?=$item->CreateBy($item->created_at)['avatar']?></td>
                 <td><?php
-                echo $item->getTotalPriceItem();
                 try {
-                  echo number_format($item->total_price,2);
-                } catch (\Throwable $th) {  
+                  echo number_format($item->getTotalOrderPrice(),2);
+                } catch (\Throwable $th) {
 
                 }
+
                 ?></td>
                 <td><?=$item->viewstatus()?></td>
                 <td>

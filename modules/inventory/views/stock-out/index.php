@@ -61,7 +61,6 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
               <th>รหัส</th>
               <th>ปีงบประมาณ</th>
               <th>จาก</th>
-              <th>มูลค่า</th>
               <th>สถานะ</th>
               <th style="width:100px">ดำเนินการ</th>
             </tr>
@@ -73,14 +72,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <td><?=$item->code?></td>
                 <td><?=$item->thai_year?></td>
                 <td><?=$item->fromWarehouse->warehouse_name?></td>
-                <td><?php
-                echo $item->getTotalPriceItem();
-                try {
-                  echo number_format($item->total_price,2);
-                } catch (\Throwable $th) {  
-
-                }
-                ?></td>
+               
                 <td><?=$item->viewstatus()?></td>
                 <td>
                 <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>

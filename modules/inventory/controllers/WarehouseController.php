@@ -311,7 +311,7 @@ class WarehouseController extends Controller
                 'count' => $dataProvider->getTotalCount(),
                 'confirm' => $searchModel->getTotalCheckerY(),
                 'totalOrder' => $searchModel->getTotalSuccessOrder(),
-                'totalPrice' => $totalPrice,
+                'totalPrice' => number_format($totalPrice,2),
                 'content' => $this->renderAjax('list_order_request', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,

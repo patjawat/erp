@@ -48,17 +48,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th>
                                 รายการ
                             </th>
+                            <th class="text-center">จำนวน</th>
                             <th class="text-center">หน่วย</th>
                             <th class="text-center">มูลค่า</th>
-                            <th class="text-center">จำนวนเบิก</th>
-                            <th class="text-center">จำนวนจ่าย</th>
+                            <th class="text-center">จ่าย</th>
                             <th class="text-center">ล็อตผลิต</th>
                             <th class="text-center">วันหมดอายุ</th>
                             <th class="text-center" scope="col" style="width: 120px;">ดำเนินการ</th>
                         </tr>
                     </thead>
+    
                     <tbody class="table-group-divider">
                         <?php foreach ($model->getItems() as $item): ?>
+
                         <tr class="<?=$item->order_status == 'await' ? 'bg-warning-subtle' : ''?>">
                             <td class="align-middle">
                                 <?php
@@ -67,13 +69,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             } catch (\Throwable $th) {}
                             ?>
                             </td>
+                            <td class="align-middle text-center"><?= isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'?></td>
 
                             <td class="align-middle text-center">
                                 <?=isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'?>
                             </td>
-                            <td class="align-middle text-end"><?= $item->total_price ?></td>
+                            <td class="align-middle text-end"><?= $item->unit_price ?></td>
        
-                            <td class="align-middle text-center"><?= isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'?></td>
                             <td class="align-middle text-center"><?= $item->qty ?></td>
 
                             <td class="align-middle text-center"><?= $item->lot_number ?></td>
@@ -110,7 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-order/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
          <?php endif;?>
          <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout']) : ''?>
         
         <?php endif;?>
         </div>

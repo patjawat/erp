@@ -61,7 +61,7 @@ $this->title = 'ระบบคลัง';
 
             <div class="d-grid gap-2 m-2" id="selectWarehouse<?= $model->id ?>">
 
-                <?= html::a('เลือก'.($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown"></i>' : 'คลังย่อย'), [
+                <?= html::a('เลือก'.($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown text-warning"></i>' : 'คลังย่อย'), [
                     '/inventory/warehouse/selct-warehouse',
                     'id' =>
                         $model->id
