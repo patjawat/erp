@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\controllers;
 
+use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
 use app\modules\inventory\models\StockOut;
@@ -298,6 +299,7 @@ class WarehouseController extends Controller
     public function actionListOrderRequest()
     {
         $warehouse = Yii::$app->session->get('warehouse');
+        $totalPrice = StockEvent::getTotalPriceWarehouse();
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         
@@ -309,7 +311,7 @@ class WarehouseController extends Controller
                 'count' => $dataProvider->getTotalCount(),
                 'confirm' => $searchModel->getTotalCheckerY(),
                 'totalOrder' => $searchModel->getTotalSuccessOrder(),
-                'totalPrice' => $searchModel->getTotalOrderPrice(),
+                'totalPrice' => $totalPrice,
                 'content' => $this->renderAjax('list_order_request', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,

@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="stock-out-update">
-    <?= $this->render('_form', [
+    <?php echo$this->render('_form', [
         'model' => $model,
     ]) ?>
 

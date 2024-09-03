@@ -17,7 +17,7 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
 <div class="d-flex gap-3">
-    <?= $form->field($model, 'q')->label(false) ?>
+    <?= $form->field($model, 'thai_year')->label(false) ?>
     <div class="btn-group">
     <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-light']) ?>
                                 <?php  Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>

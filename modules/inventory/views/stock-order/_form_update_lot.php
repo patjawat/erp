@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $form = ActiveForm::begin([
         'id' => 'form',
         'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-        'validationUrl' => ['/inventory/stock-in/create-validator']
+        'validationUrl' => ['/inventory/stock-order/update-lot-validator']
     ]); ?>
 
 
@@ -58,7 +58,7 @@ $lot = ArrayHelper::map(Stock::find()->where(['asset_item' => $model->asset_item
 <div class="row">
     
     <div class="col-6">
-        <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+        <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวน'); ?>
     </div>
 </div>
 

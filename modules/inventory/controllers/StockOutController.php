@@ -51,7 +51,8 @@ class StockOutController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'order', 'from_warehouse_id' => $warehouse['warehouse_id']]);
+        // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -153,8 +154,11 @@ class StockOutController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $oldObj = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post()) ) {
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            $model->save(false);
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -216,7 +220,7 @@ class StockOutController extends Controller
             $item->save(false);
         }
 
-        return $this->redirect(['/inventory/stock-out']);
+        return $this->redirect(['/inventory/stock-order']);
     }
 
     public function actionCheckOut($id)
@@ -233,6 +237,7 @@ class StockOutController extends Controller
         $newStockModel->warehouse_id = $model->from_warehouse_id;
         $newStockModel->transaction_type = 'IN';
         $newStockModel->category_id = $model->code;
+        
         $newStockModel->save(false);
         // จบ
 
@@ -368,7 +373,7 @@ class StockOutController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = StockOut::findOne(['id' => $id])) !== null) {
+        if (($model = StockEvent::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

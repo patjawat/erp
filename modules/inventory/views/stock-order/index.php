@@ -12,7 +12,7 @@ use yii\widgets\Pjax;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $warehouse = Yii::$app->session->get('warehouse');
-$this->title = 'จ่ายออก'.$warehouse['warehouse_name'];
+$this->title = $warehouse['warehouse_name'].'เบิกจากคลังหลัก';
 $this->params['breadcrumbs'][] = $this->title;
 $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
 ?>
@@ -57,22 +57,22 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         <table class="table table-primary">
           <thead>
             <tr>
-              <th style="width:400px" scope="col">รายการ</th>
-              <th>รหัส</th>
+              <th scope="col">รหัส</th>
               <th>ปีงบประมาณ</th>
-              <th>จาก</th>
+              <th>คลัง</th>
+              <th>ผู้ดำเนินการ</th>
               <th>มูลค่า</th>
               <th>สถานะ</th>
               <th style="width:100px">ดำเนินการ</th>
             </tr>
           </thead>
-          <tbody class="align-middle">
+          <tbody>
             <?php foreach ($dataProvider->getModels() as $item): ?>
               <tr>
-                <td><?=$item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->created_at)['avatar']?></td>
                 <td><?=$item->code?></td>
                 <td><?=$item->thai_year?></td>
-                <td><?=$item->fromWarehouse->warehouse_name?></td>
+                <td><?=$item->warehouse->warehouse_name?></td>
+                <td><?=$item->CreateBy($item->created_at)['avatar']?></td>
                 <td><?php
                 echo $item->getTotalPriceItem();
                 try {

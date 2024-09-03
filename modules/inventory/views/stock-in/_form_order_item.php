@@ -86,9 +86,19 @@ $resultsJs = <<< JS
     <div class="col-6">
         <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
         <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
+        
         <?= $form->field($model, 'unit_price')->textInput(['type' => 'number', 'maxlength' => 2])->label('ราคาต่อหน่วย'); ?>
         <?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
    
+
+    </div>
+    <div class="col-12">
+    <?php
+     echo $form->field($model, 'data_json[item_type]')->radioList(
+         ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม','บริจาค' => 'บริจาค'], 
+         ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
+         )->label('ประเภท');
+         ?>
 
     </div>
 </div>

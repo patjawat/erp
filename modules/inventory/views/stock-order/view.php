@@ -9,11 +9,21 @@ $warehouse = Yii::$app->session->get('warehouse');
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
 
-$this->title = 'รายละเอียดขอเบิกวัสดุ';
+$this->title = 'ร้องขอจาก'.$model->fromWarehouse->warehouse_name;
 $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
+
 
 
 <?php Pjax::begin(['id' => 'inventory']); ?>
@@ -25,11 +35,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-ui-checks"></i> รับเข้า <span
+                    <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span
                             class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ
                     </h6>
                     <?php if($model->order_status == 'await'):?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-out/create','order_id' => $model->id,'name' => 'order_item','title' => 'สร้างรายการเบิก'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'สร้างรายการเบิก'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
                     <?php endif;?>
                 </div>
                 <table class="table table-striped mt-3">
@@ -74,15 +84,15 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <!-- ถ้าเป็็นคลังของผู้จ่ายให้แสดงปุ่มจ่าย -->
                                 <?php if(isset($warehouse['warehouse_id']) && $model->warehouse_id == $warehouse['warehouse_id']):?>
-                                <?= $model->data_json['checker_confirm'] == 'Y' ? Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-out/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']]) : '-'?>
+                                <?= $model->data_json['checker_confirm'] == 'Y' ? Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-order/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']]) : '-'?>
                                 <?php else:?>
                                 <!-- ถ้า้ป็รคลังของผู้ขอเบิกของให้แสดงปุ่มแก้ไขและลบได้ -->
                                 <div class="d-flex justify-content-center gap-2">
                                     <?php if($item->order_status == 'pending'):?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-out/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-out/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-order/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
                                     <?php else:?>
-                                    <span>เสร็จสิ้น</span>
+                                    <?=$item->viewStatus()?>
                                     <?php endif?>
                                 </div>
                                 <?php endif;?>
@@ -97,10 +107,10 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
         <?php if($model->order_status == 'await'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-out/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-order/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
          <?php endif;?>
          <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-out/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
         
         <?php endif;?>
         </div>
@@ -117,7 +127,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <i class="fa-solid fa-ellipsis"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/me/stock/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </div>
                     </div>
                 </div>

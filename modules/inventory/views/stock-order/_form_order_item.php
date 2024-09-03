@@ -31,7 +31,7 @@ try {
 }
         echo $form->field($model, 'asset_item')->widget(Select2::classname(), [
             'options' => ['placeholder' => 'เลือก ...'],
-            'data' => ArrayHelper::map(Stock::find()->all(),'asset_item',function($model){
+            'data' => ArrayHelper::map(Stock::find()->where(['warehouse_id' => $model->warehouse_id])->all(),'asset_item',function($model){
                 $product =  Product::findOne(['code' => $model->asset_item]);
                 return $product->title;
             }),

@@ -58,7 +58,9 @@ class StockController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->andwhere(['warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
         $dataProvider->query->groupBy('asset_item');
 
         if ($this->request->isAjax) {
@@ -129,8 +131,13 @@ class StockController extends Controller
             ->leftJoin('warehouses w', 'w.id = t.from_warehouse_id')
             ->leftJoin('stock_events o', 'o.id = t.category_id AND o.name = "order"')
             ->join('JOIN', ['r' => new \yii\db\Expression('(SELECT @running_total := 0)')])
-            ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item', 't.warehouse_id' => $model->warehouse_id])
+            // ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item','t.order_status' => 'success','o.warehouse_id' => $model->warehouse_id])
+            ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item','t.warehouse_id' => $model->warehouse_id])
             ->orderBy(['t.created_at' => SORT_ASC, 't.id' => SORT_ASC]);
+
+            // Yii::$app->response->format = Response::FORMAT_JSON;
+
+            // return $dataProvider->getModels();
 
         return $this->render('view', [
             'model' => $model,

@@ -30,7 +30,7 @@ use yii\helpers\Html;
                         <td><?=$item->fromWarehouse->warehouse_name?></td>
                         <td><?= $item->viewChecker()['status']?></td>
                         <td class="text-center">
-                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-out/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

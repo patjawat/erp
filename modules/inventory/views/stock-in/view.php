@@ -33,12 +33,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-ui-checks"></i> รับเข้า <span class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ</h6>
-                   
+                    <?php if($model->order_status == 'success'):?>
+
+                        <?php else:?>
+                   <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/product-list','id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                   <?php endif?>
                    <!-- <?php if($model->order_status == 'success'):?>
+                   
                     <?=Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก',['/inventory/stock-event/cancel-order','id' => $model->id],['class' => 'btn btn-sm btn-danger rounded-pill shadow confirm-order','data' => ['title' => 'ยืนยัน','text' => 'ยืนยันยกเลิกรายการนี้']])?>
                     <?php else:?>
                     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-                <?php endif?> -->
+                <?php endif?>  -->
                 </div>
                 <table class="table table-striped mt-3">
                 <thead class="table-primary">
@@ -117,6 +122,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="fa-solid fa-rotate-left me-2"></i> ยกเลิก', ['/inventory/stock-in/cancel', 'id' => $model->id, 'title' => 'ยกเลิกใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </div>
                     </div>
                 </div>
@@ -130,7 +136,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         [
                             'label' => 'มูลค่า',
-                            'value' => number_format($model->getTotalPrice(),2)
+                            'value' => number_format($model->getTotalOrderPrice(),2)
                         ]
                     ],
                 ]) ?>

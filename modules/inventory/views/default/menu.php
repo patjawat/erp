@@ -3,15 +3,17 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
 <div class="d-flex gap-2">
+    <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory/warehouse'], ['class' => 'btn btn-light']) ?>
     <?= Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลัง', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ตรวจรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> เบิกคลัง', ['/inventory/stock-out'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> เบิกคลังหลัก', ['/inventory/stock-order'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับ', ['/inventory/stock-in'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่าย', ['/inventory/stock-out'], ['class' => 'btn btn-light']) ?>
 
     <?php  Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่ายออก', ['/inventory/stock-request'], ['class' => 'btn btn-light']) ?>
     <button class="btn btn-light" onclick="openTour()">
         <span>แนะนำ</span>
     </button><!-- end btn -->
-    <div class="btn-group">
+    <!-- <div class="btn-group">
        <span class="btn btn-light">
        <i class="fa-solid fa-gear"></i>
           ตั้งค่า
@@ -25,7 +27,7 @@ use yii\helpers\Url;
             <li><?= Html::a('<i class="fa-solid fa-file-import me-1"></i> นำเข้า', ['/sm/vendor/import-csv'], ['class' => 'dropdown-item']) ?>
             </li>
         </ul>
-    </div>
+    </div> -->
 
 </div>
 

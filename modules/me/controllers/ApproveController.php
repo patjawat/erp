@@ -55,7 +55,10 @@ class ApproveController extends \yii\web\Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $checkerData = [
+                    'checker_confirm_date' => date('Y-m-d H:i:s')
+                ];
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json,$checkerData);
                 if ($model->data_json['checker_confirm'] == 'Y') {
                     
                     if ($model->warehouse_id == $model->from_warehouse_id) {

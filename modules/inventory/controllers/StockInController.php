@@ -50,7 +50,9 @@ class StockInController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'transaction_type' => 'IN']);
+        // $dataProvider->query->where(['name' => 'order']);
+        $dataProvider->query->andWhere(['warehouse_id' => $warehouse['warehouse_id'],'transaction_type' => 'IN','name' => 'order']);
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -83,12 +85,14 @@ class StockInController extends Controller
         $name = $this->request->get('name');
         $type = $this->request->get('type');
         $order_id = $this->request->get('order_id');
+        $asset_item = $this->request->get('asset_item');
         $order =  StockEvent::findOne($order_id);
         $model = new StockEvent([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'category_id' => $order_id,
             'code' => $order ? $order->code : '',
             'name' => $name,
+            'asset_item' => $asset_item ? $asset_item : '',
             'transaction_type' => $order ? $order->transaction_type : $type
         ]);
 
@@ -108,8 +112,8 @@ class StockInController extends Controller
 
                 if ($model->name == 'order_item') {
                     $convertDate = [
-                        'mfg_date' =>  AppHelper::convertToGregorian($model->data_json['mfg_date']),
-                        'exp_date' =>  AppHelper::convertToGregorian($model->data_json['exp_date']),
+                        'mfg_date' =>  $model->data_json['mfg_date'] !== "__/__/____" ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : "",
+                        'exp_date' =>  $model->data_json['exp_date'] !== "__/__/____" ? AppHelper::convertToGregorian($model->data_json['exp_date']) : "",
                         'req_qty' => $model->qty
                     ];
                     $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate,$created);
@@ -157,6 +161,7 @@ class StockInController extends Controller
             ]);
         }
     }
+
 
 
 
@@ -371,8 +376,11 @@ class StockInController extends Controller
             $storeModel->save(false);
         }
 
-        
-        $model->total_price = $model->getTotalPrice();
+        $orderInTime = [
+            'checkin_data' => date('Y-m-d H:i:s')
+        ]; 
+        $model->data_json = ArrayHelper::merge($model->data_json,$orderInTime);
+
         $model->order_status = 'success';
         $model->save(false);
        
@@ -468,6 +476,74 @@ class StockInController extends Controller
        
     }
 
+
+
+    public function actionProductList()
+    {
+
+        $id = $this->request->get('id');
+
+        $model = StockEvent::findOne($id);
+        $searchModel = new ProductSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item','group_id' => 4]);
+        // $dataProvider->query->andFilterWhere(['group_id' => 4]);
+        $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
+       
+
+        $dataProvider->pagination->pageSize = 10;
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('product_list', [
+                    'model' => $model,
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('product_list', [
+                'model' => $model,
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+
+    public function actionAddItem()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->get('id');
+        $asset_item = $this->request->get('asset_item');
+        $model = new StockEvent([
+            'asset_item' => $asset_item,
+            'category_id' => $id
+        ]);
+
+        if($this->request->isPost && $model->load($this->request->post())) 
+        {
+
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('product_list', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('product_list', [
+                'model' => $model,
+            ]);
+        }
+
+
+    }
 
 
     /**

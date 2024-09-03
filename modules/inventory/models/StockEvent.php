@@ -164,9 +164,36 @@ class StockEvent extends \yii\db\ActiveRecord
         return $this->hasOne(Warehouse::class, ['id' => 'from_warehouse_id']);
     }
 
+    //เชื่อมกับ Stock 
+    public function getStock()
+    {
+        return $this->hasOne(Stock::class, ['lot_number' => 'lot_number']);
+    }
 
-    // ราวมราคาทั้งหมด
-    public function getTotalPrice()
+
+
+    public function getTotalOrderPrice()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        // $model =  self::find()
+        //     ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success','category_id' => $this->id])
+        //     ->sum('total_price');
+        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND `category_id` = :category_id;";
+        $query = Yii::$app->db
+        ->createCommand($sql)
+        ->bindValue(':category_id', $this->id)
+        ->queryScalar();
+        return $query;
+        // if ($query) {
+        //     return number_format($query, 2);
+        // } else {
+        //     return 0;
+        // }
+    }
+
+    
+    // ราวมราคาทั้งหมดขแงแต่ละ ชิ้น
+    public function getTotalPriceItem()
     {
         // try {
 
@@ -182,6 +209,26 @@ class StockEvent extends \yii\db\ActiveRecord
         //     return 0;
         // }
     }
+
+    //รวมราคารับเข้าของคลังนั้นๆ
+    public static function getTotalPriceWarehouse()
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        // try {
+
+            $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND `warehouse_id` = :warehouse_id;";
+            $query = Yii::$app->db
+            ->createCommand($sql)
+            ->bindValue(':warehouse_id', $warehouse['warehouse_id'])
+            ->queryScalar();
+            return $query;
+        // } catch (\Throwable $th) {
+        //     return 0;
+        // }
+    }
+    
+
+    
 
     //  ภาพทีมคณะกรรมการ
     public function StackComittee()
@@ -221,18 +268,6 @@ class StockEvent extends \yii\db\ActiveRecord
             ->count();
     }
 
-    public function getTotalOrderPrice()
-    {
-        $warehouse = Yii::$app->session->get('warehouse');
-        $model =  self::find()
-            ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success'])
-            ->sum('total_price');
-        if ($model) {
-            return number_format($model, 2);
-        } else {
-            return 0;
-        }
-    }
 
     public function getTotalSuccessOrder()
     {

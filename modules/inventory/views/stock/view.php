@@ -13,6 +13,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
+
 <div class="row">
 <div class="col-3">
     <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -57,8 +58,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
 </div>
 
+
 <div class="card">
   <div class="card-body">
+
+  
   <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทั้งหมดจำนวน <span class="badge rounded-pill text-bg-primary"> <?=count($model->getStockCard())?> </span> รายการ</h6>
             <div>
@@ -78,7 +82,6 @@ $this->params['breadcrumbs'][] = $this->title;
       <th scope="col" class="text-center">จำนวนเข้า</th>
       <th scope="col" class="text-center">จำนวนออก</th>
       <th scope="col" class="text-center">คงเหลือ</th>
-      <th class="text-end" scope="col">รวมมูลค่า</th>
     </tr>
   </thead>
   <tbody>
@@ -110,20 +113,20 @@ $this->params['breadcrumbs'][] = $this->title;
       $item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
       <td class="text-center"><?php
       try {
-
-echo $item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : '';
+        echo $item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : '';
       } catch (\Throwable $th) {
         //throw $th;
       }
       ?></td>
       <td class="text-center"><?=$item['total']?></td>
-      <td class="text-end"><?php
+      <!-- <td class="text-end">
+        <?php
       try {
-        echo number_format($item['total_price'],2);
+         number_format($item['total_price'],2);
       } catch (\Throwable $th) {
         //throw $th;
       }
-      ?></td>
+      ?></td> -->
     </tr>
   <?php endforeach;?>
   </tbody>

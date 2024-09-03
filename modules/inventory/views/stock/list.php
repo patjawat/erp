@@ -15,13 +15,16 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
     <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
+    
     <div class="card">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
-          <?php echo Html::a('แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]]) ?>
+          <div class="d-flex">
+            
+            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+            <?php echo Html::a('แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]]) ?>
+          </div>
         </div>
       <table class="table">
         <thead>

@@ -34,7 +34,7 @@ $this->title = 'ระบบคลัง';
     <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12">
         <!-- Card -->
         <div
-            class="p-2 bg-white rounded transform transition-all hover-translate-y-n2 duration-300 shadow-lg hover-shadow mt-3">
+            class="p-2 bg-white rounded transform transition-all hover-translate-y-n2 duration-300 shadow-lg hover-shadow mt-3 zoom-in">
             <!-- Image -->
 
             <?php echo Html::img($model->ShowImg(), ['class' => 'h-40 object-cover rounded img-fluid']) ?>
@@ -60,12 +60,13 @@ $this->title = 'ระบบคลัง';
             <!-- CTA -->
 
             <div class="d-grid gap-2 m-2" id="selectWarehouse<?= $model->id ?>">
-                <?= html::a('เลือก', [
+
+                <?= html::a('เลือก'.($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown"></i>' : 'คลังย่อย'), [
                     '/inventory/warehouse/selct-warehouse',
                     'id' =>
                         $model->id
                 ], [
-                    'class' => 'btn btn-primary text-white bg-purple-600 rounded-md selct-warehouse',
+                    'class' => 'btn '.($model->warehouse_type == "MAIN" ? "btn-primary" : "btn-secondary").' text-white bg-purple-600 rounded-md selct-warehouse',
                     'data' => [
                         'title' => $model->warehouse_name,
                         'img' => $model->ShowImg(),
