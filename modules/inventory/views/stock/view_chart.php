@@ -18,8 +18,8 @@ $js = <<< JS
 
   var orderOptions = {
     series: [
-            { name: "เข้า", data: $chartSummeryIn },
-            { name: "ออก", data: $chartSummeryOut },
+            { name: "เบิก", data: $chartSummeryIn },
+            { name: "จ่าย", data: $chartSummeryOut },
           ],
               chart: {
               type: 'bar',
@@ -27,7 +27,7 @@ $js = <<< JS
               parentHeightOffset: 0,
                 toolbar: { show: false }
             },
-            colors: ['#5655b7', '#3cebb4','#ffa73e'],
+            colors: ['#0866ad', '#ff9800','#ffa73e'],
             plotOptions: {
                 bar: {
                 borderRadius: 4,

@@ -99,7 +99,7 @@ class WarehouseController extends Controller
         
 
 
-    /**
+    /**f
      * Displays a single Warehouse model.
      * @param int $id Warehouse ID
      * @return string
@@ -255,7 +255,8 @@ class WarehouseController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         
         if ($this->request->isAjax) {
-            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending']);
+            // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending']);
+            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','order_status' => 'pending']);
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -269,7 +270,8 @@ class WarehouseController extends Controller
                     ])
                 ];
             } else {
-            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
+            // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order']);
             return $this->render('list_order_request', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,

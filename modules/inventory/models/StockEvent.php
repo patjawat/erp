@@ -213,13 +213,14 @@ class StockEvent extends \yii\db\ActiveRecord
     //รวมราคารับเข้าของคลังนั้นๆ
     public static function getTotalPriceWarehouse()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
+        // $warehouse = Yii::$app->session->get('warehouse');
         // try {
 
-            $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND `warehouse_id` = :warehouse_id;";
+            // $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN' AND `warehouse_id` = :warehouse_id;";
+            $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND transaction_type = 'IN'";
             $query = Yii::$app->db
             ->createCommand($sql)
-            ->bindValue(':warehouse_id', $warehouse['warehouse_id'])
+            // ->bindValue(':warehouse_id', $warehouse['warehouse_id'])
             ->queryScalar();
             return $query;
         // } catch (\Throwable $th) {
@@ -271,7 +272,7 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         $warehouse = Yii::$app->session->get('warehouse');
         return self::find()
-            ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'pending'])
+            ->where(['name' => 'order', 'order_status' => 'pending'])
             ->andWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = 'Y'"))
             ->count();
     }
@@ -281,7 +282,7 @@ class StockEvent extends \yii\db\ActiveRecord
     {
         $warehouse = Yii::$app->session->get('warehouse');
         return self::find()
-            ->where(['name' => 'order_item', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success'])
+            ->where(['name' => 'order_item', 'order_status' => 'success'])
             ->count('qty');
     }
 

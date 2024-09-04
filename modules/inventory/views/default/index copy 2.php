@@ -536,7 +536,7 @@ $this->title = 'ระบบคลังวัสดุ';
               show: !0,
               total: {
                 show: !0,
-                label: "วัสดุทั้งหมด",
+                label: "Products",
                 fontSize: "22px",
                 fontFamily: "Montserrat,sans-serif",
                 fontWeight: 600
