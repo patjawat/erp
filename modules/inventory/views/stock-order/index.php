@@ -52,7 +52,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
           </div>
 
         </div>
-        <table class="table table-primary">
+        <table class="table table-primary mb-5">
           <thead>
             <tr>
               <th scope="col">รหัส</th>
