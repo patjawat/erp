@@ -55,8 +55,11 @@ class ApproveController extends \yii\web\Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
+                $checkData = $model->getAvatar($model->checker);
                 $checkerData = [
-                    'checker_confirm_date' => date('Y-m-d H:i:s')
+                    'checker_confirm_date' => date('Y-m-d H:i:s'),
+                    'checker_name' => $checkData['fullname'],
+                    'checker_position' => $checkData['position_name']
                 ];
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json,$checkerData);
                 if ($model->data_json['checker_confirm'] == 'Y') {

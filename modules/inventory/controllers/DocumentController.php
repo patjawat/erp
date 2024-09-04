@@ -47,7 +47,11 @@ class DocumentController extends \yii\web\Controller
             
             $templateProcessor->setValue('drawer_name ', $model->CreateBy()['fullname']);
             $templateProcessor->setValue('date_drawer', $model->CreateBy()['position_name']);
-            
+
+            $checkData = $model->getAvatar($model->checker);
+            $templateProcessor->setValue('checker_name ', $checkData['fullname']);
+            $templateProcessor->setValue('checker_position', $checkData['position_name']);
+
             $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
             $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
             
