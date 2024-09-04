@@ -107,8 +107,6 @@ class WarehouseController extends Controller
      */
     public function actionView($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);

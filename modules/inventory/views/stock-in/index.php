@@ -46,9 +46,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <div class="card">
   <div class="card-body">
     <div class="d-flex gap-3">
-      <?= Html::a($createIcon . ' สร้างเอกสารตรวจรับ', ['/inventory/stock-in/create', 'name' => 'order', 'type' => 'IN', 'title' => $createIcon . ' สร้างเอกสารรับวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
       <?= Html::a($createIcon . ' ตรวจรับจากการสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'.count($models).'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
-      <?=Html::a($createIcon.' เบิกคลังหลัก',['/inventory/stock-out/create','name' => 'order','type' => 'OUT','title' => $createIcon.' สร้างเอกสารเบิกวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
     </div>
   </div>
 </div>
