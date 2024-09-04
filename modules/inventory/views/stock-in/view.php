@@ -36,13 +36,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php if($model->order_status == 'success'):?>
 
                         <?php else:?>
-                   <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/product-list','id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                   <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลือกรายการ',['/inventory/stock-in/product-list','id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
                    <?php endif?>
                    <!-- <?php if($model->order_status == 'success'):?>
                    
                     <?=Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก',['/inventory/stock-event/cancel-order','id' => $model->id],['class' => 'btn btn-sm btn-danger rounded-pill shadow confirm-order','data' => ['title' => 'ยืนยัน','text' => 'ยืนยันยกเลิกรายการนี้']])?>
                     <?php else:?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลือกรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
                 <?php endif?>  -->
                 </div>
                 <table class="table table-striped mt-3">

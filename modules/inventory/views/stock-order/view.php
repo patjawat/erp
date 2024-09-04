@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ
                     </h6>
                     <?php if($model->order_status == 'await'):?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลืกอรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'สร้างรายการเบิก'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลือกรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'สร้างรายการเบิก'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
                     <?php else:?>
                         <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-out','id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']]) ?>
                     <?php endif;?>
