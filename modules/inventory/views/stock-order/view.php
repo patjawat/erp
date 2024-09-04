@@ -50,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th>
                                 รายการ
                             </th>
-                            <th class="text-center">จำนวน</th>
+                            <th class="text-center">ขอเบิก</th>
                             <th class="text-center">หน่วย</th>
                             <th class="text-center">มูลค่า</th>
                             <th class="text-center">จ่าย</th>
