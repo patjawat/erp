@@ -17,7 +17,7 @@ use yii\helpers\Url;
         </button>
         <ul class="dropdown-menu">
             <li><?= Html::a('<i class="fa-solid fa-cash-register me-1"></i> ผู้แทนจำหน่าย', ['/sm/vendor'], ['class' => 'dropdown-item']) ?>
-            <li><?= Html::a('<i class="fa-solid fa-cash-register me-1"></i> กรรมการตรวจรับ', ['/sm/committee-group'], ['class' => 'dropdown-item']) ?>
+            <li><?php //  Html::a('<i class="fa-solid fa-cash-register me-1"></i> กรรมการตรวจรับ', ['/sm/committee-group'], ['class' => 'dropdown-item']) ?>
             <li><?= Html::a('<i class="fa-brands fa-product-hunt me-1"></i> วัสดุ', ['/sm/product', 'title' => 'ตั้งค่่าวัสดุ'], ['class' => 'dropdown-item']) ?>
             <li><?= Html::a('<i class="bi bi-box-fill me-1"></i> ทรัพย์สิน', ['/sm/asset-item', 'group' => 3, 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?>
             <li><?= Html::a('<i class="bi bi-box-fill me-1"></i> จ้างเหมาบริการ', ['/sm/service-item', 'group' => 5, 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?>
