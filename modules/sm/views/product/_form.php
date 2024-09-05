@@ -257,9 +257,7 @@ $js = <<< JS
                             success: async function (response) {
                                 form.yiiActiveForm('updateMessages', response, true);
                                 if(response.status == 'success') {
-                                    //closeModal()
-                                    \$("#main-modal-label").html(response.title);
-                                    \$(".modal-body").html(response.content);
+                                    closeModal()
                                     success()
                                     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                                 }
