@@ -100,9 +100,7 @@ $this->title = 'ระบบคลังวัสดุ';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">$34,123.20
-                                    <span class="text-success fw-medium font-size-13 align-middle"><i
-                                            class="mdi mdi-arrow-up"></i> 8.34% </span>
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -150,9 +148,7 @@ $this->title = 'ระบบคลังวัสดุ';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">$34,123.20
-                                    <span class="text-success fw-medium font-size-13 align-middle"><i
-                                            class="mdi mdi-arrow-up"></i> 8.34% </span>
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -204,9 +200,7 @@ $this->title = 'ระบบคลังวัสดุ';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">$34,123.20
-                                    <span class="text-success fw-medium font-size-13 align-middle"><i
-                                            class="mdi mdi-arrow-up"></i> 8.34% </span>
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -254,9 +248,7 @@ $this->title = 'ระบบคลังวัสดุ';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">$34,123.20
-                                    <span class="text-success fw-medium font-size-13 align-middle"><i
-                                            class="mdi mdi-arrow-up"></i> 8.34% </span>
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
