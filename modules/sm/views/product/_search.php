@@ -24,6 +24,7 @@ use kartik\select2\Select2;
         <?php echo $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
     </div>
     <div class="col-6">
+        <?=$model->category_id?>
         <div class="d-flex justify-content-between align-items-start gap-2">
             <div class="w-100">
 
