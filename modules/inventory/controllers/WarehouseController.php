@@ -53,6 +53,8 @@ class WarehouseController extends Controller
         $dataProvider->query->where(['delete' => null]);
         if(!Yii::$app->user->can('admin')){
             $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
+        }else{
+            
         }
 
 
@@ -107,6 +109,7 @@ class WarehouseController extends Controller
      */
     public function actionView($id)
     {
+        $this->setWarehouse($id);
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -190,10 +193,8 @@ class WarehouseController extends Controller
     }
 
     //เลือกคลังที่จะทำงาน
-    public function actionSetWarehouse()
+    protected function setWarehouse($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = $this->request->get('id');
         $model = Warehouse::find()->where(['id' => $id])->One();
         Yii::$app->session->set('warehouse',[
             'id' => $model->id,
@@ -205,7 +206,6 @@ class WarehouseController extends Controller
             'checker' => isset($model->data_json['checker']) ?  $model->data_json['checker'] : '',
             'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
         ]);
-        return $this->redirect(['index']);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
 

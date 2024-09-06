@@ -2,6 +2,7 @@
 
 namespace app\modules\me\controllers;
 
+use app\components\UserHelper;
 use Yii;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
@@ -24,9 +25,11 @@ class ApproveController extends \yii\web\Controller
     //รายการขอเบิกวัสดุที่ต้องอนุมัติ
     public function actionStockOut()
     {
+
+        $emp = UserHelper::GetEmployee();
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'order', 'checker' => Yii::$app->user->id]);
+        $dataProvider->query->andFilterWhere(['name' => 'order', 'checker' => $emp->id]);
         $dataProvider->query->andWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"));
         if ($this->request->isAjax) {
 
@@ -49,6 +52,7 @@ class ApproveController extends \yii\web\Controller
     // แสดงรายละเอียดและรายการขอเบิกและบันทึก
     public function actionViewStockOut($id)
     {
+        
         $model = StockEvent::findOne($id);
 
         $oldObj = $model->data_json;

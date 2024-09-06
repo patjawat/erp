@@ -51,6 +51,7 @@ class Product extends \yii\db\ActiveRecord
     public $q_category;
     public $unit_name;
     public $auto;
+    public $q;
 
     /**
      * {@inheritdoc}
@@ -59,7 +60,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items','auto'], 'safe'],
+            [['data_json', 'q_category', 'unit_items','auto','q'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];

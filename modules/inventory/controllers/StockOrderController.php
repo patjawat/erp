@@ -9,6 +9,7 @@ use app\modules\inventory\models\StockOutSearch;
 use app\modules\inventory\models\StockEventSearch;
 use app\modules\sm\models\Product;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -85,6 +86,7 @@ class StockOrderController extends Controller
     public function actionCreate()
     {
         $warehouse = Yii::$app->session->get('warehouse');
+        $userCreate = UserHelper::GetEmployee();
         $name = $this->request->get('name');
         $order_id = $this->request->get('order_id');
         $order =  StockEvent::findOne($order_id);
@@ -97,6 +99,7 @@ class StockOrderController extends Controller
             'name' => $name,
             'transaction_type' => $order ? $order->transaction_type : $type,
             'code' => $order ? $order->code : '',
+            'checker' => $userCreate->leaderUser()['leader1'],
         ]);
 
         if ($this->request->isPost) {
@@ -108,10 +111,13 @@ class StockOrderController extends Controller
                 }
 
                 $model->order_status = 'await';
+                $model->warehouse_id = $warehouse['warehouse_id'];
                 $model->from_warehouse_id = $warehouse['warehouse_id'];
 
                 if ($model->save(false)) {
                     if ($model->name == 'order') {
+                        $this->saveCartItem($model);
+                        
                         return $this->redirect(['view', 'id' => $model->id]);
                     } else {
                         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -143,6 +149,28 @@ class StockOrderController extends Controller
         }
     }
 
+    protected function saveCartItem($model)
+    {
+        $cart = \Yii::$app->cart;
+        $orderItem = $cart->getItems();
+        foreach($orderItem  as $item)
+        {
+            $item = new StockEvent([
+                'name' => 'order_item',
+                'transaction_type' => $model->transaction_type,
+                'category_id' => $model->id,
+                'warehouse_id' => $model->warehouse_id,
+                'asset_item' => $item->asset_item,
+                'data_json' => [
+                    'req_qty' => $item->qty
+                ],
+                'order_status' => 'await'
+            ]);
+            $item->save(false);
+        }
+        return true;
+
+    }
 
     /**
      * Updates an existing StockOut model.

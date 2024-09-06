@@ -109,6 +109,11 @@ class Warehouse extends \yii\db\ActiveRecord
         // }
     }
 
+//แสดงจำนวนรายการที่ขอเบิก
+    public function countOrder()
+    {
+            return StockEvent::find()->where(['warehouse_id' => $this->id,'name' => 'order', 'order_status' => 'pending'])->count('warehouse_id');
+    }
     //แสดงประเภทสินค้าบริการ
     public function ListOrderType()
     {

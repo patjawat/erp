@@ -114,8 +114,8 @@ try {
     ?>
 
     <?php
-     echo $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-                                        'data' => $model->listWareHouse(),
+      $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+                                        'data' => $model->listWareHouseMain(),
                                         'options' => ['placeholder' => 'เลือกคลังที่ต้องการเบิก'],
                                         'pluginEvents' => [
                                             "select2:unselect" => "function() { 
@@ -131,4 +131,4 @@ try {
                                     ])->label('คลังวัสดุ');
                                     
                                     ?>
-<?= $form->field($model, 'data_json[note]')->textInput()->label('เหตุผล');?>
+<?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5])->label('เหตุผล');?>

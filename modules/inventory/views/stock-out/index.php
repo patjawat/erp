@@ -12,7 +12,7 @@ use yii\widgets\Pjax;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $warehouse = Yii::$app->session->get('warehouse');
-$this->title = 'จ่ายออก'.$warehouse['warehouse_name'];
+$this->title = 'ขอเบิก'.$warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = $this->title;
 $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
 ?>
@@ -40,9 +40,12 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
   <?php Pjax::begin(); ?>
   <?php // echo $this->render('_search', ['model' => $searchModel]); 
   ?>
+<div class="row">
 
 
-  <div class="card">
+<div class="col-12">
+
+<div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
           <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
@@ -95,6 +98,77 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
     </div>
   </div>
+</div>
+</div>
+
+  
+
+
+<?php
+
+use yii\web\View;
+// $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
+// $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
+
+$StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
+$chartUrl = Url::to(['/inventory/stock/view-chart']);
+$OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
+// $chartSummeryIn = Json::encode($chartSummary['in']);
+// $chartSummeryOut = Json::encode($chartSummary['out']);
+$js = <<< JS
+  // getPendingOrder()
+  // getlistOrderRequest()
+
+
+  getStoreInWarehouse()
+  getOrderRequestInWarehouse()
+  getChart();
+
+  //รายการใน Stock
+  async function getOrderRequestInWarehouse(){
+    await $.ajax({
+      type: "get",
+      url: "$StoreInWarehouseUrl",
+      dataType: "json",
+      success: function (res) {
+        $('#showStoreInWarehouse').html(res.content)
+      }
+    });
+  }
+
+  // รายการขอเบิก
+  async function getStoreInWarehouse(){
+    await $.ajax({
+      type: "get",
+      url: "$OrderRequestInWarehouseUrl",
+      dataType: "json",
+      success: function (res) {
+        $('#showOrderRequestInWarehouse').html(res.content)
+        $('#OrderCount').html(res.count)
+        $('#OrderConfirm').html(res.confirm)
+        $('#showTotalOrder').html(res.totalOrder)
+        $('#showTotalPrice').html(res.totalPrice)
+      }
+    });
+  }
+
+  async function getChart(){
+    await $.ajax({
+      type: "get",
+      url: "$chartUrl",
+      dataType: "json",
+      success: function (res) {
+        $('#showChart').html(res.content)
+       
+      }
+    });
+  }
+ 
+
+ 
+  JS;
+$this->registerJS($js, View::POS_END);
+?>
 
 
   <?php Pjax::end(); ?>

@@ -42,9 +42,9 @@ class UserHelper extends Component
    }
 
 
-   public static function GetEmployee()
+   public static function GetEmployee($user_id = null)
    {
-      return Employees::findOne(['user_id' => Yii::$app->user->id]);
+      return Employees::findOne(['user_id' => ($user_id ? $user_id : Yii::$app->user->id)]);
    }
 
 

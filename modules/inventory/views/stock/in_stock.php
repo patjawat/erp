@@ -10,10 +10,19 @@ use yii\widgets\Pjax;
 /** @var app\modules\inventory\models\StockSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Stocks';
+$warehouse = Yii::$app->session->get('warehouse');
+$this->title = $warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
     <?php Pjax::begin(); ?>
     
     <div class="card">

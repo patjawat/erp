@@ -5,6 +5,7 @@ namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\Store;
 use app\modules\inventory\models\StoreSearch;
+
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
 use yii\web\Controller;
@@ -13,6 +14,7 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 use Yii;
 use app\modules\inventory\models\Product;
+use app\modules\inventory\models\ProductSearch;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
 use app\components\UserHelper;
@@ -46,12 +48,11 @@ class StoreController extends Controller
      */
     public function actionIndex()
     {
-        $warehouse = Yii::$app->session->get('select-warehouse');
-        $searchModel = new StoreSearch([
-            'warehouse_id' => isset($warehouse['warehouse_id']) ? $warehouse['warehouse_id'] : 0
-        ]);
+        $warehouse = Yii::$app->session->get('warehouse');
+        $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=store.asset_item');
+        $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
+        $dataProvider->query->where(['warehouse_id' => $warehouse['warehouse_id']]);
 
         if(isset($selectWarehouse)){
             // $dataProvider->query->where(['warehouse_id' => $selectWarehouse['warehouse_id']]);
@@ -68,7 +69,7 @@ class StoreController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'warehouse' => $warehouse
+
         ]);
     }
 
@@ -246,13 +247,11 @@ class StoreController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $model = Store::findOne(['asset_item' => $id]);
-        $model->stock_qty = 1;
+        $model = Stock::findOne(['asset_item' => $id]);
         if ($model) {
             \Yii::$app->cart->create($model, 1);
-            // return  $this->redirect(['/inventory/store']);
             return [
-                'container' => '#viewCart',
+                'container' => '#inventory',
                 'status' => 'success',
                 'data' => $model
             ];
@@ -263,13 +262,13 @@ class StoreController extends Controller
     public function actionUpdateCart($id, $quantity)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = Store::findOne($id);
+        $model = Stock::findOne($id);
         // return $model->qty;
         if ($model) {
              \Yii::$app->cart->update($model,$quantity);
 
             return [
-                'container' => '#viewCart',
+                'container' => '#inventory',
                 'status' => 'success'
             ];
         }
@@ -283,7 +282,7 @@ class StoreController extends Controller
             \Yii::$app->cart->delete($product);
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'container' => '#viewCart',
+                'container' => '#inventory',
                 'status' => 'success'
             ];
         }

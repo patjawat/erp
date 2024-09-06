@@ -1,23 +1,19 @@
 <?php
 use yii\helpers\Html;
 use yii\helpers\Url;
-$warehouse = Yii::$app->session->get('warehouse');
-// echo "<pre>";
-// print_r($warehouse);
-// echo "</pre>";
 ?>
 <div class="d-flex gap-2">
-    <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-store me-1"></i> หน้าหลัก', ['/inventory/warehouse'], ['class' => 'btn btn-light']) ?>
+    <?php Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory'], ['class' => 'btn btn-light']) ?>
     <?php Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลัง', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
-    <?= $warehouse['warehouse_type'] == 'MAIN' ? Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light']) : '' ?>
-    <?php Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> เบิกวัสดุ', ['/inventory/stock-out'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> เบิกวัสดุ', ['/inventory/store'], ['class' => 'btn btn-light']) ?>
+    <?php Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> เบิกคลัง', ['/inventory/stock-order'], ['class' => 'btn btn-light']) ?>
+    <?php Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับ', ['/inventory/stock-in'], ['class' => 'btn btn-light']) ?>
+    <?php Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่าย', ['/inventory/stock-out'], ['class' => 'btn btn-light']) ?>
 
     <?php  Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่ายออก', ['/inventory/stock-request'], ['class' => 'btn btn-light']) ?>
-    <button class="btn btn-light" onclick="openTour()">
+    <!-- <button class="btn btn-light" onclick="openTour()">
         <span>แนะนำ</span>
-    </button><!-- end btn -->
+    </button> -->
+    <!-- end btn -->
     <!-- <div class="btn-group">
        <span class="btn btn-light">
        <i class="fa-solid fa-gear"></i>

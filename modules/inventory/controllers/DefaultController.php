@@ -2,9 +2,14 @@
 
 namespace app\modules\inventory\controllers;
 
+use app\components\UserHelper;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
+use yii\db\Expression;
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\WarehouseSearch;
+
 /**
  * Default controller for the `warehouse` module
  */
@@ -16,14 +21,39 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
+        Yii::$app->session->remove('warehouse');
         return $this->render('index');
     }
 
-    public function actionChart()
-    {
 
-      
+    public function actionWarehouse()
+    {
+        $id = Yii::$app->user->id;
+        $searchModel = new WarehouseSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['delete' => null]);
+        if (!Yii::$app->user->can('admin')) {
+            if(Yii::$app->user->can('warehouse')){
+                $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
+
+            }else{
+                $emp = UserHelper::GetEmployee();
+                $dataProvider->query->andWhere(['warehouse_type' =>'SUB']);
+                $dataProvider->query->andWhere(['>', new \yii\db\Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
+            }
+        }
+        $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'title' => '',
+            'content' => $this->renderAjax('list_warehouse', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ])
+        ];
     }
+
 
     //ปริมาณวัสดุตามหมวดหมู่
     public function actionProductSummary()
@@ -46,5 +76,4 @@ class DefaultController extends Controller
             'label' => $label
         ];
     }
-
 }

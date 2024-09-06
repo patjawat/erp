@@ -53,7 +53,8 @@ class StockController extends Controller
         ]);
     }
 
-    public function actionWarehouse()
+
+    public function actionProduct()
     {
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -66,18 +67,74 @@ class StockController extends Controller
             return [
                 'title' => $this->request->get('title'),
                 'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('list', [
+                'content' => $this->renderAjax('product/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ])
             ];
         } else {
-            return $this->render('list', [
+            return $this->render('product/index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
     }
+
+    // public function actionWarehouse()
+    // {
+    //     $searchModel = new StockSearch();
+    //     $dataProvider = $searchModel->search($this->request->queryParams);
+    //     $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+    //     $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
+    //     $dataProvider->query->groupBy('asset_item');
+
+    //     if ($this->request->isAjax) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'count' => $dataProvider->getTotalCount(),
+    //             'content' => $this->renderAjax('list', [
+    //                 'searchModel' => $searchModel,
+    //                 'dataProvider' => $dataProvider,
+    //             ])
+    //         ];
+    //     } else {
+    //         return $this->render('list', [
+    //             'searchModel' => $searchModel,
+    //             'dataProvider' => $dataProvider,
+    //         ]);
+    //     }
+    // }
+
+    public function actionInStock()
+    {
+        $searchModel = new StockSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
+        $dataProvider->query->groupBy('asset_item');
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'count' => $dataProvider->getTotalCount(),
+                'content' => $this->renderAjax('in_stock', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('in_stock', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+
+
+
 
     public function actionListStock($q = null, $id = null)
     {

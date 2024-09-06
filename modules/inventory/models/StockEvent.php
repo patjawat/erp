@@ -3,6 +3,7 @@
 namespace app\modules\inventory\models;
 
 use app\components\AppHelper;
+use app\components\UserHelper;
 use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -174,22 +175,25 @@ class StockEvent extends \yii\db\ActiveRecord
 
     public function getTotalOrderPrice()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
-        // $model =  self::find()
-        //     ->where(['name' => 'order', 'warehouse_id' => $warehouse['warehouse_id'], 'order_status' => 'success','category_id' => $this->id])
-        //     ->sum('total_price');
         $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
         $query = Yii::$app->db
         ->createCommand($sql)
         ->bindValue(':category_id', $this->id)
         ->queryScalar();
         return $query;
-        // if ($query) {
-        //     return number_format($query, 2);
-        // } else {
-        //     return 0;
-        // }
     }
+
+    public function getTotalOrderPriceSuccess()
+    {
+        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
+        $query = Yii::$app->db
+        ->createCommand($sql)
+        ->bindValue(':category_id', $this->id)
+        ->queryScalar();
+        return $query;
+    }
+
+
 
     
     // ราวมราคาทั้งหมดขแงแต่ละ ชิ้น
@@ -316,10 +320,16 @@ class StockEvent extends \yii\db\ActiveRecord
     }
 
     //แสดงรายกาผู้ขาย/ผู้บริจาค
-    public function listWareHouse()
+    public function listWareHouseMain()
     {
-        return ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name');
+        return ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name');
     }
+
+      //แสดงรายกาผู้ขาย/ผู้บริจาค
+      public function listWareHouse()
+      {
+          return ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name');
+      }
 
     //แสดงรายการย่อยของ stock
     public function getItems()
@@ -453,7 +463,8 @@ class StockEvent extends \yii\db\ActiveRecord
     // ผู้ขอ
     public  function CreateBy($msg = null)
     {
-        return  $this->getAvatar($this->created_by, $msg);
+        $emp = UserHelper::GetEmployee($this->created_by);
+        return $this->getAvatar($emp->id);
     }
 
     public function viewCreatedAt()

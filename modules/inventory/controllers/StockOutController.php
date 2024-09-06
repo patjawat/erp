@@ -48,16 +48,23 @@ class StockOutController extends Controller
      */
     public function actionIndex()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
+        
+    $warehouse = Yii::$app->session->get('warehouse');
+    if(!$warehouse){
+        $id = $this->request->get('id');
+        $this->setWarehouse($id);
+    }else{
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
-
+        
+        // return $this->render('@app/modules/inventory/views/stock-order/index', [
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
     }
 
     /**
@@ -364,6 +371,25 @@ class StockOutController extends Controller
         return $this->redirect(['index']);
     }
 
+
+      //เลือกคลังที่จะทำงาน
+      protected function setWarehouse($id)
+      {
+          $model = Warehouse::find()->where(['id' => $id])->One();
+          Yii::$app->session->set('warehouse',[
+              'id' => $model->id,
+              'warehouse_id' => $model->id,
+              'warehouse_code' => $model->warehouse_code,
+              'warehouse_name' => $model->warehouse_name,
+              'warehouse_type' => $model->warehouse_type,
+              'category_id' => $model->category_id,
+              'checker' => isset($model->data_json['checker']) ?  $model->data_json['checker'] : '',
+              'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
+          ]);
+          return $this->redirect(['index']);
+          // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
+      }
+      
     /**
      * Finds the StockOut model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

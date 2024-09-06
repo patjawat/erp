@@ -8,7 +8,7 @@ use yii\helpers\Url;
 use yii\web\View;
 use yii\widgets\Pjax;
 
-$this->title = 'ระบบคลัง';
+$this->title = 'ตั้งค่าระบบคลัง';
 ?>
 
 

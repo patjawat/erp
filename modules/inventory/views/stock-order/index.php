@@ -55,10 +55,10 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         <table class="table table-primary mb-5">
           <thead>
             <tr>
-              <th scope="col">รหัส</th>
-              <th>ปีงบประมาณ</th>
+              <th scope="col" style="width:155px">รหัส</th>
+              <th class="text-center">ปีงบประมาณ</th>
+              <th>รายการ</th>
               <th>คลัง</th>
-              <th>ผู้ดำเนินการ</th>
               <th>มูลค่า</th>
               <th>สถานะ</th>
               <th style="width:100px">ดำเนินการ</th>
@@ -68,12 +68,13 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
             <?php foreach ($dataProvider->getModels() as $item): ?>
               <tr>
                 <td><?=$item->code?></td>
-                <td><?=$item->thai_year?></td>
-                <td><?=$item->warehouse->warehouse_name?></td>
+                <td class="text-center"><?=$item->thai_year?></td>
                 <td><?=$item->CreateBy($item->created_at)['avatar']?></td>
-                <td><?php
-                try {
+                <td><?=$item->warehouse->warehouse_name?></td>
+                <td>
+                  <?php
                   echo number_format($item->getTotalOrderPrice(),2);
+                try {
                 } catch (\Throwable $th) {
 
                 }

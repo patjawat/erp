@@ -28,14 +28,22 @@ $this->title = $model->warehouse_name;
 
 <div class="row">
     <div class="col-3">
-        <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
+        <a href="<?=Url::to(['/inventory/stock-out'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
                     <h2 id="OrderCount">0</h2>
                 </div>
-                <div class="card-footer border-0">จำนวนวัสดุในสต๊อค</div>
+                <div class="card-footer border-0">รอจ่าย</div>
             </div>
         </a>
+    </div>
+    <div class="col-3">
+        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+            <div class="card-body">
+                <h2 id="OrderConfirm">0</h2>
+            </div>
+            <div class="card-footer border-0">หัวหน้าเห็นชอบ</div>
+        </div>
     </div>
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -46,15 +54,6 @@ $this->title = $model->warehouse_name;
         </div>
 
     </div>
-    <div class="col-3">
-        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
-            <div class="card-body">
-                <h2 id="OrderConfirm">0</h2>
-            </div>
-            <div class="card-footer border-0">หัวหน้าเห็นชอบ</div>
-        </div>
-    </div>
-    
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">

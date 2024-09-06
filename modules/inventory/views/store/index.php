@@ -11,42 +11,37 @@ use yii\widgets\Pjax;
 /** @var app\modules\inventory\models\StoreSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Stores';
+$warehouse = Yii::$app->session->get('warehouse');
+$this->title = $warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
+
+<?php yii\widgets\Pjax::begin(['id' => 'inventory']); ?>
 <?php
 // $selectWarehouse = Yii::$app->session->get('select-warehouse');
 $cart = \Yii::$app->cart;
 $products = $cart->getItems();
-$selectWarehouse = Yii::$app->session->get('warehouse');
 // echo "<pre>";
 // print_r($selectWarehouse);
 // echo "</pre>";
 ?>
-    <div class="card">
-        <div class="card-body d-flex justify-content-between">
-        <div>
-            เบิกวัสดุ
-        </div>
-        <?php Html::a('<i class="bi bi-check2-square"></i> เลือกคลังที่ต้องการเบิก',['/inventory/warehouse/list','title' => '<i class="bi bi-check2-square"></i> เลือกคลังที่ต้องการเบิก'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-sm']])?>
-            <div class="d-flex align-items-center gap-2">
-                <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
-                <?= Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
-                <?php //  Html::a('<i class="fa-solid fa-gear"></i>', ['#', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
-            </div>
 
-        </div>
-    </div>
 <div class="row">
 <div class="col-8">
-<?php Pjax::begin(['id' => 'store']); ?>
     <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between">
-
-                <h6><i class="bi bi-ui-checks"></i> จำนวน <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+                <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 <?=$this->render('_search', ['model' => $searchModel])?>
             </div>
             <div class="table-responsive">
@@ -54,18 +49,17 @@ $selectWarehouse = Yii::$app->session->get('warehouse');
                     <thead>
                         <tr>
                             <th scope="col">ชื่อรายการ</th>
-                            <th scope="col">คลัง</th>
-                            <th scope="col">จำนวนสต๊อก</th>
+                            <th class="text-center">ล๊อตปัจุบัน</th>
+                            <th class="text-center">คงเหลือ</th>
                             <th class="text-center" style="width:90px">ดำเนินการ</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr class="">
-                            <td scope="row"><?php 
-                            echo $item->product->Avatar()?></td>
-                            <td><?=$item->warehouse_id?></td>
-                            <td><?=$item->stock_qty?></td>
+                            <td scope="row"><?=$item->product->Avatar()?></td>
+                            <td class="text-center"><?=$item->qty?></td>
+                            <td class="text-center"><?=$item->qty?></td>
                             <td class="text-center">
                                 <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/inventory/store/add-to-cart','id' => $item->asset_item],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?>
                             </td>
@@ -78,7 +72,7 @@ $selectWarehouse = Yii::$app->session->get('warehouse');
         </div>
         
     </div>
-    <?php Pjax::end(); ?>
+  
 
         
 </div>
@@ -185,6 +179,7 @@ JS;
 $this->registerJS($js, View::POS_END);
 
 ?>
+  <?php yii\widgets\Pjax::end(); ?>
 
 
 

@@ -1,13 +1,24 @@
 <?php
 use yii\widgets\Pjax;
 ?>
-<?php Pjax::begin(['id' => 'viewCart']); ?>
+<?php // Pjax::begin(['id' => 'inventory']); ?>
 <?php
 use yii\helpers\Html;
+use yii\web\View;
+
     $cart = \Yii::$app->cart;
     $products = $cart->getItems();
 
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
 
 <div class="card">
     <div class="card-body">
@@ -55,11 +66,12 @@ use yii\helpers\Html;
 <?php if($cart->getCount() == 0):?>
         <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
 <?php else:?>
-        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['create','title' => 'ขอเบิกวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
+        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','title' => 'ขอเบิกวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
         <?php endif?>
     </div>
 
     </div>
 </div>
 
-<?php Pjax::end(); ?>
+
+<?php // Pjax::end(); ?>
