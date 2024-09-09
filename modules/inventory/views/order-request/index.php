@@ -50,9 +50,9 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                     <thead>
                         <tr>
                             <th style="width:150px">รหัส</th>
+                            <th class="text-center">ปีงบประมาณ</th>
                             <th style="width:200px">วันที่</th>
                             <th style="width:400px" scope="col">รายการ</th>
-                            <th class="text-center">ปีงบประมาณ</th>
                             <th>ผู้ตรวจสอบ</th>
                             <th class="text-center">สถานะ</th>
                             <th style="width:100px">ดำเนินการ</th>
@@ -62,10 +62,10 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <?php foreach ($dataProvider->getModels() as $item): ?>
                         <tr>
                             <td><?=$item->code?></td>
+                            <td class="text-center"><?=$item->thai_year?></td>
                             <td><?=$item->viewCreatedAt()?></td>
                             <td><?=$item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar']?>
                             </td>
-                            <td class="text-center"><?=$item->thai_year?></td>
                             <td><?=$item->viewChecker()['avatar']?></td>
                             <td class="text-center"><?=$item->viewstatus()?></td>
                             <td>
