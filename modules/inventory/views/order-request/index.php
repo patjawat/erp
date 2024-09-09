@@ -49,11 +49,11 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <table class="table table-striped table-sm">
                     <thead>
                         <tr>
-                            <th style="width:150px">รหัส</th>
-                            <th class="text-center">ปีงบประมาณ</th>
+                            <th style="width:120px">รหัส</th>
+                            <th  style="width:120px" class="text-center">ปีงบประมาณ</th>
                             <th style="width:200px">วันที่</th>
-                            <th style="width:400px" scope="col">รายการ</th>
-                            <th>ผู้ตรวจสอบ</th>
+                            <th style="width:300px" scope="col">ผู้เบิก</th>
+                            <th style="width:300px">ผู้ตรวจสอบ</th>
                             <th class="text-center">สถานะ</th>
                             <th style="width:100px">ดำเนินการ</th>
                         </tr>
