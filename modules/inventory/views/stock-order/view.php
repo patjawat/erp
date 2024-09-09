@@ -150,7 +150,7 @@ $this->params['breadcrumbs'][] = $this->title;
                      [
                         'label' => 'พิมเอกสาร',
                         'format' => 'html',
-                        'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-out','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])
+                        'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank'])
                      ],
                     ],
                 ]) ?>

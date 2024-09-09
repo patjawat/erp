@@ -23,7 +23,7 @@ class DocumentController extends \yii\web\Controller
 
 
     //ใบเบิกวัสดุ
-    public function actionStockOut($id)
+    public function actionStockOrder($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -72,7 +72,8 @@ class DocumentController extends \yii\web\Controller
             }
 
             $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-            return $this->Show($result_name);
+            return $this->redirect('https://docs.google.com/viewerng/viewer?url='.Url::base('https').'/msword/results/' . $result_name);
+            // return $this->Show($result_name);
         }
 
             // ดึงค่ากน่วยงาน
