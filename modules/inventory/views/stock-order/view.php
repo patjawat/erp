@@ -149,15 +149,17 @@ $this->params['breadcrumbs'][] = $this->title;
                      ],
                      [
                         'label' => 'พิมเอกสาร',
-                        'format' => 'html',
-                        'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank'])
+                        'format' => 'raw',
+                        // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank','data' => ['pjax' => false]])
+                        'value' => Html::a('View', ['/inventory/document/stock-order','id' => $model->id], ['target'=>'_blank', 'data-pjax'=>"0"])
+                        // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['target' => '_blank','data' => ['pjax' => false]])
                      ],
                     ],
                 ]) ?>
 
             </div>
             <div class="card-footer">
-
+                <?=Html::a('View', ['/inventory/document', 'id' => $model->id], ['target'=>'_blank', 'data-pjax'=>"0"])?>
                 <div class="row">
                     <div class="col-6"><?= $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] ?></div>
                     <div class="col-6 text-end">
