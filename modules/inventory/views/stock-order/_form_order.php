@@ -114,21 +114,21 @@ try {
     ?>
 
     <?php
-      $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-                                        'data' => $model->listWareHouseMain(),
-                                        'options' => ['placeholder' => 'เลือกคลังที่ต้องการเบิก'],
-                                        'pluginEvents' => [
-                                            "select2:unselect" => "function() { 
+    //    $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+    //                                     'data' => $model->listWareHouseMain(),
+    //                                     'options' => ['placeholder' => 'เลือกคลังที่ต้องการเบิก'],
+    //                                     'pluginEvents' => [
+    //                                         "select2:unselect" => "function() { 
 
-                                            }",
-                                            "select2:select" => "function() {
-                                               console.log($(this).val());
-                                        }",],
-                                        'pluginOptions' => [
-                                            'allowClear' => true,
-                                            'dropdownParent' => '#main-modal',
-                                        ],
-                                    ])->label('คลังวัสดุ');
+    //                                         }",
+    //                                         "select2:select" => "function() {
+    //                                            console.log($(this).val());
+    //                                     }",],
+    //                                     'pluginOptions' => [
+    //                                         'allowClear' => true,
+    //                                         'dropdownParent' => '#main-modal',
+    //                                     ],
+    //                                 ])->label('คลังวัสดุ');
                                     
                                     ?>
 <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5])->label('เหตุผล');?>

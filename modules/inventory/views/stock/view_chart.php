@@ -5,6 +5,7 @@ use yii\web\View;
 use yii\helpers\Json;
 // $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
 // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
+
 ?>
 <div id="inventoryCharts"></div>
 

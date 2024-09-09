@@ -31,7 +31,7 @@ $this->title = $model->warehouse_name;
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2 id="OrderCount">0</h2>
+                    <h2 id="totalStock">0</h2>
                 </div>
                 <div class="card-footer border-0">จำนวนวัสดุในสต๊อค</div>
             </div>
@@ -206,7 +206,7 @@ $js = <<< JS
       dataType: "json",
       success: function (res) {
         $('#showOrderRequestInWarehouse').html(res.content)
-        $('#OrderCount').html(res.count)
+        $('#totalStock').html(res.totalstock)
         $('#OrderConfirm').html(res.confirm)
         $('#showTotalOrder').html(res.totalOrder)
         $('#showTotalPrice').html(res.totalPrice)

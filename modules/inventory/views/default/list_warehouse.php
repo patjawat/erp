@@ -67,9 +67,9 @@ use app\modules\inventory\models\Warehouse;
     </td>
       <td> <?= $model->avatarStack() ?></td>
       <td class="text-center"> 
-        <?php if($model->countOrder() > 0):?>
-      <a href="<?=Url::to(['/inventory/stock-out','id' => $model->id])?>">
-        <span class="badge rounded-pill text-bg-primary"><?=$model->countOrder()?> </span>
+        <?php if($model->countOrderRequest() > 0):?>
+      <a href="<?=Url::to(['/inventory/order-request','id' => $model->id])?>">
+        <span class="badge rounded-pill text-bg-primary"><?=$model->countOrderRequest()?> </span>
     </a>
     <?php else:?>
 

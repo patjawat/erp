@@ -8,7 +8,7 @@ use yii\web\View;
 
     $cart = \Yii::$app->cart;
     $products = $cart->getItems();
-
+    $warehouseSelect = Yii::$app->session->get('select-warehouse');
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -38,11 +38,13 @@ use yii\web\View;
                     <?php foreach($products as $item):?>
                     <tr class="">
                         <td scope="row">
-                            <?php
+                        <?php
+                            // echo "<pre>";
                             // print_r($item);
-                            ?>
+                            // echo "</pre>";
+                        ?>
                             <?php
-                            //    echo $item->asset_item;
+                               echo $item->lot_number;
                             echo $item->product->Avatar();
                             ?></td>
                         <td>
@@ -66,7 +68,7 @@ use yii\web\View;
 <?php if($cart->getCount() == 0):?>
         <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
 <?php else:?>
-        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','title' => 'ขอเบิกวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
+        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
         <?php endif?>
     </div>
 

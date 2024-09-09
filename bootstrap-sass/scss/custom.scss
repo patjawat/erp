@@ -7,6 +7,22 @@
 
 
 
+
+.badge-soft-warning {
+  color: #f4c238;
+  background-color: rgba(244, 194, 56, .1);
+}
+
+.badge-soft-success {
+  color: #28b765;
+  background-color: rgba(40, 183, 101, .1);
+}
+
+.badge-soft-danger {
+  color: #ed5555;
+  background-color: rgba(237, 85, 85, .1);
+}
+
 // @import "bootstrap";
 
 .zoom-in:hover {

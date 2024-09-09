@@ -44,14 +44,23 @@ class DefaultController extends Controller
         }
         $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => '',
-            'content' => $this->renderAjax('list_warehouse', [
+
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_warehouse', [
+                    'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('list_warehouse', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-            ])
-        ];
+            ]);
+        }
+
     }
 
 

@@ -57,11 +57,13 @@ $products = $cart->getItems();
                     <tbody>
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr class="">
-                            <td scope="row"><?=$item->product->Avatar()?></td>
+                            <td scope="row"><?=$item->product->Avatar()?>
+                        <?=$item->lot_number?>
+                        </td>
                             <td class="text-center"><?=$item->qty?></td>
-                            <td class="text-center"><?=$item->qty?></td>
+                            <td class="text-center"><?=$item->total?></td>
                             <td class="text-center">
-                                <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/inventory/store/add-to-cart','id' => $item->asset_item],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?>
+                                <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/inventory/store/add-to-cart','id' => $item->id],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?>
                             </td>
                         </tr>
                         <?php endforeach;?>
@@ -81,6 +83,8 @@ $products = $cart->getItems();
 <?php // $this->render('view_cart')?>
 </div>
 </div>
+
+<?php yii\widgets\Pjax::end(); ?>
 
 
 <?php
@@ -130,24 +134,24 @@ async function getViewCar()
 });
 
 
-$(document).ready(function(){
-  $('#addtocart').on('click',function(){
+// $(document).ready(function(){
+//   $('#addtocart').on('click',function(){
     
-    var button = $(this);
-    var cart = $('#cart');
-    var cartTotal = cart.attr('data-totalitems');
-    var newCartTotal = parseInt(cartTotal) + 1;
+//     var button = $(this);
+//     var cart = $('#cart');
+//     var cartTotal = cart.attr('data-totalitems');
+//     var newCartTotal = parseInt(cartTotal) + 1;
     
-    button.addClass('sendtocart');
-    setTimeout(function(){
-      button.removeClass('sendtocart');
-      cart.addClass('shake').attr('data-totalitems', newCartTotal);
-      setTimeout(function(){
-        cart.removeClass('shake');
-      },500)
-    },1000)
-  })
-})
+//     button.addClass('sendtocart');
+//     setTimeout(function(){
+//       button.removeClass('sendtocart');
+//       cart.addClass('shake').attr('data-totalitems', newCartTotal);
+//       setTimeout(function(){
+//         cart.removeClass('shake');
+//       },500)
+//     },1000)
+//   })
+// })
 
 
         $("body").on("click", ".update-cart", function (e) {
@@ -179,8 +183,6 @@ JS;
 $this->registerJS($js, View::POS_END);
 
 ?>
-  <?php yii\widgets\Pjax::end(); ?>
-
 
 
 

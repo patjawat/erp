@@ -30,7 +30,8 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
 <div class="card p-0">
   <div class="card-body">
-      <?=Html::a($createIcon.' สร้างเอกการเบิก',['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => $createIcon.' สร้างเอกสารเบิกวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+      <?php // Html::a($createIcon.' สร้างเอกการเบิก',['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => $createIcon.' สร้างเอกสารเบิกวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+      <?= Html::a($createIcon.' เลือกรายการ',['/inventory/store'],['class' => 'btn btn-primary rounded-pill shadow'])?>
     </div>
   </div>
 </div>

@@ -172,7 +172,13 @@ class StockEvent extends \yii\db\ActiveRecord
     }
 
 
-
+    //นีับจำนวน stock คงเหลือในคลังที่เลือก
+public static function SumStockWarehouse()
+{
+    $warehouse = Yii::$app->session->get('warehouse');
+return Stock::find()->where(['warehouse_id' => $warehouse['warehouse_id']])->sum('qty');
+}
+    
     public function getTotalOrderPrice()
     {
         $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
@@ -292,10 +298,27 @@ class StockEvent extends \yii\db\ActiveRecord
 
 
 
+      //นับจำนวนทีอยู่ใน stock
+      public function SumStockQty()
+      {
+          return Stock::find()->where(['asset_item' => $this->asset_item])->sum('qty');
+      }
+
+      
     //นับจำนวนที่เบิก
     public function SumQty()
     {
         return self::find()->where(['category_id' => $this->id])->sum('qty');
+    }
+
+    //นับจำนวนที่ขอเบิก
+    public function SumReqQty()
+    {
+        $sql = "SELECT SUM(data_json->>'$.req_qty') as total FROM `stock_events` WHERE name = 'order_item' AND category_id = :category_id";
+        $query  = Yii::$app->db->createCommand($sql)
+        ->bindValue(':category_id',$this->id)
+        ->queryScalar();
+        return $query;
     }
     //ตรวจสอบรายการว่ากรอบขอ้มูลตรบหรือไม่
     public function checkItem()
@@ -377,20 +400,29 @@ class StockEvent extends \yii\db\ActiveRecord
         }
     }
 
+
+        // Avatar ของฉัน
+        public  function getMe($msg = null)
+        {
+            return UserHelper::getMe($msg);
+        }
+        
     public function viewStatus()
     {
 
         switch ($this->order_status) {
             case 'await':
-                $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
+                $msg = '<div class="badge badge-soft-success fs-13">Paid</div>';
+                // $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
                 break;
-
-            case 'pending':
-                $msg = '<i class="fa-solid fa-hourglass"></i> <span>รอดำเนินการ</span>';
+                
+                case 'pending':
+                    $msg = '<div class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-solid fa-hourglass"></i> รอดำเนินการ</div>';
+                // $msg = '<i class="fa-solid fa-hourglass"></i> <span>รอดำเนินการ</span>';
                 break;
 
             case 'cancel':
-                $msg = '<i class="fa-regular fa-circle-xmark text-danger"></i> ยกเลิก';
+                $msg = '<div class="badge rounded-pill badge-soft-danger text-danger fs-13"> <i class="fa-solid fa-xmark fs-6 text-danger"></i> ยกเลิก </div>';
                 break;
             case 'success':
                 $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
@@ -412,21 +444,23 @@ class StockEvent extends \yii\db\ActiveRecord
             $status = '';
             switch ($this->data_json['checker_confirm']) {
                 case 'Y':
-                    $status =  '<i class="fa-regular fa-circle-check text-success fs-6"></i> อนุมัติ';
+                    $status =  '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> อนุมัติ </span>';
                     break;
 
                 case 'N':
-                    $status = '<i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ';
+                    $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ </span>';
                     break;
 
                 default:
-                    $status = '<i class="fa-regular fa-clock fs-6"></i> รออนุมัติ';
+                    $status = '<span class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-regular fa-clock"></i> รออนุมัติ </span>';
                     break;
             }
+
+            $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
             return
                 [
                     'status' => $status,
-                    'avatar' => $this->getAvatar($this->checker, $msg)['avatar']
+                    'avatar' => $this->getAvatar($this->checker, ($status.' <i class="bi bi-clock"></i> <span class="text-muted fs-13">'.$checkerTime.'</span>'))['avatar']
                 ];
         } catch (\Throwable $th) {
             return
@@ -464,7 +498,7 @@ class StockEvent extends \yii\db\ActiveRecord
     public  function CreateBy($msg = null)
     {
         $emp = UserHelper::GetEmployee($this->created_by);
-        return $this->getAvatar($emp->id);
+        return $this->getAvatar($emp->id,$msg);
     }
 
     public function viewCreatedAt()

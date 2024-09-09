@@ -26,6 +26,7 @@ class ApproveController extends \yii\web\Controller
     public function actionStockOut()
     {
 
+
         $emp = UserHelper::GetEmployee();
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -68,10 +69,6 @@ class ApproveController extends \yii\web\Controller
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json,$checkerData);
                 if ($model->data_json['checker_confirm'] == 'Y') {
                     
-                    if ($model->warehouse_id == $model->from_warehouse_id) {
-                        $this->UpdateStock($model);
-                        $model->order_status = 'success';
-                    }
                 }else{
                     $model->order_status = 'cancel';
                 }

@@ -10,10 +10,9 @@ use yii\helpers\ArrayHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $model */
 /** @var yii\widgets\ActiveForm $form */
-$cart = \Yii::$app->cart;
 ?>
 
-<div class="order-search w-25">
+<div class="order-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['/inventory/store/index'],
@@ -24,9 +23,45 @@ $cart = \Yii::$app->cart;
         ],
     ]); ?>
 <div class="row justify-content-end">
-    <div class="col-8">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
+    <div class="col-6">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('การค้นหา') ?>
     </div>
+    <div class="col-6">
+    <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+                                        'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
+                                        'options' => ['placeholder' => 'เลือกรายการพัสดุ'],
+                                        'pluginEvents' => [
+                                            "select2:unselect" => "function() { 
+                                                $.ajax({
+                                                    type: 'get',
+                                                    url: '".Url::to(['/inventory/warehouse/clear-select-warehouse'])."',
+                                                    dataType: 'json',
+                                                    success: function (res) {
+                                                              $.pjax.reload({container:'#inventory', history:false});
+                                                    }
+                                                });
+                                            }",
+                                            "select2:select" => "function() {
+                                                // console.log($(this).val());
+                                                $.ajax({
+                                                    type: 'get',
+                                                    url: '".Url::to(['/inventory/store/select-warehouse'])."',
+                                                    data: {id: $(this).val()},
+                                                    dataType: 'json',
+                                                    success: function (res) {
+                                                            //   $.pjax.reload({container:'#inventory', history:false});
+                                                              $('#form-search').submit()
+                                                    }
+                                                });
+                                        }",],
+                                        'pluginOptions' => [
+                                        'allowClear' => true,
+                                        ],
+                                    ])->label('คลัง');
+                                    
+                                    ?>
+
+</div>
 </div>
 
 

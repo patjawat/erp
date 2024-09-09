@@ -251,6 +251,7 @@ class WarehouseController extends Controller
     {
         $warehouse = Yii::$app->session->get('warehouse');
         $totalPrice = StockEvent::getTotalPriceWarehouse();
+        $sumStockWarehouse = StockEvent::SumStockWarehouse();
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         
@@ -261,6 +262,7 @@ class WarehouseController extends Controller
             return [
                 'title' => $this->request->get('title'),
                 'count' => $dataProvider->getTotalCount(),
+                'totalstock' => $sumStockWarehouse,
                 'confirm' => $searchModel->getTotalCheckerY(),
                 'totalOrder' => $searchModel->getTotalSuccessOrder(),
                 'totalPrice' => number_format($totalPrice,2),

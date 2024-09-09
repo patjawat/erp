@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span
                             class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ
                     </h6>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
                 </div>
                 <table class="table table-striped mt-3">
                     <thead class="table-primary">
@@ -88,6 +88,25 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                                 <?php endif;?>
                             </td>
+
+
+
+                            <td class="align-middle text-center">
+                                <!-- ถ้าเป็็นคลังของผู้จ่ายให้แสดงปุ่มจ่าย -->
+                                <?php if(isset($warehouse['warehouse_id']) && $model->warehouse_id == $warehouse['warehouse_id']):?>
+                                <?= $model->data_json['checker_confirm'] == 'Y' ? Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock-order/update-lot','id' => $item->id],['class' => 'text-center open-modal','data' => ['size' => 'modal-md']]) : '-'?>
+                                <?php else:?>
+                                <!-- ถ้า้ป็รคลังของผู้ขอเบิกของให้แสดงปุ่มแก้ไขและลบได้ -->
+                                <div class="d-flex justify-content-center gap-2">
+                                    <?php if($item->order_status == 'pending'):?>
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-order/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
+                                    <?php else:?>
+                                    <?=$item->viewStatus()?>
+                                    <?php endif?>
+                                </div>
+                                <?php endif;?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
 
@@ -96,15 +115,22 @@ $this->params['breadcrumbs'][] = $this->title;
 
             </div>
         </div>
-        
+        <div class="form-group mt-3 d-flex justify-content-center">
+            <?php if($model->order_status == 'await'):?>
+            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-order/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+            <?php endif;?>
+            <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
+            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout']) : ''?>
+                <?php else:?>
+            <?php endif;?>
+        </div>
     </div>
     <div class="col-4">
         <!-- Star Card -->
         <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between mb-3">
-                    <!-- <h6><?= Html::encode($this->title) ?></h6> -->
-                     <?=$model->CreateBy('<code>ผู้เบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$item->viewCreated())['avatar']?>
+                <div class="d-flex justify-content-between">
+                    <h6><?= Html::encode($this->title) ?></h6>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
@@ -124,21 +150,21 @@ $this->params['breadcrumbs'][] = $this->title;
                        'value' => $model->code
                     ],
                     [
+                        'label' => 'ผู้ขอเบิก',
+                        'format' => 'raw',
+                        'value' =>  $model->CreateBy($model->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar']
+                    ],
+                    [
                         'label' => 'วันที่',
                         'value' => $model->viewCreatedAt()
                      ],
-                    // [
-                    //     'label' => 'ผู้ขอเบิก',
-                    //     'format' => 'raw',
-                    //     'value' =>  $model->CreateBy($model->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar']
-                    // ],
                      [
-                        'label' => 'ผู้อนุมัติ',
-                        'format' => 'raw',
-                        'value' => $model->viewChecker('ผู้อนุมัติ')['avatar']
+                        'label' => 'ผู้ขอ',
+                        'format' => 'html',
+                        'value' => $model->CreateBy($model->note)['avatar']
                      ],
                      [
-                        'label' => 'สถานะคำขอ',
+                        'label' => 'สถานะ',
                         'format' => 'html',
                         'value' => $model->viewStatus()
                      ],
@@ -147,30 +173,19 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => 'html',
                         'value' => $model->getTotalOrderPrice()
                      ],
-                     [
-                        'label' => 'พิมเอกสาร',
-                        'format' => 'html',
-                        'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-out','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])
-                     ],
                     ],
                 ]) ?>
 
             </div>
             <div class="card-footer">
+               
 
+                <div class="d-grid gap-2 mt-2 mb-4">
+                <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-out','id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow open-modal zoom-in','data' => ['size' => 'modal-xl']]) ?>
+                </div>
                 <div class="row">
-                    <div class="col-6"><?= $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] ?></div>
-                    <div class="col-6 text-end">
-                    <div class="form-group mt-3 d-flex justify-content-end">
-            <?php if($model->order_status == 'await'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-order/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
-            <?php endif;?>
-            <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
-            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout']) : ''?>
-                <?php else:?>
-            <?php endif;?>
-        </div>
-                    </div>
+                    <div class="col-6"><?= $model->viewChecker('ผู้อนุมัติ')['avatar'] ?></div>
+                    <div class="col-6 text-end"><?=$model->viewChecker()['status']?></div>
                 </div>
             </div>
         </div>

@@ -18,25 +18,27 @@ use yii\helpers\Html;
                 </div>
 
             </div>
-            <table class="table table-primary">
+            <table class="table table-striped">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>
                         <th>คลัง</th>
-                        <th>จำนวน</th>
-                        <th>สถานะ</th>
-                        <th style="width:100px">ดำเนินการ</th>
+                        <th class="text-center">จำนวน</th>
+                        <th class="text-start">หมายเหตุ</th>
+                        <th style="width:150px">สถานะ</th>
+                        <th style="width:130px" class="text-center">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($dataProvider->getModels() as $item): ?>
                     <tr class="">
                         <td><?php
-                        $msg  ='ขอเบิกวัสดุสำนักงาน';
+                        $msg  ='ขอเบิกวัสดุ | <i class="bi bi-clock"></i> '.$item->viewCreated();
                        echo $item->CreateBy($msg)['avatar'] ?>
                        </td>
                         <td><?=$item->warehouse->warehouse_name?></td>
-                        <td><?=$item->SumQty()?></td>
+                        <td class="text-center"><?=$item->SumReqQty()?></td>
+                        <td class="text-start"><?=$item->data_json['note']?></td>
                         <td>
                             
                         <?= $item->viewChecker()['status']?></td>

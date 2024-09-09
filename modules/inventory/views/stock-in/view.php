@@ -36,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php if($model->order_status == 'success'):?>
 
                         <?php else:?>
-                   <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลือกรายการ',['/inventory/stock-in/product-list','id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                   <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-in/product-list','id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
                    <?php endif?>
                    <!-- <?php if($model->order_status == 'success'):?>
                    
@@ -132,6 +132,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'attributes' => [
                         [
                             'label' => 'สถานะ',
+                            'format' => 'raw',
                             'value' => $model->viewStatus()
                         ],
                         [

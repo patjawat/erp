@@ -30,6 +30,8 @@ use app\modules\inventory\models\Warehouse;
  */
 class Stock extends \yii\db\ActiveRecord implements ItemInterface
 {
+
+    public $total;
     /**
      * {@inheritdoc}
      */
@@ -65,7 +67,7 @@ class Stock extends \yii\db\ActiveRecord implements ItemInterface
     {
         return [
             [['warehouse_id', 'qty', 'created_by'], 'integer'],
-            [['data_json', 'created_at', 'updated_at','unit_price','q'], 'safe'],
+            [['data_json', 'created_at', 'updated_at','unit_price','q','total'], 'safe'],
             [['name', 'code'], 'string', 'max' => 50],
             [['asset_item'], 'string', 'max' => 255],
         ];

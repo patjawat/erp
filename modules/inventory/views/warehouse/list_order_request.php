@@ -16,8 +16,8 @@ use yii\helpers\Html;
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>
-                        <th>คลัง</th>
-                        <th>สถานะ</th>
+                        <th class="text-center">จำนวน</th>
+                        <th class="text-center">สถานะ</th>
                         <th style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -28,8 +28,8 @@ use yii\helpers\Html;
                         $msg  ='ขอเบิกวัสดุสำนักงาน';
                        echo $item->CreateBy($msg)['avatar'] ?>
                        </td>
-                        <td><?=$item->fromWarehouse->warehouse_name?></td>
-                        <td><?= $item->viewChecker()['status']?></td>
+                       <td class="text-center"><?=$item->SumReqQty()?></td>
+                       <td class="text-center"><?=$item->viewChecker()['status']?></td>
                         <td class="text-center">
                             <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
                         </td>
@@ -41,6 +41,6 @@ use yii\helpers\Html;
        
     </div>
     <div class="card-footer">
-    <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-out'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
+    <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
     </div>
 </div>

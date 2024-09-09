@@ -9,10 +9,15 @@ $warehouse = Yii::$app->session->get('warehouse');
 <div class="d-flex gap-2">
     <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory'], ['class' => 'btn btn-light']) ?>
     <?= Html::a('<i class="fa-solid fa-store me-1"></i> หน้าหลัก', ['/inventory/warehouse'], ['class' => 'btn btn-light']) ?>
-    <?php Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลัง', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
+    <?php Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลังหลัก', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
     <?= $warehouse['warehouse_type'] == 'MAIN' ? Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light']) : '' ?>
     <?php Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> เบิกวัสดุ', ['/inventory/stock-out'], ['class' => 'btn btn-light']) ?>
-    <?= Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> เบิกวัสดุ', ['/inventory/store'], ['class' => 'btn btn-light']) ?>
+<?php if($warehouse['warehouse_type'] == 'MAIN'):?>
+    <?= Html::a('<i class="bi bi-cart-check-fill"></i> รายการขอเบิก', ['/inventory/order-request'], ['class' => 'btn btn-light']) ?>
+    <?php else:?>
+        <?= Html::a('<i class="bi bi-cart-check-fill"></i> เบิกวัสดุ', ['/inventory/stock-order/request'], ['class' => 'btn btn-light']) ?>
+        <?= Html::a('<i class="bi bi-clipboard-check"></i> บันทึกจ่าย', ['/inventory/stock-order/request'], ['class' => 'btn btn-light']) ?>
+        <?php endif;?>
 
     <?php  Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่ายออก', ['/inventory/stock-request'], ['class' => 'btn btn-light']) ?>
     <button class="btn btn-light" onclick="openTour()">

@@ -18,6 +18,8 @@ use app\modules\inventory\models\ProductSearch;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
 use app\components\UserHelper;
+use yii\db\Expression;
+
 /**
  * StoreController implements the CRUD actions for Store model.
  */
@@ -51,21 +53,28 @@ class StoreController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->select(['stock.*',new Expression('SUM(stock.qty) AS total'),]);
         $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
-        $dataProvider->query->where(['warehouse_id' => $warehouse['warehouse_id']]);
-
+        if(isset($searchModel->warehouse_id)){
+            $dataProvider->query->where(['warehouse_id' => $searchModel->warehouse_id]);
+        }else{
+            $dataProvider->query->where(['warehouse_id' => $warehouse['warehouse_id']]);
+        }
+        
         if(isset($selectWarehouse)){
             // $dataProvider->query->where(['warehouse_id' => $selectWarehouse['warehouse_id']]);
         }
-
+        
         // if(isset($selectWarehouse) && $selectWarehouse['warehouse_type'] == 'SUB'){
-        //     $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
-        // }
+            //     $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
+            // }
+            $dataProvider->query->andWhere(['>', 'stock.qty', 0]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['LIKE', 'at.title', $searchModel->q],
             // ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '$.asset_name')"), $searchModel->q],
         ]);
+        $dataProvider->query->groupBy('asset_item');
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -148,7 +157,7 @@ class StoreController extends Controller
             'movement_type' => 'OUT',
             'order_status' => 'pending',
             'from_warehouse_id' => $warehouse['warehouse_id'],
-            'to_warehouse_id' => $warehouseSelect['warehouse_id'],
+            'warehouse_id' => $warehouseSelect['warehouse_id'],
             'data_json' => [
                 'checker' => (int)$userCreate->leaderUser()['leader1'],
                 'checker_name' => $warehouse['checker_name'],
@@ -247,7 +256,7 @@ class StoreController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $model = Stock::findOne(['asset_item' => $id]);
+        $model = Stock::findOne($id);
         if ($model) {
             \Yii::$app->cart->create($model, 1);
             return [
