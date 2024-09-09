@@ -62,15 +62,15 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
   <div class="card">
     <div class="card-body">
 
-      <div class="table-responsive">
-        <div class="d-flex justify-content-between">
-          <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-          <div>
-            <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
-                                เลือกรายการ</button> -->
-          </div>
-
+      <div class="d-flex justify-content-between">
+        <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
+        <div>
+          <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
+          เลือกรายการ</button> -->
         </div>
+        
+      </div>
+      <div class="table-responsive-sm">
         <table class="table table-primary">
           <thead>
             <tr>
