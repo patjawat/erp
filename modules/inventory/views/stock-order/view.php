@@ -159,7 +159,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
             </div>
             <div class="card-footer">
-                <?=Html::a('View', ['/inventory/document', 'id' => $model->id], ['target'=>'_blank', 'data-pjax'=>"0"])?>
                 <div class="row">
                     <div class="col-6"><?= $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] ?></div>
                     <div class="col-6 text-end">
