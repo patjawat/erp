@@ -1,6 +1,7 @@
 <?php
 
 use app\modules\inventory\models\Warehouse;
+use yii\bootstrap5\LinkPager;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -81,6 +82,21 @@ $this->title = 'ตั้งค่าระบบคลัง';
 </div>
 
 </div>
+
+<div class="d-flex justify-content-center">
+                    <div class="text-muted">
+                        <?= LinkPager::widget([
+                            'pagination' => $dataProvider->pagination,
+                            'firstPageLabel' => 'หน้าแรก',
+                            'lastPageLabel' => 'หน้าสุดท้าย',
+                            'options' => [
+                                'listOptions' => 'pagination pagination-sm',
+                                'class' => 'pagination-sm',
+                            ],
+                        ]); ?>
+                    </div>
+                </div>
+
 <?php Pjax::end(); ?>
 
 <?php
