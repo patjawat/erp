@@ -151,7 +151,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'label' => 'พิมเอกสาร',
                         'format' => 'raw',
                         // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank','data' => ['pjax' => false]])
-                        'value' => Html::a('View', ['/inventory/document/stock-order','id' => $model->id], ['target'=>'_blank', 'data-pjax'=>"0"])
+                        'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['target'=>'_blank', 'data-pjax'=>"0"])
                         // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['target' => '_blank','data' => ['pjax' => false]])
                      ],
                     ],
