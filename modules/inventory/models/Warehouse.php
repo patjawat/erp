@@ -61,6 +61,15 @@ class Warehouse extends \yii\db\ActiveRecord
         ];
     }
 
+
+    public function CalStock()
+    {
+        $sql = "SELECT x.*,ROUND(((x.qty / x.total)*100),0) as progress FROM ( SELECT sum(qty) as qty,(select sum(qty) FROM stock) as total FROM `stock` WHERE warehouse_id = :warehouse_id ) as x";
+        $query = Yii::$app->db->createCommand($sql)
+        ->bindValue('warehouse_id', $this->id)
+        ->queryOne();
+        return $query;
+    }
     //  ภาพทีมผู้ดูและคลัง
     public function avatarStack()
     {
