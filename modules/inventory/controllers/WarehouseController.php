@@ -257,7 +257,7 @@ class WarehouseController extends Controller
         
         if ($this->request->isAjax) {
             // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending']);
-            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','order_status' => 'pending']);
+            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','order_status' => 'pending','warehouse_id' => $warehouse['warehouse_id']]);
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
