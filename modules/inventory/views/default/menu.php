@@ -15,8 +15,8 @@ $warehouse = Yii::$app->session->get('warehouse');
 <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
     <?= Html::a('<i class="bi bi-cart-check-fill"></i> รายการขอเบิก', ['/inventory/order-request'], ['class' => 'btn btn-light']) ?>
     <?php else:?>
-        <?= Html::a('<i class="bi bi-cart-check-fill"></i> เบิกวัสดุ', ['/inventory/stock-order/request'], ['class' => 'btn btn-light']) ?>
-        <?= Html::a('<i class="bi bi-clipboard-check"></i> บันทึกจ่าย', ['/inventory/stock-order/request'], ['class' => 'btn btn-light']) ?>
+        <?= Yii::$app->user->can('warehouse') ? Html::a('<i class="bi bi-cart-check-fill"></i> เบิกวัสดุ', ['/inventory/stock-order/request'], ['class' => 'btn btn-light']) : '' ?>
+        <?= Html::a('<i class="bi bi-clipboard-check"></i> บันทึกจ่าย', ['/inventory/stock-out'], ['class' => 'btn btn-light']) ?>
         <?php endif;?>
 
     <?php  Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> จ่ายออก', ['/inventory/stock-request'], ['class' => 'btn btn-light']) ?>

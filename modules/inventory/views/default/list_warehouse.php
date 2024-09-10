@@ -24,7 +24,7 @@ use app\modules\inventory\models\Warehouse;
       <th>รายการ</th>
       <th>ผู้ดูแล</th>
       <th class="text-center">คำขอเบิก</th>
-      <th>ปริมาณการเบิก/จ่าย</th>
+      <th>ร้อยละปริมาณวัสดุ</th>
     </tr>
   </thead>
   <tbody class="align-middle">
@@ -77,12 +77,10 @@ use app\modules\inventory\models\Warehouse;
       </td>
       <td>
       <div class="progress-stacked">
-  <div class="progress" role="progressbar" aria-label="Segment one" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" style="width: 70%">
-    <div class="progress-bar"></div>
+  <div class="progress" role="progressbar" aria-label="Segment one" aria-valuenow="<?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>" aria-valuemin="0" aria-valuemax="100" style="width: <?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>%">
+    <div class="progress-bar"><?=isset($model->TransactionStock()['progress']) ? ($model->TransactionStock()['progress'] >=1 ? $model->TransactionStock()['progress'].'%' : '') : 0?></div>
   </div>
-  <div class="progress" role="progressbar" aria-label="Segment two" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" style="width: 30%">
-    <div class="progress-bar bg-warning"></div>
-  </div>
+
 
 </div>
       </td>

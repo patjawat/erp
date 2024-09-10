@@ -301,9 +301,15 @@ return Stock::find()->where(['warehouse_id' => $warehouse['warehouse_id']])->sum
       //นับจำนวนทีอยู่ใน stock
       public function SumStockQty()
       {
-          return Stock::find()->where(['asset_item' => $this->asset_item])->sum('qty');
+          return Stock::find()->where(['asset_item' => $this->asset_item,'warehouse_id' => $this->warehouse_id])->sum('qty');
       }
 
+            //นับจำนวนทีอยู่ใน lot_number stock
+            public function SumLotQty()
+            {
+                return Stock::find()->where(['asset_item' => $this->asset_item,'lot_number' => $this->lot_number,'warehouse_id' => $this->warehouse_id])->sum('qty');
+            }
+      
       
     //นับจำนวนที่เบิก
     public function SumQty()

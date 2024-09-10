@@ -160,7 +160,8 @@ public function listAssets()
 
 public function SumQty()
 {
-    return self::find()->where(['warehouse_id' => $this->warehouse_id,'asset_item' => $this->asset_item])->sum('qty');
+    $warehouse = Yii::$app->session->get('warehouse');
+    return self::find()->where(['warehouse_id' => $warehouse['warehouse_id'],'asset_item' => $this->asset_item])->sum('qty');
 }
 
 public function SumPriceByItem()

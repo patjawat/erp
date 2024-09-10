@@ -108,9 +108,11 @@ class StockController extends Controller
 
     public function actionInStock()
     {
+        $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
         $dataProvider->query->groupBy('asset_item');
 
@@ -171,6 +173,7 @@ class StockController extends Controller
     public function actionView($id)
     {
 
+        $warehouse = Yii::$app->session->get('warehouse');
         $model = $this->findModel($id);
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -178,6 +181,7 @@ class StockController extends Controller
             't.*',
             'o.category_id AS category_code',
             'w.warehouse_name',
+            'o.code',
             new \yii\db\Expression('@running_total := IF(t.transaction_type = "IN", @running_total + t.qty, @running_total - t.qty) AS total'),
             new \yii\db\Expression('(t.unit_price * t.qty) AS total_price')
         ]);
@@ -187,7 +191,7 @@ class StockController extends Controller
             ->leftJoin('stock_events o', 'o.id = t.category_id AND o.name = "order"')
             ->join('JOIN', ['r' => new \yii\db\Expression('(SELECT @running_total := 0)')])
             // ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item','t.order_status' => 'success','o.warehouse_id' => $model->warehouse_id])
-            ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item','t.warehouse_id' => $model->warehouse_id])
+            ->where(['t.asset_item' => $model->asset_item, 't.name' => 'order_item','t.warehouse_id' => $warehouse['warehouse_id'],'o.order_status' => 'success'])
             ->orderBy(['t.created_at' => SORT_ASC, 't.id' => SORT_ASC]);
 
             // Yii::$app->response->format = Response::FORMAT_JSON;

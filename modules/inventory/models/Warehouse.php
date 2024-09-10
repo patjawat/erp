@@ -62,11 +62,21 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
 
-    public function CalStock()
+    //ร้อยละปริมานเข้าออกของแต่ละคลัง
+    public function TransactionStock()
     {
-        $sql = "SELECT x.*,ROUND(((x.qty / x.total)*100),0) as progress FROM ( SELECT sum(qty) as qty,(select sum(qty) FROM stock) as total FROM `stock` WHERE warehouse_id = :warehouse_id ) as x";
+        $sqlold = "select x.*, 
+        ROUND(((x.transaction_in / x.total) *100),0) as stockin,
+        ROUND(((x.transaction_out / x.total) *100),0) as stockout FROM (
+        SELECT thai_year, (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id) as transaction_in, 
+        (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id) as transaction_out, 
+        (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE warehouse_id = :warehouse_id) as total ,
+        warehouse_id
+        FROM stock_events GROUP BY thai_year) as x";
+
+        $sql = "select x.*,ROUND(((x.qty / total) * 100),0) as progress FROM(SELECT s.*,(SELECT sum(qty) FROM stock WHERE qty > 0) as total FROM stock s WHERE warehouse_id = :warehouse_id AND qty > 0) as x;";
         $query = Yii::$app->db->createCommand($sql)
-        ->bindValue('warehouse_id', $this->id)
+        ->bindValue(':warehouse_id', $this->id)
         ->queryOne();
         return $query;
     }

@@ -27,9 +27,29 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= DetailView::widget([
                     'model' => $model,
                     'attributes' => [
-                        'code',
-                        'order_status',
-                        'name',
+                    [
+                       'label' => 'รหัสขอเบิก',
+                       'value' => $model->code
+                    ],
+                    [
+                        'label' => 'วันที่',
+                        'value' => $model->viewCreatedAt()
+                     ],
+                     [
+                        'label' => 'สถานะคำขอ',
+                        'format' => 'html',
+                        'value' => $model->viewStatus()
+                     ],
+                     [
+                        'label' => 'มูลค่า',
+                        'format' => 'html',
+                        'value' => $model->getTotalOrderPrice()
+                     ],
+                    //  [
+                    //     'label' => 'พิมเอกสาร',
+                    //     'format' => 'raw',
+                    //     'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['target'=>'_blank', 'data-pjax'=>"0"])
+                    //  ],
                     ],
                 ]) ?>
 

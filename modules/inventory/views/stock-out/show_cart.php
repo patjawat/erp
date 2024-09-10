@@ -6,9 +6,12 @@ use yii\widgets\Pjax;
 use yii\helpers\Html;
 use yii\web\View;
 
-    $cart = \Yii::$app->cart;
+    $cart = \Yii::$app->cart2;
     $products = $cart->getItems();
     $warehouseSelect = Yii::$app->session->get('select-warehouse');
+    // echo "<pre>";
+    // print_r($cart);
+    // echo "</pre>";
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -38,16 +41,20 @@ use yii\web\View;
                     <?php foreach($products as $item):?>
                     <tr class="">
                         <td scope="row">
-
+                        <?php
+                            // echo "<pre>";
+                            // print_r($item);
+                            // echo "</pre>";
+                        ?>
                             <?php
-
                             echo $item->product->Avatar();
                             ?></td>
                         <td>
                             <div class="d-flex d-flex flex-row">
-                                <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/store/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
-                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control" style="width:50px;font-weight: 600;" />
-                                <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/inventory/store/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
+                                <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/stock-out/update-qty','id' => $item->id,'qty' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
+                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control update-qty" id="<?=$item->id?>"
+                                    style="width:50px;font-weight: 600;" />
+                                <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/inventory/stock-out/update-qty','id' => $item->id,'qty' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
                             </div>
                         </td>
                         <td>
@@ -63,7 +70,7 @@ use yii\web\View;
 <?php if($cart->getCount() == 0):?>
         <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
 <?php else:?>
-        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
+        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-out/checkout','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative checkout']) ?>
         <?php endif?>
     </div>
 

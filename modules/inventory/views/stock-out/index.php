@@ -35,76 +35,78 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
   </div>
 </div> -->
 <div class="stock-in-index">
+    <?php Pjax::begin(['id' => 'inventory']); ?>
+
+    <div class="row">
 
 
-  <?php Pjax::begin(); ?>
-  <?php // echo $this->render('_search', ['model' => $searchModel]); 
-  ?>
-<div class="row">
+        <div class="col-12">
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span>รายการ</h6>
+                        <div>
+                           <?=Html::a('เลือกรายการ',['/inventory/stock-out/stock'],['class' => 'btn btn-sm btn-primary shadow rounded-pill'])?>
+                        </div>
+
+                    </div>
+                    <table class="table table-primary mb-5">
+                        <thead>
+                            <tr>
+                                <th style="width:130px">รหัส</th>
+                                <th style="width:130px" class="text-center">ปีงบประมาณ</th>
+                                <th style="width:400px" scope="col">รายการ</th>
+                                <th>จาก</th>
+                                <th>สถานะ</th>
+                                <th style="width:100px">ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="align-middle">
+                            <?php foreach ($dataProvider->getModels() as $item): ?>
+                            <tr>
+                                <td><?=$item->code?></td>
+                                <td class="text-center"><?=$item->thai_year?></td>
+                                <td><?=$item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->created_at)['avatar']?>
+                                </td>
+                                <td><?=$item->fromWarehouse->warehouse_name?></td>
+
+                                <td><?=$item->viewstatus()?></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+
+                                        <button type="button"
+                                            class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                            data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                            <i class="bi bi-caret-down-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+
+                                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-out','id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                            </li>
 
 
-<div class="col-12">
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
 
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-          <div>
-            <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
-                                เลือกรายการ</button> -->
-          </div>
-
+                </div>
+            </div>
         </div>
-        <table class="table table-primary mb-5">
-          <thead>
-            <tr>
-              <th style="width:400px" scope="col">รายการ</th>
-              <th>รหัส</th>
-              <th>ปีงบประมาณ</th>
-              <th>จาก</th>
-              <th>สถานะ</th>
-              <th style="width:100px">ดำเนินการ</th>
-            </tr>
-          </thead>
-          <tbody class="align-middle">
-            <?php foreach ($dataProvider->getModels() as $item): ?>
-              <tr>
-                <td><?=$item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->created_at)['avatar']?></td>
-                <td><?=$item->code?></td>
-                <td><?=$item->thai_year?></td>
-                <td><?=$item->fromWarehouse->warehouse_name?></td>
-               
-                <td><?=$item->viewstatus()?></td>
-                <td>
-                <div class="btn-group">
-                  <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
-
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                    <i class="bi bi-caret-down-fill"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-
-                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-out','id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?></li>
 
 
-                                </ul>
-                            </div>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
 
     </div>
-  </div>
-</div>
-</div>
-
-  
 
 
-<?php
+
+
+    <?php
 
 use yii\web\View;
 // $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
@@ -112,65 +114,16 @@ use yii\web\View;
 
 $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
 $chartUrl = Url::to(['/inventory/stock/view-chart']);
-$OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
+$getStock = Url::to(['/inventory/stock-out/stock']);
 // $chartSummeryIn = Json::encode($chartSummary['in']);
 // $chartSummeryOut = Json::encode($chartSummary['out']);
 $js = <<< JS
-  // getPendingOrder()
-  // getlistOrderRequest()
-
-
-  getStoreInWarehouse()
-  getOrderRequestInWarehouse()
-  getChart();
-
-  //รายการใน Stock
-  async function getOrderRequestInWarehouse(){
-    await $.ajax({
-      type: "get",
-      url: "$StoreInWarehouseUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showStoreInWarehouse').html(res.content)
-      }
-    });
-  }
-
-  // รายการขอเบิก
-  async function getStoreInWarehouse(){
-    await $.ajax({
-      type: "get",
-      url: "$OrderRequestInWarehouseUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showOrderRequestInWarehouse').html(res.content)
-        $('#OrderCount').html(res.count)
-        $('#OrderConfirm').html(res.confirm)
-        $('#showTotalOrder').html(res.totalOrder)
-        $('#showTotalPrice').html(res.totalPrice)
-      }
-    });
-  }
-
-  async function getChart(){
-    await $.ajax({
-      type: "get",
-      url: "$chartUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showChart').html(res.content)
-       
-      }
-    });
-  }
- 
-
  
   JS;
 $this->registerJS($js, View::POS_END);
 ?>
 
 
-  <?php Pjax::end(); ?>
+    <?php Pjax::end(); ?>
 
 </div>

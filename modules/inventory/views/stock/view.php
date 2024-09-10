@@ -67,9 +67,9 @@ $this->params['breadcrumbs'][] = $this->title;
       <th scope="col" style="width:130px">ความเคลื่อไหว</th>
       <th scope="col" style="width:120px">ปีงบประมาณ</th>
       <th scope="col" style="width:180px">วันที่</th>
-      <th scope="col" style="width:120px">เลขที่อ้างอิง</th>
+      <th scope="col" style="width:130px">หมายเลขล็อต</th>
       <th scope="col">เลขที่เอกสาร</th>
-      <th scope="col">ผู้ติดต่อ</th>
+      <th scope="col">ผู้สั่งจ่าย</th>
       <th class="text-end" scope="col">ราคาต่อหน่วย</th>
       <th scope="col" class="text-center">จำนวนเข้า</th>
       <th scope="col" class="text-center">จำนวนออก</th>
@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
       ?></th>
       <td><?=$item['thai_year']?></td>
       <td><?=$item['created_at']?></td>
-      <td><?=$item['category_code']?></td>
+      <td><?=$item['lot_number']?></td>
       <td><?=$item['code']?></td>
       <td><?=$item['warehouse_name']?></td>
       <td class="text-end"><?php

@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $cart = \Yii::$app->cart;
 $products = $cart->getItems();
 // echo "<pre>";
-// print_r($selectWarehouse);
+// print_r($cart);
 // echo "</pre>";
 ?>
 
@@ -49,7 +49,7 @@ $products = $cart->getItems();
                     <thead>
                         <tr>
                             <th scope="col">ชื่อรายการ</th>
-                            <th class="text-start">ล๊อตปัจุบัน</th>
+                            <th class="text-center">ล๊อตปัจุบัน</th>
                             <th class="text-center">คงเหลือ</th>
                             <th class="text-center" style="width:90px">ดำเนินการ</th>
                         </tr>
@@ -59,11 +59,10 @@ $products = $cart->getItems();
                         <tr class="">
                             <td scope="row"><?=$item->product->Avatar()?>
                         </td>
-                            <td class="text-start"> <?=$item->lot_number?></td>
                             <td class="text-center"><?=$item->qty?></td>
-                            <!-- <td class="text-center"><?=$item->total?></td> -->
+                            <td class="text-center"><?=$item->total?></td>
                             <td class="text-center">
-                                <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/inventory/store/add-to-cart','id' => $item->id],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?>
+                                <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เพิ่ม',['/inventory/stock-out/add-to-cart','id' => $item->id],['class' => 'add-cart btn btn-sm btn-primary shadow rounded-pill'])?>
                             </td>
                         </tr>
                         <?php endforeach;?>
@@ -79,41 +78,31 @@ $products = $cart->getItems();
         
 </div>
 <div class="col-4">
-    <div id="viewCartShow"></div>
-<?php // $this->render('view_cart')?>
+<div id="showCart"></div>
 </div>
 </div>
 
-<?php yii\widgets\Pjax::end(); ?>
+
 
 
 <?php
 $storeProductUrl = Url::to(['/inventory/store/product']);
-$viewCartUrl = Url::to(['/inventory/store/view-cart']);
+$showCartUrl = Url::to(['/inventory/stock-out/show-cart']);
 $deleteItemUrl = Url::to(['/inventory/store/delete']);
 $updateItemUrl = Url::to(['/inventory/store/update']);
 $js = <<< JS
 
 
 getViewCar()
+
 async function getViewCar()
     {
     await $.ajax({
         type: "get",
-        url: "$viewCartUrl",
+        url: "$showCartUrl",
         dataType: "json",
         success: function (res) {
-            $('#viewCartShow').html(res.content)
-            if(res.countItem == 0){
-                $('#btnSaveCart').prop('disabled', true);
-            //     $('#viewCart').hide()
-            //     // $('#viewCart').dropdown('toggle');
-            //     $('#countItemCart').hide()
-            }else{
-                $('#viewStoreCart').show()
-                $('#countItemCart').html(res.countItem)
-            }
-            console.log(res.countItem);
+            $('#showCart').html(res.content)
         }
     });
     }
@@ -125,33 +114,51 @@ async function getViewCar()
         type: "get",
         url: $(this).attr('href'),
         dataType: "json",
-        success: function (response) {
-            getViewCar()
-            success('เพิ่มลงในตะกร้าแล้ว')
-        //   $.pjax.reload({container:response.container, history:false});
+        success: function (res) {
+            if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                getViewCar()
         }
     });
 });
 
 
-// $(document).ready(function(){
-//   $('#addtocart').on('click',function(){
-    
-//     var button = $(this);
-//     var cart = $('#cart');
-//     var cartTotal = cart.attr('data-totalitems');
-//     var newCartTotal = parseInt(cartTotal) + 1;
-    
-//     button.addClass('sendtocart');
-//     setTimeout(function(){
-//       button.removeClass('sendtocart');
-//       cart.addClass('shake').attr('data-totalitems', newCartTotal);
-//       setTimeout(function(){
-//         cart.removeClass('shake');
-//       },500)
-//     },1000)
-//   })
-// })
+
+$("body").on("keypress", ".update-qty", function (e) {
+    var keycode = e.keyCode ? e.keyCode : e.which;
+    if (keycode == 13) {
+        let qty = $(this).val()
+        let id = $(this).attr('id')
+        console.log(qty);
+        
+        $.ajax({
+            type: "get",
+            url: "/inventory/stock-out/update-qty",
+            data: {
+                'id':id,
+                'qty':qty 
+            },
+            dataType: "json",
+            success: function (res) {
+                if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                getViewCar()
+            }
+        });
+    }
+});
 
 
         $("body").on("click", ".update-cart", function (e) {
@@ -162,6 +169,14 @@ async function getViewCar()
             data: {},
             dataType: "json",
             success: function (res) {
+                if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
                 getViewCar()
             }
         });
@@ -179,11 +194,45 @@ async function getViewCar()
         }
     });
 });
+
+$("body").on("click", ".checkout", async function (e) {
+    e.preventDefault();
+
+  await Swal.fire({
+    title: "ยืนยัน?",
+    text: "บันทึกรายการนี้!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ยืนยัน!",
+    cancelButtonText: "ยกเลิก",
+  }).then(async (result) => {
+    if (result.value == true) {
+      await $.ajax({
+        type: "post",
+        url: $(this).attr('href'),
+        dataType: "json",
+        success: async function (response) {
+            console.log(response);
+            
+          if (response.status == "success") {
+            // await  $.pjax.reload({container:response.container, history:false,url:response.url});
+            success("บันสำเร็จ!.");
+          }
+        },
+      });
+    }
+  });
+
+  });
+
+
 JS;
 $this->registerJS($js, View::POS_END);
 
 ?>
 
 
-
+<?php yii\widgets\Pjax::end(); ?>
 
