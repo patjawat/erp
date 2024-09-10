@@ -58,7 +58,7 @@ class StoreController extends Controller
         if(isset($searchModel->warehouse_id)){
             $dataProvider->query->where(['warehouse_id' => $searchModel->warehouse_id]);
         }else{
-            $dataProvider->query->where(['warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->where(['warehouse_id' => 00]);
         }
         
         if(isset($selectWarehouse)){
@@ -268,19 +268,26 @@ class StoreController extends Controller
         throw new NotFoundHttpException();
     }
 
-    public function actionUpdateCart($id, $quantity)
+    public function actionUpdateCart()
     {
+        $id  = $this->request->get('id');
+        $quantity  = $this->request->get('quantity');
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = Stock::findOne($id);
-        // return $model->qty;
-        if ($model) {
-             \Yii::$app->cart->update($model,$quantity);
-
+        $checkStock = Stock::findOne($id);
+        if($quantity > $checkStock->qty){
+            return [
+                'status' => 'error',
+                'container' => '#inventory',
+               ];
+           }else{
+            \Yii::$app->cart->update($model,$quantity);
             return [
                 'container' => '#inventory',
                 'status' => 'success'
             ];
-        }
+           }
+    
     }
 
 

@@ -162,6 +162,14 @@ async function getViewCar()
             data: {},
             dataType: "json",
             success: function (res) {
+                if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
                 getViewCar()
             }
         });
@@ -179,6 +187,39 @@ async function getViewCar()
         }
     });
 });
+
+
+$("body").on("keypress", ".update-qty", function (e) {
+    var keycode = e.keyCode ? e.keyCode : e.which;
+    if (keycode == 13) {
+        let qty = $(this).val()
+        let id = $(this).attr('id')
+        console.log(qty);
+        
+        $.ajax({
+            type: "get",
+            url: "/inventory/store/update-cart",
+            data: {
+                'id':id,
+                'quantity':qty 
+            },
+            dataType: "json",
+            success: function (res) {
+                if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                // success();
+                getViewCar()
+            }
+        });
+    }
+});
+
 JS;
 $this->registerJS($js, View::POS_END);
 

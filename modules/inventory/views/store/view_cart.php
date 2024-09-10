@@ -46,7 +46,7 @@ use yii\web\View;
                         <td>
                             <div class="d-flex d-flex flex-row">
                                 <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/store/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
-                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control" style="width:50px;font-weight: 600;" />
+                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control update-qty" id="<?=$item->id?>" style="width:50px;font-weight: 600;" />
                                 <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/inventory/store/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
                             </div>
                         </td>
