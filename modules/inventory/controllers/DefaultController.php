@@ -22,6 +22,7 @@ class DefaultController extends Controller
     public function actionIndex()
     {
         Yii::$app->session->remove('warehouse');
+        \Yii::$app->cart->checkOut(false);
         return $this->render('index');
     }
 
