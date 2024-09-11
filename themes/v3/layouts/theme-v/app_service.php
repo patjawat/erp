@@ -38,12 +38,12 @@ use yii\helpers\Url;
                             </div>
                             
                             <div class="col-4 mt-1">
-                                <a href="<?= Url::to(['/me/store/product', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เบิกวัสดุ/อุปกรณ์']); ?>"
+                                <a href="<?= Url::to(['/leave']); ?>"
                                 class="open-modal-x" data-title="xxx" data-size="modal-md">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
-                                        <i class="fa-solid fa-cart-plus fs-2"></i>
-                                        <div>เบิกวัสดุอุปกรณ์</div>
+                                        <i class="fa-solid fa-calendar-day fs-2"></i>
+                                        <div>ระบบลา</div>
                                     </div>
                                 </a>
                             </div>

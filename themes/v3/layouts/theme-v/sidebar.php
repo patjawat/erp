@@ -39,12 +39,6 @@ use yii\web\View;
                         <span> แจ้งซ่อม</span>
                     </a>
                 </li>
-                <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/me/store']) ?>">
-                    <i class="fa-solid fa-cart-plus"></i>
-                        <span> เบิกวัสดุอุปกรณ์</span>
-                    </a>
-                </li>
 
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me/purchase']) ?>">

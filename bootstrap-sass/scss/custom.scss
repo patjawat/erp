@@ -23,6 +23,12 @@
   background-color: rgba(237, 85, 85, .1);
 }
 
+.badge-soft-primary {
+  color: #1f58c7;
+  background-color: rgba(31, 88, 199, .1);
+}
+
+
 // @import "bootstrap";
 
 .zoom-in:hover {
@@ -159,6 +165,7 @@
 
 :root {
   --bs-body-font-family: 'prompt', sans-serif;
+  --bs-body-font-size: 15px;
 }
 
 /* make primary button bold */

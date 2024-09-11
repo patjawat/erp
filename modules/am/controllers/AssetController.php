@@ -291,7 +291,6 @@ class AssetController extends Controller
             $model->receive_date = AppHelper::DateToDb($model->receive_date);
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
             if ($model->save()) {
-                return $model;
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
