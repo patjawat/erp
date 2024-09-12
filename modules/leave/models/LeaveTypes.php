@@ -11,6 +11,7 @@ use Yii;
  * @property string|null $name ชื่อการลา
  * @property string|null $max_days จำนวนวันที่สามารถลาได้สูงสุด
  * @property string|null $data_json
+ * @property int|null $active
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
@@ -35,7 +36,7 @@ class LeaveTypes extends \yii\db\ActiveRecord
     {
         return [
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['active', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['name', 'max_days'], 'string', 'max' => 255],
         ];
     }
@@ -50,6 +51,7 @@ class LeaveTypes extends \yii\db\ActiveRecord
             'name' => 'ชื่อการลา',
             'max_days' => 'จำนวนวันที่สามารถลาได้สูงสุด',
             'data_json' => 'Data Json',
+            'active' => 'Active',
             'created_at' => 'วันที่สร้าง',
             'updated_at' => 'วันที่แก้ไข',
             'created_by' => 'ผู้สร้าง',
@@ -57,5 +59,28 @@ class LeaveTypes extends \yii\db\ActiveRecord
             'deleted_at' => 'วันที่ลบ',
             'deleted_by' => 'ผู้ลบ',
         ];
+    }
+
+    public function viewDay($leaveTypeId,$positionTypeId)
+    {
+
+        // $model = LeavePermission::find()->where(['leave_type_id' => $leaveTypeId,'position_type_id' => $positionTypeId])
+        // ->createCommand()
+        // ->getRawSql();
+        // if($leaveTypeId == 7){
+        //     return $model;
+        // }
+
+        // return $this->id;
+        // return $positionType;
+
+            $model = LeavePermission::find()->where(['leave_type_id' => $leaveTypeId,'position_type_id' => $positionTypeId])->one();
+            
+            if($model){
+                return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 ">'.$model->leave_days.'</span>';
+            }else{
+                return '<span class="badge rounded-pill badge-soft-secondary text-secondary fs-13">-</span>';
+            }
+          
     }
 }

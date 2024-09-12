@@ -11882,6 +11882,11 @@ textarea.form-control-lg {
   background-color: rgba(31, 88, 199, 0.1);
 }
 
+.badge-soft-secondary {
+  color: #a4a9b4;
+  background-color: rgba(164, 169, 180, 0.1);
+}
+
 .zoom-in:hover {
   transform: scale(1.03);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1019607843), 0 8px 10px -6px rgba(0, 0, 0, 0.1019607843);

@@ -17,6 +17,7 @@ class m240911_074740_create_leave_types_table extends Migration
             'name' =>  $this->string(255)->comment('ชื่อการลา'),
             'max_days' =>  $this->string(255)->comment('จำนวนวันที่สามารถลาได้สูงสุด'),
             'data_json' => $this->json(),
+            'active' => $this->boolean(),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),

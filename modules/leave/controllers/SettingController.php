@@ -17,4 +17,8 @@ class SettingController extends Controller
     {
         return $this->render('index');
     }
+    public function actionStyle2()
+    {
+        return $this->render('style2');
+    }
 }

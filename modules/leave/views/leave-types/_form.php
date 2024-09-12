@@ -16,7 +16,7 @@ use yii\web\View;
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'max_days')->textInput(['maxlength' => true]) ?>
-
+    <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label(true);?>
     
     <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

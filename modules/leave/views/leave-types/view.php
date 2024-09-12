@@ -3,6 +3,7 @@
 use app\models\Categorise;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\leave\models\LeaveTypes $model */
@@ -22,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'leave']); ?>
 <div class="row d-flex justify-content-center">
     <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
 
@@ -43,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php foreach(Categorise::find()->where(['name' => 'position_type'])->all() as $item):?>
                         <tr>
                             <td><?=$item->code?></td>
-                            <td><?=$item->title?></td>
+                            <td><?=Html::a($item->title,['/leave/leave-permission/update','leave_type_id' => $model->id,'position_type_id' => $item->code,'title' => '<i class="bi bi-ui-checks"></i> สิทธ์การลาป่วย'.$item->title],['class' => 'open-modal','data' => ['size'=> 'modal-md']])?></td>
                             <td class="text-center"><span
                                     class="badge rounded-pill badge-soft-primary text-primary fs-13"> 0 </span></td>
                             <td class="text-center"><span
@@ -61,3 +62,4 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+<?php Pjax::end(); ?>
