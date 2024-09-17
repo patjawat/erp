@@ -1,5 +1,5 @@
 <?php
-
+use yii\helpers\Url;
 use app\models\Categorise;
 use yii\widgets\Pjax;
 use app\modules\lm\models\LeaveEntitlements;
@@ -26,41 +26,37 @@ $listLeaveType = LeaveType::find()
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'leave']); ?>
-<div class="card">
-    <div class="card-body">
 
-        <div class="table-container">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th style="width:50px;">รหัส</th>
-                        <th>รายการ</th>
-                        <?php foreach ($listLeaveType as $leaveType): ?>
-                            <th class="text-center" style="width:150px;"><?= $leaveType->name ?></th>
-                        <?php endforeach; ?>
-                    <tr>
-                </thead>
-                <tbody>
-                    <?php foreach (Categorise::find()->where(['name' => 'position_type'])->all() as $item): ?>
-                        <tr>
-                            <td><?= $item->code ?></td>
-                            <td><?=Html::a($item->title,['/leave/leave-permission/view','id' => $item->code]); ?></td>
-                            <?php foreach ($listLeaveType as $leaveItem): ?>
-                                <td class="text-center">
-                                <?php // Html::a($leaveType->viewDay($leaveItem->id,$item->code),['/leave/leave-permission/update','position_type_id' => $item->code,'leave_type_id' => $leaveItem->id,'title' => '<i class="bi bi-ui-checks"></i> กำหนดวัน'.$leaveItem->name],['class' => 'open-modal','data' => ['size' => 'modal-md']]);?>    
-                            </td>
-                            <?php endforeach; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
 
+<div class="row d-flex justify-content-center">
+
+    <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12">
+        <a href="<?=Url::to(['/lm/leave-type'])?>">
+
+            <div class="card zoom-in">
+                <div class="card-body d-flex justify-content-center">
+                    <i class="fa-solid fa-file-pen fs-1 text-dark"></i>
+                </div>
+                <div class="card-footer">
+                    <i class="bi bi-gear"></i> ประเภทการลา
+                </div>
+            </div>
+        </a>
 
     </div>
+    <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12">
+        <a href="<?=Url::to(['/lm/holiday'])?>">
+            <div class="card zoom-in">
+                <div class="card-body d-flex justify-content-center">
+                    <i class="fa-solid fa-business-time fs-1 text-dark"></i>
+                </div>
+                <div class="card-footer">
+                    <i class="bi bi-gear"></i> ปฏิทินวันหยุด
+                </div>
+            </div>
+            </a>
+    </div>
+
 </div>
 
-<div class="d-flex justify-content-center">
-            <?=Html::a('<i class="bi bi-arrow-left-circle"></i> ย้อนกลับ',['/leave/leave-types'],['class' => 'btn btn-primary shadow rounded-pill text-center'])?>
-        </div>
 <?php Pjax::end(); ?>

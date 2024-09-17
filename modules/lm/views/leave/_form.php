@@ -1,14 +1,19 @@
 <?php
+
+use app\models\Categorise;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\View;
 use kartik\widgets\ActiveForm;
 use iamsaint\datetimepicker\Datetimepicker;
+use kartik\widgets\Select2;
+use yii\helpers\ArrayHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+
 
 <div class="leave-form">
 
@@ -18,11 +23,26 @@ use iamsaint\datetimepicker\Datetimepicker;
         'validationUrl' => ['/lm/leave/create-validator']
     ]); ?>
 
-    <?php //  $form->field($model, 'leave_type_id')->textInput(['maxlength' => true]) 
-    ?>
 <div class="row">
-<div class="col-4">
-    <?= $form->field($model, 'leave_time_type')->textInput()->label('จำนวนวันที่ลา') ?>
+    <div class="col-4">
+    <?php
+  
+  echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+      'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'leave_type'])->all(),'code','title'),
+      'options' => ['placeholder' => '',
+  ],
+      'pluginOptions' => [
+          'allowClear' => true,
+          'dropdownParent' => '#main-modal',
+      ],
+      'pluginEvents' => [
+          'select2:select' => "function(result) { 
+
+                  }",
+      ]
+  ])->label('ประเภท');
+  ?>
+    <?php //  $form->field($model, 'leave_time_type')->textInput()->label('จำนวนวันที่ลา') ?>
 </div>
 <div class="col-6">
     <?= $form->field($model, 'data_json[leave_type]')->radioList(['เต็มวัน' => 'เต็มวัน', 'ลาครึ่งเช้า' => 'ลาครึ่งเช้า', 'ลาครึ่งบ่าย' => 'ลาครึ่งบ่าย'], ['custom' => true, 'inline' => true])->label('ประเภท') ?>
@@ -57,10 +77,18 @@ use iamsaint\datetimepicker\Datetimepicker;
     </div>
 
 
+<div
+    class="alert alert-primary"
+    role="alert"
+>
+    <h4 class="alert-heading">คำนวนได้ <span id="calDays">0</span></h4>
+    <p>Alert Content</p>
+    <hr />
+    <p class="mb-0">Alert Description</p>
+</div>
 
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <div class="form-group mt-3 d-flex justify-content-center">
+        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
@@ -70,6 +98,26 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 $calDaysUrl = Url::to(['/lm/leave/cal-days']);
 $js = <<< JS
+
+
+\$('#form').on('beforeSubmit', function (e) {
+                                var form = \$(this);
+                                \$.ajax({
+                                    url: form.attr('action'),
+                                    type: 'post',
+                                    data: form.serialize(),
+                                    dataType: 'json',
+                                    success: async function (response) {
+                                        form.yiiActiveForm('updateMessages', response, true);
+                                        if(response.status == 'success') {
+                                            closeModal()
+                                            success()
+                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                                        }
+                                    }
+                                });
+                                return false;
+                            });
 
 $("input[name='Leave[data_json][leave_type]']").on('change', function() {
         // ดึงค่าที่ถูกเลือก
@@ -109,7 +157,7 @@ $("input[name='Leave[data_json][leave_type]']").on('change', function() {
             },
             dataType: "json",
             success: function (res) {
-                console.log(res);
+               $('#calDays').html(res)
                 
             }
         });

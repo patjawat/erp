@@ -25,7 +25,7 @@ $leaveType = LeaveType::find()->where(['name' => 'leave_type'])->limit(10)->all(
                             <th>เริ่มลา</th>
                             <th>ถึงวันที่</th>
                             <th>จำนวนวัน</th>
-                            <th>ดำเนินการ</th>
+                            <th class="text-center">ดำเนินการ</th>
                         <tr>
                     </thead>
                     <tbody>
@@ -39,7 +39,9 @@ $leaveType = LeaveType::find()->where(['name' => 'leave_type'])->limit(10)->all(
                             <td>1</td>
                             <td>1</td>
                             <td>1</td>
-                            <td>1</td>
+                            <td class="text-center">
+                            <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/lm/leave/update','id' => $leaveItem->id,'title' => '<i class="fa-solid fa-circle-plus"></i> แก้ไขใบลา'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                            </td>
                         </tr>
                         <?php endforeach?>
                     </tbody>

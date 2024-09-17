@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="d-flex justify-content-center">
-            <?=Html::a('<i class="bi bi-arrow-left-circle"></i> ย้อนกลับ',['/leave/leave-type'],['class' => 'btn btn-primary shadow rounded-pill text-center'])?>
+            <?=Html::a('<i class="bi bi-arrow-left-circle"></i> ย้อนกลับ',['/lm/setting'],['class' => 'btn btn-primary shadow rounded-pill text-center'])?>
         </div>
     </div>
 </div>

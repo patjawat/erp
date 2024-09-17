@@ -90,11 +90,16 @@ class LeaveController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start =  AppHelper::convertToGregorian($model->date_start);
                 $model->date_end =  AppHelper::convertToGregorian($model->date_end);
                 $model->save();
-                return $this->redirect(['view', 'id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'container' => '#leave'
+                ];
             }
         } else {
             $model->loadDefaultValues();
@@ -149,13 +154,11 @@ class LeaveController extends Controller
         $dateStart = $date_start =="" ? "" : AppHelper::convertToGregorian($this->request->get('date_start'));
         $dateEnd = $date_end =="" ? "" : AppHelper::convertToGregorian($this->request->get('date_end'));
 
-        $sql = "SELECT COUNT(*) AS leave_days
-                FROM (
-                    SELECT ADDDATE(:date_start, INTERVAL @i:=@i+1 DAY) AS date
-                    FROM information_schema.columns, (SELECT @i:=-1) temp
-                    WHERE ADDDATE(:date_start, INTERVAL @i DAY) <= :date_end
-                ) AS all_dates
-                WHERE DAYOFWEEK(date) NOT IN (1, 7);";
+        $sql = "SELECT 
+    DATEDIFF(:date_end, :date_start) - 
+    ((WEEK(:date_end) - WEEK(:date_start)) * 2) - 
+    CASE WHEN DAYOFWEEK(:date_start) = 1 THEN 1 ELSE 0 END + 
+    CASE WHEN DAYOFWEEK(:date_end) = 7 THEN 1 ELSE 0 END AS working_days";
 
         $query = Yii::$app->db->createCommand($sql)
         ->bindValue(':date_start',$dateStart)        
@@ -163,7 +166,7 @@ class LeaveController extends Controller
         ->queryScalar();
         
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return $query;
+        return ($query+1);
         return $dateStart.' '.$dateEnd;
     }
     /**
@@ -176,9 +179,19 @@ class LeaveController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model->date_start =  AppHelper::convertToThai($model->date_start);
+        $model->date_end =  AppHelper::convertToThai($model->date_end);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isPost && $model->load($this->request->post()) ) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $model->date_start =  AppHelper::convertToGregorian($model->date_start);
+            $model->date_end =  AppHelper::convertToGregorian($model->date_end);
+            $model->save();
+            return [
+                'status' => 'success',
+                'container' => '#leave'
+            ];
         }
 
         if ($this->request->isAJax) {

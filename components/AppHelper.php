@@ -35,9 +35,19 @@ class AppHelper extends Component
     }
 
     // หาปีงบประมาณไทย
-    public static function YearBudget()
+    public static function YearBudget($date = null)
     {
-        return Yii::$app->db->createCommand('SELECT IF(MONTH(NOW())>9,YEAR(NOW())+1,YEAR(NOW())) + 543 AS year_bud')->queryScalar();
+        if($date){
+            return Yii::$app->db
+            ->createCommand('SELECT IF(MONTH(:date)>9,YEAR(:date)+1,YEAR(:date)) + 543 AS year_bud')
+            ->bindValue(':date',$date)
+            ->queryScalar();
+            // ->getRawSql();
+            
+        }else{
+            return Yii::$app->db->createCommand('SELECT IF(MONTH(NOW())>9,YEAR(NOW())+1,YEAR(NOW())) + 543 AS year_bud')->queryScalar();
+
+        }
     }
 
     // สร้าง Directory
