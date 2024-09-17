@@ -34,7 +34,7 @@ use yii\helpers\Html;
 </div>
 
 <div class="d-flex justify-content-center mt-3">
-    <?=Html::a('<i class="fa-solid fa-plus"></i> ยื่นใบลา',['/me'],['class' => 'btn btn-primary round shadow'])?>
+    <?=Html::a('<i class="bi bi-calendar-check"></i> สิทธิวันลา',['/me'],['class' => 'btn btn-primary round shadow'])?>
 </div>
 <?php
 use yii\web\View;

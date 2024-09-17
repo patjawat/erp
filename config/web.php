@@ -222,7 +222,7 @@ $config = [
             'am/*',
             'pm/*',
             'fsn/*',
-            'leave/*',
+            'lm/*',
             'inventory/*',
             'stock/*',
             'backoffice/*',

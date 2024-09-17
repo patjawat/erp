@@ -66,8 +66,8 @@ class AppHelper extends Component
     {
         if ($date !== null || $date !== "__/__/____") {
             list($day, $month, $year) = explode('/', $date);
-            $year - 543;
-            return "{$year}-{$month}-{$day}";
+            $y = ($year - 543);
+            return "{$y}-{$month}-{$day}";
         }
         return null;
     }

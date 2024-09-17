@@ -470,7 +470,7 @@ LEFT JOIN
     supplies_type_kind ON supplies.SUP_TYPE_KIND_ID = supplies_type_kind.SUP_TYPE_KIND_ID
 LEFT JOIN 
     supplies_unit ON supplies.SUP_UNIT_ID = supplies_unit.SUP_UNIT_ID
-WHERE supplies.SUP_TYPE_KIND_ID IN('2','4')";
+WHERE supplies.SUP_TYPE_KIND_ID IN('1','2','4')";
 
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
         if (BaseConsole::confirm('วัสดุ '.count($querys).' รายการ ยืนยัน ??')) {

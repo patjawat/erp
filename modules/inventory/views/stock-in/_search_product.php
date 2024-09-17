@@ -34,7 +34,7 @@ use kartik\select2\Select2;
         ],
             'pluginOptions' => [
                 'allowClear' => true,
-                'dropdownParent' => '#main-modal',
+                // 'dropdownParent' => '#main-modal',
             ],
             'pluginEvents' => [
                 'select2:select' => "function(result) { 

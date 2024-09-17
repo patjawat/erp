@@ -95,13 +95,13 @@ use unclead\multipleinput\MultipleInputColumn;
                                             console.log(data)
                                         }",
                                     ]
-                                ])->label('หน่วยนับหลัก')
+                                ])->label('หน่วยนับ')
                             ?>
                     </div>
 
                 </div>
-                <div class="col-5">
-                    <?php // $form->field($model, 'data_json[unit_stock]')->textInput(['maxlength' => true, 'placeholder' => ''])->label('หน่วยรับเข้า/จ่ายออก') ?>
+                <div class="col-12">
+                    <?= $form->field($model, 'data_json[asset_type_name]')->radioList([ 'วัสดุคงทนถาวร' => 'วัสดุคงทนถาวร','วัสดุสิ้นเปลือง' => 'วัสดุสิ้นเปลือง','บริการ' => 'บริการ'], ['custom' => true, 'inline' => true])->label('ประเภท') ?>
 
                 </div>
                 <div class="col-5">

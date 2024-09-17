@@ -16,7 +16,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['enablePushState' => false]); ?>
 
-
 <?php echo $this->render('_search_product', ['searchModel' => $searchModel, 'model' => $model]); ?>
 
 
@@ -37,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <table class="table table-primary">
         <thead>
             <tr>
-                <th scope="col">รายการ</th>
+                <th scope="col"><i class="bi bi-ui-checks"></i> จำนวน <span class="badge rounded-pill text-bg-primary"> <?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</th>
                 <th scope="col">หน่วย</th>
                 <th scope="col"  style="width:90px">ดำเนินการ</th>
             </tr>
