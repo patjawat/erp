@@ -14,7 +14,7 @@ use yii\bootstrap5\LinkPager;
 $this->title = 'Products';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php Pjax::begin(['enablePushState' => false]); ?>
+<?php Pjax::begin(['enablePushState' => false,'timeout' => 999999999]); ?>
 
 <?php echo $this->render('_search_product', ['searchModel' => $searchModel, 'model' => $model]); ?>
 
