@@ -8,47 +8,25 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="holiday-search">
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
 
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'ref') ?>
-
-    <?= $form->field($model, 'group_id') ?>
-
-    <?= $form->field($model, 'category_id') ?>
-
-    <?= $form->field($model, 'code') ?>
-
-    <?php // echo $form->field($model, 'emp_id') ?>
-
-    <?php // echo $form->field($model, 'name') ?>
-
-    <?php // echo $form->field($model, 'title') ?>
-
-    <?php // echo $form->field($model, 'qty') ?>
-
-    <?php // echo $form->field($model, 'description') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'ma_items') ?>
-
-    <?php // echo $form->field($model, 'active') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+<div class="d-flex gap-3">
+        <?= $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหาชื่อ'])->label(false) ?>
+        <?= $form->field($model, 'thai_year')->textInput(['placeholder' => 'ค้นหาปีงบประมาน'])->label(false) ?>
+        
+        <div class="form-group">
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']) ?>
+            <?=html::a('<i class="fa-solid fa-rotate-right"></i>',['/lm/holiday'], ['class' => 'btn btn-warning'])?>
+        </div>
     </div>
+
 
     <?php ActiveForm::end(); ?>
 
-</div>

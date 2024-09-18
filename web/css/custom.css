@@ -13466,11 +13466,6 @@ small, .small {
   margin-bottom: 0.5rem;
 }
 
-@media (min-width: 769px) {
-  body.left-side-menu-condensed .main-content {
-    min-height: 1200px;
-  }
-}
 @media (min-width: 992px) and (max-width: 1024px) {
   .navbar-brand-box {
     width: 70px !important;

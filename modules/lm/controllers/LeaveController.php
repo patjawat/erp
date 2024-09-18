@@ -155,10 +155,18 @@ class LeaveController extends Controller
         $dateEnd = $date_end =="" ? "" : AppHelper::convertToGregorian($this->request->get('date_end'));
 
         $sql = "SELECT 
-    DATEDIFF(:date_end, :date_start) - 
-    ((WEEK(:date_end) - WEEK(:date_start)) * 2) - 
-    CASE WHEN DAYOFWEEK(:date_start) = 1 THEN 1 ELSE 0 END + 
-    CASE WHEN DAYOFWEEK(:date_end) = 7 THEN 1 ELSE 0 END AS working_days";
+                    DATEDIFF(:date_end, :date_start) - 
+                    (WEEK(:date_end, 0) - WEEK(:date_start, 0)) * 2 -
+                    (CASE 
+                        WHEN WEEKDAY(:date_start) = 5 THEN 1
+                        WHEN WEEKDAY(:date_start) = 6 THEN 2
+                        ELSE 0
+                    END) -
+                    (CASE 
+                        WHEN WEEKDAY(:date_start) = 5 THEN 2
+                        WHEN WEEKDAY(:date_start) = 6 THEN 1
+                        ELSE 0
+                    END) AS working_days;";
 
         $query = Yii::$app->db->createCommand($sql)
         ->bindValue(':date_start',$dateStart)        

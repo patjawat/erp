@@ -10,7 +10,7 @@ use Yii;
  * @property int $id
  * @property string|null $leave_type_id ประเภทการขอลา
  * @property float|null $leave_time_type ประเภทการลา
- * @property float|null $leave_days จำนวนวัน
+ * @property float|null $days_off จำนวนวัน
  * @property string|null $data_json
  * @property string|null $date_start วันที่ลา
  * @property string|null $date_end ถึงวันที่
@@ -39,7 +39,7 @@ class Leave extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['leave_time_type', 'leave_days'], 'number'],
+            [['leave_time_type', 'days_off'], 'number'],
             [['data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
@@ -55,7 +55,7 @@ class Leave extends \yii\db\ActiveRecord
             'id' => 'ID',
             'leave_type_id' => 'ประเภทการขอลา',
             'leave_time_type' => 'ประเภทการลา',
-            'leave_days' => 'จำนวนวัน',
+            'days_off' => 'จำนวนวัน',
             'data_json' => 'Data Json',
             'date_start' => 'วันที่ลา',
             'date_end' => 'ถึงวันที่',

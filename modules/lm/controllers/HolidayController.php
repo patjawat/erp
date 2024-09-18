@@ -11,6 +11,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\web\Response;
 
 /**
@@ -46,7 +47,11 @@ class HolidayController extends Controller
         $searchModel = new HolidaySearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['name' => 'holiday']);
-        $dataProvider->query->andWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.thai_year')"), AppHelper::YearBudget()]);
+        if($searchModel){
+            $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.thai_year')"), $searchModel->thai_year]);
+        }else{
+            $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.thai_year')"), AppHelper::YearBudget()]);
+        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -67,6 +72,31 @@ class HolidayController extends Controller
         ]);
     }
 
+        // ตรวจสอบความถูกต้อง
+        public function actionValidator()
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = new Holiday();
+    
+            if ($this->request->isPost && $model->load($this->request->post())) {
+                $requiredName = 'ต้องระบุ';
+    
+                if (isset($model->data_json['date'])) {
+                    preg_replace('/\D/', '', $model->data_json['date']) == "" ? $model->addError('data_json[date]', $requiredName) : null;
+                }
+                $model->data_json['thai_year'] == '' ? $model->addError('data_json[thai_year]', $requiredName) : null;
+                $model->title == '' ? $model->addError('title', $requiredName) : null;
+    
+                foreach ($model->getErrors() as $attribute => $errors) {
+                    $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+                }
+                if (!empty($result)) {
+                    return $this->asJson($result);
+                }
+            }
+        }
+
+        
     /**
      * Creates a new Holiday model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -74,14 +104,27 @@ class HolidayController extends Controller
      */
     public function actionCreate()
     {
+
         $model = new Holiday();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $convertDate =[
+                    'date' =>  AppHelper::convertToGregorian($model->data_json['date']),
+                ];
+                $model->data_json =  ArrayHelper::merge($model->data_json,$convertDate);
+                $model->save(false);
+                return [
+                    'status' => 'success',
+                    'container' => '#leave'
+                ];
             }
         } else {
             $model->loadDefaultValues();
+            $model->data_json = [
+                'thai_year' => AppHelper::YearBudget()
+            ];
         }
 
         if ($this->request->isAJax) {
@@ -109,10 +152,29 @@ class HolidayController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        $oldObj = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $convertDate =[
+                'date' =>  AppHelper::convertToGregorian($model->data_json['date']),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
+            $model->save();
+            return [
+                'status' => 'success',
+                'container' => '#leave'
+            ];
         }
+
+        try {
+            $convertDate = [
+                'date' =>  AppHelper::convertToThai($model->data_json['date']),
+            ];
+            $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -167,16 +229,16 @@ class HolidayController extends Controller
                 $model->title = $holiday['SUMMARY'];
                 $model->name = 'holiday';
                 $model->data_json = [
-                    'thai_year' => AppHelper::YearBudget($holidayDate),
+                    'thai_year' => (string) AppHelper::YearBudget($holidayDate),
                     'date' => $holidayDate
                 ];
                 $model->save();
     }
 
-    return [
-        'status' => 'success',
-        'container' => '#leave'
-    ];
+            return [
+                'status' => 'success',
+                'container' => '#leave'
+            ];
     }
 
 

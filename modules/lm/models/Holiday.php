@@ -26,6 +26,7 @@ class Holiday extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $thai_year;
     public static function tableName()
     {
         return 'categorise';
@@ -39,7 +40,7 @@ class Holiday extends \yii\db\ActiveRecord
         return [
             [['name'], 'required'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items'], 'safe'],
+            [['data_json', 'ma_items','thai_year'], 'safe'],
             [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }
