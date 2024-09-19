@@ -86,6 +86,7 @@ use unclead\multipleinput\MultipleInputColumn;
                                     'data' => $model->listUnit(),
                                     'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
                                     'pluginOptions' => [
+                                        'tags' => true,
                                         'allowClear' => true,
                                         'dropdownParent' => '#main-modal',
                                     ],

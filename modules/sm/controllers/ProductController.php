@@ -2,6 +2,7 @@
 
 namespace app\modules\sm\controllers;
 
+use app\models\Categorise;
 use Yii;
 use app\modules\sm\models\Product;
 use app\modules\sm\models\ProductSearch;
@@ -115,7 +116,9 @@ class ProductController extends Controller
                 if($model->auto == "1"){
                     $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'?????');
                 }
+
                 $model->save(false);
+                $this->UpdateUnit($model);
                 return [
                     'title' => $this->request->get('title'),
                     'status' => 'success',
@@ -145,6 +148,15 @@ class ProductController extends Controller
             ]);
         }
     }
+
+ protected function UpdateUnit($model)
+ {
+    $unit  = Categorise::findOne(['name' => 'unit','title' => $model->data_json['unit']]);
+    if(!$unit){
+        $newUnit = new Categorise(['name' => 'unit','title' => $model->data_json['unit']]);
+        $newUnit->save(false);
+    }
+ }
 
     /**
      * Updates an existing Product model.
