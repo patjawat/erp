@@ -137,6 +137,7 @@ class SettingController extends \yii\web\Controller
         }else{
             $model = new AssetType([
                 'name' => $name,
+                'group_id' => $assetType->category_id,
                 'category_id' => $assetType->code,
                 'data_json' => [
                     'service_life' => isset($assetType->data_json['service_life']) ? $assetType->data_json['service_life'] : '',

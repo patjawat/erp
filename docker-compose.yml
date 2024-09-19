@@ -15,7 +15,7 @@ services:
       - ./.env
 
   mysqlDB:
-    image: mysql:5.7
+    image: mysql:8.0
     container_name: ${CONTAINER_NAME}_db
     hostname: mysqldboffice
     
@@ -44,7 +44,7 @@ services:
     volumes:
       # - ./home/backup/db:/home/backup/db
       - /Users/patjawat/Downloads:/home/backup/db
-      - ./docker/mysql5.7/data:/var/lib/mysql
+      - ./docker/mysql8.0/data:/var/lib/mysql
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 

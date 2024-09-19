@@ -34,7 +34,7 @@ $this->title = 'Calendar';
 
                     <div class="btn-group">
                         <span class="btn btn-light">
-                            <?= Html::a('<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด', ['/lm/holiday/create', 'title' => '<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด'], ['class' => 'open-modal sync-date', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด', ['/lm/holiday/create', 'title' => '<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด'], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </span>
                         <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
                             data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
@@ -62,9 +62,9 @@ $this->title = 'Calendar';
                     <tbody>
                         <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="">
-                                <td scope="row"><?= Yii::$app->thaiFormatter->asDate($model->data_json['date'], 'long') ?>
+                                <td scope="row"><?= Yii::$app->thaiFormatter->asDate($model->date_start, 'long') ?>
                                 </td>
-                                <td><?= $model->data_json['thai_year'] ?></td>
+                                <td><?= $model->thai_year ?></td>
                                 <td><?= $model->title ?></td>
                                 <td class="text-center">
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/lm/holiday/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i>แก้ไข'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>

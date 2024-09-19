@@ -61,8 +61,8 @@ class LeaveSearch extends Leave
         $query->andFilterWhere([
             'id' => $this->id,
             'leave_time_type' => $this->leave_time_type,
-            'start_date' => $this->start_date,
-            'start_end' => $this->start_end,
+            'date_start' => $this->date_start,
+            'date_end' => $this->date_end,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,

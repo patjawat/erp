@@ -133,7 +133,6 @@ $("input[name='Leave[data_json][leave_type]']").on('change', function() {
     $('#leave-date_start').on('change', function() {
         var selectedDate = $(this).val();
         // Perform any action you want when the date is changed
-        console.log('Selected Date: ' + selectedDate);
         calDays(selectedDate);
         // You can add further logic here
     });
@@ -141,7 +140,7 @@ $("input[name='Leave[data_json][leave_type]']").on('change', function() {
     $('#leave-date_end').on('change', function() {
         var selectedDate = $(this).val();
         // Perform any action you want when the date is changed
-        console.log('Selected Date: ' + selectedDate);
+        // console.log('Selected Date: ' + selectedDate);
         calDays(selectedDate);
         // You can add further logic here
     });
@@ -157,7 +156,9 @@ $("input[name='Leave[data_json][leave_type]']").on('change', function() {
             },
             dataType: "json",
             success: function (res) {
-               $('#calDays').html(res)
+               $('#calDays').html(res.summaryDay)
+               console.log(res);
+               
                 
             }
         });

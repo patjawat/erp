@@ -3,6 +3,7 @@
 namespace app\modules\lm\controllers;
 
 use app\components\AppHelper;
+use app\components\DayHelper;
 use app\modules\lm\models\Leave;
 use app\modules\lm\models\LeaveSearch;
 use yii\web\Controller;
@@ -153,29 +154,29 @@ class LeaveController extends Controller
         $date_end = preg_replace('/\D/', '', $this->request->get('date_end'));
         $dateStart = $date_start =="" ? "" : AppHelper::convertToGregorian($this->request->get('date_start'));
         $dateEnd = $date_end =="" ? "" : AppHelper::convertToGregorian($this->request->get('date_end'));
+        // return $dateStart.' '.$dateEnd;
+        $model = AppHelper::CalDay($dateStart,$dateEnd);
+        // $sql = "SELECT 
+        //             DATEDIFF(:date_end, :date_start) - 
+        //             (WEEK(:date_end, 0) - WEEK(:date_start, 0)) * 2 -
+        //             (CASE 
+        //                 WHEN WEEKDAY(:date_start) = 5 THEN 1
+        //                 WHEN WEEKDAY(:date_start) = 6 THEN 2
+        //                 ELSE 0
+        //             END) -
+        //             (CASE 
+        //                 WHEN WEEKDAY(:date_start) = 5 THEN 2
+        //                 WHEN WEEKDAY(:date_start) = 6 THEN 1
+        //                 ELSE 0
+        //             END) AS working_days;";
 
-        $sql = "SELECT 
-                    DATEDIFF(:date_end, :date_start) - 
-                    (WEEK(:date_end, 0) - WEEK(:date_start, 0)) * 2 -
-                    (CASE 
-                        WHEN WEEKDAY(:date_start) = 5 THEN 1
-                        WHEN WEEKDAY(:date_start) = 6 THEN 2
-                        ELSE 0
-                    END) -
-                    (CASE 
-                        WHEN WEEKDAY(:date_start) = 5 THEN 2
-                        WHEN WEEKDAY(:date_start) = 6 THEN 1
-                        ELSE 0
-                    END) AS working_days;";
-
-        $query = Yii::$app->db->createCommand($sql)
-        ->bindValue(':date_start',$dateStart)        
-        ->bindValue(':date_end',$dateEnd)        
-        ->queryScalar();
+        // $query = Yii::$app->db->createCommand($sql)
+        // ->bindValue(':date_start',$dateStart)        
+        // ->bindValue(':date_end',$dateEnd)        
+        // ->queryScalar();
         
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return ($query+1);
-        return $dateStart.' '.$dateEnd;
+       return $model;
     }
     /**
      * Updates an existing Leave model.

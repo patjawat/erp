@@ -34,6 +34,46 @@ class AppHelper extends Component
         return $cid;
     }
 
+     //นับวันหยุด
+     public static function CalDay($dateStart, $dateEnd)
+     {
+ 
+         //นับวันหยุดไม่รวมเสาร์-อาทิตย์
+         $sqlDays = "WITH RECURSIVE date_range AS (
+                        SELECT :date_start AS date
+                        UNION ALL
+                        SELECT DATE_ADD(date, INTERVAL 1 DAY)
+                        FROM date_range
+                        WHERE date < :date_end
+                        )
+                        SELECT count(date) as count_days FROM date_range
+                        WHERE DAYNAME(date) NOT IN('Saturday','Sunday');";
+         
+         // นับจำนวนวันเสาร์-อาทิตย์      
+         $sqlSundays = "SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบเสาร์-อาทิตย์
+                        - CASE 
+                            WHEN DAYOFWEEK(:date_start) = 7 THEN 1 -- ถ้าวันแรกเป็นเสาร์ ให้ลบ 1
+                            WHEN DAYOFWEEK(:date_end) = 7 THEN 1 -- ถ้าวันสุดท้ายเป็นเสาร์ ให้ลบ 1
+                            ELSE 0
+                            END 
+                        - CASE
+                            WHEN DAYOFWEEK(:date_end) = 1 THEN 1 -- ถ้าวันสุดท้ายเป็นอาทิตย์ ให้ลบอีก 1
+                            ELSE 0
+                            END AS date_count;";
+         //หาจำนวนวันหยุด
+         $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
+ 
+         $summaryDay =   Yii::$app->db->createCommand($sqlDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+         $sunDay =   Yii::$app->db->createCommand($sqlSundays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+         $holiday =   Yii::$app->db->createCommand($sqlHoliday)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+             return [
+                 'summaryDay' =>  $summaryDay,
+                 'sunDay' =>  $sunDay,
+                 'holidy' =>  $holiday
+             ];
+     }
+
+
     // หาปีงบประมาณไทย
     public static function YearBudget($date = null)
     {

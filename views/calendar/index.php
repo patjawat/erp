@@ -1,24 +1,24 @@
 <?php
 
-use app\modules\lm\models\Leave;
+use app\models\Calendar;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-/** @var app\modules\lm\models\LeaveSearch $searchModel */
+/** @var app\models\CalendarSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Leaves';
+$this->title = 'Calendars';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="leave-index">
+<div class="calendar-index">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Create Leave', ['type-select'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Create Calendar', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php Pjax::begin(); ?>
@@ -31,10 +31,12 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'leave_type_id',
-            'leave_time_type',
-            'data_json',
-            //'start_end',
+            'name',
+            'date_start',
+            'date_end',
+            'status',
+            //'data_json',
+            //'thai_year',
             //'created_at',
             //'updated_at',
             //'created_by',
@@ -43,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'deleted_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Leave $model, $key, $index, $column) {
+                'urlCreator' => function ($action, Calendar $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

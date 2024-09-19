@@ -1,15 +1,15 @@
 <?php
 
-namespace app\modules\lm\models;
+namespace app\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\lm\models\Holiday;
+use app\models\Calendar;
 
 /**
- * HolidaySearch represents the model behind the search form of `app\modules\lm\models\Holiday`.
+ * CalendarSearch represents the model behind the search form of `app\models\Calendar`.
  */
-class HolidaySearch extends Holiday
+class CalendarSearch extends Calendar
 {
     /**
      * {@inheritdoc}
@@ -17,8 +17,8 @@ class HolidaySearch extends Holiday
     public function rules()
     {
         return [
-            [['id', 'qty', 'active'], 'integer'],
-            [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items','thai_year'], 'safe'],
+            [['id', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['name','title','date_start', 'date_end', 'status', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];
     }
 
@@ -40,7 +40,7 @@ class HolidaySearch extends Holiday
      */
     public function search($params)
     {
-        $query = Holiday::find();
+        $query = Calendar::find();
 
         // add conditions that should always apply here
 
@@ -59,20 +59,21 @@ class HolidaySearch extends Holiday
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'qty' => $this->qty,
-            'active' => $this->active,
+            'date_start' => $this->date_start,
+            'date_end' => $this->date_end,
+            'thai_year' => $this->thai_year,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
+            'deleted_at' => $this->deleted_at,
+            'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'group_id', $this->group_id])
-            ->andFilterWhere(['like', 'category_id', $this->category_id])
-            ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'emp_id', $this->emp_id])
-            ->andFilterWhere(['like', 'name', $this->name])
+        $query->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'ma_items', $this->ma_items]);
+            ->andFilterWhere(['like', 'status', $this->status])
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

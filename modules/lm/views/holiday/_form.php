@@ -20,7 +20,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 <div class="row">
 <div class="col-8">
     
-<?php echo $form->field($model, 'data_json[date]')->widget(Datetimepicker::className(),[
+<?php echo $form->field($model, 'date_start')->widget(Datetimepicker::className(),[
         'options' => [
             'timepicker' => false,
             'datepicker' => true,
@@ -32,7 +32,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         ])->label('วันที่') ?>
 </div>
 <div class="col-4">
-    <?= $form->field($model, 'data_json[thai_year]')->textInput(['maxlength' => true])->label('ปีงบประมาน') ?>
+    <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true])->label('ปีงบประมาน') ?>
 </div>
 </div>
 
@@ -84,7 +84,7 @@ $('#form').on('beforeSubmit', function (e) {
         })                
     };    
          
-    $("#holiday-data_json-date").datetimepicker({
+    $("#holiday-date_start").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
