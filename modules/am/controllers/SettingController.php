@@ -21,7 +21,7 @@ class SettingController extends \yii\web\Controller
     {
         $searchModel = new AssetTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'asset_type']);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_type','category_id' => 3]);
         $dataProvider->query->orderBy(new \yii\db\Expression("SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, '.'), '.', 1), '.', -1) + 0
         , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, '.'), '.', 2), '.', -1) + 0
         , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, '.'), '.', 3), '.', -1) + 0
