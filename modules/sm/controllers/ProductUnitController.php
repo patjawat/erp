@@ -80,7 +80,7 @@ class ProductUnitController extends Controller
     public function actionCreate()
     {
         $model = new Categorise([
-            'name' => 'product_unit',
+            'name' => 'unit',
             'category_id' => $this->request->get('product_id'),
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
