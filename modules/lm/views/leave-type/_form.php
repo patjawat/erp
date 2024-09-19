@@ -13,11 +13,18 @@ use yii\web\View;
 
     <?php $form = ActiveForm::begin(['id' => 'form']); ?>
 
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'max_days')->textInput(['maxlength' => true]) ?>
-    <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label(true);?>
-    
+
+    <div class="row d-flex align-items-center ">
+        <div class="col-8">
+            <?= $form->field($model, 'data_json[icon]')->textInput(['maxlength' => true])->label('Icon') ?>
+        </div>
+        <div class="col-4">
+            <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label(true);?>
+        </div>
+    </div>
+
     <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
 </div>

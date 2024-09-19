@@ -7,49 +7,102 @@ use yii\web\View;
 use kartik\widgets\ActiveForm;
 use iamsaint\datetimepicker\Datetimepicker;
 use kartik\widgets\Select2;
+use yii\web\JsExpression;
+use app\modules\hr\models\Employees;
 use yii\helpers\ArrayHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
 /** @var yii\widgets\ActiveForm $form */
+
+
+$formatJs = <<< 'JS'
+    var formatRepo = function (repo) {
+        if (repo.loading) {
+            return repo.avatar;
+        }
+        // console.log(repo);
+        var markup =
+    '<div class="row">' +
+        '<div class="col-12">' +
+            '<span>' + repo.avatar + '</span>' +
+        '</div>' +
+    '</div>';
+        if (repo.description) {
+          markup += '<p>' + repo.avatar + '</p>';
+        }
+        return '<div style="overflow:hidden;">' + markup + '</div>';
+    };
+    var formatRepoSelection = function (repo) {
+        return repo.avatar || repo.avatar;
+    }
+    JS;
+
+// Register the formatting script
+$this->registerJs($formatJs, View::POS_HEAD);
+
+// script to parse the results into the format expected by Select2
+$resultsJs = <<< JS
+    function (data, params) {
+        params.page = params.page || 1;
+        return {
+            results: data.results,
+            pagination: {
+                more: (params.page * 30) < data.total_count
+            }
+        };
+    }
+    JS;
+
 ?>
 
+<style>
+.col-form-label {
+    text-align: end;
+}
+    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #fff;
+}
+:not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.875rem + 12px) !important;
+}
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #3F51B5;
+}
+</style>
 
-<div class="leave-form">
 
+<div class="row">
+    <div class="col-8">
+
+<div class="card text-start">
+    <div class="card-body">
+       
     <?php $form = ActiveForm::begin([
         'id' => 'form',
         'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
         'validationUrl' => ['/lm/leave/create-validator']
-    ]); ?>
+        ]); ?>
+
+<div class="d-flex justify-content-between">
+            <h2><i class="fa-solid fa-file-pen"></i> บันทึกขอ<?=$model->leaveType->title?></h2>
+            <?= $form->field($model, 'id')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ไม่รวม');?>
+        </div>
+
+<?= $form->field($model, 'leave_type_id')->hiddenInput()->label(false)?>
 
 <div class="row">
-    <div class="col-4">
-    <?php
-  
-  echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-      'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'leave_type'])->all(),'code','title'),
-      'options' => ['placeholder' => '',
-  ],
-      'pluginOptions' => [
-          'allowClear' => true,
-          'dropdownParent' => '#main-modal',
-      ],
-      'pluginEvents' => [
-          'select2:select' => "function(result) { 
-
-                  }",
-      ]
-  ])->label('ประเภท');
-  ?>
-    <?php //  $form->field($model, 'leave_time_type')->textInput()->label('จำนวนวันที่ลา') ?>
-</div>
-<div class="col-6">
-    <?= $form->field($model, 'data_json[leave_type]')->radioList(['เต็มวัน' => 'เต็มวัน', 'ลาครึ่งเช้า' => 'ลาครึ่งเช้า', 'ลาครึ่งบ่าย' => 'ลาครึ่งบ่าย'], ['custom' => true, 'inline' => true])->label('ประเภท') ?>
-</div>
-</div>
-    <div class="row">
+    <div class="col-2">
+    <?= $form->field($model, 'thai_year')->textInput(['rows' => 6,'disabled' => true])->label('ปีงบประมาาน')?>
+    </div>
         <div class="col-6">
+            <?= $form->field($model, 'data_json[leave_type]')->radioList(['เต็มวัน' => 'เต็มวัน', 'ลาครึ่งเช้า' => 'ลาครึ่งเช้า', 'ลาครึ่งบ่าย' => 'ลาครึ่งบ่าย'], ['custom' => true, 'inline' => true])->label('ประเภท') ?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-5">
             <?= $form->field($model, 'date_start')->widget(Datetimepicker::className(), [
                 'options' => [
                     'timepicker' => false,
@@ -60,32 +113,92 @@ use yii\helpers\ArrayHelper;
                     'format' => 'd/m/Y',
                 ],
             ])->label('ตั้งแต่วันที่') ?>
+               <?= $form->field($model, 'data_json[note]')->textInput()->label('เหตุผล')?>
 
+</div>
+<div class="col-5">
+<?= $form->field($model, 'date_end')->widget(Datetimepicker::className(), [
+        'options' => [
+            'timepicker' => false,
+            'datepicker' => true,
+            'mask' => '99/99/9999',
+            'lang' => 'th',
+            'yearOffset' => 543,
+            'format' => 'd/m/Y',
+        ],
+        ]) ?>
+    <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ไป')?>
+
+       
+    </div>
+    <div class="col-2">
+      <div
+        class="card border-1 mt-4"
+      >
+        <div class="card-body">
+        <h1 class="text-center cal-days">0</h1>
+        </div>
+        <div class="card-footer">
+            จำนวน/วัน
+        </div>
+      </div>
+      
+    </div>
+    <div class="col-6">
+        <?php //  $form->field($model, 'data_json[note]')->textArea(['rows' => 6])->label('เหตุผลการลา')?>
+        <?= $form->field($model, 'data_json[address]')->textArea(['rows' => 6])->label('ระหว่างลาติดต่อ')?>
         </div>
         <div class="col-6">
-            <?= $form->field($model, 'date_end')->widget(Datetimepicker::className(), [
-                'options' => [
-                    'timepicker' => false,
-                    'datepicker' => true,
-                    'mask' => '99/99/9999',
-                    'lang' => 'th',
-                    'yearOffset' => 543,
-                    'format' => 'd/m/Y',
+        <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ')?>
+
+<?php
+try {
+    //code...
+    $initEmployee =  Employees::find()->where(['id' => $model->data_json['delegate']])->one()->getAvatar(false);
+} catch (\Throwable $th) {
+    $initEmployee = '';
+}
+        echo $form->field($model, 'data_json[delegate]')->widget(Select2::classname(), [
+            'initValueText' => $initEmployee,
+            'options' => ['placeholder' => 'เลือกรายการ...'],
+            'size' => Select2::LARGE,
+            'pluginEvents' => [
+                'select2:unselect' => 'function() {
+                $("#order-data_json-board_fullname").val("")
+
+         }',
+                'select2:select' => 'function() {
+                var fullname = $(this).select2("data")[0].fullname;
+                var position_name = $(this).select2("data")[0].position_name;
+                $("#order-data_json-board_fullname").val(fullname)
+                $("#order-data_json-position_name").val(position_name)
+               
+         }',
+            ],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'minimumInputLength' => 1,
+                'ajax' => [
+                    'url' => Url::to(['/depdrop/employee-by-id']),
+                    'dataType' => 'json',
+                    'delay' => 250,
+                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                    'processResults' => new JsExpression($resultsJs),
+                    'cache' => true,
                 ],
-            ]) ?>
-        </div>
+                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                'templateResult' => new JsExpression('formatRepo'),
+            ],
+        ])->label('มอบหมายงานให้')
+    ?>
+            
+            </div>
     </div>
 
 
-<div
-    class="alert alert-primary"
-    role="alert"
->
-    <h4 class="alert-heading">คำนวนได้ <span id="calDays">0</span></h4>
-    <p>Alert Content</p>
-    <hr />
-    <p class="mb-0">Alert Description</p>
-</div>
+
+
 
     <div class="form-group mt-3 d-flex justify-content-center">
         <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
@@ -93,6 +206,33 @@ use yii\helpers\ArrayHelper;
 
     <?php ActiveForm::end(); ?>
 
+
+
+    </div>
+</div>
+
+
+    </div>
+    <div class="col-4">
+
+    <div class="card">
+        <div class="card-body">
+            <h4><i class="fa-solid fa-circle-info"></i> สรุปการลา </h4>
+            <hr>
+                <!-- <h6><?=$model->leaveType->icon?> <?=$model->leaveType->title?></h6> -->
+                <div class="d-flex justify-content-between">
+                    
+                     <h6>ประเภท : <?=$model->leaveType->title?>  <?=$model->leaveType->icon?></h6>
+            </div>
+                 <div class="d-flex justify-content-between">
+                     <p class="card-text">รวมวันลา</p>
+                     <p class="card-text">จำนวน <span id="calDays" class="fs-1 cal-days">0</span> วัน</p>
+
+                 </div>
+        </div>
+    </div>
+    
+    </div>
 </div>
 
 <?php
@@ -156,7 +296,7 @@ $("input[name='Leave[data_json][leave_type]']").on('change', function() {
             },
             dataType: "json",
             success: function (res) {
-               $('#calDays').html(res.summaryDay)
+               $('.cal-days').html(res.summaryDay)
                console.log(res);
                
                 

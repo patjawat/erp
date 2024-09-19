@@ -195,6 +195,7 @@ $config = [
             'summary/*',
             'helpdesk/*',
             // 'purchase/*',
+            'leave/*',
             'debug/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',

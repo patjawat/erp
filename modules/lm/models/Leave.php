@@ -69,4 +69,10 @@ class Leave extends \yii\db\ActiveRecord
             'deleted_by' => 'ผู้ลบ',
         ];
     }
+
+        // section Relationships
+        public function getLeaveType()
+        {
+            return $this->hasOne(LeaveType::class, ['code' => 'leave_type_id']);
+        }
 }

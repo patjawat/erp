@@ -140,13 +140,13 @@ class LeaveTypeController extends Controller
 
     public function actionSetActive()
     {
-        $id = $this->request->post('id');
-        $model = $this->findModel($id);
 
+        $id = $this->request->post('id');
+
+        $model = $this->findModel($id);
         if ($this->request->isPost && $this->request->post('id') ) {
             $model->active = ($model->active == 1 ? 0 : 1);
-            if ($model->save()) {
-
+            if ($model->save(false)) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return 
                 [

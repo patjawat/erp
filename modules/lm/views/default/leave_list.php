@@ -8,7 +8,7 @@ $leaveType = LeaveType::find()->where(['name' => 'leave_type'])->limit(10)->all(
 <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h6>รายชื่อบุคลกรขออนุมัติการลา</h6>
+                    <h6>รายชื่อบุคลากรขออนุมัติการลา</h6>
                                     <?=Html::a('<i class="fa-solid fa-circle-plus me-2"></i> ยื่นใบลา',['/lm/leave/create','title' => '<i class="fa-solid fa-circle-plus"></i> ยื่นใบลา'],['class' => 'btn btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                       
                 </div>

@@ -1,26 +1,28 @@
 <?php
+use yii\helpers\Url;
 use yii\helpers\Html;
 use app\modules\lm\models\LeaveType;
 ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
 
+    
 
     <div class="row d-flex justify-content-center">
-    <div class="col-8">
+    <div class="col-4">
 
-<div class="row">
-
-    <?php foreach(LeaveType::find()->where(['name' => 'leave_type'])->all() as $model):?>
-        <div class="col-2">
-            
-            <div class="card">
+    <?php foreach(LeaveType::find()->where(['name' => 'leave_type','active' => 1])->all() as $item):?>
+        <a href="<?=Url::to(['/lm/leave/create','leave_type_id' => $item->code,'title' => $item->title])?>">
+            <div class="card mb-2 zoom-in">
                 <div class="card-body">
-                    
-                    <?=$model->title?>
+                    <?= isset($item->data_json['icon']) ? $item->data_json['icon'] : '-' ?> <?=$item->title?>
                 </div>
             </div>
-        </div>
+        </a>
         <?php endforeach;?>
-    </div>
     </div>
     </div>
     

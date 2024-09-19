@@ -6,6 +6,7 @@ use app\components\AppHelper;
 use app\components\DayHelper;
 use app\modules\lm\models\Leave;
 use app\modules\lm\models\LeaveSearch;
+use app\modules\lm\models\LeaveType;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -87,7 +88,11 @@ class LeaveController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Leave();
+        $leaveTypeId = $this->request->get('leave_type_id');
+        $model = new Leave([
+            'leave_type_id' => $leaveTypeId,
+            'thai_year' => AppHelper::YearBudget()
+        ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -111,11 +116,11 @@ class LeaveController extends Controller
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
+                    ])
+                ];
+            } else {
+                return $this->render('create', [
+                    'model' => $model,
             ]);
         }
     }

@@ -26,6 +26,8 @@ class LeaveType extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+
+     public $icon;
     public static function tableName()
     {
         return 'categorise';
@@ -39,7 +41,7 @@ class LeaveType extends \yii\db\ActiveRecord
         return [
             [['name'], 'required'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items'], 'safe'],
+            [['data_json', 'ma_items','icon'], 'safe'],
             [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }
@@ -65,4 +67,17 @@ class LeaveType extends \yii\db\ActiveRecord
             'active' => 'Active',
         ];
     }
+
+    public function afterFind()
+    {
+        try {
+            $this->icon = isset($this->data_json['icon']) ? $this->data_json['icon'] : null;
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
+
+
+        parent::afterFind();
+    }
+
 }

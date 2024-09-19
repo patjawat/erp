@@ -38,7 +38,7 @@ use yii\helpers\Url;
                             </div>
                             
                             <div class="col-4 mt-1">
-                                <a href="<?= Url::to(['/lm']); ?>"
+                                <a href="<?= Url::to(['/lm/leave/type-select']); ?>"
                                 class="open-modal-x" data-title="xxx" data-size="modal-md">
                                     <div
                                         class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
