@@ -102,10 +102,11 @@ class LeaveController extends Controller
                 $model->date_start =  AppHelper::convertToGregorian($model->date_start);
                 $model->date_end =  AppHelper::convertToGregorian($model->date_end);
                 $model->save();
-                return [
-                    'status' => 'success',
-                    'container' => '#leave'
-                ];
+                return $this->redirect(['view', 'id' => $model->id]);
+                // return [
+                //     'status' => 'success',
+                //     'container' => '#leave'
+                // ];
             }
         } else {
             $model->loadDefaultValues();
@@ -202,10 +203,11 @@ class LeaveController extends Controller
             $model->date_start =  AppHelper::convertToGregorian($model->date_start);
             $model->date_end =  AppHelper::convertToGregorian($model->date_end);
             $model->save();
-            return [
-                'status' => 'success',
-                'container' => '#leave'
-            ];
+            return $this->redirect(['view', 'id' => $model->id]);
+            // return [
+            //     'status' => 'success',
+            //     'container' => '#leave'
+            // ];
         }
 
         if ($this->request->isAJax) {

@@ -827,7 +827,7 @@ class Employees extends \yii\db\ActiveRecord
     // แสดงชื่อตำแหน่ง
     public function positionName($arr = [])
     {
-        $level = $this->positionLevelName() ? ' (ระดับ' . $this->positionLevelName() . ')' : '';
+        $level = $this->positionLevelName() ?  $this->positionLevelName() : '';
 
         if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
             $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
@@ -835,7 +835,7 @@ class Employees extends \yii\db\ActiveRecord
             $isIcon = null;
         }
 
-        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon . $this->data_json['position_name_text'] . $level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
+        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon . $this->data_json['position_name_text'] . ' '.$level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
 
         //     if ($this->position_level) {
         //         $level = ' (ระดับ' . $this->positionLevelName() . ')';

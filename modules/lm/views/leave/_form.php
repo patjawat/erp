@@ -92,6 +92,7 @@ $resultsJs = <<< JS
         </div>
 
 <?= $form->field($model, 'leave_type_id')->hiddenInput()->label(false)?>
+<?= $form->field($model, 'days_off')->textInput()->label(false)?>
 
 <div class="row">
     <div class="col-2">
@@ -231,6 +232,12 @@ try {
                  </div>
         </div>
     </div>
+
+    <?php
+    echo "<pre>";
+    print_r($model->Approve());
+    echo "</pre>";
+    ?>
     
     </div>
 </div>
