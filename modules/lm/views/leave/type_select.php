@@ -2,7 +2,13 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\modules\lm\models\LeaveType;
+$this->title = "ระบบลา";
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-calendar-check"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
