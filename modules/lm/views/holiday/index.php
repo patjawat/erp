@@ -83,7 +83,7 @@ $this->title = 'Calendar';
 <div class="d-flex justify-content-center">
     <?= Html::a('<i class="bi bi-arrow-left-circle"></i> ย้อนกลับ', ['/lm/setting'], ['class' => 'btn btn-primary shadow rounded-pill text-center']) ?>
 </div>
-
+<?php Pjax::end(); ?>
 
 
 <?php
@@ -110,7 +110,6 @@ e.preventDefault()
                 success: function (res) {
                     if(res.status == 'success') {
                        success();
-                       closeModal()
                          $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
                     }
                 }
@@ -124,4 +123,3 @@ e.preventDefault()
 JS;
 $this->registerJS($js, View::POS_END);
 ?>
-<?php Pjax::end(); ?>

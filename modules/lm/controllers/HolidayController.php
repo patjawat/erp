@@ -210,19 +210,18 @@ class HolidayController extends Controller
                 $CalendarDate = $date->format('Y-m-d');
 
                 $checkDay = Calendar::find()
-                ->where(['name' => 'holiday','title' => $Calendar['SUMMARY'],'date_start' => $CalendarDate])
-                ->andWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.date')"), $CalendarDate])
+                ->where(['name' => 'holiday','date_start' => $CalendarDate])
                 ->one();
-                $model = $checkDay ? $checkDay : new Calendar;
-
-                $model->title = $Calendar['SUMMARY'];
-                $model->name = 'holiday';
-                $model->thai_year = AppHelper::YearBudget($CalendarDate);
-                $model->date_start = $CalendarDate;
-               
-                $model->save();
-    }
-
+                if(!$checkDay){
+                    $model =  new Calendar;
+                    $model->title = $Calendar['SUMMARY'];
+                    $model->name = 'holiday';
+                    $model->thai_year = AppHelper::YearBudget($CalendarDate);
+                    $model->date_start = $CalendarDate;
+                   
+                    $model->save();
+                }
+            }
             return [
                 'status' => 'success',
                 'container' => '#leave'
