@@ -202,6 +202,7 @@ $config = [
             'purchase/pr-order/checkervalidator',
             'purchase/order-item/validator',
             'purchase/pr-order/createvalidator',
+            '/purchase/pq-order/validator',
             'inventory/stock-in/add-item',
             'inventory/stock-order/update-lot-validator/*',
 

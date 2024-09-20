@@ -16,6 +16,8 @@ $warehouse = Yii::$app->session->get('warehouse');
 $this->title = 'รับเข้า'.$warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = $this->title;
 $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
+
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -39,7 +41,9 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
      ->where(['name' => 'order', 'status' => 4])
      ->andWhere(['IN', 'category_id', $item])
      ->all();
- }
+     $count = is_array($models) ? count($models) : 0;
+    }
+    $count = 0;
 
 ?>
 
@@ -47,7 +51,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
   <div class="card-body">
     <div class="d-flex gap-3">
       <?= Html::a($createIcon . 'สร้างรายการรับเข้า', ['/inventory/stock-in/create', 'name' => 'order','type' => 'IN','title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
-      <?= Html::a($createIcon . 'การสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'. (isset($models) ? 0 : count($models)).'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
+      <?= Html::a($createIcon . 'การสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'.$count.'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
     </div>
   </div>
 </div>
