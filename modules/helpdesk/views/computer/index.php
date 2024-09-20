@@ -18,7 +18,7 @@ $this->title = 'ศูนย์คอมพิวเตอร์';
 
 <div class="row">
     <div class="col-8">
-        <?= $this->render('../default/box_summary', ['group' => 1]) ?>
+        <?= $this->render('../default/box_summary', ['group' => 2]) ?>
         <div id="viewJob">
             <h6 class="text-center mt-5">กำลังโหลด...</h6>
         </div>
