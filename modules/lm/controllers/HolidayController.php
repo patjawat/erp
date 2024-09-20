@@ -210,7 +210,7 @@ class HolidayController extends Controller
                 $CalendarDate = $date->format('Y-m-d');
 
                 $checkDay = Calendar::find()
-                ->where(['name' => 'holiday','title' => $Calendar['SUMMARY']])
+                ->where(['name' => 'holiday','title' => $Calendar['SUMMARY'],'date_start' => $CalendarDate])
                 ->andWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.date')"), $CalendarDate])
                 ->one();
                 $model = $checkDay ? $checkDay : new Calendar;
