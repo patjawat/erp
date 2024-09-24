@@ -13,6 +13,9 @@ use yii\bootstrap5\LinkPager;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'วัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
+//  sql update ยาและเวชภัณฑ์
+
+//  UPDATE categorise SET category_id = 'M23', data_json = JSON_SET(data_json, '$.category_name', 'ยา|เวชภัณฑ์') WHERE JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.category_name')) = 'ยา l เวชภัณฑ์';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -64,6 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <table class="table table-striped custom-table">
                         <thead>
                         <th style="width:500px">รายการ</th>
+                        <th class="text-center" style="width:100px">ประเภท</th>
                         <th class="text-center" style="width:80px">หน่วย</th>
                         <th class="text-center" scope="col" style="width: 80px;">ดำเนินการ</th>
                         </thead>
@@ -73,13 +77,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td scope="row">
                                     <?=$model->Avatar()?>
                                 </td>
+                                <td class="text-center"><?=$model->ViewTypeName()['title']?></td>
                                 <td class="text-center"><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td>
                                 <td class="text-center">
                                     <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                                     <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
-                                    <?=Html::a('<i class="fa-solid fa-trash"></i>', ['/sm/product/delete', 'id' => $model->id], [
-    'class' => 'btn btn-sm btn-danger rounded-pill  delete-item',
-])?>
+                                    <?=Html::a('<i class="fa-solid fa-trash"></i>', ['/sm/product/delete', 'id' => $model->id], ['class' => 'btn btn-sm btn-danger rounded-pill  delete-item',])?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

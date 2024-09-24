@@ -13,7 +13,7 @@ class m240923_103510_create_logs_table extends Migration
     public function safeUp()
     {
         $this->createTable('{{%logs}}', [
-            'id' => 'CHAR(36) NOT NULL DEFAULT (UUID())',
+            'id' => 'CHAR(255) NOT NULL DEFAULT (UUID())',
             'data_json' => $this->json(),
             'name' => $this->string(255)->comment('ชื่อการเก็บ'),
             'ref' => $this->string(255),
