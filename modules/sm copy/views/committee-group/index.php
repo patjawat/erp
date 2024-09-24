@@ -73,7 +73,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <tr>
                 <th scope="col">รายการ</th>
                 <th scope="col">คณะกรรมหาร</th>
-                <th scope="col">กำเนินการ</th>
+                <th scope="col">ดำเนินการ</th>
             </tr>
         </thead>
         <tbody>

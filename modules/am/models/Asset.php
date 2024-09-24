@@ -443,7 +443,8 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListOnYear()
     {
-        $sql = 'SELECT on_year FROM `asset` WHERE on_year IS NOT NULL GROUP BY on_year DESC';
+        // $sql = 'SELECT on_year FROM `asset` WHERE on_year IS NOT NULL GROUP BY on_year DESC';
+        $sql = 'SELECT on_year FROM `asset` WHERE on_year IS NOT NULL GROUP BY on_year ORDER BY on_year DESC';
         $query = Yii::$app->db->createCommand($sql)->queryAll();
         return ArrayHelper::map($query, 'on_year', 'on_year');
     }

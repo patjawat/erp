@@ -16,7 +16,7 @@ use kartik\sortable\Sortable;
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
 /** @var yii\widgets\ActiveForm $form */
-
+$this->registerJsFile('https://code.jquery.com/ui/1.14.0/jquery-ui.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 
 $formatJs = <<< 'JS'
@@ -56,28 +56,28 @@ $resultsJs = <<< JS
         };
     }
     JS;
-
+    
 ?>
 
 <style>
-    .col-form-label {
-        text-align: end;
-    }
+.col-form-label {
+    text-align: end;
+}
 
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-        background-color: #eaecee !important;
-        color: #fff;
-    }
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #fff;
+}
 
-    :not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
-    :not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-        height: calc(2.875rem + 12px) !important;
-    }
+:not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
+:not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.875rem + 12px) !important;
+}
 
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-        background-color: #eaecee !important;
-        color: #3F51B5;
-    }
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #eaecee !important;
+    color: #3F51B5;
+}
 </style>
 
 <?php $form = ActiveForm::begin([
@@ -90,7 +90,19 @@ $resultsJs = <<< JS
 
         <div class="card">
             <div class="card-body">
-                <?= $this->render('calendar') ?>
+
+                <div id='external-events'>
+                    <h4>เลือกเหตุหารณ์</h4>
+                    <div class='fc-event p-3'>วัน OFF</div>
+
+                    <p>
+                        <input type='checkbox' id='drop-remove' />
+                        <label for='drop-remove'>remove after drop</label>
+                    </p>
+                </div>
+
+                <div style='clear:both'></div>
+
             </div>
         </div>
 
@@ -176,77 +188,96 @@ $resultsJs = <<< JS
 
                     </div>
                     <div class="col-12">
-
+                        <?=$this->render('calendar')?>
                     </div>
-
+                 
                 </div>
 
                 <div class="row">
                     <div class="col-6">
-                        <?= $form->field($model, 'data_json[note]')->textArea(['style' => 'height:115px;'])->label('เหตุผล') ?>
+                        <?= $form->field($model, 'data_json[note]')->textArea(['style' =>'height:115px;'])->label('เหตุผล') ?>
                         <?= $form->field($model, 'data_json[address]')->textArea(['style' => 'height:58px;'])->label('ระหว่างลาติดต่อ') ?>
                     </div>
                     <div class="col-6">
                         <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
-                        <?= $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
-                            'data' => [
-                                'ภายในจังหวัด' => 'ภายในจังหวัด',
-                                'ต่างจังหวัด' => 'ต่างจังหวัด',
-                                'ต่างประเทศ' => 'ต่างประเทศ',
-                            ],
-                            'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ],
-                        ])->label('สถานที่ไป');
-                        ?>
+                        <?=$form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+    'data' => [
+        'ภายในจังหวัด' => 'ภายในจังหวัด',
+        'ต่างจังหวัด' => 'ต่างจังหวัด',
+        'ต่างประเทศ' => 'ต่างประเทศ',
+    ],
+    'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
+    'pluginOptions' => [
+        'allowClear' => true
+    ],
+])->label('สถานที่ไป');
+?>
 
                         <?php
 
 
 
-                        try {
-                            //code...
-                            $initEmployee =  Employees::find()->where(['id' => $model->data_json['delegate']])->one()->getAvatar(false);
-                        } catch (\Throwable $th) {
-                            $initEmployee = '';
-                        }
-                        echo $form->field($model, 'data_json[delegate]')->widget(Select2::classname(), [
-                            'initValueText' => $initEmployee,
-                            'options' => ['placeholder' => 'เลือกรายการ...'],
-                            'size' => Select2::LARGE,
-                            'pluginEvents' => [
-                                'select2:unselect' => 'function() {
+try {
+    //code...
+    $initEmployee =  Employees::find()->where(['id' => $model->data_json['delegate']])->one()->getAvatar(false);
+} catch (\Throwable $th) {
+    $initEmployee = '';
+}
+echo $form->field($model, 'data_json[delegate]')->widget(Select2::classname(), [
+    'initValueText' => $initEmployee,
+    'options' => ['placeholder' => 'เลือกรายการ...'],
+    'size' => Select2::LARGE,
+    'pluginEvents' => [
+        'select2:unselect' => 'function() {
             $("#order-data_json-board_fullname").val("")
             }',
-                                'select2:select' => 'function() {
+        'select2:select' => 'function() {
                     var fullname = $(this).select2("data")[0].fullname;
                     var position_name = $(this).select2("data")[0].position_name;
                     $("#order-data_json-board_fullname").val(fullname)
                     $("#order-data_json-position_name").val(position_name)
                 
             }',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'minimumInputLength' => 1,
-                                'ajax' => [
-                                    'url' => Url::to(['/depdrop/employee-by-id']),
-                                    'dataType' => 'json',
-                                    'delay' => 250,
-                                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                                    'processResults' => new JsExpression($resultsJs),
-                                    'cache' => true,
-                                ],
-                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                                'templateResult' => new JsExpression('formatRepo'),
-                            ],
-                        ])->label('มอบหมายงานให้')
-                        ?>
+    ],
+    'pluginOptions' => [
+        'allowClear' => true,
+        'minimumInputLength' => 1,
+        'ajax' => [
+            'url' => Url::to(['/depdrop/employee-by-id']),
+            'dataType' => 'json',
+            'delay' => 250,
+            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+            'processResults' => new JsExpression($resultsJs),
+            'cache' => true,
+        ],
+        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+        'templateResult' => new JsExpression('formatRepo'),
+    ],
+])->label('มอบหมายงานให้')
+?>
+
+
+
                     </div>
                 </div>
+
+
                 <?= $this->render('leader', ['form' => $form, 'model' => $model]) ?>
+
+                <div class="row">
+                    <div class="col-2">
+
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'data_json[leave_type]')->radioList(['เต็มวัน' => 'เต็มวัน', 'ลาครึ่งเช้า' => 'ลาครึ่งเช้า', 'ลาครึ่งบ่าย' => 'ลาครึ่งบ่าย'], ['custom' => true, 'inline' => true])->label('ประเภท') ?>
+                    </div>
+                </div>
+
+
+
+
+
 
                 <div class="form-group mt-3 d-flex justify-content-center">
                     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
@@ -261,124 +292,6 @@ $resultsJs = <<< JS
 <?php
 $calDaysUrl = Url::to(['/lm/leave/cal-days']);
 $js = <<< JS
-
-
-document.addEventListener('DOMContentLoaded', function() {
-
-  var calendarEl = document.getElementById('calendar');
-  var Calendar = FullCalendar.Calendar;
-  var Draggable = FullCalendar.Draggable;
-  var Draggable2 = FullCalendar.addEvent;
-  var containerEl = document.getElementById('external-events');
-  var checkbox = document.getElementById('drop-remove');
-
-  // initialize the external events
-  // -----------------------------------------------------------------
-
-  new Draggable(containerEl, {
-    itemSelector: '.fc-event',
-    eventData: function(eventEl) {
-      return {
-        title: eventEl.innerText
-      };
-    }
-  });
-
-
-  var calendar = new FullCalendar.Calendar(calendarEl, {
-    locale: 'th',
-    initialView: 'dayGridMonth',
-    headerToolbar: {
-    left: 'addEventButton',
-
-    },
-    editable: true,
-    selectable: true,
-    selectHelper: true,
-    droppable: true,
-    drop: function(info) {
-      if (checkbox.checked) {
-        info.draggedEl.parentNode.removeChild(info.draggedEl);
-      }
-    },
-    dateClick: function(info) {
-      // Open modal for event input
-      // Handle form submission
-
-
-    },
-
-  });
-
-
-  
-  calendar.render();
-
-
-  $('#leave-date_start').on('change', function() {
-        var selectedDate = $(this).val();
-        // Perform any action you want when the date is changed
-        calDays(selectedDate);
-        // You can add further logic here
-    });
-
-    $('#leave-date_end').on('change', function() {
-        var selectedDate = $(this).val();
-        // Perform any action you want when the date is changed
-        // console.log('Selected Date: ' + selectedDate);
-        calDays(selectedDate);
-        // You can add further logic here
-    });
-
-
-
-  function calDays()
-    {
-        $.ajax({
-            type: "get",
-            url: "$calDaysUrl",
-            data:{
-                date_start:$('#leave-date_start').val(),
-                date_end:$('#leave-date_end').val(),
-            },
-            dataType: "json",
-            success: function (res) {
-               $('.cal-days').html(res.summaryDay)
-               console.log(res);
-
-               var newStart = res.start; // New event start date
-                var newEnd = res.end;   // New event end date
-                var newTitle = 'Updated Event';
- // Get all events
-            var events = calendar.getEvents();
-
-            // Find if there's an event with the same title
-            var existingEvent = events.find(function(event) {
-            return event.title === newTitle;
-            });
-
-            if (existingEvent) {
-            // Update existing event if title matches
-            existingEvent.setProp('title', newTitle); // Update title
-            existingEvent.setDates(newStart, newEnd); // Update start and end dates
-            console.log('Event updated');
-            } else {
-            // Add new event if no matching event is found
-            calendar.addEvent({
-                title: newTitle,
-                start: newStart,
-                end: newEnd
-            });
-            console.log('New event added');
-            } 
-                
-            }
-        });
-    }
-
-
-});
-
 
 \$('#form').on('beforeSubmit', function (e) {
                                 var form = \$(this);
@@ -410,7 +323,41 @@ $("input[name='Leave[data_json][leave_type]']").on('change', function() {
         }
     });
 
+    $('#leave-date_start').on('change', function() {
+        var selectedDate = $(this).val();
+        // Perform any action you want when the date is changed
+        calDays(selectedDate);
+        // You can add further logic here
+    });
 
+    $('#leave-date_end').on('change', function() {
+        var selectedDate = $(this).val();
+        // Perform any action you want when the date is changed
+        // console.log('Selected Date: ' + selectedDate);
+        calDays(selectedDate);
+        // You can add further logic here
+    });
+
+    function calDays()
+    {
+        $.ajax({
+            type: "get",
+            url: "$calDaysUrl",
+            data:{
+                date_start:$('#leave-date_start').val(),
+                date_end:$('#leave-date_end').val(),
+            },
+            dataType: "json",
+            success: function (res) {
+               $('.cal-days').html(res.summaryDay)
+               console.log(res);
+               
+            //    $.pjax.reload({ container:'#calendar-container', history:false,replace: false,timeout: false});                               
+               
+                
+            }
+        });
+    }
 
     var thaiYear = function (ct) {
         var leap=3;

@@ -87,7 +87,7 @@ $name = Yii::$app->request->get('name');
             ],
             [
                 'format' => 'raw',
-                'header' => 'กำเนินการ',
+                'header' => 'ดำเนินการ',
                 'hAlign' => 'center',
                 'vAlign' => 'middle',
                 'width' => '90px',

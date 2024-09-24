@@ -171,6 +171,25 @@ class LineGroupController extends Controller
         return $this->redirect(['index']);
     }
 
+
+    public function actionSend($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $message = 'ทดสอบส่งข้อความ';
+        $response = Yii::$app->lineNotify->sendMessage($message, $id);
+        if($response){
+
+            return [
+                'status' => 'success',
+                'data' => $response
+            ];
+        }else{
+            return [
+                'status' => 'error',
+            ];
+        }
+    }
     /**
      * Finds the Categorise model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

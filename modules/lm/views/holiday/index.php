@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $this->title = 'Calendar';
 ?>
-<?php Pjax::begin(['id' => 'leave']); ?>
+<?php Pjax::begin(['id' => 'lm']); ?>
 
 <div class="row d-flex justify-content-center">
 
@@ -85,7 +85,6 @@ $this->title = 'Calendar';
 </div>
 <?php Pjax::end(); ?>
 
-
 <?php
 $js = <<< JS
 $('.sync-date').click(function (e) { 
@@ -101,16 +100,19 @@ e.preventDefault()
             confirmButtonText: "<i class='bi bi-check-circle'></i> ยืนยัน"
             }).then((result) => {
             if (result.isConfirmed) {
-                beforLoadModal()
                 $.ajax({
-                type: "get",
-                url: $(this).attr('href'),
+                    type: "get",
+                    url: $(this).attr('href'),
+                    beforeSend : function(){
+                    beforLoadModal()
+                },
                 dataType: "json",
-               
                 success: function (res) {
+                    $("#main-modal").modal("toggle");
+                    console.log(res.status);
                     if(res.status == 'success') {
-                       success();
-                         $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
+                        window.location.reload(true);
+                        //  $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
                     }
                 }
             });
@@ -123,3 +125,4 @@ e.preventDefault()
 JS;
 $this->registerJS($js, View::POS_END);
 ?>
+

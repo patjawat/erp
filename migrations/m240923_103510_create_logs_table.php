@@ -3,24 +3,19 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%leave}}`.
+ * Handles the creation of table `{{%logs}}`.
  */
-class m240916_104256_create_leave_table extends Migration
+class m240923_103510_create_logs_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('{{%leave}}', [
-            'id' => $this->primaryKey(),
-            'leave_type_id' => $this->string()->comment('ประเภทการขอลา'),
-            'leave_time_type' => $this->double()->comment('ประเภทการลา'), 
-            'days_off' => $this->double()->comment('จำนวนวัน'), 
+        $this->createTable('{{%logs}}', [
+            'id' => 'CHAR(36) NOT NULL DEFAULT (UUID())',
             'data_json' => $this->json(),
-            'date_start' => $this->date()->comment('วันที่ลา'),
-            'date_end' => $this->date()->comment('ถึงวันที่'),
-            'status' => $this->string(255)->comment('สถานะ'),
+            'name' => $this->string(255)->comment('ชื่อการเก็บ'),
             'ref' => $this->string(255),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
@@ -30,6 +25,7 @@ class m240916_104256_create_leave_table extends Migration
             'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
             'deleted_by' => $this->integer()->comment('ผู้ลบ')
         ]);
+        $this->addPrimaryKey('pk-logs-id', '{{%logs}}', 'id');
     }
 
     /**
@@ -37,6 +33,6 @@ class m240916_104256_create_leave_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%leave}}');
+        $this->dropTable('{{%logs}}');
     }
 }

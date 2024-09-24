@@ -158,28 +158,31 @@ class Leave extends \yii\db\ActiveRecord
             ->queryOne();
 if($query){
 
-    $leader1 =  Employees::find()->where(['id' => $query['t1_leader']])->one();
-    $leader2 =  Employees::find()->where(['id' => $query['t2_leader']])->one();
-    $leader3 =  Employees::find()->where(['id' => $query['t3_leader']])->one();
+    $leader =  Employees::find()->where(['id' => $query['t1_leader']])->one();
+    $leaderGroup =  Employees::find()->where(['id' => $query['t2_leader']])->one();
+    $director =  Employees::find()->where(['id' => $query['t3_leader']])->one();
 
     return 
     [
-        'leader1' => isset($query['t1_leader']) ? [
+        'leader' => isset($query['t1_leader']) ? [
             'id' => $query['t1_leader'],
-            'fullname' => $leader1->fullname,
-            'position' => $leader1->positionName(),
+            'avatar' => $leader->getAvatar(false),
+            'fullname' => $leader->fullname,
+            'position' => $leader->positionName(),
             'title' => 'หัวหน้างาน'
             ] : [],
-            'leader2' => [
+            'leaderGroup' => [
                 'id' => $query['t2_leader'],
-                'fullname' => $leader2->fullname,
-                'position' => $leader2->positionName(),
+                'avatar' => $leader->getAvatar(false),
+                'fullname' => $leaderGroup->fullname,
+                'position' => $leaderGroup->positionName(),
                 'title' => 'หัวหน้ากลุ่มงาน'
             ],
-            'leader3' => [
+            'director' => [
                 'id' => $query['t3_leader'],
-                'fullname' => $leader3->fullname,
-                'position' => $leader3->positionName(),
+                'avatar' => $director->getAvatar(false),
+                'fullname' => $director->fullname,
+                'position' => $director->positionName(),
                 'title' => 'ผู้อำนวยการ'
                 ]
             ];
@@ -188,19 +191,20 @@ if($query){
 $leader =  Employees::find()->where(['id' => $emp->id])->one();
             return 
             [
-                'leader1' => [
+                'leader' => [
                     'id' => $leader->id,
+                    'avatar' => $leader->getAvatar(false),
                     'fullname' => $leader->fullname,
                     'position' => $leader->positionName(),
                     'title' => 'หัวหน้างาน'
                     ],
-                    'leader2' => [
+                    'leaderGroup' => [
                         'id' => $leader->id,
                     'fullname' => $leader->fullname,
                     'position' => $leader->positionName(),
                         'title' => 'หัวหน้ากลุ่มงาน'
                     ],
-                    'leader3' => [
+                    'director' => [
                         'id' => $leader->id,
                         'fullname' => $leader->fullname,
                         'position' => $leader->positionName(),
@@ -214,7 +218,8 @@ $leader =  Employees::find()->where(['id' => $emp->id])->one();
 
         public function leader()
         {
-            $model = Organization::find()->where(['id' => $this->department])->one();
+            $userCreate = $this->CreateBy();
+            $model = Organization::find()->where(['id' => $userCreate->department])->one();
             $employee = self::find()->where(['id' => $model->data_json['leader1']])->one();
         }
         public function Avatar($id)

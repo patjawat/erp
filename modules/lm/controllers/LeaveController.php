@@ -52,6 +52,39 @@ class LeaveController extends Controller
         ]);
     }
 
+    public function actionCalendar()
+    {
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('calendar', [
+
+                ])
+            ];
+        } else {
+            return $this->render('calendar', [
+
+            ]);
+        }
+    }
+
+
+    public function actionHoliday()
+    {
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('holiday', [
+
+                ])
+            ];
+        } else {
+            return $this->render('holiday');
+        }
+    }
+
     /**
      * Displays a single Leave model.
      * @param int $id ID
@@ -90,9 +123,17 @@ class LeaveController extends Controller
     {
         $leaveTypeId = $this->request->get('leave_type_id');
         $model = new Leave([
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
             'thai_year' => AppHelper::YearBudget()
         ]);
+
+        $model->data_json = [
+            'address' => $model->CreateBy()->fulladdress,
+            'leader' => $model->Approve()['leader']['id'],
+            'leader_group' => $model->Approve()['leaderGroup']['id'],
+            'phone' => $model->CreateBy()->phone
+        ];
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -162,27 +203,13 @@ class LeaveController extends Controller
         $dateEnd = $date_end =="" ? "" : AppHelper::convertToGregorian($this->request->get('date_end'));
         // return $dateStart.' '.$dateEnd;
         $model = AppHelper::CalDay($dateStart,$dateEnd);
-        // $sql = "SELECT 
-        //             DATEDIFF(:date_end, :date_start) - 
-        //             (WEEK(:date_end, 0) - WEEK(:date_start, 0)) * 2 -
-        //             (CASE 
-        //                 WHEN WEEKDAY(:date_start) = 5 THEN 1
-        //                 WHEN WEEKDAY(:date_start) = 6 THEN 2
-        //                 ELSE 0
-        //             END) -
-        //             (CASE 
-        //                 WHEN WEEKDAY(:date_start) = 5 THEN 2
-        //                 WHEN WEEKDAY(:date_start) = 6 THEN 1
-        //                 ELSE 0
-        //             END) AS working_days;";
-
-        // $query = Yii::$app->db->createCommand($sql)
-        // ->bindValue(':date_start',$dateStart)        
-        // ->bindValue(':date_end',$dateEnd)        
-        // ->queryScalar();
-        
+      
         Yii::$app->response->format = Response::FORMAT_JSON;
-       return $model;
+       return [
+        $model,
+        'start' => $dateStart,
+        'end' => $dateEnd
+       ];
     }
     /**
      * Updates an existing Leave model.

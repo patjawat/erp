@@ -224,7 +224,7 @@ class HolidayController extends Controller
             }
             return [
                 'status' => 'success',
-                'container' => '#leave'
+                'container' => '#lm'
             ];
     }
 
