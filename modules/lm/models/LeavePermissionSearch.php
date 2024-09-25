@@ -17,8 +17,8 @@ class LeavePermissionSearch extends LeavePermission
     public function rules()
     {
         return [
-            [['id', 'leave_type_id', 'position_type_id', 'days_available', 'year_service', 'point', 'point_days', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['id', 'service_time', 'point', 'last_point', 'new_point', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];
     }
 
@@ -59,12 +59,11 @@ class LeavePermissionSearch extends LeavePermission
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'leave_type_id' => $this->leave_type_id,
-            'position_type_id' => $this->position_type_id,
-            'days_available' => $this->days_available,
-            'year_service' => $this->year_service,
+            'service_time' => $this->service_time,
             'point' => $this->point,
-            'point_days' => $this->point_days,
+            'last_point' => $this->last_point,
+            'new_point' => $this->new_point,
+            'thai_year' => $this->thai_year,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
@@ -73,7 +72,8 @@ class LeavePermissionSearch extends LeavePermission
             'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'data_json', $this->data_json]);
+        $query->andFilterWhere(['like', 'emp_id', $this->emp_id])
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

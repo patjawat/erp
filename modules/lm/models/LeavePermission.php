@@ -8,13 +8,13 @@ use Yii;
  * This is the model class for table "leave_permission".
  *
  * @property int $id
- * @property int|null $leave_type_id ประเภทการลา
- * @property string|null $position_type_id ประเภทการลา
+ * @property string|null $emp_id พนักงาน
  * @property int|null $service_time อายุงาน
- * @property string|null $service_type ประเภทอายุงาน
- * @property int|null $point สะสมวันลา
- * @property int|null $days_point จำนวนวัน
+ * @property int|null $point จำนวนที่ลาได้
+ * @property int|null $last_point สะสมวันลา
+ * @property int|null $new_point ลาได้
  * @property string|null $data_json
+ * @property int|null $thai_year ปีงบประมาณ
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
@@ -38,9 +38,9 @@ class LeavePermission extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['leave_type_id', 'service_time', 'point', 'days_point', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['service_time', 'point', 'last_point', 'new_point', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['position_type_id', 'service_type'], 'string', 'max' => 255],
+            [['emp_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -51,13 +51,13 @@ class LeavePermission extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'leave_type_id' => 'ประเภทการลา',
-            'position_type_id' => 'ประเภทการลา',
+            'emp_id' => 'พนักงาน',
             'service_time' => 'อายุงาน',
-            'service_type' => 'ประเภทอายุงาน',
-            'point' => 'สะสมวันลา',
-            'days_point' => 'จำนวนวัน',
+            'point' => 'จำนวนที่ลาได้',
+            'last_point' => 'สะสมวันลา',
+            'new_point' => 'ลาได้',
             'data_json' => 'Data Json',
+            'thai_year' => 'ปีงบประมาณ',
             'created_at' => 'วันที่สร้าง',
             'updated_at' => 'วันที่แก้ไข',
             'created_by' => 'ผู้สร้าง',

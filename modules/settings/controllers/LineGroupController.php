@@ -1,6 +1,6 @@
 <?php
 
-namespace app\controllers;
+namespace app\modules\settings\controllers;
 
 use app\models\Categorise;
 use app\models\CategoriseSearch;

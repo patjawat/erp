@@ -86,7 +86,7 @@ $resultsJs = <<< JS
     'validationUrl' => ['/lm/leave/create-validator']
 ]); ?>
 <div class="row d-flex justify-content-center">
-    <div class="col-lg-3 col-md-5">
+    <div class="col-lg-4 col-md-5">
 
         <div class="card">
             <div class="card-body">
@@ -95,17 +95,22 @@ $resultsJs = <<< JS
         </div>
 
     </div>
-    <div class="col-lg-6 col-md-7">
+    <div class="col-lg-7 col-md-7">
         <div class="card text-start">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h2><i class="fa-solid fa-file-pen"></i> บันทึกขอ<?= $model->leaveType->title ?></h2>
-                    <h6><span class="cal-days">0</span> / วัน</h6>
+<div class="d-flex gap-3">
+<?= $form->field($model, 'data_json[auto]')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ไม่รวมวันหยุด');?>
+    <h6><span class="cal-days">0</span> / วัน</h6>
+
+</div>
                 </div>
 
                 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'leave_type_id')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'days_off')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 
 
                 <div class="row">
@@ -187,6 +192,9 @@ $resultsJs = <<< JS
                         <?= $form->field($model, 'data_json[address]')->textArea(['style' => 'height:58px;'])->label('ระหว่างลาติดต่อ') ?>
                     </div>
                     <div class="col-6">
+                        <div>
+                       
+                        </div>
                         <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                         <?= $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                             'data' => [
@@ -297,11 +305,51 @@ document.addEventListener('DOMContentLoaded', function() {
     selectHelper: true,
     droppable: true,
     drop: function(info) {
+        // console.log('drop');
+        console.log('drop: ' + info.dateStr);
       if (checkbox.checked) {
         info.draggedEl.parentNode.removeChild(info.draggedEl);
       }
     },
+    eventDrop: function(info) {
+            // console.log('Event dropped:');
+            // console.log('Title: ' + info.event.title);
+            // console.log('New Start: ' + formatDate(info.event.start));
+            // console.log('New End: ' + formatDate(info.event.end));
+            if(info.event.title !='วัน OFF'){
+            var dateStart = formatDateThai(info.event.start);
+            var dateEnd = formatDateThai(info.event.end);
+            $('#leave-date_start').val(dateStart);
+            $('#leave-date_end').val(dateEnd)
+            console.log(dateStart,' ถึง '+ dateEnd);
+            
+            }
+        },
+
+        eventResize: function(info) {
+            // console.log('resized: ' + info.dateStr);
+            // console.log('Event resized:');
+            // console.log('Title: ' + info.event.title);
+            console.log('New Start: ' + formatDate(info.event.start));
+            console.log('New End: ' + formatDate(info.event.end));
+
+            // var dateStart = formatDate(info.event.start);
+            // var dateEnd = formatDate(info.event.end);
+            // if(info.event.title !='วัน OFF'){
+            //     var dateStart = formatDateThai(info.event.start);
+            //     var dateEnd = formatDateThai(info.event.end);
+            //     $('#leave-date_start').val(dateStart);
+            //     $('#leave-date_end').val(dateEnd)
+            // console.log(dateStart,' ถึง '+ dateEnd);
+
+            // }
+        },
     dateClick: function(info) {
+        // console.log('dateClick');
+        var dateEnd = formatDateThai(info.date);
+        console.log('Date: ' + dateEnd);
+        // console.log('Resource ID: ' + info.resource);
+        
       // Open modal for event input
       // Handle form submission
 
@@ -332,6 +380,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+    function formatDate(date) {
+    if (!date) {
+        return 'n/a'; // Handle case where date might be null or undefined
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+    return year+'-'+month+'-'+day; // Format: YYYY-MM-DD
+}
+
+// แปลงเป็น พ.ศ.
+function formatDateThai(date) {
+    if (!date) {
+        return 'n/a'; // Handle case where date might be null or undefined
+    }
+    const year = date.getFullYear() + 543;
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+    return (day-1)+'/'+month+'/'+year; // Format: YYYY-MM-DD
+}
+
+
+function dateToForm(dateStart,dateEnd)
+{
+console.log(dateStart);
+
+}
+
+
   function calDays()
     {
         $.ajax({
@@ -343,12 +420,12 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             dataType: "json",
             success: function (res) {
-               $('.cal-days').html(res.summaryDay)
+               $('.cal-days').html(res[0].summaryDay)
                console.log(res);
 
                var newStart = res.start; // New event start date
                 var newEnd = res.end;   // New event end date
-                var newTitle = 'Updated Event';
+                var newTitle = $('#leave-data_json-title').val();
  // Get all events
             var events = calendar.getEvents();
 
@@ -361,7 +438,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update existing event if title matches
             existingEvent.setProp('title', newTitle); // Update title
             existingEvent.setDates(newStart, newEnd); // Update start and end dates
-            console.log('Event updated');
             } else {
             // Add new event if no matching event is found
             calendar.addEvent({
@@ -369,7 +445,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 start: newStart,
                 end: newEnd
             });
-            console.log('New event added');
             } 
                 
             }

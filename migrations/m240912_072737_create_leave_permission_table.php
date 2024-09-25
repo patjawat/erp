@@ -14,13 +14,13 @@ class m240912_072737_create_leave_permission_table extends Migration
     {
         $this->createTable('{{%leave_permission}}', [
             'id' => $this->primaryKey(),
-            'leave_type_id' => $this->integer()->comment('ประเภทการลา'),
-            'position_type_id' => $this->string(255)->comment('ประเภทการลา'),
+            'emp_id' => $this->string(255)->comment('พนักงาน'),
             'service_time' => $this->integer()->comment('อายุงาน'),
-            'service_type' => $this->string(255)->comment('ประเภทอายุงาน'),
-            'point' => $this->boolean()->comment('สะสมวันลา'),
-            'days_point' => $this->integer()->comment('จำนวนวัน'),
+            'point' => $this->boolean()->comment('จำนวนที่ลาได้'),
+            'last_point' => $this->boolean()->comment('สะสมวันลา'),
+            'new_point' => $this->integer()->comment('ลาได้'),
             'data_json' => $this->json(),
+            'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),

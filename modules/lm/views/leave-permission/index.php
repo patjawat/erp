@@ -10,49 +10,55 @@ use yii\widgets\Pjax;
 /** @var app\modules\lm\models\LeavePermissionSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Leave Permissions';
+$this->title = 'กำหนดค่าวันลาพักผ่อน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="leave-permission-index">
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a('Create Leave Permission', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
-
-    <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            'leave_type_id',
-            'position_type_id',
-            'days_available',
-            'year_service',
-            //'point',
-            //'point_days',
-            //'data_json',
-            //'created_at',
-            //'updated_at',
-            //'created_by',
-            //'updated_by',
-            //'deleted_at',
-            //'deleted_by',
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, LeavePermission $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
-
-    <?php Pjax::end(); ?>
-
+<?php Pjax::begin(); ?>
+<div class="card `text-start`">
+    <div class="card-body">
+<div class="d-flex justify-content-between">
+    <h4><?= Html::encode($this->title) ?></h4>
+    <div class="d-flex justify-content-between align-items-center gap-2">
+        <?= $this->render('_search', ['model' => $searchModel]); ?>
+    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',['/lm/leave-permission/create'],['class' => 'btn btn-primary mt-3'])?>
+    <?=Html::a('<i class="fa-solid fa-rotate"></i> ปรับปรุงวันลาพักผ่อน',['/lm/leave-permission/create'],['class' => 'btn btn-warning mt-3'])?>
+    </div>
 </div>
+
+        <table
+            class="table table-primary"
+        >
+            <thead>
+                <tr>
+                    <th scope="col">สำดับ</th>
+                    <th scope="col">ปีงบประมาณ</th>
+                    <th scope="col">ชื่อ-นามสกุล</th>
+                    <th scope="col">อายุงาน</th>
+                    <th scope="col">ประเภทบุคลากร</th>
+                    <th scope="col">วันลา</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="">
+                    <td scope="row">R1C1</td>
+                    <td>R1C2</td>
+                    <td>R1C3</td>
+                    <td>R1C3</td>
+                    <td>R1C3</td>
+                    <td>R1C3</td>
+                </tr>
+               
+            </tbody>
+        </table>
+
+        
+    </div>
+</div>
+<?php Pjax::end(); ?>
+

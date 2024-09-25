@@ -45,7 +45,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.gl
         <strong>Draggable Events</strong>
     </p>
 
-    <div class='fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event p-2'>
+    <div class='fc-event bg-warning fc-daygrid-event fc-daygrid-block-event p-2'>
         <div class='fc-event-main'>วัน OFF</div>
     </div>
 

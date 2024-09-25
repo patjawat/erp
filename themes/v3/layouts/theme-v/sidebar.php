@@ -2,14 +2,18 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
+
 ?>
+
 <aside class="sidebar">
     <div class="scroll-content" id="metismenu" data-scrollbar="true" tabindex="-1"
         style="overflow: hidden; outline: none;">
         <div class="scroll-content">
             
             <ul id="side-menu" class="metismenu list-unstyled">
-                <li class="side-nav-title side-nav-item menu-title">Menu</li>
+                <li class="side-nav-title side-nav-item menu-title fs-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-list"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>    
+                Menu</li>
                 <li class="">
                     <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> <span>&nbsp;Main Dashboard</span>
@@ -47,7 +51,9 @@ use yii\web\View;
                     </a>
                 </li>
 
-                <li class="side-nav-title side-nav-item menu-title">Module</li>
+                <li class="side-nav-title side-nav-item menu-title fs-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-list"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>    
+                Module</li>
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/hr']) ?>">
                         <i class="bi bi-people-fill fs-4"></i>
@@ -74,86 +80,19 @@ use yii\web\View;
                     </a>
                 </li>
                 <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/settings']) ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings fs-4 me-2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span> การตั้งค่าระบบ</span>
+                    </a>
+                </li>
+                <!-- <li>
                     <a class="side-nav-link" href="<?= Url::to(['/pm']) ?>">
                         <i class="bi bi-folder-check fs-4"></i>
                         <span> แผนงานและโครงการ</span>
                     </a>
-                </li>
+                </li> -->
                 <li>
              
-                    <!-- <a href="#collapseExample" class="side-nav-link" aria-expanded="false" data-bs-toggle="collapse"  aria-controls="collapseExample">
-                        <i class="bx bx-task"></i>
-                        <span> Tasks</span>
-                        <span class="menu-arrow"><i class="fa-solid fa-angle-up"></i></span>
-                    </a>
-                    <ul aria-expanded="collapseExample" class="nav-second-level collapse" id="collapseExample">
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="task-list.html"> Task List </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="kanban-board.html"> Kanban Board </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="task-overview.html"> Task Overview </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="task-create.html"> Create Task </a>
-                        </li>
-                    </ul>
-                </li> -->
-                <!-- <li class="side-nav-title side-nav-item menu-title">Pages</li>
-
-                <li>
-                    <a href="javascript:void(0);" class="side-nav-link" aria-expanded="false">
-                        <i class="bx bx-user-circle"></i>
-                        <span> Authentication</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <ul aria-expanded="false" class="nav-second-level mm-collapse">
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-login.html">Login </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-login-basic.html"> Login 2 </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-login-full.html"> Login 3 </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-signup.html"> Register </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-signup-basic.html"> Register 2 </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-signup-full.html"> Register 3 </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-recover.html"> Recover Password </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-recover-basic.html"> Recover Password 2</a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-recover-full.html"> Recover Password 3</a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-lockscreen.html"> Lock Screen </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-confirmation.html"> Confirmation Screen </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-400.html"> 400 </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-404.html"> 404 </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="auth-500.html"> 500 </a>
-                        </li>
-                    </ul>
-                </li> -->
               
         </div>
         <div class="scrollbar-track scrollbar-track-x" style="display: none;">
@@ -166,7 +105,6 @@ use yii\web\View;
         </div>
     </div>
 </aside>
-
 <?php
 $js = <<< JS
 

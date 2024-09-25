@@ -19,6 +19,7 @@ BootstapIconAsset::register($this);
 
 $site = Categorise::findOne(['name' => 'site']);
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
+$moduleId = Yii::$app->controller->module->id; 
 ?>
 
 <?php $this->beginPage() ?>
@@ -42,36 +43,46 @@ $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['the
 
 <style>
 #nprogress .bar {
-background: #ffc107 !important;
+    background: #ffc107 !important;
 }
 
 .tooltip-inner {
     background-color: #2f4fff;
     box-shadow: 0px 0px 4px black;
     opacity: 1 !important;
-	font-family: kanit !important;
+    font-family: kanit !important;
 }
+
 .tooltip.bs-tooltip-right .tooltip-arrow::before {
     border-right-color: #2f4fff !important;
 }
+
 .tooltip.bs-tooltip-left .tooltip-arrow::before {
     border-left-color: #2f4fff !important;
 }
+
 .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
     border-bottom-color: #2f4fff !important;
 }
+
 .tooltip.bs-tooltip-top .tooltip-arrow::before {
     border-top-color: #2f4fff !important;
 }
-
 </style>
+
 <body>
-<?php $this->beginBody() ?>
+    <?php $this->beginBody() ?>
     <?= $this->render('../modal') ?>
     <main role="main">
         <div class="page-wrapper">
             <?= $this->render('header') ?>
+
+            <?php if($moduleId == 'settings' || $moduleId == 'usermanager'):?>
+            <?= $this->render('sidebar_setting') ?>
+            <?php else:?>
             <?= $this->render('sidebar') ?>
+            <?php endif?>
+
             <div class="main-content">
                 <div class="page-content">
                     <?= $this->render('page_title') ?>
@@ -80,10 +91,10 @@ background: #ffc107 !important;
                     </div>
                 </div>
             </div>
-			<?= $this->render('footer') ?>
-			
+            <?= $this->render('footer') ?>
+
         </div>
-		<?= $this->render('right_setting') ?>
+        <?= $this->render('right_setting') ?>
     </main>
 
     <?php

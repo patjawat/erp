@@ -2,14 +2,11 @@
 
 namespace app\modules\lm\controllers;
 
-use app\models\Categorise;
-use Yii;
 use app\modules\lm\models\LeavePermission;
 use app\modules\lm\models\LeavePermissionSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\web\Response;
 
 /**
  * LeavePermissionController implements the CRUD actions for LeavePermission model.
@@ -58,9 +55,8 @@ class LeavePermissionController extends Controller
      */
     public function actionView($id)
     {
-        $model = Categorise::findOne(['code' => $id,'name' => 'position_type']);
         return $this->render('view', [
-            'model' => $model,
+            'model' => $this->findModel($id),
         ]);
     }
 
@@ -81,19 +77,9 @@ class LeavePermissionController extends Controller
             $model->loadDefaultValues();
         }
 
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -103,43 +89,17 @@ class LeavePermissionController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate()
+    public function actionUpdate($id)
     {
-        $leaveTypeId = Yii::$app->request->get('leave_type_id');
-        $potitionTypeId = Yii::$app->request->get('position_type_id');
+        $model = $this->findModel($id);
 
-        $checkModel = LeavePermission::findOne(['leave_type_id' => $leaveTypeId,'position_type_id' => $potitionTypeId]);
-        if($checkModel){
-            $model = $checkModel;
-        }else{
-            $model = new LeavePermission([
-                'leave_type_id' => $leaveTypeId,
-                'position_type_id' => $potitionTypeId
-            ]);
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return 
-            [
-                'status' => 'success',
-                'container' => '#leave'
-            ];
-        }
-
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
-                    'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('update', [
+            'model' => $model,
+        ]);
     }
 
     /**

@@ -129,6 +129,7 @@ class LeaveController extends Controller
         ]);
 
         $model->data_json = [
+            'title' => $this->request->get('title'),
             'address' => $model->CreateBy()->fulladdress,
             'leader' => $model->Approve()['leader']['id'],
             'leader_group' => $model->Approve()['leaderGroup']['id'],
@@ -194,6 +195,7 @@ class LeaveController extends Controller
             return $this->asJson($result);
         }
     }
+
 
     public function actionCalDays()
     {

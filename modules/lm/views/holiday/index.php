@@ -17,6 +17,18 @@ use yii\widgets\Pjax;
 $this->title = 'กำหนดวันหยุด';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
+
+
 <?php
 $this->title = 'Calendar';
 ?>

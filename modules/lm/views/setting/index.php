@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Url;
 use app\models\Categorise;
 use yii\widgets\Pjax;
@@ -31,7 +32,7 @@ $listLeaveType = LeaveType::find()
 <div class="row d-flex justify-content-center">
 
     <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12">
-        <a href="<?=Url::to(['/lm/leave-type'])?>">
+        <a href="<?= Url::to(['/lm/leave-type']) ?>">
 
             <div class="card zoom-in">
                 <div class="card-body d-flex justify-content-center">
@@ -45,7 +46,7 @@ $listLeaveType = LeaveType::find()
 
     </div>
     <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12">
-        <a href="<?=Url::to(['/lm/holiday'])?>">
+        <a href="<?= Url::to(['/lm/holiday']) ?>">
             <div class="card zoom-in">
                 <div class="card-body d-flex justify-content-center">
                     <i class="fa-solid fa-business-time fs-1 text-dark"></i>
@@ -54,7 +55,20 @@ $listLeaveType = LeaveType::find()
                     <i class="bi bi-gear"></i> ปฏิทินวันหยุด
                 </div>
             </div>
-            </a>
+        </a>
+    </div>
+
+    <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12">
+        <a href="<?= Url::to(['/lm/leave-permission']) ?>">
+            <div class="card zoom-in">
+                <div class="card-body d-flex justify-content-center">
+                    <i class="fa-solid fa-user-clock fs-1 text-dark"></i>
+                </div>
+                <div class="card-footer">
+                    <i class="bi bi-gear"></i> กำหนดวันลาพักผ่อน
+                </div>
+            </div>
+        </a>
     </div>
 
 </div>
