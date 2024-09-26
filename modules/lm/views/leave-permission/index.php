@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <h4><?= Html::encode($this->title) ?></h4>
     <div class="d-flex justify-content-between align-items-center gap-2">
         <?= $this->render('_search', ['model' => $searchModel]); ?>
-    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',['/lm/leave-permission/create'],['class' => 'btn btn-primary mt-3'])?>
+    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',['/lm/leave-permission/create','title' => 'กำหนดวันลาพักผ่อน'],['class' => 'btn btn-primary mt-3 open-modal','data' => ['size' => 'modal-สเ']])?>
     <?=Html::a('<i class="fa-solid fa-rotate"></i> ปรับปรุงวันลาพักผ่อน',['/lm/leave-permission/create'],['class' => 'btn btn-warning mt-3'])?>
     </div>
 </div>

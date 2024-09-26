@@ -72,7 +72,7 @@ class SiteController extends Controller
 
     public function actionError()
     {
-        $this->layout = 'error_404';
+        // $this->layout = 'error_404';
         return $this->render('error');
     }
 

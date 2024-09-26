@@ -13,6 +13,9 @@ use yii\widgets\Pjax;
 $this->title = 'ระบบการลา';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-folder-check"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 
 
 <div class="card text-start">
@@ -25,30 +28,33 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
+    <table
+        class="table table-primary"
+    >
+        <thead>
+            <tr>
+                <th scope="col">ชื่อ-นามสกุล</th>
+                <th scope="col">ประเภท</th>
+                <th scope="col">จากวันที่</th>
+                <th scope="col">ถึงวันที่</th>
+                <th scope="col">เหตุผล</th>
+                <th scope="col">ดำเนินการ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach($dataProvider->getModels() as $model):?>
+            <tr class="">
+                <td scope="row"><?=$model->CreateBy()->getAvatar(false)?></td>
+                <td>R1C2</td>
+                <td>R1C3</td>
+                <td>R1C3</td>
+                <td>R1C3</td>
+                <td>R1C3</td>
+            </tr>
+<?php endforeach;?>
+        </tbody>
+    </table>
 
-            'id',
-            'leave_type_id',
-            'leave_time_type',
-            //'start_end',
-            //'created_at',
-            //'updated_at',
-            //'created_by',
-            //'updated_by',
-            //'deleted_at',
-            //'deleted_by',
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Leave $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
 
     <?php Pjax::end(); ?>
 

@@ -81,10 +81,11 @@ $resultsJs = <<< JS
 </style>
 
 <?php $form = ActiveForm::begin([
-    'id' => 'form',
+    'id' => 'form-elave',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/lm/leave/create-validator']
 ]); ?>
+
 <div class="row d-flex justify-content-center">
     <div class="col-lg-4 col-md-5">
 
@@ -95,16 +96,16 @@ $resultsJs = <<< JS
         </div>
 
     </div>
-    <div class="col-lg-7 col-md-7">
+    <div class="col-lg-8 col-md-8">
         <div class="card text-start">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h2><i class="fa-solid fa-file-pen"></i> บันทึกขอ<?= $model->leaveType->title ?></h2>
-<div class="d-flex gap-3">
-<?= $form->field($model, 'data_json[auto]')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ไม่รวมวันหยุด');?>
-    <h6><span class="cal-days">0</span> / วัน</h6>
+                    <div class="d-flex gap-3">
+                        <?= $form->field($model, 'data_json[auto]')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('ไม่รวมวันหยุด'); ?>
+                        <h6><span class="cal-days">0</span> / วัน</h6>
 
-</div>
+                    </div>
                 </div>
 
                 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
@@ -193,7 +194,7 @@ $resultsJs = <<< JS
                     </div>
                     <div class="col-6">
                         <div>
-                       
+
                         </div>
                         <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                         <?= $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
@@ -269,6 +270,8 @@ $resultsJs = <<< JS
 <?php
 $calDaysUrl = Url::to(['/lm/leave/cal-days']);
 $js = <<< JS
+
+
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -363,6 +366,44 @@ document.addEventListener('DOMContentLoaded', function() {
   calendar.render();
 
 
+  $('#form-elave').on('beforeSubmit', function (e) {
+    var form = $(this);
+    console.log('Submit');
+
+    Swal.fire({
+  title: "บันทึกหรือไม่?",
+  text: "ยืนยันบันทึกการลา!",
+  icon: "warning",
+  showCancelButton: true,
+  confirmButtonColor: "#3085d6",
+  cancelButtonColor: "#d33",
+  cancelButtonText: "ยกเลิก!",
+  confirmButtonText: "ใช่, ยืนยัน!"
+}).then((result) => {
+  if (result.isConfirmed) {
+    
+    $.ajax({
+        url: form.attr('action'),
+        type: 'post',
+        data: form.serialize(),
+        dataType: 'json',
+        success: async function (response) {
+            form.yiiActiveForm('updateMessages', response, true);
+            if(response.status == 'success') {
+                closeModal()
+                // success()
+                await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+            }
+        }
+    });
+
+  }
+});
+
+
+    return false;
+});
+
   $('#leave-date_start').on('change', function() {
         var selectedDate = $(this).val();
         // Perform any action you want when the date is changed
@@ -455,24 +496,7 @@ console.log(dateStart);
 });
 
 
-\$('#form').on('beforeSubmit', function (e) {
-                                var form = \$(this);
-                                \$.ajax({
-                                    url: form.attr('action'),
-                                    type: 'post',
-                                    data: form.serialize(),
-                                    dataType: 'json',
-                                    success: async function (response) {
-                                        form.yiiActiveForm('updateMessages', response, true);
-                                        if(response.status == 'success') {
-                                            closeModal()
-                                            success()
-                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                                        }
-                                    }
-                                });
-                                return false;
-                            });
+
 
 $("input[name='Leave[data_json][leave_type]']").on('change', function() {
         // ดึงค่าที่ถูกเลือก

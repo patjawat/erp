@@ -2,11 +2,13 @@
 
 namespace app\modules\lm\controllers;
 
+use Yii;
 use app\modules\lm\models\LeavePermission;
 use app\modules\lm\models\LeavePermissionSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Response;
 
 /**
  * LeavePermissionController implements the CRUD actions for LeavePermission model.
@@ -77,9 +79,19 @@ class LeavePermissionController extends Controller
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

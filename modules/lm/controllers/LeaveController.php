@@ -178,14 +178,22 @@ class LeaveController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
 
 
-            if (isset($model->data_json['date_start'])) {
-                preg_replace('/\D/', '', $model->data_json['date_start']) == "" ? $model->addError('data_json[date_start]', $requiredName) : null;
+            if (isset($model->date_start)) {
+                preg_replace('/\D/', '', $model->date_start) == "" ? $model->addError('date_start', $requiredName) : null;
             }
-            if (isset($model->data_json['date_end'])) {
-                preg_replace('/\D/', '', $model->data_json['date_end']) == "" ? $model->addError('data_json[date_end]', $requiredName) : null;
+            if (isset($model->date_end)) {
+                preg_replace('/\D/', '', $model->date_end) == "" ? $model->addError('date_end', $requiredName) : null;
             }
 
-            // $model->qty == "" ? $model->addError('qty', $requiredName) : null;
+            $model->data_json['date_start_type'] == "" ? $model->addError('data_json[date_start_type]', $requiredName) : null;
+            $model->data_json['date_end_type'] == "" ? $model->addError('data_json[date_end_type]', $requiredName) : null;
+            $model->data_json['note'] == "" ? $model->addError('data_json[note]', $requiredName) : null;
+            $model->data_json['phone'] == "" ? $model->addError('data_json[phone]', $requiredName) : null;
+            $model->data_json['location'] == "" ? $model->addError('data_json[location]', $requiredName) : null;
+            $model->data_json['address'] == "" ? $model->addError('data_json[address]', $requiredName) : null;
+            $model->data_json['delegate'] == "" ? $model->addError('data_json[delegate]', $requiredName) : null;
+            $model->data_json['leader'] == "" ? $model->addError('data_json[leader]', $requiredName) : null;
+            $model->data_json['leader_group'] == "" ? $model->addError('data_json[leader_group]', $requiredName) : null;
             // $model->unit_price == "" ? $model->addError('unit_price', $requiredName) : null;
         }
         foreach ($model->getErrors() as $attribute => $errors) {
