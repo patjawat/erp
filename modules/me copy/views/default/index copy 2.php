@@ -1,7 +1,6 @@
 <?php
 use yii\helpers\Url;
 use yii\widgets\Pjax;
-use yii\helpers\Html;
 
 $this->title = 'My DashBoard';
 ?>
@@ -14,58 +13,38 @@ $this->title = 'My DashBoard';
     height: 291px;
 }
 </style>
-
 <div class="row">
-    <div class="col-8">
-
+    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-sx-12">
+        <?= $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
 
         <div class="row">
             <div class="col-6">
-                <?=$this->render('welcome')?>
-                <?=$this->render('attendance')?>
-
-
-
-            </div>
-            <div class="col-6">
-                <?=$this->render('leave')?>
-            </div>
-            <div class="col-12">
-            <div class="card" style="height:300px;">
-                    <div class="card-body">
-                        <h6>กลุ่ม/ทีมประสาน</h6>
-                        <?php // $this->render('activity') ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-4">
-        <div class="card" style="height: 620px;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
-                    <?=Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด',['/'],['class' => 'btn btn-light'])?>
-                </div>
-                <div id="viewApproveStock">Loading...</div>
-                <div id="viewApprovePurchase">Loading...</div>
-            </div>
-        </div>
-
-
-    </div>
-</div>
-<div class="row">
-
-    <div class="col-3">
-
-        <?php //  $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
-        <!-- <div class="card" style="height:300px;">
+                <div class="card" style="height:300px;">
                     <div class="card-body">
                         <?= $this->render('leave_total') ?>
                     </div>
-                </div> -->
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card" style="height:300px;">
+                    <div class="card-body">
+                        <h5>กิจกรรม/ความเคลื่อนไหว</h5>
+
+                        <?php // $this->render('activity') ?>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    </div>
+    <div class="col-6">
+        <div id="viewApproveStock">Loading...</div>
+        <div id="viewApprovePurchase">Loading...</div>
+
         <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
         <!-- <div class="card" style="height:300px;">
             <div class="card-body">
@@ -81,7 +60,12 @@ $this->title = 'My DashBoard';
 
 <div class="row">
     <div class="col-6">
-
+        <div class="card" style="height:300px;">
+            <div class="card-body">
+                <h6>กลุ่ม/ทีมประสาน</h6>
+                <?php // $this->render('activity') ?>
+            </div>
+        </div>
     </div>
     <div class="col-6">
         <div id="viewOwnerAsset">Loading...</div>

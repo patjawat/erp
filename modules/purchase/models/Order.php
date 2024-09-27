@@ -352,6 +352,7 @@ class Order extends \yii\db\ActiveRecord
             $a = $this->data_json['product_type_name'];
             $text = $msg ? $msg : ($this->viewCreatedAt() . ' | ' . $employee->departmentName());
             return [
+                'employee' => $employee,
                 'avatar' => $employee->getAvatar(false, $text),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,

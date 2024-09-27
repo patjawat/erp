@@ -173,7 +173,7 @@ class ApproveController extends \yii\web\Controller
             return [
                 'title' => 'รายการขอซื้อ/ขอจ้าง',
                 'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('purchase', [
+                'content' => $this->renderAjax('@app/modules/sm/views/default/list_order', [
                 // 'content' => $this->renderAjax('purchase', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
@@ -182,7 +182,7 @@ class ApproveController extends \yii\web\Controller
                 ])
             ];
         } else {
-            return $this->render('purchase', [
+            return $this->render('@app/modules/sm/views/default/list_order', [
             // return $this->render('purchase', [
                 'title' => 'รายการขอซื้อ/ขอจ้าง',
                 'searchModel' => $searchModel,

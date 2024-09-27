@@ -3,6 +3,7 @@
 namespace app\modules\lm\models;
 
 use app\components\UserHelper;
+use app\models\Categorise;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use Yii;
@@ -97,8 +98,10 @@ class Leave extends \yii\db\ActiveRecord
         // section Relationships
         public function getLeaveType()
         {
-            return $this->hasOne(LeaveType::class, ['code' => 'leave_type_id']);
+            return $this->hasOne(LeaveType::class, ['code' => 'leave_type_id'])->andOnCondition(['name' => 'leave_type']);
         }
+
+
 
 
 

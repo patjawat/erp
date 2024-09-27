@@ -79,7 +79,6 @@ $resultsJs = <<< JS
         color: #3F51B5;
     }
 </style>
-
 <?php $form = ActiveForm::begin([
     'id' => 'form-elave',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -257,8 +256,9 @@ $resultsJs = <<< JS
                 </div>
                 <?= $this->render('leader', ['form' => $form, 'model' => $model]) ?>
 
-                <div class="form-group mt-3 d-flex justify-content-center">
+                <div class="form-group mt-3 d-flex justify-content-center gap-3">
                     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+                    <?=Html::a('<i class="bi bi-arrow-left-circle"></i> ย้อนกลับ',['/lm/leave'],['class' => 'btn btn-warning rounded-pill shadow'])?>
                 </div>
             </div>
         </div>
@@ -266,7 +266,6 @@ $resultsJs = <<< JS
 </div>
 
 <?php ActiveForm::end(); ?>
-
 <?php
 $calDaysUrl = Url::to(['/lm/leave/cal-days']);
 $js = <<< JS

@@ -6,9 +6,6 @@ use yii\helpers\Html;
   font-weight: 300
 }
 </style>
-<div class="card">
-    <div class="card-body">
-
 <div id="leaveChart"></div>
 
 <div class="d-flex">
@@ -39,11 +36,6 @@ use yii\helpers\Html;
 <div class="d-flex justify-content-center mt-3">
     <?=Html::a('<i class="bi bi-calendar-check"></i> สิทธิวันลา',['/me'],['class' => 'btn btn-primary round shadow'])?>
 </div>
-
-
-</div>
-</div>
-
 <?php
 use yii\web\View;
 $js = <<< JS

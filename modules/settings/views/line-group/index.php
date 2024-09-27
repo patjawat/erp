@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'width' => '170px',
                         'value' => function ($model) {
                             return '<div class="d-flex gap-2">'
-                            .Html::a('ทดสอบ',['/line-group/send','id' => $model->code],['class' => 'btn btn-sm btn-primary send-line'])
+                            .Html::a('ทดสอบ',['/settings/line-group/send','id' => $model->code],['class' => 'btn btn-sm btn-primary send-line'])
                             . Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']])
                                 . Html::a('<i class="fa-solid fa-trash"></i>', ['delete', 'id' => $model->id], [
                                     'class' => 'btn btn-sm btn-danger',

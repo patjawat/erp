@@ -2,9 +2,11 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
-
+$moduleId = Yii::$app->controller->module->id; 
 ?>
+<style>
 
+</style>
 <aside class="sidebar">
     <div class="scroll-content" id="metismenu" data-scrollbar="true" tabindex="-1"
         style="overflow: hidden; outline: none;">
@@ -55,26 +57,26 @@ use yii\web\View;
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-list"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>    
                 Module</li>
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/hr']) ?>">
+                    <a class="side-nav-link <?=$moduleId == 'hr' ? 'active' : null?>" href="<?= Url::to(['/hr']) ?>">
                         <i class="bi bi-people-fill fs-4"></i>
                         <span> บุคลากร</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/am']) ?>">
+                    <a class="side-nav-link <?=$moduleId == 'am' ? 'active' : null?>" href="<?= Url::to(['/am']) ?>">
                         <i class="bi bi-folder-check fs-4"></i>
                         <span> ทรัพย์สิน</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/sm']) ?>">
+                    <a class="side-nav-link <?=$moduleId == 'sm' ? 'active' : null?>" href="<?= Url::to(['/sm']) ?>">
                     <i class="bi bi-box fs-4"></i>
                         <span> พัสดุ</span>
                     </a>
                 </li>
                 
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/inventory']) ?>">
+                    <a class="side-nav-link <?=$moduleId == 'inventory' ? 'active' : null?>" href="<?= Url::to(['/inventory']) ?>">
                     <i class="fa-solid fa-cubes-stacked fs-4"></i>
                         <span> คลัง</span>
                     </a>
