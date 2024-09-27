@@ -3,6 +3,9 @@ use yii\helpers\Url;
 use yii\widgets\Pjax;
 use yii\helpers\Html;
 
+$this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerCssFile("@web/owl/owl.carousel.min.css");
+
 $this->title = 'My DashBoard';
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -17,26 +20,18 @@ $this->title = 'My DashBoard';
 
 <div class="row">
     <div class="col-8">
-
-
         <div class="row">
             <div class="col-6">
                 <?=$this->render('welcome')?>
                 <?=$this->render('attendance')?>
-
-
 
             </div>
             <div class="col-6">
                 <?=$this->render('leave')?>
             </div>
             <div class="col-12">
-            <div class="card" style="height:300px;">
-                    <div class="card-body">
-                        <h6>กลุ่ม/ทีมประสาน</h6>
-                        <?php // $this->render('activity') ?>
-                    </div>
-                </div>
+                <?=$this->render('team_work')?>
+            
             </div>
         </div>
     </div>

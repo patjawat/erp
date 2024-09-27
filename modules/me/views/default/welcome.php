@@ -36,7 +36,7 @@ use yii\helpers\Html;
                 <p>คุณมี <span class="badge rounded-pill text-bg-danger">2 </span> กิจกรรมที่ต้องทำ</p>
             </div>
             <div class="welcome-img">
-                <?=Html::img('@web/img/patjwat2.png',['class' => 'avatar border border-white'])?>
+                <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'avatar border border-white'])?>
             </div>
         </div>
         <div class="welcome-btn">

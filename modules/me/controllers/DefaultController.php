@@ -22,6 +22,13 @@ class DefaultController extends Controller
         ]);
     }
 
+    public function actionTeam()
+    {
+        return $this->render('team_work', [
+           
+        ]);
+    }
+
     public function actionRepairMe()
     {
         $userId = Yii::$app->user->id;
