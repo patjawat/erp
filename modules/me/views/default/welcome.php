@@ -21,10 +21,35 @@ use yii\helpers\Html;
     height: 100%;
     transform: skew(12deg);
     background: linear-gradient(90.31deg, #5ca1d4 -1.02%, #0866ad 132.59%);
+    animation: fadeIn 1s ease-in-out;
 }
 
 .welcome-img {
     z-index: 2;
+}
+
+@keyframes fadeInLeft {
+    from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+  }
+}   
+@keyframes fadeInRight {
+  from {
+    opacity: 50;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 </style>
 
