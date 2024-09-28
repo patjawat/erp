@@ -82,3 +82,25 @@ yii migrate/down 1
 - Refer to the README in the `tests` directory for information specific to basic application tests.
 
 
+
+Docker Build Image
+สร้าง File Image
+docker build -t erp:v1 .
+
+หากคุณต้องการส่งออก Docker image จากเครื่องหนึ่งไปใช้กับเครื่องอื่น มีขั้นตอนดังนี้
+
+docker save -o <path-to-tar-file> <image-name>:<tag>
+
+ตัวอย่าง: docker save -o yii2-app.tar yii2-app:latest
+
+ตัวอย่างการใช้ scp ส่งไปยังเครื่องอื่น:
+scp yii2-app.tar user@remote-server:/path/to/destination
+
+Import Docker Image บนเครื่องใหม่
+docker load -i yii2-app.tar
+
+ตรวจสอบว่าการ Import สำเร็จหรือไม่
+docker images
+
+ รัน Docker Image บนเครื่องใหม่
+ docker run -d -p 8080:80 yii2-app:latest

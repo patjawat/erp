@@ -1,18 +1,18 @@
-# https://crontab.guru/ ตั้งเวลา
+
 services:
   php:
     container_name: ${CONTAINER_NAME}
-    image: yiisoftware/yii2-php:8.2-apache
-    environment:
-      PHP_MEMORY_LIMIT: 2048M
-    volumes:
-      - ~/.composer-docker/cache:/root/.composer/cache:delegated
-      - ./:/app:delegated
-      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
+    image: ${IMAGE_NAME}
+    build:
+      context: .
     ports:
-      - '${HOS_CODE}:80'
+       - '${HOS_CODE}:80'
+    volumes:
+      - ./fileupload:/app/modules/filemanager/fileupload
     links:
       - mysqlDB:db
+    environment:
+      - YII_ENV=pro
     env_file:
       - ./.env
 
@@ -20,7 +20,8 @@ services:
     image: mysql:8.0
     container_name: ${CONTAINER_NAME}_db
     hostname: mysqldboffice
-    
+    volumes:
+      - ./database/mysql8.0/data:/var/lib/mysql
     cap_add:
       - SYS_NICE
     restart: always
@@ -40,14 +41,6 @@ services:
         '--collation-server=utf8_general_ci',
         '--sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
       ]
-
-    ports:
-      - '${MYSQL_PORT}:3306'
-    volumes:
-      - ./docker/mysql8.0/data:/var/lib/mysql
-      # - ./my.cnf:/etc/mysql/conf.d/my.cnf
-      # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-
   phpmyadmin_mysql:
     image: phpmyadmin
     container_name: ${CONTAINER_NAME}_pma
@@ -61,5 +54,3 @@ services:
       MYSQL_ROOT_PASSWORD: docker
       PMA_HOST: mysqlDB
       UPLOAD_LIMIT: 300M
-
-  

@@ -37,6 +37,7 @@ docker
 docker-compose.ylm
 
 web/uploads/*
+web/downloads/*
 web/import-csv/*
 .env
 db-backup

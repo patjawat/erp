@@ -1,0 +1,13 @@
+# Ignore vendor folder as it's installed during build
+# vendor/
+docker/
+bootstrap-sass/
+db-backup/
+run-production/
+db/
+.git/
+.env
+.vscode
+.sh
+.yml
+modules/filemanager/fileupload/

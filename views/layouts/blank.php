@@ -85,7 +85,7 @@ $style = 2;
     background: linear-gradient(0deg, rgba(7, 141, 169, 0.9178046218487395) 0%, rgba(7, 141, 169, 1) 41%, rgba(201, 232, 239, 1) 100%);
 }
 </style>
-<?=$this->render('@app/themes/v2/layouts/modal')?>
+<?=$this->render('@app/themes/v3/layouts/modal')?>
 <?php if($style == 1):?>
 <body class="blank-page">
     <?php $this->beginBody() ?>
