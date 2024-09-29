@@ -18,7 +18,7 @@ class EmployeesSearch extends Employees
     {
         return [
             [['id', 'user_id', 'province', 'amphure', 'district', 'zipcode',  'department', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'avatar', 'photo', 'phone', 'cid', 'email', 'gender', 'prefix', 'fname', 'lname', 'fname_en', 'lname_en', 'birthday', 'join_date', 'end_date', 'address', 'status', 'data_json', 'emergency_contact', 'updated_at', 'created_at','position_type','position_name','show','fullname','all_status','range1','range2','q_department','q'], 'safe'],
+            [['ref', 'avatar', 'photo', 'phone', 'cid', 'email', 'gender', 'prefix', 'fname', 'lname', 'fname_en', 'lname_en', 'birthday', 'join_date', 'end_date', 'address', 'status', 'data_json', 'emergency_contact', 'updated_at', 'created_at','position_type','position_name','show','fullname','all_status','range1','range2','q_department','user_register','q'], 'safe'],
         ];
     }
 

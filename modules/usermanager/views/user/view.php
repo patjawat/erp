@@ -34,8 +34,11 @@ $this->params['breadcrumbs'][] = $this->title;
         'attributes' => [
             'username',
             'email:email',
-            'pname',
-            'fullname',
+            [
+                'format'=>'html',
+                'label' => 'ชื่อ-นามสกุล',
+                'value' => $model->employee->fullname
+            ],
         ],
     ]) ?>
 

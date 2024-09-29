@@ -92,6 +92,7 @@ class Employees extends \yii\db\ActiveRecord
     public $all_status;  // สถานะทั้งหมด
     public $range1;  // ช่วงตัวเลข
     public $range2;  // ช่วงตัวเลข
+    public $user_register; //สถานะลงทะเยียน
 
     public static function tableName()
     {
@@ -107,7 +108,7 @@ class Employees extends \yii\db\ActiveRecord
             [['user_id', 'fname', 'lname', 'phone', 'cid'], 'required'],
             [['user_id', 'province', 'amphure', 'district', 'zipcode', 'department', 'created_by', 'updated_by'], 'integer'],
             [['photo'], 'string'],
-            [['birthday', 'data_json', 'updated_at', 'created_at', 'cid', 'code', 'emp_id', 'education', 'position_group', 'position_name', 'position_number', 'position_level', 'position_type', 'salary', 'show', 'cnt', 'title', '_groupname', '_groupcode', '_depcode', '_position1', '_position2', '_position3', '_position4', '_position5', '_position6', '_position7', '_age_generation', '_female', '_male', '_female_percen', '_male_percen', 'age_join_date', 'fulladdress', 'expertise', 'position_manage', 'age_y', 'range1', 'range2', 'q_department', 'q'], 'safe'],
+            [['birthday', 'data_json', 'updated_at', 'created_at', 'cid', 'code', 'emp_id', 'education', 'position_group', 'position_name', 'position_number', 'position_level', 'position_type', 'salary', 'show', 'cnt', 'title', '_groupname', '_groupcode', '_depcode', '_position1', '_position2', '_position3', '_position4', '_position5', '_position6', '_position7', '_age_generation', '_female', '_male', '_female_percen', '_male_percen', 'age_join_date', 'fulladdress', 'expertise', 'position_manage', 'age_y', 'range1', 'range2', 'q_department','user_register', 'q'], 'safe'],
             [['ref', 'avatar', 'email', 'address', 'status'], 'string', 'max' => 255],
             [['gender', 'prefix'], 'string', 'max' => 20],
             [['phone'], 'string', 'max' => 20],

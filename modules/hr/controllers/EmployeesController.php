@@ -54,6 +54,14 @@ class EmployeesController extends Controller
         $searchModel = new EmployeesSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $notStatusParam = $this->request->get('not-status');
+
+        if ($searchModel->user_register == 0) {
+            $dataProvider->query->andWhere(['user_id' => 0]);
+        }
+        if ($searchModel->user_register == 1) {
+            $dataProvider->query->andWhere(['!=','user_id',0]);
+        }
+
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'cid', $searchModel->q],

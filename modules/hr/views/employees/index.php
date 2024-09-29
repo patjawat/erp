@@ -17,6 +17,8 @@ use yii\widgets\Pjax;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'ทะเบียนประวัติ';
 $this->params['breadcrumbs'][] = $this->title;
+// $user0 = Employees::find()->where(['user_id' => 0])->andWhere(['!=','id',1])->count('id');
+// $user1 = Employees::find()->where(['>','user_id',0])->andWhere(['!=','id',1])->count('id');
 
 ?>
 <?php Pjax::begin(['id' => 'title-container', 'timeout' => 500000]); ?>
@@ -29,8 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="bi bi-people-fill"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
-จำนวนทั้งหมด <span id="showTotalCount">
-    <?= $dataProvider->getTotalCount() ?>
+จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
 
 </span>
 รายการ <?= $notStatus > 0 ? Html::a('| ' . AppHelper::MsgWarning('ไม่ระบุตำแหน่ง') . ' ' . $notStatus . ' คน', ['/hr/employees/', 'not-status' => true]) : '' ?>
@@ -54,6 +55,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 'modal' => true,
                 'size' => 'lg',
             ]) ?>
+        </div>
+        <div>
+
+
         </div>
         <div class="d-flex gap-2">
 
