@@ -123,7 +123,6 @@ use app\modules\hr\models\Employees;
 <?= $form->field($model, 'range2')->textInput(['type' => 'number'])->label('จนถึงอายุ') ?>
 </div>
 <div>
-    <?=$model->user_register?>
 <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
                 'data' => [1=>'ลงทะเบียนสำเร็จ', 0=>'ยังไม่ลงทะเบียน'],
                 'options' => ['placeholder' => 'เลือก ...'],
