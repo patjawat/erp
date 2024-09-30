@@ -55,10 +55,10 @@ class EmployeesController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $notStatusParam = $this->request->get('not-status');
 
-        if ($searchModel->user_register == 0) {
+        if (isset($searchModel->user_register) && $searchModel->user_register == 0) {
             $dataProvider->query->andWhere(['user_id' => 0]);
         }
-        if ($searchModel->user_register == 1) {
+        if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
             $dataProvider->query->andWhere(['!=','user_id',0]);
         }
 
