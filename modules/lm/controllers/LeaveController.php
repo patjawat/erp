@@ -125,7 +125,7 @@ class LeaveController extends Controller
         $model = new Leave([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
-            'thai_year' => AppHelper::YearBudget()
+            'thai_year' => AppHelper::YearBudget(),
         ]);
 
         $model->data_json = [
@@ -133,7 +133,9 @@ class LeaveController extends Controller
             'address' => $model->CreateBy()->fulladdress,
             'leader' => $model->Approve()['leader']['id'],
             'leader_group' => $model->Approve()['leaderGroup']['id'],
-            'phone' => $model->CreateBy()->phone
+            'phone' => $model->CreateBy()->phone,
+            'director' => Yii::$app->site::viewDirector()['id'],
+            'director_fullname' => Yii::$app->site::viewDirector()['fullname'],
         ];
 
         if ($this->request->isPost) {

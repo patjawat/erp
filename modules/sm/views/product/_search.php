@@ -21,7 +21,7 @@ use kartik\select2\Select2;
 
 <div class="row">
     <div class="col-6">
-        <?php echo $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
+        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
     </div>
     <div class="col-6">
         <div class="d-flex justify-content-between align-items-start gap-2">

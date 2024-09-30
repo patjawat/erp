@@ -111,6 +111,8 @@ $resultsJs = <<< JS
                 <?= $form->field($model, 'leave_type_id')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'days_off')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
 
 
                 <div class="row">

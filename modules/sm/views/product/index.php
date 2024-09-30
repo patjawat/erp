@@ -66,17 +66,20 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="table-responsive">
                     <table class="table table-striped custom-table">
                         <thead>
+                        <th style="width:80px">รหัส</th>
                         <th style="width:500px">รายการ</th>
                         <th class="text-center" style="width:100px">ประเภท</th>
                         <th class="text-center" style="width:80px">หน่วย</th>
                         <th class="text-center" scope="col" style="width: 80px;">ดำเนินการ</th>
                         </thead>
-                        <tbody>
+                        <tbody class="align-middle">
                             <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="rounded">
+                            <td><?=$model->code?></td>
                                 <td scope="row">
                                     <?=$model->Avatar()?>
                                 </td>
+                              
                                 <td class="text-center"><?=$model->ViewTypeName()['title']?></td>
                                 <td class="text-center"><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td>
                                 <td class="text-center">

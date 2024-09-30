@@ -28,6 +28,7 @@ $config = [
     ],
     'language' => 'th_TH',  // เปิดใช้งานภาษาไทย
     'components' => [
+     
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
@@ -40,7 +41,7 @@ $config = [
         'committee' => [
 			'class' => 'asyou99\cart\Cart',
 		],
-        
+        'site' => 'app\components\SiteHelper',
         'employee' => 'app\components\UserHelper',
         // แจ่งเตือน line Group
         'lineNotify' => [

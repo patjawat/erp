@@ -15,7 +15,7 @@ class ProductSearch extends Product
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category','q'], 'safe'],
         ];
     }
 

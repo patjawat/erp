@@ -128,6 +128,15 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
+    //มอบหมายงานให้
+    public function Delegate()
+    {
+        try {
+             return Employees::find()->where(['id' => $this->data_json['delegate']])->one()->getAvatar(false);
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
           // ผู้ขอลา
     public  function CreateBy($msg = null)
     {

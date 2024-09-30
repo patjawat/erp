@@ -42,6 +42,11 @@ class ProductController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item','group_id' => 4]);
         $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', 'title', $searchModel->q],
+        ]);
         // $dataProvider->query->orderBy(['id' => SORT_DESC]);
         $dataProvider->pagination->pageSize = 10;
 
