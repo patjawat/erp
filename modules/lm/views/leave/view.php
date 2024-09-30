@@ -75,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
-
+<?=$this->render('view_summary',['model' => $model])?>
 </div>
 <div class="col-xl-6 col-sm-12">
  
