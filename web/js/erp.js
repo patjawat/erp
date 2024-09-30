@@ -128,21 +128,29 @@ $("body").on("click", ".open-modal", function (e) {
       $(".modal-content").addClass("card-outline card-primary");
     },
     error: function (xhr) {
+
+      $("#main-modal-label").html('เกิดข้อผิดพลาด');
+      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาติ</h5>');
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+      $(".modal-dialog").addClass("modal-md");
+      console.log(xhr);
+      
+
       // if error occured
       // alert("Error occured.please try again");
       // console.log(xhr.statusText + xhr.responseText);
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        html: xhr.statusText + "</hr>" + xhr.responseText,
-        // text: xhr.responseText,
-        // footer: '<a href="#">Why do I have this issue?</a>'
-      }).then(function (dismiss) {
-        console.log(dismiss);
-        if (dismiss.isConfirmed) {
-          $("#main-modal").modal("hide");
-        }
-      });
+      // Swal.fire({
+      //   icon: "error",
+      //   title: "Oops...",
+      //   html: xhr.statusText + "</hr>" + xhr.responseText,
+      //   // text: xhr.responseText,
+      //   // footer: '<a href="#">Why do I have this issue?</a>'
+      // }).then(function (dismiss) {
+      //   console.log(dismiss);
+      //   if (dismiss.isConfirmed) {
+      //     $("#main-modal").modal("hide");
+      //   }
+      // });
 
       // $(placeholder).append(xhr.statusText + xhr.responseText);
       // $(placeholder).removeClass('loading');
