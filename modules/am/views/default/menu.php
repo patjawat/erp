@@ -26,5 +26,5 @@ $listAssetGroups = Categorise::find()
         <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> ขายทอดตลาด',['/am/asset-sell'],['class' => 'btn btn-light dropdown-item'])?>
     </div>
 </div> -->
-<?=Html::a('<i class="fa-solid fa-gear me-2"></i> ตั้งค่าทรัพย์สิน',['/am/setting'],['class' => 'btn btn-light'])?>
+<?=Yii::$app->user->can('admin') ? Html::a('<i class="fa-solid fa-gear me-2"></i> ตั้งค่าทรัพย์สิน',['/am/setting'],['class' => 'btn btn-light']) : ''?>
 </div>
