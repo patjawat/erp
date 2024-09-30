@@ -29,7 +29,6 @@ $me = Yii::$app->employee::GetEmployee();
           <h3 class="h2 mb-2"> ไม่อนุญาติ <?=$me->fullname?></h3>
           <p class="mb-5">หากต้องการกรุณาติดต่อผู้ดูแลระบบ</p>
           <!-- <a class="btn bsb-btn-5xl btn-dark rounded-pill px-5 fs-6 m-0" href="<?=Url::to(['/me'])?>" role="button">Back to Home</a> -->
-    
         </div>
       </div>
     </div>
