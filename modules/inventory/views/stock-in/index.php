@@ -91,7 +91,13 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
           <tbody>
             <?php foreach ($dataProvider->getModels() as $item): ?>
               <tr>
-                <td><?=$item->CreateBy($item->created_at)['avatar']?></td>
+            <td>
+                  <?php
+                  echo $item->CreateBy($item->ViewReceiveDate())['avatar'];
+
+                   $item->CreateBy(isset($item->data_json['receive_date']) ? $item->data_json['receive_date'] : '')['avatar'];
+                  ?>
+                  </td>
                 <td><?=$item->code?></td>
                 <td>
                   <?php

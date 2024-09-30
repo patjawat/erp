@@ -45,6 +45,19 @@ use iamsaint\datetimepicker\Datetimepicker;
                                     
                                     ?>
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า');?>
+
+<?=$form->field($model, 'data_json[receive_date]')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('วันที่รับเข้า');
+                ?>
+
 <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
 
 

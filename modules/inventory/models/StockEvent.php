@@ -507,6 +507,10 @@ return Stock::find()->where(['warehouse_id' => $warehouse['warehouse_id']])->sum
         return $this->getAvatar($emp->id,$msg);
     }
 
+    public function ViewReceiveDate()
+    {
+        return $date = isset($this->data_json['receive_date']) ?  Yii::$app->thaiFormatter->asDate($this->data_json['receive_date'],'long') : '-';
+    }
     public function viewCreatedAt()
     {
         return Yii::$app->thaiFormatter->asDateTime($this->created_at, 'php:d/m/Y H:i:s');
