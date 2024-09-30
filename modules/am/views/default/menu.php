@@ -16,7 +16,7 @@ $listAssetGroups = Categorise::find()
 </div>
 <?=Html::a('<i class="fa-solid fa-box-open me-1"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'btn btn-light'])?>
 
-<div class="dropdown btn btn-light">
+<!-- <div class="dropdown btn btn-light">
     <a href="javascript:void(0)" class="dropdown-toggle me-0" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="fa-solid fa-file-circle-check"></i> ดำเนินการ
     </a>
@@ -25,6 +25,6 @@ $listAssetGroups = Categorise::find()
         <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> ยืมคืนครุภัณฑ์',['/am/asset-borrow'],['class' => 'btn btn-light dropdown-item'])?>
         <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> ขายทอดตลาด',['/am/asset-sell'],['class' => 'btn btn-light dropdown-item'])?>
     </div>
-</div>
+</div> -->
 <?=Html::a('<i class="fa-solid fa-gear me-2"></i> ตั้งค่าทรัพย์สิน',['/am/setting'],['class' => 'btn btn-light'])?>
 </div>
