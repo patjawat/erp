@@ -113,8 +113,7 @@ $resultsJs = <<< JS
                 <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
-
-
+                
                 <div class="row">
                     <div class="col-6">
                         <div class="d-flex justify-content=between gap-2">

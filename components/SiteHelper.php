@@ -55,11 +55,11 @@ class SiteHelper extends Component
         public static function viewDirector()
         {
                 try {
-                        $emp_id = self::getInfo()['director_name'];
-                        $employee = Employees::find()->where(['id' => $emp_id])->one();
+                        $id = self::getInfo()['director_name'];
+                        $employee = Employees::find()->where(['id' => $id])->one();
 
                         return [
-                                'id' => $employee->user_id,
+                                'id' => $employee->id,
                                 'avatar' => $employee->getAvatar(false),
                                 'department' => $employee->departmentName(),
                                 'fullname' => $employee->fullname,
