@@ -16,6 +16,7 @@ RUN composer install --ignore-platform-reqs
 RUN rm -rf /app/web/assets/*
 
 # Step 5: ตั้งค่าให้โฟลเดอร์ runtime และ web/assets สามารถเขียนได้
+RUN mkdir /app/web/downloads
 RUN chmod -R 777 /app/runtime  /app/web/assets /app/web/downloads
 
 # Set YII_ENV to 'pro'
