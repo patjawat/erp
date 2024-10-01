@@ -82,7 +82,8 @@
         "kartik-v/yii2-popover-x": "dev-master",
         "edofre/yii2-fullcalendar": "V1.0.11",
         "asyou99/yii2-cart": "dev-master",
-        "kartik-v/yii2-sortable": "dev-master"
+        "kartik-v/yii2-sortable": "dev-master",
+        "swoole-foundation/yii2-swoole-extension": "dev-master"
         
     },
     "require-dev": {
