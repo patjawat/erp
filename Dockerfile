@@ -11,6 +11,7 @@ COPY ./ /app/
 RUN composer install --prefer-dist --no-dev --optimize-autoloader
 RUN composer install --ignore-platform-reqs
 
+
 # ลบ  Cache Asset ออก
 RUN rm -rf /app/web/assets/*
 
