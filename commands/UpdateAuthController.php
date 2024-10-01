@@ -132,6 +132,7 @@ class UpdateAuthController extends Controller
             ['name' => '/usermanager/*', 'type' => 2],
             ['name' => '/warehouse/*', 'type' => 2],
             ['name' => 'purchase/po-order/index', 'type' => 2],
+            ['name' => '/ms-word/*', 'type' => 2],
         ];
     }
 
@@ -164,6 +165,7 @@ class UpdateAuthController extends Controller
             ['child' => '/inventory/warehouse/list-order-request', 'parent' => 'user'],
             ['child' => '/inventory/warehouse/view', 'parent' => 'user'],
             ['child' => '/me/*', 'parent' => 'user'],
+            ['child' => '/ms-word/*', 'parent' => 'user'],
             ['child' => '/profile/*', 'parent' => 'user'],
             ['child' => '/purchase/document/download-file', 'parent' => 'purchase'],
             ['child' => '/purchase/gr-order/update', 'parent' => 'purchase'],
