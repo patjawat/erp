@@ -40,17 +40,17 @@ class UpdateAuthController extends Controller
                 ':name' => $authItem['name'],
                 ':type' => $authItem['type'],
             ])->execute();
-            echo $authItem['type']."\n";
         }
-
+        echo "update Route Success\n";
+        
         // update route
         foreach ($this->ChildList() as $childItem) {
             \Yii::$app->db->createCommand($sqlUpdateChild, [
                 ':parent' => $childItem['parent'],
                 ':child' => $childItem['child'],
-            ])->execute();
-            echo $childItem['parent']."\n";
-        }
+                ])->execute();
+            }
+            echo "update Child Success\n";
 
         // }
     }
