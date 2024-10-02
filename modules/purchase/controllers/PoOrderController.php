@@ -104,7 +104,11 @@ class PoOrderController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andwhere(['is not', 'po_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
-
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'pr_number', $searchModel->q],
+            ['like', 'po_number', $searchModel->q],
+        ]);
         return $this->render('@app/modules/purchase/views/order/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

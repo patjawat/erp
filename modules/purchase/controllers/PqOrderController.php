@@ -46,6 +46,11 @@ class PqOrderController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andwhere(['is not', 'pq_number', null]);
         $dataProvider->query->andFilterwhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'pr_number', $searchModel->q],
+            ['like', 'po_number', $searchModel->q],
+        ]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
