@@ -188,13 +188,14 @@ class PqOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $thaiYear = substr((date('Y') + 543), 2);
+        // $thaiYear = substr((date('Y') + 543), 
+        $thaiYear = AppHelper::YearBudget();
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->pq_number == '') {
-                    $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
+                    $model->pq_number = \mdm\autonumber\AutoNumber::generate(substr($thaiYear, -2). '-????');
                 }  // validate all models
 
                 $convertDate =[
