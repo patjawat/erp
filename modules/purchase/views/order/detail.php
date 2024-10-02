@@ -8,7 +8,7 @@ use app\components\SiteHelper;
             <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
             <td class="fw-semibold"><?= $model->pr_number ?></td>
             <td class="text-end">วันที่ขอซื้อ</td>
-            <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->pr_create_date, 'medium') ?></td>
+            <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->data_json['pr_create_date'], 'medium') ?></td>
         </tr>
         <tr class="">
            
