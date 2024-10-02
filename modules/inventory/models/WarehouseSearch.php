@@ -18,7 +18,7 @@ class WarehouseSearch extends Warehouse
     {
         return [
             [['id', 'is_main'], 'integer'],
-            [['warehouse_name', 'warehouse_code','category_id'], 'safe'],
+            [['warehouse_name', 'warehouse_code','category_id','warehouse_type'], 'safe'],
         ];
     }
 
@@ -59,6 +59,7 @@ class WarehouseSearch extends Warehouse
         // grid filtering conditions
         $query->andFilterWhere([
             'is_main' => $this->is_main,
+            'warehouse_type' => $this->warehouse_type,
         ]);
 
         $query

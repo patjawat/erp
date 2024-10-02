@@ -42,7 +42,7 @@ class Warehouse extends \yii\db\ActiveRecord
             [['warehouse_name', 'warehouse_type'], 'required'],
             [['warehouse_type'], 'string'],
             [['is_main'], 'integer'],
-            [['data_json', 'created_at', 'updated_at','category_id','department'], 'safe'],
+            [['data_json', 'created_at', 'updated_at','category_id','department','warehouse_type'], 'safe'],
             [['warehouse_name', 'warehouse_code'], 'string', 'max' => 100],
         ];
     }

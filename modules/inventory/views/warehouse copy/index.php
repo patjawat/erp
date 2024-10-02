@@ -23,44 +23,69 @@ $this->title = 'ตั้งค่าระบบคลัง';
 <?= $this->render('./menu') ?>
 <?php $this->endBlock(); ?>
 
+
+
 <?php Pjax::begin(['id' => 'inventory']); ?>
 
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> จำนวนคลัง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-            <?= $this->render('_search', ['model' => $searchModel]); ?>
-        </div>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col" style="width:50px">รหัส</th>
-                    <th scope="col">ชื่อรายการ</th>
-                    <th scope="col">ประเภทคลัง</th>
-                    <th scope="col">ผู้รับผิดชอลคลัง</th>
-                    <th scope="col" style="width:150px">ดำเนินการ</th>
-                </tr>
-            </thead>
-            <tbody class="align-middle">
-                <?php foreach ($dataProvider->getModels() as $model): ?>
-                <tr class="">
-                    <td scope="row"><?=$model->id ?></td>
-                    <td><?=$model->warehouse_name ?></td>
-                    <td><?=($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown text-warning"></i>' : 'คลังย่อย') ?>
-                    </td>
-                    <td><?= $model->avatarStack() ?></td>
-                    <td class="d-flex justify-content-center gap-2">
-                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/warehouse/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-xl']]); ?>
-                        <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/warehouse/delete', 'id' => $model->id], ['class' => 'btn btn-danger delete-item']) ?>
-                    </td>
-                </tr>
-                <?php endforeach;?>
-            </tbody>
-        </table>
+<div class="container-lg" id="listWarehouse">
+<div class="row d-flex justify-content-center">
 
-        <div class="d-flex justify-content-center mt-5">
-            <div class="text-muted">
-                <?= LinkPager::widget([
+
+<?php foreach ($dataProvider->getModels() as $model): ?>
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12">
+        <!-- Card -->
+        <div class="p-2 bg-white rounded transform transition-all hover-translate-y-n2 duration-300 shadow-lg hover-shadow mt-3 zoom-in">
+            <!-- Image -->
+
+            <?php echo Html::img($model->ShowImg(), ['class' => 'h-40 object-cover rounded img-fluid']) ?>
+            <div class="p-2">
+                <!-- Heading -->
+                 <div class="d-flex justify-content-between">
+                     <!-- <h2 class="font-weight-bold h5 mb-2"><?=($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown text-warning"></i>' : 'คลังย่อย') ?></h2> -->
+                     <h2 class="font-weight-bold h5 mb-2"> <?=$model->warehouse_name ?></h2>
+                     <div class="dropdown float-end">
+                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/warehouse/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                            <?= Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['/inventory/warehouse/delete', 'id' => $model->id], ['class' => 'dropdown-item  delete-item']) ?>
+                        </div>
+                    </div>
+                 </div>
+                <!-- Description -->
+                 <?= $model->avatarStack() ?>
+                <!-- <p class="text-muted small"></p> -->
+            </div>
+            <!-- CTA -->
+
+            <div class="d-grid gap-2 m-2" id="selectWarehouse<?= $model->id ?>">
+
+                <?= html::a(($model->warehouse_type == 'MAIN' ? '<i class="fa-solid fa-crown text-warning"></i> คลังหลัก' : '<i class="fa-solid fa-store"></i> คลังย่อย'), [
+                    '/inventory/warehouse/selct-warehouse',
+                    'id' =>
+                        $model->id
+                ], [
+                    'class' => 'btn btn-primary text-white bg-purple-600 rounded-md selct-warehouse',
+                    'data' => [
+                        'title' => $model->warehouse_name,
+                        'img' => $model->ShowImg(),
+                        'warehouse_id' => $model->id
+                    ]
+                ]) ?>
+
+        </div>
+        </div>
+    </div>
+<?php endforeach; ?>
+</div>
+
+</div>
+
+<div class="d-flex justify-content-center mt-5">
+                    <div class="text-muted">
+                        <?= LinkPager::widget([
                             'pagination' => $dataProvider->pagination,
                             'firstPageLabel' => 'หน้าแรก',
                             'lastPageLabel' => 'หน้าสุดท้าย',
@@ -69,14 +94,8 @@ $this->title = 'ตั้งค่าระบบคลัง';
                                 'class' => 'pagination-sm',
                             ],
                         ]); ?>
-            </div>
-        </div>
-
-    </div>
-</div>
-</div>
-
-
+                    </div>
+                </div>
 
 <?php Pjax::end(); ?>
 

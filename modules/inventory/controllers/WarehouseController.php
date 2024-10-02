@@ -3,27 +3,22 @@
 namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
-use app\modules\inventory\models\StockOut;
-use app\modules\inventory\models\StockOutSearch;
-use app\modules\inventory\models\StockEventSearch;
+use app\modules\purchase\models\Order;
+use Yii;
+use yii\db\Expression;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use Yii;
-use yii\db\Expression;
-use app\modules\purchase\models\Order;
 
 /**
  * WarehouseController implements the CRUD actions for Warehouse model.
  */
 class WarehouseController extends Controller
 {
-    /**
-     * @inheritDoc
-     */
     public function behaviors()
     {
         return array_merge(
@@ -46,17 +41,16 @@ class WarehouseController extends Controller
      */
     public function actionIndex()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
-        $id = Yii::$app->user->id;
+        $warehouse = \Yii::$app->session->get('warehouse');
+        $id = \Yii::$app->user->id;
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['delete' => null]);
-        if(!Yii::$app->user->can('admin')){
+        $dataProvider->query->andWhere(['delete' => null]);
+        // $dataProvider->query->andFilterWhere(['warehouse_name' => $searchModel->warehouse_name]);
+        if (!\Yii::$app->user->can('admin')) {
             $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
-        }else{
-            
+        } else {
         }
-
 
         if ($warehouse) {
             return $this->render('view', [
@@ -72,23 +66,22 @@ class WarehouseController extends Controller
         }
     }
 
-
     public function actionList()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouse = \Yii::$app->session->get('warehouse');
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['delete' => null]);
 
         if ($this->request->isAJax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('list', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                ])
+                ]),
             ];
         } else {
             return $this->render('list', [
@@ -97,9 +90,6 @@ class WarehouseController extends Controller
             ]);
         }
     }
-
-        
-
 
     /**f
      * Displays a single Warehouse model.
@@ -110,6 +100,7 @@ class WarehouseController extends Controller
     public function actionView($id)
     {
         $this->setWarehouse($id);
+
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -118,13 +109,14 @@ class WarehouseController extends Controller
     /**
      * Creates a new Warehouse model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
+     *
+     * @return string|Response
      */
     public function actionCreate()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new Warehouse([
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
         if ($this->request->isPost) {
@@ -143,7 +135,7 @@ class WarehouseController extends Controller
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
-                ])
+                ]),
             ];
         } else {
             return $this->render('create', [
@@ -155,18 +147,19 @@ class WarehouseController extends Controller
     /**
      * Updates an existing Warehouse model.
      * If update is successful, the browser will be redirected to the 'view' page.
+     *
      * @param int $id Warehouse ID
-     * @return string|\yii\web\Response
+     *
+     * @return string|Response
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
-       
-
         $model = $this->findModel($id);
-     
+
         if ($this->request->isPost) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load($this->request->post()) && $model->save(false)) {
                 return [
                     'status' => 'success',
@@ -178,12 +171,13 @@ class WarehouseController extends Controller
         }
 
         if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
-                ])
+                ]),
             ];
         } else {
             return $this->render('update', [
@@ -192,37 +186,35 @@ class WarehouseController extends Controller
         }
     }
 
-    //เลือกคลังที่จะทำงาน
+    // เลือกคลังที่จะทำงาน
     protected function setWarehouse($id)
     {
         $model = Warehouse::find()->where(['id' => $id])->One();
-        Yii::$app->session->set('warehouse',[
+        \Yii::$app->session->set('warehouse', [
             'id' => $model->id,
             'warehouse_id' => $model->id,
             'warehouse_code' => $model->warehouse_code,
             'warehouse_name' => $model->warehouse_name,
             'warehouse_type' => $model->warehouse_type,
             'category_id' => $model->category_id,
-            'checker' => isset($model->data_json['checker']) ?  $model->data_json['checker'] : '',
+            'checker' => isset($model->data_json['checker']) ? $model->data_json['checker'] : '',
             'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
         ]);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
 
-
-
-    
     public function actionClearSelectWarehouse()
     {
-        Yii::$app->session->remove('select-warehouse');
+        \Yii::$app->session->remove('select-warehouse');
         \Yii::$app->cart->checkOut(false);
+
         return $this->redirect(['/inventory/store']);
     }
 
-
     public function actionClear()
     {
-        Yii::$app->session->remove('warehouse');
+        \Yii::$app->session->remove('warehouse');
+
         return $this->redirect(['index']);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
@@ -230,13 +222,16 @@ class WarehouseController extends Controller
     /**
      * Deletes an existing Warehouse model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
+     *
      * @param int $id Warehouse ID
-     * @return \yii\web\Response
+     *
+     * @return Response
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
         $model->delete = date('Y-m-d H:i:s');
         $model->save(false);
@@ -249,43 +244,43 @@ class WarehouseController extends Controller
 
     public function actionListOrderRequest()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouse = \Yii::$app->session->get('warehouse');
         $totalPrice = StockEvent::getTotalPriceWarehouse();
         $sumStockWarehouse = StockEvent::SumStockWarehouse();
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        
+
         if ($this->request->isAjax) {
             // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending']);
-            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','order_status' => 'pending','warehouse_id' => $warehouse['warehouse_id']]);
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            $dataProvider->query->where(['transaction_type' => 'OUT', 'name' => 'order', 'order_status' => 'pending', 'warehouse_id' => $warehouse['warehouse_id']]);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'count' => $dataProvider->getTotalCount(),
                 'totalstock' => $sumStockWarehouse,
                 'confirm' => $searchModel->getTotalCheckerY(),
                 // 'totalOrder' => $searchModel->getTotalSuccessOrder(),
-                'totalPrice' => number_format($totalPrice,2),
+                'totalPrice' => number_format($totalPrice, 2),
                 'content' => $this->renderAjax('list_order_request', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    ])
-                ];
-            } else {
+                ]),
+            ];
+        } else {
             // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
-            $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order']);
+            $dataProvider->query->where(['transaction_type' => 'OUT', 'name' => 'order']);
+
             return $this->render('list_order_request', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
     }
-    
 
     public function actionViewChart()
     {
-
-        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouse = \Yii::$app->session->get('warehouse');
         if ($warehouse) {
             $sql = "SELECT thai_year,
                 (SELECT IFNULL(CONVERT(SUM(qty), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10 ) as in10,
@@ -321,9 +316,9 @@ class WarehouseController extends Controller
             try {
                 $chartSummary = [
                     'in' => [$query['in10'], $query['in11'], $query['in12'], $query['in1'], $query['in3'], $query['in3'], $query['in4'], $query['in5'], $query['in6'], $query['in7'], $query['in8'], $query['in9']],
-                    'out' => [$query['out10'], $query['out11'], $query['out12'], $query['out1'], $query['out3'], $query['out3'], $query['out4'], $query['out5'], $query['out6'], $query['out7'], $query['out8'], $query['out9']]
+                    'out' => [$query['out10'], $query['out11'], $query['out12'], $query['out1'], $query['out3'], $query['out3'], $query['out4'], $query['out5'], $query['out6'], $query['out7'], $query['out8'], $query['out9']],
                 ];
-                //code...
+                // code...
             } catch (\Throwable $th) {
                 $chartSummary = [
                     'in' => [],
@@ -332,28 +327,32 @@ class WarehouseController extends Controller
             }
 
             if ($this->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
                 return [
                     'title' => $this->request->get('title'),
                     'content' => $this->renderAjax('view_chart', [
                         'warehouse' => $warehouse,
-                        'chartSummary' => $chartSummary
-                    ])
+                        'chartSummary' => $chartSummary,
+                    ]),
                 ];
             } else {
                 return $this->render('view_chart', [
                     'warehouse' => $warehouse,
-                    'chartSummary' => $chartSummary
+                    'chartSummary' => $chartSummary,
                 ]);
             }
         }
     }
-    
+
     /**
      * Finds the Warehouse model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
+     *
      * @param int $id Warehouse ID
+     *
      * @return Warehouse the loaded model
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
