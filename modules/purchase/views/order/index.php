@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" >เลขที่สั่งซื้อ/ผู้ขาย</th>
                         <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
                         <th class="fw-semibold" style="width: 200px;">ผู้เห็นชอบ</th>
-                        <th class="fw-semibold"  style="width: 200px;">ความคืบหน้า</th>
+                        <th class="fw-semibold"  style="width: 230px;">ความคืบหน้า</th>
                         <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -84,7 +84,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php if($model->deleted_at == null):?>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">
-                                    <?=$model->viewStatus()['status_name']?><span class="text-primary">
+                                <span class="badge rounded-pill text-bg-<?=$model->viewStatus()['color']?> mb-2 fs-13"><?=$model->viewStatus()['status_name']?></span>
+                                    <span class="text-primary">
                                         <?=$model->viewStatus()['progress']?>%</span>
                                 </span>
                                 <span class="text-muted mb-0 fs-13"><?=$model->viewUpdated()?>ที่แล้ว</span>

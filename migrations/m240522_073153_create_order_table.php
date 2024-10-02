@@ -78,8 +78,6 @@ class m240522_073153_create_order_table extends Migration
             $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'order_status', 'title' => 'ส่งบัญชี', 'active' => 1,'data_json' => ['color' => 'success']]);
         }
 
-
-
     }
 
     /**
