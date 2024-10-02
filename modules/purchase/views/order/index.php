@@ -50,8 +50,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <th class="fw-semibold" style="width:110px">เลขที่</th>
                         <th class="fw-semibold" style="width:300px">ผู้ขอ</th>
-                        <th class="fw-semibold">ประเภท/มูลค่า</th>
-                        <th class="fw-semibold" style="width:300px">ผู้ขาย/เลขที่สั่งซื้อ</th>
+                        <th class="fw-semibold" style="width:150px">ประเภท/มูลค่า</th>
+                        <th class="fw-semibold" >ผู้ขาย/เลขที่สั่งซื้อ</th>
                         <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
                         <th class="fw-semibold" style="width: 200px;">ผู้เห็นชอบ</th>
                         <th class="fw-semibold"  style="width: 200px;">ความคืบหน้า</th>
