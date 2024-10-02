@@ -51,7 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" style="width:110px">เลขที่</th>
                         <th class="fw-semibold" style="width:300px">ผู้ขอ</th>
                         <th class="fw-semibold" style="width:150px">ประเภท/มูลค่า</th>
-                        <th class="fw-semibold" >ผู้ขาย/เลขที่สั่งซื้อ</th>
+                        <th class="fw-semibold" >เลขที่สั่งซื้อ/ผู้ขาย</th>
                         <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
                         <th class="fw-semibold" style="width: 200px;">ผู้เห็นชอบ</th>
                         <th class="fw-semibold"  style="width: 200px;">ความคืบหน้า</th>
@@ -75,8 +75,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-light align-middle">
                             <div class=" d-flex flex-column">
 
-                                <?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?>
                                 <span class="fw-semibold "><?=$model->po_number?></span>
+                                <?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?>
                             </div>
                         </td>
                         <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
