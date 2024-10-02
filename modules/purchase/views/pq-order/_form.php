@@ -26,32 +26,31 @@ use yii\widgets\Pjax;
 }
 </style>
 
-<div class="row d-flex justify-content-center">
-<div class="col-8">
 
 <div class="card">
     <div class="card-body">
-        <h5 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> ทะเบียนคุมขอซื้อ/ขอจ้าง : <?=$orderTypeName?></h5>
-<?php $form = ActiveForm::begin([
+        <h5><i class="fa-solid fa-circle-info text-primary"></i> ทะเบียนคุมขอซื้อ/ขอจ้าง :
+            <?=$orderTypeName?></h5>
+        <?php $form = ActiveForm::begin([
     'id' => 'form-order',
     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/purchase/pq-order/validator'],
 ]); ?>
 
 
-<div class="row mt-3">
-    <div class="col-6">
-        <div class="border border-secondary rounded p-4" style="height: 311px;">
-            <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> คำสั่ง</h6>
-            <div class="row">
-                <div class="col-12">
-                    <?= $form->field($model, 'data_json[order]')->textInput()->label('ตามคำสั่ง') ?>
-                </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[order_number]')->textInput()->label('เลขที่คำสั่ง') ?>
-                </div>
-                <div class="col-6">
-                <?=$form->field($model, 'data_json[order_date]')->widget(Datetimepicker::className(),[
+        <div class="row mt-4">
+            <div class="col-4">
+                <div class="border border-secondary rounded p-4">
+                    <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> คำสั่ง</h6>
+                    <div class="row">
+                        <div class="col-12">
+                            <?= $form->field($model, 'data_json[order]')->textInput()->label('ตามคำสั่ง') ?>
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[order_number]')->textInput()->label('เลขที่คำสั่ง') ?>
+                        </div>
+                        <div class="col-6">
+                            <?=$form->field($model, 'data_json[order_date]')->widget(Datetimepicker::className(),[
                     'options' => [
                         'timepicker' => false,
                         'datepicker' => true,
@@ -62,39 +61,40 @@ use yii\widgets\Pjax;
                     ],
                     ])->label('ลงวันที่');
                 ?>
+                        </div>
+                    </div>
                 </div>
+
+
+
+                <div class="border border-secondary rounded p-4 mt-4">
+                    <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> แผนงานโครงการ
+                    </h6>
+                    <div class="row">
+                        <div class="col-12">
+                            <?= $form->field($model, 'data_json[pq_project_name]')->textInput()->label('ชื่อโครงการ') ?>
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[pq_project_id]')->textInput()->label('โครงการเลขที่') ?>
+                            <?= $form->field($model, 'data_json[pq_egp_number]')->textInput()->label('รหัสอ้างอิง EGP') ?>
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[pq_disbursement]')->textInput()->label('การเบิกจ่ายเงิน') ?>
+                            <?= $form->field($model, 'data_json[pq_egp_report]')->textInput()->label('รายการแผน EGP') ?>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </div>
 
-
-
-    </div>
-    <!-- End Col-6 -->
-    <div class="col-6">
-        <div class="border border-secondary rounded p-4">
-            <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> แผนงานโครงการ</h6>
-            <div class="row">
-                <div class="col-12">
-                    <?= $form->field($model, 'data_json[pq_project_name]')->textInput()->label('ชื่อโครงการ') ?>
-                </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[pq_project_id]')->textInput()->label('โครงการเลขที่') ?>
-                    <?= $form->field($model, 'data_json[pq_egp_number]')->textInput()->label('รหัสอ้างอิง EGP') ?>
-                </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[pq_disbursement]')->textInput()->label('การเบิกจ่ายเงิน') ?>
-                    <?= $form->field($model, 'data_json[pq_egp_report]')->textInput()->label('รายการแผน EGP') ?>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- End Col-6 -->
-    <div class="col-12">
-        <div class="border border-secondary rounded p-4 mt-3">
-            <h6 class=" text-center"><i class="fa-solid fa-circle-info text-primary"></i> วิธีการซื้อ/จ้าง</h6>
-            <div class="row">
-<div class="col-6">
-<?php
+            <!-- End Col-6 -->
+            <div class="col-8">
+                <div class="border border-secondary rounded p-4">
+                    <h6 class=" text-center"><i class="fa-solid fa-circle-info text-primary"></i>
+                        วิธีการซื้อ/จ้าง</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <?php
                                         echo $form->field($model, 'data_json[pq_purchase_type]')->widget(Select2::classname(), [
                                             'data' => $model->ListPurchase(),
                                             'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -114,11 +114,11 @@ use yii\widgets\Pjax;
 
 
 
-</div>
+                        </div>
 
-<div class="col-6">
+                        <div class="col-6">
 
-<?php
+                            <?php
                         $conditionUrl = Url::to(['/depdrop/categorise-by-code']);
                         echo $form->field($model, 'data_json[pq_condition]')->widget(Select2::classname(), [
                             'data' => $model->ListPurchaseCondition(),
@@ -147,14 +147,14 @@ use yii\widgets\Pjax;
                     ?>
 
 
-</div>
+                        </div>
 
-<div class="col-12">
-<?= $form->field($model, 'data_json[pq_income_reason]')->textArea(['rows' => 5, 'style' => 'height: 106px;'])->label('เหตุผลการจัดหา') ?>
-</div>
-            <div class="col-6">
+                        <div class="col-12">
+                            <?= $form->field($model, 'data_json[pq_income_reason]')->textArea(['rows' => 5, 'style' => 'height: 106px;'])->label('เหตุผลการจัดหา') ?>
+                        </div>
+                        <div class="col-6">
 
-            <?php
+                            <?php
                             echo $form->field($model, 'data_json[pq_method_get]')->widget(Select2::classname(), [
                                 'data' => $model->ListMethodget(),
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -171,7 +171,7 @@ use yii\widgets\Pjax;
                             ])->label('วิธีจัดหา');
                         ?>
 
-            <?=
+                            <?=
                         $form->field($model, 'data_json[pq_budget_group]')->widget(Select2::classname(), [
                             'data' => $model->ListBudgetGroup(),
                             'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -187,7 +187,7 @@ use yii\widgets\Pjax;
                             ]
                         ])->label('หมวดเงิน');
                     ?>
-          <?=
+                            <?=
                         $form->field($model, 'data_json[pq_budget_type]')->widget(Select2::classname(), [
                             'data' => $model->ListBudgetdetail(),
                             'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -203,48 +203,44 @@ use yii\widgets\Pjax;
                             ]
                         ])->label('ประเภทเงิน');
                     ?>
-                                    
-                                    
-                                </div>
-                                <div class="col-6">
-                                <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['เกณฑ์ราคา' => 'เกณฑ์ราคา', 'เกณฑ์ประเมินประสิทธิภาพต่อราคา' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'],['custom' => true, 'inline' => true])->label('การพิจารณา') ?>
-                    <?= $form->field($model, 'data_json[pq_reason]')->textArea(['style' => 'height: 130px;'])->label('เหตุผลความจำเป็น') ?>
-                
- 
+
+
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[pq_consideration]')->radioList(['เกณฑ์ราคา' => 'เกณฑ์ราคา', 'เกณฑ์ประเมินประสิทธิภาพต่อราคา' => 'เกณฑ์ประเมินประสิทธิภาพต่อราคา'],['custom' => true, 'inline' => true])->label('การพิจารณา') ?>
+                            <?= $form->field($model, 'data_json[pq_reason]')->textArea(['style' => 'height: 130px;'])->label('เหตุผลความจำเป็น') ?>
+
+
+                        </div>
+                        <div class="col-12">
+
+
+
+                            <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'data_json[pq_purchase_type_name]')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'data_json[pq_method_get_name]')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'data_json[pq_budget_group_name]')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'data_json[pq_budget_type_name]')->hiddenInput()->label(false) ?>
+                            <?= $form->field($model, 'data_json[pq_condition_name]')->hiddenInput()->label(false) ?>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-12">
-               
-                 
-                  
-                    <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'data_json[pq_purchase_type_name]')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'data_json[pq_method_get_name]')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'data_json[pq_budget_group_name]')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'data_json[pq_budget_type_name]')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'data_json[pq_condition_name]')->hiddenInput()->label(false) ?>
-                </div>
+
             </div>
+            <!-- End Col-6 -->
+        </div>
+        <!-- End Row -->
+
+        <div class="form-group mt-3 d-flex justify-content-center gap-3">
+            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+            <?=Html::a('<i class="fa-solid fa-circle-left"></i> ย้อนกลับ',['/purchase/order/view','id' => $model->id],['class' => 'btn btn-secondary rounded-pill shadow'])?>
         </div>
 
+        <?php ActiveForm::end(); ?>
+
     </div>
-    <!-- End Col-6 -->
-</div>
-<!-- End Row -->
-
-<div class="form-group mt-3 d-flex justify-content-center gap-3">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-    <?=Html::a('<i class="fa-solid fa-circle-left"></i> ย้อนกลับ',['/purchase/order/view','id' => $model->id],['class' => 'btn btn-secondary rounded-pill shadow'])?>
-</div>
-
-<?php ActiveForm::end(); ?>
-
-</div>
-</div>
-
-
-</div>
 </div>
 
 
@@ -262,7 +258,6 @@ $js = <<< JS
             success: async function (response) {
                 form.yiiActiveForm('updateMessages', response, true);
                 if(response.status == 'success') {
-                    closeModal()
                     success()
                     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                 }

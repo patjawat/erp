@@ -213,10 +213,11 @@ class PqOrderController extends Controller
                     $model->status = 2;
                 }
                 $model->save(false);
-                return [
-                    'status' => 'success',
-                    'container' => '#purchase-container',
-                ];
+                return $this->redirect(['/purchase/order/view','id' => $model->id]);
+                // return [
+                //     'status' => 'success',
+                //     'container' => '#purchase-container',
+                // ];
             } else {
                 return false;
             }
