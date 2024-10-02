@@ -176,7 +176,12 @@ class StockEvent extends \yii\db\ActiveRecord
 public static function SumStockWarehouse()
 {
     $warehouse = Yii::$app->session->get('warehouse');
-return Stock::find()->where(['warehouse_id' => $warehouse['warehouse_id']])->sum('qty');
+    $model =  Stock::find()->where(['warehouse_id' => $warehouse['warehouse_id']])->sum('qty');
+    if($model){
+        return $model;
+    }else{
+        return 0;
+    }
 }
     
     public function getTotalOrderPrice()
@@ -288,13 +293,13 @@ return Stock::find()->where(['warehouse_id' => $warehouse['warehouse_id']])->sum
     }
 
 
-    public function getTotalSuccessOrder()
-    {
-        $warehouse = Yii::$app->session->get('warehouse');
-        return self::find()
-            ->where(['name' => 'order_item', 'order_status' => 'success'])
-            ->count('qty');
-    }
+    // public function getTotalSuccessOrder()
+    // {
+    //     $warehouse = Yii::$app->session->get('warehouse');
+    //     return self::find()
+    //         ->where(['name' => 'order_item', 'order_status' => 'success'])
+    //         ->count('qty');
+    // }
 
 
 

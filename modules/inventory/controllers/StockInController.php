@@ -105,7 +105,7 @@ class StockInController extends Controller
                     'employee_fullname' => $user->fullname,
                     'employee_position' => $user->positionName(),
                     'employee_department' => $user->departmentName(),
-                    'receive_date' => AppHelper::convertToGregorian($model->data_json['receive_date']),
+                    'receive_date' => isset($model->data_json['receive_date']) ? AppHelper::convertToGregorian($model->data_json['receive_date']) : '',
                 ];
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
@@ -186,7 +186,6 @@ class StockInController extends Controller
                 if ($order) {
                     // $order->status = 5;
                     // $order->save(false);
-
                     // ถ้าเป็นการรับจ้าใบสั่่งซื้อ
                 }
 
@@ -411,6 +410,19 @@ class StockInController extends Controller
         $model = new StockEvent();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if ($model->name == 'order') 
+            {
+                if (isset($model->data_json['receive_date'])) {
+                    preg_replace('/\D/', '', $model->data_json['receive_date']) == "" ? $model->addError('data_json[receive_date]', $requiredName) : null;
+                }
+
+                if (isset($model->data_json['do_number'])) {
+                    $model->data_json['do_number'] == '' ? $model->addError('data_json[do_number]', $requiredName) : null;
+                }
+                $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
+
+            }
             if ($model->name == 'order_item') {
                 // if (isset($model->data_json['mfg_date'])) {
                 //     preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
@@ -418,7 +430,6 @@ class StockInController extends Controller
                 // if (isset($model->data_json['exp_date'])) {
                 //     preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
                 // }
-            }
 
             if (isset($model->asset_item)) {
                 $model->asset_item == '' ? $model->addError('asset_item', $requiredName) : null;
@@ -434,6 +445,8 @@ class StockInController extends Controller
 
             $model->qty == '' ? $model->addError('qty', $requiredName) : null;
             $model->unit_price == '' ? $model->addError('unit_price', $requiredName) : null;
+        }
+
         }
         foreach ($model->getErrors() as $attribute => $errors) {
                 $result[Html::getInputId($model, $attribute)] = $errors;

@@ -40,7 +40,8 @@ $this->title = $model->warehouse_name;
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-                <h2 id="showTotalPrice">0</h2>
+                <h2><?=$model->SumPice()?></h2>
+                <!-- <h2 id="showTotalPrice">0</h2> -->
             </div>
             <div class="card-footer border-0">รวมมูลค่ารับเข้า</div>
         </div>
@@ -83,8 +84,9 @@ $this->title = $model->warehouse_name;
                         </div>
                     </div>
                 </div>
+                <?=$this->render('view_chart',['model' => $model])?>
                 <!-- <div id="inventoryCharts"></div> -->
-                <div id="showChart">
+                <!-- <div id="showChart">
 
                     <div class="placeholder-glow">
                         <div class="d-flex justufy-content-row gap-5">
@@ -98,7 +100,7 @@ $this->title = $model->warehouse_name;
                         </div>
                     </div>
 
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -182,21 +184,11 @@ $this->title = $model->warehouse_name;
     <?php
 
 use yii\web\View;
-// $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
-// $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 
 $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
-$chartUrl = Url::to(['/inventory/stock/view-chart']);
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
-// $chartSummeryIn = Json::encode($chartSummary['in']);
-// $chartSummeryOut = Json::encode($chartSummary['out']);
 $js = <<< JS
-  // getPendingOrder()
-  // getlistOrderRequest()
-
-
   getStoreInWarehouse()
-  getChart();
 
   // รายการขอเบิก
   async function getStoreInWarehouse(){
@@ -209,22 +201,11 @@ $js = <<< JS
         $('#totalStock').html(res.totalstock)
         $('#OrderConfirm').html(res.confirm)
         $('#showTotalOrder').html(res.totalOrder)
-        $('#showTotalPrice').html(res.totalPrice)
+        // $('#showTotalPrice').html(res.totalPrice)
       }
     });
   }
 
-  async function getChart(){
-    await $.ajax({
-      type: "get",
-      url: "$chartUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showChart').html(res.content)
-       
-      }
-    });
-  }
  
 
  
