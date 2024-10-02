@@ -1,40 +1,42 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use kartik\widgets\ActiveForm;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="order-search">
-
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
+        'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
         'options' => [
             'data-pjax' => 1
         ],
     ]); ?>
 
-    <?= $form->field($model, 'q')->label(false) ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <!-- <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
-    </div> -->
-
+<div class="d-flex justify-content-between gap-3 align-items-center align-middle">
+<?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
+    <?php
+                                echo $form->field($model, 'status')->widget(Select2::classname(), [
+                                    'data' => ArrayHelper::map($model->ListStatus(),'code','title'),
+                                    'options' => ['placeholder' => 'เลือกสถานะ'],
+                                    'pluginOptions' => [
+                                        'width' => '200px',
+                                    'allowClear' => true,
+                                    ],
+                                    'pluginEvents' => [
+                                        'select2:select' => "function(result) { 
+                                                  $(this).submit()
+                                                }",
+                                    ]
+                                ])->label(false);
+                        ?>
+                         <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
+                         <?= Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
+                        </div>
     <?php ActiveForm::end(); ?>
-
-</div>
