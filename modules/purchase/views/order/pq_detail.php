@@ -4,8 +4,7 @@ use yii\widgets\DetailView;
 
 ?>
 <?php if($model->pq_number != ''):?>
-
-
+    
 <table class="table table-striped-columns">
     <tbody>
         <tr class="">
@@ -83,7 +82,7 @@ use yii\widgets\DetailView;
 </table>
 
 <div class="d-flex justify-content-center mt-3">
-    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม'],['class' => 'btn btn-warning rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-lg']])?>
+    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม'],['class' => 'btn btn-warning rounded-pill shadow text-center open-modal-x','data' => ['size' => 'modal-lg']])?>
 </div>
 
 <?php else:?>

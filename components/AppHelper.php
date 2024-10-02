@@ -140,7 +140,7 @@ class AppHelper extends Component
         $position = 0;
 
         while ($number > 0) {
-            $digit = $number % 10;
+            $digit = (int)$number % 10;
 
             if ($position == 0 && $digit == 1 && $string != '') {
                 $string = 'เอ็ด' . $string;

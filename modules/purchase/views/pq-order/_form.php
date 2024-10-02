@@ -12,11 +12,26 @@ use yii\widgets\Pjax;
 /** @var app\modules\purchase\models\Order $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+<?php
+                            try {
+                                $orderTypeName =  $model->data_json['order_type_name'];
+                            } catch (\Throwable $th) {
+                                $orderTypeName = '';
+                            }
+                        ?>
+<?php Pjax::begin(['id' => 'purchase-container']); ?>
 <style>
 .col-form-label {
     text-align: end;
 }
 </style>
+
+<div class="row d-flex justify-content-center">
+<div class="col-8">
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> ทะเบียนคุมขอซื้อ/ขอจ้าง : <?=$orderTypeName?></h5>
 <?php $form = ActiveForm::begin([
     'id' => 'form-order',
     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
@@ -24,7 +39,7 @@ use yii\widgets\Pjax;
 ]); ?>
 
 
-<div class="row">
+<div class="row mt-3">
     <div class="col-6">
         <div class="border border-secondary rounded p-4" style="height: 311px;">
             <h6 class="text-center"><i class="fa-solid fa-circle-info text-primary"></i> คำสั่ง</h6>
@@ -85,7 +100,7 @@ use yii\widgets\Pjax;
                                             'options' => ['placeholder' => 'กรุณาเลือก'],
                                             'pluginOptions' => [
                                                 'allowClear' => true,
-                                                'dropdownParent' => '#main-modal',
+                                                // 'dropdownParent' => '#main-modal',
                                             ],
                                             'pluginEvents' => [
                                                 'select2:select' => "function(result) { 
@@ -110,7 +125,7 @@ use yii\widgets\Pjax;
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
+                                // 'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => 'function(result) { 
@@ -145,7 +160,7 @@ use yii\widgets\Pjax;
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                 ],
                                 'pluginEvents' => [
                                     'select2:select' => "function(result) { 
@@ -162,7 +177,7 @@ use yii\widgets\Pjax;
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
+                                // 'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => "function(result) { 
@@ -178,7 +193,7 @@ use yii\widgets\Pjax;
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
+                                // 'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => "function(result) { 
@@ -218,11 +233,19 @@ use yii\widgets\Pjax;
 </div>
 <!-- End Row -->
 
-<div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+<div class="form-group mt-3 d-flex justify-content-center gap-3">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+    <?=Html::a('<i class="fa-solid fa-circle-left"></i> ย้อนกลับ',['/purchase/order/view','id' => $model->id],['class' => 'btn btn-secondary rounded-pill shadow'])?>
 </div>
 
 <?php ActiveForm::end(); ?>
+
+</div>
+</div>
+
+
+</div>
+</div>
 
 
 <?php
@@ -281,3 +304,4 @@ $js = <<< JS
     JS;
 $this->registerJS($js, View::POS_END)
 ?>
+<?php Pjax::end(); ?>
