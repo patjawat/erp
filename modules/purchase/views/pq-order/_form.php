@@ -100,7 +100,7 @@ use yii\widgets\Pjax;
                                             'options' => ['placeholder' => 'กรุณาเลือก'],
                                             'pluginOptions' => [
                                                 'allowClear' => true,
-                                                // 'dropdownParent' => '#main-modal',
+                                                'dropdownParent' => '#main-modal',
                                             ],
                                             'pluginEvents' => [
                                                 'select2:select' => "function(result) { 
@@ -125,7 +125,7 @@ use yii\widgets\Pjax;
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                // 'dropdownParent' => '#main-modal',
+                                'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => 'function(result) { 
@@ -160,7 +160,7 @@ use yii\widgets\Pjax;
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
-                                    // 'dropdownParent' => '#main-modal',
+                                    'dropdownParent' => '#main-modal',
                                 ],
                                 'pluginEvents' => [
                                     'select2:select' => "function(result) { 
@@ -177,7 +177,7 @@ use yii\widgets\Pjax;
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                // 'dropdownParent' => '#main-modal',
+                                'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => "function(result) { 
@@ -193,7 +193,7 @@ use yii\widgets\Pjax;
                             'options' => ['placeholder' => 'กรุณาเลือก'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                // 'dropdownParent' => '#main-modal',
+                                'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
                                 'select2:select' => "function(result) { 
