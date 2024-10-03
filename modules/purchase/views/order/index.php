@@ -73,7 +73,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td class="fw-light align-middle">
                             <div class=" d-flex flex-column">
-
                                 <span class="fw-semibold "><?=$model->po_number?></span>
                                 <?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?>
                             </div>

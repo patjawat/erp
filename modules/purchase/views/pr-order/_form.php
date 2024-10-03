@@ -141,22 +141,22 @@ $resultsJs = <<< JS
             ],
             'pluginEvents' => [
                 "select2:unselecting" => "function() { 
-                $('#order-data_json-vendor_address').val('')
+                    $('#order-data_json-vendor_address').val('')
                 }",
                 'select2:select' => "function(result) { 
-                                    var data = \$(this).select2('data')[0].text;
-                                    \$('#order-data_json-vendor_name').val(data)
+                                    var data =  $(this).select2('data')[0].text;
+                                      $('#order-data_json-vendor_name').val(data)
                                     $.ajax({
                                         type: 'get',
                                         url: '/depdrop/get-vendor',
                                         data:{id:$(this).val()},
                                         dataType:'json',
                                         success: function (res) {
-                                            // $('#order-data_json-vendor_address').val(res.data_json.address)
-                                            // $('#order-data_json-vendor_phone').val(res.data_json.phone)
-                                            // $('#order-data_json-vendor_tax').val(res.code)
-                                            // $('#order-data_json-account_name').val(res.data_json.account_name)
-                                            // $('#order-data_json-account_number').val(res.data_json.account_number)
+                                            $('#order-data_json-vendor_address').val(res.data_json.address)
+                                            $('#order-data_json-vendor_phone').val(res.data_json.phone)
+                                            $('#order-data_json-vendor_tax').val(res.code)
+                                            $('#order-data_json-account_name').val(res.data_json.account_name)
+                                            $('#order-data_json-account_number').val(res.data_json.account_number)
                                         }
                                     });
 
