@@ -41,7 +41,7 @@ class StockController extends \yii\web\Controller
                 $model->transaction_type = 'OUT';
                 $model->warehouse_id = $warehouse;
                 $model->from_warehouse_id = $warehouse;
-                $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . (substr((date('Y') + 543), 2)) . '????');
+                $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . (substr(AppHelper::YearBudget(), 2)) . '????');
                 $model->save(false);
                 
                 // update Stock
@@ -151,7 +151,7 @@ class StockController extends \yii\web\Controller
             'name' => 'order',
             'movement_type' => 'OUT',
         ]);
-        $thaiYear = date('dm') . substr((date('Y') + 543), 2);
+        $thaiYear = date('dm') . substr(AppHelper::YearBudget(), 2);
 
         $stock->rq_number  = \mdm\autonumber\AutoNumber::generate('RQ' . $thaiYear . '-?????');
         $stock->save(false);

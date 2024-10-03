@@ -128,7 +128,7 @@ class OrderController extends Controller
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
@@ -225,7 +225,7 @@ class OrderController extends Controller
     public function actionPrConfirm($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         $model = $this->findModel($id);
         $user = UserHelper::GetEmployee();
         $model->updated_by = $user->id;

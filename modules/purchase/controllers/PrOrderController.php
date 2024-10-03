@@ -109,7 +109,7 @@ class PrOrderController extends Controller
             ]
         ]);
 
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -481,7 +481,7 @@ class PrOrderController extends Controller
     public function actionPrConfirm($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         $model = $this->findModel($id);
         $user = UserHelper::GetEmployee();
         $model->updated_by = $user->id;
@@ -509,7 +509,7 @@ class PrOrderController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $status = $this->request->get('status');
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
         if ($this->request->isPost) {

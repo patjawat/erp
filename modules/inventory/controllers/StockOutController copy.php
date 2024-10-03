@@ -151,7 +151,7 @@ class StockOutController extends Controller
 
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
-                    $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . (substr((date('Y') + 543), 2)) . '????');
+                    $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . (substr(AppHelper::YearBudget(), 2)) . '????');
                 }
 
                 $model->order_status = 'await';
@@ -279,7 +279,7 @@ class StockOutController extends Controller
         $newStockModel = new StockEvent;
         $newStockModel->name = 'order';
         $newStockModel->order_status = 'success';
-        $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr((date('Y') + 543), 2)) . '????');
+        $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr(AppHelper::YearBudget(), 2)) . '????');
         $newStockModel->from_warehouse_id = $model->warehouse_id;
         $newStockModel->warehouse_id = $model->from_warehouse_id;
         $newStockModel->transaction_type = 'IN';

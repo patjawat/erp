@@ -81,7 +81,7 @@ class StockRequestController extends Controller
     
             if ($this->request->isPost) {
                 if ($model->load($this->request->post())) {
-                    $thaiYear = substr((date('Y') + 543), 2);
+                    $thaiYear = substr(AppHelper::YearBudget(), 2);
                     if ($model->rq_number == '') {
                         $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
                     }

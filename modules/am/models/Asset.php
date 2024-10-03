@@ -264,7 +264,7 @@ class Asset extends \yii\db\ActiveRecord
 
                 // สร้างรหัสอัตโนมัติ
                 if ($this->fsn_auto == '1') {
-                    $year = substr((date('Y') + 543), -2, 2);
+                    $year = substr(AppHelper::YearBudget(), -2, 2);
                     $number = $this->asset_item . '/' . $year . '.';
                     $this->code = \mdm\autonumber\AutoNumber::generate($number . '?');
                 }

@@ -78,7 +78,7 @@ class PoOrderController extends Controller
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 // $model->code = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
@@ -117,7 +117,7 @@ class PoOrderController extends Controller
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;

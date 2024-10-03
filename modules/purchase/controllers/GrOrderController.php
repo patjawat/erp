@@ -127,7 +127,7 @@ class GrOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {

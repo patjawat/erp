@@ -146,7 +146,7 @@ class StoreController extends \yii\web\Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $thaiYear = substr((date('Y') + 543), 2);
+                $thaiYear = substr(AppHelper::YearBudget(), 2);
                 if ($model->rq_number == '') {
                     $model->rq_number = \mdm\autonumber\AutoNumber::generate('RQ-' . $thaiYear . '????');
                 }
@@ -236,7 +236,7 @@ class StoreController extends \yii\web\Controller
             'name' => 'order',
             'movement_type' => 'OUT',
         ]);
-        $thaiYear = date('dm') . substr((date('Y') + 543), 2);
+        $thaiYear = date('dm') . substr(AppHelper::YearBudget(), 2);
 
         $stock->rq_number  = \mdm\autonumber\AutoNumber::generate('RQ' . $thaiYear . '-?????');
         $stock->save(false);

@@ -113,7 +113,7 @@ class OrderController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $status = $this->request->get('status');
-        $thaiYear = substr((date('Y') + 543), 2);
+        $thaiYear = substr(AppHelper::YearBudget(), 2);
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
         if ($this->request->isPost) {

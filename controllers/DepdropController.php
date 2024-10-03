@@ -297,7 +297,7 @@ class DepdropController extends \yii\web\Controller
         $fsnAuto = $this->request->get('fsn_auto');
         $model = CategoriseHelper::CategoriseByCodeName($asset_item, $name);
         $asset = Asset::findOne(['asset_item' => $asset_item]);
-        $year = substr((date('Y') + 543), -2, 2);
+        $year = substr(AppHelper::YearBudget(), -2, 2);
         $number = $asset_item . '/' . $year . '.';
         // return $asset_item;
         // $auto = \mdm\autonumber\AutoNumber::generate($number.'?');

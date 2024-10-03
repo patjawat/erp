@@ -155,7 +155,7 @@ class PqOrderController extends Controller
     //         'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
     //     ]);
 
-    //     $thaiYear = substr((date('Y') + 543), 2);
+    //     $thaiYear = substr(AppHelper::YearBudget(), 2);
     //     if ($this->request->isPost) {
     //         if ($model->load($this->request->post())) {
     //             $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
@@ -193,7 +193,7 @@ class PqOrderController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        // $thaiYear = substr((date('Y') + 543), 
+        // $thaiYear = substr(AppHelper::YearBudget(), 
         $thaiYear = AppHelper::YearBudget();
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
