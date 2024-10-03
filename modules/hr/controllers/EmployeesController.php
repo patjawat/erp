@@ -74,7 +74,7 @@ class EmployeesController extends Controller
 
         // ค้นหาคามกลุ่มโครงสร้าง
         $org1 = Organization::findOne($searchModel->q_department);
-        // ถ้ามรกลุ่มย่อย
+        // ถ้ามีกลุ่มย่อย
         if (isset($org1) && $org1->lvl == 1) {
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
@@ -91,8 +91,8 @@ class EmployeesController extends Controller
             }
             // Yii::$app->response->format = Response::FORMAT_JSON;
             // $dataDepartment =  ArrayHelper::merge($arrDepartment,$org1->lft);
-            $arrDepartment;
-            $arrDepartment[]  =$org1->lft;
+            // $arrDepartment;
+            // $arrDepartment[]  = $org1->lft;
 
             if (count($arrDepartment) > 0) {
                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
@@ -138,6 +138,7 @@ class EmployeesController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'notStatus' => $notStatus
+
         ]);
     }
 
