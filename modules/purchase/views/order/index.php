@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th class="fw-semibold" style="width:110px">เลขที่</th>
+                        <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
                         <th class="fw-semibold" style="width:300px">ผู้ขอ</th>
                         <th class="fw-semibold" style="width:180px">มูลค่า/ประเภท</th>
                         <th class="fw-semibold" >เลขที่สั่งซื้อ/ผู้ขาย</th>
@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody class="align-middle">
                     <?php foreach ($dataProvider->getModels() as $model): ?>
                     <tr class="">
-                        <td><span class="fw-semibold "><?=$model->pr_number?></span></td>
+                        <td><span class="fw-semibold "><?=$model->pq_number?></span></td>
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                         <td class="fw-light align-middle">
                         <div class="d-felx flex-column">
