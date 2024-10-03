@@ -79,7 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
                         <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
-                        <td class="fw-light align-bottom">
+                        <td class="fw-light align-middle">
                         <?php if($model->deleted_at == null):?>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted mb-0 fs-13">

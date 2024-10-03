@@ -8,6 +8,7 @@ use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\Warehouse;
 use app\modules\purchase\models\Order;
+use app\modules\purchase\models\OrderSearch;
 use app\modules\sm\models\ProductSearch;
 use Yii;
 use yii\helpers\Html;
@@ -16,6 +17,7 @@ use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\db\Expression;
 
 /**
  * StockEventController implements the CRUD actions for StockEvent model.
@@ -54,6 +56,64 @@ class StockInController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+
+
+    // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
+    public function actionListPendingOrder()
+    {
+        $warehouse = \Yii::$app->session->get('warehouse');
+        $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+        
+        if (isset($warehouseModel->data_json['item_type'])) {
+
+            $item = $warehouseModel->data_json['item_type'];
+
+
+            $searchModel = new OrderSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->andFilterWhere(['name' => 'order', 'status' => 4]);
+            $dataProvider->query->andWhere(['IN', 'category_id', $item]);
+            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->vendor_name]);
+            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
+            // $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json->'$.vendor_name','\"$id\"')"));
+
+
+
+            $models = Order::find()
+                ->where(['name' => 'order', 'status' => 4])
+                // ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
+                ->andWhere(['IN', 'category_id', $item])
+                ->all();
+
+            if ($this->request->isAjax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('list_pending_order', [
+                        'models' => $models,
+                        'searchModel' => $searchModel,
+                        'dataProvider' => $dataProvider,
+                    ]),
+                ];
+            } else {
+                return $this->render('list_pending_order', [
+                    'models' => $models,
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                   
+                ]);
+            }
+        } else {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => 'not content',
+            ];
+        }
     }
 
     /**
@@ -456,43 +516,6 @@ class StockInController extends Controller
         }
     }
 
-    // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
-    public function actionListPendingOrder()
-    {
-        $warehouse = \Yii::$app->session->get('warehouse');
-        $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
-        if (isset($warehouseModel->data_json['item_type'])) {
-            $item = $warehouseModel->data_json['item_type'];
-
-            $models = Order::find()
-                ->where(['name' => 'order', 'status' => 4])
-                // ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
-                ->andWhere(['IN', 'category_id', $item])
-                ->all();
-
-            if ($this->request->isAjax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-
-                return [
-                    'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('list_pending_order', [
-                        'models' => $models,
-                    ]),
-                ];
-            } else {
-                return $this->render('list_pending_order', [
-                    'models' => $models,
-                ]);
-            }
-        } else {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => 'not content',
-            ];
-        }
-    }
 
     public function actionProductList()
     {

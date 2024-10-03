@@ -48,6 +48,7 @@ class Order extends \yii\db\ActiveRecord
     public $action;
     public $old_data;
     public $auto_lot;
+    public $order_type_name;
     public $vendor_name;
     public $vendor_address;
     public $vendor_phone;
@@ -91,7 +92,9 @@ class Order extends \yii\db\ActiveRecord
                 'old_data',
                 'auto_lot',
                 'q',
-                'set_date'
+                'set_date',
+                'vendor_name',
+                'order_type_name'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];

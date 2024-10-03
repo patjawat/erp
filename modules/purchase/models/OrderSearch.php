@@ -18,7 +18,7 @@ class OrderSearch extends Order
     {
         return [
             [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by','deleted_by'], 'integer'],
-            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','vendor_name','order_type_name'], 'safe'],
             [['price'], 'number'],
         ];
     }
@@ -78,6 +78,7 @@ class OrderSearch extends Order
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'pr_number', $this->pr_number])
             ->andFilterWhere(['like', 'po_number', $this->po_number])
+            ->andFilterWhere(['like', 'pq_number', $this->pq_number])
             ->andFilterWhere(['like', 'approve', $this->approve])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
