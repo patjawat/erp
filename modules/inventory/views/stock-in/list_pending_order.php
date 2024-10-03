@@ -64,14 +64,14 @@ use yii\widgets\Pjax;
                 }
             ],
             [
-                'attribute' => 'vendor_id',
+                // 'attribute' => '',
                 'format' => 'raw',
                 'width' => '150px',
                 'header' => 'มูลค่า',
-                // 'hAlign' => 'center',
                 'vAlign' => 'middle',
+                'hAlign' => 'right', 
                 'value' => function($model){
-                    return $model->po_number;
+                    return '<span class="fw-semibold">'.number_format($model->calculateVAT()['priceAfterVAT'],2).'</span>';
                 }
             ],
             [
