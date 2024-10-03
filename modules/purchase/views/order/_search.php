@@ -33,6 +33,10 @@ use yii\helpers\ArrayHelper;
                                         'select2:select' => "function(result) { 
                                                   $(this).submit()
                                                 }",
+                                                'select2:unselecting' => "function(result) { 
+                                                    $(this).submit()
+                                                  }",
+                                                
                                     ]
                                 ])->label(false);
                         ?>
