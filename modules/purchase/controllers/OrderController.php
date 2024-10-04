@@ -68,6 +68,8 @@ class OrderController extends Controller
         //     ['like', 'ipd_admit.vn', $searchModel->q_doctor],
         //     ['like', 'opd_visit.pcc_vn', $searchModel->q_doctor],
         // ]);
+
+        $dataProvider->query->orderBy(['created_at' => SORT_DESC]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
