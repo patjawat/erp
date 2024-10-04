@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
         </div>
-        <table class="table table-striped">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle">
                 <?php foreach ($dataProvider->getModels() as $model): ?>
-                <tr class="">
+                <tr class="zoom-in">
                     <td><span class="fw-semibold "><?=$model->pq_number?></span></td>
                     <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                     <td><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?>
@@ -138,7 +138,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php endforeach; ?>
             </tbody>
         </table>
-        
+
         <div class="d-flex justify-content-center">
             <?= yii\bootstrap5\LinkPager::widget([
         'pagination' => $dataProvider->pagination,
