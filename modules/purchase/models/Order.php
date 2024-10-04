@@ -765,12 +765,18 @@ class Order extends \yii\db\ActiveRecord
 
     public function ListItemTypeOrder()
     {
-        $variable =  self::find()->where(['name' => 'order'])->all();
         $arr = [];
+        try {
+
+        $variable =  self::find()->where(['name' => 'order'])->all();
         foreach ($variable as $model) {
             $arr[] = ['id' => $model->data_json['order_type_name'],'name' => $model->data_json['order_type_name']];
         }
         return $arr;
+                    //code...
+                } catch (\Throwable $th) {
+                    return $arr;
+                }
     }
 
     //ร้อยละดำเนินการ
