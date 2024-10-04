@@ -26,15 +26,10 @@ class DefaultController extends Controller
 public function actionBudgetChart()
 {
     Yii::$app->response->format = Response::FORMAT_JSON;
-    $sql = "SELECT 
-    b.code,
-    b.title,
-     IFNULL(SUM(CAST(JSON_UNQUOTE(o.data_json->'$.total_price') AS DECIMAL(10, 0))),0) AS total
-        FROM 
-            `categorise` b
-        LEFT JOIN 
-            orders o 
-            ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
+    $sql = "SELECT b.code,b.title,IFNULL(sum(i.price * i.qty),0) AS total
+        FROM categorise b
+        LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
+        LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
         WHERE 
             b.`name` LIKE 'budget_type'
         AND b.code <> 8

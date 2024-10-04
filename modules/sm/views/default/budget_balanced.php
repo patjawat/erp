@@ -15,11 +15,10 @@ $query = Yii::$app->db->createCommand($sql)
                     <i class="fa-solid fa-wallet fs-1 text-secondary"></i>
                 </div>
                 <div class="">
-                        <span class="h5 fw-semibold"><?=$query?> บาท</span>
-                        <!-- <p class="fw-lighter">ใช้จ่ายไปแล้วประมาณ 25% ของงบประมาณประจำปี</p> -->
-                    </div>
-                    <div id="orderBudget"></div>
-
+                    <span class="h5 fw-semibold"><?=$query?> บาท</span>
+                    <!-- <p class="fw-lighter">ใช้จ่ายไปแล้วประมาณ 25% ของงบประมาณประจำปี</p> -->
+                </div>
+                <div id="orderBudget"></div>
             </div>
         </div>
 
