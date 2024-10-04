@@ -92,7 +92,9 @@ public function actionBudgetChart()
     private function getData1($month)
     {
 
-        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(price * qty),0) FROM orders WHERE group_id = 4 AND MONTH(created_at) = :month")
+        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
+                                                INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE o.group_id = 4 AND MONTH(i.created_at) = :month")
         ->bindValue(':month',$month)
         ->queryScalar();
     }
@@ -100,7 +102,9 @@ public function actionBudgetChart()
     private function getData2($month)
     {
 
-        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(price * qty),0) FROM orders WHERE category_id != 'M25' AND MONTH(created_at) = :month")
+        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
+                                                INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id != 'M25' AND MONTH(i.created_at) = :month")
 
         ->bindValue(':month',$month)
         ->queryScalar();
@@ -109,7 +113,9 @@ public function actionBudgetChart()
     private function getData3($month)
     {
 
-        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(price * qty),0) FROM orders WHERE category_id = 'M25' AND MONTH(created_at) = :month")
+        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
+                                                INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id = 'M25' AND MONTH(i.created_at) = :month")
         ->bindValue(':month',$month)
         ->queryScalar();
     }
