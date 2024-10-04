@@ -48,17 +48,22 @@ $js = <<< JS
             xaxis: {
               categories: ['ต.ต.','พ.ย.','ธ.ค.','ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.',],
               tickPlacement: 'on',
-    labels: { show: true },
-    axisTicks: { show: false },
-    axisBorder: { show: false }
+              labels: { show: true },
+              axisTicks: { show: false },
+              axisBorder: { show: false }
             },
-            yaxis: { show: true,
-    tickAmount: 4,
-    labels: {
-      offsetX: -17,
-    },
+              yaxis: { show: true,
+              tickAmount: 4,
+              // labels: {
+                // },
+                labels: {
+                  offsetX: -17,
+                formatter: function (value) {
+                  return value.toFixed(2); // จัดรูปแบบตัวเลขเป็น 0.00
+                }
+              },
               title: {
-                text: '\$ (thousands)'
+                // text: '\$ (thousands)'
               }
             },
             fill: {
@@ -67,7 +72,7 @@ $js = <<< JS
             tooltip: {
               y: {
                 formatter: function (val) {
-                  return  val + " รายการ"
+                  return val.toFixed(2) + " บาท"
                 }
               }
             }
