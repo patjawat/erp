@@ -59,7 +59,7 @@ $js = <<< JS
                 labels: {
                   offsetX: -17,
                 formatter: function (value) {
-                  return value.toFixed(2); // จัดรูปแบบตัวเลขเป็น 0.00
+                  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
               },
               title: {
