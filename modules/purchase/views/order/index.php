@@ -48,11 +48,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
-                        <th class="fw-semibold" style="width:300px">ผู้ขอ</th>
-                        <th class="fw-semibold" style="width:180px">มูลค่า/ประเภท</th>
+                        <th class="fw-semibold" style="width:200px">ผู้ขอ/ประเภท</th>
+                        <th class="fw-semibold" style="width:180px">ประเภท</th>
                         <th class="fw-semibold" >เลขที่สั่งซื้อ/ผู้ขาย</th>
                         <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
-                        <th class="fw-semibold" style="width: 200px;">ผู้เห็นชอบ</th>
+                        <th class="fw-semibold" style="width: 180px;">ผู้เห็นชอบ</th>
+                        <th class="fw-semibold text-end" style="width:150px">มูลค่า/ประเภทเงิน</th>
                         <th class="fw-semibold"  style="width: 230px;">ความคืบหน้า</th>
                         <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
                     </tr>
@@ -62,15 +63,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="">
                         <td><span class="fw-semibold "><?=$model->pq_number?></span></td>
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
-                        <td class="fw-light align-middle">
-                        <div class="d-felx flex-column">
-                            <div class="fw-semibold ">
-                                <?= number_format($model->calculateVAT()['priceAfterVAT'],2)?>
-                            </div>
-                            <div class="text-primary mb-0 fs-15"><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?></div>
-                                
-                        </div>
-                        </td>
+                        <td><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?></td>
+
                         <td class="fw-light align-middle">
                             <div class=" d-flex flex-column">
                                 <span class="fw-semibold "><?=$model->po_number?></span>
@@ -79,6 +73,14 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
                         <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
+                        <td class="fw-light align-middle text-end">
+                        <div class="d-felx flex-column">
+                            <div class="fw-semibold ">
+                                <?= number_format($model->calculateVAT()['priceAfterVAT'],2)?>
+                            </div>
+                            <div class="text-primary mb-0 fs-15"><?=isset($model->data_json['pq_budget_type_name']) ? $model->data_json['pq_budget_type_name'] : ''?></div>   
+                        </div>
+                        </td>
                         <td class="fw-light align-middle">
                         <?php if($model->deleted_at == null):?>
                             <div class="d-flex justify-content-between">

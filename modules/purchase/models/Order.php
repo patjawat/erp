@@ -353,7 +353,8 @@ class Order extends \yii\db\ActiveRecord
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
             $a = $this->data_json['product_type_name'];
-            $text = $msg ? $msg : ($this->viewCreatedAt() . ' | ' . $employee->departmentName());
+            // $text = $msg ? $msg : ($this->viewCreatedAt() . ' | ' . $employee->departmentName());
+            $text = $msg ? $msg : ($this->viewCreatedAt());
             return [
                 'employee' => $employee,
                 'avatar' => $employee->getAvatar(false, $text),
