@@ -67,7 +67,7 @@ $js = <<< JS
             tooltip: {
               y: {
                 formatter: function (val) {
-                  return "\$ " + val + " บาท"
+                  return  val + " รายการ"
                 }
               }
             }
