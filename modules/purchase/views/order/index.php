@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle">
                 <?php foreach ($dataProvider->getModels() as $model): ?>
-                <tr class="zoom-in">
+                <tr>
                     <td><span class="fw-semibold "><?=$model->pq_number?></span></td>
                     <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                     <td><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?>
