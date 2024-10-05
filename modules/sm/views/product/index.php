@@ -50,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="bi bi-grid-fill me-1"></i>  ประเภทวัสดุ', ['/sm/product-type', 'title' => '<i class="bi bi-grid-fill"></i> ประเภทวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="bi bi-grid-fill me-1"></i>  ประเภทวัสดุ', ['/sm/product-type', 'title' => '<i class="bi bi-grid-fill"></i> ประเภทวัสดุ'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md','pjax' => false]]) ?>
                             <?= Html::a('<i class="bi bi-grid-fill me-1"></i>  หน่วยนับ', ['/sm/product-unit','title' => 'หน่วยนับ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </div>
                     </div>
@@ -63,25 +63,28 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
             <h6><i class="bi bi-ui-checks"></i> ทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-                <div class="table-responsive">
+
                     <table class="table table-striped custom-table">
                         <thead>
-                        <th style="width:80px">รหัส</th>
                         <th style="width:500px">รายการ</th>
                         <th class="text-center" style="width:100px">ประเภท</th>
-                        <th class="text-center" style="width:80px">หน่วย</th>
-                        <th class="text-center" scope="col" style="width: 80px;">ดำเนินการ</th>
+                        <th class="text-center" style="width:20px">สถานะ</th>
+                        <th class="text-center" scope="col" style="width: 100px;">ดำเนินการ</th>
                         </thead>
                         <tbody class="align-middle">
                             <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="rounded">
-                            <td><?=$model->code?></td>
                                 <td scope="row">
                                     <?=$model->Avatar()?>
                                 </td>
-                              
                                 <td class="text-center"><?=$model->ViewTypeName()['title']?></td>
-                                <td class="text-center"><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td>
+                                <!-- <td class="text-center"><?=(isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')?></td> -->
+                                <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="<?= $model->id ?>"
+                                        <?= $model->active == 1 ? 'checked' : '' ?>>
+                                </div>
+                                </td>
                                 <td class="text-center">
                                     <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                                     <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
@@ -91,7 +94,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                </div>
 
                 <div class="d-flex justify-content-center">
                     <div class="text-muted">
@@ -115,3 +117,37 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 <?php Pjax::end(); ?>
+
+
+<?php
+$chageActiveUrl = Url::to(['/sm/product/set-active']);
+$js = <<< JS
+        $("body").on("change", ".form-check-input", function (e) {
+
+          var id = $(this).attr('id');
+          $.ajax({
+            type: "post",
+            url: "$chageActiveUrl",
+            data:{
+              id:id
+            },
+            dataType: "json",
+            success: function (res) {
+              if(res.status == 'success'){
+              success()
+                 $.pjax.reload({container:res.container, history:false});
+              }
+            }
+          });
+          
+                        if ($(this).is(':checked')) {
+                            // alert('Checkbox is checked!');
+                        } else {
+                            // alert('Checkbox is unchecked!');
+                        }
+                    });
+
+              
+JS;
+$this->registerJS($js)
+?>

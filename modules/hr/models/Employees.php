@@ -245,7 +245,7 @@ class Employees extends \yii\db\ActiveRecord
 
     public function getAvatar($showAge = true, $msg = '')
     {
-        $img = Html::img($this->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
+        $img = Html::img($this->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white','loading' => 'lazy']);
         if ($msg != '') {
             return '<div class="d-flex">' . $img . '
             <div class="avatar-detail text-truncate">

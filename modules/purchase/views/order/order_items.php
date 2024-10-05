@@ -26,7 +26,7 @@ use yii\web\View;
         <thead class="table-primary">
             <tr>
                 <th style="width:500px">
-                    <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เลือกรายการ', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เลือกรายการ '.$orderTypeName ], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เลือกรายการ', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เลือกรายการ '.$orderTypeName ], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal shadow', 'data' => ['size' => 'modal-xl']]) ?>
                 </th>
                 <th class="text-center" style="width:80px">หน่วย</th>
                 <th class="text-end">ราคาต่อหน่วย</th>

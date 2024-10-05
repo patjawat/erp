@@ -10,47 +10,58 @@ use yii\widgets\Pjax;
 /** @var app\modules\sm\models\ProductTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Product Types';
+$this->title = 'ตั้งค่าวัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="product-type-index">
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-box-seam"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 
-    <?php Pjax::begin(['enablePushState' => false]); ?>
-    <div class="d-flex justify-content-between">
+<?php $this->beginBlock('sub-title'); ?>
 
-    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product-type/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
 
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-    </div>
+<?php Pjax::begin(['id' => 'sm-container','enablePushState' => false, 'timeout' => 3000]); ?>
+<div class="row d-flex justify-content-center">
+    <div class="col-8">
 
-    <div
-        class="table-responsive"
-    >
-        <table
-            class="table table-primary"
-        >
-            <thead>
-                <tr>
-                    <th scope="col">รายการ</th>
-                    <th scope="col">ดำเนินการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($dataProvider->getModels() as $model):?>
-                <tr class="">
-                    <td scope="row"><?=$model->title?></td>
-                    <td class="text-center">
-                                    <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product-type/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
-                                    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product-type/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
-                                </td>
-                </tr>
-                <?php endforeach;?>
-            </tbody>
-        </table>
-    </div>
-    
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
 
-    <div class="d-flex justify-content-center">
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product-type/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+
+                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                </div>
+
+
+                <table class="table table-primary">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:100px">รหัส</th>
+                            <th>รายการ</th>
+                            <th class="text-center" style="width:100px">ดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($dataProvider->getModels() as $model):?>
+                        <tr class="">
+                            <td scope="row"><?=$model->code?></td>
+                            <td><?=$model->title?></td>
+                            <td class="text-center">
+                                <?=Html::a('<i class="fa-solid fa-eye"></i>',['/sm/product-type/view','id' => $model->id],['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                <?=Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/sm/product-type/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                            </td>
+                        </tr>
+                        <?php endforeach;?>
+                    </tbody>
+                </table>
+
+
+                <div class="d-flex justify-content-center">
                     <div class="text-muted">
                         <?= yii\bootstrap5\LinkPager::widget([
                             'pagination' => $dataProvider->pagination,
@@ -64,6 +75,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
 
-    <?php Pjax::end(); ?>
 
+            </div>
+        </div>
+
+    </div>
 </div>
+<?php Pjax::end(); ?>

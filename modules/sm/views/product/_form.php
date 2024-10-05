@@ -103,7 +103,7 @@ use unclead\multipleinput\MultipleInputColumn;
                 </div>
                 <div class="col-12">
                     <?= $form->field($model, 'data_json[asset_type_name]')->radioList([ 'วัสดุคงทนถาวร' => 'วัสดุคงทนถาวร','วัสดุสิ้นเปลือง' => 'วัสดุสิ้นเปลือง','บริการ' => 'บริการ'], ['custom' => true, 'inline' => true])->label('ประเภท') ?>
-
+                    <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true,'checked' => ($model->active == 1 ? true : false)])->label('เปิดใช้งาน');?>
                 </div>
                 <div class="col-5">
 

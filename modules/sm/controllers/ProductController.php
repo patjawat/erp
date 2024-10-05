@@ -7,6 +7,7 @@ use Yii;
 use app\modules\sm\models\Product;
 use app\modules\sm\models\ProductSearch;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -200,6 +201,77 @@ class ProductController extends Controller
         ];
     }
 
+
+
+    public function actionSetActive()
+    {
+
+        $id = $this->request->post('id');
+
+        $model = $this->findModel($id);
+        if ($this->request->isPost && $this->request->post('id') ) {
+            $model->active = ($model->active == 1 ? 0 : 1);
+            if ($model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return 
+                [
+                    'status' => 'success',
+                    'container' => '#sm'
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+       
+    }
+
+
+    public function actionUnitUpdate()
+    {
+        $id = $this->request->get('id');
+        $model = $this->findModel($id);
+        $old = $model->data_json;
+        if (isset($_POST['hasEditable'])) {
+            // use Yii's response format to encode output as JSON
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $newObj =  $_POST['Product']['data_json'];
+            $model->data_json = ArrayHelper::merge($old, $newObj);
+            if ($model->save()) {
+                // return JSON encoded output in the below format on success with an empty `message`
+                return ['output' => $model->data_json['unit'], 'message' => ''];
+            } else {
+                // alternatively you can return a validation error (by entering an error message in `message` key)
+                return ['output' => $newObj, 'message' => 'Incorrect Value! Please reenter.'];
+            }
+        } else {
+            return ['output'=>'', 'message'=>''];
+        }
+    }
+        // \Yii::$app->response->format = Response::FORMAT_JSON;
+        // $model = $this->findModel($id);
+        // if(!$model->ref){
+        //     $model->ref  = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+        // }
+
+        // if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        //     return [
+        //         'title' => $this->request->get('title'),
+        //         'content' => $this->renderAjax('view', [
+        //             'model' => $model,
+        //         ]),
+        //         'status' => 'success',
+        //     ];
+        // }
+
+        // return [
+        //     'title' => $this->request->get('title'),
+        //     'content' => $this->renderAjax('create', [
+        //         'model' => $model,
+        //         'ref' => $model->ref == '' ? substr(\Yii::$app->getSecurity()->generateRandomString(), 10) : $model->ref,
+        //     ]),
+        // ];
+    // }
+
     /**
      * Deletes an existing Product model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -210,6 +282,7 @@ class ProductController extends Controller
      *
      * @throws NotFoundHttpException if the model cannot be found
      */
+
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();

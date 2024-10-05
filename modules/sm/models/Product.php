@@ -60,7 +60,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items','auto','q'], 'safe'],
+            [['data_json', 'q_category', 'unit_items','auto','q','unit_name'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -124,10 +124,11 @@ class Product extends \yii\db\ActiveRecord
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
-                                    <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].'</p>
+                                    <span class="text-primary fw-semibold">'. $this->code.'</span>
                                 </div>
                             </div>';
     }
+
 
     //แสดงรูปแบบประเภท
     public function ViewTypeName(){

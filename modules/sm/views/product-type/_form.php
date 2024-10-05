@@ -13,12 +13,13 @@ use kartik\widgets\ActiveForm;
     <?php $form = ActiveForm::begin([
 'id' => 'form-productType'
     ]); ?>
+<?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('รหัส') ?>
+<?= $form->field($model, 'title')->textInput(['maxlength' => true])->label('ชื่อของประเภทวัสดุ') ?>
 
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
 
-    <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('รหัส') ?>
-    <?= $form->field($model, 'title')->textInput(['maxlength' => true])->label('ชื่อของประเภทวัสดุ') ?>
 
 
     <div class="form-group mt-3 d-flex justify-content-center">
