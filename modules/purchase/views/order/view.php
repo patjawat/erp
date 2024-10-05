@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/sm/views/default/menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'purchase-container']); ?>
+<?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
 
 <?php
                             try {
