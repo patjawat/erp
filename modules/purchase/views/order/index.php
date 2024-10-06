@@ -28,7 +28,37 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php Pjax::begin(['id' => 'purchase-container','timeout' => 88888888]); ?>
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script> -->
+<style>
+    /* .blur-up {
+		-webkit-filter: blur(5px);
+		filter: blur(5px);
+		transition: filter 100ms, -webkit-filter 100ms;
+	}
 
+	.blur-up.lazyloaded {
+		-webkit-filter: blur(0);
+		filter: blur(0);
+	} */
+    .lazyload,
+.lazyloading {
+	opacity: 0;
+}
+.lazyloaded {
+	opacity: 1;
+	transition: opacity 300ms;
+}
+/* fade image in while loading and show a spinner as background image (good for progressive images) */
+
+.lazyload {
+	opacity: 0;
+}
+
+.lazyloading {
+	opacity: 1;
+	transition: opacity 300ms;
+	background: #f7f7f7 url(loader.gif) no-repeat center;
+}
+</style>
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center align-middle">
         <div class="d-flex gap-3 justify-content-start">

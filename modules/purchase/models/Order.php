@@ -445,7 +445,13 @@ class Order extends \yii\db\ActiveRecord
         foreach (Order::find()->where(['name' => 'committee', 'category_id' => $this->id])->all() as $key => $item) {
             $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
             $data .= Html::a(
-                Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),
+                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+        'data' => [
+            'expand' => '-20',
+            'sizes' => 'auto',
+            'src' =>$emp->showAvatar()
+            ]
+    ]),
                 ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
                 [
                     'class' => 'open-modal',
