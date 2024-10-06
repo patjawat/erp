@@ -9,7 +9,13 @@ use yii\helpers\Url;
     <div class="card-body">
         <div class="d-flex">
             <div class="position-relative">
-                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1', 'data-aos' => 'zoom-in']) ?>
+                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1  lazyload',
+        'data' => [
+            'expand' => '-20',
+            'sizes' => 'auto',
+            'src' =>$model->showAvatar()
+            ]
+            ]) ?>
                 <div class="position-absolute top-0 start-500 translate-middle">
                 <?php if($model->user_id == 0):?>
                     <i class="bi bi-exclamation-circle-fill text-warning fs-4"></i>
