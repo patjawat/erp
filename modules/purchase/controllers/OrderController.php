@@ -71,6 +71,8 @@ class OrderController extends Controller
         // ]);
 
         $dataProvider->query->orderBy(['created_at' => SORT_DESC]);
+        // $dataProvider->pagination->pageSize = 10;
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

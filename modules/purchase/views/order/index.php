@@ -27,6 +27,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::begin(['id' => 'purchase-container','timeout' => 88888888]); ?>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script> -->
+
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center align-middle">
         <div class="d-flex gap-3 justify-content-start">
