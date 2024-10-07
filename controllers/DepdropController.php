@@ -239,9 +239,9 @@ class DepdropController extends \yii\web\Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Categorise::find()
-            ->Where(['or', ['LIKE', 'title', $q]])
-            ->andWhere(['name' => 'position_name'])
-            ->limit(1000)
+        ->where(['name' => 'position_name'])
+            ->andWhere(['or', ['LIKE', 'title', $q]])
+            ->limit(10)
             ->all();
         $data = [['id' => '', 'text' => '', 'position_type' => '']];
         foreach ($models as $model) {
