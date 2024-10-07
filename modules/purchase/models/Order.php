@@ -858,7 +858,7 @@ class Order extends \yii\db\ActiveRecord
    {
 
     // $sql = "SELECT b.code, b.title, IFNULL(SUM(i.price * i.qty), 0) AS total
-    //     FROM categorise b
+    //     FROM categorise bf
     //     LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
     //     LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
     //     WHERE 
@@ -1012,8 +1012,8 @@ return  Yii::$app->db->createCommand($sql)
         {
             $total =  static::find()
             ->where(['name' => 'order'])
-            ->andWhere(['>=', 'o.status', 4])
-            ->andFilterWhere(['o.thai_year' => $this->thai_year])->count();
+            ->andWhere(['>=', 'status', 4])
+            ->andFilterWhere(['thai_year' => $this->thai_year])->count();
             // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
             // $price = self::find()
             // ->alias('o')
