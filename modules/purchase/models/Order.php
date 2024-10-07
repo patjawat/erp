@@ -851,6 +851,7 @@ class Order extends \yii\db\ActiveRecord
     ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
     ->select(new Expression('FORMAT(IFNULL(SUM(i.price * i.qty), 0), 2) AS total'))
     ->andFilterWhere(['o.thai_year' => $this->thai_year])
+    ->andFilterWhere(['o.status' => $this->status])
     ->scalar();
    } 
 // ผลรวมตามประเภทเงิน

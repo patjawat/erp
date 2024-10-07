@@ -46,7 +46,10 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-        </div>
+           <div>
+               มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span> บาท        </div>
+
+           </div>
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
