@@ -1013,12 +1013,21 @@ return  Yii::$app->db->createCommand($sql)
             $total =  static::find()->where(['name' => 'order', 'status' => 4])
             ->andFilterWhere(['thai_year' => $this->thai_year])->count();
             // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+            // $price = self::find()
+            // ->alias('o')
+            // ->innerJoin('orders i', 'o.id = i.category_id')
+            // ->andWhere(['i.name' => 'order_item'])
+            // ->andWhere(['>=','o.status',4])
+            // ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            // ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
             $price = self::find()
-            ->alias('o')
-            ->innerJoin('orders i', 'o.id = i.category_id')
-            ->where(['i.name' => 'order_item', 'o.status' => 4])
-            ->andFilterWhere(['o.thai_year' => $this->thai_year])
-            ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
+    ->select(['total' => new \yii\db\Expression('IFNULL(SUM(i.qty * i.price), 0)')])
+    ->from('orders i')
+    ->innerJoin('orders o', 'o.id = i.category_id')
+    ->where(['i.name' => 'order_item'])
+    ->andWhere(['>=', 'o.status', 4])
+    ->andFilterWhere(['o.thai_year' => $this->thai_year])
+    ->scalar();
             return [
                 'total' => $total,
                 'price' => isset($price) ? $price : 0
