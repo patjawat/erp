@@ -7,7 +7,7 @@ use yii\helpers\Html;
 // $pr = Order::prSummery();
 // $pq = Order::pqSummery();
 // $po = Order::poSummery();
-$success = Order::orderSuccess();
+// $success = Order::orderSuccess();
 
 
 ?>
@@ -51,13 +51,14 @@ $success = Order::orderSuccess();
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=number_format($success['price'],2)?></span>
+                <span class="h5 fw-semibold"><?=number_format($model->orderAccep()['price'],2)?></span>
                 <i class="bi bi-bag-check-fill text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <span>ตรวจรับแล้ว</span>
-                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?=$success['total']?></span>
+                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?=$model->orderAccep()['total']?></span>
             </div>
         </div>
     </div>
 </div>
+

@@ -1007,11 +1007,18 @@ return  Yii::$app->db->createCommand($sql)
         ];
     }
 
-        //ดำเนินการสงบัญชี เสร็จสิ้น
-        public static function orderSuccess()
+        //ตรวจรับแล้ว
+        public  function orderAccep()
         {
-            $total =  static::find()->where(['name' => 'order', 'status' => 6])->count();
-            $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+            $total =  static::find()->where(['name' => 'order', 'status' => 4])
+            ->andFilterWhere(['thai_year' => $this->thai_year])->count();
+            // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+            $price = self::find()
+            ->alias('o')
+            ->innerJoin('orders i', 'o.id = i.category_id')
+            ->where(['i.name' => 'order_item', 'o.status' => 4])
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
             return [
                 'total' => $total,
                 'price' => isset($price) ? $price : 0
