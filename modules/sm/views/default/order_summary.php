@@ -5,8 +5,8 @@ use yii\helpers\Html;
 
 
 // $pr = Order::prSummery();
-$pq = Order::pqSummery();
-$po = Order::poSummery();
+// $pq = Order::pqSummery();
+// $po = Order::poSummery();
 $success = Order::orderSuccess();
 
 
@@ -27,24 +27,24 @@ $success = Order::orderSuccess();
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=number_format($pq['price'],2)?> บาท</span>
+                <span class="h5 fw-semibold"><?=number_format($model->pqSummery()['price'],2)?> บาท</span>
                 <i class="fa-solid fa-user-check text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <?=Html::a('ทะเบียนคุม',['/purchase/pq-order'])?>
-                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?=$pq['total'];?></span>
+                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?=$model->pqSummery()['total'];?></span>
             </div>
         </div>
     </div>
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=number_format($po['price'],2)?> บาท</span>
+                <span class="h5 fw-semibold"><?=number_format($model->poSummery()['price'],2)?> บาท</span>
                 <i class="bi bi-rocket text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
             <?=Html::a('ออกใบสั่งซื้อ',['/purchase/po-order'])?>
-                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?=$po['total'];?></span>
+                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?=$model->poSummery()['total'];?></span>
             </div>
         </div>
     </div>

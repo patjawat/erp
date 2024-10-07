@@ -969,25 +969,41 @@ return  Yii::$app->db->createCommand($sql)
     }
 
     //นับจำนวนทะเบียนคุม
-    public static function pqSummery()
+    public  function pqSummery()
     {
-        $total =  $total =  static::find()->where(['name' => 'order', 'status' => 2])->count();
-        $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 2")->queryScalar();
-
+        $total =  $total =  static::find()->where(['name' => 'order', 'status' => 2])
+        ->andFilterWhere(['thai_year' => $this->thai_year])
+        ->count();
+        // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 2")->queryScalar();
+        $price = self::find()
+        ->alias('o')
+        ->innerJoin('orders i', 'o.id = i.category_id')
+        ->where(['i.name' => 'order_item', 'o.status' => 1])
+        ->andFilterWhere(['o.thai_year' => $this->thai_year])
+        ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
         return [
             'total' => $total,
-            'price' => $price
+            'price' => isset($price) ? $price : 0
         ];
     }
 
     //นับจำนวนใบสั่งซื้อ
-    public static function poSummery()
+    public  function poSummery()
     {
-        $total =  static::find()->where(['name' => 'order', 'status' => 3])->count();
-        $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+        $total =  static::find()
+        ->where(['name' => 'order', 'status' => 3])
+        ->andFilterWhere(['thai_year' => $this->thai_year])
+        ->count();
+        // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+        $price = self::find()
+        ->alias('o')
+        ->innerJoin('orders i', 'o.id = i.category_id')
+        ->where(['i.name' => 'order_item', 'o.status' => 3])
+        ->andFilterWhere(['o.thai_year' => $this->thai_year])
+        ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
         return [
             'total' => $total,
-            'price' => $price
+            'price' => isset($price) ? $price : 0
         ];
     }
 
@@ -998,7 +1014,7 @@ return  Yii::$app->db->createCommand($sql)
             $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
             return [
                 'total' => $total,
-                'price' => $price
+                'price' => isset($price) ? $price : 0
             ];
         }
 
