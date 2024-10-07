@@ -852,6 +852,7 @@ class Order extends \yii\db\ActiveRecord
     ->select(new Expression('FORMAT(IFNULL(SUM(i.price * i.qty), 0), 2) AS total'))
     ->andFilterWhere(['o.thai_year' => $this->thai_year])
     ->andFilterWhere(['o.status' => $this->status])
+    ->andFilterWhere(['=', new Expression("JSON_EXTRACT(o.data_json, '$.order_type_name')"), $this->order_type_name])
     ->scalar();
    } 
 // ผลรวมตามประเภทเงิน
