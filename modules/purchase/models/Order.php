@@ -1010,7 +1010,9 @@ return  Yii::$app->db->createCommand($sql)
         //ตรวจรับแล้ว
         public  function orderAccep()
         {
-            $total =  static::find()->where(['name' => 'order', 'status' => 4])
+            $total =  static::find()
+            ->where(['name' => 'order'])
+            ->andWhere(['>=', 'o.status', 4])
             ->andFilterWhere(['thai_year' => $this->thai_year])->count();
             // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
             // $price = self::find()
