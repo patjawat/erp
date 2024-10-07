@@ -1,17 +1,46 @@
 <div id="orderChartColumn"></div>
 <?php
+
+use yii\helpers\Json;
 use yii\helpers\Url;
+
 $url = Url::to('/sm/default/chart');
+
+$data1  = [];
+$data2  = [];
+$data3  = [];
+
+
+$arr = [10,11,12,1,2,3,4,5,6,7,8,9];
+                  
+foreach ($arr as $key => $value) {
+       $data1[] = $model->SummaryMaterial($value);
+       $data2[] = $model->SummaryAsset($value);
+       $data3[] = $model->SummaryOutsource($value);  
+}
+
+$seriesSummary = [
+  [
+      'name' => 'วัสดุ',
+      'data' => $data1,
+  ],
+  [
+
+      'name' => 'ครุภัณฑ์',
+      'data' => $data2,
+  ],
+  [
+      'name' => 'จ้างเหมา',
+      'data' => $data3
+      ]
+  ];
+
+  $series = Json::encode($seriesSummary);
+  // $total = Json::encode($getTotal);
 $js = <<< JS
 
-  $.ajax({
-    type: "get",
-    url: "$url",
-    dataType: "json",
-    success: function (res) {
-
     var orderOptions = {
-              series: res,
+              series: $series,
               chart: {
               type: 'bar',
               height: 350,
@@ -81,8 +110,7 @@ $js = <<< JS
             var chart = new ApexCharts(document.querySelector("#orderChartColumn"), orderOptions);
             chart.render();
       
-          }
-  });
+        
 
   JS;
 $this->registerJS($js);

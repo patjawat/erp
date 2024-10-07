@@ -19,13 +19,13 @@ use kartik\select2\Select2;
         ],
     ]); ?>
 <div>
-<div class="d-flex flex-row gap-3">
-  <div class="w-50">
-  
-  <?php echo $form->field($searchModel, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
-  </div>
-  <div class="w-50">
-  <?php
+
+<div class="row">
+<div class="col-4">
+    <?php echo $form->field($searchModel, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
+</div>
+<div class="col-4">
+<?php
   
         echo $form->field($searchModel, 'category_id')->widget(Select2::classname(), [
             'data' => $model->ListProductType(),
@@ -43,12 +43,17 @@ use kartik\select2\Select2;
             ]
         ])->label('ประเภท');
         ?>
-  </div>
-  <div class="p-2">
-
-  </div>
 </div>
+<div class="col-2">
 
+<?php if($dataProvider->getTotalCount() == 0 ):?>
+    <div class="form-group mt-4">
+        <?= Html::submitButton('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['class' => 'btn btn-primary']) ?>
+    </div>
+    <?php endif;?>
+
+</div>
+</div>
 
     <?php
         // echo $form->field($model, 'q_category')->checkboxList(

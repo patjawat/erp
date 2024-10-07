@@ -696,6 +696,17 @@ class Order extends \yii\db\ActiveRecord
             ->all();
     }
 
+
+    //แสดงปีงบประมานทั้งหมดใน order
+    public function ListGroupYear()
+    {
+        $model = self::find()
+        ->select('thai_year')
+        ->where(['name' => 'order'])
+        ->groupBy('thai_year')
+        ->all();
+        return ArrayHelper::map($model,'thai_year','thai_year');
+    }
     // แสดงชื่อคณะกรรมการ
     // public function getBoard()
     // {
@@ -831,15 +842,129 @@ class Order extends \yii\db\ActiveRecord
     //         ->sum('price');
     // }
 
-    //นับจำนวนใบขอซื้อ
-    public static function prSummery()
+// 
+    // รวมเงินทั้งหมด
+   public function SummaryTotal()
+   {
+    return self::find()
+    ->alias('o')
+    ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+    ->select(new Expression('FORMAT(IFNULL(SUM(i.price * i.qty), 0), 2) AS total'))
+    ->andFilterWhere(['o.thai_year' => $this->thai_year])
+    ->scalar();
+   } 
+// ผลรวมตามประเภทเงิน
+   public function SummaryBudgetType()
+   {
+
+    // $sql = "SELECT b.code, b.title, IFNULL(SUM(i.price * i.qty), 0) AS total
+    //     FROM categorise b
+    //     LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
+    //     LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+    //     WHERE 
+    //         b.`name` LIKE 'budget_type'
+    //         AND b.code <> 8
+    //         AND o.thai_year = :thai_year  -- Added condition here
+    //     GROUP BY 
+    //         b.code";
+    $sql = "SELECT b.code,b.title,IFNULL(sum(i.price * i.qty),0) AS total
+        FROM categorise b
+        LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code  
+        LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'         
+        WHERE b.`name` LIKE 'budget_type'
+        AND b.code <> 8
+        -- AND o.thai_year = :thai_year
+             GROUP BY 
+             
+             b.code";
+
+return  Yii::$app->db->createCommand($sql)
+// ->bindValue(':thai_year',$this->thai_year)
+
+->queryAll();
+    // $model =   Categorise::find()
+    // ->select(['b.code', new Expression('IFNULL(SUM(i.price * i.qty), 0) AS total')])
+    // ->alias('b')
+    // ->leftJoin('orders o', new Expression("JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code"))
+    // ->leftJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+    // ->where(['b.name' => 'budget_type'])
+    // ->andWhere(['<>', 'b.code', 8])
+    // ->andFilterWhere(['o.thai_year' => $this->thai_year])
+    // ->groupBy('b.code');
+    // ->all();
+    // return $model;
+
+    // $totalQuery = (new \yii\db\Query())
+    // ->select(['b.code', 'b.title', 'IFNULL(SUM(i.price * i.qty), 0) AS total'])
+    // ->from(['b' => Categorise::tableName()])
+    // ->leftJoin('orders o', "JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code")
+    // ->leftJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+    // ->where(['like', 'b.name', 'budget_type'])
+    // ->andWhere(['<>', 'b.code', 8])
+    // ->andFilterWhere(['o.thai_year' => $this->thai_year])
+    // ->groupBy('b.code');
+
+    // return $totalQuery->all();
+   }
+    //ผลรวมวัสดุ
+    public function SummaryMaterial($month)
     {
-        $total =  static::find()->where(['name' => 'order', 'status' => 1])->count();
-        $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 1")
-            ->queryScalar();
+        $model = self::find()
+            ->alias('o')
+            ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+            ->innerJoin('categorise item', 'item.code = i.asset_item AND item.name = "asset_item"')
+            ->where(['o.group_id' => 4])
+            ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
+        return  $model;
+    }
+
+        //ผลรวมวัสดุ
+        public function SummaryAsset($month)
+        {
+            $model = self::find()
+                ->alias('o')
+                ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+                ->innerJoin('categorise item', 'item.code = i.asset_item AND item.name = "asset_item"')
+                ->where(['o.group_id' => 3])
+                ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
+                ->andFilterWhere(['o.thai_year' => $this->thai_year])
+                ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
+            return  $model;
+        }
+        //ผลรวมจ้างเหมา
+        public function SummaryOutsource($month)
+        {
+            $model = self::find()
+            ->alias('o')
+            ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+            ->innerJoin('categorise item', 'item.code = i.asset_item AND item.name = "asset_item"')
+            ->where(['item.category_id' => 'M25'])
+            ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
+            return  $model;
+        }
+
+        
+    //นับจำนวนใบขอซื้อ
+    public function prSummery()
+    {
+        // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 1")->queryScalar();
+        $total =  static::find()
+        ->where(['name' => 'order', 'status' => 1])
+        ->andFilterWhere(['thai_year' => $this->thai_year])
+        ->count();
+        $price = self::find()
+                    ->alias('o')
+                    ->innerJoin('orders i', 'o.id = i.category_id')
+                    ->where(['i.name' => 'order_item', 'o.status' => 1])
+                    ->andFilterWhere(['o.thai_year' => $this->thai_year])
+                    ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
         return [
             'total' => $total,
-            'price' => $price
+            'price' => isset($price) ? $price : 0
         ];
     }
 

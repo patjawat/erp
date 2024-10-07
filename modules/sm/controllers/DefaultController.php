@@ -20,100 +20,107 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $searchModel = new OrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'order']);
+
+       return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
-public function actionBudgetChart()
-{
-    Yii::$app->response->format = Response::FORMAT_JSON;
-    $sql = "SELECT b.code,b.title,IFNULL(sum(i.price * i.qty),0) AS total
-        FROM categorise b
-        LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
-        LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
-        WHERE 
-            b.`name` LIKE 'budget_type'
-        AND b.code <> 8
-            GROUP BY 
-            b.code";
-               $querys =   Yii::$app->db->createCommand($sql)
-               ->queryAll();
+// public function actionBudgetChart()
+// {
+//     Yii::$app->response->format = Response::FORMAT_JSON;
+    // $sql = "SELECT b.code,b.title,IFNULL(sum(i.price * i.qty),0) AS total
+    //     FROM categorise b
+    //     LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
+    //     LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+    //     WHERE 
+    //         b.`name` LIKE 'budget_type'
+    //     AND b.code <> 8
+    //         GROUP BY 
+    //         b.code";
+    //            $querys =   Yii::$app->db->createCommand($sql)
+    //            ->queryAll();
     
-               $data = [];
-               $categorise = [];
-               foreach ($querys as $item) {
-                $data[] = $item['total'];
-                $categorise[] = $item['title'];
-               }
-               return [
-                'data' => $data,
-                'categorise' => $categorise
-               ];
+//                $data = [];
+//                $categorise = [];
+//                foreach ($querys as $item) {
+//                 $data[] = $item['total'];
+//                 $categorise[] = $item['title'];
+//                }
+//                return [
+//                 'data' => $data,
+//                 'categorise' => $categorise
+//                ];
 
 
-}
-    public function actionChart()
-    {
-        $data1  = [];
-        $data2  = [];
-        $data3  = [];
+// }
+//     public function actionChart()
+//     {
+//         $data1  = [];
+//         $data2  = [];
+//         $data3  = [];
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
+//         Yii::$app->response->format = Response::FORMAT_JSON;
       
-        $arr = [10,11,12,1,2,3,4,5,6,7,8,9];
+//         $arr = [10,11,12,1,2,3,4,5,6,7,8,9];
                   
-        foreach ($arr as $key => $value) {
-               $data1[] = $this->getData1($value);
-               $data2[] = $this->getData2($value);
-               $data3[] = $this->getData3($value);  
-        }
-          return [
-            [
-                'name' => 'วัสดุ',
-                'data' => $data1,
-            ],
-            [
+//         foreach ($arr as $key => $value) {
+//                $data1[] = $this->getData1($value);
+//                $data2[] = $this->getData2($value);
+//                $data3[] = $this->getData3($value);  
+//         }
+//           return [
+//             [
+//                 'name' => 'วัสดุ',
+//                 'data' => $data1,
+//             ],
+//             [
 
-                'name' => 'ครุภัณฑ์',
-                'data' => $data2,
-            ],
-            [
-                'name' => 'จ้างเหมา',
-                'data' => $data3
-                ]
-          ];
-    }
+//                 'name' => 'ครุภัณฑ์',
+//                 'data' => $data2,
+//             ],
+//             [
+//                 'name' => 'จ้างเหมา',
+//                 'data' => $data3
+//                 ]
+//           ];
+//     }
 
-    //วัสดุ
-    private function getData1($month)
-    {
+//     //วัสดุ
+//     private function getData1($month)
+//     {
 
-        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
-                                                INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
-                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE o.group_id = 4 AND MONTH(i.created_at) = :month")
-        ->bindValue(':month',$month)
-        ->queryScalar();
-    }
-//ครุภัณฑ์
-    private function getData2($month)
-    {
+//         return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
+//                                                 INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+//                                                 INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE o.group_id = 4 AND MONTH(i.created_at) = :month")
+//         ->bindValue(':month',$month)
+//         ->queryScalar();
+//     }
+// //ครุภัณฑ์
+//     private function getData2($month)
+//     {
 
-        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
-                                                INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
-                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id = 3 AND MONTH(i.created_at) = :month")
+//         return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
+//                                                 INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+//                                                 INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id = 3 AND MONTH(i.created_at) = :month")
 
-        ->bindValue(':month',$month)
-        ->queryScalar();
-    }
-//จ้างเหมา
-    private function getData3($month)
-    {
+//         ->bindValue(':month',$month)
+//         ->queryScalar();
+//     }
+// //จ้างเหมา
+//     private function getData3($month)
+//     {
 
-        return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
-                                                INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
-                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id = 'M25' AND MONTH(i.created_at) = :month")
-        ->bindValue(':month',$month)
-        ->queryScalar();
-    }
+//         return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
+//                                                 INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+//                                                 INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id = 'M25' AND MONTH(i.created_at) = :month")
+//         ->bindValue(':month',$month)
+//         ->queryScalar();
+//     }
 
 
 

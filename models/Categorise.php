@@ -24,6 +24,7 @@ class Categorise extends \yii\db\ActiveRecord
 {
     public $position_group;
     public $position_type;
+    public $total;
 
     /**
      * {@inheritdoc}
@@ -41,7 +42,7 @@ class Categorise extends \yii\db\ActiveRecord
         return [
             [['active'], 'integer'],
             [['name'], 'required'],
-            [['category_id', 'data_json', 'position_group', 'position_type', 'qty'], 'safe'],
+            [['category_id', 'data_json', 'position_group', 'position_type', 'qty','total'], 'safe'],
             [['code', 'name', 'title', 'description'], 'string', 'max' => 255],
             [['code'], 'validateCode'],
             // [['code'], 'exist', 'skipOnError' => true, 'targetClass' => Categorise::className(), 'targetAttribute' => ['medication_id' => 'id']],

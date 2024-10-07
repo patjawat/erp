@@ -27,38 +27,31 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <p><i class="fa-solid fa-chart-simple me-1"></i>ภาพรวมการสั่งซื้อ</p>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
-                        </div>
-                    </div>
+                    <p><i class="fa-solid fa-chart-simple me-1"></i>ภาพรวมการสั่งซื้อทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</p>
+                 <div class="mb-3">
+                  <?=$this->render('_search_year',['model' => $searchModel])?></div>
                 </div>
-                <?= $this->render('order_summary') ?>
-                <?= $this->render('order_chart_column') ?>
+                <?= $this->render('order_summary',['model' => $searchModel]) ?>
+                <?= $this->render('order_chart_column',['model' => $searchModel]) ?>
             </div>
         </div>
 
     </div>
     <div class="col-3">
-        <?= $this->render('budget_balanced') ?>
+        <?= $this->render('budget_balanced',['model' => $searchModel]) ?>
     </div>
 </div>
 <?php // yii\widgets\Pjax::begin(['id' => 'order','timeout' => 50000 ]); ?>
 <?php //yii\widgets\Pjax::begin(['id' => 'order-list','timeout' => 50000,'enablePushState' => true ]); ?>
 <div class="row">
     <div class="col-6">
-    <?php  // yii\widgets\Pjax::begin(['enablePushState' => false ]); ?>
-      <div id="showPrOrderList"></div>
-      <?php  // yii\widgets\Pjax::end(); ?>
-      <div id="showPrAcceptOrderList"></div>
+        <?php  // yii\widgets\Pjax::begin(['enablePushState' => false ]); ?>
+        <div id="showPrOrderList"></div>
+        <?php  // yii\widgets\Pjax::end(); ?>
+        <div id="showPrAcceptOrderList"></div>
     </div>
     <div class="col-6">
-      <div id="showPqOrder"></div>
+        <div id="showPqOrder"></div>
         <?php //  $this->render('pr_order_list') ?>
     </div>
 </div>

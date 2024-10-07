@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
-<?php echo $this->render('_search_product', ['searchModel' => $searchModel, 'model' => $model]); ?>
+<?php echo $this->render('_search_product', ['searchModel' => $searchModel,'dataProvider' => $dataProvider, 'model' => $model]); ?>
 
 
 <?php if (count($dataProvider->getModels()) == 0) { ?>
@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <tr>
                 <th scope="col">รายการ</th>
                 <th scope="col" style="width:400px">หน่วย</th>
-                <th scope="col"  style="width:90px">ดำเนินการ</th>
+                <th scope="col"  style="width:180px">ดำเนินการ</th>
             </tr>
         </thead>
         <tbody class="align-middle">
@@ -55,7 +55,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 
                 <?=(isset($item->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">'.$item->data_json['unit'].'</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>')?></td>
                 <td class="align-middle">
-                    <?php echo Html::a('<i class="bi bi-bag-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->id, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']); ?>
+                    <?php echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->id, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']); ?> | 
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->id, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill shadow text-center open-modal']); ?>
                 </td>
             </tr>
             <?php } ?>

@@ -18,7 +18,7 @@ class OrderSearch extends Order
     {
         return [
             [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by','deleted_by'], 'integer'],
-            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','vendor_name','order_type_name'], 'safe'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','vendor_name','order_type_name','thai_year'], 'safe'],
             [['price'], 'number'],
         ];
     }
@@ -65,6 +65,7 @@ class OrderSearch extends Order
             'qty' => $this->qty,
             'vendor_id' => $this->vendor_id,
             'status' => $this->status,
+            'thai_year' => $this->thai_year,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
