@@ -242,6 +242,7 @@ class Employees extends \yii\db\ActiveRecord
     {
         return FileManagerHelper::FileUpload($ref, $name);
     }
+    
 
     public function getAvatar($showAge = true, $msg = '')
     {

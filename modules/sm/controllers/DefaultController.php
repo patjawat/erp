@@ -99,7 +99,7 @@ public function actionBudgetChart()
 
         return  Yii::$app->db->createCommand("SELECT IFNULL(sum(i.price * i.qty),0) FROM orders o 
                                                 INNER JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
-                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id != 'M25' AND MONTH(i.created_at) = :month")
+                                                INNER JOIN categorise item ON item.code = i.asset_item AND item.name = 'asset_item' WHERE item.category_id = 3 AND MONTH(i.created_at) = :month")
 
         ->bindValue(':month',$month)
         ->queryScalar();

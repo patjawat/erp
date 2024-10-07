@@ -5,6 +5,9 @@ services:
     image: ${IMAGE_NAME}
     build:
       context: .
+    environment:
+      PHP_POST_MAX_SIZE: 16M
+      PHP_UPLOAD_MAX_FILESIZE: 16M
     ports:
        - '${HOS_CODE}:80'
     volumes:
