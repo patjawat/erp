@@ -60,7 +60,7 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">เบิกวัสดุ</h6>
+                                    <h6 class="mb-0 font-size-15">รับวัสดุ</h6>
                                 </div>
 
                                 <div class="flex-shrink-0">
@@ -80,11 +80,12 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">
+                                  <?=$searchModel->Summary()['in']?>
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">มูลค่าการเบิกวัสดุทั้งหมด</p>
+                                        <p class="text-muted mb-0 text-truncate">มูลค่าการรับวัสดุทั้งหมด</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 
@@ -128,7 +129,7 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">  <?=$searchModel->Summary()['out']?>
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -180,11 +181,11 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">มูลค่าการเบิกวัสดุทั้งหมด</p>
+                                        <p class="text-muted mb-0 text-truncate">จำนวนวัสดุที่เหลือน้อย</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 
@@ -228,11 +229,11 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0.00
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">มูลค่าการเบิกวัสดุทั้งหมด</p>
+                                        <p class="text-muted mb-0 text-truncate">จำนวนวัสดุที่เหลือน้อย</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 

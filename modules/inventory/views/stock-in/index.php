@@ -18,6 +18,8 @@ $this->params['breadcrumbs'][] = $this->title;
 $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
 
 
+
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -30,20 +32,19 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?php $this->endBlock(); ?>
 
 <?php
-
+// นับจำนวน order ที่รอรับเข้าคลัง
  $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
  if(isset($warehouseModel->data_json['item_type'])){
      
 
  $item = $warehouseModel->data_json['item_type'];
 
- $models = Order::find()
+ $count = Order::find()
      ->where(['name' => 'order', 'status' => 4])
      ->andWhere(['IN', 'category_id', $item])
-     ->all();
-     $count = is_array($models) ? count($models) : 0;
+     ->count();
     }
-    $count = 0;
+
 
 ?>
 
@@ -51,8 +52,9 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <div class="card">
     <div class="card-body d-flex justify-content-between">
         <div class="d-flex gap-3">
-            <?= Html::a($createIcon . 'สร้างรายการรับเข้า', ['/inventory/stock-in/create', 'name' => 'order','type' => 'IN','title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
-            <?= Html::a($createIcon . 'การสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'.$count.'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
+            <?= Html::a($createIcon . 'สร้างรายการรับเข้า', ['/inventory/stock-in/create', 'name' => 'order','type' => 'IN','title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-primary shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
+            
+            <?= $count > 0 ?  Html::a('<i class="fa-solid fa-bell"></i> รอรับเข้า <span class="badge text-bg-danger">'.$count.'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-warning shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) : '' ?>
         </div>
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
@@ -85,7 +87,6 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <tr>
                             <th scope="col">รหัส/วันที่ตรวจรับ</th>
                             <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
-                            <th>คลังที่รับเข้า</th>
                             <th>รับจาก</th>
                             <th>เจ้าหน้าที่</th>
                             <th style="width:130px" class="text-end">มูลค่า</th>
@@ -104,15 +105,13 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                             </td>
                             <td class="fw-light align-middle">
                                 <div class=" d-flex flex-column">
-                                    <span class="fw-semibold "><?=$item->purchase->pq_number?></span>
+                                    <span class="fw-semibold "><?=isset($item->purchase) ? $item->purchase->pq_number : '-'?></span>
                                     <?= isset($item->data_json['asset_type_name']) ? $item->data_json['asset_type_name'] : '' ?>
                                 </div>
                             </td>
-
-                            <td><?=$item->warehouse->warehouse_name?></td>
                             <td class="fw-light align-middle">
                                 <div class=" d-flex flex-column">
-                                    <span class="fw-semibold "><?=$item->purchase->po_number?></span>
+                                    <span class="fw-semibold "><?=isset($item->purchase) ? $item->purchase->po_number : '-'?></span>
                                     <?= isset($item->purchase->data_json['vendor_name']) ? $item->purchase->data_json['vendor_name'] : '' ?>
                                 </div>
                                 <td><?=$item->CreateBy($item->ViewReceiveDate())['avatar'];?></td>

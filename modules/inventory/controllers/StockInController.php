@@ -85,18 +85,19 @@ class StockInController extends Controller
             $searchModel = new OrderSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order', 'status' => 4]);
-            $dataProvider->query->andWhere(['IN', 'category_id', $item]);
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->vendor_name]);
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'pr_number', $searchModel->q],
+                ['like', 'po_number', $searchModel->q],
+                ['like', 'pq_number', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+            ]);
+            $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
+            // $dataProvider->query->andWhere(['IN', 'category_id', $item]);
+            // $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->vendor_name]);
+            // $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
             // $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json->'$.vendor_name','\"$id\"')"));
 
-
-
-            $models = Order::find()
-                ->where(['name' => 'order', 'status' => 4])
-                // ->andWhere(['IN', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.item_type'))"),$item])
-                ->andWhere(['IN', 'category_id', $item])
-                ->all();
 
             if ($this->request->isAjax) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -104,14 +105,12 @@ class StockInController extends Controller
                 return [
                     'title' => $this->request->get('title'),
                     'content' => $this->renderAjax('list_pending_order', [
-                        'models' => $models,
                         'searchModel' => $searchModel,
                         'dataProvider' => $dataProvider,
                     ]),
                 ];
             } else {
                 return $this->render('list_pending_order', [
-                    'models' => $models,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                    
