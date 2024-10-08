@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['id' => 'purchase-container','timeout' => 88888888]); ?>
+<?php Pjax::begin(['id' => 'purchase-container','enablePushState' => false,'timeout' => 88888888]); ?>
 
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center align-middle">

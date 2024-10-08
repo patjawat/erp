@@ -40,7 +40,22 @@ use yii\widgets\ActiveForm;
                     ]
                     ])->label(false);
                     ?>
+                        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasRightLabel"><i class="fa-solid fa-magnifying-glass"></i>
+                ค้นหาเพิ่มเติม...</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            ...
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+        aria-controls="offcanvasRight"><i class="fa-solid fa-filter"></i></button>
+
 </div>
+
     <?php ActiveForm::end(); ?>
     
 </div>
