@@ -50,21 +50,40 @@ $js = <<< JS
 
                             \$('#form').on('beforeSubmit', function (e) {
                                 var form = \$(this);
-                                \$.ajax({
-                                    url: form.attr('action'),
-                                    type: 'post',
-                                    data: form.serialize(),
-                                    dataType: 'json',
-                                    success: async function (response) {
-                                        form.yiiActiveForm('updateMessages', response, true);
-                                        if(response.status == 'success') {
-                                            closeModal()
-                                            success()
-                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+
+                                Swal.fire({
+                                    title: "รับวัสดุ?",
+                                    text: "ยืนยันหารรับวัสดุอีกครั้ง!",
+                                    icon: "warning",
+                                    showCancelButton: true,
+                                    confirmButtonColor: "#3085d6",
+                                    cancelButtonColor: "#d33",
+                                    confirmButtonText: "ใช่!",
+                                    cancelButtonText: "ยกเลิก",
+                                        }).then((result) => {
+                                        /* Read more about isConfirmed, isDenied below */
+                                        if (result.isConfirmed) {
+                                            $.ajax({
+                                                    url: form.attr('action'),
+                                                    type: 'post',
+                                                    data: form.serialize(),
+                                                    dataType: 'json',
+                                                    success: async function (response) {
+                                                        form.yiiActiveForm('updateMessages', response, true);
+                                                        if(response.status == 'success') {
+                                                            closeModal()
+                                                            success()
+                                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                                                        }
+                                                    }
+                                                });
+                                                return false;
+                                        } else if (result.isDenied) {
+                                            Swal.fire("Changes are not saved", "", "info");
                                         }
-                                    }
-                                });
-                                return false;
+                                        });
+
+                                        return false;
                             });
             JS;
 $this->registerJS($js)

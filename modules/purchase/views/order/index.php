@@ -13,6 +13,21 @@ use yii\web\View;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'ระบบขอซื้อ';
 $this->params['breadcrumbs'][] = $this->title;
+$betwenTitle = '';
+if($searchModel->date_between == 'pr_create_date'){
+    $betwenTitle = 'วันที่ขอซื้อ';
+
+}elseif($searchModel->date_between == 'po_date'){
+    $betwenTitle = 'วันที่สั่งซื้อ';
+
+}elseif($searchModel->date_between == 'gr_date'){
+    $betwenTitle = 'วันที่ตรวจรับ';
+
+}else{
+    $betwenTitle = '';
+}
+
+
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -26,19 +41,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['id' => 'purchase-container','enablePushState' => false,'timeout' => 88888888]); ?>
+<?php Pjax::begin(['id' => 'purchase-container','enablePushState' => true,'timeout' => 88888888]); ?>
 
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center align-middle">
         <div class="d-flex gap-3 justify-content-start">
             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างคำขอซื้อ/ขอจ้าง ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
-            <?php //  Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ขอซื้อ/ขอจ้าง', ['/purchase/pr-order/create', 'name' => 'pr', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง'], ['class' => 'btn btn-light open-modal','data' =>['size' => 'modal-md']]) ?>
-
         </div>
         <div class="d-flex align-items-center  align-middle gap-2">
             <?=$this->render('_search', ['model' => $searchModel])?>
-
-            <?php //  Html::a('<i class="fa-solid fa-gear"></i>', ['#', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
         </div>
     </div>
 </div>
@@ -46,10 +57,17 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-           <div>
-               มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span> บาท        </div>
+            <?php if($searchModel->date_between):?>
+            <div>
+                <?=$betwenTitle?> ช่วงวันที่ <span class="fw-semibold"><?=$searchModel->date_start?></span> ถึงวันที่ <span class="fw-semibold"><?=$searchModel->date_end?></span>
+            </div>
+            <?php endif;?>
+                    <div>
+                มูลค่า <span
+                    class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>
+                บาท </div>
 
-           </div>
+        </div>
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -129,9 +147,22 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <i class="bi bi-caret-down-fill"></i>
                             </button>
                             <ul class="dropdown-menu">
-                                <?php if ($model->status == 3): ?>
-                                <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบีนยคุม', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ลงทะเบีนยคุม'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                             
+
+                                    <?php if ($model->status >= 2): ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบีนยคุม', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบีนยคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?php endif;?>
+
+                                    <?php if ($model->status >= 3): ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำสั่งซื้อ', ['/purchase/po-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> คำสั่งซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?php endif;?>
+
+                                    <?php if ($model->status >= 4): ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ใบตรวจรับ', ['/purchase/gr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ใบตรวจรับ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?php endif;?>
+
                                 <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                 </li>
                             </ul>

@@ -2,7 +2,6 @@
 
 namespace app\modules\purchase\models;
 
-use app\modules\purchase\models\Order;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
@@ -11,21 +10,16 @@ use yii\data\ActiveDataProvider;
  */
 class OrderSearch extends Order
 {
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
-            [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by','deleted_by'], 'integer'],
-            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','vendor_name','order_type_name','thai_year'], 'safe'],
+            [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'vendor_name', 'order_type_name', 'thai_year', 'date_start',
+                'date_end','date_between'], 'safe'],
             [['price'], 'number'],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
         // bypass scenarios() implementation in the parent class
@@ -33,7 +27,7 @@ class OrderSearch extends Order
     }
 
     /**
-     * Creates data provider instance with search query applied
+     * Creates data provider instance with search query applied.
      *
      * @param array $params
      *

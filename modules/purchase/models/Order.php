@@ -56,6 +56,9 @@ class Order extends \yii\db\ActiveRecord
     public $account_name;
     public $account_number;
     public $set_date; // set ค่าลงวันที่
+    public $date_between; // ประเภทวันที่ค้นหา
+    public $date_start;
+    public $date_end;
 
     /**
      * {@inheritdoc}
@@ -94,7 +97,10 @@ class Order extends \yii\db\ActiveRecord
                 'q',
                 'set_date',
                 'vendor_name',
-                'order_type_name'
+                'order_type_name',
+                'date_start',
+                'date_end',
+                'date_between'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];

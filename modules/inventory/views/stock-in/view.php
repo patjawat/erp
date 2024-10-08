@@ -106,7 +106,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
-            <?=($model->isPending() >= 1) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกรับเข้า',['/inventory/stock-in/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order']) : ''?>
+            <?=($model->isPending() >= 1) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกรับเข้า',['/inventory/stock-in/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order','data' => ['title' => 'รับวัสดุเข้าคลัง','text' => 'ยืนยันการรับวัสดึเข้าคลัง']]) : ''?>
     </div>
     </div>
     <div class="col-4">
@@ -169,36 +169,6 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = <<< JS
 
                
-// $('.confirm-order').click(async function (e) { 
-//     e.preventDefault();
-
-//   await Swal.fire({
-//     title: "ยืนยัน?",
-//     text: "บันทึกรายการนี้!",
-//     icon: "warning",
-//     showCancelButton: true,
-//     confirmButtonColor: "#3085d6",
-//     cancelButtonColor: "#d33",
-//     confirmButtonText: "ใช่, ยืนยัน!",
-//     cancelButtonText: "ยกเลิก",
-//   }).then(async (result) => {
-//     if (result.value == true) {
-//       await $.ajax({
-//         type: "post",
-//         url: $(this).attr('href'),
-//         dataType: "json",
-//         success: async function (response) {
-//           if (response.status == "success") {
-//             await  $.pjax.reload({container:response.container, history:false,url:response.url});
-//             success("บันสำเร็จ!.");
-//           }
-//         },
-//       });
-//     }
-//   });
-
-//   });
-
 JS;
 $this->registerJS($js)
 ?>

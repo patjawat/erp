@@ -48,7 +48,7 @@ class ProductController extends Controller
             ['like', 'code', $searchModel->q],
             ['like', 'title', $searchModel->q],
         ]);
-        // $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
         $dataProvider->pagination->pageSize = 10;
 
         return $this->render('index', [
@@ -185,9 +185,10 @@ class ProductController extends Controller
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('view', [
-                    'model' => $model,
-                ]),
+                // 'content' => $this->renderAjax('view', [
+                //     'model' => $model,
+                // ]),
+                'container' => '#sm-container',
                 'status' => 'success',
             ];
         }

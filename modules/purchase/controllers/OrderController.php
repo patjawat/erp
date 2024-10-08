@@ -60,16 +60,21 @@ class OrderController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
-        // $dataProvider->query->andFilterWhere([
-        //     'or',
-        //     ['like', 'user.doctor_id', $searchModel->q_doctor],
-        //     ['like', 'user.fullname', $searchModel->q_doctor],
-        //     ['like', 'doctor_consult', $searchModel->q_doctor],
-        //     ['like', 'doctor_consult_name', $searchModel->q_doctor],
-        //     ['like', 'ipd_admit.vn', $searchModel->q_doctor],
-        //     ['like', 'opd_visit.pcc_vn', $searchModel->q_doctor],
-        // ]);
-
+       //ค้นหาช่วบงวันที่
+       if($searchModel->date_between){
+        try {
+           $dataProvider->query->andFilterWhere([
+               'between', 
+               new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),  
+               AppHelper::convertToGregorian($searchModel->date_start), 
+               AppHelper::convertToGregorian($searchModel->date_end), 
+            ]);
+                        //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        }
+            
         $dataProvider->query->orderBy(['created_at' => SORT_DESC]);
         // $dataProvider->pagination->pageSize = 10;
 

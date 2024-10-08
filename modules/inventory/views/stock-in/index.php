@@ -42,6 +42,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
  $count = Order::find()
      ->where(['name' => 'order', 'status' => 4])
      ->andWhere(['IN', 'category_id', $item])
+     ->andWhere(['!=','category_id', 'M25'])
      ->count();
     }
 
