@@ -47,98 +47,94 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
 ?>
 
+<?php Pjax::begin(); ?>
 <div class="card">
-  <div class="card-body">
-    <div class="d-flex gap-3">
-      <?= Html::a($createIcon . 'สร้างรายการรับเข้า', ['/inventory/stock-in/create', 'name' => 'order','type' => 'IN','title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
-      <?= Html::a($createIcon . 'การสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'.$count.'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
+    <div class="card-body d-flex justify-content-between">
+        <div class="d-flex gap-3">
+            <?= Html::a($createIcon . 'สร้างรายการรับเข้า', ['/inventory/stock-in/create', 'name' => 'order','type' => 'IN','title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
+            <?= Html::a($createIcon . 'การสั่งซื้อ <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">'.$count.'</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-primary rounded-pill shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) ?>
+        </div>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
-  </div>
 </div>
 <div class="stock-in-index">
 
 
-  <?php Pjax::begin(); ?>
-  <?php // echo $this->render('_search', ['model' => $searchModel]); 
-  ?>
+    
 
 
-  <div class="card">
-    <div class="card-body">
+    <div class="card">
+        <div class="card-body">
 
-      <div class="d-flex justify-content-between">
-        <h6><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-        <div>
-          <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
+            <div class="d-flex justify-content-between">
+                <h6><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span class="badge rounded-pill text-bg-primary">
+                        <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
+                        <div>
+               มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span> บาท        </div>
+
+           </div>
+                <div>
+                    <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
           เลือกรายการ</button> -->
+                </div>
+
+            </div>
+            <div class="table-responsive-sm">
+                <table class="table table-primary">
+                    <thead>
+                        <tr>
+                            <th scope="col">รหัส/วันที่ตรวจรับ</th>
+                            <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
+                            <th>คลังที่รับเข้า</th>
+                            <th>รับจาก</th>
+                            <th>เจ้าหน้าที่</th>
+                            <th style="width:130px" class="text-end">มูลค่า</th>
+                            <th style="width:100px" class="text-center">สถานะ</th>
+                            <th class="text-center" style="width:100px">ดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="align-middle">
+                        <?php foreach ($dataProvider->getModels() as $item): ?>
+                        <tr>
+                        <td class="fw-light align-middle">
+                                <div class=" d-flex flex-column">
+                                    <span class="fw-semibold "><?=$item->code?></span>
+                                    <?=$item->ViewReceiveDate();?>
+                                </div>
+                            </td>
+                            <td class="fw-light align-middle">
+                                <div class=" d-flex flex-column">
+                                    <span class="fw-semibold "><?=$item->purchase->pq_number?></span>
+                                    <?= isset($item->data_json['asset_type_name']) ? $item->data_json['asset_type_name'] : '' ?>
+                                </div>
+                            </td>
+
+                            <td><?=$item->warehouse->warehouse_name?></td>
+                            <td class="fw-light align-middle">
+                                <div class=" d-flex flex-column">
+                                    <span class="fw-semibold "><?=$item->purchase->po_number?></span>
+                                    <?= isset($item->purchase->data_json['vendor_name']) ? $item->purchase->data_json['vendor_name'] : '' ?>
+                                </div>
+                                <td><?=$item->CreateBy($item->ViewReceiveDate())['avatar'];?></td>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-semibold "><?=number_format($item->getTotalOrderPrice(),2);?>
+                                </span>
+                            </td>
+                            <td class="text-center"><?= $item->viewStatus();?></td>
+                            <td class="text-center">
+                                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-in/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
-        
-      </div>
-      <div class="table-responsive-sm">
-        <table class="table table-primary">
-          <thead>
-            <tr>
-              <th>รายการ</th>
-              <th scope="col">รหัส</th>
-              <th>จากคลัง</th>
-              <th>คลัง</th>
-              <th>ปีงบประมาณ</th>
-              <th>มูลค่า</th>
-              <th>สถานะ</th>
-              <th style="width:100px">ดำเนินการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($dataProvider->getModels() as $item): ?>
-              <tr>
-            <td>
-                  <?php
-                  echo $item->CreateBy($item->ViewReceiveDate())['avatar'];
-
-                   $item->CreateBy(isset($item->data_json['receive_date']) ? $item->data_json['receive_date'] : '')['avatar'];
-                  ?>
-                  </td>
-                <td><?=$item->code?></td>
-                <td>
-                  <?php
-                  try {
-                    echo $item->fromWarehouse->warehouse_name;
-                  } catch (\Throwable $th) {
-                    //throw $th;
-                  }?>
-                   
-                  </td>
-                  <td>
-                  <?php
-                  try {
-                    echo $item->warehouse->warehouse_name;
-                  } catch (\Throwable $th) {
-                    //throw $th;
-                  }?>
-                  </td>
-                  <td><?=$item->thai_year?></td>
-                <td><?php
-                try {
-                  echo number_format($item->getTotalOrderPrice(),2);
-                } catch (\Throwable $th) {
-
-                }
-
-                ?></td>
-                <td><?= $item->viewStatus();?></td>
-                <td>
-                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-in/view','id' => $item->id],['class'=> 'btn btn-light'])?>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-
     </div>
-  </div>
 
 
-  <?php Pjax::end(); ?>
-
+    
 </div>
+<?php Pjax::end(); ?>

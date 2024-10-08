@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\controllers;
 
+use app\components\AppHelper;
 use app\components\UserHelper;
 use Yii;
 use yii\web\Controller;
@@ -9,6 +10,8 @@ use yii\web\Response;
 use yii\db\Expression;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
 
 /**
  * Default controller for the `warehouse` module
@@ -23,7 +26,14 @@ class DefaultController extends Controller
     {
         Yii::$app->session->remove('warehouse');
         \Yii::$app->cart->checkOut(false);
-        return $this->render('index');
+        $searchModel = new StockEventSearch([
+            'thai_year' => AppHelper::YearBudget()
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
 

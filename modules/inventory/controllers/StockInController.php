@@ -47,8 +47,19 @@ class StockInController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
+        if(!$warehouse){
+            return $this->redirect(['/inventory']);
+        }
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $searchModel->asset_type_name]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
+        ]);
         // $dataProvider->query->where(['name' => 'order']);
         $dataProvider->query->andWhere(['warehouse_id' => $warehouse['warehouse_id'], 'transaction_type' => 'IN', 'name' => 'order']);
 
@@ -233,10 +244,19 @@ class StockInController extends Controller
         $po_number = $this->request->get('po_number');
         $model = new StockEvent([
             'name' => 'order',
+            'category_id' => $order->id,
             'po_number' => $order->po_number,
             'vendor_id' => $order->vendor_id,
             // 'receive_type' => $this->request->get('receive_type'),
             'warehouse_id' => $warehouse['warehouse_id'],
+            'data_json' => [
+                'receive_date' => AppHelper::convertToThai(date('Y-m-d')),
+                'po_number' => $order->po_number,
+                'do_number' => $order->data_json['gr_number'],
+                'pq_number' => $order->pq_number,
+                'asset_type' => $order->assetType->code,
+                'asset_type_name' => $order->assetType->title
+            ],
         ]);
 
         if ($this->request->isPost) {
@@ -251,6 +271,11 @@ class StockInController extends Controller
 
                 $model->transaction_type = 'IN';
                 $model->order_status = 'pending';
+                $convertDate =[
+                    'receive_date' =>  AppHelper::convertToGregorian($model->data_json['receive_date']),
+                ];
+
+                $model->data_json =  ArrayHelper::merge($model->data_json,$convertDate);
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {
                     $stockItem = new StockEvent([

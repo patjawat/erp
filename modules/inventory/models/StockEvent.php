@@ -12,6 +12,7 @@ use yii\helpers\Html;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\modules\hr\models\Employees;
+use app\modules\purchase\models\Order;
 use app\modules\sm\models\Product;
 
 /**
@@ -58,6 +59,7 @@ class StockEvent extends \yii\db\ActiveRecord
     public $mfgDate;
     public $expDate;
     public $note;
+    public $asset_type_name;
 
 
     /**
@@ -69,7 +71,7 @@ class StockEvent extends \yii\db\ActiveRecord
             [['vendor_id', ''], 'required'],
             [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total'], 'safe'],
+            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total','asset_type_name','q'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -171,6 +173,12 @@ class StockEvent extends \yii\db\ActiveRecord
         return $this->hasOne(Stock::class, ['lot_number' => 'lot_number']);
     }
 
+    //การสั่งซื้อ
+    public function getPurchase()
+    {
+        return $this->hasOne(Order::class, ['id' => 'category_id']);
+    }
+    
 
     //นีับจำนวน stock คงเหลือในคลังที่เลือก
 public static function SumStockWarehouse()
@@ -531,4 +539,50 @@ public static function SumStockWarehouse()
     {
         return AppHelper::timeDifference($this->updated_at);
     }
+
+        // รวมเงินทั้งหมด
+   public function SummaryTotal()
+   {
+    return self::find()
+    ->alias('e')
+    ->select(new Expression('FORMAT(IFNULL(SUM(e.unit_price * e.qty), 0), 2) AS total'))
+    ->andFilterWhere(['e.thai_year' => $this->thai_year])
+    ->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $this->asset_type_name])
+    ->andFilterWhere([
+        'or',
+        ['like', 'code', $this->q],
+        ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $this->q],
+        ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $this->q],
+    ])
+    ->scalar();
+   } 
+
+
+    public function ListOrderType()
+    {
+        $arr = [];
+        try {
+
+        $variable =  self::find()->where(['name' => 'order'])->all();
+        foreach ($variable as $model) {
+            $arr[] = ['id' => $model->data_json['asset_type_name'],'name' => $model->data_json['asset_type_name']];
+        }
+        return $arr;
+                    //code...
+                } catch (\Throwable $th) {
+                    return $arr;
+                }
+    }
+
+        //แสดงปีงบประมานทั้งหมดใน stock event
+        public function ListGroupYear()
+        {
+            $model = self::find()
+            ->select('thai_year')
+            ->where(['name' => 'order'])
+            ->groupBy('thai_year')
+            ->all();
+            return ArrayHelper::map($model,'thai_year','thai_year');
+        }
+
 }

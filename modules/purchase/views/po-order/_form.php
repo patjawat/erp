@@ -235,7 +235,7 @@ $js = <<< JS
         closeOnDateSelect:true,
     });   
 
-    $("#order-data_json-warranty").datetimepicker({
+    $("#order-data_json-warranty_date").datetimepicker({
         timepicker:false,
         format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
         lang:'th',  // แสดงภาษาไทย
@@ -245,7 +245,7 @@ $js = <<< JS
         closeOnDateSelect:true,
     });   
 
-
+    
 
     JS;
 $this->registerJS($js)

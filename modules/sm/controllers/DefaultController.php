@@ -2,6 +2,7 @@
 
 namespace app\modules\sm\controllers;
 
+use app\components\AppHelper;
 use Yii;
 use yii\web\Controller;
 use app\modules\sm\components\SmHelper;
@@ -20,7 +21,9 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new OrderSearch();
+        $searchModel = new OrderSearch([
+          'thai_year' => AppHelper::YearBudget()
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'order']);
 

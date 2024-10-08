@@ -32,15 +32,8 @@ $this->title = 'ระบบคลัง';
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่าเบิกจ่ายวัสดุทั้งหมด</h6>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
-                        </div>
-                    </div>
+                    <div class="mb-3">
+                  <?=$this->render('_search_year',['model' => $searchModel])?></div>
                 </div>
                 <!-- <div id="inventoryCharts"></div> -->
                 <div id="showChart">
@@ -325,103 +318,6 @@ $this->title = 'ระบบคลัง';
 
 <!-- end col-6 -->
 </div>
-<!-- 
-<div class="row">
-    <div class="col-12">
-    <div id="showStoreInWarehouse">
-            <div class="placeholder-glow">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="placeholder col-6"></h6>
-                                <a class="btn btn-sm btn-light rounded-pill placeholder"
-                                    href="/inventory/warehouse/list-order-request">แสดงท้ังหมด</a>
-                            </div>
-                            <table class="table table-primary">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">รายการ</th>
-                                        <th>คลัง</th>
-                                        <th>สถานะ</th>
-                                        <th style="width:100px">ดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php for ($x = 1; $x <= 2; $x++): ?>
-                                    <tr class="">
-                                        <td>
-                                            <div class="d-flex">
-                                                <?= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white placeholder']) ?>
-                                                <div class="avatar-detail text-truncate d-flex flex-column">
-                                                    <h6 class="mb-1 fs-13 placeholder"></h6>
-                                                    <p class="text-muted mb-0 fs-13 placeholder col-6"></p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><span class="placeholder col-12"></span></td>
-                                        <td><span class="placeholder col-12"></span></td>
-                                    </tr>
-                                    <?php endfor; ?>
-                                </tbody>
-                            </table>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-
-        <div id="showOrderRequestInWarehouse" style="min-height: 463px;">
-            <div class="placeholder-glow">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="placeholder col-6"></h6>
-                            </div>
-                            <table class="table table-primary">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">รายการ</th>
-                                        <th>คลัง</th>
-                                        <th>สถานะ</th>
-                                        <th style="width:100px">ดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php for ($x = 1; $x <= 2; $x++): ?>
-                                    <tr class="">
-                                        <td>
-                                            <div class="d-flex">
-                                                <?= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white placeholder']) ?>
-                                                <div class="avatar-detail text-truncate d-flex flex-column">
-                                                    <h6 class="mb-1 fs-13 placeholder"></h6>
-                                                    <p class="text-muted mb-0 fs-13 placeholder col-6"></p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><span class="placeholder col-12"></span></td>
-                                        <td><span class="placeholder col-12"></span></td>
-                                        <td class="text-center">
-                                            <a class="btn btn-light placeholder" href="#"></a>
-                                        </td>
-                                    </tr>
-                                    <?php endfor; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <a class="btn btn-sm btn-light rounded-pill placeholder"
-                            href="/inventory/warehouse/list-order-request">แสดงท้ังหมด</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-    </div> -->
 
 
 <?php
