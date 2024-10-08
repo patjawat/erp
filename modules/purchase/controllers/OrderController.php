@@ -57,6 +57,7 @@ class OrderController extends Controller
             'or',
             ['like', 'pr_number', $searchModel->q],
             ['like', 'pq_number', $searchModel->q],
+            ['like', 'po_number', $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
