@@ -86,7 +86,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <table class="table table-primary">
                     <thead>
                         <tr>
-                            <th scope="col">รหัส/วันที่ตรวจรับ</th>
+                            <th scope="col">รหัส/วันที่รับเข้าคลัง</th>
                             <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
                             <th>รับจาก</th>
                             <th>เจ้าหน้าที่</th>
