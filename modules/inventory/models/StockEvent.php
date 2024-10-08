@@ -57,6 +57,8 @@ class StockEvent extends Yii\db\ActiveRecord
     public $expDate;
     public $note;
     public $asset_type_name;
+    public $date_start;
+    public $date_end;
 
     public function rules()
     {
@@ -64,7 +66,8 @@ class StockEvent extends Yii\db\ActiveRecord
             [['vendor_id', ''], 'required'],
             [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total', 'asset_type_name', 'q'], 'safe'],
+            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total', 'asset_type_name', 'q', 'date_start',
+            'date_end'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];

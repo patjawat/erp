@@ -60,8 +60,23 @@ class StockInController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
         ]);
-        // $dataProvider->query->where(['name' => 'order']);
+
         $dataProvider->query->andWhere(['warehouse_id' => $warehouse['warehouse_id'], 'transaction_type' => 'IN', 'name' => 'order']);
+
+        //ค้นหาช่วบงวันที่
+   
+        try {
+           $dataProvider->query->andFilterWhere([
+               'between', 
+               new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.receive_date'))"),  
+               AppHelper::convertToGregorian($searchModel->date_start), 
+               AppHelper::convertToGregorian($searchModel->date_end), 
+            ]);
+                        //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,

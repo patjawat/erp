@@ -171,7 +171,7 @@ var thaiYear = function (ct) {
 };    
  
 
-$("#order-data_json-pr_create_date").datetimepicker({
+$("#ordersearch-date_start").datetimepicker({
     timepicker:false,
     format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
     lang:'th',  // แสดงภาษาไทย
@@ -181,7 +181,7 @@ $("#order-data_json-pr_create_date").datetimepicker({
     closeOnDateSelect:true,
 });   
 
-$("#order-data_json-due_date").datetimepicker({
+$("#ordersearch-date_end").datetimepicker({
     timepicker:false,
     format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
     lang:'th',  // แสดงภาษาไทย
