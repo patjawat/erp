@@ -33,23 +33,13 @@ $this->title = 'ระบบคลัง';
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่าเบิกจ่ายวัสดุทั้งหมด</h6>
                     <div class="mb-3">
-                  <?=$this->render('_search_year',['model' => $searchModel])?></div>
+                        <?=$this->render('_search_year',['model' => $searchModel])?></div>
                 </div>
                 <!-- <div id="inventoryCharts"></div> -->
-                <div id="showChart">
-                    <div class="placeholder-glow">
-                        <div class="d-flex justufy-content-row gap-5">
-                            <?php for ($x = 1; $x <= 12; $x++): ?>
-                            <div class="d-flex align-items-end gap-2">
-                                <span class="placeholder" style="width:10px;height:200px"></span>
-                                <span class="placeholder" style="width:10px;height:100px"></span>
-                            </div>
-                            <?php endfor ?>
-
-                        </div>
-                    </div>
-
-                </div>
+                <!-- <div id="showChart">
+                    
+                </div> -->
+                <?=$this->render('chart_summary',['model' => $searchModel])?>
             </div>
         </div>
 

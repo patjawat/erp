@@ -585,4 +585,46 @@ public static function SumStockWarehouse()
             return ArrayHelper::map($model,'thai_year','thai_year');
         }
 
+        // ข้อมูล  chart summary
+        public function SummaryChart()
+        {
+
+            $where = ['and'];
+            $where[] = ['thai_year' => $this->thai_year]; // ใช้กรองถ้าค่ามี
+
+
+            return self::find()
+                    ->select([
+                        'thai_year',
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 10 THEN qty * unit_price ELSE 0 END) as in10'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 10 THEN qty * unit_price ELSE 0 END) as out10'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 11 THEN qty * unit_price ELSE 0 END) as in11'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 11 THEN qty * unit_price ELSE 0 END) as out11'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 12 THEN qty * unit_price ELSE 0 END) as in12'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 12 THEN qty * unit_price ELSE 0 END) as out12'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 1 THEN qty * unit_price ELSE 0 END) as in1'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 1 THEN qty * unit_price ELSE 0 END) as out1'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 2 THEN qty * unit_price ELSE 0 END) as in2'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 2 THEN qty * unit_price ELSE 0 END) as out2'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 3 THEN qty * unit_price ELSE 0 END) as in3'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 3 THEN qty * unit_price ELSE 0 END) as out3'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 4 THEN qty * unit_price ELSE 0 END) as in4'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 4 THEN qty * unit_price ELSE 0 END) as out4'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 5 THEN qty * unit_price ELSE 0 END) as in5'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 5 THEN qty * unit_price ELSE 0 END) as out5'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 6 THEN qty * unit_price ELSE 0 END) as in6'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 6 THEN qty * unit_price ELSE 0 END) as out6'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 7 THEN qty * unit_price ELSE 0 END) as in7'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 7 THEN qty * unit_price ELSE 0 END) as out7'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 8 THEN qty * unit_price ELSE 0 END) as in8'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 8 THEN qty * unit_price ELSE 0 END) as out8'),
+                        new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 9 THEN qty * unit_price ELSE 0 END) as in9'),
+                        new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 9 THEN qty * unit_price ELSE 0 END) as out9')
+                    ])
+                    ->where($where)
+                    ->groupBy('thai_year')
+                    ->asArray()
+                    ->all();
+        }
+
 }
