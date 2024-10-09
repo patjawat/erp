@@ -713,4 +713,137 @@ class ImportStockController extends Controller
          }
      }
 
+
+
+
+     //นำเข้าวัสดุการเกษตร M8
+     public static function actionProduct3()
+     {
+         $data = [
+            ['code' => '08-00001','title' => 'ชุดสตาร์ทเครื่องตัดหญ้า','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00002','title' => 'หัวเทียนตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00004','title' => 'เอ็นตัดหญ้า','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00007','title' => 'สายเร่งเครื่องตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00014','title' => 'ใบมีดตัดหญ้า','unit' => 'ใบ','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00015','title' => 'ยางกดน้ำมัน','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00016','title' => 'คราด','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00018','title' => 'ผ้ามุ้งเขียว','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00020','title' => 'หน้ากากตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00021','title' => 'โซ่เลื่อย','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00025','title' => 'หัวฉีดน้ำทองเหลือง','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00026','title' => 'ครัชเครื่องตัดหญ้า','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00027','title' => 'ตลับเอ็นเครื่องตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00028','title' => 'ไกรเร่งเครื่องตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00029','title' => 'คลอรีนผง 70%','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00032','title' => 'ฝาครอบหัวเฟือง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00033','title' => 'จานไฟเครื่องตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00035','title' => 'หัวเชื้อจุลินทรีย์เข้มข้น','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00036','title' => 'โครงรถเข็นตัดหญ้า','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00037','title' => 'ถังพ่นยาฆ่าแมลง','unit' => 'ใบ','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00038','title' => 'คราดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00039','title' => 'กรรไกรตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00040','title' => 'กรรไกรตัดกิ่ง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00041','title' => 'ใบมีดตัดหญ้ารถเข็น','unit' => 'ใบ','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00042','title' => 'น๊อตเกลียวซ้ายตัดหญ้า','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00043','title' => 'ล้อรถเข็น','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00044','title' => 'สายสะพายเครื่องตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00045','title' => 'จุลินทรีย์สำหรับเครื่องกำจัดขยะอินทรีย์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00047','title' => 'แปรงทาสีขนธรรมชาติ (สีดำ)','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00048','title' => 'เครื่องวัดค่าน้ำ TDS','unit' => 'เครื่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00049','title' => 'เชือกกระตุกเครื่องยนต์','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00050','title' => 'ต้นรวงผึ้ง','unit' => 'ต้น','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00051','title' => 'กระปุกเอ็นตัดหญ้า','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00052','title' => 'สปริงครัช','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00053','title' => 'ชุดหัวฉีด','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00054','title' => 'ข้อต่อทองแดง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00055','title' => 'สวิชปั๊ม','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00056','title' => 'โครงรถเข็น','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00057','title' => 'ชุดกดน้ำมันเบนซิน','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00058','title' => 'คลอรีนผง 75%','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00059','title' => 'สปริงเกอร์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '08-00061','title' => 'สารเร่งตกตะกอน','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
+         ];
+ 
+         if (BaseConsole::confirm('Are you sure?')) {
+             $total = 0;
+             foreach ($data as $key => $value) {
+                 $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                 $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                 // ถ้าไม่มีหน่วยให้สร้างใหม่
+                 if (!$unit) {
+                     $newUnit = new Categorise([
+                         'name' => 'unit',
+                         'title' => $value['unit'],
+                         'active' => 1,
+                     ]);
+                     $newUnit->save(false);
+                 }
+                 // echo $value['code'] . "\n";
+                 // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                 if (!$asetItem) {
+                     $newItem = new Categorise([
+                         'name' => 'asset_item',
+                         'group_id' => 4,
+                         'category_id' => 'M8',
+                         'code' => $value['code'],
+                         'title' => $value['title'],
+                         'data_json' => [
+                             'unit' => $value['unit'],
+                             'sub_title' => '',
+                             'price_name' => '',
+                             'category_name' => 'วัสดุสำนักงาน',
+                             'asset_type_name' => '',
+                         ],
+                     ]);
+                     $newItem->save(false);
+                 }
+ 
+                 $qty = (int) explode('.', $value['qty'])[0];
+ 
+                 $category_id = 499;
+                 $code = 'IN-680003';
+                 $lot =  \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                 $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                 $model = new StockEvent([
+                     'ref' => $ref,
+                     'lot_number' => $lot,
+                     'name' => 'order_item',
+                     'code' => $code,
+                     'category_id' => $category_id,
+                     'transaction_type' => 'IN',
+                     'asset_item' => $value['code'],
+                     'warehouse_id' => 7,
+                     'qty' => $value['qty'],
+                     'unit_price' => (double)$value['unit_price'],
+                     'order_status' => 'pending',
+                     'data_json' => [
+                         'req_qty' => '0',
+                         'exp_date' => '',
+                         'mfg_date' => '',
+                         'item_type' => 'ยอดยกมา',
+                         'po_number' => '',
+                         'pq_number' => '',
+                         'asset_type' => '',
+                         'receive_date' => '',
+                         'asset_type_name' => '',
+                         'employee_fullname' => 'Administrator Lastname',
+                         'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                         'employee_department' => 'งานซ่อมบำรุง',
+                     ],
+                     'created_by' => 1,
+                     'updated_by' => 1,
+                 ]);
+                 // echo (DOUBLE) $value['unit_price'],"\n";
+                 if ($model->save(false)) {
+                     echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                 } else {
+                     echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                 }
+                 $sum = $qty * (int) $value['unit_price'];
+                 $total += $sum;
+             }
+             echo $total;
+         }
+     }
+
 }
