@@ -340,6 +340,12 @@ class StockEvent extends Yii\db\ActiveRecord
         //    ->queryScalar();
     }
 
+// ประเภทของวัสดุ
+    public function ListAssetType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->all(), 'code', 'title');
+    }
+
     // คณะกรรมการ
     public function ListBoard()
     {

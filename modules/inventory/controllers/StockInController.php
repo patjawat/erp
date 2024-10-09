@@ -372,16 +372,16 @@ class StockInController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             if ($model->save(false)) {
-                if ($model->name == 'order') {
-                    return $this->redirect(['view', 'id' => $model->id]);
-                } else {
+                // if ($model->name == 'order') {
+                //     return $this->redirect(['view', 'id' => $model->id]);
+                // } else {
                     \Yii::$app->response->format = Response::FORMAT_JSON;
 
                     return [
                         'status' => 'success',
                         'container' => '#inventory',
                     ];
-                }
+                // }
             } else {
              
             }

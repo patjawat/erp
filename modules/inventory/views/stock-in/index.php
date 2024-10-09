@@ -49,7 +49,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
 ?>
 
-<?php Pjax::begin(); ?>
+<?php Pjax::begin(['id' => 'inventory', 'enablePushState' => false, 'timeout' => 88888888]); ?>
 <div class="card">
     <div class="card-body d-flex justify-content-between">
         <div class="d-flex gap-3">
@@ -122,9 +122,20 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                                 </span>
                             </td>
                             <td class="text-center"><?= $item->viewStatus();?></td>
-                            <td class="text-center">
-                                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-in/view','id' => $item->id],['class'=> 'btn btn-light'])?>
-                            </td>
+
+                            <td class="fw-light">
+                        <div class="btn-group">
+                            <?= Html::a('<i class="fa-regular fa-file-lines"></i>', ['/inventory/stock-in/view','id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
+                            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                <i class="bi bi-caret-down-fill"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            </ul>
+                        </div>
+
+                    </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

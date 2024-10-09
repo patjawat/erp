@@ -44,6 +44,27 @@ use iamsaint\datetimepicker\Datetimepicker;
                                     ])->label();
                                     
                                     ?>
+
+<?php
+  
+  echo $form->field($model, 'data_json[asset_type]')->widget(Select2::classname(), [
+      'data' => $model->ListAssetType(),
+      'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
+      'disabled' => ($model->category_id ?  true : false)
+  ],
+      'pluginOptions' => [
+          'allowClear' => true,
+          'dropdownParent' => '#main-modal',
+      ],
+      'pluginEvents' => [
+        "select2:select" => "function(result) { 
+            var data = $(this).select2('data')[0]
+            $('#stockevent-data_json-asset_type_name').val(data.text)
+         }",
+      ]
+  ])->label('ประเภท');
+  ?>
+
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า');?>
 
 <?=$form->field($model, 'data_json[receive_date]')->widget(Datetimepicker::className(),[

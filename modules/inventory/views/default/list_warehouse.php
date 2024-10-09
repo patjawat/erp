@@ -23,7 +23,7 @@ use app\modules\inventory\models\Warehouse;
       <th scope="col">#</th>
       <th>รายการ</th>
       <th>ผู้ดูแล</th>
-      <th class="text-center">คำขอเบิก</th>
+      <th class="text-center">รอดำเนินการ</th>
       <th>ร้อยละปริมาณวัสดุ</th>
     </tr>
   </thead>

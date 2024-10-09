@@ -30,7 +30,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
     <?= $form->field($model, 'data_json[po_number]')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'data_json[pq_number]')->hiddenInput()->label(false);?>
-    <?= $form->field($model, 'data_json[asset_type]')->hiddenInput()->label(false);?>
+    <?php //  $form->field($model, 'data_json[asset_type]')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'data_json[asset_type_name]')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'transaction_type')->hiddenInput()->label(false);?>
@@ -52,8 +52,8 @@ $js = <<< JS
                                 var form = \$(this);
 
                                 Swal.fire({
-                                    title: "รับวัสดุ?",
-                                    text: "ยืนยันรับวัสดุอีกครั้ง!",
+                                    title: "ยืนยัน?",
+                                    text: "ยืนยันการบันทึกอีกครั้ง!",
                                     icon: "warning",
                                     showCancelButton: true,
                                     confirmButtonColor: "#3085d6",
