@@ -22,7 +22,7 @@ use kartik\select2\Select2;
 <div class="d-flex flex-row gap-3">
   <div class="w-50">
   
-  <?php echo $form->field($searchModel, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
+  <?php echo $form->field($searchModel, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
   </div>
   <div class="w-50">
   <?php

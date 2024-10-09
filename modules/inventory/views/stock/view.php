@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <table class="table">
   <thead>
     <tr>
-      <th scope="col" style="width:130px">ความเคลื่อไหว</th>
+      <th scope="col" style="width:130px">ความเคลื่อนไหว</th>
       <th scope="col" style="width:120px">ปีงบประมาณ</th>
       <th scope="col" style="width:180px">วันที่</th>
       <th scope="col" style="width:130px">หมายเลขล็อต</th>

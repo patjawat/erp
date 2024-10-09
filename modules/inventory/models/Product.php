@@ -72,6 +72,7 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
     public $unit_name;
     public $quantity;
     public $price;
+    public $q;
 
     /**
      * {@inheritdoc}
@@ -80,7 +81,7 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items','price','qty'], 'safe'],
+            [['data_json', 'q_category', 'unit_items','price','qty','q'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
