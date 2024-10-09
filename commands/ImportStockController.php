@@ -981,7 +981,7 @@ class ImportStockController extends Controller
         }
     }
 
-        // วัสดุไฟฟ้าและวิทยุ
+        // วัสดุไฟฟ้าและวิทยุ IN-680005
         public static function actionM2()
         {
             $data = [
