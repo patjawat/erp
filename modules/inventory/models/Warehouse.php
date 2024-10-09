@@ -130,7 +130,7 @@ class Warehouse extends \yii\db\ActiveRecord
 
     public function SumPice()
     {
-        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock_events WHERE warehouse_id = :warehouse_id";
+        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock_events WHERE warehouse_id = :warehouse_id AND order_status = 'success'";
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
             ])->queryScalar();
@@ -166,6 +166,7 @@ class Warehouse extends \yii\db\ActiveRecord
         (SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 ) as in9,
         (SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 ) as out9
         FROM stock_events
+        where order_status = 'success'
         GROUP BY thai_year";
     $query = \Yii::$app->db
         ->createCommand($sql)

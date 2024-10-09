@@ -573,7 +573,7 @@ class StockEvent extends Yii\db\ActiveRecord
 
         $model = self::find()
         ->where(['name' => 'order_item'])
-        ->andFilterWhere(['thai_year' => $this->thai_year]);
+        ->andFilterWhere(['thai_year' => $this->thai_year,'order_status' => 'success']);
 
         $in = $model->andFilterWhere(['transaction_type' => 'IN'])->sum(new Expression('qty * unit_price')) ?? 0;
         $out = $model->andFilterWhere(['transaction_type' => 'OUT'])->sum(new Expression('qty * unit_price')) ?? 0;
@@ -617,7 +617,8 @@ class StockEvent extends Yii\db\ActiveRecord
                     new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 9 THEN qty * unit_price ELSE 0 END) as in9'),
                     new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 9 THEN qty * unit_price ELSE 0 END) as out9'),
                 ])
-                ->where($where)
+                // ->where($where)
+                ->andWhere(['order_status' => 'success'])
                 ->groupBy('thai_year')
                 ->asArray()
                 ->all();
