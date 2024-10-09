@@ -66,7 +66,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <tr>
       <th scope="col" style="width:130px">ความเคลื่อนไหว</th>
       <th scope="col" style="width:120px">ปีงบประมาณ</th>
-      <th scope="col" style="width:180px">วันที่</th>
+      <th scope="col" style="width:180px">วันที่รับ/จ่าย</th>
       <th scope="col" style="width:130px">หมายเลขล็อต</th>
       <th scope="col">เลขที่เอกสาร</th>
       <th scope="col">ผู้สั่งจ่าย</th>
@@ -74,6 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
       <th scope="col" class="text-center">จำนวนเข้า</th>
       <th scope="col" class="text-center">จำนวนออก</th>
       <th scope="col" class="text-center">คงเหลือ</th>
+      <th scope="col" class="text-center">มูลค่าวัสดุคงเหลือ</th>
     </tr>
   </thead>
   <tbody>
@@ -111,14 +112,15 @@ $this->params['breadcrumbs'][] = $this->title;
       }
       ?></td>
       <td class="text-center"><?=$item['total']?></td>
-      <!-- <td class="text-end">
+      <td class="text-end">
         <?php
       try {
-         number_format($item['total_price'],2);
+         echo number_format($item['total_price'],2);
       } catch (\Throwable $th) {
         //throw $th;
       }
-      ?></td> -->
+      ?></td>
+
     </tr>
   <?php endforeach;?>
   </tbody>
