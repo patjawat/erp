@@ -35,7 +35,7 @@ class ImportStockController extends Controller
     }
 
     // นำเข้าวัสดุสำนักงาน
-    public static function actionProduct1()
+    public static function actionM1()
     {
         $data = [
             ['code' => '01-00001', 'title' => 'กระดาษถ่ายเอกสาร ขนาด A4', 'unit' => 'รีม', 'qty' => '0', 'unit_price' => '0'],
@@ -841,4 +841,522 @@ class ImportStockController extends Controller
             echo $total;
         }
     }
+
+
+    // วัสดุคอมพิวเตอร์
+    public static function actionM12()
+    {
+        $data = [
+            ['code' => '01-00088','title' => 'แผ่น CD (วัสดุสำนักงาน)','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00001','title' => 'Battery UPS 5.5Ah 12V','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00002','title' => 'Battery UPS 7.2Ah 12V','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00003','title' => 'Battery UPS 7.8 Ah 12 V','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00006','title' => 'Hard disk SSD 480 GB','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00007','title' => 'Hard disk SSD 240 GB','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00014','title' => 'Toner HP 30A','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00022','title' => 'Toner HP53A','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00023','title' => 'Toner HP78A','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00024','title' => 'Toner HP79A','unit' => 'กล่อง','qty' => '35.00','unit_price' => '15750.00'],
+            ['code' => '12-00025','title' => 'Toner HP85A','unit' => 'กล่อง','qty' => '10.00','unit_price' => '4500.00'],
+            ['code' => '12-00026','title' => 'Toner SAMSUNG M2T-D1162','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00029','title' => 'Webcam','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00030','title' => 'แผ่น CD (วส.คอมพิวเตอร์)','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00031','title' => 'แผ่น DVD (วส.คอมพิวเตอร์)','unit' => 'หลอด','qty' => '2.00','unit_price' => '780.00'],
+            ['code' => '12-00032','title' => 'แผ่นรองเมาส์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00033','title' => 'Toner EPSON T6641 BK','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00034','title' => 'Toner EPSON T6642 C','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00035','title' => 'Toner EPSON T6642 M','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00036','title' => 'Toner EPSON T6642 Y','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00037','title' => 'หัวแลน RJ45 CAT5','unit' => 'แพค','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00038','title' => 'Refill Ribbon LQ-300','unit' => 'กล่อง','qty' => '20.00','unit_price' => '2600.00'],
+            ['code' => '12-00039','title' => 'keyboard','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00040','title' => 'Mouse','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00052','title' => 'Mouse & Keyboord','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00055','title' => 'สาย LAN LINK 305m.','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00057','title' => 'Toner Samsung MLT-R116','unit' => 'กล่อง','qty' => '4.00','unit_price' => '3960.00'],
+            ['code' => '12-00058','title' => 'Toner HP32A-CF232','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00059','title' => 'Toner HP48A-CF248A','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00066','title' => 'เครื่องจ่ายไฟ สำหรับคอมพิวเตอร์','unit' => 'เครื่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00069','title' => 'CAT5e UTP Cable (305m./Box) LINK (US-9015M)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00073','title' => 'Toner Samsung MLT-D116L','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00075','title' => 'Adapter 12V','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00086','title' => 'แผ่นบังแสงจอคอม (LCD LED video monitor)','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00087','title' => 'ขาตั้งโทรทัศน์ 55 นิ้ว แบบล้อเลื่อน','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00088','title' => 'Adapter NB LENOVO (USB Tip) 20V (65W) 3.25A','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00089','title' => 'สายไมค์ชุดประชุมพร้อมปลั๊ก','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00090','title' => 'SSD M.2 PCle 256.GB','unit' => 'ชิ้น','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00091','title' => 'Ram 8 GB DDR4 for Lenovo sever TS150','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00092','title' => '์Network server card card Intel Gigabit Dual port PCle 4X','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00093','title' => 'ซิลิโคน CPU','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00094','title' => 'Rom Upgrade for Raid Card Lenovo','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00095','title' => 'Raid Card Sever Lenovo','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00096','title' => 'สาย Lenovo Raid to Sata','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00097','title' => 'Battery backup ROM','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00099','title' => 'Toner HP107A','unit' => 'กล่อง','qty' => '8.00','unit_price' => '6400.00'],
+            ['code' => '12-00100','title' => '128 GB SSD SATA APACER','unit' => 'ชิ้น','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00101','title' => 'Smart Card Reader','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00102','title' => 'Connector RJ45','unit' => 'ชิ้น','qty' => '0','unit_price' => '0'],
+            ['code' => '12-00103','title' => 'Finger Print Reader','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+        ];
+
+        if (BaseConsole::confirm('Are you sure?')) {
+            $total = 0;
+            foreach ($data as $key => $value) {
+                $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                // ถ้าไม่มีหน่วยให้สร้างใหม่
+                if (!$unit) {
+                    $newUnit = new Categorise([
+                        'name' => 'unit',
+                        'title' => $value['unit'],
+                        'active' => 1,
+                    ]);
+                    $newUnit->save(false);
+                }
+                // echo $value['code'] . "\n";
+                // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                if (!$asetItem) {
+                    $newItem = new Categorise([
+                        'name' => 'asset_item',
+                        'group_id' => 4,
+                        'category_id' => 'M12',
+                        'code' => $value['code'],
+                        'title' => $value['title'],
+                        'data_json' => [
+                            'unit' => $value['unit'],
+                            'sub_title' => '',
+                            'price_name' => '',
+                            'category_name' => 'วัสดุสำนักงาน',
+                            'asset_type_name' => '',
+                        ],
+                    ]);
+                    $newItem->save(false);
+                }
+
+                $qty = (int) explode('.', $value['qty'])[0];
+
+                $category_id = 543;
+                $code = 'IN-680004';
+                $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model = new StockEvent([
+                    'ref' => $ref,
+                    'lot_number' => $lot,
+                    'name' => 'order_item',
+                    'code' => $code,
+                    'category_id' => $category_id,
+                    'transaction_type' => 'IN',
+                    'asset_item' => $value['code'],
+                    'warehouse_id' => 7,
+                    'qty' => $value['qty'],
+                    'unit_price' => (float) $value['unit_price'],
+                    'order_status' => 'pending',
+                    'data_json' => [
+                        'req_qty' => '0',
+                        'exp_date' => '',
+                        'mfg_date' => '',
+                        'item_type' => 'ยอดยกมา',
+                        'po_number' => '',
+                        'pq_number' => '',
+                        'asset_type' => '',
+                        'receive_date' => '',
+                        'asset_type_name' => '',
+                        'employee_fullname' => 'Administrator Lastname',
+                        'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                        'employee_department' => 'งานซ่อมบำรุง',
+                    ],
+                    'created_by' => 1,
+                    'updated_by' => 1,
+                ]);
+                // echo (DOUBLE) $value['unit_price'],"\n";
+                if ($model->save(false)) {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                } else {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                }
+                $sum = $qty * (int) $value['unit_price'];
+                $total += $sum;
+            }
+            echo $total;
+        }
+    }
+
+        // วัสดุไฟฟ้าและวิทยุ
+        public static function actionM2()
+        {
+            $data = [
+                ['code' => '02-00004','title' => 'ฟิวส์หลอดแก้ว','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00006','title' => 'หลอดไฟ LED ขนาด 18 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00007','title' => 'ปลั๊กกราวด์ 3 ช่อง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00011','title' => 'สะพานไฟ 3 เมตร','unit' => 'อััน','qty' => '1.00','unit_price' => '700.00'],
+                ['code' => '02-00012','title' => 'เทปพันสายไฟ 3M','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00013','title' => 'เทปละลาย','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00014','title' => 'หน้ากาก 3 ช่อง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00015','title' => 'กล่องลอย','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00016','title' => 'รางเก็บสายไฟ','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00018','title' => 'ตะกั่วบัคกรี','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00019','title' => 'ชุดหลอดไฟสำเร็จ 18 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00020','title' => 'น้ำยาประสานบัดกรี','unit' => 'ขวด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00022','title' => 'สายไฟอ่อน','unit' => 'เมตร','qty' => '10.00','unit_price' => '130.00'],
+                ['code' => '02-00023','title' => 'พุกผีเสื้อ','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00025','title' => 'ขั้วหลอดกระเบื้อง','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00026','title' => 'ขั้วหลอดไฟไฮโซเดียม','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00027','title' => 'เทอร์มินอลต่อสายไฟ','unit' => 'แผง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00030','title' => 'ตะปูเกลียวขาว 2 นิ้ว','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00035','title' => 'เบรคเกอร์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00037','title' => 'สวิทซ์','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00038','title' => 'หน้ากาก 1 ช่อง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00039','title' => 'หลอดไฟ LED ขนาด 15 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00040','title' => 'ฝาครอบ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00041','title' => 'แป้น PVC','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00044','title' => 'เบรคเกอร์ 30 A','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00045','title' => 'ฝาครอบเบรคเกอร์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00046','title' => 'อะแดปเตอร์ 9V','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00050','title' => 'ไขควงวัดไฟ มีเสียง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00054','title' => 'ถ่านชาร์จ 9V','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00057','title' => 'คาปาซิเตอร์','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00059','title' => 'หลอดไฟ LED ขนาด 5 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00060','title' => 'ตะปูเกลียวดำ 1 นิ้ว','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00061','title' => 'แบตเตอร์รี่วิทยุสื่อสาร Ni-MH BP-264','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00065','title' => 'ท่อขาวเดินสายไฟ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00066','title' => 'ข้อต่อโค้ง ท่อขาวเดินสายไฟ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00067','title' => 'แค้มจับท่อขาวเดินสายไฟ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00068','title' => 'ปากกาเช็คไฟ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00070','title' => 'สวิตซ์แสงแดง โฟโต้สวิตซ์','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00071','title' => 'แบตเตอรี่ FB 200A','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00073','title' => 'กระดิ่งไร้สาย','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00074','title' => 'หางปลา','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00075','title' => 'หัวต่อปลั๊กไฟ','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00078','title' => 'มอเตอร์พัดลม','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00080','title' => 'หลอดไฟ ขนาด LED 9 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00081','title' => 'ปลั๊กตัวผู้','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00083','title' => 'สายรัดเหล็ก','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00084','title' => 'หลอดไฟนีออน LED ขนาด 30 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00085','title' => 'หลอดไฟ LED ขนาด 9 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00086','title' => 'แท่งกราวด์กลีบมะเฟือง','unit' => 'แท่ง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00087','title' => 'สายดิน','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00093','title' => 'กิ๊ปติดสายไฟ','unit' => 'ห่อ','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00094','title' => 'คอนเนคเตอร์ ท่ออ่อนลูกฟูก','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00099','title' => 'โคมตะแกรงอลูมิเนียม โคมรีเฟล็กซ์สะท้อนแสง','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00100','title' => 'ไฟฉุกเฉิน LED ขนาด 12V','unit' => 'เครื่อง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00103','title' => 'หลอดตะเกียบ แบบเกลียว 25 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00104','title' => 'หลอดเกลียว 8 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00105','title' => 'หลอดไฟฮาโลเจน 50 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00106','title' => 'แบตเตอรี่ Adult PAD-PAK','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00107','title' => 'ข้อต่อขาว','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00108','title' => 'สามทางขาว','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00109','title' => 'หลอดตะเกียบ ขนาด 18 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00110','title' => 'สปอร์ตไลท์ LED ขนาด 30 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00111','title' => 'สวิทซ์พัดลม','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00112','title' => 'คีมตัด','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00113','title' => 'คีมย้ำหางปลา','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00114','title' => 'สายไฟ ทองแดง','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00115','title' => 'ลวดแบน','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00116','title' => 'ถุงมือนิรภัย','unit' => 'คู่','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00117','title' => 'ปรีฟอร์มเข้าปลายสาย','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00118','title' => 'หลอดไฟ LED ขนาด 26 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00119','title' => 'แบตเตอรี่แห้ง ขนาด 12V','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00120','title' => 'สายไฟอ่อน 2*2.5 มม.','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00121','title' => 'ใบพัดลม','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00122','title' => 'แบตเตอรี่ Sealed Acid','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00123','title' => 'ขายึกถังดับเพลิง','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00124','title' => 'คัตเตอร์ตัดสายไฟ','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00125','title' => 'ท่ออ่อน','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00126','title' => 'เครื่องวัดประสิทธิภาพของแบตเตอรี่','unit' => 'เครื่อง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00127','title' => 'ฮีตเตอร์ 9000 วัตต์','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00128','title' => 'Heater 2000W','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00129','title' => 'แบตเตอรี่ 3.7 V Lithium - Ion','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00130','title' => 'แบตเตอรี่ Patient Monitor Biocare IM12','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00131','title' => 'ขั้วต่อสายไฟ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00132','title' => 'ชุดโคมไฟถนน ขนาด 150 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00133','title' => 'สายรัดพลาสติก','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00134','title' => 'ท่อหด','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00135','title' => 'กล่องเบรคเกอร์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00136','title' => 'ชุดหลอดไฟสำเร็จ LED 9 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00137','title' => 'หลอดไฟ LED ขนาด 7 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00138','title' => 'หลอดไฟกลม LED ขนาด 30 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00139','title' => 'เมนเบรกเกอร์ 32A','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00140','title' => 'แผ่นรองเบรกเกอร์','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00141','title' => 'น้ำยาเอนกประสงค์','unit' => 'กระป๋อง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00142','title' => 'กาวแท่งร้อน','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00143','title' => 'ป้ายทางออก Exit','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00144','title' => 'หลอดไฟ สำหรับเครื่องส่องตรวจหู Otoscope Heine','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00145','title' => 'ชุดโคมไฟถนน LED ขนาด 100 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00146','title' => 'ฟุตสวิทซ์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00147','title' => 'หลอดไฟฟลูออเรสเซนต์ ขนาด 18 วัตต์ (สีฟ้า)','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00148','title' => 'หลอดไฟฟลูออเรสเซนต์ ขนาด 18 วัตต์ (สีขาว)','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00149','title' => 'โซลินอยด์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00150','title' => 'เครื่องปรับแสงแรงดันไฟฟ้าอัตโนมัติ','unit' => 'เครื่อง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00151','title' => 'หลอดตะเกียบ แบบเสียบ 2 ขา ขนาด 100 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00152','title' => 'หลอดไฟฟลูออเรสเซนต์ ขนาด 30 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00153','title' => 'สวิทช์คันโยก','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00154','title' => 'ปลั๊กเมจิก','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00155','title' => 'เบรคเกอร์ 10A','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00156','title' => 'หลอดฆ่าเชื้ออบทารก','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00157','title' => 'ข้องอขาว','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00158','title' => 'สายโทรศัพท์ 4C*0.65','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00159','title' => 'สายสัญญาณเสียง 15 เมตร','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00160','title' => 'แผงต่อสาย','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00161','title' => 'ปั๊มหอยโข่ง 0.5 HP','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00162','title' => 'ดอกยิงหัวแฉก-แบน แบบยาว','unit' => 'ดอก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00163','title' => 'ดอกยิงหัวแฉก-แบน แบบสั้น','unit' => 'ดอก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00164','title' => 'หลอดตะเกียบ 12 V - 50 W','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00165','title' => 'หลอดตะเกียบ 12 V -100 W','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00166','title' => 'เบรคเกอร์ 20 A','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00167','title' => 'แป้นรอง PVC','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00168','title' => 'ท่อต่อตรง','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00169','title' => 'ลูกเมนย่อย','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00170','title' => 'หลอดตะเกียบ ขนาด 20 w','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00171','title' => 'พัดลมข้างฝา ติดผนัง','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00172','title' => 'พัดลมโคจร','unit' => 'ตัว','qty' => '1.00','unit_price' => '1500.00'],
+                ['code' => '02-00173','title' => 'หลอดไฟฮาโลเจน 100 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00174','title' => 'ชุดปลั๊กกราวด์คู่','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00175','title' => 'ทรานซิสเตอร์สำหรับเครื่องขูดหินปูน','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00176','title' => 'แบตเตอรี่สำรองไฟ ขนาด 12 V','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00177','title' => 'สายไฟขาว','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00178','title' => 'ฟิวส์กระบอก ขนาด 100 A','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00179','title' => 'พัดลมดูดอากาศ','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00180','title' => 'ขาโคมไฟถนน','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00181','title' => 'ใบพัดปั๊มน้ำพลาสติก 6 รู','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00182','title' => 'ใบพัดปั๊มน้ำพลาสติก 4 รู','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00183','title' => 'นิเปิลทองเหลือง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00184','title' => 'คอนแดนเซอร์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00185','title' => 'แว่นตาเชื่อม','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00186','title' => 'สกัด แบน','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00187','title' => 'ปั๊มน้ำอัตโนมัติ','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00188','title' => 'ดอกสว่าน','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00189','title' => 'หัวคอปเปอร์ปั๊มลม','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00190','title' => 'ชุดหลอดไฟ LED 15 W','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00191','title' => 'ถ่าน 23 A','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00192','title' => 'ฮีตเตอร์กลมมีเส้นแดง','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00193','title' => 'หน้ากากเบรกเกอร์','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00194','title' => 'เบรกเกอร์ 30A','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00195','title' => 'สายไฟทองแดง','unit' => 'เมตร','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00196','title' => 'กล่องแยกสาย','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00197','title' => 'ชุดรางหลอดไฟสำเร็จ LED','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00198','title' => 'หัวแร้งบัดกรี','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00199','title' => 'มัลติมิเตอร์ แบบดิจิตอล','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00200','title' => 'ถ่านรีโมท 27 A','unit' => 'ก้อน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00201','title' => 'ขั้วหลอดสตาร์ทเตอร์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00203','title' => 'ฝาปิด 3 ช่อง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00204','title' => 'หลอด LED 1 W','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00205','title' => 'หลอดไฟ LED','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00206','title' => 'เคเบิ้ลไทร์','unit' => 'ห่อ','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00207','title' => 'หลอดไฟตะเกียบ ขนาด 18 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00208','title' => 'คอนเนคเตอร์','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00209','title' => 'ตู้ใส่เบรกเกอร์','unit' => 'ตู้','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00210','title' => 'ชุดหลอดไฟ LED 18 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00211','title' => 'ปลั๊ก 3 ตา มีกราวด์คู่','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00212','title' => 'แค้มก้ามปูขาว','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00213','title' => 'แบตเตอรี่ N 200 แอมป์','unit' => 'ลูก','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00214','title' => 'ปลั๊กเดี๋ยว','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00215','title' => 'สายไฟ VCT','unit' => 'ม้วน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00216','title' => 'ไขควงแฉก','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00217','title' => 'ไขควงวัดไฟ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00218','title' => 'ชุดไขควง','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00219','title' => 'หลอดตะเกียบ ขนาด 35 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00220','title' => 'หลอดไฟ LED ขนาด 40 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00221','title' => 'หลอดไฟ ขนาด 50 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00222','title' => 'หลอดไฟ ขนาด 100 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00223','title' => 'หลอดไฟ LED ขนาด 20 วัตต์','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00224','title' => 'พุก #7','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00225','title' => 'ตะปูเกลียวดำ 1 "','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00226','title' => 'ชุดโคมไฟ LED ติดผนัง','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00227','title' => 'Timer for Koksan Centrifuge','unit' => 'ชิ้น','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00228','title' => 'ไส้ไก่','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00229','title' => 'กิ๊ฟ CR','unit' => 'กิโลกรัม','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00230','title' => 'ชุดฟิลส์แบบเสียบ 40A','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00231','title' => 'สวิทซ์ กด-ดับ','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00232','title' => 'ชุดฟิลส์กระบอก','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00233','title' => 'โคมไฟถนน ชนิด LED ขนาด 50 วัตต์','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00234','title' => 'ถังใส่วัสดุมีคมติดเชื้อ สีดำ','unit' => '','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00235','title' => 'แคปสตาร์ท 30 ไมโคร','unit' => '','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00236','title' => 'Timer','unit' => '','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00237','title' => 'สายไฟ 1x2.5 มม.','unit' => '','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00238','title' => 'ไฟโซลาร์เซลล์ 60W','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00240','title' => 'ไฟโซลาร์เซลล์ 500W','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00241','title' => 'เบรกเกอร์ 10 A','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00242','title' => 'หลอดไฟ ดาวไลท์ LED ขนาด 5 W','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00243','title' => 'รีโมทคอนโทรล','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00244','title' => 'ชุดคอยล์ไฟ','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00245','title' => 'ชุดขาไมล์ตั้งโต๊ะ','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00246','title' => 'วายนัด','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00247','title' => 'คีมปอกสายไฟ','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00248','title' => 'หลอดไฟ ดาวไลท์ ขนาด 12 W','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00251','title' => 'เบรกเกอร์ 32 A','unit' => 'ตัว','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00252','title' => 'หลอดตะเกียบ ขนาด 14 w','unit' => 'หลอด','qty' => '0','unit_price' => '0'],
+                ['code' => '02-00253','title' => 'หน้ากาก 6 ช่อง','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ];
+    
+            if (BaseConsole::confirm('Are you sure?')) {
+                $total = 0;
+                foreach ($data as $key => $value) {
+                    $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                    $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                    // ถ้าไม่มีหน่วยให้สร้างใหม่
+                    if (!$unit) {
+                        $newUnit = new Categorise([
+                            'name' => 'unit',
+                            'title' => $value['unit'],
+                            'active' => 1,
+                        ]);
+                        $newUnit->save(false);
+                    }
+                    // echo $value['code'] . "\n";
+                    // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                    if (!$asetItem) {
+                        $newItem = new Categorise([
+                            'name' => 'asset_item',
+                            'group_id' => 4,
+                            'category_id' => 'M2',
+                            'code' => $value['code'],
+                            'title' => $value['title'],
+                            'data_json' => [
+                                'unit' => $value['unit'],
+                                'sub_title' => '',
+                                'price_name' => '',
+                                'category_name' => 'วัสดุสำนักงาน',
+                                'asset_type_name' => '',
+                            ],
+                        ]);
+                        $newItem->save(false);
+                    }
+    
+                    $qty = (int) explode('.', $value['qty'])[0];
+    
+                    $category_id = 544;
+                    $code = 'IN-680005';
+                    $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                    $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                    $model = new StockEvent([
+                        'ref' => $ref,
+                        'lot_number' => $lot,
+                        'name' => 'order_item',
+                        'code' => $code,
+                        'category_id' => $category_id,
+                        'transaction_type' => 'IN',
+                        'asset_item' => $value['code'],
+                        'warehouse_id' => 7,
+                        'qty' => $value['qty'],
+                        'unit_price' => (float) $value['unit_price'],
+                        'order_status' => 'pending',
+                        'data_json' => [
+                            'req_qty' => '0',
+                            'exp_date' => '',
+                            'mfg_date' => '',
+                            'item_type' => 'ยอดยกมา',
+                            'po_number' => '',
+                            'pq_number' => '',
+                            'asset_type' => '',
+                            'receive_date' => '',
+                            'asset_type_name' => '',
+                            'employee_fullname' => 'Administrator Lastname',
+                            'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                            'employee_department' => 'งานซ่อมบำรุง',
+                        ],
+                        'created_by' => 1,
+                        'updated_by' => 1,
+                    ]);
+                    // echo (DOUBLE) $value['unit_price'],"\n";
+                    if ($model->save(false)) {
+                        echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                    } else {
+                        echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                    }
+                    $sum = $qty * (int) $value['unit_price'];
+                    $total += $sum;
+                }
+                echo $total;
+            }
+        }
+
+          // 
+          public static function actionMdemo()
+          {
+              $data = [
+                
+              ];
+      
+              if (BaseConsole::confirm('Are you sure?')) {
+                  $total = 0;
+                  foreach ($data as $key => $value) {
+                      $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                      $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                      // ถ้าไม่มีหน่วยให้สร้างใหม่
+                      if (!$unit) {
+                          $newUnit = new Categorise([
+                              'name' => 'unit',
+                              'title' => $value['unit'],
+                              'active' => 1,
+                          ]);
+                          $newUnit->save(false);
+                      }
+                      // echo $value['code'] . "\n";
+                      // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                      if (!$asetItem) {
+                          $newItem = new Categorise([
+                              'name' => 'asset_item',
+                              'group_id' => 4,
+                              'category_id' => 'M8',
+                              'code' => $value['code'],
+                              'title' => $value['title'],
+                              'data_json' => [
+                                  'unit' => $value['unit'],
+                                  'sub_title' => '',
+                                  'price_name' => '',
+                                  'category_name' => 'วัสดุสำนักงาน',
+                                  'asset_type_name' => '',
+                              ],
+                          ]);
+                          $newItem->save(false);
+                      }
+      
+                      $qty = (int) explode('.', $value['qty'])[0];
+      
+                      $category_id = 499;
+                      $code = 'IN-680003';
+                      $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                      $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                      $model = new StockEvent([
+                          'ref' => $ref,
+                          'lot_number' => $lot,
+                          'name' => 'order_item',
+                          'code' => $code,
+                          'category_id' => $category_id,
+                          'transaction_type' => 'IN',
+                          'asset_item' => $value['code'],
+                          'warehouse_id' => 7,
+                          'qty' => $value['qty'],
+                          'unit_price' => (float) $value['unit_price'],
+                          'order_status' => 'pending',
+                          'data_json' => [
+                              'req_qty' => '0',
+                              'exp_date' => '',
+                              'mfg_date' => '',
+                              'item_type' => 'ยอดยกมา',
+                              'po_number' => '',
+                              'pq_number' => '',
+                              'asset_type' => '',
+                              'receive_date' => '',
+                              'asset_type_name' => '',
+                              'employee_fullname' => 'Administrator Lastname',
+                              'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                              'employee_department' => 'งานซ่อมบำรุง',
+                          ],
+                          'created_by' => 1,
+                          'updated_by' => 1,
+                      ]);
+                      // echo (DOUBLE) $value['unit_price'],"\n";
+                      if ($model->save(false)) {
+                          echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                      } else {
+                          echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                      }
+                      $sum = $qty * (int) $value['unit_price'];
+                      $total += $sum;
+                  }
+                  echo $total;
+              }
+          }
+
 }
