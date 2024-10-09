@@ -82,7 +82,7 @@ use app\components\UserHelper;
 
             <?=$this->render('app_service')?>
             <?=$this->render('app_manage')?>
-           
+
             <!-- <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
                 <?=Html::a('<i class="bi bi-people-fill fs-4"></i>',['/hr/employees'],['class' => 'btn header-item notify-icon','data' => [
                         "bs-trigger"=>"hover focus",
@@ -137,8 +137,8 @@ use app\components\UserHelper;
 
 
 
-            
- 
+
+
             <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>

@@ -21,17 +21,7 @@ $moduleId = Yii::$app->controller->module->id;
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> <span>&nbsp;Main Dashboard</span>
                         <!-- <span class="menu-arrow"></span> -->
                     </a>
-                    <!-- <ul aria-expanded="false" class="nav-second-level mm-collapse" style="height: 0px;">
-                        <li class="side-nav-item">
-                            <a class="side-nav-link active" href="index.html"> Multi Purpose </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="dashboard2.html"> E-commerce </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a class="side-nav-link" href="dashboard3.html"> Server Statistics </a>
-                        </li>
-                    </ul> -->
+                   
                 </li>
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
@@ -39,20 +29,6 @@ $moduleId = Yii::$app->controller->module->id;
                         <span> My Dashboard</span>
                     </a>
                 </li>
-                <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/me/repair']) ?>">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span> แจ้งซ่อม</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/me/purchase']) ?>">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                        <span>ขอซื้อ-ขอจ้าง</span>
-                    </a>
-                </li>
-
                 <li class="side-nav-title side-nav-item menu-title fs-6">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-list"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>    
                 Module</li>

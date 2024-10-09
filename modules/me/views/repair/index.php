@@ -22,22 +22,16 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
-<div class="card">
-    <div class="card-body d-flex align-middle flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-        <div class="d-flex gap-3 justify-content-start">
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อม ', ['/helpdesk/default/repair-select','title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <?=$this->render('_search', ['model' => $searchModel])?>
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
-            <?php //  Html::a('<i class="fa-solid fa-gear"></i>', ['#', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
-        </div>
-    </div>
-</div>
+
 <div class="card">
     <div class="card-body">
-        <h6><i class="bi bi-ui-checks"></i> แจ้งซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+        <div class="d-flex justify-content-between">
+            <h6><i class="bi bi-ui-checks"></i> แจ้งซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <div class="d-flex justify-content-between gap-3">
+            <?=$this->render('_search', ['model' => $searchModel])?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-md']]) ?>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table">
                 <thead>

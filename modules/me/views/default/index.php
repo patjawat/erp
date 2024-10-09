@@ -75,7 +75,7 @@ $this->title = 'My DashBoard';
 
     <div class="d-flex justify-content-between">
                     <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
-                    <?=Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด',['/'],['class' => 'btn btn-light'])?>
+                    <?=Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด',['/me/activity'],['class' => 'btn btn-light'])?>
                 </div>
                 <div id="viewApproveStock">Loading...</div>
                 <div id="viewApprovePurchase">Loading...</div>
