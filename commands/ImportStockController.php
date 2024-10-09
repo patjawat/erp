@@ -1269,7 +1269,7 @@ class ImportStockController extends Controller
         }
     }
 
-    // วัสดุงานบ้านงานครัว
+    // วัสดุงานบ้านงานครัว IN-680006
     public static function actionM3()
     {
         $data = [
@@ -1699,7 +1699,7 @@ class ImportStockController extends Controller
             echo $total;
         }
     }
-
+    // วัสดุยานพาหนะและขนส่ง IN-680007
     public static function actionM5()
     {
         $data = [
@@ -1849,10 +1849,14 @@ class ImportStockController extends Controller
     }
 
 
-
-    public static function actionMdemo()
+    // วัสดุเชื้อเพลิงและหล่อลื่น IN-680008
+    public static function actionM6()
     {
         $data = [
+            ['code' => '06-00001','title' => 'แก๊สหุงต้ม ขนาด 15 กก.','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '06-00003','title' => 'น้ำมันแก๊สโซฮอล์ 91','unit' => 'ลิตร','qty' => '0','unit_price' => '0'],
+            ['code' => '06-00004','title' => 'น้ำมันดีเซล','unit' => 'ลิตร','qty' => '0','unit_price' => '0'],
+            ['code' => '06-00005','title' => 'แก๊สหุงต้ม ขนาด 48 กก.','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
         ];
 
         if (BaseConsole::confirm('Are you sure?')) {
@@ -1875,7 +1879,7 @@ class ImportStockController extends Controller
                     $newItem = new Categorise([
                         'name' => 'asset_item',
                         'group_id' => 4,
-                        'category_id' => 'M8',
+                        'category_id' => 'M6',
                         'code' => $value['code'],
                         'title' => $value['title'],
                         'data_json' => [
@@ -1891,8 +1895,8 @@ class ImportStockController extends Controller
 
                 $qty = (int) explode('.', $value['qty'])[0];
 
-                $category_id = 499;
-                $code = 'IN-680003';
+                $category_id = 547;
+                $code = 'IN-680008';
                 $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
                 $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
                 $model = new StockEvent([
@@ -1937,6 +1941,111 @@ class ImportStockController extends Controller
         }
     }
 
+
+
+//วัสดุวิทยาศาสตร์หรือการแพทย์ IN-680009
+    public static function actionM7()
+    {
+        $data = [
+            ['code' => '03-00259','title' => 'ช็อคคลอรีน','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00260','title' => 'ลองลาสติ้งคลอรีน','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00261','title' => 'ถุงกรอง','unit' => 'ใบ','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00262','title' => 'หัวดูดตะกอนแบบมีล้อ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00263','title' => 'สายดูดตะกอน','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00264','title' => 'ตะแกรงดักใบไม้','unit' => 'อัน','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00265','title' => 'เทสต์คิทน้ำ(รีฟิล)','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00351','title' => 'ชุดทดสอบโคลิฟอร์มขั้นต้น (SI-2)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00354','title' => 'คลอรีนผง 65%','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00381','title' => 'ชุดทดสอบบอแร็กซ์(ผงกรอบ)ในอาหาร','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00382','title' => 'ชุดทดสอบสารกรดซาลิซิลิคในอาหาร(สารกันรา)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00383','title' => 'ชุดทดสอบโซเตียม ไฮโดรซัลไฟด์(สารฟอกขาว)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00384','title' => 'ชุดทดสอบฟอร์มาลิน(น้ำยาดองศพ)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00385','title' => 'ชุดทดสอบโคลิฟอร์มแบคทีเรียตรวจน้ำบริโภค(อ.11)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00406','title' => 'ชุดทดสอบโคลิฟอร์มในอาหาร','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00407','title' => 'ชุดทดสอบโคลิฟอร์มในน้ำและน้ำแข็ง','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+        ];
+
+        if (BaseConsole::confirm('Are you sure?')) {
+            $total = 0;
+            foreach ($data as $key => $value) {
+                $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                // ถ้าไม่มีหน่วยให้สร้างใหม่
+                if (!$unit) {
+                    $newUnit = new Categorise([
+                        'name' => 'unit',
+                        'title' => $value['unit'],
+                        'active' => 1,
+                    ]);
+                    $newUnit->save(false);
+                }
+                // echo $value['code'] . "\n";
+                // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                if (!$asetItem) {
+                    $newItem = new Categorise([
+                        'name' => 'asset_item',
+                        'group_id' => 4,
+                        'category_id' => 'M7',
+                        'code' => $value['code'],
+                        'title' => $value['title'],
+                        'data_json' => [
+                            'unit' => $value['unit'],
+                            'sub_title' => '',
+                            'price_name' => '',
+                            'category_name' => 'วัสดุสำนักงาน',
+                            'asset_type_name' => '',
+                        ],
+                    ]);
+                    $newItem->save(false);
+                }
+
+                $qty = (int) explode('.', $value['qty'])[0];
+
+                $category_id = 548;
+                $code = 'IN-680009';
+                $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model = new StockEvent([
+                    'ref' => $ref,
+                    'lot_number' => $lot,
+                    'name' => 'order_item',
+                    'code' => $code,
+                    'category_id' => $category_id,
+                    'transaction_type' => 'IN',
+                    'asset_item' => $value['code'],
+                    'warehouse_id' => 7,
+                    'qty' => $value['qty'],
+                    'unit_price' => (float) $value['unit_price'],
+                    'order_status' => 'pending',
+                    'data_json' => [
+                        'req_qty' => '0',
+                        'exp_date' => '',
+                        'mfg_date' => '',
+                        'item_type' => 'ยอดยกมา',
+                        'po_number' => '',
+                        'pq_number' => '',
+                        'asset_type' => '',
+                        'receive_date' => '',
+                        'asset_type_name' => '',
+                        'employee_fullname' => 'Administrator Lastname',
+                        'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                        'employee_department' => 'งานซ่อมบำรุง',
+                    ],
+                    'created_by' => 1,
+                    'updated_by' => 1,
+                ]);
+                // echo (DOUBLE) $value['unit_price'],"\n";
+                if ($model->save(false)) {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                } else {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                }
+                $sum = $qty * (int) $value['unit_price'];
+                $total += $sum;
+            }
+            echo $total;
+        }
+    }
 
 
     public static function actionMdemo()
