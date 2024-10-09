@@ -195,7 +195,7 @@ class StockInController extends Controller
                 ];
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
-                    $model->code = \mdm\autonumber\AutoNumber::generate('IN-'.substr(AppHelper::YearBudget() + 543, 2).'????');
+                    $model->code = \mdm\autonumber\AutoNumber::generate('IN-'.substr(AppHelper::YearBudget(), 2).'????');
                     $model->data_json = ArrayHelper::merge($model->data_json, $created);
                 }
 
@@ -208,7 +208,7 @@ class StockInController extends Controller
                     $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
 
                     if ($model->auto_lot == '1') {
-                        $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget() + 543, 2).'-?????');
+                        $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
                     } else {
                     }
                 }
@@ -276,8 +276,8 @@ class StockInController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $thaiYear = substr(AppHelper::YearBudget() + 543, 2);
-                $model->code = \mdm\autonumber\AutoNumber::generate('RC-'.substr(AppHelper::YearBudget() + 543, 2).'????');
+                $thaiYear = substr(AppHelper::YearBudget(), 2);
+                $model->code = \mdm\autonumber\AutoNumber::generate('RC-'.substr(AppHelper::YearBudget(), 2).'????');
                 if ($order) {
                     // $order->status = 5;
                     // $order->save(false);
@@ -295,7 +295,7 @@ class StockInController extends Controller
                 foreach ($order->ListOrderItems() as $item) {
                     $stockItem = new StockEvent([
                         'code' => $model->code,
-                        'lot_number' => $model->auto_lot == '1' ? \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget() + 543, 2).'-?????') : '',
+                        'lot_number' => $model->auto_lot == '1' ? \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????') : '',
                         'asset_item' => $item->asset_item,
                         'transaction_type' => 'IN',
                         'warehouse_id' => $model->warehouse_id,
@@ -367,7 +367,7 @@ class StockInController extends Controller
             }
 
             if ($model->name == 'order_item' && $model->auto_lot == '1' && $model->lot_number == '') {
-                $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget() + 543, 2).'-?????');
+                $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
             }
             \Yii::$app->response->format = Response::FORMAT_JSON;
 

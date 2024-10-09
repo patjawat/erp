@@ -6,6 +6,7 @@ use app\modules\inventory\models\Product;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\db\Expression;
 use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\Stock;
@@ -14,22 +15,57 @@ use app\modules\inventory\models\StockSearch;
 
 class StoreController extends \yii\web\Controller
 {
+    // public function actionIndex()
+    // {
+    //     $searchModel = new StockEventSearch();
+    //     $dataProvider = $searchModel->search($this->request->queryParams);
+    //     $dataProvider->query->leftJoin('warehouses w', 'w.id=stock_events.warehouse_id');
+    //     $dataProvider->query->andFilterWhere([
+    //         'warehouse_type' => 'SUB',
+    //         'stock_events.name' => 'order',
+    //         'transaction_type' => 'OUT',
+    //         'stock_events.created_by' =>  Yii::$app->user->id]);
+
+    //     return $this->render('index',[
+    //         'searchModel' => $searchModel,
+    //         'dataProvider' => $dataProvider,
+    //     ]);
+    // }
+
     public function actionIndex()
     {
-        $searchModel = new StockEventSearch();
+        $warehouse = Yii::$app->session->get('warehouse');
+        $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('warehouses w', 'w.id=stock_events.warehouse_id');
+        $dataProvider->query->select(['stock.*',new Expression('SUM(stock.qty) AS total'),]);
+        $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
+        if(isset($searchModel->warehouse_id)){
+            $dataProvider->query->where(['warehouse_id' => $searchModel->warehouse_id]);
+        }else{
+            $dataProvider->query->where(['warehouse_id' => 00]);
+        }
+        
+        if(isset($selectWarehouse)){
+            // $dataProvider->query->where(['warehouse_id' => $selectWarehouse['warehouse_id']]);
+        }
+        
+        // if(isset($selectWarehouse) && $selectWarehouse['warehouse_type'] == 'SUB'){
+            //     $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
+            // }
+            $dataProvider->query->andWhere(['>', 'stock.qty', 0]);
         $dataProvider->query->andFilterWhere([
-            'warehouse_type' => 'SUB',
-            'stock_events.name' => 'order',
-            'transaction_type' => 'OUT',
-            'stock_events.created_by' =>  Yii::$app->user->id]);
-
-        return $this->render('index',[
+            'or',
+            ['LIKE', 'at.title', $searchModel->q],
+            // ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '$.asset_name')"), $searchModel->q],
+        ]);
+        $dataProvider->query->groupBy('asset_item');
+        return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+
         ]);
     }
+
 
 
     public function actionView($id)

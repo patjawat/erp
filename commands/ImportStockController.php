@@ -8,6 +8,7 @@
 
 namespace app\commands;
 
+use app\components\AppHelper;
 use app\models\Categorise;
 use app\modules\inventory\models\StockEvent;
 use yii\console\Controller;
@@ -276,9 +277,11 @@ class ImportStockController extends Controller
 
                 $category_id = 1;
                 $code = 'IN-680001';
+                $lot =  \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
                 $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
                 $model = new StockEvent([
                     'ref' => $ref,
+                    'lot_number' => $lot,
                     'name' => 'order_item',
                     'code' => $code,
                     'category_id' => $category_id,
