@@ -53,7 +53,7 @@ $js = <<< JS
 
                                 Swal.fire({
                                     title: "รับวัสดุ?",
-                                    text: "ยืนยันหารรับวัสดุอีกครั้ง!",
+                                    text: "ยืนยันรับวัสดุอีกครั้ง!",
                                     icon: "warning",
                                     showCancelButton: true,
                                     confirmButtonColor: "#3085d6",
