@@ -22,8 +22,9 @@ use yii\helpers\BaseConsole;
  * @author Qiang Xue <qiang.xue@gmail.com>
  *
  * @since 2.0
+ * นำเข้าคลังพัสดุ
  */
-class ImportStockController extends Controller
+class ImportStock1Controller extends Controller
 {
     /**
      * This command echoes what you have entered as the message.
@@ -657,7 +658,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'นำเข้าวัสดุก่อสร้าง',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -787,7 +788,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'นำเข้าวัสดุการเกษตร',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -1214,7 +1215,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'วัสดุไฟฟ้าและวิทยุ',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -1645,7 +1646,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'วัสดุงานบ้านงานครัว',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -1699,6 +1700,7 @@ class ImportStockController extends Controller
             echo $total;
         }
     }
+
     // วัสดุยานพาหนะและขนส่ง IN-680007
     public static function actionM5()
     {
@@ -1793,7 +1795,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'วัสดุยานพาหนะและขนส่ง',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -1848,15 +1850,14 @@ class ImportStockController extends Controller
         }
     }
 
-
     // วัสดุเชื้อเพลิงและหล่อลื่น IN-680008
     public static function actionM6()
     {
         $data = [
-            ['code' => '06-00001','title' => 'แก๊สหุงต้ม ขนาด 15 กก.','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
-            ['code' => '06-00003','title' => 'น้ำมันแก๊สโซฮอล์ 91','unit' => 'ลิตร','qty' => '0','unit_price' => '0'],
-            ['code' => '06-00004','title' => 'น้ำมันดีเซล','unit' => 'ลิตร','qty' => '0','unit_price' => '0'],
-            ['code' => '06-00005','title' => 'แก๊สหุงต้ม ขนาด 48 กก.','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
+            ['code' => '06-00001', 'title' => 'แก๊สหุงต้ม ขนาด 15 กก.', 'unit' => 'ถัง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '06-00003', 'title' => 'น้ำมันแก๊สโซฮอล์ 91', 'unit' => 'ลิตร', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '06-00004', 'title' => 'น้ำมันดีเซล', 'unit' => 'ลิตร', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '06-00005', 'title' => 'แก๊สหุงต้ม ขนาด 48 กก.', 'unit' => 'ถัง', 'qty' => '0', 'unit_price' => '0'],
         ];
 
         if (BaseConsole::confirm('Are you sure?')) {
@@ -1886,7 +1887,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'วัสดุเชื้อเพลิงและหล่อลื่น',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -1941,28 +1942,26 @@ class ImportStockController extends Controller
         }
     }
 
-
-
-//วัสดุวิทยาศาสตร์หรือการแพทย์ IN-680009
+    // วัสดุวิทยาศาสตร์หรือการแพทย์ IN-680009
     public static function actionM7()
     {
         $data = [
-            ['code' => '03-00259','title' => 'ช็อคคลอรีน','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
-            ['code' => '03-00260','title' => 'ลองลาสติ้งคลอรีน','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
-            ['code' => '03-00261','title' => 'ถุงกรอง','unit' => 'ใบ','qty' => '0','unit_price' => '0'],
-            ['code' => '03-00262','title' => 'หัวดูดตะกอนแบบมีล้อ','unit' => 'อัน','qty' => '0','unit_price' => '0'],
-            ['code' => '03-00263','title' => 'สายดูดตะกอน','unit' => 'เส้น','qty' => '0','unit_price' => '0'],
-            ['code' => '03-00264','title' => 'ตะแกรงดักใบไม้','unit' => 'อัน','qty' => '0','unit_price' => '0'],
-            ['code' => '03-00265','title' => 'เทสต์คิทน้ำ(รีฟิล)','unit' => 'ชุด','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00351','title' => 'ชุดทดสอบโคลิฟอร์มขั้นต้น (SI-2)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00354','title' => 'คลอรีนผง 65%','unit' => 'ถัง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00381','title' => 'ชุดทดสอบบอแร็กซ์(ผงกรอบ)ในอาหาร','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00382','title' => 'ชุดทดสอบสารกรดซาลิซิลิคในอาหาร(สารกันรา)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00383','title' => 'ชุดทดสอบโซเตียม ไฮโดรซัลไฟด์(สารฟอกขาว)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00384','title' => 'ชุดทดสอบฟอร์มาลิน(น้ำยาดองศพ)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00385','title' => 'ชุดทดสอบโคลิฟอร์มแบคทีเรียตรวจน้ำบริโภค(อ.11)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00406','title' => 'ชุดทดสอบโคลิฟอร์มในอาหาร','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00407','title' => 'ชุดทดสอบโคลิฟอร์มในน้ำและน้ำแข็ง','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
+            ['code' => '03-00259', 'title' => 'ช็อคคลอรีน', 'unit' => 'ถัง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '03-00260', 'title' => 'ลองลาสติ้งคลอรีน', 'unit' => 'ถัง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '03-00261', 'title' => 'ถุงกรอง', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '03-00262', 'title' => 'หัวดูดตะกอนแบบมีล้อ', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '03-00263', 'title' => 'สายดูดตะกอน', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '03-00264', 'title' => 'ตะแกรงดักใบไม้', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '03-00265', 'title' => 'เทสต์คิทน้ำ(รีฟิล)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00351', 'title' => 'ชุดทดสอบโคลิฟอร์มขั้นต้น (SI-2)', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00354', 'title' => 'คลอรีนผง 65%', 'unit' => 'ถัง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00381', 'title' => 'ชุดทดสอบบอแร็กซ์(ผงกรอบ)ในอาหาร', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00382', 'title' => 'ชุดทดสอบสารกรดซาลิซิลิคในอาหาร(สารกันรา)', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00383', 'title' => 'ชุดทดสอบโซเตียม ไฮโดรซัลไฟด์(สารฟอกขาว)', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00384', 'title' => 'ชุดทดสอบฟอร์มาลิน(น้ำยาดองศพ)', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00385', 'title' => 'ชุดทดสอบโคลิฟอร์มแบคทีเรียตรวจน้ำบริโภค(อ.11)', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00406', 'title' => 'ชุดทดสอบโคลิฟอร์มในอาหาร', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '07-00407', 'title' => 'ชุดทดสอบโคลิฟอร์มในน้ำและน้ำแข็ง', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
         ];
 
         if (BaseConsole::confirm('Are you sure?')) {
@@ -1992,7 +1991,7 @@ class ImportStockController extends Controller
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'วัสดุวิทยาศาสตร์หรือการแพทย์',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -2047,10 +2046,70 @@ class ImportStockController extends Controller
         }
     }
 
-
-    public static function actionMdemo()
+    // ##
+    // วัสดุบริโภค IN-680010
+    public static function actionM18()
     {
         $data = [
+            ['code' => '18-00003', 'title' => 'กะทิกล่อง ขนาด 500 มม.', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00005', 'title' => 'เกลือ', 'unit' => 'ถุง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00007', 'title' => 'ข้าวเจ้าหอมมะลิ (กิโลกรัม)', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00009', 'title' => 'ข้าวไรซ์เบอรี่', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00010', 'title' => 'ข้าวเหนียว', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00011', 'title' => 'เครื่องตุ๋น', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00012', 'title' => 'ซอสปรุงรส', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00013', 'title' => 'ซอสพริก', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00014', 'title' => 'ซอสมะเขือเทศ', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00015', 'title' => 'ซอสหอย', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00016', 'title' => 'ซีอิ้วขาว', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00017', 'title' => 'ซีอิ้วดำ', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00019', 'title' => 'นมข้นหวาน', 'unit' => 'กระป๋อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00020', 'title' => 'นมจืด', 'unit' => 'ลัง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00021', 'title' => 'นมถั่วเหลือง', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00023', 'title' => 'น้ำดื่มบรรจุถัง-ขนาด 20 ลิตร', 'unit' => 'ถัง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00024', 'title' => 'น้ำดื่มบรรจุขวด-ขนาดเล็ก', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00025', 'title' => 'น้ำดื่มบรรจุขวด-ขนาดกลาง', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00026', 'title' => 'น้ำดื่มบรรจุขวด-ขวดใหญ่', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00028', 'title' => 'น้ำตาลทราย', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00029', 'title' => 'น้ำปลา', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00031', 'title' => 'น้ำมันงา', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00032', 'title' => 'น้ำมันพืช ขนาดบรรจุ 1 ลิตร', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00033', 'title' => 'น้ำมันพืช ขนาดบรรจุ 2 ลิตร', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00034', 'title' => 'น้ำส้มสายชู', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00035', 'title' => 'น้ำหวาน เฮลบลูบอย', 'unit' => 'ขวด', 'qty' => '14.00', 'unit_price' => '949.98'],
+            ['code' => '18-00037', 'title' => 'แป้งข้าวโพด', 'unit' => 'ถุง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00039', 'title' => 'ผงพะโล้', 'unit' => 'ห่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00040', 'title' => 'ผงหมูแดง', 'unit' => 'ห่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00042', 'title' => 'พริกไทยป่น', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00043', 'title' => 'พริกไทยเม็ด', 'unit' => 'ขีด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00044', 'title' => 'ไม้พะโล้', 'unit' => 'ซอง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00045', 'title' => 'วุ้นเส้น', 'unit' => 'ห่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00048', 'title' => 'เส้นหมี่', 'unit' => 'ห่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00050', 'title' => 'โอวัลติน 3 in 1', 'unit' => 'ห่อ', 'qty' => '3.00', 'unit_price' => '657.00'],
+            ['code' => '18-00051', 'title' => 'อาหารสด', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00052', 'title' => 'น้ำจิ้มไก่', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00053', 'title' => 'ขนม', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00054', 'title' => 'ไข่ไก่', 'unit' => 'ฟอง', 'qty' => '104.00', 'unit_price' => '6240.00'],
+            ['code' => '18-00055', 'title' => 'นมงาดำ', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00056', 'title' => 'ข้าวหอมมะลิ (กระสอบ)', 'unit' => 'กระสอบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00057', 'title' => 'ข้าวหอมมะลิผลมข้าวไรซ์เบอรี่', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00060', 'title' => 'น้ำมันปาล์ม ขนาด 1 ลิตร', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00061', 'title' => 'กะทิธัญพืช', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00134', 'title' => 'งาขาว', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00154', 'title' => 'เส้นก่วยจั๊บ', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00158', 'title' => 'น้ำพริกเผา', 'unit' => 'กระปุก', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00159', 'title' => 'นมข้นจีด', 'unit' => 'กระป๋อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00180', 'title' => 'สาหร่ายแห้ง', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00184', 'title' => 'เส้นก๋วยเตี๋ยว เส้นใหญ่', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00189', 'title' => 'กระเทียมเจียว', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00190', 'title' => 'กาแฟ 3 in 1', 'unit' => 'ซอง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00193', 'title' => 'แป้งมัน', 'unit' => 'ถุง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00194', 'title' => 'กาแฟดำ', 'unit' => 'ห่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00198', 'title' => 'ข้าวหอมมะลิ', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00201', 'title' => 'นมวัว', 'unit' => 'แพค', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00203', 'title' => 'ดอกเก๊กฮอวย', 'unit' => 'ถุง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00204', 'title' => 'อัญชันอบแห้ง', 'unit' => 'ถุง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '18-00205', 'title' => 'ไข่ไก่ เบอร์ 3', 'unit' => 'แผง', 'qty' => '0', 'unit_price' => '0'],
         ];
 
         if (BaseConsole::confirm('Are you sure?')) {
@@ -2073,14 +2132,14 @@ class ImportStockController extends Controller
                     $newItem = new Categorise([
                         'name' => 'asset_item',
                         'group_id' => 4,
-                        'category_id' => 'M8',
+                        'category_id' => 'M18',
                         'code' => $value['code'],
                         'title' => $value['title'],
                         'data_json' => [
                             'unit' => $value['unit'],
                             'sub_title' => '',
                             'price_name' => '',
-                            'category_name' => 'วัสดุสำนักงาน',
+                            'category_name' => 'วัสดุบริโภค',
                             'asset_type_name' => '',
                         ],
                     ]);
@@ -2089,8 +2148,8 @@ class ImportStockController extends Controller
 
                 $qty = (int) explode('.', $value['qty'])[0];
 
-                $category_id = 499;
-                $code = 'IN-680003';
+                $category_id = 549;
+                $code = 'IN-680010';
                 $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
                 $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
                 $model = new StockEvent([
@@ -2135,4 +2194,387 @@ class ImportStockController extends Controller
         }
     }
 
+    // วัสดุเครื่องแต่งกาย IN-680011
+    public static function actionM10()
+    {
+        $data = [
+            ['code' => '10-00001', 'title' => 'เสื้อผู้ป่วย', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00002', 'title' => 'ผ้าถุงผู้ป่วย', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00003', 'title' => 'ผ้าปูเตียง', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00004', 'title' => 'ปลอกหมอน', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00005', 'title' => 'เสื้อแบบให้นมบุตร', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00012', 'title' => 'เสื้อกาวน์คอฮาวายคลุมทำหัตกรรม', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00013', 'title' => 'ผ้าสี่เหลี่ยม 2 ชั้น ขนาด 25*25 นิ้ว (ผ้าโทเรสีม่วง)', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00021', 'title' => 'เสื้อกราวน์กันน้ำ', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00022', 'title' => 'ชุดเจ้าหน้าที่แบบคอวี (เสื้อ+กางเกง)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00023', 'title' => 'เสื้อกาวน์คอฮาวาย ตัวยาว แขนสั้น', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00024', 'title' => 'เสื้อกาวน์คอฮาวาย ตัวยาวแขนปลายจั้ม', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '10-00025', 'title' => 'ชุดดับเพลิงพร้อมหมวก', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+        ];
+
+        if (BaseConsole::confirm('Are you sure?')) {
+            $total = 0;
+            foreach ($data as $key => $value) {
+                $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                // ถ้าไม่มีหน่วยให้สร้างใหม่
+                if (!$unit) {
+                    $newUnit = new Categorise([
+                        'name' => 'unit',
+                        'title' => $value['unit'],
+                        'active' => 1,
+                    ]);
+                    $newUnit->save(false);
+                }
+                // echo $value['code'] . "\n";
+                // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                if (!$asetItem) {
+                    $newItem = new Categorise([
+                        'name' => 'asset_item',
+                        'group_id' => 4,
+                        'category_id' => 'M10',
+                        'code' => $value['code'],
+                        'title' => $value['title'],
+                        'data_json' => [
+                            'unit' => $value['unit'],
+                            'sub_title' => '',
+                            'price_name' => '',
+                            'category_name' => 'วัสดุสำนักงาน',
+                            'asset_type_name' => '',
+                        ],
+                    ]);
+                    $newItem->save(false);
+                }
+
+                $qty = (int) explode('.', $value['qty'])[0];
+
+                $category_id = 550;
+                $code = 'IN-6800011';
+                $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model = new StockEvent([
+                    'ref' => $ref,
+                    'lot_number' => $lot,
+                    'name' => 'order_item',
+                    'code' => $code,
+                    'category_id' => $category_id,
+                    'transaction_type' => 'IN',
+                    'asset_item' => $value['code'],
+                    'warehouse_id' => 7,
+                    'qty' => $value['qty'],
+                    'unit_price' => (float) $value['unit_price'],
+                    'order_status' => 'pending',
+                    'data_json' => [
+                        'req_qty' => '0',
+                        'exp_date' => '',
+                        'mfg_date' => '',
+                        'item_type' => 'ยอดยกมา',
+                        'po_number' => '',
+                        'pq_number' => '',
+                        'asset_type' => '',
+                        'receive_date' => '',
+                        'asset_type_name' => '',
+                        'employee_fullname' => 'Administrator Lastname',
+                        'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                        'employee_department' => 'งานซ่อมบำรุง',
+                    ],
+                    'created_by' => 1,
+                    'updated_by' => 1,
+                ]);
+                // echo (DOUBLE) $value['unit_price'],"\n";
+                if ($model->save(false)) {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                } else {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                }
+                $sum = $qty * (int) $value['unit_price'];
+                $total += $sum;
+            }
+            echo $total;
+        }
+    }
+
+    // วัสดุการแพทย์ทั่วไป IN-680012
+    public static function actionM22()
+    {
+        $data = [
+            ['code' => '22-00011', 'title' => 'แผ่นให้ความร้อน', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00110', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดเรียบ ขนาด 2 นิ้ว (5cm*200m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00111', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดเรียบ ขนาด 3 นิ้ว (7.5cm*200m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00112', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดเรียบ ขนาด 4 นิ้ว (10cm*200m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00113', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดเรียบ ขนาด 6 นิ้ว (15cm*200m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00114', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดเรียบ ขนาด 8 นิ้ว (20cm*200m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00116', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดซ้อนขอบ ขนาด 6 นิ้ว (15cm*100m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00117', 'title' => 'ซองบรรจุเวชภัณฑ์ชนิดซ้อนขอบ ขนาด 12 นิ้ว (30cm*100m)', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00120', 'title' => 'ผลิตภัณฑ์ทำความสะอาดเครื่องมือแพทย์ (ชนิดไม่มีฟอง)', 'unit' => 'แกลลอน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00122', 'title' => 'สายซิลิโคน 7*11 mm', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00126', 'title' => 'หลอดแก๊สเอทธีลีนออกไซด์ 100 Gms.', 'unit' => 'หลอด', 'qty' => '30.00', 'unit_price' => '8850.00'],
+            ['code' => '22-00128', 'title' => 'สาย Cannolar ผู้ใหญ่', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00131', 'title' => 'Mask with Bag ผู้ใหญ่', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00139', 'title' => 'สายออกซิเจน', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00140', 'title' => 'หลอด Spor Test (Biological For EO 4hrs.)', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00141', 'title' => 'สติ๊กเกอร์ ม้วน HALLO 2HG', 'unit' => 'ม้วน', 'qty' => '30.00', 'unit_price' => '1500.00'],
+            ['code' => '22-00142', 'title' => 'แอลกอฮอล์เจล ขนาด 1.2 ลิตร', 'unit' => 'ขวด', 'qty' => '26.00', 'unit_price' => '31200.00'],
+            ['code' => '22-00143', 'title' => 'Oxygen Cannula Adult', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00149', 'title' => 'ล้อเข็นเตียงผู้ป่วย แบบเกลียวแป้น ขนาด 5 นิ้ว', 'unit' => 'ล้อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00150', 'title' => 'เครื่องเป่าบริหารปอด (Triflow incentive spirometer)', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00151', 'title' => 'ล้อรถเข็น ไนล่อน ขนาด 2 นิ้ว', 'unit' => 'ล้อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00152', 'title' => 'flow sensor assembly', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00153', 'title' => 'Elbow connector', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00153', 'title' => 'สติ๊กเกอร์ ขนาด 5*2.5 cm.', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00154', 'title' => 'ล้อรถเข็น แบบเกลียว ขนาด 6 นิ้ว', 'unit' => 'ล้อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00155', 'title' => 'แผ่นเคลื่อนย้ายผู้ป่วย (Padslide)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00229', 'title' => 'ออกซิเจน 6 คิว', 'unit' => 'ท่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00230', 'title' => 'W1D 15 x 10 mm. Loop Electrode, Disposable', 'unit' => 'BOX', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00231', 'title' => 'ออกซิเจน 0.5 คิว', 'unit' => 'ท่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00234', 'title' => 'ถังใส่วัสดุมีคมติดเชื้อ สีดำ', 'unit' => 'ใบ', 'qty' => '112.00', 'unit_price' => '8400.00'],
+            ['code' => '22-00239', 'title' => 'Spo2 Sensor ผู้ใหญ่', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00240', 'title' => 'Spo2 Sensor สำหรับเด็ก', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00242', 'title' => 'กรรไกรผ่าตัด CVD.17 cm.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00243', 'title' => 'กรรไกรผ่าตัด CVD 20 cm.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00246', 'title' => 'ผ้าพันแขนขนาด Adult No.11', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00247', 'title' => 'ผ้าพันแขนขนาด Small Adult No.10', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00248', 'title' => 'ผ้าพันแขนขนาด Child No.9', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00249', 'title' => 'กระดาษปริ้นเครื่องนึ่งไอน้ำ', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00252', 'title' => 'สายท่อลมเดี่ยวสำหรับวัดความดันโลหิต', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00260', 'title' => 'ผ้ายางสองหน้า เขียว-แดง', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00264', 'title' => 'ถุงผ้าแดง', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00267', 'title' => 'ไฟฉาย LED (รุ่น MT06MD)', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00268', 'title' => 'Battery', 'unit' => 'ลูก', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00270', 'title' => 'Extension (Masimo)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00272', 'title' => 'แผ่นกรองอากาศ', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00273', 'title' => 'Bacteria filter', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00273', 'title' => 'Bacteria filter', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00277', 'title' => 'เครื่องวัดไข้ดิจิตอล (ปรอท)', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00279', 'title' => 'ถุงบรรจุศพ', 'unit' => 'ใบ', 'qty' => '31.00', 'unit_price' => '14260.00'],
+            ['code' => '22-00280', 'title' => 'แบตเตอรี่', 'unit' => 'ลูก', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00281', 'title' => 'W2D 20 x 10 mm. Loop Electrode, Disposable', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00282', 'title' => 'W3D 25 x 10 mm. Loop Electrode, Disposable', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00291', 'title' => 'สายจี้ไฟฟ้า', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00292', 'title' => 'Plate ติดจี้ไฟฟ้า', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00293', 'title' => 'ล้อยางตัน รถเข็น WHEEL CHAIR', 'unit' => 'ล้อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00296', 'title' => 'เกย์ออกซิเจน', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00299', 'title' => 'สายวัดค่าความอิ่มตัวของออกซิเจนในเลือด', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00305', 'title' => 'ผ้าพันแขนขนาด Large Adult No.12', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00318', 'title' => 'เครื่องวัดอุณหภูมิร่างกาย แบบดิจิตอล', 'unit' => 'เครื่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00319', 'title' => 'ผ้าปูเตียง', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00321', 'title' => 'ผ้าถุงผู้ป่วย', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00322', 'title' => 'เสื้อผู้ป่วย', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00327', 'title' => 'เสื้อกาวน์คอฮาวายคลุมทำหัตกรรม', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00330', 'title' => 'เสื้อกาวน์กันน้ำทำคลอด', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00342', 'title' => 'ชุดเจ้าหน้าที่เสื้อ+กางเกง', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00345', 'title' => 'ชุดอุปกรณ์เผ้าระวังและส่งเสริมพัฒนาการเด็กฯ0-6 ปี', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00357', 'title' => 'เครื่องวัดอุณหภูมิและความชื้นแบบ IN - OUT', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00402', 'title' => 'ผ้ายางสองหน้า ฟ้า-ชมพู', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00403', 'title' => 'เสื้อแบบให้นมบุตร', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00404', 'title' => 'ผ้าเช็ดเท้าสีขาว', 'unit' => 'โหล', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00405', 'title' => 'ผ้าเช็ดตัวผู้ป่วย', 'unit' => 'โหล', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00406', 'title' => 'ถุงผ้าหูรูด', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00407', 'title' => 'ผ้าขวางเตียง', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00408', 'title' => 'ผ้าห่อเซ็ท 2 ชั้น ขนาด 20*20 นิ้ว', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00410', 'title' => 'ผ้าห่อเซ็ทเซ็ท 2 ชั้น ขนาด 40*40 นิ้ว', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00411', 'title' => 'ผ้าห่อเซ็ทเซ็ท 2 ชั้น ขนาด 60*60 นิ้ว', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00412', 'title' => 'ผ้า TR 2 ชั้น', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00413', 'title' => 'ผ้าคลุม Mayo', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00414', 'title' => 'ปลอกถุงขา', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00415', 'title' => 'ผ้าขนหนู', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00416', 'title' => 'ถุงผ้า ขนาด 20*25 นิ้ว', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00417', 'title' => 'ถุงผ้า ขนาด 30*40 นิ้ว', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00418', 'title' => 'ผ้าห่อเซ็ท 2 ชั้น ขนาด 25*25 นิ้ว', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00436', 'title' => 'สายแอร์โรเตอร์แบบกลม 4 รู', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00461', 'title' => 'ไฟฉาย LED แบบชาร์จไฟ', 'unit' => 'อัน', 'qty' => '3.00', 'unit_price' => '4500.00'],
+            ['code' => '22-00468', 'title' => 'เม็ดสารกันชื้น', 'unit' => 'กิโลกรัม', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00472', 'title' => 'ผ้าขนหนู ขนาดสีขาว ขนาด 15*30 นิ้ว', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00473', 'title' => 'สายสัญญาณ EKG', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00474', 'title' => 'กรรไกรตัดไหมตรง SH/BI 14.5 cm.', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00490', 'title' => 'Mask with Nebulizer Adult', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00491', 'title' => 'Aliss', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00506', 'title' => 'Kocker Artery', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00507', 'title' => 'Long non Tooth Forceps', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00508', 'title' => 'Long Tooth Forceps', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00509', 'title' => 'Mayo', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00510', 'title' => 'Metzenbaum', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00512', 'title' => 'Needle holder ใหญ่', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00547', 'title' => 'ผ้าเจาะรูผืนเล็ก', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00565', 'title' => 'Liner suction 1500cc', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00566', 'title' => 'Tube connect 1/4" x 6"', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00568', 'title' => 'สาย SpO2 senser', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00569', 'title' => 'Oxygen regulator', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00570', 'title' => 'Inner filetr', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00573', 'title' => 'ถ้วยใส่น้ำยา', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00595', 'title' => 'ผ้าสี่เหลี่ยม 2 ชั้น ขนาด 25*25 ซม.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00596', 'title' => 'ผ้าสี่เหลี่ยม 2 ชั้น ขนาด 15*15 ซม.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00597', 'title' => 'ผ้าสี่เหลี่ยม 2 ชั้น (เจาะกลาง 4*4 ซม) ขนาด 18*18 ซม.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00598', 'title' => 'ผ้าจับโคมไฟ 2 ชั้น (ติดกระดุม) ขนาด 5*5 ซม.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00599', 'title' => 'ถุงผ้า 2 ชั้น ขนาด 65*60 ซม.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00600', 'title' => 'ผ้าพันสายดูดน้ำลาย (มีเชือกผูก) ขนาด 7*66 ซม.', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00602', 'title' => 'ผลิตภัณฑ์กำจัดคราบสนิมหินปูน และคราบฝังแน่น', 'unit' => 'แกลลอน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00604', 'title' => 'DHC-สติ๊กเกอร์-ไม่มีอินดิเคเตอร์ ดวงเล็ก ขนาด 3*4 ซม.', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00606', 'title' => 'DHC-สติ๊กเกอร์-มีอินดิเคเตอร์ ดวงเล็ก ขนาด 3*4 ซม.', 'unit' => 'ม้วน', 'qty' => '45.00', 'unit_price' => '33750.00'],
+            ['code' => '22-00607', 'title' => 'DHC-สติ๊กเกอร์-มีอินดิเคเตอร์ ดวงเล็ก ขนาด 5*7.5 ซม.', 'unit' => 'ม้วน', 'qty' => '19.00', 'unit_price' => '19000.00'],
+            ['code' => '22-00608', 'title' => 'ชุดตะกั่วป้องกันรังสีจากเครื่องเอกซเรย์แบบเต็มตัวพร้อมไทยอยด์ซิลด์ Size L รุ่น Classic', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00609', 'title' => 'ชุดตะกั่วป้องกันรังสีจากเครื่องเอกซเรย์แบบเต็มตัวพร้อมไทยอยด์ซิลด์ Size S รุ่น Innomax', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00610', 'title' => 'ไม้แขวนสแตนเลสชุดตะกั่วแบบติดผนัง', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00620', 'title' => 'สายวัดออกซิเจนในเลือดสำหรับเด็ก', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00621', 'title' => 'ผ้าพันแขนสำหรับวัดความดัน (Blood Pressure Cuff)', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00622', 'title' => 'สติ๊กเกอร์ พิมพ์วันหมดอายุ ขนาด 2.4*1.55 ซม.', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00635', 'title' => 'ผ้าเซ็ทในคลอด 2 ชั้น', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00644', 'title' => 'ปรอทวัดไข้ Digital', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00662', 'title' => 'Surgicel', 'unit' => 'pcs', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00666', 'title' => 'Grave Vaginal Speculum No.S', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00667', 'title' => 'Grave Vaginal Speculum No.M', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00668', 'title' => 'Grave Vaginal Speculum No.L', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00669', 'title' => 'Suction หู No.3', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00670', 'title' => 'Suction หู No.5', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00676', 'title' => 'แก๊สเอทธิลีนออกไซด์ 100% (บรรจุท่อ 6 กก.)', 'unit' => 'ท่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00679', 'title' => 'PLAT 8(200mm*70m) TYVEK', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00680', 'title' => 'PLAT 10 (250mm*70m) TYVEK', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00681', 'title' => 'PLAT 16 (400mm*70m) TYVEK', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00682', 'title' => 'Cheamical Strip for Plasrna', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00683', 'title' => 'Biological indicator for Plasrna 30 mins.(BT96)', 'unit' => 'หลอด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00685', 'title' => 'สายพานเทปลอน 750 มม.', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00686', 'title' => 'ผ้ายางเอนกประสงค์สีฟ้า', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00692', 'title' => 'โมโนฟิลาเมนต์ แบบปากกา', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00700', 'title' => 'กระดาษผิวมัน (paper thermal roll) ขนาด 58 กรับ*57มม.*38มม.', 'unit' => 'ม้วน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00710', 'title' => 'ชุดช่วยหายใจมือบีบ (Ambubag Silicone Adult)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00711', 'title' => 'Tube&Chamber Kit', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00712', 'title' => 'Mask with Nebulizer Child', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00714', 'title' => 'กระป๋อง Oxygen PVC', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00715', 'title' => 'Mask wiyh Bag Adult', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00717', 'title' => 'ขวด suction พร้อมฝาขนาด 1000 cc', 'unit' => 'ขวด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00718', 'title' => 'สาย Extensinon masimo', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00719', 'title' => 'กระโหลกราวกั้นพับซ้าย', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00720', 'title' => 'กระโหลกราวกั้นพับขวา', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00721', 'title' => 'แก๊สเอทธิลีนออกไซด์ 100% (บรรจุท่อ 4.8 กก.)', 'unit' => 'ท่อ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00722', 'title' => 'ฝาครอบเครื่องI nfusion pump สำหรับล็อคเสาน้ำเกลือ', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00727', 'title' => 'น้ำยาไฮโดรเจนเพอร์ออกไซด์แก๊สพลาสมา', 'unit' => 'หลอด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00728', 'title' => 'TRIFLO II Incentive Deep Breathing Exerciser', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00729', 'title' => 'บอลลูนห้ามเลือด', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00732', 'title' => 'ผ้าสี่เหลี่ยม 2 ชั้น ขนาด 65x65', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00733', 'title' => 'ถุงผ้า ขนาด 50x50', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00734', 'title' => 'เสื้อกาวน์แขนยาวฝ่ายทันตกรรม', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00736', 'title' => 'ผ้าสี่เหลี่ยมเจาะกลาง 2 ชั้น ขนาด 18*18 เจาะกลาง 4*4', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00741', 'title' => 'สเก็ตบอร์ดมือ', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00742', 'title' => 'ม้วนหมึก HALLO 2 HG', 'unit' => 'ลูก', 'qty' => '12.00', 'unit_price' => '1800.00'],
+            ['code' => '22-00743', 'title' => 'เสื้อผู้ป่วยเด็กเล็ก 1-3 ปี แบบผ่าข้างซ้าย ไม่มีแขน', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00744', 'title' => 'เสื้อผู้ป่วยเด็กเล็ก 1-3 ปี แบบผ่าข้างซ้าย มีแขนในตัว', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00745', 'title' => 'กางเกงผู้ป่วยเด็ก 1-3 ปี เอวรูด', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00747', 'title' => 'Infant Resuscitator T-Piece Circuit', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00752', 'title' => 'ชุดสาย OMRON CUFF HOSES', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00756', 'title' => 'SpO2 srnsor probe for Zoll Rseries', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00771', 'title' => 'ซิลิโคนเสียบสายเครื่องเป่าแห้ง 52*34*7 mm หนา 9.5 mm', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00772', 'title' => 'ท่อส่งลม (ฺBreathing Tube)', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00773', 'title' => 'กระป๋องน้ำ (Water Chamber)', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00774', 'title' => 'สายออกซิเจนแคนนูล่า (Oxygen Cannula)', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00775', 'title' => 'หน้ากากช่วยหายใจ (Full Face Mask) Size L', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00776', 'title' => 'หน้ากากช่วยหายใจ (Full Face Mask) Size M', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00779', 'title' => 'ซองกันน้ำลาย เบอร์ 4', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00781', 'title' => 'ข้อต่อสามทาง', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00782', 'title' => 'Disposable Swivel Elbow w/suction', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00784', 'title' => 'หมึกริบบอน 60 มม.X 300 ม.', 'unit' => 'ม้วน', 'qty' => '4.00', 'unit_price' => '1280.00'],
+            ['code' => '22-00785', 'title' => 'EKG 3 Lead wire for Patient monitor Mediana', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00786', 'title' => 'Reusable Finger Clip Sensor Rad-G', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00787', 'title' => 'Battery for Infusion pump Ampall 9.6 V.2000mAh', 'unit' => 'อัน', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00788', 'title' => 'ชุดทดสอบยาฆ่าแมลง (OC-KIT)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00789', 'title' => 'ชุดทดสอบโคลิฟอร์มในอาหาร SI-2', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00790', 'title' => 'สายรัดตัวผู้ป่วยกับเตียง', 'unit' => 'เส้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00791', 'title' => 'สายรัดข้อเท้าผู้ใหญ่', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00793', 'title' => 'กระดาษสำหรับเครื่อง EKG', 'unit' => 'พับ', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00794', 'title' => 'Spo2 sensor for patient monitor Drager Vista 120', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00795', 'title' => 'หมึกริบบอน 40 มม.X 300 ม.', 'unit' => 'ม้วน', 'qty' => '10.00', 'unit_price' => '3500.00'],
+            ['code' => '22-00796', 'title' => 'Safety trap for suction pipeline system', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00797', 'title' => 'อะไหล่สำหรับเครื่องอบฆ่าเชื้อด้วยแก๊สเอทธิลีนออกไซด์', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00801', 'title' => 'อะไหล่เครื่อง infusion pump', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00802', 'title' => 'เครื่องวัดออกซิเจนในอากาศ', 'unit' => '', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00807', 'title' => 'Battery Ni-MH 7.2V 4.0Ah', 'unit' => '', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00808', 'title' => 'เครื่องวิเคราะห์ค่าออกซิเจนสำหรับเครื่องผลิตออกซิเจน', 'unit' => '', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00809', 'title' => 'ใบเลื่อยตัดเฝือก 120-65', 'unit' => '', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00814', 'title' => 'ชุดดึงเอว', 'unit' => '', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00850', 'title' => 'Multisite Probe SpO2 (Masimo)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00853', 'title' => 'อะไหล่เครื่องกระตุกหัวใจ', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00860', 'title' => 'ตัวตรวจสอบประสิทธิภาพของเครื่องล้าง', 'unit' => 'ชิ้น', 'qty' => '0', 'unit_price' => '0'],
+            ['code' => '22-00861', 'title' => 'ตัวตรวจสอบการฆ่าเชื้อทางเคมี สำหรับการฆ่าเชื้อแบบหม้อนึ่งไอน้ำ', 'unit' => 'กล่อง', 'qty' => '0', 'unit_price' => '0'],
+        ];
+
+        if (BaseConsole::confirm('Are you sure?')) {
+            $total = 0;
+            foreach ($data as $key => $value) {
+                $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                // ถ้าไม่มีหน่วยให้สร้างใหม่
+                if (!$unit) {
+                    $newUnit = new Categorise([
+                        'name' => 'unit',
+                        'title' => $value['unit'],
+                        'active' => 1,
+                    ]);
+                    $newUnit->save(false);
+                }
+                // echo $value['code'] . "\n";
+                // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                if (!$asetItem) {
+                    $newItem = new Categorise([
+                        'name' => 'asset_item',
+                        'group_id' => 4,
+                        'category_id' => 'M22',
+                        'code' => $value['code'],
+                        'title' => $value['title'],
+                        'data_json' => [
+                            'unit' => $value['unit'],
+                            'sub_title' => '',
+                            'price_name' => '',
+                            'category_name' => 'วัสดุสำนักงาน',
+                            'asset_type_name' => '',
+                        ],
+                    ]);
+                    $newItem->save(false);
+                }
+
+                $qty = (int) explode('.', $value['qty'])[0];
+
+                $category_id = 551;
+                $code = 'IN-680012';
+                $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model = new StockEvent([
+                    'ref' => $ref,
+                    'lot_number' => $lot,
+                    'name' => 'order_item',
+                    'code' => $code,
+                    'category_id' => $category_id,
+                    'transaction_type' => 'IN',
+                    'asset_item' => $value['code'],
+                    'warehouse_id' => 7,
+                    'qty' => $value['qty'],
+                    'unit_price' => (float) $value['unit_price'],
+                    'order_status' => 'pending',
+                    'data_json' => [
+                        'req_qty' => '0',
+                        'exp_date' => '',
+                        'mfg_date' => '',
+                        'item_type' => 'ยอดยกมา',
+                        'po_number' => '',
+                        'pq_number' => '',
+                        'asset_type' => '',
+                        'receive_date' => '',
+                        'asset_type_name' => '',
+                        'employee_fullname' => 'Administrator Lastname',
+                        'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                        'employee_department' => 'งานซ่อมบำรุง',
+                    ],
+                    'created_by' => 1,
+                    'updated_by' => 1,
+                ]);
+                // echo (DOUBLE) $value['unit_price'],"\n";
+                if ($model->save(false)) {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                } else {
+                    echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                }
+                $sum = $qty * (int) $value['unit_price'];
+                $total += $sum;
+            }
+            echo $total;
+        }
+    }
 }

@@ -540,7 +540,7 @@ class StockEvent extends Yii\db\ActiveRecord
             'or',
             ['like', 'code', $this->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $this->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $this->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $this->q],
         ])
         ->scalar();
     }

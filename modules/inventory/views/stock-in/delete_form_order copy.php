@@ -20,11 +20,22 @@ use iamsaint\datetimepicker\Datetimepicker;
                                         'options' => ['placeholder' => 'เลือกผู้จำหน่วย/บริจาค'],
                                         'pluginEvents' => [
                                             "select2:unselect" => "function() { 
-                                              
+                                                $('#asset-fsn').val('')
                                             }",
                                             "select2:select" => "function() {
-                                                 var data = $(this).select2('data')[0]
-                                                $('#stockevent-data_json-vendor_name').val(data.text)
+                                                // console.log($(this).val());
+                                                $.ajax({
+                                                    type: 'get',
+                                                    url: '".Url::to(['/depdrop/categorise-by-code'])."',
+                                                    data: {
+                                                        code: $(this).val(),
+                                                        name:'asset_name'
+                                                    },
+                                                    dataType: 'json',
+                                                    success: function (res) {
+                                                        $('#asset-fsn').val(res.code)
+                                                    }
+                                                });
                                         }",],
                                         'pluginOptions' => [
                                             'allowClear' => true,

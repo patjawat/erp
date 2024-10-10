@@ -32,6 +32,7 @@ use iamsaint\datetimepicker\Datetimepicker;
     <?= $form->field($model, 'data_json[pq_number]')->hiddenInput()->label(false);?>
     <?php //  $form->field($model, 'data_json[asset_type]')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'data_json[asset_type_name]')->hiddenInput()->label(false);?>
+    <?= $form->field($model, 'data_json[vendor_name]')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false);?>
     <?= $form->field($model, 'transaction_type')->hiddenInput()->label(false);?>
     <?= $model->isNewRecord ? $form->field($model, 'category_id')->hiddenInput()->label(false) : null;?>
