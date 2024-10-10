@@ -58,6 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="text-center">ล็อตผลิต</th>
                         <th class="text-center">วันผลิต</th>
                         <th class="text-center">วันหมดอายุ</th>
+                        <th class="text-end">รวม</th>
                         <th class="text-center" scope="col" style="width: 120px;">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -86,7 +87,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= $item->mfgDate; ?></td>
                         <td class="align-middle text-center">
                             <?=$item->expDate?></td>
-
+                            <td class="align-middle text-end">
+                                <span class="fw-semibold">
+                                    <?=$item->unit_price * $item->qty ?>
+                                </span>
+                        </td>
                         <td class="align-middle">
                             <div class="d-flex justify-content-center gap-2">
                                 <?php if($item->order_status == 'pending'):?>
