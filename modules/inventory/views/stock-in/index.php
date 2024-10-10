@@ -112,7 +112,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                             </td>
                             <td class="fw-light align-middle">
                                 <div class=" d-flex flex-column">
-                                    <span class="fw-semibold "><?=isset($item->purchase) ? $item->purchase->po_number : '-'?></span>
+                                    <?=isset($item->purchase) ? ('<span class="fw-semibold ">'.$item->purchase->po_number.'</span>') : null?>
                                     <?= isset($item->data_json['vendor_name']) ? $item->data_json['vendor_name'] : '' ?>
                                 </div>
                                 <td><?=$item->CreateBy($item->ViewReceiveDate())['avatar'];?></td>
