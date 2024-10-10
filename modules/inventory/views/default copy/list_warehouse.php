@@ -24,7 +24,7 @@ use app\modules\inventory\models\Warehouse;
       <th>รายการ</th>
       <th>ผู้ดูแล</th>
       <th class="text-center">รอดำเนินการ</th>
-      <th class="text-end">มูลค่าวัสดุคงคลัง</th>
+      <th>ร้อยละปริมาณวัสดุ</th>
     </tr>
   </thead>
   <tbody class="align-middle">
@@ -75,14 +75,14 @@ use app\modules\inventory\models\Warehouse;
 
       <?php endif;?>
       </td>
-      <td class="text-end">
-      <span class="fw-semibold "> <?=$model->SumPice()?></span>
-       
-      <!-- <div class="progress-stacked">
-        <div class="progress" role="progressbar" aria-label="Segment one" aria-valuenow="<?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>" aria-valuemin="0" aria-valuemax="100" style="width: <?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>%">
-          <div class="progress-bar"><?=isset($model->TransactionStock()['progress']) ? ($model->TransactionStock()['progress'] >=1 ? $model->TransactionStock()['progress'].'%' : '') : 0?></div>
-        </div>
-        </div> -->
+      <td>
+      <div class="progress-stacked">
+  <div class="progress" role="progressbar" aria-label="Segment one" aria-valuenow="<?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>" aria-valuemin="0" aria-valuemax="100" style="width: <?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>%">
+    <div class="progress-bar"><?=isset($model->TransactionStock()['progress']) ? ($model->TransactionStock()['progress'] >=1 ? $model->TransactionStock()['progress'].'%' : '') : 0?></div>
+  </div>
+
+
+</div>
       </td>
     </tr>
     <?php endforeach;?>

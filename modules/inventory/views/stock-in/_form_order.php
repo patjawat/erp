@@ -38,7 +38,8 @@ use iamsaint\datetimepicker\Datetimepicker;
   
   echo $form->field($model, 'data_json[asset_type]')->widget(Select2::classname(), [
       'data' => $model->ListAssetType(),
-      'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
+    //   'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
+      'options' => ['placeholder' => 'ระบุประเภท',
       'disabled' => ($model->category_id ?  true : false)
   ],
       'pluginOptions' => [

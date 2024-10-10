@@ -55,7 +55,7 @@ class PoOrderController extends Controller
             }
 
             if (isset($model->data_json['credit_days'])) {
-                $model->data_json['credit_days'] == "" ? $model->addError('data_json[credit_days]', 'ครดิต (วัน)ต้องระบุ') : null;
+                $model->data_json['credit_days'] == "" ? $model->addError('data_json[credit_days]', 'เครดิต (วัน)ต้องระบุ') : null;
             }
 
             if (isset($model->data_json['order_receipt_date'])) {

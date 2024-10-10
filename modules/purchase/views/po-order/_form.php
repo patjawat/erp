@@ -64,7 +64,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                 ?>
      
       
-        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
+        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('เครดิต (วัน)') ?>
         <?= $form->field($model, 'data_json[po_recipient]')->textInput()->label('ผู้รับใบสั่งซื้อ') ?>
     </div>
     <div class="col-6">

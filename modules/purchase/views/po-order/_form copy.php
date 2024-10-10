@@ -89,14 +89,14 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                 <div class="col-4">
 
                                     <?= $form->field($model, 'data_json[want_use_day]')->textInput()->label('ต้องการภายใน (วัน)') ?>
-                                    <?= $form->field($model, 'data_json[po_credit]')->textInput()->label('ครดิต (วัน)') ?>
+                                    <?= $form->field($model, 'data_json[po_credit]')->textInput()->label('เครดิต (วัน)') ?>
                                     <?= $form->field($model, 'data_json[supplier]')->textInput()->label('วันที่เอกสาร') ?>
                                     <?= $form->field($model, 'data_json[supplier]')->textInput()->label('วันที่เอกสาร') ?>
 
                                 </div>
                                 <div class="col-4">
                                     <?= $form->field($model, 'data_json[supplier]')->textInput()->label('ต้องการภายใน (วัน)') ?>
-                                    <?= $form->field($model, 'data_json[supplier]')->textInput()->label('ครดิต (วัน)') ?>
+                                    <?= $form->field($model, 'data_json[supplier]')->textInput()->label('เครดิต (วัน)') ?>
                                     <?= $form->field($model, 'data_json[supplier]')->textInput()->label('วันที่เอกสาร') ?>
                                     <?= $form->field($model, 'data_json[supplier]')->textInput()->label('วันที่เอกสาร') ?>
 

@@ -133,7 +133,7 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                                         ]
                                     ]
                                 ])->label('กำหนดวันส่งมอบ') ?>
-                        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('ครดิต (วัน)') ?>
+                        <?= $form->field($model, 'data_json[credit_days]')->textInput()->label('เครดิต (วัน)') ?>
                         <?= $form->field($model, 'data_json[signing_date]')->widget(DateControl::classname(), [
                                     'type' => DateControl::FORMAT_DATE,
                                     'language' => 'th',

@@ -86,6 +86,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <table class="table table-primary">
                     <thead>
                         <tr>
+                            <th class="text-center">#</th>
                             <th scope="col">รหัส/วันที่รับเข้าคลัง</th>
                             <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
                             <th>รับจาก</th>
@@ -96,8 +97,9 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         </tr>
                     </thead>
                     <tbody class="align-middle">
-                        <?php foreach ($dataProvider->getModels() as $item): ?>
+                        <?php $row = 1;  foreach ($dataProvider->getModels() as $item): ?>
                         <tr>
+                            <td class="text-center"><?=$row++?></td>
                         <td class="fw-light align-middle">
                                 <div class=" d-flex flex-column">
                                     <span class="fw-semibold "><?=$item->code?></span>
