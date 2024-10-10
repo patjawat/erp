@@ -377,7 +377,7 @@ class ImportStock2Controller extends Controller
         public  function actionM22()
         {
             //คลังวัสดุกายภาพบำบัด
-            $warehouse_id = 9;
+            $warehouse_id = 4;
             $assettype = 'M22';
             $categoryName = 'วัสดุการแพทย์ทั่วไป';
             $category_id = 1228;
@@ -529,11 +529,11 @@ class ImportStock2Controller extends Controller
         }
 
 
-                // วัสดุวิทยาศาสตร์หรือการแพทย์
+                // วัสดุทันตกรรม
                 public  function actionM19()
                 {
-                    //คลังทันตกรรม
-                    $warehouse_id = 2;
+                    //คลังวัสดุทันตกรรม
+                    $warehouse_id = 3;
                     $assettype = 'M19';
                     $categoryName = 'วัสดุทันตกรรม';
                     $category_id = 1229;
