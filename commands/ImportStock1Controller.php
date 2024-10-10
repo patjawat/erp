@@ -2577,4 +2577,104 @@ class ImportStock1Controller extends Controller
             echo $total;
         }
     }
+
+        // วัสดุการแพทย์ออกซิเจน IN-680016
+        public static function actionM26()
+        {
+            $data = [
+                ['code' => '10-00001', 'title' => 'เสื้อผู้ป่วย', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00002', 'title' => 'ผ้าถุงผู้ป่วย', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00003', 'title' => 'ผ้าปูเตียง', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00004', 'title' => 'ปลอกหมอน', 'unit' => 'ใบ', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00005', 'title' => 'เสื้อแบบให้นมบุตร', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00012', 'title' => 'เสื้อกาวน์คอฮาวายคลุมทำหัตกรรม', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00013', 'title' => 'ผ้าสี่เหลี่ยม 2 ชั้น ขนาด 25*25 นิ้ว (ผ้าโทเรสีม่วง)', 'unit' => 'ผืน', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00021', 'title' => 'เสื้อกราวน์กันน้ำ', 'unit' => 'ตัว', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00022', 'title' => 'ชุดเจ้าหน้าที่แบบคอวี (เสื้อ+กางเกง)', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00023', 'title' => 'เสื้อกาวน์คอฮาวาย ตัวยาว แขนสั้น', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00024', 'title' => 'เสื้อกาวน์คอฮาวาย ตัวยาวแขนปลายจั้ม', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+                ['code' => '10-00025', 'title' => 'ชุดดับเพลิงพร้อมหมวก', 'unit' => 'ชุด', 'qty' => '0', 'unit_price' => '0'],
+            ];
+    
+            if (BaseConsole::confirm('Are you sure?')) {
+                $total = 0;
+                foreach ($data as $key => $value) {
+                    $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $value['code'], 'title' => $value['title']]);
+                    $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+                    // ถ้าไม่มีหน่วยให้สร้างใหม่
+                    if (!$unit) {
+                        $newUnit = new Categorise([
+                            'name' => 'unit',
+                            'title' => $value['unit'],
+                            'active' => 1,
+                        ]);
+                        $newUnit->save(false);
+                    }
+                    // echo $value['code'] . "\n";
+                    // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+                    if (!$asetItem) {
+                        $newItem = new Categorise([
+                            'name' => 'asset_item',
+                            'group_id' => 4,
+                            'category_id' => 'M26',
+                            'code' => $value['code'],
+                            'title' => $value['title'],
+                            'data_json' => [
+                                'unit' => $value['unit'],
+                                'sub_title' => '',
+                                'price_name' => '',
+                                'category_name' => 'วัสดุการแพทย์ ออกซิเจน',
+                                'asset_type_name' => '',
+                            ],
+                        ]);
+                        $newItem->save(false);
+                    }
+    
+                    $qty = (int) explode('.', $value['qty'])[0];
+    
+                    $category_id = 1230;
+                    $code = 'IN-6800016';
+                    $lot = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                    $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                    $model = new StockEvent([
+                        'ref' => $ref,
+                        'lot_number' => $lot,
+                        'name' => 'order_item',
+                        'code' => $code,
+                        'category_id' => $category_id,
+                        'transaction_type' => 'IN',
+                        'asset_item' => $value['code'],
+                        'warehouse_id' => 7,
+                        'qty' => $value['qty'],
+                        'unit_price' => (float) $value['unit_price'],
+                        'order_status' => 'pending',
+                        'data_json' => [
+                            'req_qty' => '0',
+                            'exp_date' => '',
+                            'mfg_date' => '',
+                            'item_type' => 'ยอดยกมา',
+                            'po_number' => '',
+                            'pq_number' => '',
+                            'asset_type' => '',
+                            'receive_date' => '',
+                            'asset_type_name' => '',
+                            'employee_fullname' => 'Administrator Lastname',
+                            'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                            'employee_department' => 'งานซ่อมบำรุง',
+                        ],
+                        'created_by' => 1,
+                        'updated_by' => 1,
+                    ]);
+                    // echo (DOUBLE) $value['unit_price'],"\n";
+                    if ($model->save(false)) {
+                        echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."สำเร็จ! \n";
+                    } else {
+                        echo 'นำเข้า '.$value['code'].' รหัส : '.$value['code']."ผิดพลาด! \n";
+                    }
+                    $sum = $qty * (int) $value['unit_price'];
+                    $total += $sum;
+                }
+                echo $total;
+            }
+        }
 }
