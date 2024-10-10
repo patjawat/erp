@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 use app\modules\inventory\models\StockEvent;
 use yii\widgets\Pjax;
-
+$totalPrice = 0;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
 
@@ -89,8 +89,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?=$item->expDate?></td>
                             <td class="align-middle text-end">
                                 <span class="fw-semibold">
-                                    <?=$item->unit_price * $item->qty ?>
+                                    <?=number_format(($item->unit_price * $item->qty),2) ?>
                                 </span>
+                               
                         </td>
                         <td class="align-middle">
                             <div class="d-flex justify-content-center gap-2">
@@ -107,7 +108,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 </tbody>
             </table>
-            
+            <?=$totalPrice?>
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
