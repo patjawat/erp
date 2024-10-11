@@ -264,7 +264,7 @@ class ImportStock2Controller extends Controller
             ['code' => '07-00376','title' => 'Blood collecting pack 350 ml double CPD-A1 with diversion pouch#41104109','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
             ['code' => '07-00377','title' => 'Blood collecting pack 450 ml double CPD-A1 with diversion pouch#41104109','unit' => 'ถุง','qty' => '89','unit_price' => '170.00000'],
             ['code' => '07-00378','title' => 'THC Cassette 40 test#41116136','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
-            ['code' => '07-00379','title' => 'Needle Container 5'*7" #41116116','unit' => 'กระป๋อง','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00379','title' => 'Needle Container 5*7" #41116116','unit' => 'กระป๋อง','qty' => '0','unit_price' => '0'],
             ['code' => '07-00381','title' => 'ชุดทดสอบบอแร็กซ์(ผงกรอบ)ในอาหาร','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
             ['code' => '07-00382','title' => 'ชุดทดสอบสารกรดซาลิซิลิคในอาหาร(สารกันรา)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
             ['code' => '07-00383','title' => 'ชุดทดสอบโซเตียม ไฮโดรซัลไฟด์(สารฟอกขาว)','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],
