@@ -529,44 +529,33 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     // รวมเงินทั้งหมด
-    public function SummaryTotal()
+    public function SummaryTotal($status = true)
     {
 
-        return self::find()
-        ->select([new Expression("FORMAT(IFNULL(SUM(i.unit_price * i.qty), 2), 0) AS total")])
+        $query =  self::find()
+        ->select([new Expression("IFNULL(FORMAT(SUM(i.unit_price * i.qty),2), 0) AS total")])
         ->alias('e')
         ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
         ->andFilterWhere(['e.thai_year' => $this->thai_year])
-        ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
-        ->andFilterWhere(['e.order_status' => 'success'])
-        ->andFilterWhere(['i.order_status' => 'success'])
-        ->andFilterWhere(['=', new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"), $this->asset_type_name])
+        ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id]);
+        if($status == true){
+            $query->andFilterWhere(['e.order_status' => 'success']);
+            $query->andFilterWhere(['i.order_status' => 'success']);
+        }
+        $query->andFilterWhere(['=', new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"), $this->asset_type_name])
        ->andFilterWhere([
             'or',
             ['like', 'e.code', $this->q],
             ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $this->q],
             ['like', new Expression("JSON_EXTRACT(e.data_json, '$.pq_number')"), $this->q],
             ['like', new Expression("JSON_EXTRACT(e.data_json, '$.po_number')"), $this->q],
-        ])
-        ->scalar();
-
-        // return self::find()
-        // ->alias('e')
-        // ->select(new Expression('FORMAT(IFNULL(SUM(e.unit_price * e.qty), 0), 4) AS total'))
-        // ->andFilterWhere(['e.thai_year' => $this->thai_year])
-        // ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
-        // ->andFilterWhere(['e.order_status' => 'success'])
-        // ->andFilterWhere(['=', new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"), $this->asset_type_name])
-        // ->andFilterWhere([
-        //     'or',
-        //     ['like', 'e.code', $this->q],
-        //     ['like', new Expression("JSON_EXTRACT(e.data_json, '$.pq_number')"), $this->q],
-        //     ['like', new Expression("JSON_EXTRACT(e.data_json, '$.po_number')"), $this->q],
-        // ])
-        // ->scalar();
-
+       ]);
+       
+return $query->scalar();
+      
     }
 
+    
     public function ListOrderType()
     {
         $arr = [];
