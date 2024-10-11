@@ -49,7 +49,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
 ?>
 
-<?php Pjax::begin(['id' => 'inventory', 'enablePushState' => false, 'timeout' => 88888888]); ?>
+<?php Pjax::begin(['id' => 'inventory', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <div class="card">
     <div class="card-body d-flex justify-content-between">
         <div class="d-flex gap-3">
