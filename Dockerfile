@@ -3,11 +3,12 @@ FROM yiisoftware/yii2-php:8.2-apache
 
 # Step 2: กำหนด working directory ของโปรเจค
 WORKDIR /app
-
+RUN apt update && apt install -y nano
 # Step 3: Copy ไฟล์ที่จำเป็นไปยัง image
 COPY ./ /app/
 
 # Step 4: ติดตั้ง dependencies ผ่าน composer
+
 RUN composer install --prefer-dist --no-dev --optimize-autoloader
 RUN composer install --ignore-platform-reqs
 
