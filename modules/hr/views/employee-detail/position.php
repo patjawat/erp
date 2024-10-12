@@ -266,7 +266,7 @@ echo $form->field($model, 'data_json[position_name]')->widget(Select2::classname
         <?=$form->field($model, 'data_json[doc_ref]')->textInput()->label('เอกสารอ้างอิง')?>
     </div>
     <div class="col-12">
-        <?=$form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ')?>
+        <?=$form->field($model, 'data_json[comment]')->textArea()->label('หน่วยงานตาม 0.18')?>
     </div>
 </div>
 <?php $model->upload($model->ref, 'position')?>
