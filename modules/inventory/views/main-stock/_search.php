@@ -16,7 +16,7 @@ $getWarehouse = Yii::$app->session->get('selectMainWarehouse');
 <div class="order-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['/inventory/main-stock/index'],
+        'action' => ['/inventory/main-stock/store'],
         'method' => 'get',
         'id' => 'form-search',
         'options' => [
@@ -30,33 +30,26 @@ $getWarehouse = Yii::$app->session->get('selectMainWarehouse');
     <div class="col-6">
     <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
                                         'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-                                        'options' => ['placeholder' => 'เลือกคลัง','value' => ($getWarehouse ? $getWarehouse['warehouse_id'] : ''),],
+                                        'options' => ['placeholder' => 'เลือกคลัง'],
                                         
                                         'disabled' => ($getWarehouse ?  true : false),
                                         'pluginEvents' => [
                                             "select2:unselect" => "function() { 
-                                                $.ajax({
-                                                    type: 'get',
-                                                    url: '".Url::to(['/inventory/main-stock/clear-warehouse'])."',
-                                                    dataType: 'json',
-                                                    success: function (res) {
-                                                              $.pjax.reload({container:'#inventory-container', history:false});
-                                                    }
-                                                });
+                                             $(this).submit()
+                                                // $.ajax({
+                                                //     type: 'get',
+                                                //     url: '".Url::to(['/inventory/main-stock/clear-warehouse'])."',
+                                                //     dataType: 'json',
+                                                //     success: function (res) {
+                                                //               $.pjax.reload({container:'#inventory-container', history:false});
+                                                //     }
+                                                // });
                                             }",
                                             "select2:select" => "function() {
-                                                // console.log($(this).val());
-                                                $.ajax({
-                                                    type: 'get',
-                                                    url: '".Url::to(['/inventory/store/select-warehouse'])."',
-                                                    data: {id: $(this).val()},
-                                                    dataType: 'json',
-                                                    success: function (res) {
-                                                            //   $.pjax.reload({container:'#inventory', history:false});
-                                                              $('#form-search').submit()
-                                                    }
-                                                });
-                                        }",],
+                                            $(this).submit()
+                        
+                                        }",
+                                    ],
                                         'pluginOptions' => [
                                         'allowClear' => true,
                                         ],

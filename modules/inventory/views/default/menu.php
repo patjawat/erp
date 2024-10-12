@@ -9,9 +9,9 @@ $warehouse = Yii::$app->session->get('warehouse');
     <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory'], ['class' => 'btn btn-light']) ?>
     <?= Html::a('<i class="fa-solid fa-house"></i> หน้าหลัก', ['/inventory/warehouse'], ['class' => 'btn btn-light']) ?>
     <?php Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลังหลัก', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
-    <?= $warehouse['warehouse_type'] == 'MAIN' ? Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> รับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light']) : '' ?>
+    <?= $warehouse['warehouse_type'] == 'MAIN' ? Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light']) : '' ?>
     <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
-        <?= Html::a('<i class="bi bi-cart-check-fill"></i> รายการขอเบิก', ['/inventory/order-request'], ['class' => 'btn btn-light']) ?>
+        <?= Html::a('<i class="bi bi-cart-check-fill"></i> ทะเบียนขอเบิกทั้งหมด', ['/inventory/order-request'], ['class' => 'btn btn-light']) ?>
         <?php else:?>
             <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-light']) ?>
             <?php echo Html::a('<i class="fa-solid fa-list-ul"></i> ทะเบียนประวัติ', ['/inventory/main-stock'], ['class' => 'btn btn-light']) ?>

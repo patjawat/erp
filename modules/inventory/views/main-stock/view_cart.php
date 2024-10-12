@@ -8,7 +8,7 @@ use yii\web\View;
 
 $cart = \Yii::$app->cartMain;
 $products = $cart->getItems();
-$warehouseSelect = Yii::$app->session->get('select-warehouse');
+$warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -57,7 +57,7 @@ $warehouseSelect = Yii::$app->session->get('select-warehouse');
         <?php else:?>
             <?php
             try {
-                echo Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]);
+                echo Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/main-stock/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]);
                 //code...
             } catch (\Throwable $th) {
                 //throw $th;

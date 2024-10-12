@@ -181,11 +181,6 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 </div>
 
 <div class="row">
-    <div class="col-12">
-
-
-
-    </div>
 
     <?php
 
