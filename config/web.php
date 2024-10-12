@@ -32,6 +32,34 @@ $config = [
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
+        'cartMain' => [
+			'class' => 'asyou99\cart\Cart',
+			'storage' => [
+				'class' => 'asyou99\cart\MultipleStorage',
+				'storages' => [
+					['class' => 'asyou99\cart\SessionStorage'],
+					[
+						'class' => 'asyou99\cart\DatabaseStorage',
+						'table' => 'cart',
+					],
+				],
+			]
+		],
+        'cartSub' => [
+			'class' => 'asyou99\cart\Cart',
+			'storage' => [
+				'class' => 'asyou99\cart\MultipleStorage',
+				'storages' => [
+					['class' => 'asyou99\cart\SessionStorage'],
+					[
+						'class' => 'asyou99\cart\DatabaseStorage',
+						'table' => 'cart',
+					],
+				],
+			]
+		],
+    
+
         'cart' => [
 			'class' => 'asyou99\cart\Cart',
 		],
@@ -294,7 +322,7 @@ if (YII_ENV_DEV) {
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
         // 'allowedIPs' => ['127.0.0.1', '::1'],
-        // 'allowedIPs' => ['*'],
+        'allowedIPs' => ['*'],
     ];
 }
 

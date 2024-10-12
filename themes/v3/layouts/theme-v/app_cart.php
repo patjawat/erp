@@ -101,6 +101,8 @@ $js = <<< JS
         url: $(this).attr('href'),
         dataType: "json",
         success: function (response) {
+            console.log(response);
+            
             getViewCar()
             // $.pjax.reload({container:'#viewCart', history:false});
         }

@@ -4,6 +4,7 @@ namespace app\modules\inventory\controllers;
 
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
 use app\modules\purchase\models\Order;
@@ -14,9 +15,6 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
-/**
- * WarehouseController implements the CRUD actions for Warehouse model.
- */
 class WarehouseController extends Controller
 {
     public function behaviors()
@@ -52,12 +50,25 @@ class WarehouseController extends Controller
         } else {
         }
 
+        // หากเลือกคลังแล้วให้แสดง หะนแา ในคลัง
         if ($warehouse) {
+            $searchModel = new StockSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+            $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'asset_item', $searchModel->q],
+                ['like', 'title', $searchModel->q],
+            ]);
+            $dataProvider->query->groupBy('asset_item');
+
             return $this->render('view', [
-                // 'searchModel' => $searchModel,
-                // 'dataProvider' => $dataProvider,
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
                 'model' => $this->findModel($warehouse['warehouse_id']),
             ]);
+
         } else {
             return $this->render('index', [
                 'searchModel' => $searchModel,
@@ -100,10 +111,10 @@ class WarehouseController extends Controller
     public function actionView($id)
     {
         $this->setWarehouse($id);
-
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        return $this->redirect(['index']);
+        // return $this->render('view', [
+        //     'model' => $this->findModel($id),
+        // ]);
     }
 
     /**
@@ -277,6 +288,8 @@ class WarehouseController extends Controller
             ]);
         }
     }
+
+
 
     public function actionViewChart()
     {

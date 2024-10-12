@@ -14,6 +14,8 @@ use asyou99\cart\ItemInterface;
 use yii\db\Expression;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\Warehouse;
+use asyou99\cart\Storage;
+
 /**
  * This is the model class for table "stock".
  *

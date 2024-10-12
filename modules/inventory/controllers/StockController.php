@@ -113,7 +113,12 @@ class StockController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
         $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse['warehouse_id']]);
-        $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
+
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'asset_item', $searchModel->q],
+            ['like', 'title', $searchModel->q],
+        ]);
         $dataProvider->query->groupBy('asset_item');
 
         if ($this->request->isAjax) {

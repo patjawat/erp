@@ -30,8 +30,17 @@ $this->title = 'My DashBoard';
                 <?=$this->render('leave')?>
             </div>
             <div class="col-12">
+
+            <div class="d-flex justify-content-between">
+            <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
+            <?=Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด',['/me/activity'],['class' => 'btn btn-light'])?>
+        </div>
+        <div id="viewApproveStock">Loading...</div>
+        <div id="viewApprovePurchase">Loading...</div>
+
+        
                 <?=$this->render('team_work')?>
-            
+
             </div>
         </div>
     </div>
@@ -39,8 +48,8 @@ $this->title = 'My DashBoard';
     <div class="col-4">
         <div class="card" style="height: 620px;">
             <div class="card-body">
-            <h6><i class="bi bi-app-indicator"></i> บริการ</h6>
-            <?=$this->render('app_indicator')?>
+                <h6><i class="bi bi-app-indicator"></i> บริการ</h6>
+                <?=$this->render('app_indicator')?>
             </div>
         </div>
 
@@ -73,12 +82,6 @@ $this->title = 'My DashBoard';
 <div class="row">
     <div class="col-6">
 
-    <div class="d-flex justify-content-between">
-                    <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
-                    <?=Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด',['/me/activity'],['class' => 'btn btn-light'])?>
-                </div>
-                <div id="viewApproveStock">Loading...</div>
-                <div id="viewApprovePurchase">Loading...</div>
 
     </div>
     <div class="col-6">

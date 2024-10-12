@@ -268,10 +268,6 @@ public function actionShowCart()
                 'container' => '#inventory',
             ];
         }
-    
-   
-
-
 
     }
        
@@ -307,7 +303,7 @@ public function actionShowCart()
 
     public function actionDeleteItem($id)
     {
-        $product = Product::findOne($id);
+        $product = Stock::findOne($id);
         if ($product) {
             \Yii::$app->cart->delete($product);
             Yii::$app->response->format = Response::FORMAT_JSON;

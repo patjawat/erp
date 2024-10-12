@@ -1,7 +1,7 @@
 <?php
 use yii\widgets\Pjax;
 ?>
-<?php // Pjax::begin(['id' => 'inventory']); ?>
+<?php  Pjax::begin(['id' => 'inventory']); ?>
 <?php
 use yii\helpers\Html;
 use yii\web\View;
@@ -63,7 +63,7 @@ use yii\web\View;
 <?php if($cart->getCount() == 0):?>
         <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
 <?php else:?>
-        <?= Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
+        <?php //  Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]) ?>
         <?php endif?>
     </div>
 
@@ -71,4 +71,4 @@ use yii\web\View;
 </div>
 
 
-<?php // Pjax::end(); ?>
+<?php  Pjax::end(); ?>

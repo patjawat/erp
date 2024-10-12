@@ -18,6 +18,7 @@ use app\modules\inventory\models\ProductSearch;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockSearch;
 use app\components\UserHelper;
+use app\modules\inventory\models\StockEvent;
 use yii\db\Expression;
 
 /**
@@ -255,18 +256,80 @@ class StoreController extends Controller
     public function actionAddToCart($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-
+        $cart = \Yii::$app->cart;
+        $itemsCount = \Yii::$app->cart->getCount();
+        
         $model = Stock::findOne($id);
-        if ($model) {
+        if($itemsCount > 0){
+            $item = $cart->getItemById($id);
+            $item->getQuantity();
+            if($item->getQuantity() > $model->qty){
+                \Yii::$app->cart->create($model, -1);
+                 return [
+                     'status' => 'error',
+                     'container' => '#inventory',
+                    ];
+                }else{
+                    \Yii::$app->cart->create($model, 1);
+                     return [
+                         'status' => 'success',
+                         'container' => '#inventory',
+                     ];
+        
+             }
+        }else{
             \Yii::$app->cart->create($model, 1);
             return [
-                'container' => '#inventory',
                 'status' => 'success',
-                'data' => $model
+                'container' => '#inventory',
             ];
         }
-        throw new NotFoundHttpException();
+
     }
+
+
+ //กำหนดจำนวนที่จ่ายให้
+ public function actionUpdateQty()
+ {
+     Yii::$app->response->format = Response::FORMAT_JSON;
+     $id = $this->request->get('id');
+     $qty = $this->request->get('qty');
+     $model = StockEvent::findOne($id);
+     $checkStock = Stock::findOne($id);
+     if($qty > $checkStock->qty){
+         return [
+             'status' => 'error',
+             'container' => '#inventory',
+            ];
+        }else{
+            //  $model->qty = $qty;
+            \Yii::$app->cart->update($checkStock,$qty);
+             Yii::$app->response->format = Response::FORMAT_JSON;
+             return [
+                 'status' => 'success',
+                 'container' => '#inventory',
+             ];
+
+     }
+         
+ }
+
+
+    // public function actionAddToCart($id)
+    // {
+    //     Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //     $model = Stock::findOne($id);
+    //     if ($model) {
+    //         \Yii::$app->cart->create($model, 1);
+    //         return [
+    //             'container' => '#inventory',
+    //             'status' => 'success',
+    //             'data' => $model
+    //         ];
+    //     }
+    //     throw new NotFoundHttpException();
+    // }
 
     public function actionUpdateCart()
     {
@@ -293,7 +356,7 @@ class StoreController extends Controller
 
     public function actionDeleteItem($id)
     {
-        $product = Product::findOne($id);
+        $product = Stock::findOne($id);
         if ($product) {
             \Yii::$app->cart->delete($product);
             Yii::$app->response->format = Response::FORMAT_JSON;

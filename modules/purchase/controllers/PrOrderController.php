@@ -3,27 +3,23 @@
 namespace app\modules\purchase\controllers;
 
 use app\components\AppHelper;
-use app\components\UserHelper;
 use app\components\SiteHelper;
+use app\components\UserHelper;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
+use Yii;
+use yii\db\Expression;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
-use app\model\Categorise;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use Yii;
-use yii\db\Expression;
 
 /**
  * PrOrderController implements the CRUD actions for Order model.
  */
 class PrOrderController extends Controller
 {
-    /**
-     * @inheritDoc
-     */
     public function behaviors()
     {
         return array_merge(
@@ -38,7 +34,6 @@ class PrOrderController extends Controller
             ]
         );
     }
-
 
     /**
      * Lists all Order models.
@@ -55,38 +50,40 @@ class PrOrderController extends Controller
         $dataProvider->pagination->pageSize = 8;
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('@app/modules/purchase/views/order/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'isAjax' => $this->request->isAjax
+                    'isAjax' => $this->request->isAjax,
                 ]),
             ];
         } else {
-
             return $this->render('@app/modules/purchase/views/order/index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'isAjax' => $this->request->isAjax
+                'isAjax' => $this->request->isAjax,
             ]);
         }
     }
 
     // รายการที่อนุมัติแล้ว
 
-
-
     /**
      * Displays a single Order model.
+     *
      * @param int $id ID
+     *
      * @return string
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
         \Yii::$app->session->set('name', 'pr_item');
+
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -95,7 +92,8 @@ class PrOrderController extends Controller
     /**
      * Creates a new Order model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
+     *
+     * @return string|Response
      */
     public function actionCreate()
     {
@@ -103,32 +101,30 @@ class PrOrderController extends Controller
         $model = new Order([
             'name' => 'order',
             'status' => $this->request->get('status'),
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'data_json' => [
-                'leader1' => $userCreate->leaderUser()['leader1']
-            ]
+                'leader1' => $userCreate->leaderUser()['leader1'],
+            ],
         ]);
 
-        $thaiYear = substr(AppHelper::YearBudget(), 2);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-
+                \Yii::$app->response->format = Response::FORMAT_JSON;
                 $oldObj = $model->data_json;
-
                 $vendor = $model->vendor;
                 $model->data_json = [
-                    'pr_create_date' =>  AppHelper::convertToGregorian($model->data_json['pr_create_date']),
-                    'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date']),
+                    'pr_create_date' => AppHelper::convertToGregorian($model->data_json['pr_create_date']),
+                    'due_date' => AppHelper::convertToGregorian($model->data_json['due_date']),
                     'vendor_name' => isset($vendor->data_json['title']) ? $vendor->data_json['title'] : '-',
                     'vendor_address' => isset($vendor->data_json['address']) ? $vendor->data_json['address'] : '-',
                     'vendor_phone' => isset($vendor->data_json['vendor_phone']) ? $vendor->data_json['phone'] : '',
-                    'account_name' => isset($vendor->data_json['account_name']) ? $vendor->data_json['account_name']  : '',
-                    'account_number' => isset($vendor->data_json['account_number']) ? $vendor->data_json['account_number']  : ''
+                    'account_name' => isset($vendor->data_json['account_name']) ? $vendor->data_json['account_name'] : '',
+                    'account_number' => isset($vendor->data_json['account_number']) ? $vendor->data_json['account_number'] : '',
                 ];
 
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
+
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
@@ -138,7 +134,8 @@ class PrOrderController extends Controller
         }
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
@@ -155,8 +152,11 @@ class PrOrderController extends Controller
     /**
      * Updates an existing Order model.
      * If update is successful, the browser will be redirected to the 'view' page.
+     *
      * @param int $id ID
-     * @return string|\yii\web\Response
+     *
+     * @return string|Response
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
@@ -165,23 +165,23 @@ class PrOrderController extends Controller
         $oldObj = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-
                 // validate all models
                 $vendor = $model->vendor;
                 $newObj = [
-                    'pr_create_date' =>  AppHelper::convertToGregorian($model->data_json['pr_create_date']),
-                    'due_date' =>  AppHelper::convertToGregorian($model->data_json['due_date']),
+                    'pr_create_date' => AppHelper::convertToGregorian($model->data_json['pr_create_date']),
+                    'due_date' => AppHelper::convertToGregorian($model->data_json['due_date']),
                     'vendor_name' => $vendor->title,
                     'vendor_address' => isset($vendor->data_json['address']) ? $vendor->data_json['address'] : '-',
                     'vendor_phone' => isset($vendor->data_json['phone']) ? $vendor->data_json['phone'] : '',
-                    'account_name' => isset($vendor->data_json['account_name']) ? $vendor->data_json['account_name']  : '',
-                    'account_number' => isset($vendor->data_json['account_number']) ? $vendor->data_json['account_number']  : ''
+                    'account_name' => isset($vendor->data_json['account_name']) ? $vendor->data_json['account_name'] : '',
+                    'account_number' => isset($vendor->data_json['account_number']) ? $vendor->data_json['account_number'] : '',
                 ];
 
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $newObj);
-                Yii::$app->response->format = Response::FORMAT_JSON;
+                \Yii::$app->response->format = Response::FORMAT_JSON;
 
                 $model->save(false);
+
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
@@ -192,14 +192,15 @@ class PrOrderController extends Controller
             $model->loadDefaultValues();
             $oldObj = $model->data_json;
             $model->data_json = [
-                'pr_create_date' =>  AppHelper::convertToThai($model->data_json['pr_create_date']),
-                'due_date' =>  AppHelper::convertToThai($model->data_json['due_date'])
+                'pr_create_date' => AppHelper::convertToThai($model->data_json['pr_create_date']),
+                'due_date' => AppHelper::convertToThai($model->data_json['due_date']),
             ];
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             // return $model->data_json;
-            
+
             if ($this->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
                 return [
                     'title' => $this->request->get('title'),
                     'content' => $this->renderAjax('update', [
@@ -217,8 +218,11 @@ class PrOrderController extends Controller
     /**
      * Deletes an existing Order model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
+     *
      * @param int $id ID
-     * @return \yii\web\Response
+     *
+     * @return Response
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
@@ -228,37 +232,33 @@ class PrOrderController extends Controller
         return $this->redirect(['index']);
     }
 
-
-
-
     // รายการที่ขอซื้อ
     public function actionList()
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterwhere(['name' => 'order','status' => 1]);
+        $dataProvider->query->andFilterwhere(['name' => 'order', 'status' => 1]);
         $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm') = ''"));
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('@app/modules/purchase/views/order/list_style1', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                     'title' => 'ขอซื้อ/ขอจ้าง'
+                    'title' => 'ขอซื้อ/ขอจ้าง',
                 ]),
             ];
         } else {
-
-        return $this->render('@app/modules/purchase/views/order/list_style1', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-             'title' => 'ขอซื้อ/ขอจ้าง'
-        ]);
-        } 
+            return $this->render('@app/modules/purchase/views/order/list_style1', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'title' => 'ขอซื้อ/ขอจ้าง',
+            ]);
+        }
     }
-
 
     // public function actionAcceptOrderList()
     // {
@@ -284,79 +284,73 @@ class PrOrderController extends Controller
     //         'dataProvider' => $dataProvider,
     //          'title' => 'อนุมิติ'
     //     ]);
-    //     } 
+    //     }
     // }
-
-
-
-
 
     // ตรวจสอบความถูกต้อง
     public function actionCreatevalidator()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new Order();
-        $requiredName = "ต้องระบุ";
+        $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-
             if (isset($model->data_json['pr_create_date'])) {
-                preg_replace('/\D/', '', $model->data_json['pr_create_date']) == "" ? $model->addError('data_json[pr_create_date]', $requiredName) : null;
+                preg_replace('/\D/', '', $model->data_json['pr_create_date']) == '' ? $model->addError('data_json[pr_create_date]', $requiredName) : null;
             }
             if (isset($model->data_json['due_date'])) {
-                preg_replace('/\D/', '', $model->data_json['due_date']) == "" ? $model->addError('data_json[due_date]', $requiredName) : null;
+                preg_replace('/\D/', '', $model->data_json['due_date']) == '' ? $model->addError('data_json[due_date]', $requiredName) : null;
             }
 
             if (isset($model->data_json['leader1'])) {
-                $model->data_json['leader1'] == "" ? $model->addError('data_json[leader1]', $requiredName) : null;
+                $model->data_json['leader1'] == '' ? $model->addError('data_json[leader1]', $requiredName) : null;
             }
 
             if (isset($model->vendor_id)) {
-                $model->vendor_id  == "" ? $model->addError('vendor_id', $requiredName) : null;
+                $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
             }
-
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
         }
     }
-
 
     // ตรวจสอบความถูกต้อง
     public function actionCheckervalidator()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new Order();
-        $requiredName = "ต้องระบุ";
+        $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-
             if (isset($model->data_json['pr_leader_confirm'])) {
-                $model->data_json['pr_leader_confirm'] == "" ? $model->addError('data_json[pr_leader_confirm]', $requiredName) : null;
+                $model->data_json['pr_leader_confirm'] == '' ? $model->addError('data_json[pr_leader_confirm]', $requiredName) : null;
             }
 
             if (isset($model->data_json['pr_officer_checker'])) {
-                $model->data_json['pr_officer_checker'] == "" ? $model->addError('data_json[pr_officer_checker]', $requiredName) : null;
+                $model->data_json['pr_officer_checker'] == '' ? $model->addError('data_json[pr_officer_checker]', $requiredName) : null;
             }
             if (isset($model->data_json['pr_director_confirm'])) {
-                $model->data_json['pr_director_confirm'] == "" ? $model->addError('data_json[pr_director_confirm]', $requiredName) : null;
-            } 
+                $model->data_json['pr_director_confirm'] == '' ? $model->addError('data_json[pr_director_confirm]', $requiredName) : null;
+            }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
         }
     }
-    
 
     /**
      * Finds the Order model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
+     *
      * @param int $id ID
+     *
      * @return Order the loaded model
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
@@ -368,28 +362,30 @@ class PrOrderController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    //จนท.พัสดุตรวจสอบ
+    // จนท.พัสดุตรวจสอบ
     public function actionCheckerConfirm($id)
     {
         $model = $this->findModel($id);
 
         $oldObj = $model->data_json;
         if ($model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             $model->save(false);
+
             return [
                 'status' => 'success',
                 'container' => '#purchase-container',
-                'model' => $model
+                'model' => $model,
             ];
         } else {
             $model->loadDefaultValues();
         }
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $model->getMe()['avatar'],
                 'content' => $this->renderAjax('_checker_confirm', [
@@ -413,20 +409,22 @@ class PrOrderController extends Controller
 
         $oldObj = $model->data_json;
         if ($model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             $model->save(false);
+
             return [
                 'status' => 'success',
                 'container' => '#purchase-container',
-                'model' => $model
+                'model' => $model,
             ];
         } else {
             $model->loadDefaultValues();
         }
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $model->viewLeaderUser()['avatar'],
                 'content' => $this->renderAjax('_leader_confirm', [
@@ -442,26 +440,28 @@ class PrOrderController extends Controller
 
     public function actionDirectorConfirm($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
 
         $oldObj = $model->data_json;
         if ($model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             $model->save(false);
+
             return [
                 'status' => 'success',
                 'container' => '#purchase-container',
-                'model' => $model
+                'model' => $model,
             ];
         } else {
             $model->loadDefaultValues();
         }
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => SiteHelper::viewDirector()['avatar'],
                 'content' => $this->renderAjax('_director_confirm', [
@@ -475,39 +475,49 @@ class PrOrderController extends Controller
         }
     }
 
-
-
     // ส่งใบขอซื้อ
     public function actionPrConfirm($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $thaiYear = substr(AppHelper::YearBudget(), 2);
-        $model = $this->findModel($id);
-        $user = UserHelper::GetEmployee();
-        $model->updated_by = $user->id;
-        $newObj = [
-            'pr_confirm_name' => $user->fullname,
-            'pr_confirm_time' => date('Y-m-d H:i:s'),
-        ];
-        $model->data_json = ArrayHelper::merge(
-            $newObj,
-            $model->data_json
-        );
-        $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-' . $thaiYear . '????');
-        $model->status = 1;
-        $model->approve = 'Y';
-        $model->save();
-
-        return [
-            'status' => 'success',
-            'container' => '#purchase-container',
-        ];
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        try {
+            $thaiYear = substr(AppHelper::YearBudget(), 2);
+            $model = $this->findModel($id);
+            $user = UserHelper::GetEmployee();
+            $model->updated_by = $user->id;
+            $newObj = [
+                'pr_confirm_name' => $user->fullname,
+                'pr_confirm_time' => date('Y-m-d H:i:s'),
+            ];
+            $model->data_json = ArrayHelper::merge(
+                $newObj,
+                $model->data_json
+            );
+            $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
+            $model->status = 1;
+            $model->approve = 'Y';
+            if ($model->save()) {
+                return [
+                    'status' => 'success',
+                    'container' => '#purchase-container',
+                ];
+            } else {
+                return [
+                    'status' => 'error',
+                    'container' => '#purchase-container',
+                ];
+            }
+        } catch (\Throwable $th) {
+            return [
+                'status' => 'error',
+                'container' => '#purchase-container',
+            ];
+        }
     }
 
     // อนุมัติตาม status
     public function actionConfirmStatus($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $status = $this->request->get('status');
         $thaiYear = substr(AppHelper::YearBudget(), 2);
         $model = $this->findModel($id);
@@ -520,9 +530,10 @@ class PrOrderController extends Controller
                     $model->status = $status;
                 }
                 if ($model->status == 4) {
-                    $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-' . $thaiYear . '????');
+                    $model->pq_number = \mdm\autonumber\AutoNumber::generate('PQ-'.$thaiYear.'????');
                 }
                 $model->save(false);
+
                 return [
                     'status' => 'success',
                     'container' => '#purchase-container',
@@ -535,7 +546,8 @@ class PrOrderController extends Controller
         }
 
         if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('confirm_status', [

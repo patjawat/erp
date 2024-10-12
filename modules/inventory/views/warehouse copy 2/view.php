@@ -10,7 +10,7 @@ use yii\helpers\Url;
 use yii\helpers\Json;
 use app\modules\inventory\models\Stock;
 use app\models\Categorise;
-$warehouse = Yii::$app->session->get('warehouse');
+
 $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$model->SumPice().' บาท';
 ?>
 
@@ -28,7 +28,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 
 
 <div class="row">
-    <div class="col-3">
+<div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
                 <h2><?=$model->SumPice()?></h2>
@@ -54,20 +54,17 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
             <div class="card-body">
                 <h2 id="OrderConfirm">0</h2>
             </div>
-            <div class="card-footer border-0">มูลค่ารับเข้า</div>
+            <div class="card-footer border-0">หัวหน้าเห็นชอบ</div>
         </div>
     </div>
-
+    
     <div class="col-3">
-        <a href="<?=Url::to(['/inventory/stock-out'])?>">
-
-            <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
-                <div class="card-body">
-                    <h2 id="showTotalOrder">0</h2>
-                </div>
-                <div class="card-footer border-0">มูลค่าจ่ายวัสดุ</div>
+        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+            <div class="card-body">
+                <h2 id="showTotalOrder">0</h2>
             </div>
-        </a>
+            <div class="card-footer border-0">จำนวนรับเข้า</div>
+        </div>
 
     </div>
 </div>
@@ -90,7 +87,6 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
                     </div>
                 </div>
                 <?=$this->render('view_chart',['model' => $model])?>
-
                 <!-- <div id="inventoryCharts"></div> -->
                 <!-- <div id="showChart">
 
@@ -109,14 +105,18 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
                 </div> -->
             </div>
         </div>
-        <?= $warehouse['warehouse_type'] == 'SUB' ? $this->render('list_store',[
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider
-                    ]) : null?>
 
 
-        <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
-        <div id="showOrderRequestInWarehouse" style="min-height: 463px;">
+
+
+        
+
+        
+
+    </div>
+    <div class="col-12">
+        
+    <div id="showOrderRequestInWarehouse" style="min-height: 463px;">
             <div class="placeholder-glow">
                 <div class="card">
                     <div class="card-body">
@@ -162,15 +162,9 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
             </div>
         </div>
 
-        <?php endif?>
+        
 
-
-
-
-
-    </div>
-    <div class="col-12">
-
+        
 
 
     </div>
