@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
       }
       ?></th>
       <td><?=$item['thai_year']?></td>
-      <td><?=$item['created_at']?></td>
+      <td><?=$item['data_json']['receive_date']?></td>
       <td><?=$item['lot_number']?></td>
       <td><?=$item['code']?></td>
       <td><?=$item['warehouse_name']?></td>

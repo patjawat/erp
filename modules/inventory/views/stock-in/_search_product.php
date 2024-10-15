@@ -27,10 +27,10 @@ use kartik\select2\Select2;
   <div class="w-50">
   <?php
   
-        echo $form->field($searchModel, 'category_id')->widget(Select2::classname(), [
+        echo $form->field($searchModel, 'data_json[asset_type]')->widget(Select2::classname(), [
             'data' => $searchModel->ListProductType(),
-            'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
-            'disabled' => ($model->category_id ?  true : false)
+            'options' => ['placeholder' => ($model->data_json['asset_type'] ?  $model->data_json['asset_type_name'] : 'ระบุประเภท'),
+            'disabled' => ($model->data_json['asset_type'] ?  true : false)
         ],
             'pluginOptions' => [
                 'allowClear' => true,

@@ -39,7 +39,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ
                     </h6>
                     <?php if(Yii::$app->user->can('warehouse')):?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
+                    <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])?>
                    <?php else:?>
                    <?= ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
                    <?php endif;?>
@@ -51,12 +52,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 รายการ
                             </th>
                             <th class="text-center">หน่วย</th>
-                            <!-- <th class="text-center">คงเหลือ</th> -->
+                            <th class="text-center">คงเหลือ</th>
                             <th class="text-center">ขอเบิก</th>
                             <th class="text-start">ล็อตผลิต</th>
                             <th class="text-end">มูลค่า</th>
                             <th class="text-center">จ่าย</th>
-                            <th class="text-center" scope="col" style="width:90px;">ดำเนินการ</th>
+                            <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
                         </tr>
                     </thead>
 
@@ -74,24 +75,27 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <?=isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'?>
                             </td>
-                            <!-- <td class="text-center"><?= $item->SumStockQty() ?></td> -->
+                            <td class="text-center"><?= $item->SumStockQty() ?></td>
                             <td class="align-middle text-center">
                                 <?= isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'?></td>
 
                           
-                            <td class="align-middle text-start"><?= $item->lot_number ?> | เหลือ (<code><?=$item->SumLotQty()?></code>)</td>
+                            <td class="align-middle text-start"><?= $item->lot_number ?> (คงเหลือ <code><?=$item->SumLotQty()?></code>)</td>
                             <td class="align-middle text-end"><?= $item->unit_price ?></td>
                             <td>
                                 <?php if(isset($model->data_json['checker_confirm']) && $model->data_json['checker_confirm'] == 'Y'):?>
                                 <div class="d-flex d-flex flex-row justify-content-center">
                                     <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/stock-order/update-qty','id' => $item->id,'qty' => ($item->qty-1)],['class' => 'btn update-qty'])?>
-                                    <input type="text" value="<?=$item->qty?>" class="form-control update-qty" style="width:50px;font-weight: 600;" id="<?=$item->id?>"/>
+                                    <input type="text" value="<?=($item->data_json['req_qty'] > $item->SumLotQty()) ? $item->SumLotQty() : $item->qty?>" class="form-control update-qty" style="width:50px;font-weight: 600;" id="<?=$item->id?>"/>
                                     <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/inventory/stock-order/update-qty','id' => $item->id,'qty' => ($item->qty+1)],['class' => 'btn update-qty'])?>
                                 </div>
                                 <?php endif;?>
                             </td>
                             <td class="text-center">
-                                <?=Html::a('<i class="bi bi-x text-danger"></i>',['/inventory/stock-order/delete','id' => $item->id],['class' => 'delete-item'])?>
+                                <?php if($item->data_json['req_qty']>$item->SumLotQty()):?>
+                                <?=Html::a('<i class="fa-solid fa-copy"></i>',['/inventory/stock-order/copy-item','lot_number' => $item->lot_number],['class' => 'btn btn-sm btn-primary copy-item'])?>
+                                <?php endif;?>
+                                <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/stock-order/delete','id' => $item->id],['class' => 'btn btn-sm btn-danger delete-item'])?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -243,6 +247,8 @@ $("body").on("click", ".update-qty", function (e) {
         });
         
     });
+
+
     $("body").on("click", ".checkout", async function (e) {
     e.preventDefault();
 
@@ -288,23 +294,57 @@ $('.confirm-order').click(async function (e) {
     cancelButtonColor: "#d33",
     confirmButtonText: "ใช่, ยืนยัน!",
     cancelButtonText: "ยกเลิก",
+        }).then(async (result) => {
+            if (result.value == true) {
+            await $.ajax({
+                type: "post",
+                url: $(this).attr('href'),
+                dataType: "json",
+                success: async function (response) {
+                if (response.status == "success") {
+                    await  $.pjax.reload({container:response.container, history:false,url:response.url});
+                    success("บันสำเร็จ!.");
+                }
+                },
+            });
+            }
+        });
+
+  });
+
+
+  $("body").on("click", ".copy-item", async function (e) {
+    e.preventDefault();
+
+  await Swal.fire({
+    title: "ยืนยัน?",
+    text: "บันทึกสั่งจ่ายรายการนี้!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ยืนยัน!",
+    cancelButtonText: "ยกเลิก",
   }).then(async (result) => {
     if (result.value == true) {
       await $.ajax({
-        type: "post",
+        type: "get",
         url: $(this).attr('href'),
         dataType: "json",
         success: async function (response) {
-          if (response.status == "success") {
-            await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            success("บันสำเร็จ!.");
-          }
+            console.log(response);
+            
+        //   if (response.status == "success") {
+        //     // await  $.pjax.reload({container:response.container, history:false,url:response.url});
+        //     success("บันสำเร็จ!.");
+        //   }
         },
       });
     }
   });
 
   });
+
 
 JS;
 $this->registerJS($js)

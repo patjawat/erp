@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
-<?php Pjax::begin(); ?>
+<?php Pjax::begin(['id' => 'inventory-container']); ?>
 
 <div class="card">
     <div class="card-body">

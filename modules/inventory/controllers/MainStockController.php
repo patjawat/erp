@@ -18,6 +18,7 @@ class MainStockController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
+       
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
@@ -127,9 +128,10 @@ class MainStockController extends Controller
 
     public function actionStore()
     {
-        // $warehouse = Yii::$app->session->get('warehouse');
         $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
-        $searchModel = new StockSearch();
+        $searchModel = new StockSearch([
+            'warehouse_id' =>  isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : ''
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
         $dataProvider->query->andFilterWhere(['warehouse_id' => ($getWarehouse ? $getWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
@@ -229,7 +231,8 @@ class MainStockController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = Stock::findOne($id);
         $checkStock = Stock::findOne($id);
-        if ($quantity > $checkStock->qty) {
+
+        if ($quantity > $checkStock->SumQty()){
             return [
                 'status' => 'error',
                 'container' => '#inventory',
@@ -243,6 +246,8 @@ class MainStockController extends Controller
             ];
         }
     }
+
+    
 
     public function actionDeleteItem($id)
     {

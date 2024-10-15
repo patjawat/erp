@@ -187,6 +187,7 @@ class StockController extends Controller
             'o.category_id AS category_code',
             'w.warehouse_name',
             'o.code',
+            'o.data_json',
             new \yii\db\Expression('@running_total := IF(t.transaction_type = "IN", @running_total + t.qty, @running_total - t.qty) AS total'),
             new \yii\db\Expression('(t.unit_price * t.qty) AS total_price')
         ]);

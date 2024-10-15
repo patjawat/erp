@@ -10,6 +10,8 @@ use yii\helpers\Url;
 use yii\helpers\Json;
 use app\modules\inventory\models\Stock;
 use app\models\Categorise;
+use yii\widgets\Pjax;
+
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$model->SumPice().' บาท';
 ?>
@@ -26,7 +28,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-
+<?php Pjax::begin(['id' => 'inventory-container']); ?>
 <div class="row">
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -90,29 +92,9 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
                     </div>
                 </div>
                 <?=$this->render('view_chart',['model' => $model])?>
-
-                <!-- <div id="inventoryCharts"></div> -->
-                <!-- <div id="showChart">
-
-                    <div class="placeholder-glow">
-                        <div class="d-flex justufy-content-row gap-5">
-                            <?php for ($x = 1; $x <= 12; $x++):?>
-                            <div class="d-flex align-items-end gap-2">
-                                <span class="placeholder" style="width:10px;height:200px"></span>
-                                <span class="placeholder" style="width:10px;height:100px"></span>
-                            </div>
-                            <?php endfor?>
-
-                        </div>
-                    </div>
-
-                </div> -->
             </div>
         </div>
-        <?= $warehouse['warehouse_type'] == 'SUB' ? $this->render('list_store',[
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider
-                    ]) : null?>
+      
 
 
         <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
@@ -163,25 +145,15 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
         </div>
 
         <?php endif?>
-
-
-
-
-
-    </div>
-    <div class="col-12">
-
-
-
     </div>
 
 </div>
 
-<!-- end col-6 -->
-</div>
-
-<div class="row">
-
+<?php Pjax::end(); ?>
+<?= $warehouse['warehouse_type'] == 'SUB' ? $this->render('list_store',[
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider
+                    ]) : null?>
     <?php
 
 use yii\web\View;
@@ -202,14 +174,35 @@ $js = <<< JS
         $('#totalStock').html(res.totalstock)
         $('#OrderConfirm').html(res.confirm)
         $('#showTotalOrder').html(res.totalOrder)
-        // $('#showTotalPrice').html(res.totalPrice)
       }
     });
   }
 
- 
 
- 
-  JS;
+
+
+    $("body").on("click", ".add-cart", function (e) {
+    e.preventDefault();
+    $.ajax({
+        type: "get",
+        url: $(this).attr('href'),
+        dataType: "json",
+        success: function (res) {
+            if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                // success()
+                // $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
+        }
+    });
+});
+
+
+JS;
 $this->registerJS($js, View::POS_END);
 ?>

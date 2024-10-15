@@ -23,7 +23,7 @@ class Vendor extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public $tel,$email,$add,$contact_name,$address;
+    public $phone,$email,$add,$contact_name,$address,$account_name,$account_number,$bank_name;
     public static function tableName()
     {
         return 'categorise';
@@ -36,7 +36,7 @@ class Vendor extends \yii\db\ActiveRecord
     {
         return [
             [['name','code','title'], 'required'],
-            [['data_json'], 'safe'],
+            [['data_json','phone','email','contact_name','address','account_name','account_number','bank_name'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -69,10 +69,13 @@ class Vendor extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
-        $this->tel = isset($this->data_json['tel']) ? $this->data_json['tel'] : '-';
+        $this->phone = isset($this->data_json['phone']) ? $this->data_json['phone'] : '-';
         $this->address = isset($this->data_json['address']) ? $this->data_json['address'] : '-';
         $this->email = isset($this->data_json['email']) ? $this->data_json['email'] : '-';
         $this->contact_name = isset($this->data_json['contact_name']) ? $this->data_json['contact_name'] : '-';
+        $this->account_name = isset($this->data_json['account_name']) ? $this->data_json['account_name'] : '-';
+        $this->account_number = isset($this->data_json['account_number']) ? $this->data_json['account_number'] : '-';
+        $this->bank_name = isset($this->data_json['bank_name']) ? $this->data_json['bank_name'] : '-';
         parent::afterFind();
     }
 }

@@ -81,7 +81,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'header' => 'รายการ',
                     'format' => 'raw',
                     'value' => function ($model) {
-                        return html::a($model->title, ['view', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]);;
+                        return html::a($model->title, ['view', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]);;
                     },
                 ],
                 [
@@ -110,11 +110,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     },
                 ],
                 [
-                    'attribute' => 'tel',
+                    'attribute' => 'phone',
                     'header' => 'โทรศัพท์',
                     'width' => '250px',
                     'value' => function ($model) {
-                        return $model->tel;
+                        return $model->phone;
                     },
                 ],
                 [

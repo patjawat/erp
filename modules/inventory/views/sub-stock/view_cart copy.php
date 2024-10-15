@@ -34,7 +34,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                     <?php foreach($products as $item):?>
                     <tr class="">
                         <td scope="row"><?=$item->product->Avatar();?></td>
-                        <td class="text-center"><?=$item->SumQty()?></td>
+                        <td class="text-center"><?=$item->qty?></td>
                         <td class="text-center"><?=$item->product->unit_name?></td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center flex-row">
@@ -44,7 +44,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                             </div>
                         </td>
                         <td>
-                            <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/main-stock/delete-item','id' => $item->id],['class' => 'delete-item-cart btn btn-sm btn-danger shadow '])?>
+                            <?php // Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/main-stock/delete-item','id' => $item->id],['class' => 'delete-item-cart btn btn-sm btn-danger shadow '])?>
                         </td>
                     </tr>
                     <?php endforeach;?>

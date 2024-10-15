@@ -5,9 +5,12 @@ use yii\helpers\Html;
 use yii\web\View;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
-
+$warehouse = Yii::$app->session->get('warehouse');
+$this->title = $warehouse['warehouse_name'];
 ?>
-
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
@@ -16,10 +19,10 @@ use yii\widgets\Pjax;
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
 <?php
+
 $cart = \Yii::$app->cartMain;
 $products = $cart->getItems();
 
-$warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 ?>
 
 <div class="card">
@@ -38,28 +41,40 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 
 <div class="d-flex flex-wrap">
     <?php foreach($dataProvider->getModels() as $model):?>
-    <div class="p-2 col-2">
-        <div class="card">
-            <?=Html::img($model->product->ShowImg(),['class' => 'card-top'])?>
-            <div class="card-body w-100">
-                <div class="text-end">
-                <?php if($model->qty > 0):?>
-                    <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เลือก',['/inventory/main-stock/add-to-cart','id' => $model->id],['class' => 'add-cart btn btn-sm btn-warning rounded-pill mt--45 zoom-in'])?>
-                    <!-- <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เลือก',['/'],['class' => 'btn btn-sm btn-warning rounded-pill mt--45 zoom-in'])?> -->
-                <?php else:?>
-                    <button type="button" class="btn btn-sm btn-secondary shadow rounded-pill mt--45"><i class="fa-solid fa-triangle-exclamation text-danger"></i> หมด</button>
-                    <?php endif;?>
-                </div>
-                <p class="text-truncate"><?=$model->product->title?></p>
-                <div class="d-flex justify-content-between">
-                    <div class="text-danger">
-                       <span class="fw-semibold">
-                           <?=$model->qty?> 
-                       </span> 
-                        <?=$model->product->unit_name?>
+        <div class="p-2 col-2">
+            <div class="card position-relative">
+
+
+                    <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0"><?=$model->warehouse->warehouse_name?></p>
+                    <?=Html::img($model->product->ShowImg(),['class' => 'card-top'])?>
+                <div class="card-body w-100">
+                       <div class="d-flex justify-content-center align-items-center">
+          
+                        <?php
+                        try {
+                           echo Html::a('<i class="fa-solid fa-cart-plus"></i> '. $model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span>'.' เลือก',['/inventory/main-stock/add-to-cart','id' => $model->getLotQty()['id']],['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
+                        } catch (\Throwable $th) {
+                            //throw $th;
+                        }
+                        ?>
                     </div>
+                    <p class="text-truncate mb-0"><?=$model->product->title?></p>
+                    
+                    <div class="d-flex justify-content-between">
+                        <code class=""><?=$model->product->code?></code>
+                        <div class="">
+                        <span class="text-primary">
+                                ทั้งหมด
+                            </span>
+                            <span class="fw-semibold text-danger">
+                                <?=$model->qty?> 
+                            </span> 
+                            <span class="text-primary">
+                                <?=$model->product->unit_name?>
+                            </span>
+                        </div>
+                       
                     <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?=$model->warehouse->warehouse_name?> </span> -->
-                    <p class="badge rounded-pill text-bg-primary"><?=$model->warehouse->warehouse_name?></p>
                 </div>
             </div>
         </div>
@@ -86,9 +101,6 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 <!-- End CardBody -->
 
 <?php
-$showCartUrl = Url::to(['/inventory/stock-out/show-cart']);
-$deleteItemUrl = Url::to(['/inventory/store/delete']);
-$updateItemUrl = Url::to(['/inventory/store/update']);
 $js = <<< JS
 
 
@@ -124,10 +136,10 @@ $("body").on("keypress", ".update-qty", function (e) {
         
         $.ajax({
             type: "get",
-            url: "/inventory/store/update-qty",
+            url: "/inventory/main-stock/update-cart",
             data: {
                 'id':id,
-                'qty':qty 
+                'quantity':qty 
             },
             dataType: "json",
             success: function (res) {
@@ -140,6 +152,7 @@ $("body").on("keypress", ".update-qty", function (e) {
                 });
                 }
                 ViewMainCar();
+                $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
             }
         });
     }

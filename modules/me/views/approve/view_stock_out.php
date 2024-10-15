@@ -119,7 +119,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <?=isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'?>
                             </td>
-                            <td class="align-middle text-center"><?= $item->data_json['req_qty']?></td>
+                            <td class="align-middle text-center"><?= isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'?></td>
                         </tr>
                         <?php endforeach; ?>
 

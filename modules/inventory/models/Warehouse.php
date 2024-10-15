@@ -130,7 +130,11 @@ class Warehouse extends \yii\db\ActiveRecord
 
     public function SumPice()
     {
-        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock_events WHERE warehouse_id = :warehouse_id AND order_status = 'success'";
+        // 715,043.22
+        // 2600
+        // 7212443.22
+        // 01-00011
+        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id";
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
             ])->queryScalar();

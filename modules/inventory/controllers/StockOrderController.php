@@ -84,9 +84,6 @@ class StockOrderController extends Controller
      */
     public function actionView($id)
     {
-
-
-
         $model = StockEvent::findOne($id);
         return $this->render('view', [
             'model' => $model
@@ -520,6 +517,26 @@ class StockOrderController extends Controller
         }
     }
 
+
+    public function actionCopyItem()
+    {
+        $lot_number = $this->request->get('lot_number');
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = Stock::findOne(['lot_number' => $lot_number]);
+        $sql = "SELECT o.data_json->>'$.receive_date' as receive_date,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
+                LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
+                LEFT JOIN stock s ON s.lot_number = i.lot_number
+                WHERE i.asset_item = '01-00011'
+                AND IFNULL(s.qty,0) > 0
+                AND JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) > '2024-08-01'
+                GROUP BY s.lot_number
+                ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) ASC limit 1;";
+        $query  = Yii::$app->db->createCommand($sql,[':asset_item' => $model->asset_item,':qty' => $model->SumQty()])
+        ->queryOne();
+        return $query;
+        
+    }
 
     /**
      * Deletes an existing StockOut model.

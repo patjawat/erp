@@ -174,6 +174,7 @@ class StockInController extends Controller
         $order_id = $this->request->get('order_id');
         $asset_item = $this->request->get('asset_item');
         $order = StockEvent::findOne($order_id);
+
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'category_id' => $order_id,
@@ -205,7 +206,7 @@ class StockInController extends Controller
                     $convertDate = [
                         'mfg_date' => $model->data_json['mfg_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
                         'exp_date' => $model->data_json['exp_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
-                        'req_qty' => $model->qty,
+                        'req_qty' => $model->qty
                     ];
                     $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
 
@@ -489,6 +490,7 @@ class StockInController extends Controller
                 $storeModel = new Stock();
                 $storeModel->lot_number = $item->lot_number;
             }
+
             $storeModel->asset_item = $item->asset_item;
             $storeModel->qty = $storeModel->qty + $item->qty;
             $storeModel->unit_price = $item->unit_price;
@@ -562,9 +564,12 @@ class StockInController extends Controller
     public function actionProductList()
     {
         $id = $this->request->get('id');
+        \Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = StockEvent::findOne($id);
-        $searchModel = new ProductSearch();
+        $searchModel = new ProductSearch([
+            'category_id' => $model->data_json['asset_type']
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item', 'group_id' => 4]);
         $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);

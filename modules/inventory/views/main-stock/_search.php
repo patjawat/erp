@@ -11,6 +11,7 @@ $getWarehouse = Yii::$app->session->get('selectMainWarehouse');
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+
 ?>
 
 <div class="order-search">
@@ -31,7 +32,6 @@ $getWarehouse = Yii::$app->session->get('selectMainWarehouse');
     <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
                                         'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
                                         'options' => ['placeholder' => 'เลือกคลัง'],
-                                        
                                         'disabled' => ($getWarehouse ?  true : false),
                                         'pluginEvents' => [
                                             "select2:unselect" => "function() { 
