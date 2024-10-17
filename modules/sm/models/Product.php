@@ -113,7 +113,12 @@ class Product extends \yii\db\ActiveRecord
         if ($model) {
             return FileManagerHelper::getImg($model->id);
         } else {
-            return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+            // return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+            $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
+            $type = pathinfo($filepath, PATHINFO_EXTENSION);
+            $data = file_get_contents($filepath);
+            return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            
         }
     }
 
