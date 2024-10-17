@@ -76,7 +76,7 @@ class PoOrderController extends Controller
             }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
