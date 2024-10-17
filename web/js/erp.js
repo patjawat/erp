@@ -5,6 +5,7 @@
 window.onbeforeunload = function () {
   $("#cover-spin").show();
   NProgress.start();
+  
   // $('#modal-dialog').modal('hide');
   // $('#awaitLogin').show();
   // $('#content-container').hide();
@@ -13,14 +14,14 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
-  $('#page-content').hide();
-  $('#page-loadding').show();
+  // $('#page-content').hide();
+  // $('#page-loadding').show();
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
-  $('#page-content').show();
-  $('#page-loadding').hide();
+  // $('#page-content').show();
+  // $('#page-loadding').hide();
 });
 
 // focus เวลาเปิก select2

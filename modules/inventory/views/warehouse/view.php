@@ -30,23 +30,23 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 
 <?php //  Pjax::begin(['id' => 'inventory-container']); ?>
 <div class="row">
-    <div class="col-3">
+    <!-- <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
                 <h2><?=$model->SumPice()?></h2>
-                <!-- <h2 id="showTotalPrice">0</h2> -->
             </div>
             <div class="card-footer border-0">รวมมูลค่าคลัง</div>
         </div>
-
-    </div>
-    <div class="col-3">
+    </div> -->
+    <div class="col-6">
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2 id="totalStock">0</h2>
+                    <!-- <h2 id="totalStock">0</h2> -->
+                     
+                    <h2><?=$model->SumPice()?></h2>
                 </div>
-                <div class="card-footer border-0">วัสดุในสต๊อค</div>
+                <div class="card-footer border-0">สต๊อกวัสดุ</div>
             </div>
         </a>
     </div>

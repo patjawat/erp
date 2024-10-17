@@ -24,8 +24,6 @@ $StockOut = StockEvent::find()
 ])
 ->andFilterWhere(['i.thai_year' => '2568'])
 ->sum(new Expression('i.qty * i.unit_price'));
-
-echo $StockOut;
 $this->title = 'ระบบคลัง';
 ?>
 
