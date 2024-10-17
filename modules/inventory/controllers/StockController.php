@@ -109,6 +109,9 @@ class StockController extends Controller
     public function actionInStock()
     {
         $warehouse = Yii::$app->session->get('warehouse');
+        if(!$warehouse){
+            return $this->redirect(['/incentiry']);
+        }
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
