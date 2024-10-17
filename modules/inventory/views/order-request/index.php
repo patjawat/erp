@@ -59,7 +59,13 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                             <td><?=$item->code?></td>
                             <td class="text-center"><?=$item->thai_year?></td>
                             <td><?=$item->viewCreatedAt()?></td>
-                            <td><?=$item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar']?>
+                            <td>
+                                <?php
+                                try {
+                                   echo $item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar'];
+                                } catch (\Throwable $th) {
+                                }
+                                ?>
                             </td>
                             <td><?=$item->viewChecker()['avatar']?></td>
                             <td class="text-center"><?=$item->viewstatus()?></td>
