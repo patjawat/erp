@@ -26,8 +26,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory', 'enablePushState' => false, 'timeout' => 88888888]); ?>
-<div class="row">
-    <div class="col-8">
+<div class="row <?=$ajax ? 'flex-column-reverse' : null?>">
+    <div class="<?=$ajax ? 'col-12' : 'col-8'?>">
         <div class="card">
             <div class="card-body">
 
@@ -108,14 +108,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 </tbody>
             </table>
-            <?=$totalPrice?>
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
             <?=($model->isPending() >= 1) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกรับเข้า',['/inventory/stock-in/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order','data' => ['title' => 'รับวัสดุเข้าคลัง','text' => 'ยืนยันการรับวัสดุเข้าคลัง']]) : ''?>
     </div>
     </div>
-    <div class="col-4">
+    <div class="<?=$ajax ? 'col-12' : 'col-4'?>">
         <!-- Star Card -->
         <div class="card">
             <div class="card-body">

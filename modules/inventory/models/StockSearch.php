@@ -18,7 +18,7 @@ class StockSearch extends Stock
     {
         return [
             [['id', 'warehouse_id', 'qty', 'created_by'], 'integer'],
-            [['name', 'code', 'asset_item', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
+            [['name', 'code', 'asset_item', 'data_json', 'created_at', 'updated_at','q','asset_type'], 'safe'],
         ];
     }
 
@@ -38,6 +38,7 @@ class StockSearch extends Stock
      *
      * @return ActiveDataProvider
      */
+    
     public function search($params)
     {
         $query = Stock::find();
@@ -56,6 +57,7 @@ class StockSearch extends Stock
             return $dataProvider;
         }
 
+        
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,

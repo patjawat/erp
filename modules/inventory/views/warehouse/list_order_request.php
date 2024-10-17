@@ -10,6 +10,7 @@ use yii\helpers\Html;
         <div class="table-responsive">
             <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
             <?php // Html::a('<i class="fa-solid fa-angles-right"></i> แสดงทั้งหมด',['/inventory/stock-out'],['class' => 'btn btn-light'])?>
             </div>
             <table class="table table-primary">
@@ -41,6 +42,6 @@ use yii\helpers\Html;
        
     </div>
     <div class="card-footer">
-    <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
+   
     </div>
 </div>

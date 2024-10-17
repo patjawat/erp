@@ -40,9 +40,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     </h6>
                     <?php if(Yii::$app->user->can('warehouse')):?>
                     <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])?>
+                    <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])?>
                    <?php else:?>
-                   <?= ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
+                   <?php //  ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
                    <?php endif;?>
                 </div>
                 <table class="table table-striped mt-3">
@@ -92,10 +92,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php endif;?>
                             </td>
                             <td class="text-center">
-                                <?php if($item->data_json['req_qty']>$item->SumLotQty()):?>
-                                <?=Html::a('<i class="fa-solid fa-copy"></i>',['/inventory/stock-order/copy-item','lot_number' => $item->lot_number],['class' => 'btn btn-sm btn-primary copy-item'])?>
+                                <?php if(($item->data_json['req_qty']>$item->SumLotQty()) && $item->CountItem($model->id) < 2):?>
+                                <?=Html::a('<i class="fa-solid fa-copy"></i>',['/inventory/stock-order/copy-item','id' => $model->id,'lot_number' => $item->lot_number],['class' => 'btn btn-sm btn-primary copy-item'])?>
                                 <?php endif;?>
                                 <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/stock-order/delete','id' => $item->id],['class' => 'btn btn-sm btn-danger delete-item'])?>
+                               
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -121,6 +122,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </div>
                     </div>
                 </div>
@@ -172,13 +174,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="col-6"><?= $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] ?></div>
                     <div class="col-6 text-end">
                     <div class="form-group mt-3 d-flex justify-content-end">
-            <?php if($model->order_status == 'await'):?>
-            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-order/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
-            <?php endif;?>
-            <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
-            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout']) : ''?>
-                <?php else:?>
-            <?php endif;?>
+                    <?php if($model->order_status == 'await'):?>
+                    <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก',['/inventory/stock-order/save-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout'])?>
+                    <?php endif;?>
+                    <?php if($model->order_status == 'pending' && $model->data_json['checker_confirm'] == 'Y'):?>
+                            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย',['/inventory/stock-order/check-out','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow checkout']) : ''?>
+                    <?php else:?>
+
+                    <?php endif;?>
         </div>
                     </div>
                 </div>
@@ -316,32 +319,32 @@ $('.confirm-order').click(async function (e) {
   $("body").on("click", ".copy-item", async function (e) {
     e.preventDefault();
 
-  await Swal.fire({
-    title: "ยืนยัน?",
-    text: "บันทึกสั่งจ่ายรายการนี้!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "ใช่, ยืนยัน!",
-    cancelButtonText: "ยกเลิก",
-  }).then(async (result) => {
-    if (result.value == true) {
-      await $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: async function (response) {
-            console.log(response);
-            
-        //   if (response.status == "success") {
-        //     // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-        //     success("บันสำเร็จ!.");
-        //   }
-        },
-      });
-    }
-  });
+        await Swal.fire({
+            title: "ยืนยัน?",
+            text: "บันทึกสั่งจ่ายรายการนี้!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "ใช่, ยืนยัน!",
+            cancelButtonText: "ยกเลิก",
+        }).then(async (result) => {
+            if (result.value == true) {
+            await $.ajax({
+                type: "get",
+                url: $(this).attr('href'),
+                dataType: "json",
+                success: async function (response) {
+                    console.log(response);
+                    
+                  if (response.status == "success") {
+                    await  $.pjax.reload({container:response.container, history:false,url:response.url});
+                    // success("บันสำเร็จ!.");
+                  }
+                },
+            });
+            }
+        });
 
   });
 

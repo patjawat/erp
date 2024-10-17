@@ -36,16 +36,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                     <?= $form->field($model, 'data_json[address]')->textArea(['maxlength' => true])->label('ที่อยู่') ?>
                 </div>
 
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[contact_name]')->textInput(['maxlength' => true])->label('ชื่อผู้ติดต่อ') ?>
-                </div>
-                <div class="col-6">
-                    <div class="d-flex gap-4">
-                        <?= $form->field($model, 'data_json[phone]')->textInput(['maxlength' => true])->label('เบอร์โทร')  ?>
-                        <?= $form->field($model, 'data_json[email]')->textInput(['maxlength' => true])->label('อีเมล')  ?>
-
-                    </div>
-                </div>
+                
                 <div class="col-6">
                     <?= $form->field($model, 'data_json[account_name]')->textInput(['maxlength' => true])->label('ชื่อบัญชี') ?>
                 </div>
@@ -54,11 +45,30 @@ use iamsaint\datetimepicker\Datetimepicker;
                     <?= $form->field($model, 'data_json[bank_name]')->textInput(['maxlength' => true])->label('ชื่อธนาคาร') ?>
                     <?= $form->field($model, 'data_json[account_number]')->textInput(['maxlength' => true])->label('เลขบัญชี') ?>
                 </div>
+                
                 </div>
               
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[contact_name]')->textInput(['maxlength' => true])->label('ชื่อผู้ติดต่อ') ?>
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[contact_position]')->textInput(['maxlength' => true])->label('ตำแหน่ง')  ?>
+
+                </div>
+
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[fax]')->textInput(['maxlength' => true])->label('Fax') ?>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex gap-4">
+                        <?= $form->field($model, 'data_json[phone]')->textInput(['maxlength' => true])->label('เบอร์โทร')  ?>
+                        <?= $form->field($model, 'data_json[email]')->textInput(['maxlength' => true])->label('อีเมล')  ?>
+
+                    </div>
+                </div>
+
                  
                     <!-- End Row On col-6 -->
-                    <?= $form->field($model, 'data_json[fax]')->textInput(['maxlength' => true])->label('Fax') ?>
            
           
 

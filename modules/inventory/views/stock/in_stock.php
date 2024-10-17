@@ -13,6 +13,7 @@ use yii\widgets\Pjax;
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -24,15 +25,22 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
-
+<?php
+$cart = Yii::$app->cartSub;
+$products = $cart->getItems();
+?>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary">
                     <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
-            <div class="d-flex">
+                    <?=$this->render('_search', ['model' => $searchModel]); ?>
+                    <div class="d-flex">
+                    <?=Html::a('<button type="button" class="btn btn-primary rounded-pill">
+                    <i class="fa-solid fa-cart-plus"></i> เลือก <span class="badge text-bg-danger">'.$cart->getCount().'</span> รายการ
+                    </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
 
-                <?=$this->render('_search', ['model' => $searchModel]); ?>
+                <?php // $this->render('_search', ['model' => $searchModel]); ?>
                 <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light','data' => ['pjax' => 0]]) ?>
             </div>
         </div>
@@ -44,6 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col" class="text-center">คงเหลือ</th>
                     <th scope="col" class="text-center">หน่วย</th>
                     <th scope="col" class="text-end">มูลค่า</th>
+                    <th scope="col" class="text-end">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle">
@@ -59,6 +68,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-end">
                         <span class="fw-semibold"><?=$item->SumPriceByItem()?></span>
                     </td>
+                    <td class="text-end">
+                        <?php if($item->SumQty() > 0):?>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก',['/inventory/sub-stock/add-to-cart','id' => $item->id],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>
+                   <?php else:?>
+                    <button type="button" class="btn btn-sm btn-primary shadow rounded-pill" disabled><i class="fa-solid fa-circle-plus"></i> เลือก</button>
+                    <?php endif?>
+                </td>
                 </tr>
                 <?php endforeach;?>
             </tbody>
@@ -78,3 +94,57 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     </div>
     <?php Pjax::end(); ?>
+
+    <?php
+
+use yii\web\View;
+
+$StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
+$OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
+$js = <<< JS
+  getStoreInWarehouse()
+
+  // รายการขอเบิก
+  async function getStoreInWarehouse(){
+    await $.ajax({
+      type: "get",
+      url: "$OrderRequestInWarehouseUrl",
+      dataType: "json",
+      success: function (res) {
+        $('#showOrderRequestInWarehouse').html(res.content)
+        $('#totalStock').html(res.totalstock)
+        $('#OrderConfirm').html(res.confirm)
+        $('#showTotalOrder').html(res.totalOrder)
+      }
+    });
+  }
+
+
+
+
+    $("body").on("click", ".add-sub-cart", function (e) {
+    e.preventDefault();
+    $.ajax({
+        type: "get",
+        url: $(this).attr('href'),
+        dataType: "json",
+        success: function (res) {
+            if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                // success()
+                $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
+        }
+    });
+});
+
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>
+

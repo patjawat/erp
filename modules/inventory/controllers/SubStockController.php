@@ -32,12 +32,22 @@ class SubStockController extends \yii\web\Controller
                 'warehouse_name' => $warehouse->warehouse_name,
             ]);
         }
+
+        $checkStock = Stock::findOne($id);
+        if($model->qty > $checkStock->qty){
+            return [
+                'status' => 'error',
+                'container' => '#inventory-container',
+               ];
+           }else{
+
         $cart->create($model, 1);
 
         return [
             'status' => 'success',
-            'container' => '#inventory',
+            'container' => '#inventory-container',
         ];
+    }
     }
 
 
@@ -84,18 +94,43 @@ class SubStockController extends \yii\web\Controller
         if($quantity > $checkStock->qty){
             return [
                 'status' => 'error',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
                ];
            }else{
             \Yii::$app->cartSub->update($model,$quantity);
             return [
-                'container' => '#inventory',
+                'container' => '#inventory-container',
                 'status' => 'success'
             ];
            }
     
     }
 
+
+ //กำหนดจำนวนที่จ่ายให้
+ public function actionUpdateQty()
+ {
+     Yii::$app->response->format = Response::FORMAT_JSON;
+     $id = $this->request->get('id');
+     $qty = $this->request->get('qty');
+     $checkStock = Stock::findOne($id);
+     if($qty > $checkStock->qty){
+         return [
+             'status' => 'error',
+             'container' => '#inventory-container',
+            ];
+        }else{
+            //  $model->qty = $qty;
+            \Yii::$app->cartSub->update($checkStock,$qty);
+             Yii::$app->response->format = Response::FORMAT_JSON;
+             return [
+                 'status' => 'success',
+                 'container' => '#inventory-container',
+             ];
+
+     }
+         
+ }
 
     public function actionDeleteItem($id)
     {
@@ -104,12 +139,12 @@ class SubStockController extends \yii\web\Controller
             \Yii::$app->cartSub->delete($product);
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'container' => '#inventory',
+                'container' => '#inventory-container',
                 'status' => 'success'
             ];
         }
     }
-
+    
     //บันทึกเบิก
     public function actionCheckOut()
     {
@@ -118,23 +153,91 @@ class SubStockController extends \yii\web\Controller
         $warehouse = \Yii::$app->session->get('warehouse');
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-            'warehouse_id' => $warehouse['warehouse_id'],
-            'name' => 'order',
-            'transaction_type' => 'OUT'
+           
         ]);
-        $model->save();
-        foreach($items as $item){
-            $item = new StockEvent([
-                'name' => 'order_item',
-                'transaction_type' => 'OUT',
-                'warehouse_id' => $warehouse['warehouse_id'],
-                'qty' => $item->getQuantity(),
-                'unit_price' => $item->price,
-                'lot_number' => $item->lot_number,
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            // Save Order
+            $model->warehouse_id = $warehouse['warehouse_id'];
+            $model->name = 'order';
+            $model->transaction_type = 'OUT';
+            $model->save(false);
+
+            // ถ้า Save Order เสร็จ ให้ save Items
+            if($model->save(false)){
+                foreach($items as $item){
+                    $item = new StockEvent([
+                        'name' => 'order_item',
+                        'transaction_type' => 'OUT',
+                        'warehouse_id' => $warehouse['warehouse_id'],
+                        'qty' => $item->getQuantity(),
+                        'unit_price' => $item->unit_price,
+                        'lot_number' => $item->lot_number,
+                        'asset_item' => $item->asset_item,
+                    ]);
+                    //ถ้า save icon เสร็จให้ update stock
+                    if($item->save(false))
+                    {
+                        $stock = Stock::findOne(['warehouse_id' => $item->warehouse_id,'asset_item' => $item->asset_item,'lot_number' => $item->lot_number]);
+                        if($stock){
+                            $stock->qty =  ($stock->qty - $item->qty);
+                            $stock->save(false);
+                        }
+                    }
+                }
+                $cart->checkOut(false);
+                return [
+                    'container' => '#inventory-container',
+                    'status' => 'success'
+                ];
+            }
+
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
             ]);
         }
-        
     }
+
+
+     // ตรวจสอบความถูกต้อง
+     public function actionCreateValidator()
+     {
+         Yii::$app->response->format = Response::FORMAT_JSON;
+         $model = new StockEvent();
+ 
+         $requiredName = "ต้องระบุ";
+         if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['note'])) {
+                $model->data_json['note'] == '' ? $model->addError('data_json[note]', $requiredName) : null;
+            }
+ 
+         }
+         foreach ($model->getErrors() as $attribute => $errors) {
+             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+         }
+         if (!empty($result)) {
+             return $this->asJson($result);
+         }
+     }
+
+
 
 
 

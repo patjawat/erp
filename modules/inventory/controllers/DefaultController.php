@@ -25,6 +25,7 @@ class DefaultController extends Controller
     public function actionIndex()
     {
         Yii::$app->session->remove('warehouse');
+        Yii::$app->session->remove('selectMainWarehouse');
         \Yii::$app->cart->checkOut(false);
         $searchModel = new StockEventSearch([
             'thai_year' => AppHelper::YearBudget()
@@ -79,15 +80,12 @@ class DefaultController extends Controller
     public function actionProductSummary()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $sql = "SELECT pt.title,count(s.id) as total FROM stock s 
-            INNER JOIN categorise p ON p.code = s.asset_item AND p.name = 'asset_item'
-            INNER JOIN categorise pt ON pt.code = p.category_id AND pt.name = 'asset_type'
-            GROUP BY pt.code";
+        $sql = "SELECT pt.title,FORMAT(sum(s.qty*s.unit_price),2) as total FROM stock s INNER JOIN categorise p ON p.code = s.asset_item AND p.name = 'asset_item' INNER JOIN categorise pt ON pt.code = p.category_id AND pt.name = 'asset_type' GROUP BY pt.code";
         $querys = Yii::$app->db->createCommand($sql)->queryAll();
         $series = [];
         $label = [];
         foreach ($querys as $item) {
-            $series[] = (int)$item['total'];
+            $series[] = $item['total'];
             $label[] = $item['title'];
         }
 

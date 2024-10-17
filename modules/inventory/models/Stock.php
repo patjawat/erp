@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\models;
 
+use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\sm\models\Product;
@@ -31,6 +32,7 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
     use ItemTrait;
 
     public $total;
+    public $asset_type;
 
     public static function tableName()
     {
@@ -58,7 +60,7 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
     {
         return [
             [['warehouse_id', 'qty', 'created_by'], 'integer'],
-            [['data_json', 'created_at', 'updated_at', 'unit_price', 'q', 'total'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'unit_price', 'q', 'total','asset_type'], 'safe'],
             [['name', 'code'], 'string', 'max' => 50],
             [['asset_item'], 'string', 'max' => 255],
         ];
@@ -142,6 +144,13 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
         return StockEvent::find()->where(['name' => 'order_item', 'asset_item' => $this->asset_item, 'warehouse_id' => $this->warehouse_id])->all();
     }
 
+    public function ListProductType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->all(), 'code', 'title');
+    }
+
+
+
     public function SumQty()
     {
         // $warehouse = \Yii::$app->session->get('warehouse');
@@ -186,6 +195,8 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
         ->queryAll();
     }
 
+
+
     public function listWarehouseMe()
     {
         try {
@@ -207,10 +218,13 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
                 LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
                 LEFT JOIN stock s ON s.lot_number = i.lot_number
                 WHERE i.asset_item = :asset_item AND IFNULL(s.qty,0) > 0
+                AND s.warehouse_id = :warehouse_id
                 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) ASC limit 1;";
-        $query = Yii::$app->db->createCommand($sql,[
-            ':asset_item' => $this->asset_item
-        ])->queryOne();
-        return $query;
+                
+                $query = Yii::$app->db->createCommand($sql,[
+                    ':asset_item' => $this->asset_item,
+                    ':warehouse_id' => $this->warehouse_id
+                ])->queryOne();
+                return $query;
     }
 }

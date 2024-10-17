@@ -36,7 +36,7 @@ use yii\helpers\Html;
 
         <tr>
         <td class="text-end">ผู้รับใบสั่งซื้อ</td>
-        <td colspan="3"> <?= isset($model->data_json['po_recipient']) ? $model->data_json['po_recipient'] : '' ?> (<?= isset($model->data_json['po_recipient_position']) ? $model->data_json['po_recipient_position'] : '' ?>)
+        <td colspan="3"> <?= isset($model->data_json['contact_name']) ? $model->data_json['contact_name'] : '' ?> (<?= isset($model->data_json['contact_position']) ? $model->data_json['contact_position'] : '' ?>)
         </tr>
 
     </tbody>

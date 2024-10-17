@@ -477,8 +477,8 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('deliveryDay', $model->deliveryDay());
         $templateProcessor->setValue('project_id', isset($model->data_json['pq_project_id']) ? $model->data_json['pq_project_id'] : ''); //เลขที่โครงการ
         $templateProcessor->setValue('delivery', Yii::$app->thaiFormatter->asDate($model->data_json['delivery_date'], 'long'));
-        $templateProcessor->setValue('recipient', $model->data_json['po_recipient']);
-        $templateProcessor->setValue('recipient_position', $model->data_json['po_recipient_position']);
+        $templateProcessor->setValue('recipient', $model->data_json['contact_name']);
+        $templateProcessor->setValue('recipient_position', $model->data_json['contact_position']);
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('province', $this->GetInfo()['province']);
         $templateProcessor->setValue('director_fullname', SiteHelper::viewDirector()['fullname']);  // ชื่อผู้บริหาร ผอ.

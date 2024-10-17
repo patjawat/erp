@@ -28,7 +28,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'inventory-container']); ?>
+<?php //  Pjax::begin(['id' => 'inventory-container']); ?>
 <div class="row">
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -99,49 +99,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 
         <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
         <div id="showOrderRequestInWarehouse" style="min-height: 463px;">
-            <div class="placeholder-glow">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="placeholder col-6"></h6>
-                            </div>
-                            <table class="table table-primary">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">รายการ</th>
-                                        <th>คลัง</th>
-                                        <th>สถานะ</th>
-                                        <th style="width:100px">ดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php for ($x = 1; $x <= 2; $x++):?>
-                                    <tr class="">
-                                        <td>
-                                            <div class="d-flex">
-                                                <?= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white placeholder']) ?>
-                                                <div class="avatar-detail text-truncate d-flex flex-column">
-                                                    <h6 class="mb-1 fs-13 placeholder"></h6>
-                                                    <p class="text-muted mb-0 fs-13 placeholder col-6"></p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><span class="placeholder col-12"></span></td>
-                                        <td><span class="placeholder col-12"></span></td>
-                                        <td class="text-center">
-                                            <a class="btn btn-light placeholder" href="#"></a>
-                                        </td>
-                                    </tr>
-                                    <?php endfor;?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <a class="btn btn-sm btn-light rounded-pill placeholder"
-                            href="/inventory/warehouse/list-order-request">แสดงท้ังหมด</a>
-                    </div>
-                </div>
-            </div>
+            
         </div>
 
         <?php endif?>
@@ -149,20 +107,14 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 
 </div>
 
-<?php Pjax::end(); ?>
-<?= $warehouse['warehouse_type'] == 'SUB' ? $this->render('list_store',[
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider
-                    ]) : null?>
-    <?php
+
+
+<?php
 
 use yii\web\View;
-
-$StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
-$OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
+$OrderRequestInWarehouseUrl = Url::to(['/inventory/order-request']);
 $js = <<< JS
   getStoreInWarehouse()
-
   // รายการขอเบิก
   async function getStoreInWarehouse(){
     await $.ajax({
@@ -171,38 +123,16 @@ $js = <<< JS
       dataType: "json",
       success: function (res) {
         $('#showOrderRequestInWarehouse').html(res.content)
-        $('#totalStock').html(res.totalstock)
-        $('#OrderConfirm').html(res.confirm)
-        $('#showTotalOrder').html(res.totalOrder)
+        // $('#totalStock').html(res.totalstock)
+        // $('#OrderConfirm').html(res.confirm)
+        // $('#showTotalOrder').html(res.totalOrder)
       }
     });
   }
-
-
-
-
-    $("body").on("click", ".add-cart", function (e) {
-    e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: function (res) {
-            if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                }
-                // success()
-                // $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-        }
-    });
-});
-
-
-JS;
+ 
+  JS;
 $this->registerJS($js, View::POS_END);
 ?>
+
+    <?php// Pjax::end(); ?>
+  

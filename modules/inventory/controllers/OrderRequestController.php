@@ -7,6 +7,7 @@ use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\Warehouse;
 use app\modules\sm\models\Product;
 use app\components\AppHelper;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -27,12 +28,34 @@ class OrderRequestController extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
-        
-        // return $this->render('@app/modules/inventory/views/stock-order/index', [
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', 'thai_year', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
         ]);
+        // return $this->render('@app/modules/inventory/views/stock-order/index', [
+      
+
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'ajax' => true
+            ])
+            ];
+        } else {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'ajax' => false
+            ]);
+        }
+
     }
     }
 

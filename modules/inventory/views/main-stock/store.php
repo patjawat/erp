@@ -52,7 +52,7 @@ $products = $cart->getItems();
           
                         <?php
                         try {
-                           echo Html::a('<i class="fa-solid fa-cart-plus"></i> '. $model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span>'.' เลือก',['/inventory/main-stock/add-to-cart','id' => $model->getLotQty()['id']],['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
+                            echo Html::a('<i class="fa-solid fa-cart-plus"></i> '. $model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span>'.' เลือก',['/inventory/main-stock/add-to-cart','id' => $model->getLotQty()['id']],['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
                         } catch (\Throwable $th) {
                             //throw $th;
                         }
@@ -63,15 +63,9 @@ $products = $cart->getItems();
                     <div class="d-flex justify-content-between">
                         <code class=""><?=$model->product->code?></code>
                         <div class="">
-                        <span class="text-primary">
-                                ทั้งหมด
-                            </span>
-                            <span class="fw-semibold text-danger">
-                                <?=$model->qty?> 
-                            </span> 
-                            <span class="text-primary">
-                                <?=$model->product->unit_name?>
-                            </span>
+                        <span class="text-primary">ทั้งหมด</span>
+                            <span class="fw-semibold text-danger"><?=$model->SumQty()?></span> 
+                            <span class="text-primary"><?=$model->product->unit_name?></span>
                         </div>
                        
                     <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?=$model->warehouse->warehouse_name?> </span> -->

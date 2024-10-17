@@ -155,9 +155,24 @@ class StockInController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                    'ajax' => true
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+                'ajax' => false
+            ]);
+        }
+
     }
 
     /**

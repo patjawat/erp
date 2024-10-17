@@ -27,34 +27,29 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-
-<?php Pjax::begin(); ?>
-<?php // echo $this->render('_search', ['model' => $searchModel]); 
-  ?>
+<?php  Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true]); ?>
 <div class="row">
-
-
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary">
-                            <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-                    <div>
-                        <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
-                                เลือกรายการ</button> -->
+                        <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
+                        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                        <div>
+                            <?php echo $ajax ? Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]): null ?>
                     </div>
 
                 </div>
                 <table class="table table-striped table-sm">
                     <thead>
                         <tr>
-                            <th style="width:120px">รหัส</th>
+                            <th style="width:110px">รหัส</th>
                             <th  style="width:120px" class="text-center">ปีงบประมาณ</th>
                             <th style="width:200px">วันที่</th>
-                            <th style="width:300px" scope="col">ผู้เบิก</th>
-                            <th style="width:300px">ผู้ตรวจสอบ</th>
-                            <th class="text-center">สถานะ</th>
+                            <th scope="col">ผู้เบิก</th>
+                            <th >ผู้ตรวจสอบ</th>
+                            <th class="text-center" style="width:300px">สถานะ</th>
                             <th style="width:100px">ดำเนินการ</th>
                         </tr>
                     </thead>

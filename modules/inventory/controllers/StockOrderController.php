@@ -52,7 +52,6 @@ class StockOrderController extends Controller
         $warehouse = Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','from_warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
@@ -85,6 +84,14 @@ class StockOrderController extends Controller
     public function actionView($id)
     {
         $model = StockEvent::findOne($id);
+        return $this->render('view', [
+            'model' => $model
+        ]);
+    }
+
+    public function actionViewCode($id)
+    {
+        $model = StockEvent::findOne(['code' => $id,'name' => 'order']);
         return $this->render('view', [
             'model' => $model
         ]);
@@ -223,6 +230,38 @@ class StockOrderController extends Controller
     }
 
 
+    public function actionCancelOrder($id)
+    {
+        $model = $this->findModel($id);
+        $model->order_status = 'cancel';
+        $oldObj = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            if($model->save(false)){
+                 StockEvent::updateAll(['order_status' => 'cancel'], ['category_id' => $model->order_status]);
+                  return $this->redirect(['/inventory/order-request']);
+            }
+            // return $model;
+           
+        }
+
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_cancel', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_cancel', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
     //กำหนดจำนวนที่จ่ายให้
     public function actionUpdateQty($id)
     {
@@ -309,6 +348,28 @@ class StockOrderController extends Controller
         }
     }
 
+
+     // ตรวจสอบความถูกต้อง
+     public function actionCancelOrderValidator()
+     {
+         Yii::$app->response->format = Response::FORMAT_JSON;
+         $model = new StockEvent();
+ 
+         $requiredName = "ต้องระบุ";
+         if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['cancel_note'])) {
+                $model->data_json['cancel_note'] == '' ? $model->addError('data_json[cancel_note]', $requiredName) : null;
+            }
+ 
+         }
+         foreach ($model->getErrors() as $attribute => $errors) {
+             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+         }
+         if (!empty($result)) {
+             return $this->asJson($result);
+         }
+     }
 
 
 
@@ -520,21 +581,45 @@ class StockOrderController extends Controller
 
     public function actionCopyItem()
     {
+        $id = $this->request->get('id');
         $lot_number = $this->request->get('lot_number');
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $model = Stock::findOne(['lot_number' => $lot_number]);
-        $sql = "SELECT o.data_json->>'$.receive_date' as receive_date,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
+        $order = StockEvent::findOne($id);
+        $stock = Stock::findOne(['lot_number' => $lot_number]);
+
+        $sql = "SELECT i.asset_item,o.data_json->>'$.receive_date' as receive_date,s.unit_price,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
                 LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
                 LEFT JOIN stock s ON s.lot_number = i.lot_number
-                WHERE i.asset_item = '01-00011'
+                WHERE i.asset_item = :asset_item
                 AND IFNULL(s.qty,0) > 0
-                AND JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) > '2024-08-01'
+                AND i.lot_number <> :lot_number
                 GROUP BY s.lot_number
                 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) ASC limit 1;";
-        $query  = Yii::$app->db->createCommand($sql,[':asset_item' => $model->asset_item,':qty' => $model->SumQty()])
+
+        $query  = Yii::$app->db->createCommand($sql,[':lot_number' => $lot_number,'asset_item' => $stock->asset_item])
         ->queryOne();
-        return $query;
+
+        $model = new StockEvent([
+            'name' => 'order_item',
+            'category_id' => $order->id,
+            'transaction_type' => 'OUT',
+            'lot_number' => $query['lot_number'],
+            'warehouse_id' => $order->warehouse_id,
+            'order_status' => 'pending',
+            'thai_year' => $order->thai_year,
+            'unit_price' => $query['unit_price'],
+            'asset_item' =>  $query['asset_item'],
+            'data_json' => [
+                'req_qty' => ''
+            ]
+        ]);
+      if($model->save(false)){
+        return [
+            'status' => 'success',
+            'container' => '#inventory',
+        ];
+      }
         
     }
 

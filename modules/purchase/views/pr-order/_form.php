@@ -142,6 +142,12 @@ $resultsJs = <<< JS
             'pluginEvents' => [
                 "select2:unselecting" => "function() { 
                     $('#order-data_json-vendor_address').val('')
+                    $('#order-data_json-vendor_phone').val('')
+                    $('#order-data_json-vendor_tax').val('')
+                    $('#order-data_json-account_name').val('')
+                    $('#order-data_json-account_number').val('')
+                    $('#order-data_json-contact_name').val('')
+                    $('#order-data_json-contact_position').val('')
                 }",
                 'select2:select' => "function(result) { 
                                     var data =  $(this).select2('data')[0].text;
@@ -157,6 +163,8 @@ $resultsJs = <<< JS
                                             $('#order-data_json-vendor_tax').val(res.code)
                                             $('#order-data_json-account_name').val(res.data_json.account_name)
                                             $('#order-data_json-account_number').val(res.data_json.account_number)
+                                            $('#order-data_json-contact_name').val(res.data_json.contact_name)
+                                            $('#order-data_json-contact_position').val(res.data_json.contact_position)
                                         }
                                     });
 
@@ -210,6 +218,13 @@ try {
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
 
+<?= $form->field($model, 'data_json[vendor_address]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_phone]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_tax]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[account_name]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[account_number]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[contact_name]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[contact_position]')->textInput()->label(false) ?>
 <?= $form->field($model, 'data_json[item_type]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>

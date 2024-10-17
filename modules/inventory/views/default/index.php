@@ -10,7 +10,22 @@ use yii\helpers\Url;
 use yii\helpers\Json;
 use app\modules\inventory\models\Stock;
 use app\models\Categorise;
+use app\modules\inventory\models\StockEvent;
+use yii\db\Expression;
 
+$StockOut = StockEvent::find()
+->alias('i')
+->leftJoin(['o' => 'stock_events'], 'i.category_id = o.id AND i.name = :order', [':order' => 'order'])
+->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
+->where([
+    'i.name' => 'order_item',
+    'i.transaction_type' => 'OUT',
+    'w.warehouse_type' => 'SUB',
+])
+->andFilterWhere(['i.thai_year' => '2568'])
+->sum(new Expression('i.qty * i.unit_price'));
+
+echo $StockOut;
 $this->title = 'ระบบคลัง';
 ?>
 
@@ -60,7 +75,7 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">รับวัสดุ</h6>
+                                    <h6 class="mb-0 font-size-15">มูลค่ารวม</h6>
                                 </div>
 
                                 <div class="flex-shrink-0">
@@ -85,7 +100,7 @@ $this->title = 'ระบบคลัง';
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">มูลค่าการรับวัสดุทั้งหมด</p>
+                                        <p class="text-muted mb-0 text-truncate">รวมมูลค่าวัสดุคงเหลือ</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 
@@ -109,7 +124,7 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">จ่ายวัสดุ</h6>
+                                    <h6 class="mb-0 font-size-15">ใช้ไป</h6>
                                 </div>
 
                                 <div class="flex-shrink-0">
@@ -133,7 +148,7 @@ $this->title = 'ระบบคลัง';
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">มูลค่าการจ่ายวัสดุทั้งหมด</p>
+                                        <p class="text-muted mb-0 text-truncate">รวมมูลค่าที่ใช้ไป</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 
@@ -267,8 +282,8 @@ $this->title = 'ระบบคลัง';
                      
                     </div>
                 </div>
-                <div id="saleing-categories"
-                    data-colors="[&quot;#1f58c7&quot;, &quot;#4976cf&quot;,&quot;#6a92e1&quot;, &quot;#e6ecf9&quot;]">
+                <!-- <div id="saleing-categories" data-colors="[&quot;#1f58c7&quot;, &quot;#4976cf&quot;,&quot;#6a92e1&quot;, &quot;#e6ecf9&quot;]"> -->
+                <div id="saleing-categories" data-colors="[&quot;#FE9800&quot;, &quot;#1770B2&quot;,&quot;#1770B2&quot;, &quot;#0A67AD&quot;, &quot;#0F6AAF&quot;]">
                 </div>
             </div>
         </div>
@@ -288,12 +303,9 @@ $this->title = 'ระบบคลัง';
   // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 
   $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
-  // $chartUrl = Url::to(['/inventory/stock/view-chart-total']);
   $productSummeryUrl = Url::to(['/inventory/default/product-summary']);
   $wareHouseUrl = Url::to(['/inventory/default/warehouse']);
   $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
-  // $chartSummeryIn = Json::encode($chartSummary['in']);
-  // $chartSummeryOut = Json::encode($chartSummary['out']);
   $js = <<< JS
   // getPendingOrder()
   // getlistOrderRequest()
@@ -379,28 +391,33 @@ $this->title = 'ระบบคลัง';
         url: "$productSummeryUrl",
         dataType: "json",
         success: function (res) {
-
+            const rawData = res.series;
+            const series = rawData.map(val => parseFloat(val.replace(/,/g, '')));
   options = {
       chart: {
         height: 350,
         type: "donut"
       },
-      series: res.series,
+      series: series,
       labels: res.label,
       colors: barchartColors = getChartColorsArray("saleing-categories"),
       plotOptions: {
         pie: {
           startAngle: 25,
           donut: {
+           
             size: "72%",
             labels: {
               show: !0,
               total: {
                 show: !0,
+                fontFamily: "Prompt, sans-serif",
                 label: "วัสดุทั้งหมด",
                 fontSize: "22px",
-                fontFamily: "Montserrat,sans-serif",
-                fontWeight: 600
+                fontWeight: 600,
+                formatter: function (w) {
+              return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(w.globals.seriesTotals.reduce((a, b) => a + b, 0));
+            }
               }
             }
           }
@@ -415,7 +432,13 @@ $this->title = 'ระบบคลัง';
         fontSize: "14px",
         offsetX: 0
       },
-      dataLabels: {
+    //   stroke: {
+    //     width: 4,
+    //     colors: ['#ffffff'],
+    //      lineCap: 'round'
+    // },
+    
+        dataLabels: {
         style: {
           fontSize: "11px",
           fontFamily: "Montserrat,sans-serif",
@@ -432,6 +455,13 @@ $this->title = 'ระบบคลัง';
           opacity: 1
         }
       },
+      tooltip: {
+    y: {
+      formatter: function (val) {
+        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+      }
+    },
+    },
       responsive: [{
         breakpoint: 600,
         options: {
@@ -450,6 +480,8 @@ $this->title = 'ระบบคลัง';
   }
       });
     }
+ 
+
  
   JS;
   $this->registerJS($js, View::POS_END);

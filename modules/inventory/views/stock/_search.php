@@ -1,5 +1,6 @@
 <?php
 
+use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -18,6 +19,26 @@ use yii\widgets\ActiveForm;
     ]); ?>
     <div class="d-flex gap-3">
         <?= $form->field($model, 'q')->label(false) ?>
+        <?php
+  
+  echo $form->field($model, 'asset_type')->widget(Select2::classname(), [
+      'data' => $model->ListProductType(),
+      'options' => ['placeholder' => 'เลือกประเภทวัสดุ',
+  ],
+      'pluginOptions' => [
+          'allowClear' => true,
+          'width' => '200px',
+        ],
+        'pluginEvents' => [
+            'select2:select' => "function(result) { 
+                $(this).submit()
+                }",
+                'select2:unselect' => "function(result) { 
+                    $(this).submit()
+                    }",
+            ],
+            ])->label(false);
+            ?>
         <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light']) ?>
         <!-- <div class="btn-group">
             <?php Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>

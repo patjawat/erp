@@ -90,9 +90,20 @@ $this->params['breadcrumbs'][] = $this->title;
       }
       ?></th>
       <td><?=$item['thai_year']?></td>
-      <td><?=$item['data_json']['receive_date']?></td>
+      <td>
+        <?php
+        try {
+          // Yii::$app->thaiFormatter->asDateTime($item->created_at, 'short')
+          echo $item->created_at;
+        } catch (\Throwable $th) {
+          //throw $th;
+        }
+      ?>
+      </td>
       <td><?=$item['lot_number']?></td>
-      <td><?=$item['code']?></td>
+      <td>
+      <?=Html::a($item['code'],['/inventory/stock-in/view','id' =>$item['category_id']],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>  
+</td>
       <td><?=$item['warehouse_name']?></td>
       <td class="text-end"><?php
       try {

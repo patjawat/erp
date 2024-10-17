@@ -135,6 +135,7 @@ class MainStockController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
         $dataProvider->query->andFilterWhere(['warehouse_id' => ($getWarehouse ? $getWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
+        $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
 
         $dataProvider->query->andFilterWhere([
             'or',
