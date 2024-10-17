@@ -23,7 +23,7 @@ use yii\web\View;
     ]); ?>
 
     <?= $form->field($model, 'data_json[cancel_note]')->textArea(['rows' => 5])->label('ระบุเหตุผล');?>
-    <?= $form->field($model, 'order_status')->textInput()->label(false);?>
+    <?= $form->field($model, 'order_status')->hiddenInput()->label(false);?>
     <div class="form-group mt-3 d-flex justify-content-center">
         <span class="btn btn-primary rounded-pill shadow form-submit"><i class="bi bi-check2-circle"></i> บันทึก</span>
         <?php Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>

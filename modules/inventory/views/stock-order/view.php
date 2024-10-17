@@ -118,7 +118,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
                     <!-- <h6><?= Html::encode($this->title) ?></h6> -->
-                     <?=$model->CreateBy('<code>ผู้เบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$model->viewCreated())['avatar']?>
+                     <?php
+                     try {
+                         $model->CreateBy('<code>ผู้เบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$model->viewCreated())['avatar'];
+                     } catch (\Throwable $th) {
+                        //throw $th;
+                     }
+                     ?>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
