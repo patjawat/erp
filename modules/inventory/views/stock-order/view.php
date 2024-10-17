@@ -9,7 +9,11 @@ $warehouse = Yii::$app->session->get('warehouse');
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
 
-$this->title = 'ร้องขอจาก'.$model->fromWarehouse->warehouse_name;
+try {
+    $this->title = 'ร้องขอจาก'.$model->fromWarehouse->warehouse_name;
+} catch (\Throwable $th) {
+     $this->title = 'ไม่ระบุคลังที่ร้องขอ';
+}
 $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
