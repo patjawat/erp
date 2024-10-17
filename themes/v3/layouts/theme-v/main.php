@@ -87,8 +87,14 @@ $moduleId = Yii::$app->controller->module->id;
                 <div class="page-content">
                     <?= $this->render('page_title') ?>
                     <div class="page-content-wrapper mt--45">
-                        <?= $this->render('content', ['content' => $content]) ?>
+						<div id="page-content">
+							<?= $this->render('content', ['content' => $content]) ?>
+						</div>
+						<div id="page-loadding" style="display: none;">
+						<?=$this->render('loadding')?>
                     </div>
+                    </div>
+				
                 </div>
             </div>
             <?= $this->render('footer') ?>
