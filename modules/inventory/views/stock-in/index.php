@@ -31,7 +31,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => false, 'timeout' => 88888888]); ?>
+<?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <?php
 // นับจำนวน order ที่รอรับเข้าคลัง
 $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
