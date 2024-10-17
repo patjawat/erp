@@ -1,28 +1,14 @@
-->select([
-        'thai_year',
-        'w.warehouse_type',
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 10 THEN i.qty * i.unit_price ELSE 0 END) as in10"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 10 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out10"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 11 THEN i.qty * i.unit_price ELSE 0 END) as in11"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 11 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out11"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 12 THEN i.qty * i.unit_price ELSE 0 END) as in12"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 12 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out12"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 1 THEN i.qty * i.unit_price ELSE 0 END) as in1"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 1 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out1"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 2 THEN i.qty * i.unit_price ELSE 0 END) as in2"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 2 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out2"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 3 THEN i.qty * i.unit_price ELSE 0 END) as in3"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 3 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out3"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 4 THEN i.qty * i.unit_price ELSE 0 END) as in4"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 4 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out4"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 5 THEN i.qty * i.unit_price ELSE 0 END) as in5"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 5 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out5"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 6 THEN i.qty * i.unit_price ELSE 0 END) as in6"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 6 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out6"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 7 THEN i.qty * i.unit_price ELSE 0 END) as in7"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 7 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out7"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 8 THEN i.qty * i.unit_price ELSE 0 END) as in8"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 8 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out8"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 9 THEN i.qty * i.unit_price ELSE 0 END) as in9"),
-        new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 9 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out9"),
-    ])
+docker exec -it dansai yii migrate --interactive=0
+docker exec -it ubonrat yii migrate --interactive=0
+docker exec -it nampong yii migrate --interactive=0
+docker exec -it umphang yii migrate --interactive=0
+docker exec -it lomkao yii migrate --interactive=0
+docker exec -it pua yii migrate --interactive=0
+docker exec -it thatphanom yii migrate --interactive=0
+docker exec -it yaha yii migrate --interactive=0
+docker exec -it denchai yii migrate --interactive=0
+docker exec -it phakhao yii migrate --interactive=0
+docker exec -it thawangpha yii migrate --interactive=0
+docker exec -it chombung yii migrate --interactive=0
+docker exec -it erawan yii migrate --interactive=0
+docker exec -it pcrh yii migrate --interactive=0
