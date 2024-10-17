@@ -218,13 +218,13 @@ try {
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
 
-<?= $form->field($model, 'data_json[vendor_address]')->textInput()->label(false) ?>
-<?= $form->field($model, 'data_json[vendor_phone]')->textInput()->label(false) ?>
-<?= $form->field($model, 'data_json[vendor_tax]')->textInput()->label(false) ?>
-<?= $form->field($model, 'data_json[account_name]')->textInput()->label(false) ?>
-<?= $form->field($model, 'data_json[account_number]')->textInput()->label(false) ?>
-<?= $form->field($model, 'data_json[contact_name]')->textInput()->label(false) ?>
-<?= $form->field($model, 'data_json[contact_position]')->textInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_address]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_phone]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[vendor_tax]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[account_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[account_number]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[contact_name]')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'data_json[contact_position]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[item_type]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[leader1_fullname]')->hiddenInput(['value' => $employee->leaderUser()['leader1_fullname']])->label(false) ?>
 <?= $form->field($model, 'data_json[department]')->hiddenInput(['value' => $model->getUserReq()['department']])->label(false) ?>
