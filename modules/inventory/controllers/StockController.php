@@ -110,7 +110,7 @@ class StockController extends Controller
     {
         $warehouse = Yii::$app->session->get('warehouse');
         if(!$warehouse){
-            return $this->redirect(['/incentiry']);
+            return $this->redirect(['/inventory']);
         }
         $searchModel = new StockSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
