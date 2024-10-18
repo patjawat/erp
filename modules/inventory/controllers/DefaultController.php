@@ -26,7 +26,8 @@ class DefaultController extends Controller
     {
         Yii::$app->session->remove('warehouse');
         Yii::$app->session->remove('selectMainWarehouse');
-        \Yii::$app->cart->checkOut(false);
+        \Yii::$app->cartMain->checkOut(false);
+        \Yii::$app->cartSub->checkOut(false);
         $searchModel = new StockEventSearch([
             'thai_year' => AppHelper::YearBudget()
         ]);
