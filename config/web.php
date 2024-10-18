@@ -40,7 +40,7 @@ $config = [
 					['class' => 'asyou99\cart\SessionStorage'],
 					[
 						'class' => 'asyou99\cart\DatabaseStorage',
-						'table' => 'cart',
+						'table' => 'cart_main',
 					],
 				],
 			]

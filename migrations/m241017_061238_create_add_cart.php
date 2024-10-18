@@ -42,11 +42,18 @@ class m241017_061238_create_add_cart extends Migration
      */
     public function safeDown()
     {
+        if ($this->db->schema->getTableSchema('{{%cart}}', true) !== null) {
+            $this->dropTable('{{%cart}}');
+        } else {
+            echo "Table 'cart' does not exist. Skipping drop.\n";
+        }
+
         if ($this->db->schema->getTableSchema('{{%cart_main}}', true) !== null) {
             $this->dropTable('{{%cart_main}}');
         } else {
             echo "Table 'cart' does not exist. Skipping drop.\n";
         }
+
         if ($this->db->schema->getTableSchema('{{%cart_sub}}', true) !== null) {
             $this->dropTable('{{%cart_sub}}');
         } else {
