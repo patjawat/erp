@@ -153,10 +153,20 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
 
     public function SumQty()
     {
+        // return $this->warehouse_id;
         // $warehouse = \Yii::$app->session->get('warehouse');
         // return self::find()->where(['warehouse_id' => $warehouse['warehouse_id'], 'asset_item' => $this->asset_item])->sum('qty');
         return self::find()->where(['warehouse_id' => $this->warehouse_id, 'asset_item' => $this->asset_item])->sum('qty');
     }
+       // นับจำนวนทีอยู่ใน lot_number stock
+       public function SumLotQty()
+       {
+           try {
+               return self::find()->where(['asset_item' => $this->asset_item, 'lot_number' => $this->lot_number, 'warehouse_id' => $this->warehouse_id])->sum('qty');
+           } catch (\Throwable $th) {
+               return 0;
+           }
+       }
 
     public function SumPriceByItem()
     {

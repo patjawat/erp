@@ -54,6 +54,10 @@ class MainStockController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                $transaction = \Yii::$app->db->beginTransaction();
+                try {
+                    $transaction->commit();
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
                     $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
@@ -62,24 +66,55 @@ class MainStockController extends Controller
                 $model->order_status = 'pending';
                 $model->warehouse_id = $toWarehouse['warehouse_id'];
                 $model->from_warehouse_id = $formWarehouse['warehouse_id'];
-                if ($model->save(false)) {
-                    if ($model->name == 'order') {
-                        $this->saveCartItem($model);
-                        $cart->checkOut(false);
-                        \Yii::$app->session->remove('selectMainWarehouse');
+                $model->save(false);
 
-                        return $this->redirect(['/inventory/main-stock']);
-                    } else {
-                        \Yii::$app->response->format = Response::FORMAT_JSON;
-
-                        return [
-                            'status' => 'success',
-                            'container' => '#inventory',
-                        ];
-                    }
-                } else {
-                    $model->loadDefaultValues();
+                foreach ($cart->getItems() as $item) {
+                    $item = new StockEvent([
+                        'name' => 'order_item',
+                        'transaction_type' => $model->transaction_type,
+                        'category_id' => $model->id,
+                        'warehouse_id' => $model->warehouse_id,
+                        'asset_item' => $item->asset_item,
+                        'lot_number' => $item->lot_number,
+                        'unit_price' => $item->unit_price,
+                        'qty' => 0,
+                        // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
+                        'data_json' => [
+                            'req_qty' => $item->getQuantity(),
+                        ],
+                        'order_status' => 'pending',
+                    ]);
+                    $item->save(false);
                 }
+                $cart->checkOut(false);
+                \Yii::$app->session->remove('selectMainWarehouse');
+
+                return $this->redirect(['/inventory/main-stock']);
+                    } catch (\Throwable $th) {
+                                $transaction->rollBack();
+
+                                return [
+                                    'status' => 'error',
+                                ];
+                            }
+                // if ($model->save(false)) {
+                //     if ($model->name == 'order') {
+                //         $this->saveCartItem($model);
+                //         $cart->checkOut(false);
+                //         \Yii::$app->session->remove('selectMainWarehouse');
+
+                //         return $this->redirect(['/inventory/main-stock']);
+                //     } else {
+                //         \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                //         return [
+                //             'status' => 'success',
+                //             'container' => '#inventory',
+                //         ];
+                //     }
+                // } else {
+                //     $model->loadDefaultValues();
+                // }
             }
         } else {
             $model->loadDefaultValues();
@@ -114,7 +149,7 @@ class MainStockController extends Controller
                 'asset_item' => $item->asset_item,
                 'lot_number' => $item->lot_number,
                 'unit_price' => $item->unit_price,
-                'qty' => $item->getQuantity(),
+                'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
                 'data_json' => [
                     'req_qty' => $item->getQuantity(),
                 ],
