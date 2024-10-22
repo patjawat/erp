@@ -4,85 +4,87 @@ namespace app\modules\inventory\controllers;
 
 use app\components\AppHelper;
 use app\components\UserHelper;
-use Yii;
-use yii\web\Controller;
-use yii\web\Response;
-use yii\db\Expression;
+use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockEventSearch;
+use yii\db\Expression;
+use yii\web\Controller;
+use yii\web\Response;
 
 /**
- * Default controller for the `warehouse` module
+ * Default controller for the `warehouse` module.
  */
 class DefaultController extends Controller
 {
     /**
-     * Renders the index view for the module
+     * Renders the index view for the module.
+     *
      * @return string
      */
     public function actionIndex()
     {
-        Yii::$app->session->remove('warehouse');
-        Yii::$app->session->remove('selectMainWarehouse');
+        \Yii::$app->session->remove('warehouse');
+        \Yii::$app->session->remove('selectMainWarehouse');
         \Yii::$app->cartMain->checkOut(false);
         \Yii::$app->cartSub->checkOut(false);
         $searchModel = new StockEventSearch([
-            'thai_year' => AppHelper::YearBudget()
+            'thai_year' => AppHelper::YearBudget(),
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'searchModelWarehouse' => $this->Warehouse()['searchModelWarehouse'],
+            'dataProviderWarehouse' => $this->Warehouse()['dataProviderWarehouse'],
         ]);
     }
 
-
-    public function actionWarehouse()
+    protected function Warehouse()
     {
-        $id = Yii::$app->user->id;
+        $id = \Yii::$app->user->id;
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['delete' => null]);
-        if (!Yii::$app->user->can('admin')) {
-            if(Yii::$app->user->can('warehouse')){
+        if (!\Yii::$app->user->can('admin')) {
+            if (\Yii::$app->user->can('warehouse')) {
                 $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
-
-            }else{
+            } else {
                 $emp = UserHelper::GetEmployee();
-                $dataProvider->query->andWhere(['warehouse_type' =>'SUB']);
-                $dataProvider->query->andWhere(['>', new \yii\db\Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
+                $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
+                $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
             }
         }
         $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
 
+        return [
+            'searchModelWarehouse' => $searchModel,
+            'dataProviderWarehouse' => $dataProvider,
+        ];
+        // if ($this->request->isAJax) {
+        //     \Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('list_warehouse', [
-                    'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                ])
-            ];
-        } else {
-            return $this->render('list_warehouse', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-
+        //     return [
+        //         'title' => $this->request->get('title'),
+        //         'content' => $this->renderAjax('list_warehouse', [
+        //             'searchModel' => $searchModel,
+        //             'dataProvider' => $dataProvider,
+        //         ]),
+        //     ];
+        // } else {
+        //     return $this->render('list_warehouse', [
+        //         'searchModel' => $searchModel,
+        //         'dataProvider' => $dataProvider,
+        //     ]);
+        // }
     }
 
-
-    //ปริมาณวัสดุตามหมวดหมู่
+    // ปริมาณวัสดุตามหมวดหมู่
     public function actionProductSummary()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $sql = "SELECT pt.title,FORMAT(sum(s.qty*s.unit_price),2) as total FROM stock s INNER JOIN categorise p ON p.code = s.asset_item AND p.name = 'asset_item' INNER JOIN categorise pt ON pt.code = p.category_id AND pt.name = 'asset_type' GROUP BY pt.code";
-        $querys = Yii::$app->db->createCommand($sql)->queryAll();
+        $querys = \Yii::$app->db->createCommand($sql)->queryAll();
         $series = [];
         $label = [];
         foreach ($querys as $item) {
@@ -92,7 +94,7 @@ class DefaultController extends Controller
 
         return [
             'series' => $series,
-            'label' => $label
+            'label' => $label,
         ];
     }
 }

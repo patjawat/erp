@@ -1,17 +1,13 @@
 <?php
 
 /**
- * @var yii\web\View $this
+ * @var View $this
  */
 
-use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\helpers\Json;
 use app\modules\inventory\models\Stock;
-use app\models\Categorise;
 use app\modules\inventory\models\StockEvent;
 use yii\db\Expression;
+use yii\helpers\Url;
 
 $StockOut = StockEvent::find()
 ->alias('i')
@@ -29,13 +25,13 @@ $this->title = 'ระบบคลัง';
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu_dashbroad') ?>
+<?php echo $this->render('../default/menu_dashbroad'); ?>
 <?php $this->endBlock(); ?>
 
 
@@ -46,13 +42,13 @@ $this->title = 'ระบบคลัง';
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่าเบิกจ่ายวัสดุทั้งหมด</h6>
                     <div class="mb-3">
-                        <?=$this->render('_search_year',['model' => $searchModel])?></div>
+                        <?php echo $this->render('_search_year', ['model' => $searchModel]); ?></div>
                 </div>
                 <!-- <div id="inventoryCharts"></div> -->
                 <!-- <div id="showChart">
                     
                 </div> -->
-                <?=$this->render('chart_summary',['model' => $searchModel])?>
+                <?php echo $this->render('chart_summary', ['model' => $searchModel]); ?>
             </div>
         </div>
 
@@ -94,7 +90,7 @@ $this->title = 'ระบบคลัง';
 
                             <div>
                                 <h4 class="mt-4 pt-1 mb-0 font-size-22">
-                                  <?=$searchModel->Summary()['in']?>
+                                  <?php echo $searchModel->Summary()['in']; ?>
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -142,7 +138,7 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">  <?=$searchModel->Summary()['out']?>
+                                <h4 class="mt-4 pt-1 mb-0 font-size-22">  <?php echo $searchModel->Summary()['out']; ?>
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -267,6 +263,12 @@ $this->title = 'ระบบคลัง';
 <div class="row">
 
     <div class="col-xl-8">
+        <?php echo $this->render('list_warehouse', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'searchModel' => $searchModelWarehouse,
+            'dataProvider' => $dataProviderWarehouse,
+        ]); ?>
         <div id="showWarehouse"></div>
     </div>
     <div class="col-xl-4">
@@ -297,14 +299,15 @@ $this->title = 'ระบบคลัง';
 <?php
 
   use yii\web\View;
-  // $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
-  // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 
-  $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
-  $productSummeryUrl = Url::to(['/inventory/default/product-summary']);
-  $wareHouseUrl = Url::to(['/inventory/default/warehouse']);
-  $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
-  $js = <<< JS
+// $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
+// $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
+
+$StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
+$productSummeryUrl = Url::to(['/inventory/default/product-summary']);
+$wareHouseUrl = Url::to(['/inventory/default/warehouse']);
+$OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
+$js = <<< JS
   // getPendingOrder()
   // getlistOrderRequest()
 
@@ -482,5 +485,5 @@ $this->title = 'ระบบคลัง';
 
  
   JS;
-  $this->registerJS($js, View::POS_END);
-  ?>
+$this->registerJS($js, View::POS_END);
+?>
