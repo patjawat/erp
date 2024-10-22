@@ -5,6 +5,7 @@
 window.onbeforeunload = function () {
   $("#cover-spin").show();
   NProgress.start();
+  beforLoadModal()
   
   // $('#modal-dialog').modal('hide');
   // $('#awaitLogin').show();
