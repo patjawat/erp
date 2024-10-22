@@ -2,26 +2,21 @@
 
 namespace app\controllers;
 
-use yii\helpers\Html;
-use app\components\SiteHelper;
+use app\models\LoginForm;
+use app\models\PasswordResetRequestForm;
 use app\models\SignupForm;
 use app\modules\hr\models\Employees;
-use app\models\PasswordResetRequestForm;
 use app\modules\usermanager\models\User;
 use Yii;
-use yii\filters\Cors;
 use yii\filters\AccessControl;
+use yii\filters\Cors;
+use yii\filters\VerbFilter;
+use yii\helpers\Html;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\filters\VerbFilter;
-use app\models\LoginForm;
-use app\models\ContactForm;
 
 class SiteController extends Controller
 {
-    /**
-     * {@inheritdoc}
-     */
     public function behaviors()
     {
         return [
@@ -42,21 +37,18 @@ class SiteController extends Controller
                     'logout' => ['post'],
                 ],
             ],
-            'corsFilter' =>[
+            'corsFilter' => [
                 'class' => Cors::class,
-            'cors' => [
-                'Origin' => ['*'],
-                'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
-                'Access-Control-Allow-Headers' => ['content-type'],
-                'Access-Control-Request-Headers' => ['*'],
+                'cors' => [
+                    'Origin' => ['*'],
+                    'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+                    'Access-Control-Allow-Headers' => ['content-type'],
+                    'Access-Control-Request-Headers' => ['*'],
+                ],
             ],
-            ]
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     // public function actions()
     // {
     //     return [
@@ -75,6 +67,7 @@ class SiteController extends Controller
         // $this->layout = 'error_404';
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'content' => $this->renderAjax('error'),
             ];
@@ -85,18 +78,14 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-        return $this->render('index2');
-    }
-    
-        public function actionIndex2()
-    {
         return $this->render('index');
     }
+
     public function actionIndex3()
     {
         return $this->render('index3');
     }
-    
+
     /**
      * Login action.
      *
@@ -105,32 +94,33 @@ class SiteController extends Controller
     public function actionLogin()
     {
         $this->layout = 'blank';
-        if (!Yii::$app->user->isGuest) {
+        if (!\Yii::$app->user->isGuest) {
             return $this->goHome();
             // return $this->redirect(['/profile']);
         }
 
         $model = new LoginForm();
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            // return $this->goBack();
-            return $this->redirect(['/site/index']);
-            // return $this->asJson([
-            //     'success' => true,
-            //     'model' => $model,
-                
-            // ]);
-        }
-        $result = [];
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Html::getInputId($model, $attribute)] = $errors;
-        }
+        if (\Yii::$app->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load(\Yii::$app->request->post()) && $model->login()) {
+                // return $this->goBack();
+                return $this->redirect(['/site/index']);
+                // return $this->asJson([
+                //     'success' => true,
+                //     'model' => $model,
 
-        return $this->asJson(['validation' => $result]);
-    }
+                // ]);
+            }
+            $result = [];
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[Html::getInputId($model, $attribute)] = $errors;
+            }
+
+            return $this->asJson(['validation' => $result]);
+        }
 
         $model->password = '';
+
         return $this->render('login', [
             'model' => $model,
         ]);
@@ -143,48 +133,51 @@ class SiteController extends Controller
      */
     public function actionLogout()
     {
-        Yii::$app->user->logout();
+        \Yii::$app->user->logout();
 
         return $this->goHome();
     }
+
     public function actionSignUp()
     {
         $this->layout = 'blank';
         $model = new SignupForm();
-        
 
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->signup()) {
+        if (\Yii::$app->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load(\Yii::$app->request->post()) && $model->validate() && $model->signup()) {
                 $emp = Employees::findOne(['cid' => $model->cid]);
+
                 return $this->asJson([
                     'success' => true,
                     'model' => $model,
-                    'content' => $this->renderAjax('signup_success',['model' => $emp])
+                    'content' => $this->renderAjax('signup_success', ['model' => $emp]),
                 ]);
             }
-    
+
             $result = [];
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[Html::getInputId($model, $attribute)] = $errors;
             }
-    
+
             return $this->asJson(['validation' => $result]);
         }
+
         return $this->render('signup', [
             'model' => $model,
         ]);
     }
 
-    public function actionConditionsRegister(){
+    public function actionConditionsRegister()
+    {
         // $this->layout = 'blank';
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
         return [
             'title' => 'ข้อกำหนดและเงื่อนไข',
-            'content' => $this->renderAjax('conditions_register')
+            'content' => $this->renderAjax('conditions_register'),
         ];
     }
-
 
     // public function actionSuccess(){
     //     $this->layout = 'blank';
@@ -198,33 +191,32 @@ class SiteController extends Controller
     {
         $this->layout = 'blank';
         $model = new PasswordResetRequestForm();
-        if ($model->load(Yii::$app->request->post())) {
-            if($model->sendEmail()){
-                return $this->render('confirm_email',['model' => $model]);
-            }else{
+        if ($model->load(\Yii::$app->request->post())) {
+            if ($model->sendEmail()) {
+                return $this->render('confirm_email', ['model' => $model]);
+            } else {
                 $model->addError('email', 'ไม่พบที่อยู่อีเมลนี้');
             }
         }
+
         return $this->render('forgot_password', ['model' => $model]);
-
-
     }
 
     public function actionResetPassword()
     {
         $this->layout = 'blank';
-        $token =Yii::$app->request->get('token');
-        $model =  new PasswordResetForm(['token' => $token]);
+        $token = \Yii::$app->request->get('token');
+        $model = new PasswordResetForm(['token' => $token]);
         $user = User::findOne(['password_reset_token' => $token]);
-        if ($model->load(Yii::$app->request->post()) && $model->setPassword()) {
-            Yii::$app->session->setFlash('success', 'เปลี่ยนรหัสผ่านสำเร็จ !');
+        if ($model->load(\Yii::$app->request->post()) && $model->setPassword()) {
+            \Yii::$app->session->setFlash('success', 'เปลี่ยนรหัสผ่านสำเร็จ !');
+
             return $this->redirect(['/site/login']);
         }
-        if($user){
+        if ($user) {
             return $this->render('reset_password', ['model' => $model]);
-        }else{
+        } else {
             return $this->render('reset_false');
         }
     }
-
 }

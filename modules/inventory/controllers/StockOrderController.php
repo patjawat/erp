@@ -2,31 +2,25 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockOut;
-use app\modules\inventory\models\StockOutSearch;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\sm\models\Product;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\Warehouse;
+use Yii;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
-
-use Yii;
-use yii\helpers\ArrayHelper;
 
 /**
  * StockOutController implements the CRUD actions for StockOut model.
  */
 class StockOrderController extends Controller
 {
-    /**
-     * @inheritDoc
-     */
     public function behaviors()
     {
         return array_merge(
@@ -49,10 +43,10 @@ class StockOrderController extends Controller
      */
     public function actionIndex()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouse = \Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','from_warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->andwhere(['name' => 'order', 'transaction_type' => 'OUT', 'from_warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -62,12 +56,12 @@ class StockOrderController extends Controller
 
     public function actionRequest()
     {
-        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouse = \Yii::$app->session->get('warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
-        $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','from_warehouse_id' => $warehouse['warehouse_id']]);
-        $dataProvider->query->andwhere(['<>','warehouse_id', $warehouse['warehouse_id']]);
+        $dataProvider->query->andwhere(['name' => 'order', 'transaction_type' => 'OUT', 'from_warehouse_id' => $warehouse['warehouse_id']]);
+        $dataProvider->query->andwhere(['<>', 'warehouse_id', $warehouse['warehouse_id']]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -77,43 +71,49 @@ class StockOrderController extends Controller
 
     /**
      * Displays a single StockOut model.
+     *
      * @param int $id ID
+     *
      * @return string
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
         $model = StockEvent::findOne($id);
+
         return $this->render('view', [
-            'model' => $model
+            'model' => $model,
         ]);
     }
 
     public function actionViewCode($id)
     {
-        $model = StockEvent::findOne(['code' => $id,'name' => 'order']);
+        $model = StockEvent::findOne(['code' => $id, 'name' => 'order']);
+
         return $this->render('view', [
-            'model' => $model
+            'model' => $model,
         ]);
     }
 
     /**
      * Creates a new StockOut model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
+     *
+     * @return string|Response
      */
     public function actionCreate()
     {
-        $formWarehouse = Yii::$app->session->get('warehouse');
-        $toWarehouse = Yii::$app->session->get('select-warehouse');
+        $formWarehouse = \Yii::$app->session->get('warehouse');
+        $toWarehouse = \Yii::$app->session->get('select-warehouse');
         $userCreate = UserHelper::GetEmployee();
         $name = $this->request->get('name');
         $order_id = $this->request->get('order_id');
-        $order =  StockEvent::findOne($order_id);
+        $order = StockEvent::findOne($order_id);
         $type = $this->request->get('type');
 
         $model = new StockEvent([
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'warehouse_id' => $toWarehouse['warehouse_id'],
             'category_id' => $order_id,
             'name' => $name,
@@ -124,10 +124,10 @@ class StockOrderController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
+                \Yii::$app->response->format = Response::FORMAT_JSON;
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
-                    $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . (substr(AppHelper::YearBudget(), 2)) . '????');
+                    $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
                 }
 
                 $model->order_status = 'pending';
@@ -136,12 +136,13 @@ class StockOrderController extends Controller
 
                 if ($model->save(false)) {
                     if ($model->name == 'order') {
-                         $this->saveCartItem($model);
+                        $this->saveCartItem($model);
                         \Yii::$app->cart->checkOut(false);
 
                         return $this->redirect(['/inventory/stock-order/request']);
                     } else {
-                        Yii::$app->response->format = Response::FORMAT_JSON;
+                        \Yii::$app->response->format = Response::FORMAT_JSON;
+
                         return [
                             'status' => 'success',
                             'container' => '#inventory',
@@ -156,12 +157,13 @@ class StockOrderController extends Controller
         }
 
         if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
-                ])
+                ]),
             ];
         } else {
             return $this->render('create', [
@@ -174,8 +176,7 @@ class StockOrderController extends Controller
     {
         $cart = \Yii::$app->cart;
 
-        foreach($cart->getItems()  as $item)
-        {
+        foreach ($cart->getItems() as $item) {
             $item = new StockEvent([
                 'name' => 'order_item',
                 'transaction_type' => $model->transaction_type,
@@ -186,41 +187,45 @@ class StockOrderController extends Controller
                 'unit_price' => $item->unit_price,
                 'qty' => $item->getQuantity(),
                 'data_json' => [
-                    'req_qty' => $item->getQuantity()
+                    'req_qty' => $item->getQuantity(),
                 ],
-                'order_status' => 'pending'
+                'order_status' => 'pending',
             ]);
             $item->save(false);
         }
-        return true;
 
+        return true;
     }
 
     /**
      * Updates an existing StockOut model.
      * If update is successful, the browser will be redirected to the 'view' page.
+     *
      * @param int $id ID
-     * @return string|\yii\web\Response
+     *
+     * @return string|Response
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post()) ) {
-
+        if ($this->request->isPost && $model->load($this->request->post())) {
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             $model->save(false);
+
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
         if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
-                ])
+                ]),
             ];
         } else {
             return $this->render('update', [
@@ -229,30 +234,30 @@ class StockOrderController extends Controller
         }
     }
 
-
     public function actionCancelOrder($id)
     {
         $model = $this->findModel($id);
         $model->order_status = 'cancel';
         $oldObj = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-            if($model->save(false)){
-                 StockEvent::updateAll(['order_status' => 'cancel'], ['category_id' => $model->order_status]);
-                  return $this->redirect(['/inventory/order-request']);
+            if ($model->save(false)) {
+                StockEvent::updateAll(['order_status' => 'cancel'], ['category_id' => $model->order_status]);
+
+                return $this->redirect(['/inventory/order-request']);
             }
             // return $model;
-           
         }
 
         if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('_form_cancel', [
                     'model' => $model,
-                ])
+                ]),
             ];
         } else {
             return $this->render('_form_cancel', [
@@ -261,31 +266,40 @@ class StockOrderController extends Controller
         }
     }
 
-
-    //กำหนดจำนวนที่จ่ายให้
+    // กำหนดจำนวนที่จ่ายให้
     public function actionUpdateQty($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         $qty = $this->request->get('qty');
         $model = StockEvent::findOne($id);
-        $checkStock = Stock::findOne(['lot_number' => $model->lot_number,'warehouse_id' => $model->warehouse_id]);
-        if($qty > $checkStock->qty){
+        $checkStock = Stock::findOne(['lot_number' => $model->lot_number, 'warehouse_id' => $model->warehouse_id]);
+        if ($qty <= -1) {
             return [
                 'status' => 'error',
                 'container' => '#inventory',
+                'code' => '$qty <= -1',
             ];
-        }else{
+        }
+
+        if ($qty > $checkStock->qty) {
+            return [
+                'status' => 'error',
+                'container' => '#inventory',
+                'code' => '$qty > $checkStock->qty',
+            ];
+        } else {
             $model->qty = $qty;
-            if($model->save(false)){
-                Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($qty >= 0 && $model->save(false)) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
                 return [
                     'status' => 'success',
                     'container' => '#inventory',
+                    'data' => $model,
                 ];
             }
         }
-            
     }
 
     public function actionUpdateLot($id)
@@ -293,12 +307,13 @@ class StockOrderController extends Controller
         $model = StockEvent::findOne($id);
         $model->qty = $model->data_json['req_qty'];
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $lot = Stock::findOne(['lot_number'=> $model->lot_number]);
+            $lot = Stock::findOne(['lot_number' => $model->lot_number]);
             $model->unit_price = $lot->unit_price;
-            $model->total_price = ($lot->unit_price* $model->qty);
+            $model->total_price = ($lot->unit_price * $model->qty);
             $model->save(false);
 
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'status' => 'success',
                 'container' => '#inventory',
@@ -306,12 +321,13 @@ class StockOrderController extends Controller
         }
 
         if ($this->request->isAJax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
             return [
                 'title' => $model->product->Avatar(),
                 'content' => $this->renderAjax('_form_update_lot', [
                     'model' => $model,
-                ])
+                ]),
             ];
         } else {
             return $this->render('_form_update_lot', [
@@ -323,55 +339,49 @@ class StockOrderController extends Controller
     // ตรวจสอบความถูกต้อง
     public function actionUpdateLotValidator()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new StockEvent();
 
-        $requiredName = "ต้องระบุ";
+        $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
             $checkStock = Stock::findOne(['lot_number' => $model->lot_number]);
-            
+
             if (isset($model->lot_number)) {
-                $model->lot_number == "" ? $model->addError('lot_number', $requiredName) : null;
-            }
-            
-            $model->qty == "" ? $model->addError('qty', $requiredName) : null;
-            if($model->qty > $checkStock->qty){
-                $model->addError('qty', 'วัสดุไม่พอจ่าย');
+                $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
             }
 
+            $model->qty == '' ? $model->addError('qty', $requiredName) : null;
+            if ($model->qty > $checkStock->qty) {
+                $model->addError('qty', 'วัสดุไม่พอจ่าย');
+            }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
         }
     }
 
+    // ตรวจสอบความถูกต้อง
+    public function actionCancelOrderValidator()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new StockEvent();
 
-     // ตรวจสอบความถูกต้อง
-     public function actionCancelOrderValidator()
-     {
-         Yii::$app->response->format = Response::FORMAT_JSON;
-         $model = new StockEvent();
- 
-         $requiredName = "ต้องระบุ";
-         if ($this->request->isPost && $model->load($this->request->post())) {
-
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
             if (isset($model->data_json['cancel_note'])) {
                 $model->data_json['cancel_note'] == '' ? $model->addError('data_json[cancel_note]', $requiredName) : null;
             }
- 
-         }
-         foreach ($model->getErrors() as $attribute => $errors) {
-             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-         }
-         if (!empty($result)) {
-             return $this->asJson($result);
-         }
-     }
-
-
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
 
     public function actionSaveOrder($id)
     {
@@ -387,50 +397,46 @@ class StockOrderController extends Controller
         return $this->redirect(['/inventory/stock-order']);
     }
 
-
-
     public function actionCheckOut($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $transaction = Yii::$app->db->beginTransaction();
+        $transaction = \Yii::$app->db->beginTransaction();
 
         try {
             // บันทึกข้อมูล Order
             $model = StockEvent::findOne($id);
 
             $userCreate = UserHelper::GetEmployee();
-            $jsonDate =['player' => $userCreate->id,'player_date' => date('Y-m-d H:i:s')];
+            $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s')];
             $model->order_status = 'success';
             $oldObj = $model->data_json;
-            $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$jsonDate);
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $jsonDate);
             // $model->save(false);
 
             if (!$model->save(false)) {
                 throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
             }
 
-              // สร้างรายการคำสั่งเข้าเข้าคลังที่ขอเบิก
-                $newStockModel = new StockEvent;
-                $newStockModel->name = 'order';
-                $newStockModel->order_status = 'success';
-                $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . (substr(AppHelper::YearBudget(), 2)) . '????');
-                $newStockModel->from_warehouse_id = $model->warehouse_id;
-                $newStockModel->warehouse_id = $model->from_warehouse_id;
-                $newStockModel->transaction_type = 'IN';
-                $newStockModel->category_id = $model->code;
-                $newStockModel->data_json = $jsonDate;
+            // สร้างรายการคำสั่งเข้าเข้าคลังที่ขอเบิก
+            $newStockModel = new StockEvent();
+            $newStockModel->name = 'order';
+            $newStockModel->order_status = 'success';
+            $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-'.substr(AppHelper::YearBudget(), 2).'????');
+            $newStockModel->from_warehouse_id = $model->warehouse_id;
+            $newStockModel->warehouse_id = $model->from_warehouse_id;
+            $newStockModel->transaction_type = 'IN';
+            $newStockModel->category_id = $model->code;
+            $newStockModel->data_json = $jsonDate;
 
-                if (!$newStockModel->save(false)) {
-                    throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
-                }
-            
+            if (!$newStockModel->save(false)) {
+                throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
+            }
+
             foreach ($model->getItems() as $item) {
-               
-
-                if($item->SumStockQty() != "0" && $item->qty > 0){
+                if ($item->SumStockQty() != '0' && $item->qty > 0) {
                     $item->order_status = 'success';
-                    $newStockItem = new StockEvent;
+                    $newStockItem = new StockEvent();
                     $newStockItem->order_status = 'success';
                     $newStockItem->name = 'order_item';
                     $newStockItem->code = $newStockModel->code;
@@ -444,48 +450,45 @@ class StockOrderController extends Controller
                     if (!$newStockItem->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                     }
-
-                }else{
+                } else {
                     $item->order_status = 'cancel';
                 }
                 if (!$item->save(false)) {
                     throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                 }
-              
-    
-            //     // UpdateNewStock ที่ขอเบิก
-            if($item->SumStockQty() != "0"){
-                $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $newStockItem->warehouse_id]);
-                if ($checkToStock) {
-                    $toStock = $checkToStock;
-                } else {
-                    $toStock = new Stock;
-                }
-                $toStock->asset_item = $item->asset_item;
-                $toStock->lot_number = $item->lot_number;
-                $toStock->warehouse_id = $newStockItem->warehouse_id;
-                $toStock->unit_price = $item->unit_price;
-                $toStock->qty = $toStock->qty + $newStockItem->qty;
-                // $toStock->save(false);
-                if (!$toStock->save(false)) {
-                    throw new \Exception('ไม่สามารถ UpdateNewStock ที่ขอเบิก ได้');
-                }
-    
-                // ตัด stock และทำการ update
-                $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
-                $checkStock->qty = $checkStock->qty - $item->qty;
-                if (!$checkStock->save(false)) {
-                    throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
+
+                //     // UpdateNewStock ที่ขอเบิก
+                if ($item->SumStockQty() != '0') {
+                    $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $newStockItem->warehouse_id]);
+                    if ($checkToStock) {
+                        $toStock = $checkToStock;
+                    } else {
+                        $toStock = new Stock();
+                    }
+                    $toStock->asset_item = $item->asset_item;
+                    $toStock->lot_number = $item->lot_number;
+                    $toStock->warehouse_id = $newStockItem->warehouse_id;
+                    $toStock->unit_price = $item->unit_price;
+                    $toStock->qty = $toStock->qty + $newStockItem->qty;
+                    // $toStock->save(false);
+                    if (!$toStock->save(false)) {
+                        throw new \Exception('ไม่สามารถ UpdateNewStock ที่ขอเบิก ได้');
+                    }
+
+                    // ตัด stock และทำการ update
+                    $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
+                    $checkStock->qty = $checkStock->qty - $item->qty;
+                    if (!$checkStock->save(false)) {
+                        throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
+                    }
                 }
             }
-            }
-            
+
             // ถ้าไม่มีข้อผิดพลาด ทำการ commit
             $transaction->commit();
-    
+
             // return ['status' => 'success', 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว'];
             return $this->redirect(['/inventory/order-request']);
-    
         } catch (\Exception $e) {
             // ถ้ามีข้อผิดพลาด ทำการ rollback
             return ['status' => 'error', 'message' => $e->getMessage()];
@@ -493,63 +496,57 @@ class StockOrderController extends Controller
         // จบ
     }
 
- public function actionAddNewItem($id)
- {
-    // Yii::$app->response->format = Response::FORMAT_JSON;
-    $order = $this->findModel($id);
-    $model = new StockEvent;
-
-    if ($this->request->isPost && $model->load($this->request->post())) 
+    public function actionAddNewItem($id)
     {
-        $item = Stock::findOne(['lot_number' => $model->lot_number]);
-        $model->category_id = $order->id;
-        $model->name = 'order_item';
-        $model->asset_item = $item->asset_item;
-        $model->unit_price = $item->unit_price;
-        $model->transaction_type = 'OUT';
-        $model->warehouse_id =  $order->warehouse_id;
+        // Yii::$app->response->format = Response::FORMAT_JSON;
+        $order = $this->findModel($id);
+        $model = new StockEvent();
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $checkStock = Stock::findOne(['lot_number' => $model->lot_number]);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $item = Stock::findOne(['lot_number' => $model->lot_number]);
+            $model->category_id = $order->id;
+            $model->name = 'order_item';
+            $model->asset_item = $item->asset_item;
+            $model->unit_price = $item->unit_price;
+            $model->transaction_type = 'OUT';
+            $model->warehouse_id = $order->warehouse_id;
 
-            if($model->qty > $checkStock->qty){
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $checkStock = Stock::findOne(['lot_number' => $model->lot_number]);
+
+            if ($model->qty > $checkStock->qty) {
                 return [
-                    'status' => 'error'
+                    'status' => 'error',
                 ];
             }
 
             $model->save(false);
+
             return [
                 'status' => 'success',
-                'container' => '#inventory'
+                'container' => '#inventory',
             ];
+        }
 
-            
-    }
- 
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
 
-    if ($this->request->isAJax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => 'เพิ่มรายการใหม่',
-            'content' => $this->renderAjax('_add_new_item', [
+            return [
+                'title' => 'เพิ่มรายการใหม่',
+                'content' => $this->renderAjax('_add_new_item', [
+                    'model' => $model,
+                    'order' => $order,
+                ]),
+            ];
+        } else {
+            return $this->render('_add_new_item', [
                 'model' => $model,
-                'order' => $order
-            ])
-        ];
-    } else {
-        return $this->render('_add_new_item', [
-            'model' => $model,
-             'order' => $order
-        ]);
+                'order' => $order,
+            ]);
+        }
     }
 
-
-   
- }
-   
-
-    //ยืนยันการจ่ายของ
+    // ยืนยันการจ่ายของ
     // public function actionCheckOut($id)
     // {
     //     Yii::$app->response->format = Response::FORMAT_JSON;
@@ -578,9 +575,11 @@ class StockOrderController extends Controller
     // update รายการ Items ที่บันทึกใหม่ให้เป็น success
     public function actionConfirmOrder($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
         // $model = StockOut::updateAll(['order_status' => 'success'], ['category_id' => $id]);
         return $this->updateStock($id);
+
         return $this->redirect(['/inventory/stock-out']);
 
         if ($model) {
@@ -591,15 +590,13 @@ class StockOrderController extends Controller
         }
     }
 
-
     protected function updateStock($id)
     {
-
         $order = $this->findModel($id);
         // return $order->listItems();
         foreach ($order->listItems() as $item) {
             $model = StockEvent::findOne(['lot_number' => $item->lot_number]);
-            $model->asset_item  = $item->asset_item;
+            $model->asset_item = $item->asset_item;
             $model->qty = $model->qty - $item->qty;
             $model->warehouse_id = $item->warehouse_id;
             $model->save(false);
@@ -610,12 +607,11 @@ class StockOrderController extends Controller
         }
     }
 
-
     public function actionCopyItem()
     {
         $id = $this->request->get('id');
         $lot_number = $this->request->get('lot_number');
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
 
         $order = StockEvent::findOne($id);
         $stock = Stock::findOne(['lot_number' => $lot_number]);
@@ -629,7 +625,7 @@ class StockOrderController extends Controller
                 GROUP BY s.lot_number
                 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) ASC limit 1;";
 
-        $query  = Yii::$app->db->createCommand($sql,[':lot_number' => $lot_number,'asset_item' => $stock->asset_item])
+        $query = \Yii::$app->db->createCommand($sql, [':lot_number' => $lot_number, 'asset_item' => $stock->asset_item])
         ->queryOne();
 
         $model = new StockEvent([
@@ -641,25 +637,27 @@ class StockOrderController extends Controller
             'order_status' => 'pending',
             'thai_year' => $order->thai_year,
             'unit_price' => $query['unit_price'],
-            'asset_item' =>  $query['asset_item'],
+            'asset_item' => $query['asset_item'],
             'data_json' => [
-                'req_qty' => ''
-            ]
+                'req_qty' => '',
+            ],
         ]);
-      if($model->save(false)){
-        return [
-            'status' => 'success',
-            'container' => '#inventory',
-        ];
-      }
-        
+        if ($model->save(false)) {
+            return [
+                'status' => 'success',
+                'container' => '#inventory',
+            ];
+        }
     }
 
     /**
      * Deletes an existing StockOut model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
+     *
      * @param int $id ID
-     * @return \yii\web\Response
+     *
+     * @return Response
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
@@ -667,20 +665,24 @@ class StockOrderController extends Controller
         $container = $this->request->get('container');
         $url = $this->request->get('url');
         $model = $this->findModel($id);
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model->delete();
+
         return [
             'status' => 'success',
             'container' => '#inventory',
-            'url' => $url
+            'url' => $url,
         ];
     }
 
     /**
      * Finds the StockOut model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
+     *
      * @param int $id ID
+     *
      * @return StockOut the loaded model
+     *
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)

@@ -37,8 +37,7 @@ yii\web\YiiAsset::register($this);
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span
-                            class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span>
-                        รายการ
+                            class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span> รายการ
                     </h6>
 
                     <?php
@@ -71,10 +70,10 @@ yii\web\YiiAsset::register($this);
                         <tr class="<?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
                             <td class="align-middle">
                                 <?php
-                                        try {
-                                            echo $item->product->Avatar();
-                                        } catch (Throwable $th) {
-                                        }
+        try {
+            echo $item->product->Avatar();
+        } catch (Throwable $th) {
+        }
                             ?>
                             </td>
                             <td class="align-middle text-center">
@@ -86,30 +85,32 @@ yii\web\YiiAsset::register($this);
                             <td class="align-middle text-end"><?php echo $item->unit_price; ?></td>
                             <td class="text-center"><?php echo $item->SumStockQty(); ?></td>
                             <td class="align-middle text-center">
-                                <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?>
-                            </td>
+                                <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
                             <td>
                                 <?php if ($model->OrderApprove()) { ?>
-                                    <div class="d-flex">
-                                        <span type="button"  class="minus btn btn-sm btn-primary" id="min"  data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>">-</span>
-                                        <input name="qty" id="quantity" type="text" value="<?php echo $item->qty; ?>" class="qty" style="width: 55px;font-weight: 600;font-size: large;">
-                                        <span type="button" class="plus btn btn-sm btn-primary border-end border-start-0 border-top-0" id="plus" data-lot_qty="<?php echo $item->SumLotQty(); ?>"  data-id="<?php echo $item->id; ?>">+</span>                    
-                                    </div>
+                                <div class="d-flex d-flex flex-row justify-content-center">
+                                    <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i>', ['/inventory/stock-order/update-qty', 'id' => $item->id, 'qty' => ($item->qty - 1)], ['class' => 'btn update-qty', 'data' => ['lot_qty' => $item->SumLotQty()]]); ?>
+                                    <?php // echo Html::a('<i class="fa-solid fa-chevron-left"></i>', ['/inventory/stock-order/update-qty', 'id' => $item->id, 'qty' => ($item->qty - 1)], ['class' => 'btn update-qty']);?>
+                                    <!-- <input type="text" value="<?php echo ($item->data_json['req_qty'] > $item->SumLotQty()) ? $item->SumLotQty() : $item->qty; ?>" class="form-control update-qty" style="width:50px;font-weight: 600;" id="<?php echo $item->id; ?>" min="1"/> -->
+                                    <input type="text" value="<?php echo $item->qty; ?>" class="form-control update-qty"
+                                        style="width:50px;font-weight: 600;" id="<?php echo $item->id; ?>" min="1" />
+                                    <?php echo Html::a('<i class="fa-solid fa-chevron-right"></i>', ['/inventory/stock-order/update-qty', 'id' => $item->id, 'qty' => ($item->qty + 1)], ['class' => 'btn update-qty', 'data' => ['lot_qty' => $item->SumLotQty(), 'item' => $item->id]]); ?>
+                                </div>
                                 <?php } else { ?>
                                 <?php echo $item->qty; ?>
                                 <?php }?>
                             </td>
                             <td class="text-center">
                                 <?php if ($model->OrderApprove()) { ?>
-
-                                <?php if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
+                                
+                                    <?php if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
                                 <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
                                 <?php }?>
 
                                 <?php if ($warehouse['warehouse_id'] != $item->warehouse_id) { ?>
                                 <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
                                 <?php }?>
-
+                                
                                 <?php }?>
 
                             </td>
@@ -218,91 +219,6 @@ yii\web\YiiAsset::register($this);
 
 $js = <<< JS
 
-$('.minus').click(function(){
-    quantityField = $(this).next();
-    var lotQty = $(this).data('lot_qty');
-    var id = $(this).data('id');
-    console.log(id);
-  
-  if (quantityField.val() != 0) {
-    var setVal = parseInt(quantityField.val(), 10) - 1;
-    if(setVal > lotQty){
-        Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-    }else{
-        $.ajax({
-            type: "get",
-            url: "/inventory/stock-order/update-qty",
-            data: {
-                id:id,
-                qty:setVal
-            },
-            dataType: "json",
-            success: function (res) {
-                if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                }
-                if(res.status == 'success')
-                {
-                    quantityField.val(parseInt(setVal));   
-                }
-            }
-        });
-    }
-  }
-  
-});
-
-$('.plus').click(function(){
-    quantityField = $(this).prev();
-    var lotQty = $(this).data('lot_qty');
-    var id = $(this).data('id');
-    console.log(id);
-    
-    var setVal = parseInt(quantityField.val(), 10) + 1;
-    if(setVal > lotQty){
-        Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-    }else{
-        $.ajax({
-            type: "get",
-            url: "/inventory/stock-order/update-qty",
-            data: {
-                id:id,
-                qty:setVal
-            },
-            dataType: "json",
-            success: function (res) {
-                if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                }
-                if(res.status == 'success')
-                {
-                    quantityField.val(parseInt(setVal));   
-                }
-            }
-        });
-    }
-});
-
 
 $("body").on("keypress", ".update-qty", function (e) {
     var keycode = e.keyCode ? e.keyCode : e.which;
@@ -335,9 +251,28 @@ $("body").on("keypress", ".update-qty", function (e) {
 });
 
 
+function increase(id,qty) {
+    var value + 1;
+    $.ajax({
+        type: "get",
+        url: "/inventory/stock-order/update-qty",
+        data:{
+            id:id,
+            qty:1
+        },
+        dataType: "dataType",
+        success: function (response) {
+            
+        }
+    });
+}
+
+function decrease(id) {
+    return value - 1;
+}
+
 $("body").on("click", ".update-qty", function (e) {
         e.preventDefault();
-        
         $.ajax({
             type: "get",
             url: $(this).attr('href'),
