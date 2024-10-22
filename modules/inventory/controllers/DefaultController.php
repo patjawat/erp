@@ -9,7 +9,6 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\WarehouseSearch;
 use yii\db\Expression;
 use yii\web\Controller;
-use yii\web\Response;
 
 /**
  * Default controller for the `warehouse` module.
@@ -37,6 +36,8 @@ class DefaultController extends Controller
             'dataProvider' => $dataProvider,
             'searchModelWarehouse' => $this->Warehouse()['searchModelWarehouse'],
             'dataProviderWarehouse' => $this->Warehouse()['dataProviderWarehouse'],
+            'series' => $this->ProductSummary()['series'],
+            'label' => $this->ProductSummary()['label'],
         ]);
     }
 
@@ -61,28 +62,11 @@ class DefaultController extends Controller
             'searchModelWarehouse' => $searchModel,
             'dataProviderWarehouse' => $dataProvider,
         ];
-        // if ($this->request->isAJax) {
-        //     \Yii::$app->response->format = Response::FORMAT_JSON;
-
-        //     return [
-        //         'title' => $this->request->get('title'),
-        //         'content' => $this->renderAjax('list_warehouse', [
-        //             'searchModel' => $searchModel,
-        //             'dataProvider' => $dataProvider,
-        //         ]),
-        //     ];
-        // } else {
-        //     return $this->render('list_warehouse', [
-        //         'searchModel' => $searchModel,
-        //         'dataProvider' => $dataProvider,
-        //     ]);
-        // }
     }
 
     // ปริมาณวัสดุตามหมวดหมู่
-    public function actionProductSummary()
+    protected function ProductSummary()
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
         $sql = "SELECT pt.title,FORMAT(sum(s.qty*s.unit_price),2) as total FROM stock s INNER JOIN categorise p ON p.code = s.asset_item AND p.name = 'asset_item' INNER JOIN categorise pt ON pt.code = p.category_id AND pt.name = 'asset_type' GROUP BY pt.code";
         $querys = \Yii::$app->db->createCommand($sql)->queryAll();
         $series = [];

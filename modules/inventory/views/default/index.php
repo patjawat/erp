@@ -7,6 +7,7 @@
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 use yii\db\Expression;
+use yii\helpers\Json;
 use yii\helpers\Url;
 
 $StockOut = StockEvent::find()
@@ -297,15 +298,15 @@ $this->title = 'ระบบคลัง';
 
 
 <?php
-
-  use yii\web\View;
+$label = Json::encode($label);
+$series = Json::encode($series);
+use yii\web\View;
 
 // $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
 // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);
 
 $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
 $productSummeryUrl = Url::to(['/inventory/default/product-summary']);
-$wareHouseUrl = Url::to(['/inventory/default/warehouse']);
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
 $js = <<< JS
   // getPendingOrder()
@@ -314,22 +315,9 @@ $js = <<< JS
 
   getStoreInWarehouse()
   getOrderRequestInWarehouse()
-  // getChart();
   productSummery();
-  getWarehouse();
 
 
-  async function getWarehouse()
-  {
-    await $.ajax({
-      type: "get",
-      url: "$wareHouseUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showWarehouse').html(res.content)
-      }
-    });
-  }
 
   //รายการใน Stock
   async function getOrderRequestInWarehouse(){
@@ -358,18 +346,6 @@ $js = <<< JS
       }
     });
   }
-
-  // async function getChart(){
-  //   await $.ajax({
-  //     type: "get",
-  //     url: "chartUrl",
-  //     dataType: "json",
-  //     success: function (res) {
-  //       $('#showChart').html(res.content)
-       
-  //     }
-  //   });
-  // }
  
 
   function getChartColorsArray(e) {
@@ -387,52 +363,48 @@ $js = <<< JS
 
     function productSummery()
     {
-      $.ajax({
-        type: "get",
-        url: "$productSummeryUrl",
-        dataType: "json",
-        success: function (res) {
-            const rawData = res.series;
+     
+            const rawData = $series;
             const series = rawData.map(val => parseFloat(val.replace(/,/g, '')));
-  options = {
-      chart: {
-        height: 350,
-        type: "donut"
-      },
-      series: series,
-      labels: res.label,
-      colors: barchartColors = getChartColorsArray("saleing-categories"),
-      plotOptions: {
-        pie: {
-          startAngle: 25,
-          donut: {
-           
-            size: "72%",
-            labels: {
-              show: !0,
-              total: {
-                show: !0,
-                fontFamily: "Prompt, sans-serif",
-                label: "วัสดุทั้งหมด",
-                fontSize: "22px",
-                fontWeight: 600,
-                formatter: function (w) {
-              return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(w.globals.seriesTotals.reduce((a, b) => a + b, 0));
-            }
-              }
-            }
-          }
-        }
-      },
-      legend: {
-        show: !1,
-        position: "bottom",
-        horizontalAlign: "center",
-        verticalAlign: "middle",
-        floating: !1,
-        fontSize: "14px",
-        offsetX: 0
-      },
+        options = {
+            chart: {
+                height: 350,
+                type: "donut"
+            },
+            series: series,
+            labels: $label,
+            colors: barchartColors = getChartColorsArray("saleing-categories"),
+            plotOptions: {
+                pie: {
+                startAngle: 25,
+                donut: {
+                
+                    size: "72%",
+                    labels: {
+                    show: !0,
+                    total: {
+                        show: !0,
+                        fontFamily: "Prompt, sans-serif",
+                        label: "วัสดุทั้งหมด",
+                        fontSize: "22px",
+                        fontWeight: 600,
+                        formatter: function (w) {
+                    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(w.globals.seriesTotals.reduce((a, b) => a + b, 0));
+                    }
+                    }
+                    }
+                }
+                }
+            },
+            legend: {
+                show: !1,
+                position: "bottom",
+                horizontalAlign: "center",
+                verticalAlign: "middle",
+                floating: !1,
+                fontSize: "14px",
+                offsetX: 0
+            },
     //   stroke: {
     //     width: 4,
     //     colors: ['#ffffff'],
@@ -475,13 +447,8 @@ $js = <<< JS
         }
       }]
     };
-    (chart = new ApexCharts(document.querySelector("#saleing-categories"), options)).render();
-
-          
+    (chart = new ApexCharts(document.querySelector("#saleing-categories"), options)).render();       
   }
-      });
-    }
- 
 
  
   JS;
