@@ -9,7 +9,6 @@ use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\Warehouse;
-use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 
@@ -18,7 +17,7 @@ class MainStockController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
-       
+
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
@@ -58,45 +57,45 @@ class MainStockController extends Controller
                 $transaction = \Yii::$app->db->beginTransaction();
                 try {
                     $transaction->commit();
-                // สร้างรหัสรับเข้า
-                if ($model->name == 'order') {
-                    $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
+                    // สร้างรหัสรับเข้า
+                    if ($model->name == 'order') {
+                        $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
+                    }
+
+                    $model->order_status = 'pending';
+                    $model->warehouse_id = $toWarehouse['warehouse_id'];
+                    $model->from_warehouse_id = $formWarehouse['warehouse_id'];
+                    $model->save(false);
+
+                    foreach ($cart->getItems() as $item) {
+                        $item = new StockEvent([
+                            'name' => 'order_item',
+                            'transaction_type' => $model->transaction_type,
+                            'category_id' => $model->id,
+                            'warehouse_id' => $model->warehouse_id,
+                            'asset_item' => $item->asset_item,
+                            'lot_number' => $item->lot_number,
+                            'unit_price' => $item->unit_price,
+                            'qty' => 0,
+                            // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
+                            'data_json' => [
+                                'req_qty' => $item->getQuantity(),
+                            ],
+                            'order_status' => 'pending',
+                        ]);
+                        $item->save(false);
+                    }
+                    $cart->checkOut(false);
+                    \Yii::$app->session->remove('selectMainWarehouse');
+
+                    return $this->redirect(['/inventory/main-stock']);
+                } catch (\Throwable $th) {
+                    $transaction->rollBack();
+
+                    return [
+                        'status' => 'error',
+                    ];
                 }
-
-                $model->order_status = 'pending';
-                $model->warehouse_id = $toWarehouse['warehouse_id'];
-                $model->from_warehouse_id = $formWarehouse['warehouse_id'];
-                $model->save(false);
-
-                foreach ($cart->getItems() as $item) {
-                    $item = new StockEvent([
-                        'name' => 'order_item',
-                        'transaction_type' => $model->transaction_type,
-                        'category_id' => $model->id,
-                        'warehouse_id' => $model->warehouse_id,
-                        'asset_item' => $item->asset_item,
-                        'lot_number' => $item->lot_number,
-                        'unit_price' => $item->unit_price,
-                        'qty' => 0,
-                        // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
-                        'data_json' => [
-                            'req_qty' => $item->getQuantity(),
-                        ],
-                        'order_status' => 'pending',
-                    ]);
-                    $item->save(false);
-                }
-                $cart->checkOut(false);
-                \Yii::$app->session->remove('selectMainWarehouse');
-
-                return $this->redirect(['/inventory/main-stock']);
-                    } catch (\Throwable $th) {
-                                $transaction->rollBack();
-
-                                return [
-                                    'status' => 'error',
-                                ];
-                            }
                 // if ($model->save(false)) {
                 //     if ($model->name == 'order') {
                 //         $this->saveCartItem($model);
@@ -149,7 +148,7 @@ class MainStockController extends Controller
                 'asset_item' => $item->asset_item,
                 'lot_number' => $item->lot_number,
                 'unit_price' => $item->unit_price,
-                'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
+                'qty' => $item->SumLotQty(), // ระบุจำนวนจริงตาม lot ที่เหลือ
                 'data_json' => [
                     'req_qty' => $item->getQuantity(),
                 ],
@@ -165,7 +164,7 @@ class MainStockController extends Controller
     {
         $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
         $searchModel = new StockSearch([
-            'warehouse_id' =>  isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : ''
+            'warehouse_id' => isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : '',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
@@ -239,7 +238,7 @@ class MainStockController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $cart = \Yii::$app->cartMain;
-        $itemsCount = $cart->getCount();
+        $totalCount = $cart->getCount();
 
         $model = Stock::findOne($id);
 
@@ -256,6 +255,7 @@ class MainStockController extends Controller
         return [
             'status' => 'success',
             'container' => '#inventory',
+            'totalCount' => $totalCount,
         ];
     }
 
@@ -268,7 +268,7 @@ class MainStockController extends Controller
         $model = Stock::findOne($id);
         $checkStock = Stock::findOne($id);
 
-        if ($quantity > $checkStock->SumQty()){
+        if ($quantity > $checkStock->SumQty()) {
             return [
                 'status' => 'error',
                 'container' => '#inventory',
@@ -282,8 +282,6 @@ class MainStockController extends Controller
             ];
         }
     }
-
-    
 
     public function actionDeleteItem($id)
     {

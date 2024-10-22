@@ -3,24 +3,24 @@
 use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\web\View;
-use yii\helpers\Url;
 use yii\widgets\Pjax;
+
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
+<?php echo $this->render('../default/menu'); ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
 <?php
 
-$cart = \Yii::$app->cartMain;
+$cart = Yii::$app->cartMain;
 $products = $cart->getItems();
 
 ?>
@@ -28,70 +28,70 @@ $products = $cart->getItems();
 <div class="card">
 <div class="card-body d-flex justify-content-between align-items-center">
         <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span
-                class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount())?> </span> รายการ</h6>
+                class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?> </span> รายการ</h6>
 
-            <?=$this->render('_search', ['model' => $searchModel])?>
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
             <div>
-                <?=Html::a('<button type="button" class="btn btn-primary rounded-pill">
-                    <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger">'.$cart->getCount().'</span> รายการ
-                    </button>',['/inventory/main-stock/show-cart'],['class' => 'brn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
+                    <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
+                    </button>', ['/inventory/main-stock/show-cart'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]); ?>
                     </div>
     </div>
 </div>
 
 <div class="d-flex flex-wrap">
-    <?php foreach($dataProvider->getModels() as $model):?>
+    <?php foreach ($dataProvider->getModels() as $model) { ?>
         <div class="p-2 col-2">
             <div class="card position-relative">
 
 
-                    <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0"><?=$model->warehouse->warehouse_name?></p>
-                    <?=Html::img($model->product->ShowImg(),['class' => 'card-top'])?>
+                    <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0"><?php echo $model->warehouse->warehouse_name; ?></p>
+                    <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top']); ?>
                 <div class="card-body w-100">
                        <div class="d-flex justify-content-center align-items-center">
           
                         <?php
                         try {
-                            echo Html::a('<i class="fa-solid fa-cart-plus"></i> '. $model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span>'.' เลือก',['/inventory/main-stock/add-to-cart','id' => $model->getLotQty()['id']],['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
-                        } catch (\Throwable $th) {
-                            //throw $th;
+                            echo Html::a('<i class="fa-solid fa-cart-plus"></i> '.$model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
+                        } catch (Throwable $th) {
+                            // throw $th;
                         }
-                        ?>
+        ?>
                     </div>
-                    <p class="text-truncate mb-0"><?=$model->product->title?></p>
+                    <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
                     
                     <div class="d-flex justify-content-between">
-                        <code class=""><?=$model->product->code?></code>
+                        <code class=""><?php echo $model->product->code; ?></code>
                         <div class="">
                         <span class="text-primary">ทั้งหมด</span>
-                            <span class="fw-semibold text-danger"><?=$model->SumQty()?></span> 
-                            <span class="text-primary"><?=$model->product->unit_name?></span>
+                            <span class="fw-semibold text-danger"><?php echo $model->SumQty(); ?></span> 
+                            <span class="text-primary"><?php echo $model->product->unit_name; ?></span>
                         </div>
                        
-                    <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?=$model->warehouse->warehouse_name?> </span> -->
+                    <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?php echo $model->warehouse->warehouse_name; ?> </span> -->
                 </div>
             </div>
         </div>
 
     </div>
-    <?php endforeach?>
+    <?php }?>
 </div>
 
 <div class="d-flex justify-content-center">
     <div class="text-muted">
-        <?= LinkPager::widget([
-                            'pagination' => $dataProvider->pagination,
-                            'firstPageLabel' => 'หน้าแรก',
-                            'lastPageLabel' => 'หน้าสุดท้าย',
-                            'options' => [
-                                'listOptions' => 'pagination pagination-sm',
-                                'class' => 'pagination-sm',
-                            ],
-                        ]); ?>
+        <?php echo LinkPager::widget([
+            'pagination' => $dataProvider->pagination,
+            'firstPageLabel' => 'หน้าแรก',
+            'lastPageLabel' => 'หน้าสุดท้าย',
+            'options' => [
+                'listOptions' => 'pagination pagination-sm',
+                'class' => 'pagination-sm',
+            ],
+        ]); ?>
     </div>
 </div>
 
-<?php  Pjax::end(); ?>
+<?php Pjax::end(); ?>
 <!-- End CardBody -->
 
 <?php
@@ -112,9 +112,11 @@ $js = <<< JS
                     showConfirmButton: false,
                     timer: 1500,
                 });
-                }
+            }else{
+                $('#totalCount').text(res.totalCount)
+            }
                 // success()
-                $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
+                // $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
         }
     });
 });
