@@ -224,7 +224,7 @@ yii\web\YiiAsset::register($this);
 
 $js = <<< JS
 
-$('.minus').click( async function(){
+$("body").on("click", ".minus", async function (e) {
     quantityField = $(this).next();
     var lotQty = $(this).data('lot_qty');
     var id = $(this).data('id');
@@ -264,7 +264,7 @@ $('.minus').click( async function(){
   
 });
 
-$('.plus').click( async function(){
+$("body").on("click", ".plus", async function (e) {
     quantityField = $(this).prev();
     var lotQty = $(this).data('lot_qty');
     var id = $(this).data('id');

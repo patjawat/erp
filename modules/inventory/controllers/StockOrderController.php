@@ -638,8 +638,9 @@ class StockOrderController extends Controller
             'thai_year' => $order->thai_year,
             'unit_price' => $query['unit_price'],
             'asset_item' => $query['asset_item'],
+            'qty' => 0,
             'data_json' => [
-                'req_qty' => '',
+                'req_qty' => 0,
             ],
         ]);
         if ($model->save(false)) {
