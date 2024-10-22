@@ -238,7 +238,6 @@ class MainStockController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $cart = \Yii::$app->cartMain;
-        $totalCount = $cart->getCount();
 
         $model = Stock::findOne($id);
 
@@ -251,6 +250,7 @@ class MainStockController extends Controller
             ]);
         }
         $cart->create($model, 1);
+        $totalCount = $cart->getCount();
 
         return [
             'status' => 'success',
