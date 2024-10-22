@@ -90,11 +90,17 @@ yii\web\YiiAsset::register($this);
                             </td>
                             <td>
                                 <?php if ($model->OrderApprove()) { ?>
-                                    <div class="d-flex">
-                                        <span type="button"  class="minus btn btn-sm btn-primary" id="min"  data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>">-</span>
-                                        <input name="qty" id="quantity" type="text" value="<?php echo $item->qty; ?>" class="qty" style="width: 55px;font-weight: 600;font-size: large;">
-                                        <span type="button" class="plus btn btn-sm btn-primary border-end border-start-0 border-top-0" id="plus" data-lot_qty="<?php echo $item->SumLotQty(); ?>"  data-id="<?php echo $item->id; ?>">+</span>                    
-                                    </div>
+                                <div class="d-flex">
+                                    <span type="button" class="minus btn btn-sm btn-primary" id="min"
+                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
+                                        data-id="<?php echo $item->id; ?>">-</span>
+                                    <input name="qty" id="quantity" type="text" value="<?php echo $item->qty; ?>"
+                                        class="qty" style="width: 55px;font-weight: 600;font-size: large;">
+                                    <span type="button"
+                                        class="plus btn btn-sm btn-primary border-end border-start-0 border-top-0"
+                                        id="plus" data-lot_qty="<?php echo $item->SumLotQty(); ?>"
+                                        data-id="<?php echo $item->id; ?>">+</span>
+                                </div>
                                 <?php } else { ?>
                                 <?php echo $item->qty; ?>
                                 <?php }?>
@@ -226,39 +232,35 @@ $('.minus').click(function(){
   
   if (quantityField.val() != 0) {
     var setVal = parseInt(quantityField.val(), 10) - 1;
-    if(setVal > lotQty){
-        Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
+            if(setVal > lotQty){
+                Swal.fire({icon: "warning",title: "เกินจำนวน",showConfirmButton: false,timer: 1500});
+            }else{
+                quantityField.val(parseInt(setVal));   
+                $.ajax({
+                    type: "get",
+                    url: "/inventory/stock-order/update-qty",
+                    data: {
+                        id:id,
+                        qty:setVal
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        if(res.status == 'error'){
+                            Swal.fire({
+                            icon: "warning",
+                            title: "เกินจำนวน",
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
+                        }
+                        if(res.status == 'success')
+                        {
+                           
+                        }
+                    }
                 });
-    }else{
-        $.ajax({
-            type: "get",
-            url: "/inventory/stock-order/update-qty",
-            data: {
-                id:id,
-                qty:setVal
-            },
-            dataType: "json",
-            success: function (res) {
-                if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                }
-                if(res.status == 'success')
-                {
-                    quantityField.val(parseInt(setVal));   
-                }
-            }
-        });
-    }
-  }
+            }   
+        }
   
 });
 
@@ -277,6 +279,7 @@ $('.plus').click(function(){
                     timer: 1500,
                 });
     }else{
+        quantityField.val(parseInt(setVal)); 
         $.ajax({
             type: "get",
             url: "/inventory/stock-order/update-qty",
@@ -296,7 +299,7 @@ $('.plus').click(function(){
                 }
                 if(res.status == 'success')
                 {
-                    quantityField.val(parseInt(setVal));   
+                     
                 }
             }
         });
