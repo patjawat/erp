@@ -268,8 +268,6 @@ $('.plus').click(function(){
     quantityField = $(this).prev();
     var lotQty = $(this).data('lot_qty');
     var id = $(this).data('id');
-    console.log(id);
-    
     var setVal = parseInt(quantityField.val(), 10) + 1;
     if(setVal > lotQty){
         Swal.fire({
