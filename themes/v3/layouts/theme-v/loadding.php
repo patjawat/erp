@@ -86,13 +86,10 @@
 }
 </style>
 
-<div class="d-flex justify-content-center mt-5">
-    <div class="d-flex gap-5 mt-5 align-items-center">
-        <div style="width: 200px;">
-            <h3 class="text-primary">กำลังโหลด ...</h3>
-            <h2 class="fw-lighter">กรุณารอสักครู่</h2>
-        </div>
-        <div class="progress circular"></div>
+<div class="d-flex justify-content-center" style="margin-top:15%;">
+    <div class="d-flex flex-column align-items-center gap-4">
+			<div class="progress circular"></div>
+            <h4 class="text-primary">กำลังโหลด ...</h4>
     </div>
 </div>
 

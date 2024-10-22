@@ -1,10 +1,10 @@
 <?php
 
 /**
- * @var yii\web\View $this
+ * @var View $this
  */
 
-/**
+/*
  * @var string $content
  */
 
@@ -19,26 +19,26 @@ BootstapIconAsset::register($this);
 
 $site = Categorise::findOne(['name' => 'site']);
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
-$moduleId = Yii::$app->controller->module->id; 
+$moduleId = Yii::$app->controller->module->id;
 ?>
 
-<?php $this->beginPage() ?>
+<?php $this->beginPage(); ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>" class="h-100" data-bs-theme="<?= $colorName ?>">
+<html lang="<?php echo Yii::$app->language; ?>" class="h-100" data-bs-theme="<?php echo $colorName; ?>">
 
 <head>
-    <meta charset="<?= Yii::$app->charset ?>">
+    <meta charset="<?php echo Yii::$app->charset; ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <?php $this->registerCsrfMetaTags() ?>
+    <?php $this->registerCsrfMetaTags(); ?>
 
-    <title><?= Html::encode($this->title) ?></title>
+    <title><?php echo Html::encode($this->title); ?></title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <!-- <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet"> -->
 
     <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
 
-    <?php $this->head() ?>
+    <?php $this->head(); ?>
 </head>
 
 <style>
@@ -71,40 +71,42 @@ $moduleId = Yii::$app->controller->module->id;
 </style>
 
 <body>
-    <?php $this->beginBody() ?>
-    <?= $this->render('../modal') ?>
+    <?php $this->beginBody(); ?>
+    <?php echo $this->render('../modal'); ?>
     <main role="main">
-        <div class="page-wrapper">
-            <?= $this->render('header') ?>
 
-            <?php if($moduleId == 'settings' || $moduleId == 'usermanager'):?>
-            <?= $this->render('sidebar_setting') ?>
-            <?php else:?>
-            <?= $this->render('sidebar') ?>
-            <?php endif?>
+	<div id="page-loadding" style="display: none;">
+				<?php echo $this->render('loadding'); ?>
+        </div>
+        <div class="page-wrapper" id="page-content">
+            <?php echo $this->render('header'); ?>
+
+            <?php if ($moduleId == 'settings' || $moduleId == 'usermanager') { ?>
+            <?php echo $this->render('sidebar_setting'); ?>
+            <?php } else { ?>
+            <?php echo $this->render('sidebar'); ?>
+            <?php }?>
 
             <div class="main-content">
                 <div class="page-content">
-                    <?= $this->render('page_title') ?>
+                    <?php echo $this->render('page_title'); ?>
                     <div class="page-content-wrapper mt--45">
-						<div id="page-content">
-							<?= $this->render('content', ['content' => $content]) ?>
+						<div>
+							<?php echo $this->render('content', ['content' => $content]); ?>
 						</div>
-						<div id="page-loadding" style="display: none;">
-						<?=$this->render('loadding')?>
-                    </div>
+			
                     </div>
 				
                 </div>
             </div>
-            <?= $this->render('footer') ?>
+            <?php echo $this->render('footer'); ?>
 
         </div>
-        <?= $this->render('right_setting') ?>
+        <?php echo $this->render('right_setting'); ?>
     </main>
 
     <?php
-		$js = <<< JS
+        $js = <<< JS
 
 
 			var scrollBarCont, isfullscreen = false, ddSliderIns;
@@ -188,11 +190,11 @@ $moduleId = Yii::$app->controller->module->id;
 
 
 			JS;
-		$this->registerJS($js, View::POS_END);
-	?>
+$this->registerJS($js, View::POS_END);
+?>
 
-    <?php $this->endBody() ?>
+    <?php $this->endBody(); ?>
 </body>
 
 </html>
-<?php $this->endPage() ?>
+<?php $this->endPage(); ?>

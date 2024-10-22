@@ -40,6 +40,7 @@ $this->title = 'ระบบคลัง';
     <div class="col-xl-6">
         <div class="card">
             <div class="card-body">
+                
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่าเบิกจ่ายวัสดุทั้งหมด</h6>
                     <div class="mb-3">
