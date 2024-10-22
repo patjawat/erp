@@ -224,7 +224,7 @@ yii\web\YiiAsset::register($this);
 
 $js = <<< JS
 
-$('.minus').click(function(){
+$('.minus').click( async function(){
     quantityField = $(this).next();
     var lotQty = $(this).data('lot_qty');
     var id = $(this).data('id');
@@ -235,8 +235,8 @@ $('.minus').click(function(){
             if(setVal > lotQty){
                 Swal.fire({icon: "warning",title: "เกินจำนวน",showConfirmButton: false,timer: 1500});
             }else{
-                quantityField.val(parseInt(setVal));   
-                $.ajax({
+               await quantityField.val(parseInt(setVal));   
+               await $.ajax({
                     type: "get",
                     url: "/inventory/stock-order/update-qty",
                     data: {
@@ -264,7 +264,7 @@ $('.minus').click(function(){
   
 });
 
-$('.plus').click(function(){
+$('.plus').click( async function(){
     quantityField = $(this).prev();
     var lotQty = $(this).data('lot_qty');
     var id = $(this).data('id');
@@ -277,8 +277,8 @@ $('.plus').click(function(){
                     timer: 1500,
                 });
     }else{
-        quantityField.val(parseInt(setVal)); 
-        $.ajax({
+       await quantityField.val(parseInt(setVal)); 
+       await $.ajax({
             type: "get",
             url: "/inventory/stock-order/update-qty",
             data: {
