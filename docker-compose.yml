@@ -44,8 +44,8 @@ services:
     ports:
       - '${MYSQL_PORT}:3306'
     volumes:
-      # - ./docker/mysql8.0/data:/var/lib/mysql
-      - ./docker/mysql_dansai8.0/data:/var/lib/mysql
+      - ./docker/mysql8.0/data:/var/lib/mysql
+      # - ./docker/mysql_dansai8.0/data:/var/lib/mysql
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
