@@ -75,8 +75,8 @@ $moduleId = Yii::$app->controller->module->id;
     <?php echo $this->render('../modal'); ?>
     <main role="main">
 
-	<div id="page-loadding" style="display: none;">
-				<?php echo $this->render('loadding'); ?>
+        <div id="page-loadding" style="display: none;">
+            <?php echo $this->render('loadding'); ?>
         </div>
         <div class="page-wrapper" id="page-content">
             <?php echo $this->render('header'); ?>
@@ -91,18 +91,17 @@ $moduleId = Yii::$app->controller->module->id;
                 <div class="page-content">
                     <?php echo $this->render('page_title'); ?>
                     <div class="page-content-wrapper mt--45">
-						<div>
-							<?php echo $this->render('content', ['content' => $content]); ?>
-						</div>
-			
+                        <div>
+                            <?php echo $this->render('content', ['content' => $content]); ?>
+                        </div>
+
                     </div>
-				
+
                 </div>
             </div>
             <?php echo $this->render('footer'); ?>
-
+			<?php echo $this->render('right_setting'); ?>
         </div>
-        <?php echo $this->render('right_setting'); ?>
     </main>
 
     <?php

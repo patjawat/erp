@@ -294,8 +294,6 @@ $this->title = 'ระบบคลัง';
     </div>
 </div>
 
-<!-- end col-6 -->
-</div>
 
 
 <?php
