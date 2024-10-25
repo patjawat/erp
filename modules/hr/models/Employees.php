@@ -7,54 +7,52 @@ use app\components\CategoriseHelper;
 use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
-use app\modules\hr\models\Organization;
-use yii\bootstrap5\Html;
 use Yii;
+use yii\bootstrap5\Html;
+use yii\db\Expression;
+
 
 /**
  * This is the model class for table "employees".
  *
- * @property int $id
- * @property int $user_id
- * @property string|null $ref
- * @property string|null $avatar
+ * @property int           $id
+ * @property int           $user_id
+ * @property string|null   $ref
+ * @property string|null   $avatar
  * @property resource|null $photo
- * @property string|null $phone
- * @property string|null $cid เลขบัตรประชาชน
- * @property string|null $email
- * @property string|null $gender เพศ
- * @property string|null $prefix คำนำหน้า
- * @property string $fname ชื่อ
- * @property string $lname นามสกุล
- * @property string|null $fname_en ชื่อ(TH)
- * @property string|null $lname_en นามสกุล(EN)
- * @property string|null $birthday วันเกิด
- * @property string|null $join_date เริ่มงาน
- * @property string|null $end_date ทำงานวันสุดท้าย
- * @property string|null $address ที่อยู่
- * @property int|null $province จังหวัด
- * @property int|null $amphure อำเภอ
- * @property int|null $district ตำบล
- * @property int|null $zipcode รหัสไปรษณีย์
- * @property int|null $position ตำแหน่ง
- * @property int|null $department แผนก/ฝ่าย
- * @property string|null $status แผนก/ฝ่าย
- * @property string|null $data_json
- * @property string|null $banking ข้อมูลบัญชีธนาคาร
- * @property string|null $family สมาชิกในครอบครัว
- * @property string|null $education การศึกษา
- * @property string|null $experience ประสบการณ์
- * @property string|null $emergency_contact ติดต่อในกรณีฉุกเฉิน
- * @property string|null $updated_at
- * @property string|null $created_at
- * @property int|null $created_by ผู้สร้าง
- * @property int|null $updated_by ผู้แก้ไข
+ * @property string|null   $phone
+ * @property string|null   $cid               เลขบัตรประชาชน
+ * @property string|null   $email
+ * @property string|null   $gender            เพศ
+ * @property string|null   $prefix            คำนำหน้า
+ * @property string        $fname             ชื่อ
+ * @property string        $lname             นามสกุล
+ * @property string|null   $fname_en          ชื่อ(TH)
+ * @property string|null   $lname_en          นามสกุล(EN)
+ * @property string|null   $birthday          วันเกิด
+ * @property string|null   $join_date         เริ่มงาน
+ * @property string|null   $end_date          ทำงานวันสุดท้าย
+ * @property string|null   $address           ที่อยู่
+ * @property int|null      $province          จังหวัด
+ * @property int|null      $amphure           อำเภอ
+ * @property int|null      $district          ตำบล
+ * @property int|null      $zipcode           รหัสไปรษณีย์
+ * @property int|null      $position          ตำแหน่ง
+ * @property int|null      $department        แผนก/ฝ่าย
+ * @property string|null   $status            แผนก/ฝ่าย
+ * @property string|null   $data_json
+ * @property string|null   $banking           ข้อมูลบัญชีธนาคาร
+ * @property string|null   $family            สมาชิกในครอบครัว
+ * @property string|null   $education         การศึกษา
+ * @property string|null   $experience        ประสบการณ์
+ * @property string|null   $emergency_contact ติดต่อในกรณีฉุกเฉิน
+ * @property string|null   $updated_at
+ * @property string|null   $created_at
+ * @property int|null      $created_by        ผู้สร้าง
+ * @property int|null      $updated_by        ผู้แก้ไข
  */
-class Employees extends \yii\db\ActiveRecord
+class Employees extends Yii\db\ActiveRecord
 {
-    /**
-     * {@inheritdoc}
-     */
     public $show;
 
     public $fulladdress;
@@ -92,23 +90,20 @@ class Employees extends \yii\db\ActiveRecord
     public $all_status;  // สถานะทั้งหมด
     public $range1;  // ช่วงตัวเลข
     public $range2;  // ช่วงตัวเลข
-    public $user_register; //สถานะลงทะเยียน
+    public $user_register; // สถานะลงทะเยียน
 
     public static function tableName()
     {
         return 'employees';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
             [['user_id', 'fname', 'lname', 'phone', 'cid'], 'required'],
             [['user_id', 'province', 'amphure', 'district', 'zipcode', 'department', 'created_by', 'updated_by'], 'integer'],
             [['photo'], 'string'],
-            [['birthday', 'data_json', 'updated_at', 'created_at', 'cid', 'code', 'emp_id', 'education', 'position_group', 'position_name', 'position_number', 'position_level', 'position_type', 'salary', 'show', 'cnt', 'title', '_groupname', '_groupcode', '_depcode', '_position1', '_position2', '_position3', '_position4', '_position5', '_position6', '_position7', '_age_generation', '_female', '_male', '_female_percen', '_male_percen', 'age_join_date', 'fulladdress', 'expertise', 'position_manage', 'age_y', 'range1', 'range2', 'q_department','user_register', 'q'], 'safe'],
+            [['birthday', 'data_json', 'updated_at', 'created_at', 'cid', 'code', 'emp_id', 'education', 'position_group', 'position_name', 'position_number', 'position_level', 'position_type', 'salary', 'show', 'cnt', 'title', '_groupname', '_groupcode', '_depcode', '_position1', '_position2', '_position3', '_position4', '_position5', '_position6', '_position7', '_age_generation', '_female', '_male', '_female_percen', '_male_percen', 'age_join_date', 'fulladdress', 'expertise', 'position_manage', 'age_y', 'range1', 'range2', 'q_department', 'user_register', 'q'], 'safe'],
             [['ref', 'avatar', 'email', 'address', 'status'], 'string', 'max' => 255],
             [['gender', 'prefix'], 'string', 'max' => 20],
             [['phone'], 'string', 'max' => 20],
@@ -136,9 +131,9 @@ class Employees extends \yii\db\ActiveRecord
             $total = 0;
             $digi = 13;
 
-            for ($i = 0; $i < 12; $i++) {
+            for ($i = 0; $i < 12; ++$i) {
                 $sum = $sum + (intval($id[$i]) * $digi);
-                $digi--;
+                --$digi;
             }
             $total = (11 - ($sum % 11)) % 10;
 
@@ -151,9 +146,6 @@ class Employees extends \yii\db\ActiveRecord
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function attributeLabels()
     {
         return [
@@ -213,11 +205,11 @@ class Employees extends \yii\db\ActiveRecord
             if ($this->UpdateFormDetail()['new_fullname']) {  // ถ้ามีการเปลี่ยนชื่อ
                 $this->fullname = $this->UpdateFormDetail()['new_fullname'];
             } else {
-                $this->fullname = $this->prefix . $this->fname . ' ' . $this->lname;
+                $this->fullname = $this->prefix.$this->fname.' '.$this->lname;
             }
             $this->date_end = AppHelper::DateFormDb($this->UpdateFormDetail()['date_end']);
 
-            $this->fullname_en = ($this->prefix == 'นาย' ? 'Mr.' : 'Miss.') . $this->fname_en . ' ' . $this->lname_en;
+            $this->fullname_en = ($this->prefix == 'นาย' ? 'Mr.' : 'Miss.').$this->fname_en.' '.$this->lname_en;
             $this->birthday = AppHelper::DateFormDb($this->birthday);
             // $this->join_date = AppHelper::DateFormDb($this->join_date);
             // $this->age_join_date = AppHelper::Age(AppHelper::DateFormDb($this->join_date));
@@ -229,7 +221,7 @@ class Employees extends \yii\db\ActiveRecord
             $this->nationality = isset($this->data_json['nationality']) ? $this->data_json['nationality'] : null;
             $this->religion = isset($this->data_json['religion']) ? $this->data_json['religion'] : null;
             $this->marry = isset($this->data_json['marry']) ? $this->data_json['marry'] : null;
-            $this->fulladdress = $this->address . ' ' . (isset($this->data_json['address2']) ? $this->data_json['address2'] : null);
+            $this->fulladdress = $this->address.' '.(isset($this->data_json['address2']) ? $this->data_json['address2'] : null);
             // $this->status = $this->UpdateFormDetail()['status'] ? $this->UpdateFormDetail()['status'] : '-';
         } catch (\Throwable $th) {
         }
@@ -242,47 +234,58 @@ class Employees extends \yii\db\ActiveRecord
     {
         return FileManagerHelper::FileUpload($ref, $name);
     }
-    
+
+    public function getImg()
+    {
+        return Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white lazyload',
+            'data' => [
+                'expand' => '-20',
+                'sizes' => 'auto',
+                'src' => $this->showAvatar(),
+            ],
+        ]);
+    }
 
     public function getAvatar($showAge = true, $msg = '')
     {
         $img = Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white lazyload',
-        'data' => [
-            'expand' => '-20',
-            'sizes' => 'auto',
-            'src' =>$this->showAvatar()
-            ]
-    ]);
+            'data' => [
+                'expand' => '-20',
+                'sizes' => 'auto',
+                'src' => $this->showAvatar(),
+            ],
+        ]);
         if ($msg != '') {
-            return '<div class="d-flex">' . $img . '
+            return '<div class="d-flex">'.$img.'
             <div class="avatar-detail text-truncate">
-                <h6 class="mb-1 fs-13">' . $this->fullname . '</h6>
-                <p class="text-muted mb-0 fs-13">' . $msg . '</p>
+                <h6 class="mb-1 fs-13">'.$this->fullname.'</h6>
+                <p class="text-muted mb-0 fs-13">'.$msg.'</p>
             </div>
         </div>';
         } else {
             return '<div class="d-flex">'
-                . $img . '
+                .$img.'
         <div class="avatar-detail">
             <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
-                . Html::a(
+                .Html::a(
                     $this->fullname,
                     ['/hr/employees/view', 'id' => $this->id],
                     ['class' => '']
-                ) . '
+                ).'
             </h6>
-            <p class="text-muted mb-0 fs-13">' . $this->positionName() . ' <code>(' . $this->positionTypeName() . ')</code></p>
-            ' . ($showAge ? '<p class="text-muted mb-0 fs-13">อายุ ' . $this->age . '</p>' : '') . '
+            <p class="text-muted mb-0 fs-13">'.$this->positionName().' <code>('.$this->positionTypeName().')</code></p>
+            '.($showAge ? '<p class="text-muted mb-0 fs-13">อายุ '.$this->age.'</p>' : '').'
         </div>
     </div>';
         }
     }
 
     /**
-     * หาปีที่เกษียณอายุ ครบ 60 ปี โดยกำหนดให้เป็นสิ้นเดือนกันยายนของปีนั้นๆ
-     * @return String คืนค่าวันที่เกษียณอายุ
+     * หาปีที่เกษียณอายุ ครบ 60 ปี โดยกำหนดให้เป็นสิ้นเดือนกันยายนของปีนั้นๆ.
+     *
+     * @return string คืนค่าวันที่เกษียณอายุ
      */
     public function Retire()
     {
@@ -293,10 +296,10 @@ class Employees extends \yii\db\ActiveRecord
             $color = '';
 
             if (substr($birthday, 5, 2) >= 10) {
-                $age += 1;
+                ++$age;
             }
             // ถ้าเลยปีงบประมาณแล้ว ให้ไปอยู่ในปีข้างหน้า
-            $date_retire = (substr($birthday, 0, 4) + $age) . '-09-30';  // สิ้นปีงบประมาณ หน่วยงานราชการ
+            $date_retire = (substr($birthday, 0, 4) + $age).'-09-30';  // สิ้นปีงบประมาณ หน่วยงานราชการ
             // return $date_retire;
             $currentDate = new \DateTime();
             $date1 = new \DateTime($birthday);
@@ -311,10 +314,11 @@ class Employees extends \yii\db\ActiveRecord
             } else {
                 $color = 'danger';
             }
+
             return [
                 'date' => AppHelper::DateFormDb($date_retire),
                 'progress' => 100 - $progress,
-                'color' => $color
+                'color' => $color,
             ];
 
             // code...
@@ -322,7 +326,7 @@ class Employees extends \yii\db\ActiveRecord
             return [
                 'date' => '0000-00-00',
                 'progress' => 0,
-                'color' => 'danger'
+                'color' => 'danger',
             ];
         }
     }
@@ -332,7 +336,8 @@ class Employees extends \yii\db\ActiveRecord
     {
         try {
             $sql = '';
-            return Yii::$app
+
+            return \Yii::$app
                 ->db
                 ->createCommand('SELECT DATE_ADD(:date, INTERVAL 60 YEAR)')
                 ->bindValue('date', AppHelper::DateToDb($this->birthday))
@@ -348,7 +353,7 @@ class Employees extends \yii\db\ActiveRecord
 
     public function leftYear60()
     {
-        return Yii::$app
+        return \Yii::$app
             ->db
             ->createCommand('SELECT (60-FLOOR(DATEDIFF(CURRENT_DATE, :date) / 365)) AS age')
             ->bindValue('date', AppHelper::DateToDb($this->birthday))
@@ -363,6 +368,7 @@ class Employees extends \yii\db\ActiveRecord
         } else {
             $text = 'ครบกำหนดเกษียณ';
         }
+
         return [
             'label' => $text,
             'due_date' => '',
@@ -376,7 +382,7 @@ class Employees extends \yii\db\ActiveRecord
         $model = EmployeeDetail::find()
             ->where(['emp_id' => $this->id, 'name' => 'position'])
             ->orderBy([
-                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
+                new Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
                 'id' => SORT_DESC,
             ])
             ->one();
@@ -404,6 +410,7 @@ class Employees extends \yii\db\ActiveRecord
             // SELECT count(e1.id) FROM employees e1 WHERE e1.department = e.department AND e1.position_type = 1
             $data[] = self::find()->where(['department' => $dep_id, 'position_type' => $key])->count();
         }
+
         return $data;
     }
 
@@ -418,6 +425,7 @@ class Employees extends \yii\db\ActiveRecord
             } else {
                 return null;
             }
+
             return null;
             // code...
         } catch (\Throwable $th) {
@@ -427,9 +435,7 @@ class Employees extends \yii\db\ActiveRecord
 
     public function leaderUser()
     {
-
         try {
-
             $model = Organization::find()->where(['id' => $this->department])->one();
             $employee = self::find()->where(['id' => $model->data_json['leader1']])->one();
 
@@ -692,7 +698,7 @@ class Employees extends \yii\db\ActiveRecord
         try {
             // $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $this->id])->all();
             // return count($model);
-            $queryCheck = Yii::$app
+            $queryCheck = \Yii::$app
                 ->db
                 ->createCommand("SELECT count(id) FROM employee_detail WHERE emp_id = :emp_id AND name = 'position'")
                 ->bindValue(':emp_id', $this->id)
@@ -700,7 +706,7 @@ class Employees extends \yii\db\ActiveRecord
             // return count($model);
             if ($queryCheck >= 2) {
                 $sql = "SELECT CAST(JSON_UNQUOTE(JSON_EXTRACT(e.data_json,'\$.date_start'))  AS DATE) as date_start FROM employee_detail e WHERE e.emp_id = $this->id AND JSON_EXTRACT(e.data_json,'\$.date_start') > (SELECT e2.data_json->'\$.date_start' as date_start FROM employee_detail e2 WHERE e2.emp_id =  $this->id AND JSON_EXTRACT(e2.data_json,'\$.status') = '2' ORDER BY date_start desc limit 1) limit 1;";
-                $query = Yii::$app
+                $query = \Yii::$app
                     ->db
                     ->createCommand($sql)
                     //  ->bindParam(':emp_id', '2')
@@ -713,20 +719,22 @@ class Employees extends \yii\db\ActiveRecord
                     $data = EmployeeDetail::find()
                         ->where(['emp_id' => $this->id, 'name' => 'position'])
                         ->orderBy([
-                            new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
+                            new Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
                             'id' => SORT_DESC,
                         ])
                         ->one();
+
                     return $data->data_json['date_start'];
                 }
             } else {
                 $data = EmployeeDetail::find()
                     ->where(['emp_id' => $this->id, 'name' => 'position'])
                     ->orderBy([
-                        new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
+                        new Expression("JSON_EXTRACT(data_json, '\$.date_start') asc"),
                         'id' => SORT_DESC,
                     ])
                     ->one();
+
                 return $data->data_json['date_start'];
             }
             // code...
@@ -747,10 +755,11 @@ class Employees extends \yii\db\ActiveRecord
     public function endDate()
     {
         $sql = "SELECT data_json->'\$.date_start' as date_start FROM employee_detail WHERE emp_id = 1 AND JSON_EXTRACT(data_json,'\$.status') = '2' ORDER BY data_json->'\$.date_start' ASC limit 1";
-        $query = Yii::$app
+        $query = \Yii::$app
             ->db
             ->createCommand($sql)
             ->queryOne();
+
         return $query['date_start'];
     }
 
@@ -760,6 +769,7 @@ class Employees extends \yii\db\ActiveRecord
     {
         $position = $this->getDetail('position');
         $rename = $this->getDetail('rename');
+
         return [
             'date_start' => isset($position->data_json['date_start']) ? $position->data_json['date_start'] : '',
             'date_end' => isset($position->data_json['date_end']) ? $position->data_json['date_end'] : '',
@@ -780,7 +790,7 @@ class Employees extends \yii\db\ActiveRecord
     {
         $id = $this->id;
         $sql = "SELECT *,JSON_EXTRACT(data_json, '\$.date_start') AS date_start FROM `employee_detail` WHERE name=:name AND emp_id = :emp_id ORDER by date_start desc LIMIT 1;";
-        $query = Yii::$app
+        $query = \Yii::$app
             ->db
             ->createCommand($sql)
             ->bindParam(':emp_id', $id)
@@ -835,7 +845,7 @@ class Employees extends \yii\db\ActiveRecord
     // แสดงชื่อตำแหน่ง
     public function positionName($arr = [])
     {
-        $level = $this->positionLevelName() ?  $this->positionLevelName() : '';
+        $level = $this->positionLevelName() ? $this->positionLevelName() : '';
 
         if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
             $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
@@ -843,7 +853,7 @@ class Employees extends \yii\db\ActiveRecord
             $isIcon = null;
         }
 
-        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon . $this->data_json['position_name_text'] . ' '.$level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
+        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon.$this->data_json['position_name_text'].' '.$level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
 
         //     if ($this->position_level) {
         //         $level = ' (ระดับ' . $this->positionLevelName() . ')';
@@ -902,6 +912,7 @@ class Employees extends \yii\db\ActiveRecord
     public function educationName()
     {
         $model = CategoriseHelper::CategoriseByCodeName($this->education, 'education');
+
         return $model ? $model->title : '-';
         // return isset($this->educations) ? $this->educations->title : $this->education;
     }
@@ -910,9 +921,9 @@ class Employees extends \yii\db\ActiveRecord
     {
         try {
             return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : '';
-            //code...
+            // code...
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             return '';
         }
         // return isset($this->empDepartment) ? $this->empDepartment->title : $this->department;
@@ -983,7 +994,7 @@ class Employees extends \yii\db\ActiveRecord
         return $this
             ->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])
             ->orderBy([
-                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_end') desc"),
+                new Expression("JSON_EXTRACT(data_json, '\$.date_end') desc"),
                 'id' => SORT_DESC,
             ])
             ->andOnCondition(['name' => 'education']);
@@ -995,7 +1006,7 @@ class Employees extends \yii\db\ActiveRecord
         return $this
             ->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])
             ->orderBy([
-                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"),
+                new Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"),
                 'id' => SORT_DESC,
             ])
             // ->orderBy(
@@ -1076,16 +1087,16 @@ class Employees extends \yii\db\ActiveRecord
                 // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
                 return FileManagerHelper::getImg($model->id);
             } else {
-                return Yii::getAlias('@web') . '/img/placeholder_cid.png';
+                return \Yii::getAlias('@web').'/img/placeholder_cid.png';
             }
         } catch (\Throwable $th) {
             // throw $th;
-            return Yii::getAlias('@web') . '/img/placeholder_cid.png';
+            return \Yii::getAlias('@web').'/img/placeholder_cid.png';
         }
     }
 
     public function fullname()
     {
-        return $this->prefix . $this->fname . ' ' . $this->lname;
+        return $this->prefix.$this->fname.' '.$this->lname;
     }
 }

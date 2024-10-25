@@ -27,7 +27,7 @@ yii\web\YiiAsset::register($this);
 <?php echo $this->render('../default/menu'); ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'inventory']); ?>
+<?php Pjax::begin(['id' => 'inventory-container']); ?>
 
 <div class="row">
 
@@ -134,7 +134,7 @@ yii\web\YiiAsset::register($this);
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
-                    <!-- <h6><?php echo Html::encode($this->title); ?></h6> -->
+                    <h6>รายละเอียดการขอเบิก</h6>
                     <?php
                      try {
                          $model->CreateBy('<code>ผู้เบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$model->viewCreated())['avatar'];
@@ -164,16 +164,6 @@ yii\web\YiiAsset::register($this);
                         [
                             'label' => 'วันที่',
                             'value' => $model->viewCreatedAt(),
-                        ],
-                        // [
-                        //     'label' => 'ผู้ขอเบิก',
-                        //     'format' => 'raw',
-                        //     'value' =>  $model->CreateBy($model->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar']
-                        // ],
-                        [
-                            'label' => 'ผู้อนุมัติ',
-                            'format' => 'raw',
-                            'value' => $model->viewChecker('ผู้อนุมัติ')['avatar'],
                         ],
                         [
                             'label' => 'สถานะคำขอ',
@@ -205,7 +195,7 @@ yii\web\YiiAsset::register($this);
                             <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
                             <?php if ($model->OrderApprove()) { ?>
-                            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']) : ''; ?>
+                            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
                             <?php } else { ?>
 
                             <?php }?>
@@ -215,6 +205,17 @@ yii\web\YiiAsset::register($this);
             </div>
         </div>
         <!-- End Card -->
+
+        <!-- approve -->
+         <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <?php echo $model->viewChecker('ผู้อนุมัติ')['avatar']; ?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                </div>
+            </div>
+         </div>
+         
     </div>
 </div>
 

@@ -16,20 +16,12 @@ $user  = UserHelper::GetUser();
 <?=$this->title;?>
 <?php $this->endBlock(); ?>
 
-
-
 <div class="row d-flex flex-sm-row-reverse">
-
-
     <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
         <?=$this->render('@app/modules/hr/views/employees/avatar',['model' => $model])?>
-
-
-
-
-                <?php if($model->leader()):?>
-                        <?=$this->render('@app/modules/hr/views/employees/member_on_dep',['model' => $model])?>
-                <?php endif;?>
+        <?php if($model->leader()):?>
+        <?=$this->render('@app/modules/hr/views/employees/member_on_dep',['model' => $model])?>
+        <?php endif;?>
         <div class="list-group border-0">
             <a href="<?=Url::to(['/profile','name' => ''])?>"
                 class="list-group-item list-group-item-action d-flex gap-3 py-3">
@@ -62,7 +54,7 @@ $user  = UserHelper::GetUser();
 
         </div>
 
-         
+
 
 
 

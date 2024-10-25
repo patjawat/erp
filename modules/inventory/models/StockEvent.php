@@ -322,8 +322,6 @@ class StockEvent extends Yii\db\ActiveRecord
         return self::find()->where(['category_id' => $this->id])->sum('qty');
     }
 
-
-
     // นับจำนวนที่ขอเบิก
     public function SumReqQty()
     {
@@ -351,9 +349,9 @@ class StockEvent extends Yii\db\ActiveRecord
     public function OrderApprove()
     {
         try {
-            if($this->order_status == 'pending' && $this->data_json['checker_confirm'] == 'Y') {
+            if ($this->order_status == 'pending' && $this->data_json['checker_confirm'] == 'Y') {
                 return true;
-            } else{
+            } else {
                 return false;
             }
         } catch (\Throwable $th) {
@@ -435,6 +433,7 @@ class StockEvent extends Yii\db\ActiveRecord
 
             return [
                 'avatar' => $employee->getAvatar(false),
+                'img' => $employee->showAvatar(false),
                 'department' => $employee->departmentName(),
             ];
         } catch (\Throwable $th) {
@@ -503,7 +502,7 @@ class StockEvent extends Yii\db\ActiveRecord
             return
                 [
                     'status' => $status,
-                    'avatar' => $this->getAvatar($this->checker, $status.' <i class="bi bi-clock"></i> <span class="text-muted fs-13">'.$checkerTime.'</span>')['avatar'],
+                    'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">ผู้อนุมัติ</span> '.$status.' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">'.$checkerTime.'</span>')['avatar'],
                 ];
         } catch (\Throwable $th) {
             return
@@ -521,6 +520,7 @@ class StockEvent extends Yii\db\ActiveRecord
 
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
+                'img' => $employee->getImg(),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
@@ -529,6 +529,7 @@ class StockEvent extends Yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
+                'img' => '',
                 'department' => '',
                 'fullname' => '',
                 'position_name' => '',

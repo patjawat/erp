@@ -1,15 +1,15 @@
 <?php
+use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
-use yii\helpers\Html;
-
-$this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
-$this->registerCssFile("@web/owl/owl.carousel.min.css");
+use app\modules\purchase\models\Order;
+$this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [yii\web\JqueryAsset::className()]]);
+$this->registerCssFile('@web/owl/owl.carousel.min.css');
 
 $this->title = 'My DashBoard';
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check"></i> <?= $this->title; ?>
+<i class="bi bi-folder-check"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <style>
@@ -17,29 +17,47 @@ $this->title = 'My DashBoard';
     height: 291px;
 }
 </style>
+<?php
+$orders = Order::find()
+->andwhere(['is not', 'pr_number', null])
+->andwhere(['status' => 1])
+->andFilterwhere(['name' => 'order'])
+// ถ้าเป็นผู้อำนวยการ
+// if (Yii::$app->user->can('director')) {
+//     $orders->andwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), '']);
+//     $orders->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_officer_checker')"), 'Y']);
+//     $orders->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y']);
+// }
+->all();
+
+foreach($orders as $order)
+{
+    echo $order->id;
+}
+?>
 
 <div class="row">
     <div class="col-8">
         <div class="row">
             <div class="col-6">
-                <?=$this->render('welcome')?>
-                <?=$this->render('attendance')?>
+                <?php echo $this->render('welcome'); ?>
+                <?php echo $this->render('attendance'); ?>
 
             </div>
             <div class="col-6">
-                <?=$this->render('leave')?>
+                <?php echo $this->render('leave'); ?>
             </div>
             <div class="col-12">
 
-            <div class="d-flex justify-content-between">
-            <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
-            <?=Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด',['/me/activity'],['class' => 'btn btn-light'])?>
-        </div>
-        <div id="viewApproveStock">Loading...</div>
-        <div id="viewApprovePurchase">Loading...</div>
+                <!-- <div class="d-flex justify-content-between">
+                    <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
+                    <?php echo Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด', ['/me/activity'], ['class' => 'btn btn-light']); ?>
+                </div>
+                <div id="viewApproveStock">Loading...</div>
+                <div id="viewApprovePurchase">Loading...</div> -->
 
-        
-                <?=$this->render('team_work')?>
+
+                <?php echo $this->render('team_work'); ?>
 
             </div>
         </div>
@@ -49,7 +67,7 @@ $this->title = 'My DashBoard';
         <div class="card" style="height: 620px;">
             <div class="card-body">
                 <h6><i class="bi bi-app-indicator"></i> บริการ</h6>
-                <?=$this->render('app_indicator')?>
+                <?php echo $this->render('app_indicator'); ?>
             </div>
         </div>
 
@@ -60,10 +78,10 @@ $this->title = 'My DashBoard';
 
     <div class="col-3">
 
-        <?php //  $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model]) ?>
+        <?php //  $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model])?>
         <!-- <div class="card" style="height:300px;">
                     <div class="card-body">
-                        <?= $this->render('leave_total') ?>
+                        <?php echo $this->render('leave_total'); ?>
                     </div>
                 </div> -->
         <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
@@ -71,7 +89,7 @@ $this->title = 'My DashBoard';
             <div class="card-body">
                 <h5>กิจกรรม/ความเคลื่อนไหวss</h5>
                 <div id="viewRepair" class="mt-4"></div>
-                <?php //  $this->render('activity') ?>
+                <?php //  $this->render('activity')?>
 
             </div>
         </div> -->
@@ -90,6 +108,8 @@ $this->title = 'My DashBoard';
 </div>
 
 
+
+
 <?php
 $urlRepair = Url::to(['/me/repair']);
 $ApproveStockUrl = Url::to(['/me/approve/stock-out']);
@@ -99,7 +119,7 @@ $ownerAssetUrl = Url::to(['/me/owner']);
 $js = <<< JS
 
     loadRepairHostory();
-    loadApproveStock();
+    // loadApproveStock();
     loadPurchase();
     loadOwnerAsset();
     
