@@ -60,11 +60,11 @@ $js = <<< JS
             grid: {
                 strokeDashArray: 7,
                 padding: {
-      top: -1,
-      right: 0,
-      left: -12,
-      bottom: 5
-    }
+                top: -1,
+                right: 0,
+                left: -12,
+                bottom: 5
+              }
             },
             dataLabels: {
               enabled: false

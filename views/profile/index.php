@@ -77,6 +77,7 @@ $user  = UserHelper::GetUser();
                 </div>
                 <?php else :?>
 
+                <?=$this->render('point_chart')?>
                 <?=$this->render('estimate_chart')?>
 
                 <?php endif;?>

@@ -67,9 +67,8 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <?php else :?>
         <?php echo $this->render('general',['model' => $model])?>
-        <?php echo $this->render('@app/views/profile/estimate_chart')?>
-
-
+        <?php echo $this->render('@app/views/profile/point_chart',['model' => $model])?>
+        <?php // echo $this->render('@app/views/profile/estimate_chart')?>
         <div class="card">
             <div class="card-body">
 

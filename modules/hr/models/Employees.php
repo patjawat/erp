@@ -801,6 +801,45 @@ class Employees extends Yii\db\ActiveRecord
         }
     }
 
+
+    //คะแนนการประเมินของแต่ละปี
+    public function pointYear()
+    {
+        try {
+        $sql ="SELECT x.* 
+                FROM (
+                    SELECT 
+                        data_json->>'$.point' AS point,
+                        (IF(MONTH(STR_TO_DATE(data_json->>'$.date_start', '%Y-%m-%d')) > 9,
+                            YEAR(STR_TO_DATE(data_json->>'$.date_start', '%Y-%m-%d')) + 1,
+                            YEAR(STR_TO_DATE(data_json->>'$.date_start', '%Y-%m-%d')) ) + 543) AS thai_year
+                    FROM `employee_detail`
+                    WHERE name = 'position' 
+                    AND emp_id = :emp_id
+                    AND data_json->>'$.point' IS NOT NULL
+                    AND data_json->>'$.point' <> ''
+                ) AS x 
+                GROUP BY x.thai_year;";
+        return  Yii::$app->db->createCommand($sql,[':emp_id' => $this->id])->queryAll();
+
+    } catch (\Throwable $th) {
+        return [];
+    }
+        
+    }
+
+    // คะแนนการประเมินในปี
+    public function point($thai_year)
+    {
+        $sql = "SELECT x.* FROM(SELECT 
+	data_json->>'$.point' as point,
+    data_json->>'$.date_start' AS date_start,
+     (IF(MONTH(STR_TO_DATE(data_json->>'$.date_start', '%Y-%m-%d')) > 9,YEAR(STR_TO_DATE(data_json->>'$.date_start', '%Y-%m-%d')) + 1,
+            YEAR(STR_TO_DATE(data_json->>'$.date_start', '%Y-%m-%d')) ) + 543) AS thai_year
+        FROM `employee_detail` WHERE name = 'position' AND emp_id = :emp_id) as x where x.thai_year = :thai_year";
+    return    Yii::$app->db->createCommand($sql,[':thai_year' =>$thai_year,':emp_id' => $this->id])->queryAll();
+    }
+
     // section Relationships
     public function getUser()
     {
