@@ -73,25 +73,10 @@ $this->title = 'ระบบคลัง';
                                 <div class="flex-grow-1 ms-3">
                                     <h6 class="mb-0 font-size-15">มูลค่ารวม</h6>
                                 </div>
-
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown">
-                                        <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <i class="bx bx-dots-horizontal text-muted font-size-22"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end" style="">
-                                            <a class="dropdown-item" href="#">Yearly</a>
-                                            <a class="dropdown-item" href="#">Monthly</a>
-                                            <a class="dropdown-item" href="#">Weekly</a>
-                                            <a class="dropdown-item" href="#">Today</a>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">
                                   <?php echo $searchModel->Summary()['in']; ?>
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
@@ -123,24 +108,10 @@ $this->title = 'ระบบคลัง';
                                     <h6 class="mb-0 font-size-15">ใช้ไป</h6>
                                 </div>
 
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown">
-                                        <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <i class="bx bx-dots-horizontal text-muted font-size-22"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end" style="">
-                                            <a class="dropdown-item" href="#">Yearly</a>
-                                            <a class="dropdown-item" href="#">Monthly</a>
-                                            <a class="dropdown-item" href="#">Weekly</a>
-                                            <a class="dropdown-item" href="#">Today</a>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">  <?php echo $searchModel->Summary()['out']; ?>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">  <?php echo $searchModel->Summary()['out']; ?>
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -156,8 +127,6 @@ $this->title = 'ระบบคลัง';
                 </div>
 
 
-
-
             </div>
 
             <div class="col-6">
@@ -172,31 +141,17 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">วัสดุเหลือน้อย</h6>
+                                    <h6 class="mb-0 font-size-15">สินค้าคงเหลือ</h6>
                                 </div>
 
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown">
-                                        <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <i class="bx bx-dots-horizontal text-muted font-size-22"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end" style="">
-                                            <a class="dropdown-item" href="#">Yearly</a>
-                                            <a class="dropdown-item" href="#">Monthly</a>
-                                            <a class="dropdown-item" href="#">Weekly</a>
-                                            <a class="dropdown-item" href="#">Today</a>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">0
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">จำนวนวัสดุที่เหลือน้อย</p>
+                                        <p class="text-muted mb-0 text-truncate">ยอดเดือนสิงหา</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 
@@ -220,31 +175,16 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">วัสดุสูงกว่ากำหนด</h6>
-                                </div>
-
-                                <div class="flex-shrink-0">
-                                    <div class="dropdown">
-                                        <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <i class="bx bx-dots-horizontal text-muted font-size-22"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end" style="">
-                                            <a class="dropdown-item" href="#">Yearly</a>
-                                            <a class="dropdown-item" href="#">Monthly</a>
-                                            <a class="dropdown-item" href="#">Weekly</a>
-                                            <a class="dropdown-item" href="#">Today</a>
-                                        </div>
-                                    </div>
+                                    <h6 class="mb-0 font-size-15">ซื้อระหว่างเดือน</h6>
                                 </div>
                             </div>
 
                             <div>
-                                <h4 class="mt-4 pt-1 mb-0 font-size-22">0
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">0
                                 </h4>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">จำนวนวัสดุที่เหลือน้อย</p>
+                                        <p class="text-muted mb-0 text-truncate">ยอกซื้อเดือนกันนยา</p>
                                     </div>
                                     <div class="flex-shrink-0" style="position: relative;">
 

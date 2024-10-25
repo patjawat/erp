@@ -22,8 +22,6 @@ $warehouse = Yii::$app->session->get('warehouse');
     <button class="btn btn-light" onclick="openTour()">
         <span>แนะนำ</span>
     </button>
-    
-
 </div>
 
 

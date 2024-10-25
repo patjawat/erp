@@ -236,11 +236,10 @@ class PoOrderController extends Controller
                     'order_receipt_date' => AppHelper::convertToThai($model->data_json['order_receipt_date']),
                     'warranty_date' => AppHelper::convertToThai($model->data_json['warranty_date']),
                     'signing_date' => AppHelper::convertToThai($model->data_json['signing_date']),
-                    'contact_name' => $vendor->data_json['contact_name'],
-                    'contact_position' => $vendor->data_json['contact_position'],
+                    'contact_name' => $vendor->data_json['contact_name'] ?? '',
+                    'contact_position' => $vendor->data_json['contact_position'] ?? '',
                 ];
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-                // code...
             } catch (\Throwable $th) {
                 // throw $th;
             }
