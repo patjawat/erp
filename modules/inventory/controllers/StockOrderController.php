@@ -434,7 +434,7 @@ class StockOrderController extends Controller
             }
 
             foreach ($model->getItems() as $item) {
-                if ($item->SumStockQty() != '0' && $item->qty > 0) {
+                if ($item->SumStockQty() != 0 && $item->qty > 0) {
                     $item->order_status = 'success';
                     $newStockItem = new StockEvent();
                     $newStockItem->order_status = 'success';
@@ -459,7 +459,7 @@ class StockOrderController extends Controller
 
                 //     // UpdateNewStock ที่ขอเบิก
                 if ($item->SumStockQty() != '0') {
-                    $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $newStockItem->warehouse_id]);
+                    $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $model->from_warehouse_id,'lot_number' => $item->lot_number]);
                     if ($checkToStock) {
                         $toStock = $checkToStock;
                     } else {
@@ -467,9 +467,9 @@ class StockOrderController extends Controller
                     }
                     $toStock->asset_item = $item->asset_item;
                     $toStock->lot_number = $item->lot_number;
-                    $toStock->warehouse_id = $newStockItem->warehouse_id;
+                    $toStock->warehouse_id = $model->from_warehouse_id;
                     $toStock->unit_price = $item->unit_price;
-                    $toStock->qty = $toStock->qty + $newStockItem->qty;
+                    $toStock->qty = $toStock->qty +  $item->qty;
                     // $toStock->save(false);
                     if (!$toStock->save(false)) {
                         throw new \Exception('ไม่สามารถ UpdateNewStock ที่ขอเบิก ได้');

@@ -89,7 +89,7 @@ yii\web\YiiAsset::register($this);
                                 <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?>
                             </td>
                             <td>
-                                <?php if ($model->OrderApprove()) { ?>
+                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse')) { ?>
                                 <div class="d-flex">
                                     <span type="button" class="minus btn btn-sm btn-primary" id="min"
                                         data-lot_qty="<?php echo $item->SumLotQty(); ?>"
@@ -104,9 +104,10 @@ yii\web\YiiAsset::register($this);
                                 <?php } else { ?>
                                 <?php echo $item->qty; ?>
                                 <?php }?>
+
                             </td>
                             <td class="text-center">
-                                <?php if ($model->OrderApprove()) { ?>
+                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse')) { ?>
 
                                 <?php if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
                                 <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
@@ -211,7 +212,7 @@ yii\web\YiiAsset::register($this);
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้อนุมัติ')['avatar']; ?>
-                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                    <?php echo $model->order_status != 'success' ? Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
                 </div>
             </div>
          </div>
