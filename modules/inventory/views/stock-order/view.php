@@ -3,8 +3,12 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\widgets\Pjax;
+use yii\db\Expression;
+use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('warehouse');
+
+
 /* @var yii\web\View $this */
 /* @var app\modules\inventory\models\StockEvent $model */
 
@@ -29,6 +33,13 @@ yii\web\YiiAsset::register($this);
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
 
+<?php
+
+//ตรวจสอบว่าเป็นผู้ดูแลคลัง
+$id = \Yii::$app->user->id;
+$office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"))->one();
+
+?>
 <div class="row">
 
 
@@ -40,10 +51,6 @@ yii\web\YiiAsset::register($this);
                             class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span>
                         รายการ
                     </h6>
-
-                    <?php
-                    echo $model->OrderApprove();
-?>
                     <?php if (Yii::$app->user->can('warehouse')) { ?>
                     <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
                     <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])?>
@@ -66,9 +73,10 @@ yii\web\YiiAsset::register($this);
                     </thead>
 
                     <tbody class="table-group-divider align-middle">
-                        <?php foreach ($model->getItems() as $item) { ?>
+                        <?php foreach ($model->getItems() as $item):?>
 
-                        <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
+                        <tr
+                            class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
                             <td class="align-middle">
                                 <?php
                                         try {
@@ -88,22 +96,29 @@ yii\web\YiiAsset::register($this);
                             <td class="align-middle text-center">
                                 <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?>
                             </td>
-                            <td>
-                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0) { ?>
+                            <td class="text-center">
+                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office)): ?>
                                 <div class="d-flex">
-                                    <span type="button" class="minus btn btn-sm btn-light" id="min" data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>"><i class="fa-regular fa-square-minus fs-3"></i></span>
-                                    <input name="qty" id="<?=$item->id?>" type="text"  min="0" max="2" value="<?php echo $item->qty; ?>" class="qty" data-maxlot="<?=$item->SumLotQty()?>" style="width: 55px;font-weight: 600;font-size: large;">
-                                    <span type="button" class="plus btn btn-sm btn-light" id="plus" data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>">
-                                    <i class="fa-regular fa-square-plus fs-3"></i>
+                                    <span type="button" class="minus btn btn-sm btn-light" id="min"
+                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
+                                        data-id="<?php echo $item->id; ?>"><i
+                                            class="fa-regular fa-square-minus fs-3"></i></span>
+                                    <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2"
+                                        value="<?php echo $item->qty; ?>" class="qty"
+                                        data-maxlot="<?=$item->SumLotQty()?>"
+                                        style="width: 55px;font-weight: 600;font-size: large;">
+                                    <span type="button" class="plus btn btn-sm btn-light" id="plus"
+                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
+                                        data-id="<?php echo $item->id; ?>">
+                                        <i class="fa-regular fa-square-plus fs-3"></i>
                                     </span>
                                 </div>
-                                <?php } else { ?>
+                                <?php else:?>
                                 <?php echo $item->qty; ?>
-                                <?php }?>
-
+                                <?php endif;?>
                             </td>
                             <td class="text-center">
-                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse')) { ?>
+                            <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office)): ?>
 
                                 <?php if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
                                 <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
@@ -113,11 +128,12 @@ yii\web\YiiAsset::register($this);
                                 <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
                                 <?php//  }?>
 
-                                <?php }?>
+                                <?php endif;?>
 
                             </td>
                         </tr>
-                        <?php } ?>
+                      
+                        <?php endforeach; ?>
 
                     </tbody>
                 </table>
@@ -170,7 +186,7 @@ yii\web\YiiAsset::register($this);
                         [
                             'label' => 'มูลค่า',
                             'format' => 'html',
-                            'value' => $model->getTotalOrderPrice(),
+                            'value' => number_format($model->getTotalOrderPrice(),2),
                         ],
                         [
                             'label' => 'พิมเอกสาร',
@@ -191,11 +207,11 @@ yii\web\YiiAsset::register($this);
                             <?php if ($model->order_status == 'await') { ?>
                             <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
-                            <?php if ($model->OrderApprove()) { ?>
+                            <?php if ($model->OrderApprove() && isset($office)): ?>
                             <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
-                            <?php } else { ?>
+                            <?php else:?>
 
-                            <?php }?>
+                            <?php endif;?>
                         </div>
                     </div>
                 </div>
@@ -204,19 +220,21 @@ yii\web\YiiAsset::register($this);
         <!-- End Card -->
 
         <!-- approve -->
-         <div class="card">
+        <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้อนุมัติ')['avatar']; ?>
+                    <?php if($model->checker == $id):?>
                     <?php echo $model->order_status != 'success' ? Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
+               <?php endif;?>
                 </div>
             </div>
-         </div>
-         
+        </div>
+
     </div>
 </div>
 
-<?php Pjax::end(); ?>
+
 
 <?php
 
@@ -450,10 +468,10 @@ $('.confirm-order').click(async function (e) {
   });
 
 
-  $("body").on("click", ".copy-item", async function (e) {
+  $("body").on("click", ".copy-item", function (e) {
     e.preventDefault();
 
-        await Swal.fire({
+         Swal.fire({
             title: "ยืนยัน?",
             text: "บันทึกสั่งจ่ายรายการนี้!",
             icon: "warning",
@@ -462,16 +480,16 @@ $('.confirm-order').click(async function (e) {
             cancelButtonColor: "#d33",
             confirmButtonText: "ใช่, ยืนยัน!",
             cancelButtonText: "ยกเลิก",
-        }).then(async (result) => {
+        }).then( (result) => {
             if (result.value == true) {
-            await $.ajax({
+             $.ajax({
                 type: "get",
                 url: $(this).attr('href'),
                 dataType: "json",
-                success: async function (res) {
+                success: function (res) {
 
                   if (res.status == "success") {
-                    await  $.pjax.reload({container:res.container, history:false,url:res.url});
+                      $.pjax.reload({container:res.container, history:false,url:res.url});
                     // success("บันสำเร็จ!.");
                   }
                 },
@@ -485,3 +503,4 @@ $('.confirm-order').click(async function (e) {
 JS;
 $this->registerJS($js);
 ?>
+<?php Pjax::end(); ?>

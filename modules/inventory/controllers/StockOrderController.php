@@ -82,12 +82,26 @@ class StockOrderController extends Controller
     {
         $model = StockEvent::findOne($id);
         if($model){   
+            $this->checkUpdateQty($id);
             return $this->render('view', [
                 'model' => $model,
             ]);
         }else{
             return $this->redirect(['/inventory/stock-order']);
         }
+    }
+
+    protected function checkUpdateQty($id)
+    {
+        $model = StockEvent::findOne($id);
+            
+        
+            foreach($model->getItems() as $item){
+                if($item->qty > $item->SumlotQty()){
+                    $item->qty =  $item->SumlotQty();
+                    $item->save(false);
+                }
+            }
     }
 
     public function actionViewCode($id)

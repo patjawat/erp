@@ -28,7 +28,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php //  Pjax::begin(['id' => 'inventory-container']); ?>
+<?php  Pjax::begin(['id' => 'inventory-container']); ?>
 <div class="row">
     <!-- <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -134,5 +134,5 @@ $js = <<< JS
 $this->registerJS($js, View::POS_END);
 ?>
 
-    <?php// Pjax::end(); ?>
+    <?php Pjax::end(); ?>
   
