@@ -141,6 +141,26 @@ class Warehouse extends \yii\db\ActiveRecord
             return number_format($model,2);
     }
 
+    // ยอดรับเข้า
+    public function SumPiceIn()
+    {
+        $sql = "SELECT COALESCE(sum(qty* unit_price),0) as total FROM stock_events  WHERE transaction_type ='IN' AND order_status = 'success' AND warehouse_id  = :warehouse_id";
+        $model =  Yii::$app->db->createCommand($sql, [
+            ':warehouse_id' => $this->id,
+            ])->queryScalar();
+            return number_format($model,2);
+    }
+// ยอดจ่ายออก
+    public function SumPiceOut()
+    {
+        $sql = "SELECT COALESCE(sum(qty* unit_price),0) as total FROM stock_events  WHERE transaction_type ='OUT' AND order_status = 'success' AND warehouse_id  = :warehouse_id";
+        $model =  Yii::$app->db->createCommand($sql, [
+            ':warehouse_id' => $this->id,
+            ])->queryScalar();
+            return number_format($model,2);
+    }
+
+
     //สถิติมูลค่าการับเข้าจ่ายออกตามปีงบประมาณ
     public function SummaryPriceYear()
     {

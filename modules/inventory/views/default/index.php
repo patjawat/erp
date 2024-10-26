@@ -42,7 +42,7 @@ $this->title = 'ระบบคลัง';
             <div class="card-body">
 
                 <div class="d-flex justify-content-between">
-                    <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่าเบิกจ่ายวัสดุทั้งหมด</h6>
+                    <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่ารับ-จ่ายวัสดุ</h6>
                     <div class="mb-3">
                         <?php echo $this->render('_search_year', ['model' => $searchModel]); ?></div>
                 </div>
@@ -106,7 +106,7 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">ใช้ไป</h6>
+                                    <h6 class="mb-0 font-size-15">ยอดใช้ไป</h6>
                                 </div>
 
                             </div>
@@ -141,7 +141,7 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">ซื้อระหว่างเดือน</h6>
+                                    <h6 class="mb-0 font-size-15">ยอดรับเข้า</h6>
                                 </div>
                             </div>
 
@@ -175,7 +175,7 @@ $this->title = 'ระบบคลัง';
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">สินค้าคงเหลือ</h6>
+                                    <h6 class="mb-0 font-size-15">มูลค่าคงเหลือ</h6>
                                 </div>
 
                             </div>

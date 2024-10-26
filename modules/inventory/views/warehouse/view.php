@@ -54,7 +54,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-                <h2 id="OrderConfirm">0</h2>
+            <h2><?=$model->SumPiceIn()?></h2>
             </div>
             <div class="card-footer border-0">มูลค่ารับเข้า</div>
         </div>
@@ -65,7 +65,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2 id="showTotalOrder">0</h2>
+                <h2><?=$model->SumPiceOut()?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าจ่ายวัสดุ</div>
             </div>
