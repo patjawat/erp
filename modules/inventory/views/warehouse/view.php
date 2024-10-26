@@ -13,7 +13,7 @@ use app\models\Categorise;
 use yii\widgets\Pjax;
 
 $warehouse = Yii::$app->session->get('warehouse');
-$this->title = $model->warehouse_name .' | มูลค่าคลัง '.$model->SumPice().' บาท';
+$this->title = $model->warehouse_name;
 ?>
 
 
@@ -38,7 +38,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
             <div class="card-footer border-0">รวมมูลค่าคลัง</div>
         </div>
     </div> -->
-    <div class="col-6">
+    <div class="col-3">
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
@@ -46,7 +46,7 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
                      
                     <h2><?=$model->SumPice()?></h2>
                 </div>
-                <div class="card-footer border-0">สต๊อกวัสดุ</div>
+                <div class="card-footer border-0">ยอดยกมา</div>
             </div>
         </a>
     </div>
@@ -67,7 +67,19 @@ $this->title = $model->warehouse_name .' | มูลค่าคลัง '.$mod
                 <div class="card-body">
                 <h2><?=$model->SumPiceOut()?></h2>
                 </div>
-                <div class="card-footer border-0">มูลค่าจ่ายวัสดุ</div>
+                <div class="card-footer border-0">มูลค่าใช้ไป</div>
+            </div>
+        </a>
+
+    </div>
+    <div class="col-3">
+        <a href="<?=Url::to(['/inventory/stock-out'])?>">
+
+            <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+                <div class="card-body">
+                <h2><?=$model->SumPiceOut()?></h2>
+                </div>
+                <div class="card-footer border-0">มูลค่าคงเหลือ</div>
             </div>
         </a>
 
