@@ -212,13 +212,6 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                             <?php else:?>
 
                             <?php endif;?>
-                            <?php 
-                            echo $model->OrderApprove();
-                            // echo isset($office);
-                            echo "<pre>";
-                            // print_r($office);
-                            echo "</pre>";
-                            ?>
 
                         </div>
                     </div>
@@ -232,7 +225,7 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
             <div class="card-body">
                
                 <div class="d-flex justify-content-between align-items-center">
-                    <?php echo $model->viewChecker('ผู้อนุมัติ')['avatar']; ?>
+                    <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
                     <?php if($model->checker == $userid):?>
                     <?php echo $model->order_status != 'success' ? Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
                <?php endif;?>
