@@ -212,6 +212,14 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                             <?php else:?>
 
                             <?php endif;?>
+                            <?php 
+                            echo $model->OrderApprove();
+                            // echo isset($office);
+                            echo "<pre>";
+                            // print_r($office);
+                            echo "</pre>";
+                            ?>
+
                         </div>
                     </div>
                 </div>
@@ -222,7 +230,7 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
         <!-- approve -->
         <div class="card">
             <div class="card-body">
-                <?php echo $model->checker;?> | <?=$userid?>
+               
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้อนุมัติ')['avatar']; ?>
                     <?php if($model->checker == $userid):?>
