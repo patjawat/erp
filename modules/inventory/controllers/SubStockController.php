@@ -16,13 +16,35 @@ class SubStockController extends \yii\web\Controller
 
 
 
+
+
+    //เลือกเบิก lot จาก stock 
+    public function actionSelectLot($id)
+    {      
+        $model= Stock::findOne($id);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'เลือกเบิก'.$model->product->title,
+                'content' => $this->renderAjax('select_lot',['model' => $model])
+            ];
+        } else {
+            return $this->render('select_lot',['model' => $model]);
+        }  
+    }
+
+
+
     public function actionAddToCart($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $cart = \Yii::$app->cartSub;
+      
+
         $itemsCount = $cart->getCount();
 
         $model = Stock::findOne($id);
+        // return $model->getLotQtyOut();
 
         $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
         if (!$getWarehouse) {
@@ -40,8 +62,9 @@ class SubStockController extends \yii\web\Controller
                 'container' => '#inventory-container',
                ];
            }else{
-
-        $cart->create($model, 1);
+if(!$cart->getItems($id)){
+    $cart->create($model, 1);
+}
 
         return [
             'status' => 'success',
@@ -163,6 +186,7 @@ class SubStockController extends \yii\web\Controller
             $model->warehouse_id = $warehouse['warehouse_id'];
             $model->name = 'order';
             $model->transaction_type = 'OUT';
+            $model->order_status = 'success';
             $model->save(false);
 
             // ถ้า Save Order เสร็จ ให้ save Items
@@ -170,12 +194,14 @@ class SubStockController extends \yii\web\Controller
                 foreach($items as $item){
                     $item = new StockEvent([
                         'name' => 'order_item',
+                        'category_id' => $model->id,
                         'transaction_type' => 'OUT',
                         'warehouse_id' => $warehouse['warehouse_id'],
                         'qty' => $item->getQuantity(),
                         'unit_price' => $item->unit_price,
                         'lot_number' => $item->lot_number,
                         'asset_item' => $item->asset_item,
+                        'order_status' => 'success'
                     ]);
                     //ถ้า save icon เสร็จให้ update stock
                     if($item->save(false))

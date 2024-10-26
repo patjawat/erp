@@ -56,7 +56,7 @@ class MainStockController extends Controller
 
                 $transaction = \Yii::$app->db->beginTransaction();
                 try {
-                    $transaction->commit();
+                    // $transaction->commit();
                     // สร้างรหัสรับเข้า
                     if ($model->name == 'order') {
                         $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
@@ -65,7 +65,10 @@ class MainStockController extends Controller
                     $model->order_status = 'pending';
                     $model->warehouse_id = $toWarehouse['warehouse_id'];
                     $model->from_warehouse_id = $formWarehouse['warehouse_id'];
-                    $model->save(false);
+                    if (!$model->save(false)) {
+                        throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
+                    }
+        
 
                     foreach ($cart->getItems() as $item) {
                         $item = new StockEvent([
@@ -76,25 +79,27 @@ class MainStockController extends Controller
                             'asset_item' => $item->asset_item,
                             'lot_number' => $item->lot_number,
                             'unit_price' => $item->unit_price,
-                            'qty' => 0,
+                            'qty' => $item->getQuantity(),
                             // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
                             'data_json' => [
                                 'req_qty' => $item->getQuantity(),
                             ],
                             'order_status' => 'pending',
                         ]);
-                        $item->save(false);
+                        if (!$item->save(false)) {
+                            throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ITems ได้');
+                        }
+            
                     }
                     $cart->checkOut(false);
                     \Yii::$app->session->remove('selectMainWarehouse');
-
+                    // ถ้าไม่มีข้อผิดพลาด ทำการ commit
+                    $transaction->commit();
                     return $this->redirect(['/inventory/main-stock']);
-                } catch (\Throwable $th) {
+                } catch (\Throwable $e) {
                     $transaction->rollBack();
 
-                    return [
-                        'status' => 'error',
-                    ];
+                    return ['status' => 'error', 'message' => $e->getMessage()];
                 }
                 // if ($model->save(false)) {
                 //     if ($model->name == 'order') {

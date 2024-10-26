@@ -161,6 +161,11 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Stock::class, ['lot_number' => 'lot_number']);
     }
 
+    //เชื่อกับ Order
+    public function getOrder()
+    {
+        return $this->hasOne(StockEvent::class, ['id' => 'category_id']);
+    }
     // การสั่งซื้อ
     public function getPurchase()
     {

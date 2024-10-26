@@ -26,48 +26,48 @@ $products = $cart->getItems();
 ?>
 
 <div class="card">
-<div class="card-body d-flex justify-content-between align-items-center">
+    <div class="card-body d-flex justify-content-between align-items-center">
         <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span
-                class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?> </span> รายการ</h6>
+                class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?>
+            </span> รายการ</h6>
 
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <div>
-                <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <div>
+            <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
                     </button>', ['/inventory/main-stock/show-cart'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]); ?>
-                    </div>
+        </div>
     </div>
 </div>
 
 <div class="d-flex flex-wrap">
     <?php foreach ($dataProvider->getModels() as $model) { ?>
-        <div class="p-2 col-2">
-            <div class="card position-relative">
+    <div class="p-2 col-2">
+        <div class="card position-relative">
+            <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0">
+                <?php echo $model->warehouse->warehouse_name; ?></p>
+            <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top']); ?>
+            <div class="card-body w-100">
+                <div class="d-flex justify-content-center align-items-center">
 
-
-                    <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0"><?php echo $model->warehouse->warehouse_name; ?></p>
-                    <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top']); ?>
-                <div class="card-body w-100">
-                       <div class="d-flex justify-content-center align-items-center">
-          
-                        <?php
+                    <?php
                         try {
                             echo Html::a('<i class="fa-solid fa-cart-plus"></i> '.$model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
                         } catch (Throwable $th) {
                             // throw $th;
                         }
         ?>
-                    </div>
-                    <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
-                    
-                    <div class="d-flex justify-content-between">
-                        <code class=""><?php echo $model->product->code; ?></code>
-                        <div class="">
+                </div>
+                <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
+
+                <div class="d-flex justify-content-between">
+                    <code class=""><?php echo $model->product->code; ?></code>
+                    <div class="">
                         <span class="text-primary">ทั้งหมด</span>
-                            <span class="fw-semibold text-danger"><?php echo $model->SumQty(); ?></span> 
-                            <span class="text-primary"><?php echo $model->product->unit_name; ?></span>
-                        </div>
-                       
+                        <span class="fw-semibold text-danger"><?php echo $model->SumQty(); ?></span>
+                        <span class="text-primary"><?php echo $model->product->unit_name; ?></span>
+                    </div>
+
                     <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?php echo $model->warehouse->warehouse_name; ?> </span> -->
                 </div>
             </div>
@@ -229,5 +229,3 @@ JS;
 $this->registerJS($js, View::POS_END);
 
 ?>
-
-

@@ -68,7 +68,7 @@ yii\web\YiiAsset::register($this);
                     <tbody class="table-group-divider align-middle">
                         <?php foreach ($model->getItems() as $item) { ?>
 
-                        <tr class="<?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
+                        <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
                             <td class="align-middle">
                                 <?php
                                         try {
@@ -89,17 +89,13 @@ yii\web\YiiAsset::register($this);
                                 <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?>
                             </td>
                             <td>
-                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse')) { ?>
+                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0) { ?>
                                 <div class="d-flex">
-                                    <span type="button" class="minus btn btn-sm btn-primary" id="min"
-                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
-                                        data-id="<?php echo $item->id; ?>">-</span>
-                                    <input name="qty" id="quantity" type="text" value="<?php echo $item->qty; ?>"
-                                        class="qty" style="width: 55px;font-weight: 600;font-size: large;">
-                                    <span type="button"
-                                        class="plus btn btn-sm btn-primary border-end border-start-0 border-top-0"
-                                        id="plus" data-lot_qty="<?php echo $item->SumLotQty(); ?>"
-                                        data-id="<?php echo $item->id; ?>">+</span>
+                                    <span type="button" class="minus btn btn-sm btn-light" id="min" data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>"><i class="fa-regular fa-square-minus fs-3"></i></span>
+                                    <input name="qty" id="<?=$item->id?>" type="text"  min="0" max="2" value="<?php echo $item->qty; ?>" class="qty" data-maxlot="<?=$item->SumLotQty()?>" style="width: 55px;font-weight: 600;font-size: large;">
+                                    <span type="button" class="plus btn btn-sm btn-light" id="plus" data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>">
+                                    <i class="fa-regular fa-square-plus fs-3"></i>
+                                    </span>
                                 </div>
                                 <?php } else { ?>
                                 <?php echo $item->qty; ?>
@@ -113,9 +109,9 @@ yii\web\YiiAsset::register($this);
                                 <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
                                 <?php }?>
 
-                                <?php if ($warehouse['warehouse_id'] != $item->warehouse_id) { ?>
+                                <?php // if ($warehouse['warehouse_id'] != $item->warehouse_id) { ?>
                                 <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
-                                <?php }?>
+                                <?php//  }?>
 
                                 <?php }?>
 
@@ -226,6 +222,18 @@ yii\web\YiiAsset::register($this);
 
 $js = <<< JS
 
+$("body").on("input", ".qty", function (e) {
+    const maxlot = parseInt($(this).data('maxlot')); 
+    // ลบตัวอักษรที่ไม่ใช่ตัวเลขออก
+    // this.value.replace(/[^0-9]/g, '');
+    this.value = this.value.replace(/[^0-9]/g, '');
+    let = value = $(this).val();
+
+      if (parseInt($(this).val()) > maxlot) {
+        $(this).val(maxlot);
+      }
+});
+
 $("body").on("click", ".minus", async function (e) {
     quantityField = $(this).next();
     var lotQty = $(this).data('lot_qty');
@@ -307,13 +315,12 @@ $("body").on("click", ".plus", async function (e) {
 });
 
 
-$("body").on("keypress", ".update-qty", function (e) {
+$("body").on("keypress", ".qty", function (e) {
     var keycode = e.keyCode ? e.keyCode : e.which;
     if (keycode == 13) {
         let qty = $(this).val()
         let id = $(this).attr('id')
         console.log(qty);
-        
         $.ajax({
             type: "get",
             url: "/inventory/stock-order/update-qty",
@@ -331,7 +338,7 @@ $("body").on("keypress", ".update-qty", function (e) {
                     timer: 1500,
                 });
                 }
-                  $.pjax.reload({container:'#inventory', history:false});
+                  $.pjax.reload({container:res.container, history:false});
             }
         });
     }
@@ -461,11 +468,10 @@ $('.confirm-order').click(async function (e) {
                 type: "get",
                 url: $(this).attr('href'),
                 dataType: "json",
-                success: async function (response) {
-                    console.log(response);
-                    
-                  if (response.status == "success") {
-                    await  $.pjax.reload({container:response.container, history:false,url:response.url});
+                success: async function (res) {
+
+                  if (res.status == "success") {
+                    await  $.pjax.reload({container:res.container, history:false,url:res.url});
                     // success("บันสำเร็จ!.");
                   }
                 },

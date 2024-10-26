@@ -81,10 +81,13 @@ class StockOrderController extends Controller
     public function actionView($id)
     {
         $model = StockEvent::findOne($id);
-
-        return $this->render('view', [
-            'model' => $model,
-        ]);
+        if($model){   
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }else{
+            return $this->redirect(['/inventory/stock-order']);
+        }
     }
 
     public function actionViewCode($id)
@@ -145,7 +148,7 @@ class StockOrderController extends Controller
 
                         return [
                             'status' => 'success',
-                            'container' => '#inventory',
+                            'container' => '#inventory-container',
                         ];
                     }
                 } else {
@@ -277,7 +280,7 @@ class StockOrderController extends Controller
         if ($qty <= -1) {
             return [
                 'status' => 'error',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
                 'code' => '$qty <= -1',
             ];
         }
@@ -285,7 +288,7 @@ class StockOrderController extends Controller
         if ($qty > $checkStock->qty) {
             return [
                 'status' => 'error',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
                 'code' => '$qty > $checkStock->qty',
             ];
         } else {
@@ -295,7 +298,7 @@ class StockOrderController extends Controller
 
                 return [
                     'status' => 'success',
-                    'container' => '#inventory',
+                    'container' => '#inventory-container',
                     'data' => $model,
                 ];
             }
@@ -316,7 +319,7 @@ class StockOrderController extends Controller
 
             return [
                 'status' => 'success',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
             ];
         }
 
@@ -408,7 +411,7 @@ class StockOrderController extends Controller
             $model = StockEvent::findOne($id);
 
             $userCreate = UserHelper::GetEmployee();
-            $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s')];
+            $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s'),'receive_date' => date('Y-m-d')];
             $model->order_status = 'success';
             $oldObj = $model->data_json;
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $jsonDate);
@@ -524,7 +527,7 @@ class StockOrderController extends Controller
 
             return [
                 'status' => 'success',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
             ];
         }
 
@@ -585,7 +588,7 @@ class StockOrderController extends Controller
         if ($model) {
             return [
                 'status' => 'success',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
             ];
         }
     }
@@ -646,7 +649,7 @@ class StockOrderController extends Controller
         if ($model->save(false)) {
             return [
                 'status' => 'success',
-                'container' => '#inventory',
+                'container' => '#inventory-container',
             ];
         }
     }
@@ -671,7 +674,7 @@ class StockOrderController extends Controller
 
         return [
             'status' => 'success',
-            'container' => '#inventory',
+            'container' => '#inventory-container',
             'url' => $url,
         ];
     }

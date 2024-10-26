@@ -80,31 +80,6 @@ class StockController extends Controller
         }
     }
 
-    // public function actionWarehouse()
-    // {
-    //     $searchModel = new StockSearch();
-    //     $dataProvider = $searchModel->search($this->request->queryParams);
-    //     $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
-    //     $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
-    //     $dataProvider->query->groupBy('asset_item');
-
-    //     if ($this->request->isAjax) {
-    //         Yii::$app->response->format = Response::FORMAT_JSON;
-    //         return [
-    //             'title' => $this->request->get('title'),
-    //             'count' => $dataProvider->getTotalCount(),
-    //             'content' => $this->renderAjax('list', [
-    //                 'searchModel' => $searchModel,
-    //                 'dataProvider' => $dataProvider,
-    //             ])
-    //         ];
-    //     } else {
-    //         return $this->render('list', [
-    //             'searchModel' => $searchModel,
-    //             'dataProvider' => $dataProvider,
-    //         ]);
-    //     }
-    // }
 
     public function actionInStock()
     {
@@ -141,7 +116,6 @@ class StockController extends Controller
             ]);
         }
     }
-
 
 
 
@@ -183,6 +157,17 @@ class StockController extends Controller
 
         $warehouse = Yii::$app->session->get('warehouse');
         $model = $this->findModel($id);
+        
+        return $this->render('view', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionViewStockCard($id)
+    {
+
+        $warehouse = Yii::$app->session->get('warehouse');
+        $model = $this->findModel($id);
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->select([
@@ -208,16 +193,13 @@ class StockController extends Controller
                 ])
             ->orderBy(['t.created_at' => SORT_ASC, 't.id' => SORT_ASC]);
 
-            // Yii::$app->response->format = Response::FORMAT_JSON;
-
-            // return $dataProvider->getModels();
-
-        return $this->render('view', [
+        return $this->render('view_stock_card', [
             'model' => $model,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
+    
 
     /**
      * Creates a new Stock model.

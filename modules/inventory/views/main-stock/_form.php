@@ -64,6 +64,14 @@ $js = <<< JS
                         dataType: 'json',
                         success: async function (response) {
                                 form.yiiActiveForm('updateMessages', response, true);
+                                if(response.status == 'error') 
+                                {
+                                    Swal.fire({
+                                        title: "เกิดข้อผิดพลาดบางอย่าง!",
+                                        text: response.message,
+                                        icon: "error"
+                                        });
+                                    }
                                     if(response.status == 'success') {
                                             closeModal()
                                             success()

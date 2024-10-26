@@ -46,7 +46,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
               <th>คลัง</th>
               <th>มูลค่า</th>
               <th>สถานะ</th>
-              <th style="width:100px">ดำเนินการ</th>
+              <th class="text-center" style="width:100px">ดำเนินการ</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +65,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
                 ?></td>
                 <td><?php echo $item->viewstatus(); ?></td>
-                <td>
+                <td class="text-center">
                 <?php echo Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/inventory/stock-order/view', 'id' => $item->id], ['class' => 'btn btn-light']); ?>
                 </td>
               </tr>

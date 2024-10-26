@@ -12,6 +12,7 @@ use Yii;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use app\modules\inventory\models\StockEvent;
 
 /**
  * This is the model class for table "stock".
@@ -98,6 +99,11 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
         return $this->hasOne(StockOut::class, ['warehouse_id' => 'warehouse_id']);
     }
 
+    public function getOrder()
+    {
+        return $this->hasOne(StockEvent::class, ['lot_number' => 'lot_number']);
+    }
+
     public function ShowImg()
     {
         $model = Uploads::find()->where(['ref' => $this->product->ref])->one();
@@ -149,8 +155,12 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->all(), 'code', 'title');
     }
 
-
-
+//แสดง lot สินค้าทั้งหมด
+public function listLotNumber()
+{
+  return  self::find()->where(['asset_item' => $this->asset_item,'warehouse_id' => $this->warehouse_id])
+  ->andWhere(['>','qty',0])->all();
+}
     public function SumQty()
     {
         // return $this->warehouse_id;
@@ -230,6 +240,18 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
                 WHERE i.asset_item = :asset_item AND IFNULL(s.qty,0) > 0
                 AND s.warehouse_id = :warehouse_id
                 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) ASC limit 1;";
+                
+                $query = Yii::$app->db->createCommand($sql,[
+                    ':asset_item' => $this->asset_item,
+                    ':warehouse_id' => $this->warehouse_id
+                ])->queryOne();
+                return $query;
+    }
+
+    //เบิกวัสดุคลังย่อยgเลือก lot ที่ล่าสุด
+    public function getLotQtyOut()
+    {
+        $sql = "SELECT id,lot_number,qty  FROM stock WHERE asset_item = :asset_item AND IFNULL(qty,0) > 0 AND warehouse_id = :warehouse_id LIMIT 1;";
                 
                 $query = Yii::$app->db->createCommand($sql,[
                     ':asset_item' => $this->asset_item,

@@ -26,54 +26,39 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-
-
+<?php Pjax::begin(); ?>
 <div class="card p-0">
-  <div class="card-body">
-      <?php // Html::a($createIcon.' สร้างเอกการเบิก',['/inventory/stock-order/create','name' => 'order','type' => 'OUT','title' => $createIcon.' สร้างเอกสารเบิกวัสดุ'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-      <?= Html::a($createIcon.' เลือกรายการ',['/inventory/store'],['class' => 'btn btn-primary rounded-pill shadow'])?>
+    <div class="card-body">
+        <?= Html::a($createIcon.' เลือกรายการ',['/inventory/store'],['class' => 'btn btn-primary rounded-pill shadow'])?>
     </div>
-  </div>
 </div>
-<div class="stock-in-index">
-
-
-  <?php Pjax::begin(); ?>
-  <?php // echo $this->render('_search', ['model' => $searchModel]); 
-  ?>
-
-
-  <div class="card">
+<div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-          <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-          <div>
-            <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
-                                เลือกรายการ</button> -->
-          </div>
-
+            <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary">
+                    <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
         </div>
         <table class="table table-primary mb-5">
-          <thead>
-            <tr>
-              <th scope="col" style="width:155px">รหัส</th>
-              <th class="text-center">ปีงบประมาณ</th>
-              <th>รายการ</th>
-              <th>คลัง</th>
-              <th>มูลค่า</th>
-              <th>สถานะ</th>
-              <th style="width:100px">ดำเนินการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($dataProvider->getModels() as $item): ?>
-              <tr>
-                <td><?=$item->code?></td>
-                <td class="text-center"><?=$item->thai_year?></td>
-                <td><?=$item->CreateBy($item->created_at)['avatar']?></td>
-                <td><?=$item->warehouse->warehouse_name?></td>
-                <td>
-                  <?php
+            <thead>
+                <tr>
+                    <th scope="col" style="width:155px">รหัส</th>
+                    <th class="text-center">ปีงบประมาณ</th>
+                    <th>รายการ</th>
+                    <th>คลัง</th>
+                    <th>มูลค่า</th>
+                    <th>สถานะ</th>
+                    <th style="width:100px">ดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($dataProvider->getModels() as $item): ?>
+                <tr>
+                    <td><?=$item->code?></td>
+                    <td class="text-center"><?=$item->thai_year?></td>
+                    <td><?=$item->CreateBy($item->created_at)['avatar']?></td>
+                    <td><?=$item->warehouse->warehouse_name?></td>
+                    <td>
+                        <?php
                   echo number_format($item->getTotalOrderPrice(),2);
                 try {
                 } catch (\Throwable $th) {
@@ -81,19 +66,14 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 }
 
                 ?></td>
-                <td><?=$item->viewstatus()?></td>
-                <td>
-                <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
+                    <td><?=$item->viewstatus()?></td>
+                    <td>
+                        <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
         </table>
-
     </div>
-  </div>
-
-
-  <?php Pjax::end(); ?>
-
 </div>
+<?php Pjax::end(); ?>
