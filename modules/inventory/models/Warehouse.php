@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\models;
 
+use app\components\AppHelper;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\Employees;
@@ -128,15 +129,17 @@ class Warehouse extends \yii\db\ActiveRecord
         // }
     }
 
+    //ยอดยกมาจากของปีงบปรัมารที่แล้ว
     public function SumPice()
     {
         // 715,043.22
         // 2600
         // 7212443.22
         // 01-00011
-        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id";
+        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id AND thai_year <> :thai_year";
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
+            ':thai_year' => AppHelper::YearBudget()
             ])->queryScalar();
             return number_format($model,2);
     }
