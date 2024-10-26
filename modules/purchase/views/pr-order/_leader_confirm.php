@@ -44,7 +44,7 @@ $user = UserHelper::GetEmployee();
 
 <?php ActiveForm::end(); ?>
 <?php else:?>
-<h6 class="text-center">ไม่อนุญาติ</h6>
+<h6 class="text-center">ไม่อนุญาต</h6>
 <?php endif;?>
 <?php
 $js = <<< JS

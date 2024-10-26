@@ -40,7 +40,7 @@ $this->title = 'ระบบคลัง';
     <div class="col-xl-6">
         <div class="card">
             <div class="card-body">
-                
+
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่าเบิกจ่ายวัสดุทั้งหมด</h6>
                     <div class="mb-3">
@@ -59,43 +59,78 @@ $this->title = 'ระบบคลัง';
         <!-- #### -->
         <div class="row">
         <div class="col-6">
+                <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+                    <div class="card-body">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar">
+                                    <div class="avatar-title rounded bg-primary bg-opacity-25">
+                                        <i class="fa-solid fa-rocket mb-0 text-primary"></i>
 
-<div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
-    <div class="card-body">
-        <div>
-            <div class="d-flex align-items-center">
-                <div class="avatar">
-                    <div class="avatar-title rounded bg-primary bg-opacity-25">
-                        <i class="fa-solid fa-chart-line font-size-24 mb-0 text-primary"></i>
+                                    </div>
+                                </div>
+
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0 font-size-15">ยอดยกมา</h6>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">
+                                    <?php echo $searchModel->Summary()['in']; ?>
+                                    </h4>
+                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-0 text-truncate">รวมมูลค่าวัสดุคงเหลือ</p>
+                                        </div>
+                                        <div class="flex-shrink-0" style="position: relative;">
+
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="flex-grow-1 ms-3">
-                    <h6 class="mb-0 font-size-15">ใช้ไป</h6>
                 </div>
 
             </div>
-
-            <div>
-                <h3 class="mt-4 pt-1 mb-0 font-size-22">  <?php echo $searchModel->Summary()['out']; ?>
-                </h4>
-                <div class="d-flex mt-1 align-items-end overflow-hidden">
-                    <div class="flex-grow-1">
-                        <p class="text-muted mb-0 text-truncate">รวมมูลค่าที่ใช้ไป</p>
-                    </div>
-                    <div class="flex-shrink-0" style="position: relative;">
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-</div>
             <div class="col-6">
-            <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+
+                <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
+                    <div class="card-body">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar">
+                                    <div class="avatar-title rounded bg-primary bg-opacity-25">
+                                        <i class="fa-solid fa-chart-line font-size-24 mb-0 text-primary"></i>
+                                    </div>
+                                </div>
+
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0 font-size-15">ใช้ไป</h6>
+                                </div>
+
+                            </div>
+
+                            <div>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo $searchModel->Summary()['out']; ?>
+                                    </h4>
+                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-0 text-truncate">รวมมูลค่าที่ใช้ไป</p>
+                                        </div>
+                                        <div class="flex-shrink-0" style="position: relative;">
+
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="col-6">
+                <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                     <div class="card-body">
                         <div>
                             <div class="d-flex align-items-center">
@@ -112,21 +147,21 @@ $this->title = 'ระบบคลัง';
 
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">0
-                                </h4>
-                                <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">ยอกซื้อเดือนกันนยา</p>
-                                    </div>
-                                    <div class="flex-shrink-0" style="position: relative;">
+                                    </h4>
+                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-0 text-truncate">ยอกซื้อเดือนกันนยา</p>
+                                        </div>
+                                        <div class="flex-shrink-0" style="position: relative;">
 
+                                        </div>
                                     </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
 
             <div class="col-6">
                 <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -147,57 +182,22 @@ $this->title = 'ระบบคลัง';
 
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">0
-                                </h4>
-                                <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">ยอดเดือนสิงหา</p>
-                                    </div>
-                                    <div class="flex-shrink-0" style="position: relative;">
+                                    </h4>
+                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-0 text-truncate">ยอดเดือนสิงหา</p>
+                                        </div>
+                                        <div class="flex-shrink-0" style="position: relative;">
 
+                                        </div>
                                     </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-6">
-
-            <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
-                    <div class="card-body">
-                        <div>
-                            <div class="d-flex align-items-center">
-                                <div class="avatar">
-                                    <div class="avatar-title rounded bg-primary bg-opacity-25">
-                                        <i class="fa-solid fa-rocket mb-0 text-primary"></i>
-
-                                    </div>
-                                </div>
-
-                                <div class="flex-grow-1 ms-3">
-                                    <h6 class="mb-0 font-size-15">มูลค่ารวม</h6>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                  <?php echo $searchModel->Summary()['in']; ?>
-                                </h4>
-                                <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">รวมมูลค่าวัสดุคงเหลือ</p>
-                                    </div>
-                                    <div class="flex-shrink-0" style="position: relative;">
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
+            
 
 
         </div>
@@ -224,11 +224,12 @@ $this->title = 'ระบบคลัง';
                         <h5 class="card-title mb-4 text-truncate">ปริมาณวัสดุตามหมวดหมู่</h5>
                     </div>
                     <div class="flex-shrink-0 ms-2">
-                     
+
                     </div>
                 </div>
                 <!-- <div id="saleing-categories" data-colors="[&quot;#1f58c7&quot;, &quot;#4976cf&quot;,&quot;#6a92e1&quot;, &quot;#e6ecf9&quot;]"> -->
-                <div id="saleing-categories" data-colors="[&quot;#FE9800&quot;, &quot;#1770B2&quot;,&quot;#1770B2&quot;, &quot;#0A67AD&quot;, &quot;#0F6AAF&quot;]">
+                <div id="saleing-categories"
+                    data-colors="[&quot;#FE9800&quot;, &quot;#1770B2&quot;,&quot;#1770B2&quot;, &quot;#0A67AD&quot;, &quot;#0F6AAF&quot;]">
                 </div>
             </div>
         </div>

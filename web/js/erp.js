@@ -137,7 +137,7 @@ $("body").on("click", ".open-modal", function (e) {
     error: function (xhr) {
 
       $("#main-modal-label").html('เกิดข้อผิดพลาด');
-      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาติ</h5>');
+      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
       $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
       $(".modal-dialog").addClass("modal-md");
       console.log(xhr);

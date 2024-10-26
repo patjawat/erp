@@ -35,7 +35,7 @@ yii\web\YiiAsset::register($this);
 
 <?php ActiveForm::end(); ?>
 <?php } else { ?>
-<h6 class="text-center">ไม่อนุญาติ</h6>
+<h6 class="text-center">ไม่อนุญาต</h6>
 <?php }?>
 <?php
 
