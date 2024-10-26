@@ -36,8 +36,8 @@ yii\web\YiiAsset::register($this);
 <?php
 
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
-$id = \Yii::$app->user->id;
-$office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"))->one();
+$userid = \Yii::$app->user->id;
+$office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
 
 ?>
 <div class="row">
@@ -222,9 +222,10 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
         <!-- approve -->
         <div class="card">
             <div class="card-body">
+                <?php echo $model->checker;?> | <?=$userid?>
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้อนุมัติ')['avatar']; ?>
-                    <?php if($model->checker == $id):?>
+                    <?php if($model->checker == $userid):?>
                     <?php echo $model->order_status != 'success' ? Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
                <?php endif;?>
                 </div>
