@@ -54,7 +54,7 @@ $this->title = $model->warehouse_name;
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-            <h2><?=$model->SumPiceIn()?></h2>
+            <h2><?=number_format($model->SumPiceIn(),2)?></h2>
             </div>
             <div class="card-footer border-0">มูลค่ารับเข้า</div>
         </div>
@@ -65,7 +65,7 @@ $this->title = $model->warehouse_name;
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                <h2><?=$model->SumPiceOut()?></h2>
+                <h2><?=number_format($model->SumPiceOut(),2)?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าใช้ไป</div>
             </div>
@@ -77,7 +77,7 @@ $this->title = $model->warehouse_name;
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                <h2><?=$model->SumPiceOut()?></h2>
+                <h2><?=number_format(($model->SumPiceIn()-$model->SumPiceOut()),2)?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าคงเหลือ</div>
             </div>

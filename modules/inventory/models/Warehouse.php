@@ -148,7 +148,7 @@ class Warehouse extends \yii\db\ActiveRecord
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
             ])->queryScalar();
-            return number_format($model,2);
+            return $model;
     }
 // ยอดจ่ายออก
     public function SumPiceOut()
@@ -157,7 +157,7 @@ class Warehouse extends \yii\db\ActiveRecord
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
             ])->queryScalar();
-            return number_format($model,2);
+            return $model;
     }
 
 
