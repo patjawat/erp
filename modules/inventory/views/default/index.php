@@ -149,7 +149,7 @@ $this->title = 'ระบบคลัง';
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
-                                            <p class="text-muted mb-0 text-truncate">ยอกซื้อเดือนกันนยา</p>
+                                            <p class="text-muted mb-0 text-truncate">ยอดรับเข้า</p>
                                         </div>
                                         <div class="flex-shrink-0" style="position: relative;">
 
@@ -185,7 +185,7 @@ $this->title = 'ระบบคลัง';
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
-                                            <p class="text-muted mb-0 text-truncate">ยอดเดือนสิงหา</p>
+                                            <p class="text-muted mb-0 text-truncate">มูลค่าคงเหลือ</p>
                                         </div>
                                         <div class="flex-shrink-0" style="position: relative;">
 
