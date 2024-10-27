@@ -231,6 +231,7 @@ class StockInController extends Controller
                     }
                 }
 
+                $model->thai_year = isset($model->data_json['receive_date']) ? AppHelper::convertToGregorian($model->data_json['receive_date']) : '';
                 $model->order_status = 'pending';
                 $model->warehouse_id = $warehouse['warehouse_id'];
 
@@ -294,7 +295,8 @@ class StockInController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $thaiYear = substr(AppHelper::YearBudget(), 2);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
                 $model->code = \mdm\autonumber\AutoNumber::generate('RC-'.substr(AppHelper::YearBudget(), 2).'????');
                 if ($order) {
                     // $order->status = 5;
@@ -307,12 +309,14 @@ class StockInController extends Controller
                 $convertDate =[
                     'receive_date' =>  AppHelper::convertToGregorian($model->data_json['receive_date']),
                 ];
-
+                $model->thai_year = AppHelper::YearBudget(AppHelper::convertToGregorian($model->data_json['receive_date']));
                 $model->data_json =  ArrayHelper::merge($model->data_json,$convertDate);
+
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {
                     $stockItem = new StockEvent([
                         'code' => $model->code,
+                        'thai_year' =>  $model->thai_year,
                         'lot_number' => $model->auto_lot == '1' ? \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????') : '',
                         'asset_item' => $item->asset_item,
                         'transaction_type' => 'IN',
@@ -387,6 +391,7 @@ class StockInController extends Controller
             if ($model->name == 'order_item' && $model->auto_lot == '1' && $model->lot_number == '') {
                 $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
             }
+            $model->thai_year = isset($model->data_json['receive_date']) ? AppHelper::convertToGregorian($model->data_json['receive_date']) : '';
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             if ($model->save(false)) {
@@ -506,6 +511,7 @@ class StockInController extends Controller
                 $storeModel->lot_number = $item->lot_number;
             }
 
+            $storeModel->thai_year = AppHelper::YearBudget();
             $storeModel->asset_item = $item->asset_item;
             $storeModel->qty = $storeModel->qty + $item->qty;
             $storeModel->unit_price = $item->unit_price;

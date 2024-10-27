@@ -118,17 +118,16 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                                 <?php endif;?>
                             </td>
                             <td class="text-center">
-                            <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office)): ?>
+                                <?php if ($model->OrderApprove() && isset($office) &&  $item->SumLotQty() <= 0): ?>
+                                    <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
+                                    <?php endif;?>
+                                    
+                                    <?php //if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
+                                    
+                                    <?php if($model->OrderApprove() != 1):?>
+                                    <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
+                                    <?php endif;?>
 
-                                <?php if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
-                                <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
-                                <?php }?>
-
-                                <?php // if ($warehouse['warehouse_id'] != $item->warehouse_id) { ?>
-                                <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
-                                <?php//  }?>
-
-                                <?php endif;?>
 
                             </td>
                         </tr>

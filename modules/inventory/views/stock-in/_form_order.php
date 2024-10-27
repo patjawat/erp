@@ -14,7 +14,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 
 
-    <?php
+<?php
      echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
                                         'data' => $model->listVendor(),
                                         'options' => ['placeholder' => 'เลือกผู้จำหน่วย/บริจาค'],
@@ -34,27 +34,52 @@ use iamsaint\datetimepicker\Datetimepicker;
                                     
                                     ?>
 
-<?php
-  
-  echo $form->field($model, 'data_json[asset_type]')->widget(Select2::classname(), [
-      'data' => $model->ListAssetType(),
-    //   'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
-      'options' => ['placeholder' => 'ระบุประเภท',
-      'disabled' => ($model->category_id ?  true : false)
-  ],
-      'pluginOptions' => [
-          'allowClear' => true,
-          'dropdownParent' => '#main-modal',
-      ],
-      'pluginEvents' => [
-        "select2:select" => "function(result) { 
-            var data = $(this).select2('data')[0]
-            $('#stockevent-data_json-asset_type_name').val(data.text)
-         }",
-      ]
-  ])->label('ประเภท');
-  ?>
+<div class="row">
+    <div class="col-6">
 
+        <?php
+
+echo $form->field($model, 'data_json[asset_type]')->widget(Select2::classname(), [
+    'data' => $model->ListAssetType(),
+    //   'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
+    'options' => ['placeholder' => 'ระบุประเภท',
+    'disabled' => ($model->category_id ?  true : false)
+],
+'pluginOptions' => [
+    'allowClear' => true,
+    'dropdownParent' => '#main-modal',
+],
+'pluginEvents' => [
+    "select2:select" => "function(result) { 
+        var data = $(this).select2('data')[0]
+        $('#stockevent-data_json-asset_type_name').val(data.text)
+        }",
+        ]
+        ])->label('ประเภทวัดุ');
+        ?>
+
+    </div>
+    <div class="col-6">
+
+        <?php
+
+echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
+    'data' =>  ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม','บริจาค' => 'บริจาค'], 
+    'options' => ['placeholder' => 'ระบุประเภทการรับเข้า',
+    'disabled' => ($model->category_id ?  true : false)
+],
+'pluginOptions' => [
+    'allowClear' => true,
+    'dropdownParent' => '#main-modal',
+],
+'pluginEvents' => []
+        ])->label('ประเภทการรับเข้า');
+        ?>
+
+
+    </div>
+
+</div>
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า');?>
 
 <?=$form->field($model, 'data_json[receive_date]')->widget(Datetimepicker::className(),[

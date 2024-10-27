@@ -10,7 +10,7 @@ use yii\helpers\Json;
 <div id="inventoryCharts"></div>
 
 <?php
- $query = $model->SummaryChart();
+ $query = $model->SummaryChart('MAIN');
 
 try {
   $chartSummary = [

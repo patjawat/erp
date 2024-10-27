@@ -13,7 +13,7 @@ use app\models\Categorise;
 use yii\widgets\Pjax;
 
 $warehouse = Yii::$app->session->get('warehouse');
-$this->title = $model->warehouse_name;
+$this->title = $warehouse['warehouse_name'];
 ?>
 
 
@@ -30,21 +30,11 @@ $this->title = $model->warehouse_name;
 
 <?php  Pjax::begin(['id' => 'inventory-container']); ?>
 <div class="row">
-    <!-- <div class="col-3">
-        <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
-            <div class="card-body">
-                <h2><?=$model->SumPice()?></h2>
-            </div>
-            <div class="card-footer border-0">รวมมูลค่าคลัง</div>
-        </div>
-    </div> -->
     <div class="col-3">
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <!-- <h2 id="totalStock">0</h2> -->
-                     
-                    <h2><?=$model->SumPice()?></h2>
+                    <h2><?php echo number_format($searchModel->LastTotalStock(),2); ?> </h2>
                 </div>
                 <div class="card-footer border-0">ยอดยกมา</div>
             </div>
@@ -54,7 +44,7 @@ $this->title = $model->warehouse_name;
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
-            <h2><?=number_format($model->SumPiceIn(),2)?></h2>
+                <h2><?php echo number_format($searchModel->ReceiveSubSummary(),2); ?></h2>
             </div>
             <div class="card-footer border-0">มูลค่ารับเข้า</div>
         </div>
@@ -65,7 +55,8 @@ $this->title = $model->warehouse_name;
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                <h2><?=number_format($model->SumPiceOut(),2)?></h2>
+                    <h2><?=number_format($searchModel->OutSummary(),2)?></h2>
+
                 </div>
                 <div class="card-footer border-0">มูลค่าใช้ไป</div>
             </div>
@@ -77,7 +68,10 @@ $this->title = $model->warehouse_name;
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                <h2><?=number_format(($model->SumPiceIn()-$model->SumPiceOut()),2)?></h2>
+                    <h2> <?php 
+                    echo number_format(($searchModel->LastTotalStock()+$searchModel->ReceiveSubSummary()) - $searchModel->OutSummary(),2)
+                    // echo number_format($searchModel->TotalPrice(),2);
+                     ?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าคงเหลือ</div>
             </div>
@@ -87,39 +81,26 @@ $this->title = $model->warehouse_name;
 </div>
 
 
-<div class="row">
-    <div class="col-12">
+
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title">ปริมาณเบิก/จ่าย</h6>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
-                        </div>
-                    </div>
+                    <div class="mb-3">
+                    <?php echo $this->render('_search_year', ['model' => $searchModel]); ?></div>
                 </div>
-                <?=$this->render('view_chart',['model' => $model])?>
+                <?= $this->render('view_chart',['model' => $searchModel])?>
             </div>
         </div>
-      
 
 
-        <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
-        <div id="showOrderRequestInWarehouse" style="min-height: 463px;">
-            
-        </div>
+<?php if($warehouse['warehouse_type'] == 'MAIN'):?>
+<?= $this->render('_order_request',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
+<?php endif?>
 
-        <?php endif?>
-    </div>
-
-</div>
-
-
+<?php if($warehouse['warehouse_type'] == 'SUB'):?>
+<?= $this->render('_order_withdraw',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
+<?php endif?>
 
 <?php
 
@@ -146,5 +127,4 @@ $js = <<< JS
 $this->registerJS($js, View::POS_END);
 ?>
 
-    <?php Pjax::end(); ?>
-  
+<?php Pjax::end(); ?>

@@ -37,7 +37,7 @@ $products = $cart->getItems();
                     <?=$this->render('_search', ['model' => $searchModel]); ?>
                     <div class="d-flex">
                     <?=Html::a('<button type="button" class="btn btn-primary rounded-pill">
-                    <i class="fa-solid fa-cart-plus"></i> เลือก <span class="badge text-bg-danger">'.$cart->getCount().'</span> รายการ
+                    <i class="fa-solid fa-cart-plus"></i> เลือก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
                     </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
 
                 <?php // $this->render('_search', ['model' => $searchModel]); ?>
@@ -70,7 +70,7 @@ $products = $cart->getItems();
                     </td>
                     <td class="text-end">
                         <?php if($item->SumQty() > 0):?>
-                    <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เบิก',['/inventory/sub-stock/add-to-cart','id' => $item->id],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>
+                    <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เบิก',['/inventory/sub-stock/add-to-cart','lot_number' => $item->lot_number],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>
                     <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก2',['/inventory/sub-stock/select-lot','id' => $item->id],['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                    <?php else:?>
                     <button type="button" class="btn btn-sm btn-primary shadow rounded-pill" disabled><i class="fa-solid fa-circle-plus"></i> เลือก</button>
@@ -78,6 +78,11 @@ $products = $cart->getItems();
                 </td>
                 </tr>
                 <?php endforeach;?>
+                <tr>
+                    <td class="text-end" colspan="4"> <span class="fw-semibold">รวมทั้งสิ้น</span></td>
+                    <td class="text-end"> <span class="fw-semibold"><?=$searchModel->SumPrice()?></span></td>
+                    <td class="text-end"></td>
+                </tr>
             </tbody>
         </table>
 
@@ -94,7 +99,7 @@ $products = $cart->getItems();
         </div>
     </div>
     </div>
-    <?php Pjax::end(); ?>
+ 
 
     <?php
 
@@ -138,8 +143,12 @@ $js = <<< JS
                     timer: 1500,
                 });
                 }
-                // success()
-                $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
+                if(res.status =='success')
+                {
+                    $('#totalCount').text(res.totalCount);
+                }
+                success()
+                // $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
         }
     });
 });
@@ -149,3 +158,5 @@ JS;
 $this->registerJS($js, View::POS_END);
 ?>
 
+
+<?php Pjax::end(); ?>

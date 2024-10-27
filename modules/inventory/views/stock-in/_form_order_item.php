@@ -97,7 +97,7 @@ $resultsJs = <<< JS
      echo $form->field($model, 'data_json[item_type]')->radioList(
          ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม','บริจาค' => 'บริจาค'], 
          ['custom' => true, 'inline' => true, 'id' => 'custom-radio-list']
-         )->label('ประเภท');
+         )->label('ประเภทการรับเข้า');
          ?>
 
     </div>

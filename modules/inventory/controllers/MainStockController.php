@@ -31,9 +31,16 @@ class MainStockController extends Controller
 
     public function actionCreate()
     {
-        $cart = \Yii::$app->cartMain;
+
         $formWarehouse = \Yii::$app->session->get('warehouse');
         $toWarehouse = \Yii::$app->session->get('selectMainWarehouse');
+
+        //หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
+        if(!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse['warehouse_id'])){
+            return $this->redirec(['/inventory']);
+        }
+        
+        $cart = \Yii::$app->cartMain;
         $userCreate = UserHelper::GetEmployee();
         $name = $this->request->get('name');
         $order_id = $this->request->get('order_id');
@@ -62,6 +69,7 @@ class MainStockController extends Controller
                         $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
                     }
 
+                    $model->thai_year = AppHelper::YearBudget();
                     $model->order_status = 'pending';
                     $model->warehouse_id = $toWarehouse['warehouse_id'];
                     $model->from_warehouse_id = $formWarehouse['warehouse_id'];
@@ -71,8 +79,9 @@ class MainStockController extends Controller
         
 
                     foreach ($cart->getItems() as $item) {
-                        $item = new StockEvent([
+                        $newItem = new StockEvent([
                             'name' => 'order_item',
+                            'thai_year' => AppHelper::YearBudget(),
                             'transaction_type' => $model->transaction_type,
                             'category_id' => $model->id,
                             'warehouse_id' => $model->warehouse_id,
@@ -86,7 +95,7 @@ class MainStockController extends Controller
                             ],
                             'order_status' => 'pending',
                         ]);
-                        if (!$item->save(false)) {
+                        if (!$newItem->save(false)) {
                             throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ITems ได้');
                         }
             
@@ -98,7 +107,6 @@ class MainStockController extends Controller
                     return $this->redirect(['/inventory/main-stock']);
                 } catch (\Throwable $e) {
                     $transaction->rollBack();
-
                     return ['status' => 'error', 'message' => $e->getMessage()];
                 }
                 // if ($model->save(false)) {
@@ -147,6 +155,7 @@ class MainStockController extends Controller
         foreach ($cart->getItems() as $item) {
             $item = new StockEvent([
                 'name' => 'order_item',
+                'thai_year' => AppHelper::YearBudget(),
                 'transaction_type' => $model->transaction_type,
                 'category_id' => $model->id,
                 'warehouse_id' => $model->warehouse_id,

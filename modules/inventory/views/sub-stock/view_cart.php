@@ -45,7 +45,7 @@ use yii\web\View;
                             </div>
                         </td>
                         <td>
-                            <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/sub-stock/delete-item','id' => $item->id],['class' => 'delete-item-cart btn btn-sm btn-danger shadow '])?>
+                            <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/sub-stock/delete-item','id' => $item->id],['class' => 'delete-sub-item-cart btn btn-sm btn-danger shadow '])?>
                         </td>
                     </tr>
                     <?php endforeach;?>

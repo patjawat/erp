@@ -1,7 +1,7 @@
 <?php
 
 namespace app\modules\inventory\models;
-
+use app\components\AppHelper;
 use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
@@ -193,6 +193,28 @@ public function listLotNumber()
         }
     }
 
+    //รวมราคา
+    public function SumPrice()
+    {
+        $model = self::find()
+        ->leftJoin('categorise p', 'p.code=stock.asset_item')
+        ->andWhere(['warehouse_id' => $this->warehouse_id])
+        ->andFilterWhere(['p.category_id' => $this->asset_type])
+        ->andFilterWhere([
+            'or',
+            ['like', 'asset_item', $this->q],
+            ['like', 'title', $this->q],
+        ])
+        ->select(['total' => new Expression('SUM(stock.unit_price * stock.qty)')])
+        ->scalar();
+
+        if ($model) {
+            return number_format($model, 2);
+        } else {
+            return 0;
+        }
+    }
+
     public function getStockCard()
     {
         $sql = "SELECT x.*,(x.unit_price * qty) as total_price FROM(SELECT 
@@ -259,4 +281,117 @@ public function listLotNumber()
                 ])->queryOne();
                 return $query;
     }
+
+        // แสดงปีงบประมานทั้งหมดใน stock event
+        public function ListGroupYear()
+        {
+            $model = self::find()
+                ->select('thai_year')
+                ->where(['name' => 'order'])
+                ->groupBy('thai_year')
+                ->asArray()
+                ->all();
+    
+            $year = AppHelper::YearBudget();
+            $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+            // รวมข้อมูล
+            $model = ArrayHelper::merge($model, $isYear);
+            return ArrayHelper::map($model, 'thai_year', 'thai_year');
+        }
+    // ยอดยกมา
+    public function LastTotalStock()
+    {
+ 
+        $year = $this->thai_year- 1;
+        $total = self::find()
+            ->select([new Expression('ROUND(COALESCE(SUM(qty * unit_price), 0), 2)')])
+            ->where(['thai_year' => $year])
+            ->andFilterWhere(['warehouse_id' => $this->warehouse_id])
+            ->scalar();
+        return $total;
+    }
+
+    // // จำนวนรับเข้าของคลังหลักปีงบประมานนี้
+    // public function ReceiveMainSummary()
+    // {
+    //     $year = $this->thai_year;
+    //     $total = StockEvent::find()
+    //     ->alias('se')
+    //     ->select([
+    //         new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2) as total')
+    //     ])
+    //     ->joinWith('warehouse w')
+    //     ->where([
+    //         'se.thai_year' => $year,
+    //         'se.transaction_type' => 'IN',
+    //         'w.warehouse_type' => 'MAIN'
+    //     ])
+    //     ->andFilterWhere(['se.warehouse_id' => $this->warehouse_id])
+    //     ->scalar();
+    //     return $total;
+    // }
+
+
+    //     // จำนวนรับเข้าของคลังย่อยปีงบประมานนี้
+    //     public function ReceiveSubSummary()
+    //     {
+    //         $year = $this->thai_year;
+    //         $total = StockEvent::find()
+    //         ->alias('se')
+    //         ->select([
+    //             new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2) as total')
+    //         ])
+    //         ->joinWith('warehouse w')
+    //         ->where([
+    //             'se.thai_year' => $year,
+    //             'se.transaction_type' => 'IN',
+    //             'w.warehouse_type' => 'SUB'
+    //         ])
+    //         ->andFilterWhere(['se.warehouse_id' => $this->warehouse_id])
+    //         ->scalar();
+    //         return $total;
+    //     }
+
+    //     // จำนวนที่ใช้ไป
+    //     public function OutSummary()
+    //     {
+
+    //         $query = StockEvent::find()
+    //             ->alias('se')
+    //             ->joinWith('warehouse w')
+    //             ->where([
+    //                 'se.thai_year' => $this->thai_year,
+    //                 'se.transaction_type' => 'OUT',
+    //                 'w.warehouse_type' => 'SUB'
+    //             ]);
+
+    //         if ($this->warehouse_id) {
+    //             $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
+    //         }
+
+    //         $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
+
+    //         return $total;
+
+    //     //     $where = ['and'];
+    //     //     $where[] = ['se.warehouse_id' => $this->warehouse_id];  // ใช้กรองถ้าค่ามี
+    
+    //     //     $sql = "SELECT ROUND(COALESCE(SUM(se.qty*se.unit_price),0),2) as total
+    //     //             FROM stock_events AS se
+    //     //             JOIN warehouses AS w ON se.warehouse_id = w.id
+    //     //             WHERE se.thai_year = :thai_year
+    //     //             AND se.transaction_type = 'OUT' 
+    //     //             AND w.warehouse_type = 'SUB'";
+    //     //    return Yii::$app->db->createCommand($sql)
+    //     //    ->bindValue(':thai_year', $this->thai_year)->queryScalar();
+    //     }
+
+    // public function TotalPrice()
+    // {
+    //     return ($this->LastTotalStock()+$this->ReceiveMainSummary()) - $this->OutSummary() ;
+    // }
+
+    
+
+
 }

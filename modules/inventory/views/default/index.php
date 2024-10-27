@@ -77,7 +77,7 @@ $this->title = 'ระบบคลัง';
 
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?php echo $searchModel->Summary()['in']; ?>
+                                    <?php echo number_format($searchModel->LastTotalStock(),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -112,7 +112,7 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo $searchModel->Summary()['out']; ?>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo $searchModel->OutSummary(); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -139,14 +139,13 @@ $this->title = 'ระบบคลัง';
                                         <i class="fa-solid fa-chart-line font-size-24 mb-0 text-primary"></i>
                                     </div>
                                 </div>
-
                                 <div class="flex-grow-1 ms-3">
                                     <h6 class="mb-0 font-size-15">ยอดรับเข้า</h6>
                                 </div>
                             </div>
-
                             <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22">0
+                                
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo number_format($searchModel->ReceiveMainSummary(),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -181,7 +180,8 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22">0
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">
+                                <?php echo number_format($searchModel->TotalPrice(),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">

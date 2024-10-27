@@ -101,14 +101,14 @@ $("body").on("keypress", ".update-qty", function (e) {
                 }
                 // success()
                 ViewSubCart();
-                $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
+                // $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
             }
         });
        
         
     });
 
-    $("body").on("click", ".delete-item-cart", function (e) {
+    $("body").on("click", ".delete-sub-item-cart", function (e) {
     e.preventDefault();
     $.ajax({
         type: "get",

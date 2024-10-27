@@ -26,7 +26,6 @@ class OrderRequestController extends \yii\web\Controller
     }else{
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andFilterWhere([
             'or',

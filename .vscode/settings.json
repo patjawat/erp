@@ -2,6 +2,6 @@
   "php-cs-fixer.executablePath": "/full/path/of/php-cs-fixer.phar",
   "php-cs-fixer.formatHtml": true,
   "[php]": {
-    "editor.defaultFormatter": "mansoorkhan96.php-cs-fixer"
+    "editor.defaultFormatter": "lkrms.pretty-php"
   }
 }

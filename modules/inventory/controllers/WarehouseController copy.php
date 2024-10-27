@@ -52,18 +52,19 @@ class WarehouseController extends Controller
 
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
-            $searchModel = new StockEventSearch([
+            $searchModel = new StockSearch([
                 'thai_year' => 2568,
                 'warehouse_id' => $warehouse['warehouse_id']
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+            // $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse['warehouse_id']]);
             $dataProvider->query->andFilterWhere([
                 'or',
-                ['like', 'code', $searchModel->q],
-                ['like', 'thai_year', $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+                ['like', 'asset_item', $searchModel->q],
+                ['like', 'title', $searchModel->q],
             ]);
+            $dataProvider->query->groupBy('asset_item');
 
             return $this->render('view', [
                 'searchModel' => $searchModel,

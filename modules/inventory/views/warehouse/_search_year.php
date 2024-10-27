@@ -9,10 +9,8 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="product-type-search">
-
     <?php $form = ActiveForm::begin([
-        'action' => ['index'],
+        'action' => ['/inventory/warehouse/index'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1
@@ -39,5 +37,3 @@ echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
 ])->label(false);
 ?>
     <?php ActiveForm::end(); ?>
-
-</div>

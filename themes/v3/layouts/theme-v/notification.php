@@ -108,8 +108,8 @@ $summary = (count($approveStocks) + count($helpdesks)+count($orders));
                             echo $approveStock->CreateBy($msg)['img']; ?>
                                 <div class="avatar-detail text-truncate">
                                     <h6 class="mb-1 fs-13">ขอเบิกวัสดุ</h6>
-                                    <p class="text-muted mb-0 fs-13"><i class="bi bi-clock"></i>
-                                        <?php echo $approveStock->viewCreated(); ?></p>
+                                    <p class="text-muted mb-0 fs-13">
+                                        <?=isset($approveStock->data_json['note']) ? $approveStock->data_json['note'].' | ' : ''?>  <i class="bi bi-clock"></i> <?php echo $approveStock->viewCreated(); ?></p>
                                 </div>
                             </div>
                         </a>
