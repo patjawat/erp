@@ -361,7 +361,7 @@ class StockEvent extends Yii\db\ActiveRecord
     public function OrderApprove()
     {
         try {
-            if ($this->order_status == 'pending' && $this->data_json['checker_confirm'] == 'Y') {
+            if ($this->order_status == 'success' && $this->data_json['checker_confirm'] == 'Y') {
                 return true;
             } else {
                 return false;
@@ -466,7 +466,7 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         switch ($this->order_status) {
             case 'await':
-                $msg = '<div class="badge badge-soft-success fs-13">Paid</div>';
+                $msg = '<div class="badge badge-soft-success fs-13">รอดำเนินการ</div>';
                 // $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
                 break;
 
@@ -557,6 +557,16 @@ class StockEvent extends Yii\db\ActiveRecord
 
         return $this->getAvatar($emp->id, $msg);
     }
+    //ผู้สั่งจ่ายวัสดุ
+    public function ShowPlayer()
+    {
+        // $datetime = AppHelper::ThaiDate($this->data_json['player_date'],false,false);
+        $datetime = \Yii::$app->thaiFormatter->asDateTime($this->data_json['player_date'], 'medium');
+        $msg = 'ผู้สั่งจ่ายวัสดุ'.' | '.$datetime;
+        return $this->getAvatar($this->data_json['player'], $msg);
+    }
+
+
 
     public function ViewReceiveDate()
     {

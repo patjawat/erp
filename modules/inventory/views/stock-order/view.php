@@ -13,7 +13,7 @@ $warehouse = Yii::$app->session->get('warehouse');
 /* @var app\modules\inventory\models\StockEvent $model */
 
 try {
-    $this->title = 'ร้องขอจาก'.$model->fromWarehouse->warehouse_name;
+    $this->title = $warehouse['warehouse_name'];
 } catch (Throwable $th) {
     $this->title = 'ไม่ระบุคลังที่ร้องขอ';
 }
@@ -42,7 +42,6 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
 ?>
 <div class="row">
 
-
     <div class="col-8">
         <div class="card">
             <div class="card-body">
@@ -58,84 +57,8 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                     <?php //  ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : ''?>
                     <?php }?>
                 </div>
-                <table class="table table-striped mt-3">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>รายการ</th>
-                            <th class="text-center">หน่วย</th>
-                            <th class="text-start">ล็อตผลิต</th>
-                            <th class="text-end">มูลค่า</th>
-                            <th class="text-center">คงเหลือ</th>
-                            <th class="text-center">ขอเบิก</th>
-                            <th class="text-center">จ่าย</th>
-                            <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="table-group-divider align-middle">
-                        <?php foreach ($model->getItems() as $item):?>
-
-                        <tr
-                            class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
-                            <td class="align-middle">
-                                <?php
-                                        try {
-                                            echo $item->product->Avatar();
-                                        } catch (Throwable $th) {
-                                        }
-                            ?>
-                            </td>
-                            <td class="align-middle text-center">
-                                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
-                            </td>
-
-                            <td class="align-middle text-start"><?php echo $item->lot_number; ?>
-                                (<code><?php echo $item->SumLotQty(); ?></code>)</td>
-                            <td class="align-middle text-end"><?php echo $item->unit_price; ?></td>
-                            <td class="text-center"><?php echo $item->SumStockQty(); ?></td>
-                            <td class="align-middle text-center">
-                                <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?>
-                            </td>
-                            <td class="text-center">
-                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office)): ?>
-                                <div class="d-flex">
-                                    <span type="button" class="minus btn btn-sm btn-light" id="min"
-                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
-                                        data-id="<?php echo $item->id; ?>"><i
-                                            class="fa-regular fa-square-minus fs-3"></i></span>
-                                    <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2"
-                                        value="<?php echo $item->qty; ?>" class="qty"
-                                        data-maxlot="<?=$item->SumLotQty()?>"
-                                        style="width: 55px;font-weight: 600;font-size: large;">
-                                    <span type="button" class="plus btn btn-sm btn-light" id="plus"
-                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
-                                        data-id="<?php echo $item->id; ?>">
-                                        <i class="fa-regular fa-square-plus fs-3"></i>
-                                    </span>
-                                </div>
-                                <?php else:?>
-                                <?php echo $item->qty; ?>
-                                <?php endif;?>
-                            </td>
-                            <td class="text-center">
-                                <?php if ($model->OrderApprove() && isset($office) &&  $item->SumLotQty() <= 0): ?>
-                                    <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
-                                    <?php endif;?>
-                                    
-                                    <?php //if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
-                                    
-                                    <?php if($model->OrderApprove() != 1):?>
-                                    <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
-                                    <?php endif;?>
-
-
-                            </td>
-                        </tr>
-                      
-                        <?php endforeach; ?>
-
-                    </tbody>
-                </table>
+                <!-- รายละเอียดรายการขอเบิก -->
+                <?php echo $this->render('order_items',['model' => $model,'office' => $office])?>
 
             </div>
         </div>
@@ -161,7 +84,7 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]); ?>
-                            <?php echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
+                            <?php  echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
                         </div>
                     </div>
                 </div>
@@ -172,6 +95,10 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                         [
                             'label' => 'รหัสขอเบิก',
                             'value' => $model->code,
+                        ],
+                        [
+                            'label' => 'จากคลัง',
+                            'value' => $model->fromWarehouse->warehouse_name,
                         ],
                         [
                             'label' => 'วันที่',
@@ -200,33 +127,40 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
             </div>
             <div class="card-footer">
                 <div class="row">
-                    <div class="col-6"><?php echo $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar']; ?></div>
+                    <div class="col-12">
+                        <?php  if($model->data_json['player']):?>
+                            <?=$model->ShowPlayer()['avatar'];?>
+                        <?php else :?>
+                        
+                        <?=$model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'];?>
+                        <?php endif;?>
+                        <!-- player -->
+                    </div>
                     <div class="col-6 text-end">
                         <div class="form-group mt-3 d-flex justify-content-end">
                             <?php if ($model->order_status == 'await') { ?>
-                            <?php echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
+                            <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
-                            <?php if ($model->OrderApprove() && isset($office)): ?>
+                            <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse['warehouse_id'])): ?>
                             <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
                             <?php else:?>
 
-                            <?php endif;?>
-
+                            <?php endif;?>    
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
         <!-- End Card -->
 
         <!-- approve -->
         <div class="card">
             <div class="card-body">
-               
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
-                    <?php if($model->checker == $userid):?>
-                    <?php echo $model->order_status != 'success' ? Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
+                    <?php if($model->checker == $userid && $model->order_status != 'success'):?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
                <?php endif;?>
                 </div>
             </div>
@@ -281,6 +215,7 @@ $("body").on("click", ".minus", async function (e) {
                             showConfirmButton: false,
                             timer: 1500,
                         });
+                        
                         }
                         if(res.status == 'success')
                         {
@@ -415,13 +350,14 @@ $("body").on("click", ".update-qty", function (e) {
         url: $(this).attr('href'),
         dataType: "json",
         success: async function (response) {
-            console.log(response);
-            
+
           if (response.status == "success") {
             // await  $.pjax.reload({container:response.container, history:false,url:response.url});
             success("บันสำเร็จ!.");
           }
+
           if (response.status == "error") {
+              $.pjax.reload({container:response.container, history:false});
             Swal.fire({
                     icon: "error",
                     title: "Oops...",
@@ -488,6 +424,15 @@ $('.confirm-order').click(async function (e) {
                 url: $(this).attr('href'),
                 dataType: "json",
                 success: function (res) {
+
+                    if (res.status == "error") {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Oops...",
+                                text: res.message,
+                                footer: 'เกิดข้อผิดพลาด'
+                            });
+                        }
 
                   if (res.status == "success") {
                       $.pjax.reload({container:res.container, history:false,url:res.url});

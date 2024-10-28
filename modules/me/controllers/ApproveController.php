@@ -64,6 +64,7 @@ class ApproveController extends Yii\web\Controller
                 ];
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $checkerData);
                 if ($model->data_json['checker_confirm'] == 'Y') {
+                    $model->order_status = 'pending';
                 } else {
                     $model->order_status = 'cancel';
                 }
