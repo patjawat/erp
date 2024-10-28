@@ -122,7 +122,7 @@ $config = [
         'redis' => [
             'class' => 'yii\redis\Connection',
             'hostname' => 'redis',
-            'port' => 6379,
+            'port' => env('REDIS_PORT'),
             'database' => 0,
         ],
         
