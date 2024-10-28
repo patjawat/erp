@@ -45,7 +45,7 @@ use yii\helpers\Html;
                     </span>
                 </div>
                 <?php else:?>
-                <?php // echo ($model->OrderApprove() && $model->order_status == 'success') ? $item->qty : '-' ?>
+                <?php  echo ($model->OrderApprove() && $model->order_status == 'success') ? $item->qty : '-' ?>
                 <?php endif;?>
             </td>
             <td class="text-center">
