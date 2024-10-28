@@ -560,7 +560,7 @@ class StockEvent extends Yii\db\ActiveRecord
     //ผู้สั่งจ่ายวัสดุ
     public function ShowPlayer()
     {
-        // $datetime = AppHelper::ThaiDate($this->data_json['player_date'],false,false);
+
         $datetime = \Yii::$app->thaiFormatter->asDateTime($this->data_json['player_date'], 'medium');
         $msg = 'ผู้สั่งจ่ายวัสดุ'.' | '.$datetime;
         return $this->getAvatar($this->data_json['player'], $msg);
