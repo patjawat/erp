@@ -24,7 +24,7 @@ yii\web\YiiAsset::register($this);
     ?>
 
         <?php echo $form->field($model, 'data_json[checker_confirm]')->radioList(
-            ['Y' => 'อนุมัติ', 'N' => 'ไม่อนุมัติ'],
+            ['Y' => 'เห็นชอบ', 'N' => 'ไม่เห็นชอบ'],
             ['custom' => true, 'inline' => true])->label(false); ?>
         <?php echo $form->field($model, 'data_json[checker_comment]')->textArea()->label('หมายเหตุ'); ?>
 

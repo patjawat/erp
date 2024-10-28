@@ -497,11 +497,11 @@ class StockEvent extends Yii\db\ActiveRecord
             $status = '';
             switch ($this->data_json['checker_confirm']) {
                 case 'Y':
-                    $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> อนุมัติ </span>';
+                    $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> เห็นชอบ </span>';
                     break;
 
                 case 'N':
-                    $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่อนุมัติ </span>';
+                    $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่เห็นชอบ </span>';
                     break;
 
                 default:
