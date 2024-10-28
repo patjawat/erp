@@ -515,7 +515,7 @@ class StockEvent extends Yii\db\ActiveRecord
                 [
                     'status' => $status,
                     'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
-                    'checker_date' => isset($this->data_json['checker_date']) ? $this->data_json['checker_date'] : '',
+                    'checker_date' => isset($this->data_json['checker_confirm_date']) ? $this->data_json['checker_confirm_date'] : '',
                     'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">ผู้อนุมัติ</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
                 ];
         } catch (\Throwable $th) {

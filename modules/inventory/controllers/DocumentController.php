@@ -47,7 +47,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('date_drawer',  explode(' ', $model->viewCreatedAt())[0]);
 
         $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname']);
-        $templateProcessor->setValue('approve_date', $model->viewChecker('ผู้เห็นชอบ')['checker_date']);
+        $templateProcessor->setValue('approve_date', $model->viewChecker()['checker_date']);
         // $templateProcessor->setValue('checker_name ', $model->viewChecker('ผู้เห็นชอบ')['fullname']);
         // $templateProcessor->setValue('checker_position', $checkData['position_name']);
 
