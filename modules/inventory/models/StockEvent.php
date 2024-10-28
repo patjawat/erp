@@ -566,7 +566,10 @@ class StockEvent extends Yii\db\ActiveRecord
             $msg = 'ผู้สั่งจ่ายวัสดุ' . ' | ' . $datetime;
             return $this->getAvatar($this->data_json['player'], $msg);
         } catch (\Throwable $th) {
-           return [];
+           return [
+            'fullname' => '',
+            'avatar' => ''
+           ];
         }
     }
 
