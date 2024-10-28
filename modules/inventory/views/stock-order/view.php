@@ -128,11 +128,11 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
             <div class="card-footer">
                 <div class="row">
                     <div class="col-12">
-                        <?php  if($model->data_json['player']):?>
+                        <?php  if(isset($model->data_json['player'])):?>
                             <?=$model->ShowPlayer()['avatar'];?>
                         <?php else :?>
                         
-                        <?=$model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'];?>
+                        <?=isset($office) ? $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] : null;?>
                         <?php endif;?>
                         <!-- player -->
                     </div>
