@@ -85,7 +85,7 @@ class StockOrderController extends Controller
         // return $model;
         $model = StockEvent::findOne($id);
         if ($model) {
-            $this->checkUpdateQty($id);
+            // $this->checkUpdateQty($id);
             return $this->render('view', [
                 'model' => $model,
             ]);
