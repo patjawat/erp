@@ -126,7 +126,6 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
 
             </div>
             <div class="card-footer">
-
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>

@@ -563,10 +563,10 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         try {
             $datetime = \Yii::$app->thaiFormatter->asDateTime($this->data_json['player_date'], 'medium');
+            $msg = 'ผู้สั่งจ่ายวัสดุ' . ' | ' . $datetime;
         } catch (\Throwable $th) {
-            $datetime = '';
+            $msg = 'ผู้สั่งจ่ายวัสดุ';
         }
-        $msg = 'ผู้สั่งจ่ายวัสดุ' . ' | ' . $datetime;
         return $this->getAvatar($this->data_json['player'], $msg);
     }
 
