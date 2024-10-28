@@ -126,21 +126,23 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
 
             </div>
             <div class="card-footer">
-                <div class="row">
-                    <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
                             <?=$model->ShowPlayer()['avatar'];?>
+                            <?=$model->ShowPlayer()['fullname'];?>
                         <?php else :?>
                         
                         <?=isset($office) ? $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] : null;?>
                         <?php endif;?>
                         <!-- player -->
                     </div>
-                    <div class="col-6 text-end">
+                    <div class="">
                         <div class="form-group mt-3 d-flex justify-content-end">
                             <?php if ($model->order_status == 'await') { ?>
                             <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
+
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse['warehouse_id'])): ?>
                             <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
                             <?php else:?>

@@ -50,7 +50,7 @@ use yii\helpers\Html;
             </td>
             <td class="text-center">
 
-                <?php if ($model->OrderApprove() && isset($office) &&  $item->SumLotQty() >= 1): ?>
+                <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
                 <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
                 <?php endif;?>
 

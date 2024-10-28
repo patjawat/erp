@@ -361,7 +361,7 @@ class StockEvent extends Yii\db\ActiveRecord
     public function OrderApprove()
     {
         try {
-            if ($this->order_status == 'success' && $this->data_json['checker_confirm'] == 'Y') {
+            if ($this->data_json['checker_confirm'] == 'Y') {
                 return true;
             } else {
                 return false;

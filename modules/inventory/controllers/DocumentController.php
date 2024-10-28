@@ -57,6 +57,10 @@ class DocumentController extends \yii\web\Controller
             
             $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);//ผู้อำนวยการโรงพยาบาล
             $templateProcessor->setValue('org_name', 'ผู้อำนวนยการ'.$this->GetInfo()['company_name']); //ชื่อโรงพยาบาล
+
+            $datetime = \Yii::$app->thaiFormatter->asDateTime(date('Y-m-d', strtotime($model->data_json['player_date'])), 'medium');
+            $templateProcessor->setValue('pay_date',$datetime); //วันที่
+            $templateProcessor->setValue('pay_name',$model->ShowPlayer()['fullname']); //ผู้จ่าย
             
             $templateProcessor->cloneRow('detail', count($model->getItems()));
             $i = 1;
