@@ -771,8 +771,8 @@ class StockEvent extends Yii\db\ActiveRecord
             ->where([
                 'se.thai_year' => $this->thai_year,
                 'se.transaction_type' => 'OUT',
-                'order_status' => 'success'
-                // 'w.warehouse_type' => 'SUB'
+                'order_status' => 'success',
+                'w.warehouse_type' => 'SUB'
             ]);
 
         if ($this->warehouse_id) {
