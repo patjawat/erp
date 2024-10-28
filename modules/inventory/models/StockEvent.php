@@ -530,6 +530,12 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
+// ผู้รับวสดุ
+    public function Recipient()
+    {
+        return $this->getAvatar($this->data_json['recipient'],'ผู้รับวัสดุ');
+    }
+
     public function getAvatar($empid, $msg = '')
     {
         try {

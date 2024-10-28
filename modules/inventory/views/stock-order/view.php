@@ -159,6 +159,22 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
         </div>
         <!-- End Card -->
 
+        <div class="card">
+            <div class="card-body">
+            <?php if(isset($model->data_json['recipient'])):?>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                <?=$model->Recipient()['avatar']?>
+                <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-sm btn-primary shadow text-center open-modal','data' => ['size' => 'modal-md']]);?>
+            </div>
+                <?php else:?>
+                <div class="d-flex justify-content-center">
+                    <?=Html::a('<i class="bi bi-plus-circle"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-primary shadow text-center open-modal','data' => ['size' => 'modal-md']]);?>
+                </div>
+        <?php endif?>    
+        </div>
+        </div>
+        
         <!-- approve -->
         <div class="card">
             <div class="card-body">

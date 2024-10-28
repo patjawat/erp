@@ -54,6 +54,7 @@ class StockOrderController extends Controller
         ]);
     }
 
+    
     public function actionRequest()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
@@ -191,6 +192,7 @@ class StockOrderController extends Controller
         }
     }
 
+
     protected function saveCartItem($model)
     {
         $cart = \Yii::$app->cart;
@@ -215,6 +217,78 @@ class StockOrderController extends Controller
         }
 
         return true;
+    }
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionRecipientValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new StockEvent();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if (isset($model->data_json['recipient_date'])) {
+                preg_replace('/\D/', '', $model->data_json['recipient_date']) == "" ? $model->addError('data_json[recipient_date]', 'ลงวันที่ต้องระบุ') : null;
+            }
+
+            if (isset($model->data_json['recipient'])) {
+                $model->data_json['recipient'] == '' ? $model->addError('data_json[recipient]', $requiredName) : null;
+            }
+
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
+
+    //ผู้รับวัสดุ
+    public function actionRecipient($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $oldObj = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $newObj = [
+                'recipient_date' => AppHelper::convertToGregorian($model->data_json['recipient_date']),
+            ];
+
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $newObj);
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            $model->save(false);
+
+            return [
+                'status' => 'success',
+                'container' => '#inventory-container',
+                'data' => $model,
+            ];
+        }else{
+            $model->loadDefaultValues();
+
+            $oldObj = $model->data_json;
+            $model->data_json = [
+                'recipient_date' => AppHelper::convertToThai(isset($model->data_json['recipient_date']) ? $model->data_json['recipient_date'] : date('Y-m-d')),
+            ];
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+        }
+
+        if ($this->request->isAJax) {
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_recipient', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_form_recipient', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
