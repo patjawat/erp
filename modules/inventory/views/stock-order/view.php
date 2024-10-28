@@ -126,11 +126,14 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
 
             </div>
             <div class="card-footer">
+                <?php
+                // echo $model->CreateBy()['fullname'];
+                // echo $model->viewCreatedAt();
+                ?>
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
                             <?=$model->ShowPlayer()['avatar'];?>
-                            <?=$model->ShowPlayer()['fullname'];?>
                         <?php else :?>
                         
                         <?=isset($office) ? $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] : null;?>
