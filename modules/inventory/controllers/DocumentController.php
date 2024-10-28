@@ -49,8 +49,8 @@ class DocumentController extends \yii\web\Controller
 
         $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname']);
         $templateProcessor->setValue('approve_date', $model->viewChecker()['checker_date']);
-        $templateProcessor->setValue('recipientname', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '.........................');
-        $templateProcessor->setValue('recipientdate',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiFormatter->asDateTime($model->data_json['recipient_date'], 'php:d/m/Y') : '.........................');
+        $templateProcessor->setValue('recipientname', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '.................................................');
+        $templateProcessor->setValue('recipientdate',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiFormatter->asDateTime($model->data_json['recipient_date'], 'php:d/m/Y') : '........................................');
 
         $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
         $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
