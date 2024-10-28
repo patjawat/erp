@@ -514,12 +514,14 @@ class StockEvent extends Yii\db\ActiveRecord
             return
                 [
                     'status' => $status,
+                    'fullname' => $this->getAvatar()['fullname'],
                     'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">ผู้อนุมัติ</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
                 ];
         } catch (\Throwable $th) {
             return
                 [
                     'status' => '',
+                    'fullname' => '',
                     'avatar' => '',
                 ];
         }
