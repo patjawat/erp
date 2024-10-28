@@ -1,6 +1,33 @@
 # Step 1: เลือก PHP พร้อม Apache เป็น base image
 FROM yiisoftware/yii2-php:8.2-apache
 
+# ติดตั้ง dependencies ที่จำเป็น
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    pkg-config \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+    # เปิดใช้งาน Opcache
+RUN docker-php-ext-install opcache
+
+# ติดตั้ง Redis extension
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# ตั้งค่า OPcache ใน php.ini
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.memory_consumption=128" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.interned_strings_buffer=8" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.max_accelerated_files=4000" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+
+# ติดตั้ง Swoole
+# RUN pecl install  swoole-5.0.3
+# RUN docker-php-ext-enable swoole
+
 # Step 2: กำหนด working directory ของโปรเจค
 WORKDIR /app
 RUN apt update && apt install -y nano
@@ -9,8 +36,8 @@ COPY ./ /app/
 
 # Step 4: ติดตั้ง dependencies ผ่าน composer
 
-RUN composer install --prefer-dist --no-dev --optimize-autoloader
 RUN composer install --ignore-platform-reqs
+# RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
 
 # ลบ  Cache Asset ออก

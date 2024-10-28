@@ -14,10 +14,15 @@ services:
       - ./fileupload:/app/modules/filemanager/fileupload
     links:
       - mysqlDB:db
-    environment:
-      - YII_ENV=pro
     env_file:
       - ./.env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
 
   mysqlDB:
     image: mysql:8.0
@@ -35,14 +40,22 @@ services:
       - MYSQL_ROOT_HOST=%
       - MYSQL_DATABASE=${DB_NAME}
     command:
-      [
-        'mysqld',
-        '--max-allowed-packet=64M',
-        '--wait_timeout=28800',
-        '--interactive_timeout=28800',
-        '--character-set-server=utf8',
-        '--collation-server=utf8_general_ci',
-        '--sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
+     [
+        "mysqld",
+        "--innodb-buffer-pool-size=1G",
+        "--innodb-log-file-size=256M",
+        "--innodb-flush-log-at-trx-commit=2",
+        "--innodb-flush-method=O_DIRECT",
+        "--tmp_table_size=64M",
+        "--max-heap-table-size=64M",
+        "--max-connections=200",
+        "--table-open-cache=400",
+        "--max-allowed-packet=64M",
+        "--wait_timeout=28800",
+        "--interactive_timeout=28800",
+        "--character-set-server=utf8",
+        "--collation-server=utf8_general_ci",
+        "--sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
       ]
   phpmyadmin_mysql:
     image: phpmyadmin
