@@ -44,13 +44,14 @@ class DocumentController extends \yii\web\Controller
         // $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
         $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
 
-        $templateProcessor->setValue('drawer_name ', $model->CreateBy()['fullname']);
+        $templateProcessor->setValue('drawer_name', $model->CreateBy()['fullname']);
         $templateProcessor->setValue('date_drawer',  explode(' ', $model->viewCreatedAt())[0]);
 
         $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname']);
         $templateProcessor->setValue('approve_date', $model->viewChecker()['checker_date']);
-        $templateProcessor->setValue('recipient_name ', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '');
-        $templateProcessor->setValue('recipient_date',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiFormatter->asDateTime($model->data_json['recipient_date'], 'php:d/m/Y') : '-');
+        // $templateProcessor->setValue('recipientname', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '');
+        $templateProcessor->setValue('recipientname','xxx');
+        $templateProcessor->setValue('recipientdate',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiFormatter->asDateTime($model->data_json['recipient_date'], 'php:d/m/Y') : '-');
 
         $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
         $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
