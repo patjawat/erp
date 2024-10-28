@@ -22,7 +22,7 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
 
   mysqlDB:
     image: mysql:8.0
