@@ -524,7 +524,7 @@ class StockEvent extends Yii\db\ActiveRecord
                     'fullname' => '',
                     'avatar' => '',
                 ];
-        // }
+        }
     }
 
     public function getAvatar($empid, $msg = '')
