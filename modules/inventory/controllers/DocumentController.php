@@ -77,7 +77,8 @@ class DocumentController extends \yii\web\Controller
             $templateProcessor->setValue('no#' . $i, $num++);
             $templateProcessor->setValue('detail#' . $i, $item->product->title);
             $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
-            $templateProcessor->setValue('qty#' . $i, $item->qty);
+            // $templateProcessor->setValue('qty#' . $i, $item->qty);
+            $templateProcessor->setValue('qty#' . $i, 88);
             $templateProcessor->setValue('unitprice#' . $i, $item->unit_price);
             $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price), 2));
             $i++;
