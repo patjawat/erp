@@ -98,7 +98,7 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
                         ],
                         [
                             'label' => 'จากคลัง',
-                            'value' => $model->fromWarehouse->warehouse_name,
+                            'value' => $model->fromWarehouse->warehouse_name ?? '-',
                         ],
                         [
                             'label' => 'วันที่',
