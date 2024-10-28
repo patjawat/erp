@@ -35,6 +35,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
         $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
+        $templateProcessor->setValue('date', Yii::$app->thaiFormatter->asDateTime(date('Y-m-y'), 'php:d/m/Y'));
         $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
         $templateProcessor->setValue('department', $model->CreateBy()['department']);
         $templateProcessor->setValue('number', $model->code);
