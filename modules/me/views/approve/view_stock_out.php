@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 yii\web\YiiAsset::register($this);
 ?>
-<?php if ($model->checker == $user->id) { ?>
+<?php // if ($model->checker == $user->id) { ?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-confirm',
     'enableAjaxValidation' => true, // เปิดการใช้งาน AjaxValidation
@@ -34,9 +34,9 @@ yii\web\YiiAsset::register($this);
 
 
 <?php ActiveForm::end(); ?>
-<?php } else { ?>
-<h6 class="text-center">ไม่อนุญาต</h6>
-<?php }?>
+<?php  // } else { ?>
+<!-- <h6 class="text-center">ไม่อนุญาต</h6> -->
+<?php // }?>
 <?php
 
 $js = <<< JS
