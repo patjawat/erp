@@ -47,8 +47,8 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('drawer_name', $model->CreateBy()['fullname']);
         $templateProcessor->setValue('date_drawer',  explode(' ', $model->viewCreatedAt())[0]);
 
-        $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname']);
-        $templateProcessor->setValue('approve_date', $model->viewChecker()['checker_date']);
+        $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname'] !='' ? $model->viewChecker()['fullname'] : '.................................................') ;
+        $templateProcessor->setValue('approve_date',  $model->viewChecker()['checker_date'] !='' ? $model->viewChecker()['checker_date'] : '.................................................') ;
         $templateProcessor->setValue('recipientname', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '.................................................');
         $templateProcessor->setValue('recipientdate',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiFormatter->asDateTime($model->data_json['recipient_date'], 'php:d/m/Y') : '........................................');
 
