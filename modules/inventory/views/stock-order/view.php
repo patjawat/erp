@@ -127,16 +127,6 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
             </div>
             <div class="card-footer">
 
-            <?php
-            // echo $datetime;
-            echo date('Y-m-d H:i:s');
-            // echo $datetime = \Yii::$app->thaiFormatter->asDateTime('2024-10-28', 'medium');
-
-// ตัวอย่างที่ 2: ใช้ DateTime
-// $dateTime = new DateTime("2024-10-28 16:25:57");
-// $dateOnly = $dateTime->format("Y-m-d");
-// echo $dateOnly; // Output: 2024-10-28
-            ?>
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
