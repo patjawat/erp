@@ -162,6 +162,8 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
         <!-- approve -->
         <div class="card">
             <div class="card-body">
+
+            <?=$model->viewChecker('ผู้เห็นชอบ')['fullname']?>
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
                     <?php if($model->checker == $userid && $model->order_status != 'success'):?>
