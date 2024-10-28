@@ -1,28 +1,26 @@
 <?php
 namespace app\modules\inventory\controllers;
+
 use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
-use yii\helpers\ArrayHelper;
-use app\modules\inventory\models\StockEvent;
 use app\modules\am\components\AssetHelper;
 use app\modules\am\models\Asset;
 use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\StockEvent;
 use app\modules\purchase\models\Order;
 use PhpOffice\PhpWord\Settings;
+use yii\helpers\ArrayHelper;
+use yii\helpers\BaseFileHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\web\Response;
-use yii\helpers\BaseFileHelper;
-use yii;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
+use yii;
 
 class DocumentController extends \yii\web\Controller
 {
-
-
-
-    //ใบเบิกวัสดุ
+    // ใบเบิกวัสดุ
     public function actionStockOrder($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -30,57 +28,66 @@ class DocumentController extends \yii\web\Controller
         $model = StockEvent::findOne($id);
         $this->CreateDir($model->id);
         $title = 'ใบเบิกวัสดุ';
-        $result_name = $title.'.docx';
+        $result_name = $title . '.docx';
         $word_name = 'billofmaterials.docx';
 
-            @unlink(Yii::getAlias('@webroot') . '/msword/results/inventory/' . $result_name);
-            $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/inventory/' . $result_name);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
-            $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
-            $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
-            $templateProcessor->setValue('department',  $model->CreateBy()['department']);
-            $templateProcessor->setValue('number',  $model->code);
-            $templateProcessor->setValue('total',  number_format($model->getTotalOrderPrice(),2));
-            // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
-            // $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
-            $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
-            
-            $templateProcessor->setValue('drawer_name ', $model->CreateBy()['fullname']);
-            $templateProcessor->setValue('date_drawer', $model->CreateBy()['position_name']);
+        $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
+        $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
+        $templateProcessor->setValue('department', $model->CreateBy()['department']);
+        $templateProcessor->setValue('number', $model->code);
+        $templateProcessor->setValue('total', number_format($model->getTotalOrderPrice(), 2));
+        // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
+        // $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
+        $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
 
-            $checkData = $model->getAvatar($model->checker);
-            $templateProcessor->setValue('checker_name ', $checkData['fullname']);
-            $templateProcessor->setValue('checker_position', $checkData['position_name']);
+        $templateProcessor->setValue('drawer_name ', $model->CreateBy()['fullname']);
+        $templateProcessor->setValue('date_drawer', $model->CreateBy()['position_name']);
 
-            $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
-            $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
-            
-            $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);//ผู้อำนวยการโรงพยาบาล
-            $templateProcessor->setValue('org_name', 'ผู้อำนวนยการ'.$this->GetInfo()['company_name']); //ชื่อโรงพยาบาล
+        $checkData = $model->getAvatar($model->checker);
+        $templateProcessor->setValue('checker_name ', $checkData['fullname']);
+        $templateProcessor->setValue('checker_position', $checkData['position_name']);
 
-            $datetime = \Yii::$app->thaiFormatter->asDateTime(date('Y-m-d', strtotime($model->data_json['player_date'])), 'medium');
-            $templateProcessor->setValue('pay_date',$datetime); //วันที่
-            $templateProcessor->setValue('pay_name',$model->ShowPlayer()['fullname']); //ผู้จ่าย
-            
-            $templateProcessor->cloneRow('detail', count($model->getItems()));
-            $i = 1;
-            $num = 1;
-            foreach ($model->getItems() as $item) {
-                $templateProcessor->setValue('no#' . $i, $num++);
-                $templateProcessor->setValue('detail#' . $i, $item->product->title);
-                $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
-                $templateProcessor->setValue('qty#' . $i, $item->qty);
-                $templateProcessor->setValue('unitprice#' . $i, $item->unit_price);
-                $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price),2));
-                $i++;
-            }
+        $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
+        $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
 
-            $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-            return $this->redirect('https://docs.google.com/viewerng/viewer?url='.Url::base('https').'/msword/results/' . $result_name);
-            // return $this->Show($result_name);
+        $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);  // ผู้อำนวยการโรงพยาบาล
+        $templateProcessor->setValue('org_name', 'ผู้อำนวนยการ' . $this->GetInfo()['company_name']);  // ชื่อโรงพยาบาล
+
+        // วันที่สั่งจ่าย
+        try {
+            $dateTime = $model->data_json['player_date'];
+            $paydate = explode(' ', $dateTime)[0];
+            Yii::$app->thaiFormatter->asDate($paydate, 'long');
+            $templateProcessor->setValue('pay_date', $datetime);  // วันที่
+        } catch (\Throwable $th) {
+            $templateProcessor->setValue('pay_date', '-');  // วันที่
         }
 
-            // ดึงค่ากน่วยงาน
+        $templateProcessor->setValue('pay_name', $model->ShowPlayer()['fullname']);  // ผู้จ่าย
+
+        $templateProcessor->cloneRow('detail', count($model->getItems()));
+        $i = 1;
+        $num = 1;
+        foreach ($model->getItems() as $item) {
+            $templateProcessor->setValue('no#' . $i, $num++);
+            $templateProcessor->setValue('detail#' . $i, $item->product->title);
+            $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
+            $templateProcessor->setValue('qty#' . $i, $item->qty);
+            $templateProcessor->setValue('unitprice#' . $i, $item->unit_price);
+            $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price), 2));
+            $i++;
+        }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/' . $result_name);
+        // return $this->Show($result_name);
+    }
+
+    // ดึงค่ากน่วยงาน
+
     protected function GetInfo()
     {
         $info = SiteHelper::getInfo();
@@ -88,8 +95,8 @@ class DocumentController extends \yii\web\Controller
             'company_full' => $info['company_name'] . ' ' . $info['address'],  // ที่อยู่
             'company_name' => $info['company_name'],  // ชื่อหน่วยงาน
             'doc_number' => $info['doc_number'],  // ชื่อหน่วยงาน
-            'leader_fullname' => $info['leader_fullname'], //
-            'leader_position' => $info['leader_position'], // 
+            'leader_fullname' => $info['leader_fullname'],  //
+            'leader_position' => $info['leader_position'],  //
             'address' => $info['address'],  // ที่อยู่
             'phone' => $info['phone'],  // โทรศัพท์
             'province' => $info['province'],  // ที่อยู่
@@ -101,10 +108,9 @@ class DocumentController extends \yii\web\Controller
 
     public static function CreateDir($folderName)
     {
-
-            $downloadPath = Yii::getAlias('@app') . '/web/downloads';
+        $downloadPath = Yii::getAlias('@app') . '/web/downloads';
         if ($downloadPath != null) {
-            BaseFileHelper::createDirectory($downloadPath ,0777);
+            BaseFileHelper::createDirectory($downloadPath, 0777);
         }
 
         if ($folderName != null) {
@@ -131,6 +137,4 @@ class DocumentController extends \yii\web\Controller
             echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
         }
     }
-
-
 }

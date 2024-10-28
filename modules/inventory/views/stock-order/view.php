@@ -126,6 +126,25 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
 
             </div>
             <div class="card-footer">
+
+            <?php
+            // echo $datetime;
+            
+            // ตัวอย่างที่ 1: ใช้ date()
+            $dateTime = $model->data_json['player_date'];
+            $paydate = explode(" ", $dateTime)[0];
+// print_r($paydate[0])
+            // echo $dateOnly; // Output: 2024-10-28
+            $date1 = '2024-10-28';
+            $date1 = $paydate;
+            echo Yii::$app->thaiFormatter->asDate($date1,'long');
+
+
+// ตัวอย่างที่ 2: ใช้ DateTime
+// $dateTime = new DateTime("2024-10-28 16:25:57");
+// $dateOnly = $dateTime->format("Y-m-d");
+// echo $dateOnly; // Output: 2024-10-28
+            ?>
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
