@@ -183,8 +183,8 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
             <?=$model->viewChecker('ผู้เห็นชอบ')['fullname']?>
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
-                    <?php if($model->checker == $userid && $model->order_status != 'success'):?>
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                    <?php if($model->checker == $userid && $model->order_status != 'success'):?>
                <?php endif;?>
                 </div>
             </div>
