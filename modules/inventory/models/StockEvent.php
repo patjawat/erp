@@ -620,41 +620,45 @@ class StockEvent extends Yii\db\ActiveRecord
     public function SummaryTotal($status = true)
     {
 
-        // $query = self::find()->select([
-        //   'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
-        // ])
-        // ->where(['thai_year' => $year])
-        // ->andFilterWhere(['warehouse_id' => $this->warehouse_id])->scalar();
-        // if($query){
-        //    return $query; 
-        // }else{
-        //     return 0;
-        // }
-        
-        ###
+
         $query = self::find()
-            // ->select([new Expression('IFNULL(FORMAT(SUM(i.unit_price * i.qty),2), 0) AS total')])
-            ->select([new Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) ELSE -COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) END), 2) as total')])
-            ->alias('e')
-            ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
-            ->andFilterWhere(['e.thai_year' => $this->thai_year])
-            ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
-            ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
-        if ($status == true) {
-            $query->andFilterWhere(['e.order_status' => 'success']);
-            $query->andFilterWhere(['i.order_status' => 'success']);
-        }
-        $query
-            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(e.data_json, '\$.asset_type_name')"), $this->asset_type_name])
-            ->andFilterWhere([
-                'or',
-                ['like', 'e.code', $this->q],
-                ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.vendor_name')"), $this->q],
-                ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.pq_number')"), $this->q],
-                ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.po_number')"), $this->q],
-            ])->scalar();
-            
-            return $query ?? 0;
+        ->select([
+            new Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) ELSE -COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) END), 2) as total')
+        ])
+        ->alias('e')
+        ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
+        ->andFilterWhere(['e.thai_year' => $this->thai_year])
+        ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
+        ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
+    
+    // เพิ่มเงื่อนไขการตรวจสอบสถานะเมื่อ $status เป็น true
+    if ($status === true) {
+        $query->andFilterWhere(['e.order_status' => 'success']);
+        $query->andFilterWhere(['i.order_status' => 'success']);
+    }
+    
+    // กรองตามข้อมูล JSON ที่ต้องการ
+    $query->andFilterWhere([
+        '=',
+        new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"),
+        $this->asset_type_name
+    ]);
+    
+    // กรองข้อมูลตามคำค้นหา $this->q
+    $query->andFilterWhere([
+        'or',
+        ['like', 'e.code', $this->q],
+        ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $this->q],
+        ['like', new Expression("JSON_EXTRACT(e.data_json, '$.pq_number')"), $this->q],
+        ['like', new Expression("JSON_EXTRACT(e.data_json, '$.po_number')"), $this->q],
+    ]);
+    
+    // ดึงข้อมูลเพียงแถวเดียว
+    $result = $query->one();
+    
+    // ตรวจสอบผลลัพธ์
+    return $result['total'] ?: 0;
+    
        
     }
 
