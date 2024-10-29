@@ -1,11 +1,11 @@
 <?php
 
-use app\modules\inventory\models\StockEvent;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use kartik\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\inventory\models\StockEvent;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEventSearch $searchModel */
@@ -37,7 +37,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
                         <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
                         <div>
-                            <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
+                            <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
                     </div>
 
                 </div>
@@ -81,7 +81,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                                     </button>
                                     <ul class="dropdown-menu">
 
-                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-out','id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
                                         </li>
 
 
