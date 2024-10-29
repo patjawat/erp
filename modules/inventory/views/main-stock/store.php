@@ -1,9 +1,9 @@
 <?php
 
-use yii\bootstrap5\LinkPager;
-use yii\helpers\Html;
 use yii\web\View;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\bootstrap5\LinkPager;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
@@ -35,7 +35,7 @@ $products = $cart->getItems();
         <div>
             <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
-                    </button>', ['/inventory/main-stock/show-cart'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]); ?>
+                    </button>', ['/inventory/main-stock/show-cart'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
         </div>
     </div>
 </div>

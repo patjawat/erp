@@ -2,15 +2,15 @@
 
 namespace app\modules\filemanager\components;
 
-use app\modules\filemanager\models\Uploads;
-use Imagine\Image\Box;
-use kartik\file\FileInput;
 use Yii;
-use yii\base\Component;
-use yii\helpers\BaseFileHelper;
 use yii\helpers\Url;
+use Imagine\Image\Box;
 use yii\imagine\Image;
+use yii\base\Component;
 use yii\web\UploadedFile;
+use kartik\file\FileInput;
+use yii\helpers\BaseFileHelper;
+use app\modules\filemanager\models\Uploads;
 
 // รวม function ตที่ใช้งานบ่อยๆ
 class FileManagerHelper extends Component
@@ -294,10 +294,16 @@ class FileManagerHelper extends Component
                 $type = pathinfo($filepath, PATHINFO_EXTENSION);
                 $data = file_get_contents($filepath);
             } catch (\Throwable $th) {
+                try {
                 $filepath = FileManagerHelper::getUploadPath() . $model->ref . '/' . $filename;
                 $type = pathinfo($filepath, PATHINFO_EXTENSION);
                 $data = file_get_contents($filepath);
-                //throw $th;
+            } catch (\Throwable $th) {
+                $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
+                $type = pathinfo($filepath, PATHINFO_EXTENSION);
+                $data = file_get_contents($filepath);
+                return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            }
             }
 
             if ($data) {

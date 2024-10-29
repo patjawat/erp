@@ -1,11 +1,11 @@
 <?php
 
-use app\modules\inventory\models\Stock;
-use yii\helpers\Html;
+use yii\web\View;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -28,6 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $cart = Yii::$app->cartSub;
 $products = $cart->getItems();
+echo $searchModel->warehouse_id;
 ?>
 <div class="card">
     <div class="card-body">
@@ -38,7 +39,7 @@ $products = $cart->getItems();
                     <div class="d-flex">
                     <?=Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> เลือก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
-                    </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+                    </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
 
                 <?php // $this->render('_search', ['model' => $searchModel]); ?>
                 <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light','data' => ['pjax' => 0]]) ?>
@@ -70,7 +71,7 @@ $products = $cart->getItems();
                     </td>
                     <td class="text-end">
                         <?php if($item->SumQty() > 0):?>
-                    <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เบิก',['/inventory/sub-stock/add-to-cart','lot_number' => $item->lot_number],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>
+                    <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เบิก',['/inventory/sub-stock/add-to-cart','id' => $item->id],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>
                     <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก2',['/inventory/sub-stock/select-lot','id' => $item->id],['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                    <?php else:?>
                     <button type="button" class="btn btn-sm btn-primary shadow rounded-pill" disabled><i class="fa-solid fa-circle-plus"></i> เลือก</button>
@@ -103,7 +104,7 @@ $products = $cart->getItems();
 
     <?php
 
-use yii\web\View;
+use app\modules\inventory\models\Stock;
 
 $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);

@@ -4,13 +4,13 @@
  * @var yii\web\View $this
  */
 
-use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
-use yii\helpers\Html;
+use yii\web\View;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\helpers\Json;
-use app\modules\inventory\models\Stock;
-use app\models\Categorise;
 use yii\widgets\Pjax;
+use app\models\Categorise;
+use app\modules\inventory\models\Stock;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
@@ -34,7 +34,7 @@ $this->title = $warehouse['warehouse_name'];
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2><?php echo number_format($searchModel->LastTotalStock(),2); ?> </h2>
+                    <h2><?php  echo number_format($searchModel->LastTotalStock(),2); ?> </h2>
                 </div>
                 <div class="card-footer border-0">ยอดยกมา</div>
             </div>
@@ -51,8 +51,6 @@ $this->title = $warehouse['warehouse_name'];
     </div>
 
     <div class="col-3">
-        <a href="<?=Url::to(['/inventory/stock-out'])?>">
-
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
                     <h2><?=number_format($searchModel->OutSummary(),2)?></h2>
@@ -60,8 +58,6 @@ $this->title = $warehouse['warehouse_name'];
                 </div>
                 <div class="card-footer border-0">มูลค่าใช้ไป</div>
             </div>
-        </a>
-
     </div>
     <div class="col-3">
         <a href="<?=Url::to(['/inventory/stock-out'])?>">
@@ -69,8 +65,8 @@ $this->title = $warehouse['warehouse_name'];
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
                     <h2> <?php 
-                    echo number_format(($searchModel->LastTotalStock()+$searchModel->ReceiveSubSummary()) - $searchModel->OutSummary(),2)
-                    // echo number_format($searchModel->TotalPrice(),2);
+                    // echo number_format(($searchModel->LastTotalStock()+$searchModel->ReceiveSubSummary()) - $searchModel->OutSummary(),2)
+                    echo number_format($searchModel->SumSubStock(),2);
                      ?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าคงเหลือ</div>
@@ -104,7 +100,7 @@ $this->title = $warehouse['warehouse_name'];
 
 <?php
 
-use yii\web\View;
+use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/order-request']);
 $js = <<< JS
   getStoreInWarehouse()

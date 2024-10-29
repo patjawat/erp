@@ -1,18 +1,18 @@
 <?php
 
 namespace app\modules\inventory\models;
-use app\components\AppHelper;
-use app\models\Categorise;
-use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\filemanager\models\Uploads;
-use app\modules\sm\models\Product;
-use asyou99\cart\ItemInterface;
-use asyou99\cart\ItemTrait;
 use Yii;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\db\Expression;
+use app\models\Categorise;
+use asyou99\cart\ItemTrait;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use asyou99\cart\ItemInterface;
+use app\modules\sm\models\Product;
+use app\modules\filemanager\models\Uploads;
 use app\modules\inventory\models\StockEvent;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "stock".
@@ -163,7 +163,6 @@ public function listLotNumber()
 }
     public function SumQty()
     {
-        // return $this->warehouse_id;
         // $warehouse = \Yii::$app->session->get('warehouse');
         // return self::find()->where(['warehouse_id' => $warehouse['warehouse_id'], 'asset_item' => $this->asset_item])->sum('qty');
         return self::find()->where(['warehouse_id' => $this->warehouse_id, 'asset_item' => $this->asset_item])->sum('qty');

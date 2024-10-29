@@ -1,6 +1,6 @@
 <?php
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
 $warehouse = Yii::$app->session->get('warehouse');
 
 ?>
@@ -14,7 +14,7 @@ $warehouse = Yii::$app->session->get('warehouse');
         <?php //  Html::a('<i class="bi bi-cart-check-fill"></i> ทะเบียนขอเบิก', ['/inventory/order-request'], ['class' => 'btn btn-light']) ?>
         <?php else:?>
             <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-light']) ?>
-            <?php echo Html::a('<i class="fa-solid fa-list-ul"></i> ทะเบียนประวัติ', ['/inventory/main-stock'], ['class' => 'btn btn-light']) ?>
+            <?php echo Html::a('<i class="fa-solid fa-list-ul"></i> ทะเบียนประวัติ', ['/inventory/stock-order'], ['class' => 'btn btn-light']) ?>
             
         <?php endif;?>
 

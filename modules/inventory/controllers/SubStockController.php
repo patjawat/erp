@@ -1,12 +1,12 @@
 <?php
 
 namespace app\modules\inventory\controllers;
+use Yii;
+use yii\web\Response;
 use app\components\AppHelper;
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\Warehouse;
-use yii\web\Response;
-use Yii;
+use app\modules\inventory\models\StockEvent;
 class SubStockController extends \yii\web\Controller
 {
     public function actionIndex()
@@ -35,12 +35,12 @@ class SubStockController extends \yii\web\Controller
 
 
 
-    public function actionAddToCart($lot_number)
+    public function actionAddToCart($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $cart = \Yii::$app->cartSub;
         $itemsCount = $cart->getCount();
-        $model = Stock::findOne(['lot_number' => $lot_number]);
+        $model = Stock::findOne($id);
         // return $model->getLotQtyOut();
 
         $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
@@ -52,7 +52,7 @@ class SubStockController extends \yii\web\Controller
             ]);
         }
 
-        $checkStock = Stock::findOne(['lot_number' => $lot_number]);
+        $checkStock = Stock::findOne(['lot_number' => $model->lot_number,'id' => $model->id]);
 
         if($model->qty > $checkStock->qty){
             return [
@@ -60,7 +60,7 @@ class SubStockController extends \yii\web\Controller
                 'container' => '#inventory-container',
                ];
            }else{
-                if(!$cart->getItems($lot_number)){
+                if(!$cart->getItems($model->lot_number)){
                     $cart->create($model, 1);
                 }
 
@@ -207,7 +207,7 @@ class SubStockController extends \yii\web\Controller
                     'lot_number' => $item->lot_number,
                     'unit_price' => $item->unit_price,
                     'qty' => $item->getQuantity(),
-                    // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
+                    'order_status' => 'success',
                     'data_json' => [
                         'req_qty' => $item->getQuantity(),
                     ],

@@ -1,10 +1,9 @@
 <?php
-use yii\widgets\Pjax;
-?>
-<?php  Pjax::begin(['id' => 'inventory']); ?>
-<?php
-use yii\helpers\Html;
 use yii\web\View;
+use yii\helpers\Html;
+?>
+<?php  yii\widgets\Pjax::begin(['id' => 'inventory']); ?>
+<?php
 
 $cart = \Yii::$app->cartMain;
 $products = $cart->getItems();
@@ -26,6 +25,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                         <th scope="col">ชื่อรายการ</th>
                         <th class="text-center">จำนวสต็อก</th>
                         <th class="text-center">หน่วย</th>
+                        <th class="text-end">มูลค่า</th>
                         <th class="text-center" style="width:190px">จำนวนเบิก</th>
                         <th scope="col" class="text-center align-center" style="width:32px;">#</th>
                     </tr>
@@ -36,6 +36,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                         <td scope="row"><?=$item->product->Avatar();?></td>
                         <td class="text-center"><?=$item->SumQty()?></td>
                         <td class="text-center"><?=$item->product->unit_name?></td>
+                        <td class="text-end"><?=number_format($item->unit_price,2)?></td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center flex-row">
                                 <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
@@ -68,4 +69,4 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
     </div>
 
 
-<?php  Pjax::end(); ?>
+<?php  yii\widgets\Pjax::end(); ?>

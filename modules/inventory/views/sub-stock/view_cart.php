@@ -1,10 +1,10 @@
 <?php
-use yii\widgets\Pjax;
+use yii\web\View;
 ?>
 
 <?php
 use yii\helpers\Html;
-use yii\web\View;
+use yii\widgets\Pjax;
 
     $cart = \Yii::$app->cartSub;
     $products = $cart->getItems();
@@ -20,23 +20,24 @@ use yii\web\View;
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-            <table class="table table-primary">
+<table class="table table-primary">
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>
-                        <th scope="col" style="width:60px">จำนวน</th>
+                        <th class="text-center">จำนวสต็อก</th>
+                        <th class="text-center">หน่วย</th>
+                        <th class="text-end">มูลค่า</th>
+                        <th class="text-center" style="width:190px">จำนวนเบิก</th>
                         <th scope="col" class="text-center align-center" style="width:32px;">#</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach($products as $item):?>
                     <tr class="">
-                        <td scope="row">
-
-                            <?php
-
-                            echo $item->product->Avatar();
-                            ?></td>
+                        <td scope="row"><?=$item->product->Avatar();?></td>
+                        <td class="text-center"><?=$item->SumQty()?></td>
+                        <td class="text-center"><?=$item->product->unit_name?></td>
+                        <td class="text-end"><?=number_format($item->unit_price,2)?></td>
                         <td>
                             <div class="d-flex d-flex flex-row">
                                 <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/sub-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-sub-cart'])?>
@@ -45,12 +46,13 @@ use yii\web\View;
                             </div>
                         </td>
                         <td>
-                            <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/sub-stock/delete-item','id' => $item->id],['class' => 'delete-sub-item-cart btn btn-sm btn-danger shadow '])?>
+                        <?=Html::a('<i class="fa-solid fa-trash"></i>',['/inventory/sub-stock/delete-item','id' => $item->id],['class' => 'delete-sub-item-cart btn btn-sm btn-danger shadow '])?>
                         </td>
                     </tr>
                     <?php endforeach;?>
                 </tbody>
             </table>
+           
 
         <div class="d-grid gap-2">
 <?php if($cart->getCount() == 0):?>

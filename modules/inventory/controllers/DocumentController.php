@@ -1,25 +1,27 @@
 <?php
 namespace app\modules\inventory\controllers;
 
+use yii;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\web\Response;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
-use app\modules\am\components\AssetHelper;
-use app\modules\am\models\Asset;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
-use app\modules\purchase\models\Order;
 use PhpOffice\PhpWord\Settings;
-use yii\helpers\ArrayHelper;
 use yii\helpers\BaseFileHelper;
-use yii\helpers\Html;
-use yii\helpers\Url;
+use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use yii;
+use app\modules\purchase\models\Order;
+use app\modules\inventory\models\Stock;
+use app\modules\am\components\AssetHelper;
+use app\modules\inventory\models\StockEvent;
 
 class DocumentController extends \yii\web\Controller
 {
+
+    
     // ใบเบิกวัสดุ
     public function actionStockOrder($id)
     {

@@ -2,18 +2,18 @@
 
 namespace app\modules\inventory\models;
 
+use Yii;
+use yii\helpers\Html;
+use yii\db\Expression;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\models\Categorise;
-use app\modules\hr\models\Employees;
-use app\modules\purchase\models\Order;
 use app\modules\sm\models\Product;
+use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
-use Yii;
+use app\modules\purchase\models\Order;
 
 /**
  * This is the model class for table "stock_in".
@@ -67,7 +67,7 @@ class StockEvent extends Yii\db\ActiveRecord
             [['warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
             [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total', 'asset_type_name', 'q', 'date_start',
-                'date_end'], 'safe'],
+                'date_end','transaction_type'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'category_id', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -619,12 +619,27 @@ class StockEvent extends Yii\db\ActiveRecord
     // รวมเงินทั้งหมด
     public function SummaryTotal($status = true)
     {
+
+        // $query = self::find()->select([
+        //   'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
+        // ])
+        // ->where(['thai_year' => $year])
+        // ->andFilterWhere(['warehouse_id' => $this->warehouse_id])->scalar();
+        // if($query){
+        //    return $query; 
+        // }else{
+        //     return 0;
+        // }
+        
+        ###
         $query = self::find()
-            ->select([new Expression('IFNULL(FORMAT(SUM(i.unit_price * i.qty),2), 0) AS total')])
+            // ->select([new Expression('IFNULL(FORMAT(SUM(i.unit_price * i.qty),2), 0) AS total')])
+            ->select([new Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) ELSE -COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) END), 2) as total')])
             ->alias('e')
             ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
             ->andFilterWhere(['e.thai_year' => $this->thai_year])
-            ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id]);
+            ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
+            ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
         if ($status == true) {
             $query->andFilterWhere(['e.order_status' => 'success']);
             $query->andFilterWhere(['i.order_status' => 'success']);
@@ -678,19 +693,43 @@ class StockEvent extends Yii\db\ActiveRecord
     // ยอดยกมา
     public function LastTotalStock()
     {
+
+        // $sql = "SELECT 
+        //         asset_item,
+        //         ROUND(SUM(CASE WHEN transaction_type = 'in' THEN qty * unit_price ELSE 0 END),2) AS total_in_value,
+        //         ROUND(SUM(CASE WHEN transaction_type = 'out' THEN qty * unit_price ELSE 0 END),2) AS total_out_value,
+        //         ROUND(SUM(CASE WHEN transaction_type = 'in' THEN qty * unit_price ELSE -qty * unit_price END),2) AS total
+        //         FROM 
+        //             stock_events
+        //         WHERE  thai_year =(:thai_year-1)";
         //     $sql = "SELECT ROUND(COALESCE(SUM(qty*unit_price),0),2) FROM stock WHERE thai_year =(:thai_year-1);";
         //    return \Yii::$app
         //     ->db
         //     ->createCommand($sql)
         //     ->bindValue(':thai_year', $this->thai_year)
         //     ->queryScalar();
-        $year = $this->thai_year - 1;
-        $total = Stock::find()
-            ->select([new Expression('ROUND(COALESCE(SUM(qty * unit_price), 0), 2)')])
-            ->where(['thai_year' => $year])
-            ->andFilterWhere(['warehouse_id' => $this->warehouse_id])
-            ->scalar();
-        return $total;
+        //     $total = self::find()
+        //     ->select([new Expression('ROUND(COALESCE(SUM(qty * unit_price), 0), 2)')])
+        //     ->where(['thai_year' => $year])
+        //     ->andFilterWhere(['warehouse_id' => $this->warehouse_id])
+        //     ->scalar();
+        //     return $total;
+            
+            $year = $this->thai_year - 1;
+            $query = self::find()->select([
+                    // 'asset_item',
+                    // 'total_in_value' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN qty * unit_price ELSE 0 END), 2)',
+                    // 'total_out_value' => 'ROUND(SUM(CASE WHEN transaction_type = "out" THEN qty * unit_price ELSE 0 END), 2)',
+                  'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
+                ])
+                ->where(['thai_year' => $year])
+                ->andFilterWhere(['warehouse_id' => $this->warehouse_id])->scalar();
+                if($query){
+                   return $query; 
+                }else{
+                    return 0;
+                }
+    
     }
 
     // 0จำนวนรับเข้าปีงบประมานนี้
@@ -717,9 +756,14 @@ class StockEvent extends Yii\db\ActiveRecord
     //    return Yii::$app->db->createCommand($sql)->bindValue(':thai_year', $this->thai_year)->queryScalar();
     // }
 
+    public function SumSubStock()
+    {
+        return \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock where warehouse_id = :warehouse_id",[':warehouse_id' => $this->warehouse_id])->queryScalar();
+    }
+
     public function TotalPrice()
     {
-        return ($this->LastTotalStock() + $this->ReceiveSummary()) - $this->OutSummary();
+        return \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock")->queryScalar();
     }
 
     // จำนวนรับเข้าของคลังหลักปีงบประมานนี้
@@ -762,40 +806,52 @@ class StockEvent extends Yii\db\ActiveRecord
         return $total;
     }
 
-    // จำนวนที่ใช้ไป
-    public function OutSummary()
-    {
-        $query = StockEvent::find()
-            ->alias('se')
-            ->joinWith('warehouse w')
-            ->where([
-                'se.thai_year' => $this->thai_year,
-                'se.transaction_type' => 'OUT',
-                'order_status' => 'success',
-                'w.warehouse_type' => 'SUB'
-            ]);
+    // จำนวนที่ใช้ของการตัดออกจากคัลงย่อย
+    // public function OutSummary($type =null)
+    // {
+    //     $query = StockEvent::find()
+    //         ->alias('se')
+    //         ->joinWith('warehouse w')
+    //         ->where([
+    //             'se.thai_year' => $this->thai_year,
+    //             'se.transaction_type' => 'OUT',
+    //             'order_status' => 'success',
+    //             'w.warehouse_type' => 'SUB'
+    //         ]);
 
-        if ($this->warehouse_id) {
-            $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
-        }
+    //     if ($this->warehouse_id) {
+    //         $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
+    //     }
+        
+    //     $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
+    //     return $total;
+    // }
 
-        $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
 
-        return $total;
-
-        //     $where = ['and'];
-        //     $where[] = ['se.warehouse_id' => $this->warehouse_id];  // ใช้กรองถ้าค่ามี
-
-        //     $sql = "SELECT ROUND(COALESCE(SUM(se.qty*se.unit_price),0),2) as total
-        //             FROM stock_events AS se
-        //             JOIN warehouses AS w ON se.warehouse_id = w.id
-        //             WHERE se.thai_year = :thai_year
-        //             AND se.transaction_type = 'OUT'
-        //             AND w.warehouse_type = 'SUB'";
-        //    return Yii::$app->db->createCommand($sql)
-        //    ->bindValue(':thai_year', $this->thai_year)->queryScalar();
-    }
-
+     // จำนวนที่ใช้
+     public function OutSummary($type =null)
+     {
+         $query = StockEvent::find()
+             ->alias('se')
+             ->joinWith('warehouse w')
+             ->where([
+                 'se.thai_year' => $this->thai_year,
+                 'se.transaction_type' => 'OUT',
+                 'order_status' => 'success'
+             ]);
+ 
+         if ($this->warehouse_id) {
+             $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
+         }
+         
+         if ($type) {
+             $query->andWhere(['w.warehouse_type' => $type]);
+         }
+         
+         $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
+         return $total;
+     }
+     
     // ผลสรุปราคาแบ่งประเภท
     // public function Summary()
     // {

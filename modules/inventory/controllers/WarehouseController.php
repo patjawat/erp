@@ -2,18 +2,19 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\StockSearch;
-use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\WarehouseSearch;
-use app\modules\purchase\models\Order;
 use Yii;
-use yii\db\Expression;
-use yii\filters\VerbFilter;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use app\components\AppHelper;
+use yii\web\NotFoundHttpException;
+use app\modules\purchase\models\Order;
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\WarehouseSearch;
+use app\modules\inventory\models\StockEventSearch;
 
 class WarehouseController extends Controller
 {
@@ -53,7 +54,7 @@ class WarehouseController extends Controller
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
             $searchModel = new StockEventSearch([
-                'thai_year' => 2568,
+                'thai_year' => AppHelper::YearBudget(),
                 'warehouse_id' => $warehouse['warehouse_id']
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);

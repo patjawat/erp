@@ -4,23 +4,13 @@
  * @var View $this
  */
 
+use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Json;
+use yii\db\Expression;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
-use yii\db\Expression;
-use yii\helpers\Json;
-use yii\helpers\Url;
 
-$StockOut = StockEvent::find()
-->alias('i')
-->leftJoin(['o' => 'stock_events'], 'i.category_id = o.id AND i.name = :order', [':order' => 'order'])
-->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
-->where([
-    'i.name' => 'order_item',
-    'i.transaction_type' => 'OUT',
-    'w.warehouse_type' => 'SUB',
-])
-->andFilterWhere(['i.thai_year' => '2568'])
-->sum(new Expression('i.qty * i.unit_price'));
 $this->title = 'ระบบคลัง';
 ?>
 
@@ -112,7 +102,7 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo $searchModel->OutSummary(); ?>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo  number_format($searchModel->OutSummary('SUB'),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -181,8 +171,7 @@ $this->title = 'ระบบคลัง';
 
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?=number_format(($searchModel->LastTotalStock() + $searchModel->ReceiveMainSummary()) - $searchModel->OutSummary(),2);?>
-
+                                <?php echo number_format($searchModel->TotalPrice(),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -244,7 +233,7 @@ $this->title = 'ระบบคลัง';
 <?php
 $label = Json::encode($label);
 $series = Json::encode($series);
-use yii\web\View;
+
 
 // $showReceivePendingOrderUrl = Url::to(['/inventory/receive/list-pending-order']);
 // $listOrderRequestUrl = Url::to(['/inventory/stock/list-order-request']);

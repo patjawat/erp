@@ -2,19 +2,20 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\components\AppHelper;
-use app\components\UserHelper;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\StockOut;
-use app\modules\inventory\models\Warehouse;
+use Yii;
+use yii\web\Response;
+use yii\db\Expression;
+use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
+use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use Yii;
+use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\StockOut;
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockEventSearch;
 
 /**
  * StockOutController implements the CRUD actions for StockOut model.
@@ -44,9 +45,26 @@ class StockOrderController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
-        $searchModel = new StockEventSearch();
+        if(!$warehouse){
+            return $this->redirect(['/inventory']);
+        }
+
+        $searchModel = new StockEventSearch([
+            'warehouse_id' => $warehouse['warehouse_id']
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andwhere(['name' => 'order', 'transaction_type' => 'OUT', 'from_warehouse_id' => $warehouse['warehouse_id']]);
+         $dataProvider = $searchModel->search($this->request->queryParams);
+         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $searchModel->asset_type_name]);
+         $dataProvider->query->andFilterWhere(['name' => 'order']);
+         $dataProvider->query->andFilterWhere(['transaction_type' => $searchModel->transaction_type]);
+         $dataProvider->query->andFilterWhere([
+             'or',
+             ['like', 'code', $searchModel->q],
+             ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+             ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $searchModel->q],
+             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
+         ]);
+        // $dataProvider->query->andwhere(['name' => 'order', 'transaction_type' => 'OUT', 'from_warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

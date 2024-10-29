@@ -2,15 +2,16 @@
 
 namespace app\modules\inventory\controllers;
 
+use yii\web\Response;
+use yii\web\Controller;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\Warehouse;
-use yii\web\Controller;
-use yii\web\Response;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\StockEventSearch;
 
 class MainStockController extends Controller
 {
@@ -64,11 +65,17 @@ class MainStockController extends Controller
                 $transaction = \Yii::$app->db->beginTransaction();
                 try {
                     // $transaction->commit();
-                    // สร้างรหัสรับเข้า
+                    // สร้างรหัสขอเบิก
                     if ($model->name == 'order') {
                         $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
                     }
-
+                    
+                    //ถ้าผู้ขอกับผู้อนุมิติเป็นคนเดียวกันให้อนุมติได้เลย
+                    if($userCreate->id == $model->checker){
+                        $newObj = $model->data_json = ['checker_confirm' => 'Y'];
+                        $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
+                    }
+                    
                     $model->thai_year = AppHelper::YearBudget();
                     $model->order_status = 'pending';
                     $model->warehouse_id = $toWarehouse['warehouse_id'];
@@ -109,24 +116,7 @@ class MainStockController extends Controller
                     $transaction->rollBack();
                     return ['status' => 'error', 'message' => $e->getMessage()];
                 }
-                // if ($model->save(false)) {
-                //     if ($model->name == 'order') {
-                //         $this->saveCartItem($model);
-                //         $cart->checkOut(false);
-                //         \Yii::$app->session->remove('selectMainWarehouse');
 
-                //         return $this->redirect(['/inventory/main-stock']);
-                //     } else {
-                //         \Yii::$app->response->format = Response::FORMAT_JSON;
-
-                //         return [
-                //             'status' => 'success',
-                //             'container' => '#inventory',
-                //         ];
-                //     }
-                // } else {
-                //     $model->loadDefaultValues();
-                // }
             }
         } else {
             $model->loadDefaultValues();

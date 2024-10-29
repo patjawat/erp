@@ -1,9 +1,10 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 use yii\widgets\Pjax;
 use yii\db\Expression;
+use yii\widgets\DetailView;
+use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('warehouse');
@@ -37,7 +38,8 @@ yii\web\YiiAsset::register($this);
 
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
-$office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
+$office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
+$emp = UserHelper::GetEmployee();
 
 ?>
 <div class="row">
@@ -158,7 +160,7 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
 
         </div>
         <!-- End Card -->
-<?php if($model->order_status == 'success'):?>
+<?php if($model->order_status == 'success' && $model->transaction_type == 'OUT'):?>
         <div class="card">
             <div class="card-body">
             <?php if(isset($model->data_json['recipient'])):?>
@@ -179,12 +181,10 @@ $office = Warehouse::find()->andWhere(['id' => $warehouse['warehouse_id']])->and
         <!-- approve -->
         <div class="card">
             <div class="card-body">
-
-            <?=$model->viewChecker('ผู้เห็นชอบ')['fullname']?>
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
+                    <?php if($model->checker == $emp->id && $model->order_status != 'success'):?>
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
-                    <?php if($model->checker == $userid && $model->order_status != 'success'):?>
                <?php endif;?>
                 </div>
             </div>

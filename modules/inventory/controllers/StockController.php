@@ -2,17 +2,17 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\modules\inventory\models\StockOut;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockSearch;
-use app\modules\inventory\models\StockEventSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
-use Yii;;
-
+use Yii;
 use yii\web\Response;
 use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
+use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\StockOut;;
+
+use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\StockEventSearch;
 
 /**
  * StockController implements the CRUD actions for Stock model.
@@ -83,6 +83,7 @@ class StockController extends Controller
 
     public function actionInStock()
     {
+        // Yii::$app->response->format = Response::FORMAT_JSON;
         $warehouse = Yii::$app->session->get('warehouse');
         if(!$warehouse){
             return $this->redirect(['/inventory']);

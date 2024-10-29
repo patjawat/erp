@@ -2,18 +2,18 @@
 
 namespace app\modules\inventory\models;
 
-use app\components\AppHelper;
-use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\filemanager\models\Uploads;
-use app\modules\hr\models\Employees;
-use app\models\Categorise;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
+use Yii;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use Yii;
+use yii\db\Expression;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "warehouses".
@@ -129,8 +129,8 @@ class Warehouse extends \yii\db\ActiveRecord
         // }
     }
 
-    //ม๔ลค่าสินค้าแยกตาม Stock
-    public function SumPice()
+    //ลค่าสินค้าแยกตาม Stock
+    public function SumPiceStockWarehouse()
     {
 
         // $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id AND thai_year <> :thai_year";
