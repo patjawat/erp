@@ -169,6 +169,9 @@ class StockController extends Controller
     {
 
         $warehouse = Yii::$app->session->get('warehouse');
+        if(!$warehouse){
+            return $this->redirect(['/inventory']);
+        }
         $model = $this->findModel($id);
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
