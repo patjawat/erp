@@ -652,9 +652,14 @@ class StockEvent extends Yii\db\ActiveRecord
                 ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.vendor_name')"), $this->q],
                 ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.pq_number')"), $this->q],
                 ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.po_number')"), $this->q],
-            ]);
-
-        return $query->scalar();
+            ])->scalar();
+            
+            if($query){
+               return $query; 
+            }else{
+                return 0;
+            }
+       
     }
 
     public function ListOrderType()
