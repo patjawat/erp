@@ -93,8 +93,8 @@ $this->params['breadcrumbs'][] = $this->title;
       <td>
         <?php
         try {
-          // Yii::$app->thaiFormatter->asDateTime($item->created_at, 'short')
-          echo $item->created_at;
+          // Yii::$app->thaiFormatter->asDateTime($item->, 'short')
+          echo $item->ViewReceiveDate();
         } catch (\Throwable $th) {
           //throw $th;
         }
