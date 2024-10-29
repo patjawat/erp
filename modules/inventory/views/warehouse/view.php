@@ -44,7 +44,14 @@ $this->title = $warehouse['warehouse_name'];
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
+            <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
+            <h2><?php echo number_format($searchModel->ReceiveMainSummary(),2); ?></h2>
+            <?php endif?>
+
+            <?php if($warehouse['warehouse_type'] == 'SUB'):?>
                 <h2><?php echo number_format($searchModel->ReceiveSubSummary(),2); ?></h2>
+            <?php endif?>
+
             </div>
             <div class="card-footer border-0">มูลค่ารับเข้า</div>
         </div>
