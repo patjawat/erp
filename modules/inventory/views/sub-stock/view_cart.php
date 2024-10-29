@@ -58,7 +58,7 @@ use yii\widgets\Pjax;
 <?php if($cart->getCount() == 0):?>
         <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
 <?php else:?>
-        <?php echo  Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/sub-stock/check-out','name' => 'order','type' => 'OUT','title' => 'เบิกวัดุ'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal checkout','data' => ['size' => 'modal-ld']]) ?>
+        <?php echo  Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/sub-stock/check-out','name' => 'order','type' => 'OUT','title' => 'เบิกวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal checkout','data' => ['size' => 'modal-ld']]) ?>
         <?php endif?>
     </div>
 
