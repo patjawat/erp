@@ -67,7 +67,6 @@ $this->title = $warehouse['warehouse_name'];
             </div>
     </div>
     <div class="col-3">
-        <a href="<?=Url::to(['/inventory/stock-out'])?>">
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
@@ -78,7 +77,6 @@ $this->title = $warehouse['warehouse_name'];
                 </div>
                 <div class="card-footer border-0">มูลค่าคงเหลือ</div>
             </div>
-        </a>
 
     </div>
 </div>
