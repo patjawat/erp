@@ -60,8 +60,8 @@ class SubStockController extends \yii\web\Controller
                 'container' => '#inventory-container',
                ];
            }else{
+               $cart->create($model, 1);
                 if(!$cart->getItems($model->lot_number)){
-                    $cart->create($model, 1);
                 }
 
         return [
