@@ -654,11 +654,7 @@ class StockEvent extends Yii\db\ActiveRecord
                 ['like', new Expression("JSON_EXTRACT(e.data_json, '\$.po_number')"), $this->q],
             ])->scalar();
             
-            if($query){
-               return $query; 
-            }else{
-                return 0;
-            }
+            return $query ?? 0;
        
     }
 
@@ -763,7 +759,9 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public function SumSubStock()
     {
-        return \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock where warehouse_id = :warehouse_id",[':warehouse_id' => $this->warehouse_id])->queryScalar();
+        $query =  \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock where warehouse_id = :warehouse_id",[':warehouse_id' => $this->warehouse_id])->queryScalar();
+        return $query ?? 0;
+        
     }
 
     public function TotalPrice()
