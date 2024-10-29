@@ -28,7 +28,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $cart = Yii::$app->cartSub;
 $products = $cart->getItems();
-echo $searchModel->warehouse_id;
 ?>
 <div class="card">
     <div class="card-body">

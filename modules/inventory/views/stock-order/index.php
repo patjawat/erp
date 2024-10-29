@@ -71,13 +71,15 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <?php endif ?>
                     </td>
                     <td>
-                    <?= $item->CreateBy($item->ViewReceiveDate())['avatar']; ?>
+                    <?= $item->UserReq($item->ViewReceiveDate())['avatar']; ?>
+                    <?=$item->from_warehouse_id?>
                     
-                    </td>
-                    <td>
-                        <?php if ($item->transaction_type == 'IN'): ?>
-                            <?= $item->warehouse->warehouse_name ?>
-                            <?php else: ?>
+                </td>
+                <td>
+                    <?php if ($item->transaction_type == 'IN'): ?>
+                        <?=$item->fromWarehouse->warehouse_name?>
+                        <?php else: ?>
+                            <?php $item->warehouse->warehouse_name ?>
                                 <?php isset($item->fromWarehouse->warehouse_name) ? $item->fromWarehouse->warehouse_name : 'ไม่ระบุ' ?>
                                 <?php endif ?>
                     </td>

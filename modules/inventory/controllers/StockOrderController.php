@@ -73,6 +73,23 @@ class StockOrderController extends Controller
     }
 
     
+        // เลือกคลังที่จะทำงาน
+        protected function setWarehouse($id)
+        {
+            $model = Warehouse::find()->where(['id' => $id])->One();
+            \Yii::$app->session->set('warehouse', [
+                'id' => $model->id,
+                'warehouse_id' => $model->id,
+                'warehouse_code' => $model->warehouse_code,
+                'warehouse_name' => $model->warehouse_name,
+                'warehouse_type' => $model->warehouse_type,
+                'category_id' => $model->category_id,
+                'checker' => isset($model->data_json['checker']) ? $model->data_json['checker'] : '',
+                'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
+            ]);
+            // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
+        }
+        
     public function actionRequest()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
@@ -101,7 +118,11 @@ class StockOrderController extends Controller
     {
         // \Yii::$app->response->format = Response::FORMAT_JSON;
         // return $model;
+        $warehouse = Yii::$app->session->get('warehouse');
         $model = StockEvent::findOne($id);
+        if(!$warehouse){
+            $this->setWarehouse($model->warehouse_id);
+        }
         if ($model) {
             // $this->checkUpdateQty($id);
             return $this->render('view', [
@@ -540,7 +561,7 @@ class StockOrderController extends Controller
                 // บันทึกข้อมูล Order
                 $model = StockEvent::findOne($id);
                 $userCreate = UserHelper::GetEmployee();
-                $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s'), 'receive_date' => date('Y-m-d')];
+                $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s'), 'receive_date' => date('Y-m-d'),'user_req' => $model->created_by];
                 $model->order_status = 'success';
                 $oldObj = $model->data_json;
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $jsonDate);
@@ -561,6 +582,7 @@ class StockOrderController extends Controller
                 $newStockModel->transaction_type = 'IN';
                 $newStockModel->category_id = $model->code;
                 $newStockModel->data_json = $jsonDate;
+                
 
                 // ถ้าหากผิดพลาด
                 if (!$newStockModel->save(false)) {

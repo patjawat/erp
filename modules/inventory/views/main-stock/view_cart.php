@@ -49,8 +49,16 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                         </td>
                     </tr>
                     <?php endforeach;?>
+                    <tr>
+                        <td colspan="3" class="text-center">รวมทั้งสิ้น</td>
+                        <td class="text-end"><span class="fw-semibold"><?=number_format($cart->getCost(),2);?></span></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
+
+            
 
         <div class="d-grid gap-2">
         <?php if($cart->getCount() == 0):?>

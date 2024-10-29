@@ -573,13 +573,29 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
-    // ผู้ขอ
+    // ผู้สร้าง
     public function CreateBy($msg = null)
     {
         $emp = UserHelper::GetEmployee($this->created_by);
 
         return $this->getAvatar($emp->id, $msg);
     }
+
+        // ผู้ขอเบิก
+        public function UserReq($msg = null)
+        {
+            try {
+
+            $emp = UserHelper::GetEmployee($this->data_json['user_req']);
+            return $this->getAvatar($emp->id, $msg);
+                            //code...
+                        } catch (\Throwable $th) {
+                           return [
+                            'avatar' => ''
+                           ];
+                        }
+        }
+        
 
     // ผู้สั่งจ่ายวัสดุ
     public function ShowPlayer()
@@ -859,144 +875,6 @@ class StockEvent extends Yii\db\ActiveRecord
          return $total;
      }
      
-    // ผลสรุปราคาแบ่งประเภท
-    // public function Summary()
-    // {
-    //     $StockIn = self::find()
-    //         ->where(['name' => 'order_item'])
-    //         ->andFilterWhere(['thai_year' => $this->thai_year, 'order_status' => 'success'])
-    //         ->andFilterWhere(['transaction_type' => 'IN'])
-    //         ->sum(new Expression('qty * unit_price'));
-
-    //     $StockOut = self::find()
-    //         ->alias('i')
-    //         ->leftJoin(['o' => 'stock_events'], 'i.category_id = o.id AND i.name = :order', [':order' => 'order'])
-    //         ->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
-    //         ->where([
-    //             'i.name' => 'order_item',
-    //             'i.transaction_type' => 'OUT',
-    //             'w.warehouse_type' => 'SUB',
-    //         ])
-    //         ->andFilterWhere(['i.thai_year' => $this->thai_year])
-    //         ->sum(new Expression('i.qty * i.unit_price'));
-
-    //     return [
-    //         'in' => number_format($StockIn ?? 0, 2),
-    //         'out' => number_format($StockOut ?? 0, 2),
-    //     ];
-    // }
-
-    // ข้อมูล  chart summary แบบรายเดือนและปี
-    // public function SummaryChart()
-    // {
-    //     $where = ['and'];
-    //     $where[] = ['thai_year' => $this->thai_year]; // ใช้กรองถ้าค่ามี
-
-    //     return self::find()
-    //                  ->select([
-    //                      'thai_year',
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 10 THEN qty * unit_price ELSE 0 END) as in10'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 10 THEN qty * unit_price ELSE 0 END) as out10'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 11 THEN qty * unit_price ELSE 0 END) as in11'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 11 THEN qty * unit_price ELSE 0 END) as out11'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 12 THEN qty * unit_price ELSE 0 END) as in12'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 12 THEN qty * unit_price ELSE 0 END) as out12'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 1 THEN qty * unit_price ELSE 0 END) as in1'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 1 THEN qty * unit_price ELSE 0 END) as out1'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 2 THEN qty * unit_price ELSE 0 END) as in2'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 2 THEN qty * unit_price ELSE 0 END) as out2'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 3 THEN qty * unit_price ELSE 0 END) as in3'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 3 THEN qty * unit_price ELSE 0 END) as out3'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 4 THEN qty * unit_price ELSE 0 END) as in4'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 4 THEN qty * unit_price ELSE 0 END) as out4'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 5 THEN qty * unit_price ELSE 0 END) as in5'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 5 THEN qty * unit_price ELSE 0 END) as out5'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 6 THEN qty * unit_price ELSE 0 END) as in6'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 6 THEN qty * unit_price ELSE 0 END) as out6'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 7 THEN qty * unit_price ELSE 0 END) as in7'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 7 THEN qty * unit_price ELSE 0 END) as out7'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 8 THEN qty * unit_price ELSE 0 END) as in8'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 8 THEN qty * unit_price ELSE 0 END) as out8'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "IN" AND MONTH(created_at) = 9 THEN qty * unit_price ELSE 0 END) as in9'),
-    //                      new Expression('SUM(CASE WHEN transaction_type = "OUT" AND MONTH(created_at) = 9 THEN qty * unit_price ELSE 0 END) as out9'),
-    //                  ])
-    //                  ->where($where)
-    //                  ->andWhere(['order_status' => 'success'])
-    //                  ->groupBy('thai_year')
-    //                  ->asArray()
-    //                  ->all();
-
-    //     $StockOut = self::find()
-    //         ->alias('i')
-    //         ->select([
-    //             'i.thai_year',
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 10 THEN i.qty * i.unit_price ELSE 0 END) AS out10'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 11 THEN i.qty * i.unit_price ELSE 0 END) AS out11'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 12 THEN i.qty * i.unit_price ELSE 0 END) AS out12'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 1 THEN i.qty * i.unit_price ELSE 0 END) AS out1'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 2 THEN i.qty * i.unit_price ELSE 0 END) AS out2'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 3 THEN i.qty * i.unit_price ELSE 0 END) AS out3'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 4 THEN i.qty * i.unit_price ELSE 0 END) AS out4'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 5 THEN i.qty * i.unit_price ELSE 0 END) AS out5'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 6 THEN i.qty * i.unit_price ELSE 0 END) AS out6'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 7 THEN i.qty * i.unit_price ELSE 0 END) AS out7'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 8 THEN i.qty * i.unit_price ELSE 0 END) AS out8'),
-    //             new Expression('SUM(CASE WHEN i.transaction_type = "OUT" AND MONTH(i.created_at) = 9 THEN i.qty * i.unit_price ELSE 0 END) AS out9'),
-    //         ])
-    //         ->leftJoin(['o' => 'stock_events'], 'i.category_id = o.id AND i.name = :order', [':order' => 'order'])
-    //         ->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
-    //         ->where([
-    //             'i.name' => 'order_item',
-    //             'i.transaction_type' => 'OUT',
-    //             'w.warehouse_type' => 'SUB',
-    //         ])
-    //         ->groupBy('i.thai_year')
-    //         ->asArray()
-    //         ->all();
-
-    //     return [
-    //         'in' => $StockIn,
-    //         'out' => $StockOut,
-    //     ];
-    // }
-
-    //   return self::find()
-    //   ->alias('i')
-    //   ->select([
-    //     'i.thai_year',
-    //     'w.warehouse_type',
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 10 THEN i.qty * i.unit_price ELSE 0 END) as in10"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 10 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out10"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 11 THEN i.qty * i.unit_price ELSE 0 END) as in11"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 11 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out11"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 12 THEN i.qty * i.unit_price ELSE 0 END) as in12"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 12 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out12"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 1 THEN i.qty * i.unit_price ELSE 0 END) as in1"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 1 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out1"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 2 THEN i.qty * i.unit_price ELSE 0 END) as in2"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 2 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out2"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 3 THEN i.qty * i.unit_price ELSE 0 END) as in3"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 3 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out3"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 4 THEN i.qty * i.unit_price ELSE 0 END) as in4"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 4 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out4"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 5 THEN i.qty * i.unit_price ELSE 0 END) as in5"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 5 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out5"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 6 THEN i.qty * i.unit_price ELSE 0 END) as in6"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 6 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out6"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 7 THEN i.qty * i.unit_price ELSE 0 END) as in7"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 7 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out7"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 8 THEN i.qty * i.unit_price ELSE 0 END) as in8"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 8 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out8"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 9 THEN i.qty * i.unit_price ELSE 0 END) as in9"),
-    //     new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 9 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out9"),
-    // ])
-    //   ->leftJoin(['o' => 'stock_events'], 'i.category_id = o.id AND i.name = :order', [':order' => 'order'])
-    //     ->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
-    //   ->where(['o.order_status' => 'success'])
-    //   ->groupBy('thai_year')
-    //   ->asArray()
-    //   ->all();
-    // }
 
     // ยอดรวมที่จ่ายออก
     public function SummaryOut()
@@ -1050,42 +928,6 @@ class StockEvent extends Yii\db\ActiveRecord
             ->bindValue(':thai_year', $this->thai_year)
             ->queryOne();
 
-        // $where = ['and'];
-        // $where[] = ['thai_year' => $this->thai_year];  // ใช้กรองถ้าค่ามี
-        // $where[] =['order_status' => 'success'];
-        //     $query = StockEvent::find()
-        //     ->select([
-        //         'thai_year',
-        //         'in10' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10)"),
-        //         'out10' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 10)"),
-        //         'in11' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11)"),
-        //         'out11' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 11)"),
-        //         'in12' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 12)"),
-        //         'out12' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 12)"),
-        //         'in1' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 1)"),
-        //         'out1' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 1)"),
-        //         'in2' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 2)"),
-        //         'out2' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 2)"),
-        //         'in3' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 3)"),
-        //         'out3' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 3)"),
-        //         'in4' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 4)"),
-        //         'out4' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 4)"),
-        //         'in5' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 5)"),
-        //         'out5' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 5)"),
-        //         'in6' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 6)"),
-        //         'out6' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 6)"),
-        //         'in7' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 7)"),
-        //         'out7' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 7)"),
-        //         'in8' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 8)"),
-        //         'out8' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 8)"),
-        //         'in9' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9)"),
-        //         'out9' => new Expression("(SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED), 0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9)")
-        //     ])
-        //     ->where($where)
-        //     ->groupBy('thai_year')
-        //     ->addParams([':warehouse_id' => $this->warehouse_id])
-        //     ->asArray()
-        //     ->one();
 
         try {
             $chartSummary = [

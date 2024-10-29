@@ -32,7 +32,7 @@ use yii\helpers\Html;
                 <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
             </td>
             <td class="align-middle text-start"><?php echo $item->lot_number; ?>(<code><?php echo $item->SumLotQty(); ?></code>)</td>
-            <td class="align-middle text-end"><?php echo $item->unit_price; ?></td>
+            <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
             <td class="text-center"><?php echo $item->SumStockQty(); ?></td>
             <td class="align-middle text-center"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
             <td class="text-center">
@@ -51,13 +51,13 @@ use yii\helpers\Html;
             <td class="text-center">
 
                 <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
-                <?php echo Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
+                <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $model->id, 'lot_number' => $item->lot_number], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
                 <?php endif;?>
 
                 <?php //if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
 
                 <?php if(!$model->OrderApprove()):?>
-                <?php echo Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
+                <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
                 <?php endif;?>
 
 

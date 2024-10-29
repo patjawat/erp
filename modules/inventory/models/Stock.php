@@ -42,7 +42,7 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
 
     public function getPrice()
     {
-        return $this->price;
+        return $this->unit_price;
     }
 
     public function getQty()

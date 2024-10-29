@@ -181,6 +181,20 @@ class SubStockController extends \yii\web\Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
+            
+            $error = 0;
+
+            // foreach ($cart->getItems() as $item) {
+            //     $stock = Stock::findOne($item->id);
+            //     if($item->getQuantity() > $stock->qty){
+            //         $error+=1;
+            //     }
+            // }
+
+            // if($error>0){
+            //     return ['status' => 'error', 'message' =>'ไม่พอจ่าย'];
+            // }
+
             $transaction = \Yii::$app->db->beginTransaction();
             try {
 
@@ -211,16 +225,16 @@ class SubStockController extends \yii\web\Controller
                     'data_json' => [
                         'req_qty' => $item->getQuantity(),
                     ],
-                    'order_status' => 'pending',
                 ]);
                 if (!$newItem->save(false)) {
                     throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ITems ได้');
                 }
                     //ถ้า save icon เสร็จให้ update stock
                 
-                        $stock = Stock::findOne(['warehouse_id' => $item->warehouse_id,'asset_item' => $item->asset_item,'lot_number' => $item->lot_number]);
+                        // $stock = Stock::findOne(['warehouse_id' => $item->warehouse_id,'asset_item' => $item->asset_item,'lot_number' => $item->lot_number]);
+                        $stock = Stock::findOne($item->id);
                         if($stock){
-                            $stock->qty =  ($stock->qty - $item->qty);
+                            $stock->qty =  ($stock->qty - $newItem->qty);
                            if (!$stock->save(false)) {
                             throw new \Exception('ไม่สามารถบันทึกข้อมูล Stock ได้');
                         }
