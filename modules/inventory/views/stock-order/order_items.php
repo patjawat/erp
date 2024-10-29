@@ -37,7 +37,7 @@ use yii\helpers\Html;
             <td class="align-middle text-center"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
             <td class="text-center">
 
-                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office)): ?>
+                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office) && $model->order_status != 'success'): ?>
                 <div class="d-flex">
                     <span type="button" class="minus btn btn-sm btn-light" id="min" data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>"><i class="fa-regular fa-square-minus fs-3"></i></span>
                     <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2" value="<?php echo $item->qty; ?>" class="qty" data-maxlot="<?=$item->SumLotQty()?>" style="width: 55px;font-weight: 600;font-size: large;">
