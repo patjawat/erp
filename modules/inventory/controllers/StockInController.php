@@ -204,6 +204,7 @@ class StockInController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
                 $user = \Yii::$app->user->identity->employee;
                 $created = [
                     'employee_fullname' => $user->fullname,
@@ -215,23 +216,25 @@ class StockInController extends Controller
                 if ($model->name == 'order') {
                     $model->code = \mdm\autonumber\AutoNumber::generate('IN-'.substr(AppHelper::YearBudget(), 2).'????');
                     $model->data_json = ArrayHelper::merge($model->data_json, $created);
+                    $model->thai_year =  AppHelper::YearBudget($model->data_json['receive_date']);
                 }
-
+                
                 if ($model->name == 'order_item') {
+                    $model->thai_year =  AppHelper::YearBudget($order->data_json['receive_date']);
                     $convertDate = [
-                        'mfg_date' => $model->data_json['mfg_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
-                        'exp_date' => $model->data_json['exp_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
-                        'req_qty' => $model->qty
-                    ];
-                    $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
-
-                    if ($model->auto_lot == '1') {
-                        $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
-                    } else {
+                            'mfg_date' => $model->data_json['mfg_date'] != '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
+                            'exp_date' => $model->data_json['exp_date'] != '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
+                            'req_qty' => $model->qty
+                        ];
+                        $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
+                        
+                        if ($model->auto_lot == '1') {
+                            $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                        } else {
+                        }
                     }
-                }
-
-                $model->thai_year = isset($model->data_json['receive_date']) ? AppHelper::convertToGregorian($model->data_json['receive_date']) : '';
+                    
+;
                 $model->order_status = 'pending';
                 $model->warehouse_id = $warehouse['warehouse_id'];
 
@@ -243,7 +246,7 @@ class StockInController extends Controller
 
                         return [
                             'status' => 'success',
-                            'container' => '#inventory',
+                            'container' => '#inventory-container',
                         ];
                     }
                 } else {
@@ -410,7 +413,7 @@ class StockInController extends Controller
 
                     return [
                         'status' => 'success',
-                        'container' => '#inventory',
+                        'container' => '#inventory-container',
                     ];
                 // }
             } else {
@@ -486,7 +489,7 @@ class StockInController extends Controller
 
         return [
             'status' => 'success',
-            'container' => '#inventory',
+            'container' => '#inventory-container',
         ];
     }
 
