@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'format'=>'html',
                 'label' => 'ชื่อ-นามสกุล',
-                'value' => $model->employee->fullname
+                'value' => $model->employee->fullname ?? '-'
             ],
         ],
     ]) ?>

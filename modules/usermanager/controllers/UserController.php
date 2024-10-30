@@ -3,16 +3,16 @@
 namespace app\modules\usermanager\controllers;
 
 use Yii;
-use app\modules\usermanager\models\User;
-use app\modules\usermanager\models\UserSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
-use \dominus77\sweetalert2\Alert;
-use dektrium\user\models\RegistrationForm;
 use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use \dominus77\sweetalert2\Alert;
+use yii\web\NotFoundHttpException;
 use dektrium\user\models\User as BaseUser;
+use app\modules\usermanager\models\User;
+use dektrium\user\models\RegistrationForm;
+use app\modules\usermanager\models\UserSearch;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -96,7 +96,7 @@ class UserController extends Controller
         $model->password = $model->password_hash;
         $model->confirm_password = $model->password_hash;
         $oldPass = $model->password_hash;
-        $model->fullname = $model->employee->fullname;
+        $model->fullname = ($model->employee->fullname ?? '-');
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
           if($oldPass!==$model->password){

@@ -48,7 +48,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <th class="text-center">#</th>
                 <th class="text-center">ปีงบ</th>
                 <th scope="col">รหัส/วันที่</th>
-                    <th class="text-center" style="width:120px">ควมเคลื่อนไหว</th>
+                    <th class="text-center" style="width:120px">ความเคลื่อนไหว</th>
                     <th>ผู้ดำเนินการ</th>
                     <th>ประเภท</th>
                     <th>คลัง</th>
