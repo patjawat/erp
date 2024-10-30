@@ -25,8 +25,6 @@ $this->title = 'ระบบคลัง';
 <?php echo $this->render('../default/menu_dashbroad'); ?>
 <?php $this->endBlock(); ?>
 
-
-
 <div class="row">
     <div class="col-xl-6">
         <div class="card">

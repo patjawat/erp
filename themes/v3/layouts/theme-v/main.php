@@ -75,7 +75,7 @@ $moduleId = Yii::$app->controller->module->id;
     <?php echo $this->render('../modal'); ?>
     <main role="main">
 
-        <div class="page-wrapper" id="page-content">
+        <div class="page-wrapper"  id="page-content">
             <?php echo $this->render('header'); ?>
 
             <?php if ($moduleId == 'settings' || $moduleId == 'usermanager') { ?>
