@@ -63,10 +63,18 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <td class="text-center"><?= $row++ ?></td>
                 <td class="text-center"><?= $item->thai_year ?></td>
                 <td class="fw-light align-middle">
+                    
+                    <?php if ($item->transaction_type == 'IN'): ?>
                         <div class=" d-flex flex-column">
                             <span class="fw-semibold "><?= $item->code ?></span>
                             <?= $item->ViewReceiveDate(); ?>
                         </div>
+                        <?php else:?>
+                            <div class=" d-flex flex-column">
+                            <span class="fw-semibold "><?= $item->code ?></span>
+                            <?= $item->viewCreatedAt()(); ?>
+                        </div>
+                            <?php endif?>
                     </td>
                     <td class="text-center">
                         <?php if ($item->transaction_type == 'IN'): ?>
