@@ -45,46 +45,59 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         <table class="table table-primary mb-5 mt-3">
             <thead>
                 <tr>
-                    <th scope="col" style="width:120px">รหัส</th>
+                <th class="text-center">#</th>
+                <th class="text-center">ปีงบ</th>
+                <th scope="col">รหัส/วันที่</th>
                     <th class="text-center" style="width:120px">ควมเคลื่อนไหว</th>
-                    <th>รายการ</th>
-                    <th>คลัง</th>
-                    <th class="text-center">ปีงบประมาณ</th>
+                    <th>ผู้ดำเนินการ</th>
                     <th>ประเภท</th>
+                    <th>คลัง</th>
                     <th style="width:130px" class="text-end">มูลค่า</th>
                     <th style="width:100px" class="text-center">สถานะ</th>
                     <th class="text-end" style="width:100px">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($dataProvider->getModels() as $item): ?>
+            <tbody class="align-middle">
+                <?php  $row = 1;foreach ($dataProvider->getModels() as $item): ?>
                 <tr>
-                    <td><?= $item->code ?></td>
+                <td class="text-center"><?= $row++ ?></td>
+                <td class="text-center"><?= $item->thai_year ?></td>
+                <td class="fw-light align-middle">
+                        <div class=" d-flex flex-column">
+                            <span class="fw-semibold "><?= $item->code ?></span>
+                            <?= $item->ViewReceiveDate(); ?>
+                        </div>
+                    </td>
                     <td class="text-center">
                         <?php if ($item->transaction_type == 'IN'): ?>
                         <div class="badge rounded-pill badge-soft-primary text-primary fs-13"><i
-                                class="fa-solid fa-circle-plus"></i> รับเข้า</div>
+                                class="fa-solid fa-circle-plus"></i> รับ</div>
                         <?php else: ?>
                         <div class="badge rounded-pill badge-soft-danger text-danger fs-13"><i
-                                class="fa-solid fa-circle-minus"></i> จ่ายออก</div>
+                                class="fa-solid fa-circle-minus"></i> จ่าย</div>
 
                         <?php endif ?>
                     </td>
                     <td>
-                    <?= $item->UserReq($item->ViewReceiveDate())['avatar']; ?>
-                    <?=$item->from_warehouse_id?>
+                        
+                    <?php if ($item->transaction_type == 'IN'): ?>
+                        <?= $item->CreateBy($item->ViewReceiveDate())['avatar']; ?>
+                        <?php else:?>
+                            <?= $item->ShowPlayer()['avatar']; ?>
+                                    <?php //  $item->UserReq($item->ViewReceiveDate())['avatar']; ?>
+                                    <?php endif ?>
                     
                 </td>
+                <td>  <?= isset($item->data_json['asset_type_name']) ? $item->data_json['asset_type_name'] : '' ?></td>
                 <td>
+                    <?=$item->fromWarehouseName()?>
                     <?php if ($item->transaction_type == 'IN'): ?>
-                        <?=$item->fromWarehouse->warehouse_name?>
+                        <?php $item->warehouse->warehouse_name ?>
                         <?php else: ?>
-                            <?php $item->warehouse->warehouse_name ?>
-                                <?php isset($item->fromWarehouse->warehouse_name) ? $item->fromWarehouse->warehouse_name : 'ไม่ระบุ' ?>
+                            <?php  $model->fromWarehouse->warehouse_name ?? '-' ?>
                                 <?php endif ?>
                     </td>
-                    <td class="text-center"><?= $item->thai_year ?></td>
-                    <td>  <?= isset($item->data_json['asset_type_name']) ? $item->data_json['asset_type_name'] : '' ?></td>
+                  
                   
                   
                     <td class="text-end">

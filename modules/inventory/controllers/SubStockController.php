@@ -43,14 +43,14 @@ class SubStockController extends \yii\web\Controller
         $model = Stock::findOne($id);
         // return $model->getLotQtyOut();
 
-        $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
-        if (!$getWarehouse) {
-            $warehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
-            \Yii::$app->session->set('selectMainWarehouse', [
-                'warehouse_id' => $warehouse->id,
-                'warehouse_name' => $warehouse->warehouse_name,
-            ]);
-        }
+        // $getWarehouse = \Yii::$app->session->get('selectSubWarehouse');
+        // if (!$getWarehouse) {
+        //     $warehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
+        //     \Yii::$app->session->set('selectSubWarehouse', [
+        //         'warehouse_id' => $warehouse->id,
+        //         'warehouse_name' => $warehouse->warehouse_name,
+        //     ]);
+        // }
 
         $checkStock = Stock::findOne(['lot_number' => $model->lot_number,'id' => $model->id]);
 

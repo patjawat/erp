@@ -27,7 +27,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
         <?= $form->field($model, 'q')->label(false) ?>
         <?=$form->field($model, 'transaction_type')->widget(Select2::classname(), [
-        'data' => ['IN' => 'รับเข้า','OUT' =>'จ่ายออก'],
+        'data' => ['IN' => 'รับ','OUT' =>'จ่าย'],
         'options' => ['placeholder' => 'ความเคลื่อนไหว'],
         'pluginOptions' => [
             'width' => '100px',

@@ -249,6 +249,11 @@ class StockEvent extends Yii\db\ActiveRecord
         // }
     }
 
+    public function fromWarehouseName()
+    {
+        return Warehouse::findOne($this->from_warehouse_id)->warehouse_name ?? '-';
+    }
+    
     // ตรวจสอบค่าวาง qty
     public function countNullQty()
     {
@@ -478,8 +483,9 @@ class StockEvent extends Yii\db\ActiveRecord
             case 'cancel':
                 $msg = '<div class="badge rounded-pill badge-soft-danger text-danger fs-13"> <i class="fa-solid fa-xmark fs-6 text-danger"></i> ยกเลิก </div>';
                 break;
-            case 'success':
-                $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
+                case 'success':
+                    $msg = '<div class="badge rounded-pill badge-soft-success text-success fs-13"> <i class="bi bi-check2-circle text-success"></i> สำเร็จ </div>';
+                    // $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
                 break;
 
             default:
@@ -602,7 +608,7 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         try {
             $datetime = \Yii::$app->thaiFormatter->asDateTime($this->data_json['player_date'], 'medium');
-            $msg = 'ผู้สั่งจ่ายวัสดุ' . ' | ' . $datetime;
+            $msg = 'ผู้ดำเนินการ' . ' | ' . $datetime;
             return $this->getAvatar($this->data_json['player'], $msg);
         } catch (\Throwable $th) {
            return [
@@ -946,39 +952,39 @@ class StockEvent extends Yii\db\ActiveRecord
 
     // ข้อมูล  chart summary แบบรายเดือนและปี
 
-    public function SummaryChart($warehouseType)
+    public function SummaryChart($warehouseType = null)
     {
         $where = ['and'];
         $where[] = ['thai_year' => $this->thai_year];  // ใช้กรองถ้าค่ามี
-        $where[] = ['w.warehouse_type' => $warehouseType];  // ใช้กรองถ้าค่ามี
+        // $where[] = ['w.warehouse_type' => $warehouseType];  // ใช้กรองถ้าค่ามี
 
         return StockEvent::find()
             ->alias('i')
             ->select([
                 'thai_year',
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 10 THEN i.qty * i.unit_price ELSE 0 END) as in10"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 10  AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in10"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 10 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out10"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 11 THEN i.qty * i.unit_price ELSE 0 END) as in11"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 11 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in11"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 11 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out11"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 12 THEN i.qty * i.unit_price ELSE 0 END) as in12"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 12 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in12"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 12 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out12"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 1 THEN i.qty * i.unit_price ELSE 0 END) as in1"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 1 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in1"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 1 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out1"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 2 THEN i.qty * i.unit_price ELSE 0 END) as in2"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 2 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in2"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 2 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out2"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 3 THEN i.qty * i.unit_price ELSE 0 END) as in3"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 3 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in3"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 3 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out3"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 4 THEN i.qty * i.unit_price ELSE 0 END) as in4"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 4 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in4"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 4 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out4"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 5 THEN i.qty * i.unit_price ELSE 0 END) as in5"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 5 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in5"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 5 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out5"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 6 THEN i.qty * i.unit_price ELSE 0 END) as in6"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 6 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in6"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 6 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out6"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 7 THEN i.qty * i.unit_price ELSE 0 END) as in7"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 7 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in7"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 7 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out7"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 8 THEN i.qty * i.unit_price ELSE 0 END) as in8"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 8 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in8"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 8 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out8"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 9 THEN i.qty * i.unit_price ELSE 0 END) as in9"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 9 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in9"),
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 9 AND w.warehouse_type = 'SUB' THEN i.qty * i.unit_price ELSE 0 END) as out9"),
             ])
             ->where($where)
@@ -988,4 +994,5 @@ class StockEvent extends Yii\db\ActiveRecord
             ->asArray()
             ->one();
     }
+
 }

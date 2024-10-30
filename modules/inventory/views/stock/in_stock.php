@@ -39,7 +39,7 @@ $products = $cart->getItems();
                     <div class="d-flex">
                    <div>
                    <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
-                    <?=  Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light'])  ?>
+                    <?php //  Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light'])  ?>
                     <?php else:?>
                     <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-primary','data-pjax' => '0']) ?>
                     <?php endif;?>
@@ -48,6 +48,12 @@ $products = $cart->getItems();
                 <?php // $this->render('_search', ['model' => $searchModel]); ?>
                 <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light','data' => ['pjax' => 0]]) ?>
             </div>
+            <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
+            <div>
+                    มูลค่า <span
+                        class="fw-semibold badge rounded-pill text-bg-light fs-6"><?= $searchModel->SumPrice(false) ?></span>บาท
+                </div>
+                <?php endif;?>
         </div>
         <table class="table">
             <thead>
@@ -73,14 +79,20 @@ $products = $cart->getItems();
                     <td class="text-end">
                         <span class="fw-semibold"><?=$item->SumPriceByItem()?></span>
                     </td>
+                    <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'SUB'):?>
                     <td class="text-end">
-                        <?php if($item->SumQty() > 0):?>
+                    <?php if($item->SumQty() > 0):?>
                     <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เบิก',['/inventory/sub-stock/add-to-cart','id' => $item->id],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>
                     <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก2',['/inventory/sub-stock/select-lot','id' => $item->id],['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-lg']])?>
                    <?php else:?>
                     <button type="button" class="btn btn-sm btn-primary shadow rounded-pill" disabled><i class="fa-solid fa-circle-plus"></i> เลือก</button>
-                    <?php endif?>
                 </td>
+                    <?php endif?>
+                    <?php else:?>
+                        <td class="text-end">
+                        <?=Html::a('<i class="fa-solid fa-eye"></i>',['/inventory/stock/view-stock-card','id' => $item->id],['class' => 'btn btn-primary'])?>
+                    </td>
+                    <?php endif?>
                 </tr>
                 <?php endforeach;?>
                 <tr>

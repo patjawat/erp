@@ -31,8 +31,7 @@ use yii\widgets\Pjax;
             <th scope="col" class="text-center align-center" style="width:32px;">#</th>
         </tr>
     </thead>
-    <tbody>
-        
+    <tbody class="align-middle">
         <?php $sumQty = 0; $getQuantity=0;foreach($products as $item):?>
             <?php
            $sumQty += (float)$item->SumQty();

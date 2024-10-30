@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
 $cart = Yii::$app->cartSub;
+$warehouse = Yii::$app->session->get('warehouse');
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockSearch $model */
 /** @var yii\widgets\ActiveForm $form */
@@ -39,10 +40,12 @@ $cart = Yii::$app->cartSub;
             ],
             ])->label(false);
             ?>
+            <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'SUB'):?>
              <?=Html::a('<button type="button" class="btn btn-primary">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span>
                     </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary shadow open-modal','data' => ['size' => 'modal-xl']])?>
-        <?php //  Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light']) ?>
+       <?php  endif;?>
+       <?php //  Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light']) ?>
         <!-- <div class="btn-group">
             <?php Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
             <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"

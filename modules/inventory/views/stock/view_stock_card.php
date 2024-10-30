@@ -81,14 +81,17 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php foreach($dataProvider->getModels() as $item):?>
     <tr>
       <th scope="row">
-        <?php
 
-      if($item['transaction_type'] == 'IN'){
-        echo 'เข้า <svg class="text-success" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-input"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M2 15h10"/><path d="m9 18 3-3-3-3"/></svg>';
-    }else{
-        echo '<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-output"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 7V4a2 2 0 0 1 2-2 2 2 0 0 0-2 2"/><path d="M4.063 20.999a2 2 0 0 0 2 1L18 22a2 2 0 0 0 2-2V7l-5-5H6"/><path d="m5 11-3 3"/><path d="m5 17-3-3h10"/></svg> ออก';
-      }
-      ?></th>
+      <?php if ($item['transaction_type'] == 'IN'): ?>
+                        <div class="badge rounded-pill badge-soft-primary text-primary fs-13"><i
+                                class="fa-solid fa-circle-plus"></i> รับ</div>
+                        <?php else: ?>
+                        <div class="badge rounded-pill badge-soft-danger text-danger fs-13"><i
+                                class="fa-solid fa-circle-minus"></i> จ่าย</div>
+
+                        <?php endif ?>
+                        
+      
       <td><?=$item['thai_year']?></td>
       <td>
         <?php
