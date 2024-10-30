@@ -554,7 +554,7 @@ class StockOrderController extends Controller
                 'message' => 'ไม่พอจ่าย',
                 'container' => '#inventory-container',
             ];
-        } else {
+        } 
             // ตรวจสอบความเรียบร้อยก่อนบันทึก
             $transaction = \Yii::$app->db->beginTransaction();
             try {
@@ -664,7 +664,7 @@ class StockOrderController extends Controller
                 ];
             }
             // จบ
-        }
+        
     }
 
     // public function actionCheckOutOri($id)
