@@ -72,7 +72,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <?php else:?>
                             <div class=" d-flex flex-column">
                             <span class="fw-semibold "><?= $item->code ?></span>
-                            <?= $item->viewCreatedAt(); ?>
+                            <?= Yii::$app->thaiFormatter->asDate($item->viewCreatedAt(), 'medium'); ?>
                         </div>
                             <?php endif?>
                     </td>
