@@ -22,8 +22,9 @@ $this->title = $warehouse['warehouse_name'];
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
-
+Dashboard
 <?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>

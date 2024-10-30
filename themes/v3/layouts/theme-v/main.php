@@ -8,11 +8,11 @@
  * @var string $content
  */
 
-use app\assets\AppAsset;
-use app\assets\BootstapIconAsset;
-use app\models\Categorise;
-use yii\bootstrap5\Html;
 use yii\web\View;
+use app\assets\AppAsset;
+use yii\bootstrap5\Html;
+use app\models\Categorise;
+use app\assets\BootstapIconAsset;
 
 AppAsset::register($this);
 BootstapIconAsset::register($this);
@@ -75,9 +75,6 @@ $moduleId = Yii::$app->controller->module->id;
     <?php echo $this->render('../modal'); ?>
     <main role="main">
 
-        <div id="page-loadding" style="display: none;">
-            <?php echo $this->render('loadding'); ?>
-        </div>
         <div class="page-wrapper" id="page-content">
             <?php echo $this->render('header'); ?>
 

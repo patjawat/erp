@@ -3,10 +3,15 @@
 // const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
 window.onbeforeunload = function () {
-  $("#cover-spin").show();
+
+  var target = $('#page-content');
+    if (target.hasClass('loading')) {
+      target.loadingOverlay('remove');
+    } else {
+      target.loadingOverlay();
+    };
+
   NProgress.start();
-    $('#page-content').hide();
-  $('#page-loadding').show();
   
   // $('#modal-dialog').modal('hide');
   // $('#awaitLogin').show();
@@ -16,12 +21,12 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
-  // $('#page-content').hide();
-  // $('#page-loadding').show();
+  $('#page-content').loadingOverlay();
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
+  $('#page-content').loadingOverlay('remove');
   // $('#page-content').show();
   // $('#page-loadding').hide();
 });

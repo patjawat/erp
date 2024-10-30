@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
   <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทั้งหมดจำนวน <span class="badge rounded-pill text-bg-primary"> <?=count($model->getStockCard())?> </span> รายการ</h6>
             <div>
-            <?php  echo $this->render('_search', ['searchModel' => $searchModel,'model' => $model]); ?>
+            <?php  echo $this->render('_search_stock', ['searchModel' => $searchModel,'model' => $model]); ?>
             </div>
           </div>
 <table class="table">

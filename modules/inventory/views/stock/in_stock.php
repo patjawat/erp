@@ -35,10 +35,15 @@ $products = $cart->getItems();
             <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary">
                     <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
                     <?=$this->render('_search', ['model' => $searchModel]); ?>
+                    
                     <div class="d-flex">
-                    <?=Html::a('<button type="button" class="btn btn-primary rounded-pill">
-                    <i class="fa-solid fa-cart-plus"></i> เลือก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
-                    </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
+                   <div>
+                   <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
+                    <?=  Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light'])  ?>
+                    <?php else:?>
+                    <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-primary']) ?>
+                    <?php endif;?>
+                   </div>
 
                 <?php // $this->render('_search', ['model' => $searchModel]); ?>
                 <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light','data' => ['pjax' => 0]]) ?>
