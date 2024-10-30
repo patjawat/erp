@@ -792,7 +792,8 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public function TotalPrice()
     {
-        return \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock")->queryScalar();
+        $query =  \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock")->queryScalar();
+        return $query ?? 0;
     }
 
     // จำนวนรับเข้าของคลังหลักปีงบประมานนี้
@@ -890,10 +891,10 @@ class StockEvent extends Yii\db\ActiveRecord
                 LEFT JOIN warehouses w ON w.id = i.warehouse_id
                 WHERE i.name = 'order_item' AND i.transaction_type = 'OUT' AND w.warehouse_type = 'SUB'";
 
-        return \Yii::$app
-            ->db
-            ->createCommand($sql)
-            ->queryScalar();
+        $query = Yii::$app->db->createCommand($sql)->queryScalar();
+            
+        return $query ?? 0;
+            
     }
 
     // สถิติมูลค่าการับเข้าจ่ายออกตามปีงบประมาณ

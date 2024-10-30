@@ -2,22 +2,22 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\components\AppHelper;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\Warehouse;
-use app\modules\purchase\models\Order;
-use app\modules\purchase\models\OrderSearch;
-use app\modules\sm\models\ProductSearch;
 use Yii;
 use yii\helpers\Html;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use yii\web\NotFoundHttpException;
+use app\modules\purchase\models\Order;
+use app\modules\inventory\models\Stock;
+use app\modules\sm\models\ProductSearch;
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockEvent;
+use app\modules\purchase\models\OrderSearch;
+use app\modules\inventory\models\StockEventSearch;
 
 /**
  * StockEventController implements the CRUD actions for StockEvent model.
@@ -381,17 +381,25 @@ class StockInController extends Controller
             }
 
             if ($model->name == 'order') {
-
                 $convertDate = [
                     'receive_date' => AppHelper::convertToGregorian($model->data_json['receive_date']),
                 ];
-                $model->data_json = ArrayHelper::merge($model->data_json, $convertDate);
+               $model->data_json = ArrayHelper::merge($model->data_json, $convertDate);
             }
 
             if ($model->name == 'order_item' && $model->auto_lot == '1' && $model->lot_number == '') {
                 $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
             }
-            $model->thai_year = isset($model->data_json['receive_date']) ? AppHelper::convertToGregorian($model->data_json['receive_date']) : '';
+            //ถ้าหากมีการระบุวันที่รับเข้าให้หาปีงบประมาจากวันที่
+            if(isset($model->data_json['receive_date'])){
+                // return $model->data_json['receive_date'];
+                // return AppHelper::YearBudget($model->data_json['receive_date']);
+                 $model->thai_year = AppHelper::YearBudget($model->data_json['receive_date']);
+            }else{
+                // ถ้าไม้ให้เป็นปัจจุบัน
+                 $model->thai_year = AppHelper::YearBudget();
+            }
+            
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             if ($model->save(false)) {
