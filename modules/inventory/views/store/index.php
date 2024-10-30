@@ -1,12 +1,12 @@
 <?php
 
-use app\modules\inventory\models\Store;
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\View;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\inventory\models\Store;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StoreSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -84,6 +84,7 @@ $products = $cart->getItems();
 <?php // $this->render('view_cart')?>
 </div>
 </div>
+
 
 <?php yii\widgets\Pjax::end(); ?>
 

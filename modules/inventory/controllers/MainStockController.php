@@ -32,15 +32,14 @@ class MainStockController extends Controller
 
     public function actionCreate()
     {
-
         $formWarehouse = \Yii::$app->session->get('warehouse');
         $toWarehouse = \Yii::$app->session->get('selectMainWarehouse');
 
-        //หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
-        if(!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse['warehouse_id'])){
+        // หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
+        if (!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse['warehouse_id'])) {
             return $this->redirec(['/inventory']);
         }
-        
+
         $cart = \Yii::$app->cartMain;
         $userCreate = UserHelper::GetEmployee();
         $name = $this->request->get('name');
@@ -67,15 +66,15 @@ class MainStockController extends Controller
                     // $transaction->commit();
                     // สร้างรหัสขอเบิก
                     if ($model->name == 'order') {
-                        $model->code = \mdm\autonumber\AutoNumber::generate('REQ-'.substr(AppHelper::YearBudget(), 2).'????');
+                        $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . substr(AppHelper::YearBudget(), 2) . '????');
                     }
-                    
-                    //ถ้าผู้ขอกับผู้อนุมิติเป็นคนเดียวกันให้อนุมติได้เลย
-                    if($userCreate->id == $model->checker){
+
+                    // ถ้าผู้ขอกับผู้อนุมิติเป็นคนเดียวกันให้อนุมติได้เลย
+                    if ($userCreate->id == $model->checker) {
                         $newObj = $model->data_json = ['checker_confirm' => 'Y'];
                         $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
                     }
-                    
+
                     $model->thai_year = AppHelper::YearBudget();
                     $model->order_status = 'pending';
                     $model->warehouse_id = $toWarehouse['warehouse_id'];
@@ -83,7 +82,6 @@ class MainStockController extends Controller
                     if (!$model->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
                     }
-        
 
                     foreach ($cart->getItems() as $item) {
                         $newItem = new StockEvent([
@@ -105,7 +103,6 @@ class MainStockController extends Controller
                         if (!$newItem->save(false)) {
                             throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ITems ได้');
                         }
-            
                     }
                     $cart->checkOut(false);
                     \Yii::$app->session->remove('selectMainWarehouse');
@@ -116,7 +113,6 @@ class MainStockController extends Controller
                     $transaction->rollBack();
                     return ['status' => 'error', 'message' => $e->getMessage()];
                 }
-
             }
         } else {
             $model->loadDefaultValues();
@@ -152,7 +148,7 @@ class MainStockController extends Controller
                 'asset_item' => $item->asset_item,
                 'lot_number' => $item->lot_number,
                 'unit_price' => $item->unit_price,
-                'qty' => $item->SumLotQty(), // ระบุจำนวนจริงตาม lot ที่เหลือ
+                'qty' => $item->SumLotQty(),  // ระบุจำนวนจริงตาม lot ที่เหลือ
                 'data_json' => [
                     'req_qty' => $item->getQuantity(),
                 ],
@@ -229,7 +225,7 @@ class MainStockController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => '<h6><i class="bi bi-ui-checks"></i> ขอเบิก <span class="badge rounded-pill text-bg-primary countMainItem">'.$cart->getCount().' </span> รายการ</h6>',
+                'title' => '<h6><i class="bi bi-ui-checks"></i> ขอเบิก <span class="badge rounded-pill text-bg-primary countMainItem">' . $cart->getCount() . ' </span> รายการ</h6>',
                 'content' => $this->renderAjax('show_cart'),
                 'countItem' => $cart->getCount(),
             ];
@@ -258,7 +254,7 @@ class MainStockController extends Controller
 
         return [
             'status' => 'success',
-            'container' => '#inventory',
+            'container' => '#inventory-container',
             'totalCount' => $totalCount,
         ];
     }
@@ -271,20 +267,12 @@ class MainStockController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = Stock::findOne($id);
         $checkStock = Stock::findOne($id);
+        $cart->update($model, $quantity);
 
-        if ($quantity > $checkStock->SumQty()) {
-            return [
-                'status' => 'error',
-                'container' => '#inventory',
-            ];
-        } else {
-            $cart->update($model, $quantity);
-
-            return [
-                'container' => '#inventory',
-                'status' => 'success',
-            ];
-        }
+        return [
+            'container' => '#inventory-container',
+            'status' => 'success',
+        ];
     }
 
     public function actionDeleteItem($id)
@@ -299,7 +287,7 @@ class MainStockController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'container' => '#inventory',
+                'container' => '#inventory-container',
                 'status' => 'success',
                 'countItem' => $cart->getCount(),
             ];

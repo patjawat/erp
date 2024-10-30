@@ -41,7 +41,7 @@ $products = $cart->getItems();
                    <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
                     <?=  Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light'])  ?>
                     <?php else:?>
-                    <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-primary']) ?>
+                    <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-primary','data-pjax' => '0']) ?>
                     <?php endif;?>
                    </div>
 

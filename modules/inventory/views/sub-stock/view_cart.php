@@ -41,7 +41,9 @@ use yii\widgets\Pjax;
                 ?>
         <tr class="<?=($item->getQuantity() > $item->SumQty()) ? 'badge-soft-danger' : ''?>">
             <td scope="row"><?=$item->product->Avatar();?></td>
-            <td class="text-center"><?=$item->SumQty()?></td>
+            <td class="text-center">
+            <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"> <?=$item->SumQty()?> </span>
+            </td>
             <td class="text-center"><?=$item->product->unit_name?></td>
             <td class="text-end"><span class="fw-semibold"><?=number_format($item->unit_price,2)?></span></td>
             <td>
