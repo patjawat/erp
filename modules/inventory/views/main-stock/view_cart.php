@@ -23,7 +23,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>
-                        <th class="text-center">จำนวสต็อก</th>
+                        <th class="text-center">จำนวนสต็อก</th>
                         <th class="text-center">หน่วย</th>
                         <th class="text-end">มูลค่า</th>
                         <th class="text-center" style="width:190px">จำนวนเบิก</th>

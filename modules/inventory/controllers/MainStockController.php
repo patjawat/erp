@@ -202,6 +202,50 @@ class MainStockController extends Controller
         }
     }
 
+
+
+    public function actionStore2()
+    {
+        $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
+        $searchModel = new StockSearch([
+            'warehouse_id' => isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : '',
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->andFilterWhere(['warehouse_id' => ($getWarehouse ? $getWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
+        $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
+
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'asset_item', $searchModel->q],
+            ['like', 'title', $searchModel->q],
+        ]);
+        $dataProvider->setSort([
+            'defaultOrder' => [
+                'unit_price' => SORT_DESC,
+            ],
+        ]);
+        $dataProvider->query->groupBy('asset_item');
+        $dataProvider->pagination->pageSize = 24;
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'count' => $dataProvider->getTotalCount(),
+                'content' => $this->renderAjax('store2', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('store2', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+    
     public function actionViewCart()
     {
         $cart = \Yii::$app->cartMain;
