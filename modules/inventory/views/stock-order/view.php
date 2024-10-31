@@ -1,5 +1,6 @@
 <?php
 
+use yii\web\View;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\db\Expression;
@@ -60,7 +61,102 @@ $emp = UserHelper::GetEmployee();
                     <?php }?>
                 </div>
                 <!-- รายละเอียดรายการขอเบิก -->
-                <?php echo $this->render('order_items',['model' => $model,'office' => $office])?>
+                <?php // echo $this->render('order_items',['model' => $model,'office' => $office])?>
+
+
+
+
+                <table class="table table-striped mt-3">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>รายการ</th>
+                            <th class="text-center">หน่วย</th>
+                            <th class="text-start">ล็อตผลิต</th>
+                            <th class="text-end">มูลค่า</th>
+                            <th class="text-center">คงเหลือ</th>
+                            <th class="text-center">ขอเบิก</th>
+                            <th class="text-center">จ่าย</th>
+                            <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="table-group-divider align-middle">
+                        <?php $sumQty = 0; $getQuantity=0;foreach ($model->getItems() as $item):?>
+                        <?php
+                                $sumQty += (float)$item->qty;
+                                $getQuantity += (float)$item->SumlotQty();
+                                ?>
+                        <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
+                            <td class="align-middle">
+                                <?php
+                                        try {
+                                            echo $item->product->Avatar();
+                                        } catch (Throwable $th) {
+                                        }
+                                    ?>
+                            </td>
+                            <td class="align-middle text-center">
+                                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
+                            </td>
+                            <td class="align-middle text-start">
+                                <?php echo $item->lot_number; ?>(<code><?php echo $item->SumLotQty(); ?></code>)</td>
+                            <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
+                            <td class="text-center"><?php echo $item->SumStockQty(); ?></td>
+                            <td class="align-middle text-center"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
+                            <td class="text-center">
+                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office) && $model->order_status != 'success'): ?>
+                                <div class="d-flex">
+                                    <span type="button" class="minus btn btn-sm btn-light" id="min"
+                                        data-lot_qty="<?php echo $item->SumLotQty(); ?>"
+                                        data-id="<?php echo $item->id;?>"
+                                        data-total="<?php echo $item->SumStockQty();?>"
+                                        >
+                                        <i class="fa-regular fa-square-minus fs-3"></i>
+                                    </span>
+                                    <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2"
+                                        value="<?php echo $item->qty; ?>" class="qty"
+                                        data-maxlot="<?=$item->SumLotQty()?>"
+                                        style="width: 55px;font-weight: 600;font-size: large;">
+                                        
+                                    <span type="button" 
+                                        class="plus btn btn-sm btn-light" 
+                                        id="plus"
+                                        data-lot_qty="<?php echo $item->SumLotQty();?>"
+                                        data-id="<?php echo $item->id;?>"
+                                        data-total="<?php echo $item->SumStockQty();?>"
+                                        > 
+                                        <i class="fa-regular fa-square-plus fs-3"></i>
+                                    </span>
+                                </div>
+                                <?php else:?>
+                                <?php  echo ($model->OrderApprove() && $model->order_status == 'success') ? $item->qty : '-' ?>
+                                <?php endif;?>
+                            </td>
+                            <td class="text-center">
+
+                                <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
+                                <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
+                                <?php endif;?>
+
+                                <?php //if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
+
+                                <?php if(!$model->OrderApprove()):?>
+                                <?php //echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
+                                <?php endif;?>
+                                <?php if($model->order_status != 'success' && $userid == $item->created_by):?>
+                                <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
+                                <?php endif?>
+
+                            </td>
+                        </tr>
+
+                        <?php endforeach; ?>
+
+                    </tbody>
+                </table>
+
+
+
 
             </div>
         </div>
@@ -135,9 +231,9 @@ $emp = UserHelper::GetEmployee();
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
-                            <?=$model->ShowPlayer()['avatar'];?>
+                        <?=$model->ShowPlayer()['avatar'];?>
                         <?php else :?>
-                        
+
                         <?=isset($office) ? $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] : null;?>
                         <?php endif;?>
                         <!-- player -->
@@ -149,10 +245,13 @@ $emp = UserHelper::GetEmployee();
                             <?php }?>
 
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse['warehouse_id'])): ?>
+                            <?php if(($getQuantity >= $sumQty)):?>
                             <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
+
+                            <?php endif;?>
                             <?php else:?>
 
-                            <?php endif;?>    
+                            <?php endif;?>
                         </div>
                     </div>
                 </div>
@@ -160,24 +259,24 @@ $emp = UserHelper::GetEmployee();
 
         </div>
         <!-- End Card -->
-<?php if($model->order_status == 'success' && $model->transaction_type == 'OUT'):?>
+        <?php if($model->order_status == 'success' && $model->transaction_type == 'OUT'):?>
         <div class="card">
             <div class="card-body">
-            <?php if(isset($model->data_json['recipient'])):?>
+                <?php if(isset($model->data_json['recipient'])):?>
 
                 <div class="d-flex justify-content-between align-items-center">
-                <?=$model->Recipient()['avatar']?>
-                <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-md']]);?>
-            </div>
+                    <?=$model->Recipient()['avatar']?>
+                    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-md']]);?>
+                </div>
                 <?php else:?>
                 <div class="d-flex justify-content-center">
                     <?=Html::a('<i class="bi bi-plus-circle"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-md']]);?>
                 </div>
-        <?php endif?>    
-    </div>
-</div>
-<?php endif?>    
-        
+                <?php endif?>
+            </div>
+        </div>
+        <?php endif?>
+
         <!-- approve -->
         <div class="card">
             <div class="card-body">
@@ -185,7 +284,7 @@ $emp = UserHelper::GetEmployee();
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
                     <?php if($model->checker == $emp->id && $model->order_status != 'success'):?>
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
-               <?php endif;?>
+                    <?php endif;?>
                 </div>
             </div>
         </div>
@@ -254,6 +353,9 @@ $("body").on("click", ".minus", async function (e) {
 $("body").on("click", ".plus", async function (e) {
     quantityField = $(this).prev();
     var lotQty = $(this).data('lot_qty');
+    var total = $(this).data('total');
+    console.log(total);
+    
     var id = $(this).data('id');
     var setVal = parseInt(quantityField.val(), 10) + 1;
     if(setVal > lotQty){
@@ -315,7 +417,8 @@ $("body").on("keypress", ".qty", function (e) {
                     timer: 1500,
                 });
                 }
-                  $.pjax.reload({container:res.container, history:false});
+                location.reload();
+                //   $.pjax.reload({container:res.container, history:false});
             }
         });
     }
@@ -431,23 +534,24 @@ $('.confirm-order').click(async function (e) {
   $("body").on("click", ".copy-item", function (e) {
     e.preventDefault();
 
-         Swal.fire({
-            title: "ยืนยัน?",
-            text: "บันทึกสั่งจ่ายรายการนี้!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "ใช่, ยืนยัน!",
-            cancelButtonText: "ยกเลิก",
-        }).then( (result) => {
-            if (result.value == true) {
+        //  Swal.fire({
+        //     title: "ยืนยัน?",
+        //     text: "บันทึกสั่งจ่ายรายการนี้!",
+        //     icon: "warning",
+        //     showCancelButton: true,
+        //     confirmButtonColor: "#3085d6",
+        //     cancelButtonColor: "#d33",
+        //     confirmButtonText: "ใช่, ยืนยัน!",
+        //     cancelButtonText: "ยกเลิก",
+        // }).then( (result) => {
+        //     if (result.value == true) {
              $.ajax({
                 type: "get",
                 url: $(this).attr('href'),
                 dataType: "json",
                 success: function (res) {
-
+                    console.log(res);
+                    
                     if (res.status == "error") {
                             Swal.fire({
                                 icon: "error",
@@ -458,18 +562,19 @@ $('.confirm-order').click(async function (e) {
                         }
 
                   if (res.status == "success") {
-                      $.pjax.reload({container:res.container, history:false,url:res.url});
+                    // location.reload();
+                    //   $.pjax.reload({container:res.container, history:false,url:res.url});
                     // success("บันสำเร็จ!.");
                   }
                 },
             });
-            }
-        });
+            // }
+        // });
 
   });
 
 
 JS;
-$this->registerJS($js);
+$this->registerJS($js,View::POS_END);
 ?>
 <?php Pjax::end(); ?>

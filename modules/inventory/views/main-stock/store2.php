@@ -1,6 +1,6 @@
 <?php
-
 use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
@@ -57,25 +57,18 @@ $products = $cart->getItems();
                 <div class="card position-relative rounded">
                     <p class="position-absolute top-0 end-0 p-2">
                         <i class="fa-solid fa-circle-info fs-4"></i>
-                        <?php // echo $model->warehouse->warehouse_name; ?>
                     </p>
                     <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top']); ?>
                     <div class="card-body w-100">
+                        <a href="<?=Url::to(['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']])?>" class="add-cart">
+                        
                         <div class="d-flex justify-content-start align-items-center">
                             <?php if($model->SumQty() >= 1):?>
                             <span class="badge text-bg-primary  mt--45"><?php echo $model->SumQty(); ?>
                                 <?php echo $model->product->unit_name; ?></span>
-                            <!-- <span class="btn btn-sm btn-primary fs-13 mt--45 rounded-pill"><?php echo $model->SumQty(); ?> <?php echo $model->product->unit_name; ?> </span> -->
                             <?php else:?>
                             <span class="btn btn-sm btn-secondary fs-13 mt--45 rounded-pill"> หมด</span>
                             <?php endif;?>
-                            <?php
-                        // try {
-                        //     // echo Html::a('<i class="fa-solid fa-cart-plus"></i> '.$model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
-                        // } catch (Throwable $th) {
-                        //     // throw $th;
-                        // }
-        ?>
                         </div>
                         <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
 
@@ -85,14 +78,16 @@ $products = $cart->getItems();
 
 
                                 <?php
-                        try {
-                            echo Html::a('<i class="fa-solid fa-cart-plus"></i> '.$model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
-                        } catch (Throwable $th) {
-                            // throw $th;
-                        }
-        ?>
-                                <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?php echo $model->warehouse->warehouse_name; ?> </span> -->
+                                                try {
+                                                    echo Html::a('เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
+                                                } catch (Throwable $th) {
+                                                    // throw $th;
+                                                }
+                                ?>
                         </div>
+    
+                        </a>
+                        
                     </div>
                 </div>
 
@@ -153,6 +148,14 @@ $products = $cart->getItems();
                     </table>
                 </div>
 
+            </div>
+            <div class="d-grid gap-2 p-3">
+                <button class="btn btn-primary">
+                    <span>เบิกวัสดุ (<?=$cart->getCount()?> รายการ)</span>
+                    <br>
+                    <span class="fw-semibold"><i
+                            class="bi bi-currency-dollar"></i><?=number_format($cart->getCost(),2);?></span>
+                </button>
             </div>
         </div>
 

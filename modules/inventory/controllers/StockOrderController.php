@@ -45,7 +45,7 @@ class StockOrderController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
-        if(!$warehouse){
+        if (!$warehouse) {
             return $this->redirect(['/inventory']);
         }
 
@@ -53,17 +53,17 @@ class StockOrderController extends Controller
             'warehouse_id' => $warehouse['warehouse_id']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-         $dataProvider = $searchModel->search($this->request->queryParams);
-         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $searchModel->asset_type_name]);
-         $dataProvider->query->andFilterWhere(['name' => 'order']);
-         $dataProvider->query->andFilterWhere(['transaction_type' => $searchModel->transaction_type]);
-         $dataProvider->query->andFilterWhere([
-             'or',
-             ['like', 'code', $searchModel->q],
-             ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
-             ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $searchModel->q],
-             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
-         ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '\$.asset_type_name')"), $searchModel->asset_type_name]);
+        $dataProvider->query->andFilterWhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere(['transaction_type' => $searchModel->transaction_type]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.vendor_name')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.pq_number')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.po_number')"), $searchModel->q],
+        ]);
         // $dataProvider->query->andwhere(['name' => 'order', 'transaction_type' => 'OUT', 'from_warehouse_id' => $warehouse['warehouse_id']]);
 
         return $this->render('index', [
@@ -72,24 +72,23 @@ class StockOrderController extends Controller
         ]);
     }
 
-    
-        // เลือกคลังที่จะทำงาน
-        protected function setWarehouse($id)
-        {
-            $model = Warehouse::find()->where(['id' => $id])->One();
-            \Yii::$app->session->set('warehouse', [
-                'id' => $model->id,
-                'warehouse_id' => $model->id,
-                'warehouse_code' => $model->warehouse_code,
-                'warehouse_name' => $model->warehouse_name,
-                'warehouse_type' => $model->warehouse_type,
-                'category_id' => $model->category_id,
-                'checker' => isset($model->data_json['checker']) ? $model->data_json['checker'] : '',
-                'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
-            ]);
-            // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
-        }
-        
+    // เลือกคลังที่จะทำงาน
+    protected function setWarehouse($id)
+    {
+        $model = Warehouse::find()->where(['id' => $id])->One();
+        \Yii::$app->session->set('warehouse', [
+            'id' => $model->id,
+            'warehouse_id' => $model->id,
+            'warehouse_code' => $model->warehouse_code,
+            'warehouse_name' => $model->warehouse_name,
+            'warehouse_type' => $model->warehouse_type,
+            'category_id' => $model->category_id,
+            'checker' => isset($model->data_json['checker']) ? $model->data_json['checker'] : '',
+            'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
+        ]);
+        // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
+    }
+
     public function actionRequest()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
@@ -120,7 +119,7 @@ class StockOrderController extends Controller
         // return $model;
         $warehouse = Yii::$app->session->get('warehouse');
         $model = StockEvent::findOne($id);
-        if(!$warehouse){
+        if (!$warehouse) {
             $this->setWarehouse($model->warehouse_id);
         }
         if ($model) {
@@ -231,7 +230,6 @@ class StockOrderController extends Controller
         }
     }
 
-
     protected function saveCartItem($model)
     {
         $cart = \Yii::$app->cart;
@@ -258,23 +256,20 @@ class StockOrderController extends Controller
         return true;
     }
 
-
     // ตรวจสอบความถูกต้อง
     public function actionRecipientValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new StockEvent();
-        $requiredName = "ต้องระบุ";
+        $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-
             if (isset($model->data_json['recipient_date'])) {
-                preg_replace('/\D/', '', $model->data_json['recipient_date']) == "" ? $model->addError('data_json[recipient_date]', 'ลงวันที่ต้องระบุ') : null;
+                preg_replace('/\D/', '', $model->data_json['recipient_date']) == '' ? $model->addError('data_json[recipient_date]', 'ลงวันที่ต้องระบุ') : null;
             }
 
             if (isset($model->data_json['recipient'])) {
                 $model->data_json['recipient'] == '' ? $model->addError('data_json[recipient]', $requiredName) : null;
             }
-
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
@@ -284,8 +279,7 @@ class StockOrderController extends Controller
         }
     }
 
-
-    //ผู้รับวัสดุ
+    // ผู้รับวัสดุ
     public function actionRecipient($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -305,7 +299,7 @@ class StockOrderController extends Controller
                 'container' => '#inventory-container',
                 'data' => $model,
             ];
-        }else{
+        } else {
             $model->loadDefaultValues();
 
             $oldObj = $model->data_json;
@@ -316,7 +310,6 @@ class StockOrderController extends Controller
         }
 
         if ($this->request->isAJax) {
-
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('_form_recipient', [
@@ -399,7 +392,42 @@ class StockOrderController extends Controller
         }
     }
 
-    // กำหนดจำนวนที่จ่ายให้
+    // ปรับลดจำนวนเบิก
+    // public function actionUpdateQty($id)
+    // {
+    //     \Yii::$app->response->format = Response::FORMAT_JSON;
+    //     $id = $this->request->get('id');
+    //     $qty = $this->request->get('qty');
+    //     $model = StockEvent::findOne($id);
+    //     $checkStock = Stock::findOne(['lot_number' => $model->lot_number, 'warehouse_id' => $model->warehouse_id]);
+    //     if ($qty <= -1) {
+    //         return [
+    //             'status' => 'error',
+    //             'container' => '#inventory-container',
+    //             'code' => '$qty <= -1',
+    //         ];
+    //     }
+
+    //     if ($qty > $checkStock->qty) {
+    //         return [
+    //             'status' => 'error',
+    //             'container' => '#inventory-container',
+    //             'code' => '$qty > $checkStock->qty',
+    //         ];
+    //     } else {
+    //         $model->qty = $qty;
+    //         if ($qty >= 0 && $model->save(false)) {
+    //             \Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //             return [
+    //                 'status' => 'success',
+    //                 'container' => '#inventory-container',
+    //                 'data' => $model,
+    //             ];
+    //         }
+    //     }
+    // }
+
     public function actionUpdateQty($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -554,117 +582,115 @@ class StockOrderController extends Controller
                 'message' => 'ไม่พอจ่าย',
                 'container' => '#inventory-container',
             ];
-        } 
-            // ตรวจสอบความเรียบร้อยก่อนบันทึก
-            $transaction = \Yii::$app->db->beginTransaction();
-            try {
-                // บันทึกข้อมูล Order
-                $model = StockEvent::findOne($id);
-                $userCreate = UserHelper::GetEmployee();
-                $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s'), 'receive_date' => date('Y-m-d'),'user_req' => $model->created_by];
-                $model->order_status = 'success';
-                $oldObj = $model->data_json;
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $jsonDate);
+        }
+        // ตรวจสอบความเรียบร้อยก่อนบันทึก
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            // บันทึกข้อมูล Order
+            $model = StockEvent::findOne($id);
+            $userCreate = UserHelper::GetEmployee();
+            $jsonDate = ['player' => $userCreate->id, 'player_date' => date('Y-m-d H:i:s'), 'receive_date' => date('Y-m-d'), 'user_req' => $model->created_by];
+            $model->order_status = 'success';
+            $oldObj = $model->data_json;
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $jsonDate);
+
+            // ถ้าหากผิดพลาด
+            if (!$model->save(false)) {
+                throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
+            }
+
+            // สร้างรายการคำสั่งเข้าเข้าคลังที่ขอเบิก
+            $newStockModel = new StockEvent();
+            $newStockModel->name = 'order';
+            $newStockModel->thai_year = AppHelper::YearBudget();
+            $newStockModel->order_status = 'success';
+            $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
+            $newStockModel->from_warehouse_id = $model->warehouse_id;
+            $newStockModel->warehouse_id = $model->from_warehouse_id;
+            $newStockModel->transaction_type = 'IN';
+            $newStockModel->category_id = $model->code;
+            $newStockModel->data_json = $jsonDate;
+
+            // ถ้าหากผิดพลาด
+            if (!$newStockModel->save(false)) {
+                throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
+            }
+
+            foreach ($model->getItems() as $item) {
+                $checkStock = Stock::findOne(['id' => $item->id, 'lot_number' => $item->lot_number]);
+
+                // if ($item->SumStockQty() != 0 && $item->qty > 0) {
+                $item->order_status = 'success';
+                $newStockItem = new StockEvent();
+                $newStockItem->order_status = 'success';
+                $newStockItem->thai_year = AppHelper::YearBudget();
+                $newStockItem->name = 'order_item';
+                $newStockItem->code = $newStockModel->code;
+                $newStockItem->asset_item = $item->asset_item;
+                $newStockItem->lot_number = $item->lot_number;
+                $newStockItem->qty = $item->qty;
+                $newStockItem->unit_price = $item->unit_price;
+                $newStockItem->transaction_type = 'IN';
+                $newStockItem->warehouse_id = $model->from_warehouse_id;
+                $newStockItem->category_id = $newStockModel->id;
+                if (!$newStockItem->save(false)) {
+                    throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
+                }
+                // } else {
+                //     $item->order_status = 'cancel';
+                // }
 
                 // ถ้าหากผิดพลาด
-                if (!$model->save(false)) {
-                    throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
+                if (!$item->save(false)) {
+                    throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                 }
 
-                // สร้างรายการคำสั่งเข้าเข้าคลังที่ขอเบิก
-                $newStockModel = new StockEvent();
-                $newStockModel->name = 'order';
-                $newStockModel->thai_year = AppHelper::YearBudget();
-                $newStockModel->order_status = 'success';
-                $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
-                $newStockModel->from_warehouse_id = $model->warehouse_id;
-                $newStockModel->warehouse_id = $model->from_warehouse_id;
-                $newStockModel->transaction_type = 'IN';
-                $newStockModel->category_id = $model->code;
-                $newStockModel->data_json = $jsonDate;
-                
-
-                // ถ้าหากผิดพลาด
-                if (!$newStockModel->save(false)) {
-                    throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
-                }
-
-                foreach ($model->getItems() as $item) {
-                    $checkStock = Stock::findOne(['id' => $item->id, 'lot_number' => $item->lot_number]);
-
-                    // if ($item->SumStockQty() != 0 && $item->qty > 0) {
-                    $item->order_status = 'success';
-                    $newStockItem = new StockEvent();
-                    $newStockItem->order_status = 'success';
-                    $newStockItem->thai_year = AppHelper::YearBudget();
-                    $newStockItem->name = 'order_item';
-                    $newStockItem->code = $newStockModel->code;
-                    $newStockItem->asset_item = $item->asset_item;
-                    $newStockItem->lot_number = $item->lot_number;
-                    $newStockItem->qty = $item->qty;
-                    $newStockItem->unit_price = $item->unit_price;
-                    $newStockItem->transaction_type = 'IN';
-                    $newStockItem->warehouse_id = $model->from_warehouse_id;
-                    $newStockItem->category_id = $newStockModel->id;
-                    if (!$newStockItem->save(false)) {
-                        throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
+                //     // UpdateNewStock ที่ขอเบิก
+                if ($item->SumStockQty() != '0') {
+                    $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $model->from_warehouse_id, 'lot_number' => $item->lot_number]);
+                    if ($checkToStock) {
+                        $toStock = $checkToStock;
+                    } else {
+                        $toStock = new Stock();
                     }
-                    // } else {
-                    //     $item->order_status = 'cancel';
-                    // }
+                    $toStock->asset_item = $item->asset_item;
+                    $toStock->thai_year = AppHelper::YearBudget();
+                    $toStock->lot_number = $item->lot_number;
+                    $toStock->warehouse_id = $model->from_warehouse_id;
+                    $toStock->unit_price = $item->unit_price;
+                    $toStock->qty = $toStock->qty + $item->qty;
 
                     // ถ้าหากผิดพลาด
-                    if (!$item->save(false)) {
-                        throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
+                    if (!$toStock->save(false)) {
+                        throw new \Exception('ไม่สามารถ UpdateNewStock ที่ขอเบิก ได้');
                     }
 
-                    //     // UpdateNewStock ที่ขอเบิก
-                    if ($item->SumStockQty() != '0') {
-                        $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $model->from_warehouse_id, 'lot_number' => $item->lot_number]);
-                        if ($checkToStock) {
-                            $toStock = $checkToStock;
-                        } else {
-                            $toStock = new Stock();
-                        }
-                        $toStock->asset_item = $item->asset_item;
-                        $toStock->thai_year = AppHelper::YearBudget();
-                        $toStock->lot_number = $item->lot_number;
-                        $toStock->warehouse_id = $model->from_warehouse_id;
-                        $toStock->unit_price = $item->unit_price;
-                        $toStock->qty = $toStock->qty + $item->qty;
-
-                        // ถ้าหากผิดพลาด
-                        if (!$toStock->save(false)) {
-                            throw new \Exception('ไม่สามารถ UpdateNewStock ที่ขอเบิก ได้');
-                        }
-
-                        // ตัด stock และทำการ update
-                        $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
-                        $checkStock->qty = $checkStock->qty - $item->qty;
-                        // ถ้าหากผิดพลาด
-                        if (!$checkStock->save(false)) {
-                            throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
-                        }
+                    // ตัด stock และทำการ update
+                    $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
+                    $checkStock->qty = $checkStock->qty - $item->qty;
+                    // ถ้าหากผิดพลาด
+                    if (!$checkStock->save(false)) {
+                        throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
                     }
                 }
-
-                // ถ้าไม่มีข้อผิดพลาด ทำการ commit
-                $transaction->commit();
-
-                // return ['status' => 'success', 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว'];
-                return $this->redirect(['/inventory/warehouse']);
-            } catch (\Exception $e) {
-                $transaction->rollBack();
-
-                // ถ้ามีข้อผิดพลาด ทำการ rollback
-                return [
-                    'status' => 'error',
-                    'container' => '#inventory-container',
-                    'message' => $e->getMessage()
-                ];
             }
-            // จบ
-        
+
+            // ถ้าไม่มีข้อผิดพลาด ทำการ commit
+            $transaction->commit();
+
+            // return ['status' => 'success', 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว'];
+            return $this->redirect(['/inventory/warehouse']);
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+
+            // ถ้ามีข้อผิดพลาด ทำการ rollback
+            return [
+                'status' => 'error',
+                'container' => '#inventory-container',
+                'message' => $e->getMessage()
+            ];
+        }
+        // จบ
     }
 
     // public function actionCheckOutOri($id)
@@ -899,22 +925,20 @@ class StockOrderController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
 
         $order = StockEvent::findOne($id);
-        $stock = Stock::findOne(['lot_number' => $lot_number]);
+        $orderItem = StockEvent::find()->select(['id','lot_number'])->where(['category_id' => $id])->asArray()->all();
+        $lotNumbers = ArrayHelper::getColumn($orderItem, 'lot_number');
 
-        $sql = "SELECT i.asset_item,o.data_json->>'\$.receive_date' as receive_date,s.unit_price,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
+        $sql = "SELECT s.id,i.asset_item,o.data_json->>'\$.receive_date' as receive_date,s.unit_price,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
                 LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
                 LEFT JOIN stock s ON s.lot_number = i.lot_number
-                WHERE i.asset_item = :asset_item
+                WHERE i.asset_item = '01-00091'
                 AND IFNULL(s.qty,0) > 0
-                AND i.lot_number <> :lot_number
+                AND i.lot_number NOT IN(:lot_number)
                 GROUP BY s.lot_number
-                ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '\$.receive_date')) ASC limit 1;";
+                ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '\$.receive_date'));";
 
-        $query = \Yii::$app
-            ->db
-            ->createCommand($sql, [':lot_number' => $lot_number, 'asset_item' => $stock->asset_item])
-            ->queryOne();
-
+        $query = Yii::$app->db->createCommand($sql)->bindValue(':lot_number', implode(',', $lotNumbers))->queryOne();
+return $orderItem;
         if ($query) {
             $model = new StockEvent([
                 'name' => 'order_item',
@@ -946,6 +970,61 @@ class StockOrderController extends Controller
             ];
         }
     }
+
+    // public function actionCopyItem()
+    // {
+    //     $id = $this->request->get('id');
+    //     $lot_number = $this->request->get('lot_number');
+    //     \Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //     $order = StockEvent::findOne($id);
+    //     $stock = Stock::findOne(['lot_number' => $lot_number]);
+
+    //     $sql = "SELECT i.asset_item,o.data_json->>'\$.receive_date' as receive_date,s.unit_price,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
+    //             LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
+    //             LEFT JOIN stock s ON s.lot_number = i.lot_number
+    //             WHERE i.asset_item = :asset_item
+    //             AND IFNULL(s.qty,0) > 0
+    //             AND i.lot_number <> :lot_number
+    //             GROUP BY s.lot_number
+    //             ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '\$.receive_date')) ASC limit 1;";
+
+    //     $query = \Yii::$app
+    //         ->db
+    //         ->createCommand($sql, [':lot_number' => $lot_number, 'asset_item' => $stock->asset_item])
+    //         ->queryOne();
+
+    //     if ($query) {
+    //         $model = new StockEvent([
+    //             'name' => 'order_item',
+    //             'category_id' => $order->id,
+    //             'transaction_type' => 'OUT',
+    //             'lot_number' => $query['lot_number'],
+    //             'warehouse_id' => $order->warehouse_id,
+    //             'order_status' => 'pending',
+    //             'thai_year' => $order->thai_year,
+    //             'unit_price' => $query['unit_price'],
+    //             'asset_item' => $query['asset_item'],
+    //             'qty' => 0,
+    //             'data_json' => [
+    //                 'req_qty' => 0,
+    //             ],
+    //         ]);
+
+    //         if ($model->save(false)) {
+    //             return [
+    //                 'status' => 'success',
+    //                 'container' => '#inventory-container',
+    //             ];
+    //         }
+    //     } else {
+    //         return [
+    //             'status' => 'error',
+    //             'massage' => 'เกิดข้อผิดพลาด',
+    //             'container' => '#inventory-container',
+    //         ];
+    //     }
+    // }
 
     /**
      * Deletes an existing StockOut model.
