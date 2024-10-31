@@ -2,17 +2,18 @@
 
 namespace app\modules\helpdesk\controllers;
 
-use app\components\UserHelper;
-use app\modules\am\models\Asset;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\helpdesk\models\HelpdeskSearch;
-use app\modules\hr\models\Employees;
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use Yii;
+use app\modules\hr\models\Employees;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\helpdesk\models\HelpdeskSearch;
 
 /**
  * RepairController implements the CRUD actions for Repair model.
@@ -404,6 +405,13 @@ class RepairController extends Controller
                     // throw $th;
                 }
 
+                $convertDate = [
+                    'start_job_date' => $model->data_json['start_job_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['start_job_date']) : '',
+                    'repair_type_date' => $model->data_json['repair_type_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['repair_type_date']) : '',
+                    'end_job_date' => $model->data_json['end_job_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['end_job_date']) : '',
+                ];
+                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json, $convertDate);
+
                 $model->save();
 
                 return [
@@ -412,7 +420,20 @@ class RepairController extends Controller
                 ];
             }
         } else {
+
             $model->loadDefaultValues();
+            try {
+            $model->data_json = [
+                'start_job_date' => $model->data_json['start_job_date'] !== "" ? AppHelper::convertToThai($model->data_json['start_job_date']) : "",
+                'repair_type_date' => $model->data_json['repair_type_date'] !== "" ? AppHelper::convertToThai($model->data_json['repair_type_date']) : "",
+                'end_job_date' => $model->data_json['end_job_date'] !== "" ?  AppHelper::convertToThai($model->data_json['end_job_date']) : "",
+            ];
+            
+            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
         }
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
