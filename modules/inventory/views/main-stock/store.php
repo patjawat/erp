@@ -4,7 +4,7 @@ use yii\web\View;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
-
+use app\modules\inventory\models\Warehouse;
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
 ?>

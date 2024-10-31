@@ -1,16 +1,29 @@
 <?php
 
-use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use kartik\select2\Select2;
 use yii\helpers\Url;
-use app\modules\inventory\models\Warehouse;
+use yii\helpers\Html;
+use app\models\Categorise;
+use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
+use yii\bootstrap5\ActiveForm;
+use app\modules\inventory\models\Warehouse;
 
 $getWarehouse = Yii::$app->session->get('selectMainWarehouse');
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+
+$warehouse = Yii::$app->session->get('warehouse');
+$warehouseModel = app\modules\inventory\models\Warehouse::findOne($warehouse['warehouse_id']);
+$item = $warehouseModel->data_json['item_type'];
+$product = ArrayHelper::map(Categorise::find()
+->where(['name' => 'asset_type','category_id' => 4])
+->andWhere(['IN', 'code', $item])
+->all(), 'code', 'title');
+
+// echo "<pre>";
+// print_r($item);
+// echo "</pre>";
 
 ?>
 
@@ -32,7 +45,7 @@ $getWarehouse = Yii::$app->session->get('selectMainWarehouse');
     <?php
   
   echo $form->field($model, 'asset_type')->widget(Select2::classname(), [
-      'data' => $model->ListProductType(),
+      'data' => $product,
       'options' => ['placeholder' => 'เลือกประเภทวัสดุ',
   ],
       'pluginOptions' => [

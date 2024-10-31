@@ -2,8 +2,10 @@
 
 namespace app\modules\inventory\controllers;
 
+use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
@@ -163,14 +165,23 @@ class MainStockController extends Controller
     public function actionStore()
     {
         $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
+        $warehouse = Yii::$app->session->get('warehouse');
+            $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse['warehouse_id']);
+            $item = $warehouseModel->data_json['item_type'];
+            $product = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->andWhere(['IN', 'code', $item])->all(), 'code', 'title');
+
         $searchModel = new StockSearch([
             'warehouse_id' => isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : '',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        // $dataProvider->query->leftJoin('categorise', 'categorise.code = stock.asset_item AND categorise.name = :name', [':name' => 'asset_item'])
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
         $dataProvider->query->andFilterWhere(['warehouse_id' => ($getWarehouse ? $getWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
-
+        // $dataProvider->query->andFilterWhere(['p.category_id' =>$product]);
+        
+        // ->where(['categorise.category_id' => ['M1', 'M2']])
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_item', $searchModel->q],
