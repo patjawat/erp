@@ -9,7 +9,7 @@ use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('warehouse');
-
+$this->registerJsFile($this->render('stock-order.js'), ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 /* @var yii\web\View $this */
 /* @var app\modules\inventory\models\StockEvent $model */
@@ -562,7 +562,7 @@ $('.confirm-order').click(async function (e) {
                         }
 
                   if (res.status == "success") {
-                    // location.reload();
+                    location.reload();
                     //   $.pjax.reload({container:res.container, history:false,url:res.url});
                     // success("บันสำเร็จ!.");
                   }
@@ -577,4 +577,5 @@ $('.confirm-order').click(async function (e) {
 JS;
 $this->registerJS($js,View::POS_END);
 ?>
+
 <?php Pjax::end(); ?>

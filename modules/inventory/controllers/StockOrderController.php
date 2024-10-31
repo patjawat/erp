@@ -925,24 +925,34 @@ class StockOrderController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
 
         $order = StockEvent::findOne($id);
-        $orderItem = StockEvent::find()->select(['id','lot_number'])->where(['category_id' => $id])->asArray()->all();
+        
+        $orderItem = StockEvent::find()->where(['category_id' => $order->category_id])->asArray()->all();
         $lotNumbers = ArrayHelper::getColumn($orderItem, 'lot_number');
-
-        $sql = "SELECT s.id,i.asset_item,o.data_json->>'\$.receive_date' as receive_date,s.unit_price,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
-                LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
-                LEFT JOIN stock s ON s.lot_number = i.lot_number
-                WHERE i.asset_item = '01-00091'
-                AND IFNULL(s.qty,0) > 0
-                AND i.lot_number NOT IN(:lot_number)
-                GROUP BY s.lot_number
-                ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '\$.receive_date'));";
-
-        $query = Yii::$app->db->createCommand($sql)->bindValue(':lot_number', implode(',', $lotNumbers))->queryOne();
-return $orderItem;
-        if ($query) {
+        
+       $query = StockEvent::find()
+                        ->alias('i')
+                        ->select([
+                            's.id',
+                            'i.asset_item',
+                            new Expression("o.data_json->>'$.receive_date' as receive_date"),
+                            's.unit_price',
+                            'i.lot_number',
+                            new Expression("IFNULL(s.qty, 0) as qty"),
+                        ])
+                        ->leftJoin(['o' => 'stock_events'], 'i.code = o.code AND o.name = "order"')
+                        ->leftJoin(['s' => 'stock'], 's.lot_number = i.lot_number')
+                        ->where(['i.asset_item' => $order->asset_item])
+                        ->andWhere(['>', new Expression('IFNULL(s.qty, 0)'), 0])
+                        ->andWhere(['not in', 'i.lot_number', $lotNumbers]) 
+                        ->groupBy(['s.lot_number'])
+                        ->orderBy(new Expression("JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date'))"))
+                        ->asArray()
+                        ->one();
+                        
+        if (!is_null($query) && count($query) > 0) {
             $model = new StockEvent([
                 'name' => 'order_item',
-                'category_id' => $order->id,
+                'category_id' => $order->category_id,
                 'transaction_type' => 'OUT',
                 'lot_number' => $query['lot_number'],
                 'warehouse_id' => $order->warehouse_id,

@@ -189,7 +189,7 @@ class StockInController extends Controller
         $order_id = $this->request->get('order_id');
         $asset_item = $this->request->get('asset_item');
         $order = StockEvent::findOne($order_id);
-
+    
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'category_id' => $order_id,
@@ -199,6 +199,7 @@ class StockInController extends Controller
             'transaction_type' => $order ? $order->transaction_type : $type,
             'data_json' => [
                 'receive_date' => AppHelper::convertToThai(date('Y-m-d')),
+                'item_type' => ($order->data_json['item_type'] ?? '')
             ],
         ]);
 

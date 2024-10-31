@@ -80,7 +80,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                                     </button>
                                     <ul class="dropdown-menu">
 
-                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-lg']]) ?>
                                         </li>
 
 
