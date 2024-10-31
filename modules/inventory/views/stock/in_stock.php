@@ -35,19 +35,6 @@ $products = $cart->getItems();
             <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary">
                     <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
                     <?=$this->render('_search', ['model' => $searchModel]); ?>
-                    
-                    <div class="d-flex">
-                   <div>
-                   <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
-                    <?php //  Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light'])  ?>
-                    <?php else:?>
-                    <?php echo Html::a('<i class="fa-solid fa-store"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'btn btn-primary','data-pjax' => '0']) ?>
-                    <?php endif;?>
-                   </div>
-
-                <?php // $this->render('_search', ['model' => $searchModel]); ?>
-                <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock/warehouse'], ['class' => 'btn btn-sm btn-light','data' => ['pjax' => 0]]) ?>
-            </div>
             <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
             <div>
                     มูลค่า <span
