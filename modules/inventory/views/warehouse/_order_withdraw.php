@@ -32,7 +32,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-ui-checks"></i> ประวัติการเบิกใช้งานวัสดุ <span class="badge rounded-pill text-bg-primary">
+                    <h6><i class="bi bi-ui-checks"></i> ประวัติเบิกใช้งาน <span class="badge rounded-pill text-bg-primary">
                         <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
                         <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
                         <div>
