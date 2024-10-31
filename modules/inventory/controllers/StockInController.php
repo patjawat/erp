@@ -222,8 +222,8 @@ class StockInController extends Controller
                 if ($model->name == 'order_item') {
                     $model->thai_year =  AppHelper::YearBudget($order->data_json['receive_date']);
                     $convertDate = [
-                            'mfg_date' => $model->data_json['mfg_date'] != '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
-                            'exp_date' => $model->data_json['exp_date'] != '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
+                            'mfg_date' => $model->data_json['mfg_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
+                            'exp_date' => $model->data_json['exp_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
                             'req_qty' => $model->qty
                         ];
                         $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
@@ -559,14 +559,14 @@ class StockInController extends Controller
                 $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
 
             }
-            
             if ($model->name == 'order_item') {
-                if (isset($model->data_json['mfg_date'])) {
-                    preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
-                }
-                if (isset($model->data_json['exp_date'])) {
-                    preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
-                }
+                
+                // if (isset($model->data_json['mfg_date'])) {
+                //     preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
+                // }
+                // if (isset($model->data_json['exp_date'])) {
+                //     preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
+                // }
 
             if (isset($model->asset_item)) {
                 $model->asset_item == '' ? $model->addError('asset_item', $requiredName) : null;
@@ -583,7 +583,6 @@ class StockInController extends Controller
             $model->qty == '' ? $model->addError('qty', $requiredName) : null;
             $model->unit_price == '' ? $model->addError('unit_price', $requiredName) : null;
         }
-        
 
         }
         foreach ($model->getErrors() as $attribute => $errors) {
