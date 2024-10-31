@@ -2,21 +2,21 @@
 
 namespace app\modules\helpdesk\models;
 
-use app\components\AppHelper;
-use app\components\CategoriseHelper;
-use app\components\UserHelper;
-use app\models\Categorise;
-use app\modules\am\models\Asset;
-use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\filemanager\models\Uploads;
-use app\modules\hr\models\Employees;
 use Yii;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Json;
+use yii\db\Expression;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\am\models\Asset;
+use app\components\CategoriseHelper;
+use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "helpdesk".
@@ -122,10 +122,16 @@ class Helpdesk extends Yii\db\ActiveRecord
             if ($model) {
                 return FileManagerHelper::getImg($model->id);
             } else {
-                return \Yii::getAlias('@web').'/img/placeholder-img.jpg';
+                $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
+                $type = pathinfo($filepath, PATHINFO_EXTENSION);
+                $data = file_get_contents($filepath);
+                return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
             }
         } catch (\Throwable $th) {
-            return \Yii::getAlias('@web').'/img/placeholder-img.jpg';
+            $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
+            $type = pathinfo($filepath, PATHINFO_EXTENSION);
+            $data = file_get_contents($filepath);
+            return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
     }
 

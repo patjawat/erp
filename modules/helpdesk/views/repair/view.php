@@ -1,9 +1,9 @@
 <?php
 
-use app\components\UserHelper;
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 use yii\widgets\Pjax;
+use yii\widgets\DetailView;
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\Repair $model */

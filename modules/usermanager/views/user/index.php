@@ -108,10 +108,10 @@ HTML;
     [
       'class' => 'app\modules\usermanager\grid\ActionColumn',
       'header' => '<center>ดำเนินการ<center>',
+      'template' => '{view} {update}',
       'width' => '130px',
       'dropdown' => false,
       'vAlign' => 'middle',
     ],
-
   ],
 ]); ?>

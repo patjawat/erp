@@ -1,9 +1,9 @@
 <?php
 
-use app\components\UserHelper;
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 use yii\widgets\Pjax;
+use yii\widgets\DetailView;
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk\models\Repair $model */
@@ -74,6 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
                             <?php else: ?>
                             <?= Html::a('<i class="fa-solid fa-hammer"></i> ลงบันทึกซ่อม/แก้ไข', ['/helpdesk/repair/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                          
                             <?php endif ?>
 
                             <?= Html::a('<i class="fa-solid fa-circle-minus"></i> ยกเลิกงานซ่อม', ['/helpdesk/repair/cancel-job', 'id' => $model->id, 'title' => '<i class="fa-solid fa-circle-minus text-danger"></i> ยกเลิกงานซ่อม'], ['class' => 'btn btn-danger open-modal', 'data' => ['size' => 'modal-lg']]) ?>
@@ -103,7 +104,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <h4 class="card-title text-center"><i class="fa-regular fa-clipboard"></i> บันทึกซ่อม</h4>
+        <div class="d-flex justify-content-between">
+            <h4 class="card-title text-center"><i class="fa-regular fa-clipboard"></i> บันทึกซ่อม</h4>
+              <?= Html::a('<i class="fa-solid fa-cube"></i> สต๊อก/เบิกอะไหล่', ['/helpdesk/stock/index', 'title' => '<i class="fa-solid fa-cube"></i> สต๊อก/เบิกอะไหล่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+        </div>
 
         <div class="row" id="ath_tabs_accordion">
             <div class="col-md-12 p-3">
