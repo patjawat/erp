@@ -4,13 +4,7 @@
 
 window.onbeforeunload = function () {
 
-  var target = $('#page-content');
-    if (target.hasClass('loading')) {
-      target.loadingOverlay('remove');
-    } else {
-      target.loadingOverlay();
-    };
-
+  $('#page-content').loadingOverlay();
   NProgress.start();
   
   // $('#modal-dialog').modal('hide');
@@ -21,7 +15,7 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
-  $('#page-content').loadingOverlay();
+  
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
