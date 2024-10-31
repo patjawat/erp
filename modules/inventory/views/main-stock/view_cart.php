@@ -46,7 +46,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                         <td class="text-center">
                             <div class="d-flex justify-content-center flex-row">
                                 <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
-                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control update-qty" id="<?=$item->id?>" style="width:50px;font-weight: 600;" />
+                                <input type="text" value="<?=$item->getQuantity()?>" class="form-control update-qty" id="<?=$item->id?>" style="width:100px;font-weight: 600;" />
                                 <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/inventory/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
                             </div>
                         </td>

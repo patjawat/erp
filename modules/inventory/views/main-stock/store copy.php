@@ -44,36 +44,32 @@ $products = $cart->getItems();
     <?php foreach ($dataProvider->getModels() as $model) { ?>
     <div class="p-2 col-2">
         <div class="card position-relative">
-        <p class="position-absolute top-0 end-0 p-2">
-                        <i class="fa-solid fa-circle-info fs-4"></i>
-                    </p>
+            <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0">
+                <?php echo $model->warehouse->warehouse_name; ?></p>
             <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-cover','style' => 'max-height: 155px;']); ?>
             <div class="card-body w-100">
-            <div class="d-flex justify-content-start align-items-center">
-                            <?php if($model->SumQty() >= 1):?>
-                            <span class="badge text-bg-primary  mt--45"><?php echo $model->SumQty(); ?>
-                                <?php echo $model->product->unit_name; ?></span>
-                            <?php else:?>
-                            <span class="btn btn-sm btn-secondary fs-13 mt--45 rounded-pill"> หมด</span>
-                            <?php endif;?>
-                        </div>
-                        <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
-                        
-                        <div class="d-flex justify-content-between">
-                            <div class="fw-semibold text-danger">
-                                <i class="fa-solid fa-dollar-sign"></i>
-                            <?php echo number_format($model->unit_price,2); ?>
-                            </div>
+                <div class="d-flex justify-content-center align-items-center">
 
+                    <?php
+                        try {
+                            echo Html::a('<i class="fa-solid fa-cart-plus"></i> '.$model->getLotQty()['lot_number'].' <span class="badge text-bg-danger">'.$model->getLotQty()['qty'].'</span> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill mt--45 zoom-in']);
+                        } catch (Throwable $th) {
+                            // throw $th;
+                        }
+        ?>
+                </div>
+                <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
 
-                                <?php
-                                                try {
-                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
-                                                } catch (Throwable $th) {
-                                                    // throw $th;
-                                                }
-                                ?>
-                        </div>
+                <div class="d-flex justify-content-between">
+                    <code class=""><?php echo $model->product->code; ?></code>
+                    <div class="">
+                        <span class="text-primary">ทั้งหมด</span>
+                        <span class="fw-semibold text-danger"><?php echo $model->SumQty(); ?></span>
+                        <span class="text-primary"><?php echo $model->product->unit_name; ?></span>
+                    </div>
+
+                    <!-- <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?php echo $model->warehouse->warehouse_name; ?> </span> -->
+                </div>
             </div>
         </div>
 
