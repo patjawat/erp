@@ -109,33 +109,7 @@ $this->params['breadcrumbs'][] = $this->title;
               <?= Html::a('<i class="fa-solid fa-cube"></i> สต๊อก/เบิกอะไหล่', ['/helpdesk/stock/index', 'title' => '<i class="fa-solid fa-cube"></i> สต๊อก/เบิกอะไหล่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
         </div>
 
-        <div class="row" id="ath_tabs_accordion">
-            <div class="col-md-12 p-3">
-                <div class="tab-style3">
-                    <ul class="nav nav-tabs text-uppercase">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="Description-tab" data-bs-toggle="tab" href="#Description"><i
-                                    class="fa-solid fa-handshake-simple"></i> เบิกอะไหล่</a>
-                        </li>
-                    </ul>
-                    <div class="tab-content shop_info_tab entry-main-content">
-                        <div class="tab-pane fade show active" id="Description">
-                            <div class="d-flex flex-row align-middle align-items-center gap-2">
-
-                                <h2>รายการเบิกอะไหล่</h2>
-                                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มใหม่', ['/helpdesk/repair/add-part', 'id' => $model->id, 'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                            </div>
-                            <p>รายการที่ต้องเบอกอะไหล่เพื่อช้ในการเปลี่ยนเพื่อให้ใช้งานได้</p>
-                            <?php //  Html::a('ลงบันทึกซ่อม', ['/helpdesk/repair/update', 'id' => $model->id,'title' => 'แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']]) ?>
-                            <?php // isset($model->data_json['repair_note']) ? $model->data_json['repair_note'] : '-' ?>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
+        
     </div>
 </div>
 
