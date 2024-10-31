@@ -46,7 +46,7 @@ $products = $cart->getItems();
         <div class="card position-relative">
             <p class="badge rounded-pill text-bg-primary position-absolute top-0 end-0">
                 <?php echo $model->warehouse->warehouse_name; ?></p>
-            <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-none','style' => 'max-height: 155px;']); ?>
+            <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-cover','style' => 'max-height: 155px;']); ?>
             <div class="card-body w-100">
                 <div class="d-flex justify-content-center align-items-center">
 
