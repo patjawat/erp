@@ -633,6 +633,7 @@ class StockOrderController extends Controller
                 $newStockItem->transaction_type = 'IN';
                 $newStockItem->warehouse_id = $model->from_warehouse_id;
                 $newStockItem->category_id = $newStockModel->id;
+                $newStockItem->data_json = $item->data_json;
                 if (!$newStockItem->save(false)) {
                     throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                 }
