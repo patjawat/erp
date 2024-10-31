@@ -85,6 +85,12 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/medical/*', 'type' => 2],
             ['name' => '/helpdesk/repair/create', 'type' => 2],
             ['name' => '/helpdesk/repair/timeline', 'type' => 2],
+            
+            ['name' => '/helpdesk/repair/summary', 'type' => 2],
+            ['name' => '/helpdesk/repair/user-request-order', 'type' => 2],
+            ['name' => '/helpdesk/repair/user-job', 'type' => 2],
+            ['name' => '/helpdesk/repair/list-accept', 'type' => 2],
+            
             ['name' => '/hr/default/index', 'type' => 2],
             ['name' => '/hr/employees/view', 'type' => 2],
             ['name' => '/inventory/default/index', 'type' => 2],
@@ -153,6 +159,23 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/medical/*', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/create', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/timeline', 'parent' => 'user'],
+
+            ['child' => '/helpdesk/repair/summary', 'parent' => 'computer'],
+            ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'computer'],
+            ['child' => '/helpdesk/repair/user-job', 'parent' => 'computer'],
+            ['child' => '/helpdesk/repair/list-accept', 'parent' => 'computer'],
+            
+            ['child' => '/helpdesk/repair/summary', 'parent' => 'technician'],
+            ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'technician'],
+            ['child' => '/helpdesk/repair/user-job', 'parent' => 'technician'],
+            ['child' => '/helpdesk/repair/list-accept', 'parent' => 'technician'],
+
+            ['child' => '/helpdesk/repair/summary', 'parent' => 'medical'],
+            ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'medical'],
+            ['child' => '/helpdesk/repair/user-job', 'parent' => 'medical'],
+            ['child' => '/helpdesk/repair/list-accept', 'parent' => 'medical'],
+            
+            
             ['child' => '/hr/default/index', 'parent' => 'user'],
             ['child' => '/hr/employees/view', 'parent' => 'user'],
             ['child' => '/inventory/default/index', 'parent' => 'user'],
