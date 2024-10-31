@@ -742,14 +742,20 @@ class StockEvent extends Yii\db\ActiveRecord
         //     ->scalar();
         //     return $total;
             
-            $year = $this->thai_year - 1;
+            // $year = ($this->thai_year) ? ($this->thai_year - 1) : '';
+            $where = ['and'];
+            if($this->thai_year){
+                $where[] = ['thai_year' => ($this->thai_year - 1)];  // ใช้กรองถ้าค่ามี
+
+            }
+            
             $query = self::find()->select([
                     // 'asset_item',
                     // 'total_in_value' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN qty * unit_price ELSE 0 END), 2)',
                     // 'total_out_value' => 'ROUND(SUM(CASE WHEN transaction_type = "out" THEN qty * unit_price ELSE 0 END), 2)',
                   'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
                 ])
-                ->where(['thai_year' => $year])
+                ->where($where)
                 ->andFilterWhere(['warehouse_id' => $this->warehouse_id])->scalar();
                 if($query){
                    return $query; 
