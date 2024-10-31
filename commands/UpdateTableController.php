@@ -96,6 +96,7 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/cancel-job', 'type' => 2],
             ['name' => '/helpdesk/repair/add-part', 'type' => 2],
             ['name' => '/helpdesk/repair/update', 'type' => 2],
+            ['name' => '/helpdesk/repair/rating', 'type' => 2],
             
             ['name' => '/hr/default/index', 'type' => 2],
             ['name' => '/hr/employees/view', 'type' => 2],
@@ -166,6 +167,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/create', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/timeline', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/view', 'parent' => 'user'],
+            ['child' => '/helpdesk/repair/rating', 'parent' => 'user'],
 
             ['child' => '/helpdesk/repair/summary', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'computer'],

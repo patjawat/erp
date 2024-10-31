@@ -14,7 +14,7 @@ $item = $warehouseModel->data_json['item_type'];
 /** @var yii\widgets\ActiveForm $form */
 
 echo "<pre>";
-print_r($$item);
+print_r($item);
 echo "</pre>";
 
 ?>
