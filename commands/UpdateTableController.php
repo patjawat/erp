@@ -91,6 +91,9 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/user-job', 'type' => 2],
             ['name' => '/helpdesk/repair/list-accept', 'type' => 2],
             ['name' => '/helpdesk/repair/view', 'type' => 2],
+            ['name' => '/helpdesk/repair/accept-job', 'type' => 2],
+            ['name' => '/helpdesk/repair/switch-group', 'type' => 2],
+            ['name' => '/helpdesk/repair/cancel-job', 'type' => 2],
             
             ['name' => '/hr/default/index', 'type' => 2],
             ['name' => '/hr/employees/view', 'type' => 2],
@@ -167,18 +170,27 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/list-accept', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/view', 'parent' => 'computer'],
+            ['child' => '/helpdesk/repair/accept-job', 'type' => 'computer'],
+            ['child' => '/helpdesk/repair/switch-group', 'type' => 'computer'],
+            ['child' => '/helpdesk/repair/cancel-job', 'type' => 'computer'],
             
             ['child' => '/helpdesk/repair/summary', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/list-accept', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/view', 'parent' => 'technician'],
+            ['child' => '/helpdesk/repair/accept-job', 'type' => 'technician'],
+            ['child' => '/helpdesk/repair/switch-group', 'type' => 'technician'],
+            ['child' => '/helpdesk/repair/cancel-job', 'type' => 'technician'],
 
             ['child' => '/helpdesk/repair/summary', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/list-accept', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/view', 'parent' => 'medical'],
+            ['child' => '/helpdesk/repair/accept-job', 'type' => 'medical'],
+            ['child' => '/helpdesk/repair/switch-group', 'type' => 'medical'],
+            ['child' => '/helpdesk/repair/cancel-job', 'type' => 'medical'],
             
             
             ['child' => '/hr/default/index', 'parent' => 'user'],
