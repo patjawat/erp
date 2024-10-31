@@ -113,18 +113,18 @@ class SubStockController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = Stock::findOne($id);
         $checkStock = Stock::findOne($id);
-        if($quantity > $checkStock->qty){
-            return [
-                'status' => 'error',
-                'container' => '#inventory-container',
-               ];
-           }else{
+        // if($quantity > $checkStock->qty){
+        //     return [
+        //         'status' => 'error',
+        //         'container' => '#inventory-container',
+        //        ];
+        //    }else{
             \Yii::$app->cartSub->update($model,$quantity);
             return [
                 'container' => '#inventory-container',
                 'status' => 'success'
             ];
-           }
+        //    }
     
     }
 

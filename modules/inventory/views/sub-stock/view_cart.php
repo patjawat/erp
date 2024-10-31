@@ -32,11 +32,12 @@ use yii\widgets\Pjax;
         </tr>
     </thead>
     <tbody class="align-middle">
-        <?php $sumQty = 0; $getQuantity=0;foreach($products as $item):?>
+        <?php $balanced = 0;foreach($products as $item):?>
             <?php
-           $sumQty += (float)$item->SumQty();
-           $getQuantity += (float)$item->getQuantity();
-                
+            if($item->getQuantity() > $item->SumQty()){
+                $balanced +=1;
+            }
+   
                 ?>
         <tr class="<?=($item->getQuantity() > $item->SumQty()) ? 'badge-soft-danger' : ''?>">
             <td scope="row"><?=$item->product->Avatar();?></td>
@@ -68,7 +69,7 @@ use yii\widgets\Pjax;
 </table>
 <div class="text-center">
     
-    <?php if(($getQuantity > $sumQty)):?>
+    <?php if($balanced >0):?>
     <button type="button" class="btn btn-primary rounded-pill" disabled><i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก</button>
     <?php else:?>
     <?php echo  $cart->getCount() > 0 ? Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/inventory/sub-stock/check-out','name' => 'order','type' => 'OUT','title' => 'เบิกวัสดุ'], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal checkout','data' => ['size' => 'modal-ld']]) : '' ?>
