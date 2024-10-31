@@ -81,10 +81,11 @@ $emp = UserHelper::GetEmployee();
                     </thead>
 
                     <tbody class="table-group-divider align-middle">
-                        <?php $sumQty = 0; $getQuantity=0;foreach ($model->getItems() as $item):?>
+                        <?php $balanced=0;foreach ($model->getItems() as $item):?>
                         <?php
-                                $sumQty += (float)$item->qty;
-                                $getQuantity += (float)$item->SumlotQty();
+                        if($item->qty > $item->SumlotQty()){
+                            $balanced +=1;
+                        }
                                 ?>
                         <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
                             <td class="align-middle">
@@ -243,9 +244,8 @@ $emp = UserHelper::GetEmployee();
                             <?php if ($model->order_status == 'await') { ?>
                             <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
-
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse['warehouse_id'])): ?>
-                            <?php if(($getQuantity >= $sumQty)):?>
+                            <?php if($balanced == 0):?>
                             <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
 
                             <?php endif;?>
