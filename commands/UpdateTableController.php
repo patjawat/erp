@@ -95,6 +95,7 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/switch-group', 'type' => 2],
             ['name' => '/helpdesk/repair/cancel-job', 'type' => 2],
             ['name' => '/helpdesk/repair/add-part', 'type' => 2],
+            ['name' => '/helpdesk/repair/update', 'type' => 2],
             
             ['name' => '/hr/default/index', 'type' => 2],
             ['name' => '/hr/employees/view', 'type' => 2],
@@ -175,6 +176,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/switch-group', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/cancel-job', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/add-part', 'parent' => 'computer'],
+            ['child' => '/helpdesk/repair/update', 'parent' => 'computer'],
             
             ['child' => '/helpdesk/repair/summary', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'technician'],
@@ -185,6 +187,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/switch-group', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/cancel-job', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/add-part', 'parent' => 'technician'],
+            ['child' => '/helpdesk/repair/update', 'parent' => 'technician'],
 
             ['child' => '/helpdesk/repair/summary', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'medical'],
@@ -195,6 +198,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/switch-group', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/cancel-job', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/add-part', 'parent' => 'medical'],
+            ['child' => '/helpdesk/repair/update', 'parent' => 'medical'],
             
             
             ['child' => '/hr/default/index', 'parent' => 'user'],

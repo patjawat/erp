@@ -1,15 +1,22 @@
 <?php
 
-use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use kartik\select2\Select2;
 use yii\helpers\Url;
-use app\modules\inventory\models\Warehouse;
+use yii\helpers\Html;
+use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
-
+use yii\bootstrap5\ActiveForm;
+use app\modules\inventory\models\Warehouse;
+$warehouse = \Yii::$app->session->get('warehouse');
+$warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+$item = $warehouseModel->data_json['item_type'];
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+
+echo "<pre>";
+print_r($$item);
+echo "</pre>";
+
 ?>
 
 <div class="order-search">
