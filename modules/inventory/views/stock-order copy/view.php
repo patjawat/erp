@@ -181,7 +181,7 @@ yii\web\YiiAsset::register($this);
                             'value' => $model->getTotalOrderPrice(),
                         ],
                         [
-                            'label' => 'พิมเอกสาร',
+                            'label' => 'พิมพ์เอกสาร',
                             'format' => 'raw',
                             // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank','data' => ['pjax' => false]])
                             'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['target' => '_blank', 'data-pjax' => '0']),
