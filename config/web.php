@@ -232,7 +232,7 @@ $config = [
             '/purchase/pq-order/validator',
             'inventory/stock-in/add-item',
             'inventory/stock-order/update-lot-validator/*',
-
+            'helpdesk/repair/create-validator',
             'filemanager/*',
             // 'usermanager/*',
             'site/login',
