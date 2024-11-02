@@ -43,12 +43,16 @@ class ComputerController extends \yii\web\Controller
                 'content' => $this->renderAjax('@app/modules/helpdesk/views/repair/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'title' => 'ศูนย์คอมพิวเตอร์',
+                    'icon' => '<<i class="fa-solid fa-computer"></i>',
                 ]),
             ];
         } else {
             return $this->render('@app/modules/helpdesk/views/repair/index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'title' => 'ศูนย์คอมพิวเตอร์',
+                'icon' => '<i class="fa-solid fa-computer"></i>',
             ]);
         }
     }

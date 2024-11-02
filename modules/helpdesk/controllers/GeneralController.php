@@ -42,12 +42,17 @@ class GeneralController extends \yii\web\Controller
                 'content' => $this->renderAjax('@app/modules/helpdesk/views/repair/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'title' => 'ศูนย์งานซ่อมบำรุง',
+                    'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
                 ]),
             ];
         } else {
             return $this->render('@app/modules/helpdesk/views/repair/index', [
+                'title' => 'ศูนย์งานซ่อมบำรุง',
+                'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                
             ]);
         }
     }

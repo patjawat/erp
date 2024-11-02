@@ -4,11 +4,11 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
-$this->title = 'งานซ่อมบำรุง';
+$this->title = $title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-screwdriver-wrench fs-2"></i> <?= $this->title; ?>
+ <?= $icon.' '.$this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 ระบบงานซ่อมบำรุง

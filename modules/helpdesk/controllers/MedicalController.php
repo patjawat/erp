@@ -41,12 +41,16 @@ class MedicalController extends \yii\web\Controller
                 'content' => $this->renderAjax('@app/modules/helpdesk/views/repair/index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'title' => 'ศูนย์เครื่องมืออพทย์',
+                    'icon' => '<i class="fa-solid fa-briefcase-medical"></i>',
                 ]),
             ];
         } else {
             return $this->render('@app/modules/helpdesk/views/repair/index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'title' => 'ศูนย์เครื่องมือแพทย์',
+                'icon' => '<i class="fa-solid fa-briefcase-medical"></i>',
             ]);
         }
     }
