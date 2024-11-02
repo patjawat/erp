@@ -29,7 +29,7 @@ $cart = \Yii::$app->cart;
             <p class="position-absolute top-0 end-0 p-2">
                 <i class="fa-solid fa-circle-info fs-4"></i>
             </p>
-            <?php echo Html::img($model->product->ShowImg(),  ['class' => 'card-top object-fit-cover','style' => 'max-height: 155px;']); ?>
+            <?php echo Html::img($model->product->ShowImg(),  ['class' => 'card-top object-fit-cover','style' => 'max-height: 125px;']); ?>
             <div class="card-body w-100">
                 <a href="<?=isset($model->getLotQty()['id']) ? Url::to(['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']]) : '#'?>"
                     class="add-cart">
