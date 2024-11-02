@@ -59,22 +59,23 @@ $cart = \Yii::$app->cart;
                     </td>
                     <td class="text-center"><?= $item->product->unit_name ?></td>
                     <td class="text-end"><span class="fw-semibold"><?= number_format($item->unit_price, 2) ?></span>
-                </td>
-                <td class="text-center">
-                    <div class="d-flex justify-content-center flex-row">
-                        <?= Html::a('<i class="fa-solid fa-chevron-left"></i>', ['/helpdesk/stock/update-cart', 'id' => $item->id, 'quantity' => ($item->getQuantity() - 1)], ['class' => 'btn update-cart']) ?>
-                        <input type="text" value="<?= $item->getQuantity() ?>" class="form-control update-qty"
-                        id="<?= $item->id ?>" style="width:100px;font-weight: 600;" />
-                        <?= Html::a('<i class="fa-solid fa-chevron-right"></i>', ['/helpdesk/stock/update-cart', 'id' => $item->id, 'quantity' => ($item->getQuantity() + 1)], ['class' => 'btn update-cart']) ?>
-                    </div>
-                </td>
-                <td class="text-end"><span class="fw-semibold"><?= number_format(($item->unit_price* $item->getQuantity()), 2) ?></span>
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center flex-row">
+                            <?= Html::a('<i class="fa-solid fa-chevron-left"></i>', ['/helpdesk/stock/update-cart', 'id' => $item->id, 'quantity' => ($item->getQuantity() - 1)], ['class' => 'btn update-cart']) ?>
+                            <input type="text" value="<?= $item->getQuantity() ?>" class="form-control update-qty"
+                                id="<?= $item->id ?>" style="width:100px;font-weight: 600;" />
+                            <?= Html::a('<i class="fa-solid fa-chevron-right"></i>', ['/helpdesk/stock/update-cart', 'id' => $item->id, 'quantity' => ($item->getQuantity() + 1)], ['class' => 'btn update-cart']) ?>
+                        </div>
+                    </td>
+                    <td class="text-end"><span
+                            class="fw-semibold"><?= number_format(($item->unit_price* $item->getQuantity()), 2) ?></span>
                     <td>
                         <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/helpdesk/stock/delete-item', 'id' => $item->id], ['class' => 'delete-item-cart btn btn-sm btn-danger shadow ']) ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>
-                
+
             </tbody>
         </table>
 
@@ -83,15 +84,15 @@ $cart = \Yii::$app->cart;
             <div class="col-4">
                 <div class="d-grid gap-2 p-3">
 
-                <?php if($balanced >0):?>
-    <button class="btn btn-primary" disabled data-totalcount="<?= $cart->getCount() ?>">
+                    <?php if($balanced >0):?>
+                    <button class="btn btn-primary" disabled data-totalcount="<?= $cart->getCount() ?>">
                         <span>เบิกวัสดุ (<?= $cart->getCount() ?> รายการ)</span>
                         <br>
                         <span class="fw-semibold"><i
                                 class="bi bi-currency-dollar"></i><?= number_format($cart->getCost(), 2); ?></span>
                     </button>
-    <?php else:?>
-        
+                    <?php else:?>
+
                     <button class="btn btn-primary" id="checkout" data-totalcount="<?= $cart->getCount() ?>"
                         data-url="<?= Url::to(['/helpdesk/stock/check-out']) ?>" data-id="<?=$model->id?>">
                         <span>เบิกวัสดุ (<?= $cart->getCount() ?> รายการ)</span>
@@ -100,7 +101,7 @@ $cart = \Yii::$app->cart;
                                 class="bi bi-currency-dollar"></i><?= number_format($cart->getCost(), 2); ?></span>
                     </button>
                     <?php endif;?>
-                    
+
                 </div>
 
                 <?php endif;?>
@@ -108,3 +109,5 @@ $cart = \Yii::$app->cart;
 
             </div>
         </div>
+    </div>
+</div>
