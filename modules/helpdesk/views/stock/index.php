@@ -22,7 +22,7 @@ $cart = \Yii::$app->cart;
 <?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => false, 'timeout' => 88888888]); ?>
 <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
-<div class="d-flex flex-wrap overflow-scroll" style="height:500px;background-color: #eceff3;">
+<div class="d-flex flex-wrap overflow-scroll p-3" style="height:500px;background-color: #eceff3;">
     <?php foreach ($dataProvider->getModels() as $model): ?>
     <div class="p-2 col-2">
         <div class="card position-relative rounded">
