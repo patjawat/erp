@@ -51,6 +51,26 @@ class RepairController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+        ]);
+        if($searchModel->date_between){
+            try {
+               $dataProvider->query->andFilterWhere([
+                   'between', 
+                   new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),  
+                   AppHelper::convertToGregorian($searchModel->date_start), 
+                   AppHelper::convertToGregorian($searchModel->date_end), 
+                ]);
+                            //code...
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+            }
         // $dataProvider->query->andFilterWhere(['status' => 1]);
 
         if ($this->request->isAjax) {
@@ -71,66 +91,66 @@ class RepairController extends Controller
     }
 
     // แสดงรายการแจ้งซ่อม (ร้องขอ)
-    public function actionUserRequestOrder()
-    {
-        $searchModel = new HelpdeskSearch([
-            'repair_group' => $this->request->get('repair_group'),
-            'status' => $this->request->get('status')
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair']);
+    // public function actionUserRequestOrder()
+    // {
+    //     $searchModel = new HelpdeskSearch([
+    //         'repair_group' => $this->request->get('repair_group'),
+    //         'status' => $this->request->get('status')
+    //     ]);
+    //     $dataProvider = $searchModel->search($this->request->queryParams);
+    //     $dataProvider->query->andFilterWhere(['name' => 'repair']);
 
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '',
-                'content' => $this->renderAjax('_user_request_order', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]),
-            ];
-        } else {
-            return $this->render('_user_request_order', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
+    //     if ($this->request->isAjax) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         return [
+    //             'title' => '',
+    //             'content' => $this->renderAjax('_user_request_order', [
+    //                 'searchModel' => $searchModel,
+    //                 'dataProvider' => $dataProvider,
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('_user_request_order', [
+    //             'searchModel' => $searchModel,
+    //             'dataProvider' => $dataProvider,
+    //         ]);
+    //     }
+    // }
 
     // ปริมาณงานต่อคน
-    public function actionUserJob()
-    {
-        $repair_group = $this->request->get('repair_group');
-        $auth_item = $this->request->get('auth_item');
+    // public function actionUserJob()
+    // {
+    //     $repair_group = $this->request->get('repair_group');
+    //     $auth_item = $this->request->get('auth_item');
 
-        $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as p FROM ( SELECT x1.*,
-            (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'\$.join',CONCAT('" . '"' . "',x1.user_id,'" . '"' . "'))) as rating_user
-            FROM (SELECT DISTINCT e.user_id, concat(e.fname,' ',e.lname) as fullname,
-            (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
-            FROM employees e
-            INNER JOIN auth_assignment a ON a.user_id = e.user_id  where a.item_name = :auth_item) as x1
-            GROUP BY x1.user_id) as x3;";
-        $querys = Yii::$app
-            ->db
-            ->createCommand($sql)
-            ->bindValue(':repair_group', $repair_group)
-            ->bindValue(':auth_item', $auth_item)
-            ->queryAll();
+    //     $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as p FROM ( SELECT x1.*,
+    //         (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'\$.join',CONCAT('" . '"' . "',x1.user_id,'" . '"' . "'))) as rating_user
+    //         FROM (SELECT DISTINCT e.user_id, concat(e.fname,' ',e.lname) as fullname,
+    //         (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
+    //         FROM employees e
+    //         INNER JOIN auth_assignment a ON a.user_id = e.user_id  where a.item_name = :auth_item) as x1
+    //         GROUP BY x1.user_id) as x3;";
+    //     $querys = Yii::$app
+    //         ->db
+    //         ->createCommand($sql)
+    //         ->bindValue(':repair_group', $repair_group)
+    //         ->bindValue(':auth_item', $auth_item)
+    //         ->queryAll();
 
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('user_job', [
-                    'querys' => $querys,
-                ]),
-            ];
-        } else {
-            return $this->render('user_job', [
-                'querys' => $querys,
-            ]);
-        }
-    }
+    //     if ($this->request->isAjax) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'content' => $this->renderAjax('user_job', [
+    //                 'querys' => $querys,
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('user_job', [
+    //             'querys' => $querys,
+    //         ]);
+    //     }
+    // }
 
     // แสดงการให้คะแนน
     public function actionViewRating()
@@ -411,8 +431,7 @@ class RepairController extends Controller
                     'end_job_date' => $model->data_json['end_job_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['end_job_date']) : '',
                 ];
                 $model->data_json = ArrayHelper::merge($oldObj,$model->data_json, $convertDate);
-
-                $model->save();
+               $model->save();
 
                 return [
                     'status' => 'success',
@@ -424,9 +443,9 @@ class RepairController extends Controller
             $model->loadDefaultValues();
             try {
             $model->data_json = [
-                'start_job_date' => $model->data_json['start_job_date'] !== "" ? AppHelper::convertToThai($model->data_json['start_job_date']) : "",
-                'repair_type_date' => $model->data_json['repair_type_date'] !== "" ? AppHelper::convertToThai($model->data_json['repair_type_date']) : "",
-                'end_job_date' => $model->data_json['end_job_date'] !== "" ?  AppHelper::convertToThai($model->data_json['end_job_date']) : "",
+                'start_job_date' => $model->data_json['start_job_date'] !== "" ? AppHelper::convertToThai($model->data_json['start_job_date']) : '__/__/____',
+                'repair_type_date' => $model->data_json['repair_type_date'] !== "" ? AppHelper::convertToThai($model->data_json['repair_type_date']) : '__/__/____',
+                'end_job_date' => $model->data_json['end_job_date'] !== "" ?  AppHelper::convertToThai($model->data_json['end_job_date']) : '__/__/____',
             ];
             
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);

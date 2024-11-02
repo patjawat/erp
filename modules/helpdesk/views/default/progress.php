@@ -1,4 +1,6 @@
 <?php
+use yii\web\View;
+use yii\helpers\Url;
 use app\modules\helpdesk\models\Helpdesk;
 
 $total = Helpdesk::find()->where(['in','status',[1,2,3,4]])->andWhere(['repair_group' => $repair_group])->count();
@@ -11,45 +13,41 @@ try {
 }
 ?>
 
-<div class="card">
-            <div class="card-body">
-                <div id="leaveChart"></div>
-                <div class="d-flex">
-                    <div class="flex-fill border-primary border-end" style="width: 129px;">
-                        <div class="d-flex flex-column align-items-center justify-content-start">
-                            <div class="position-relative">
-                            <div class="d-flex flex-column">
-                                <span class="h5">อยู่ในกระบวนการ</span>
-                                <span class="text-center text-muted mb-0"><?=$status2;?></span>
-                            </div>
-                            </div>
+<div class="card" style="height: 378px;">
+    <div class="card-body">
+        <div id="leaveChart"></div>
+        <div class="d-flex">
+            <div class="flex-fill border-primary border-end" style="width: 129px;">
+                <div class="d-flex flex-column align-items-center justify-content-start">
+                    <div class="position-relative">
+                        <div class="d-flex flex-column">
+                            <span class="h5">อยู่ในกระบวนการ</span>
+                            <span class="text-center text-muted mb-0"><?=$status2;?></span>
                         </div>
                     </div>
-                    <div class="flex-fill">
-                        <div class="d-flex flex-column align-items-center justify-content-start">
-                            <div class="position-relative">
-                                <div class="d-flex flex-column">
-                                    <span class="h5">เสร็จสิ้น</span>
-                                    <span class="text-muted mb-0 text-center"><?=$status4;?></span>
-                                </div>
-                            </div>
+                </div>
+            </div>
+            <div class="flex-fill">
+                <div class="d-flex flex-column align-items-center justify-content-start">
+                    <div class="position-relative">
+                        <div class="d-flex flex-column">
+                            <span class="h5">เสร็จสิ้น</span>
+                            <span class="text-muted mb-0 text-center"><?=$status4;?></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
 
 <?php
 
-use yii\helpers\Url;
-
-
 $url = Url::to(['/helpdesk/repair']);
 $js = <<< JS
 
-
-        var optionsleaveChart = {
+    var optionsleaveChart = {
           series: [$percen],
           chart: {
           height: 250,
@@ -103,12 +101,10 @@ $js = <<< JS
         labels: ['เป้าหมาย'],
         };
 
-        var chart = new ApexCharts(document.querySelector("#leaveChart"), optionsleaveChart);
-        chart.render();
-
-
+var chart = new ApexCharts(document.querySelector("#leaveChart"), optionsleaveChart);
+chart.render();
 
 
 JS;
-$this->registerJS($js);
+$this->registerJS($js,View::POS_END);
 ?>

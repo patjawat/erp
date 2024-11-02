@@ -85,6 +85,7 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/medical/*', 'type' => 2],
             ['name' => '/helpdesk/repair/create', 'type' => 2],
             ['name' => '/helpdesk/repair/timeline', 'type' => 2],
+            ['name' => '/helpdesk/stock/*', 'type' => 2],
             
             ['name' => '/helpdesk/repair/summary', 'type' => 2],
             ['name' => '/helpdesk/repair/user-request-order', 'type' => 2],
@@ -97,6 +98,7 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/add-part', 'type' => 2],
             ['name' => '/helpdesk/repair/update', 'type' => 2],
             ['name' => '/helpdesk/repair/rating', 'type' => 2],
+            ['name' => '/helpdesk/repair/*', 'type' => 2],
             
             ['name' => '/hr/default/index', 'type' => 2],
             ['name' => '/hr/employees/view', 'type' => 2],
@@ -179,6 +181,8 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/cancel-job', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/add-part', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/update', 'parent' => 'computer'],
+            ['child' => '/helpdesk/stock/*', 'parent' => 'computer'],
+            ['child' => '/helpdesk/repair/*', 'parent' => 'computer'],
             
             ['child' => '/helpdesk/repair/summary', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'technician'],
@@ -190,7 +194,9 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/cancel-job', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/add-part', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/update', 'parent' => 'technician'],
-
+            ['child' => '/helpdesk/stock/*', 'parent' => 'technician'],
+            ['child' => '/helpdesk/repair/*', 'parent' => 'technician'],
+            
             ['child' => '/helpdesk/repair/summary', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'medical'],
@@ -201,7 +207,8 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/cancel-job', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/add-part', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/update', 'parent' => 'medical'],
-            
+            ['child' => '/helpdesk/stock/*', 'parent' => 'medical'],
+            ['child' => '/helpdesk/repair/*', 'parent' => 'medical'],
             
             ['child' => '/hr/default/index', 'parent' => 'user'],
             ['child' => '/hr/employees/view', 'parent' => 'user'],

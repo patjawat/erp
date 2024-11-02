@@ -3,6 +3,7 @@
 namespace app\modules\helpdesk\models;
 
 use Yii;
+use yii\db\Query;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\db\Expression;
@@ -16,6 +17,7 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\filemanager\models\Uploads;
+use app\modules\inventory\models\StockEvent;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -36,9 +38,12 @@ use app\modules\filemanager\components\FileManagerHelper;
  */
 class Helpdesk extends Yii\db\ActiveRecord
 {
+    public $q;
     public $asset_name;
-
+    public $date_between;
+    public $urgency;
     public $asset_type_name;
+    public $auth_item;
 
     public static function tableName()
     {
@@ -48,7 +53,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency','auth_item'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -98,6 +103,8 @@ class Helpdesk extends Yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
 
+    public function UpdateStockYear() {}
+
     public function Upload($name)
     {
         return FileManagerHelper::FileUpload($this->ref, $name);
@@ -142,6 +149,11 @@ class Helpdesk extends Yii\db\ActiveRecord
         return $this->hasOne(Asset::class, ['code' => 'code']);
     }
 
+    public function getStockEvent()
+    {
+        return $this->hasOne(StockEvent::class, ['helpdesk_id' => 'id']);
+    }
+
     // ผู้แจ่งซ่อม
     public function getUserReq($msg = null)
     {
@@ -165,10 +177,10 @@ class Helpdesk extends Yii\db\ActiveRecord
         // ซ่อมบำรุง
         if ($this->repair_group == 1) {
             $item_name = 'technician';
-        // 2 คือศูนย์คอมพิวเตอร์
+            // 2 คือศูนย์คอมพิวเตอร์
         } elseif ($this->repair_group == 2) {
             $item_name = 'computer';
-        // 3 คือศูนย์เครื่องมือแพทย์
+            // 3 คือศูนย์เครื่องมือแพทย์
         } elseif ($this->repair_group == 3) {
             $item_name = 'medical';
         } else {
@@ -237,7 +249,7 @@ class Helpdesk extends Yii\db\ActiveRecord
             $data .= '<div class="avatar-stack">';
             foreach ($this->data_json['join'] as $key => $avatar) {
                 $emp = Employees::findOne(['user_id' => $avatar]);
-                $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="'.$emp->fullname.'">';
+                $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
                 $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
                 $data .= '</a>';
             }
@@ -267,19 +279,19 @@ class Helpdesk extends Yii\db\ActiveRecord
             $model = Categorise::findOne(['name' => 'repair_status', 'code' => $this->status]);
 
             if ($model->code == 1) {
-                return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-triangle-exclamation"></i> '.$model->title.'</span>';
+                return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-triangle-exclamation"></i> ' . $model->title . '</span>';
             }
             if ($model->code == 2) {
-                return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-user-check"></i> '.$model->title.'</span>';
+                return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-user-check"></i> ' . $model->title . '</span>';
             }
             if ($model->code == 3) {
-                return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-person-digging text-primary"></i> '.$model->title.'</span>';
+                return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-person-digging text-primary"></i> ' . $model->title . '</span>';
             }
             if ($model->code == 4) {
-                return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-circle-check text-success"></i> '.$model->title.'</span>';
+                return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-circle-check text-success"></i> ' . $model->title . '</span>';
             }
             if ($model->code == 5) {
-                return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-solid fa-circle-minus text-danger"></i> '.$model->title.'</span>';
+                return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-solid fa-circle-minus text-danger"></i> ' . $model->title . '</span>';
             }
         }
     }
@@ -295,21 +307,24 @@ class Helpdesk extends Yii\db\ActiveRecord
     // แสดงความเร่งด่วน
     public function viewUrgency()
     {
-        if (isset($this->data_json['urgency'])) {
-            $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
-
-            if ($model->code == 1) {
-                return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-face-smile"></i> '.$model->title.'</span>';
+        try {
+            if (isset($this->data_json['urgency'])) {
+                $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
+                if ($model->code == 1) {
+                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-face-smile"></i> ' . $model->title . '</span>';
+                }
+                if ($model->code == 2) {
+                    return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-exclamation"></i> ' . $model->title . '</span>';
+                }
+                if ($model->code == 3) {
+                    return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-circle-exclamation text-danger"></i> ' . $model->title . '</span>';
+                }
+                if ($model->code == 4) {
+                    return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-bomb text-danger"></i> ' . $model->title . '</span>';
+                }
             }
-            if ($model->code == 2) {
-                return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-exclamation"></i> '.$model->title.'</span>';
-            }
-            if ($model->code == 3) {
-                return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-circle-exclamation text-danger"></i> '.$model->title.'</span>';
-            }
-            if ($model->code == 4) {
-                return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-bomb text-danger"></i> '.$model->title.'</span>';
-            }
+        } catch (\Throwable $th) {
+            return null;
         }
     }
 
@@ -368,5 +383,83 @@ class Helpdesk extends Yii\db\ActiveRecord
             return \Yii::$app->thaiFormatter->asDateTime($this->data_json['comment_date'], 'medium');
         } catch (\Throwable $th) {
         }
+    }
+
+    public function listUserJob()
+    {
+
+        $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as p FROM ( SELECT x1.*,
+            (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'\$.join',CONCAT('" . '"' . "',x1.user_id,'" . '"' . "'))) as rating_user
+            FROM (SELECT DISTINCT e.user_id, concat(e.fname,' ',e.lname) as fullname,
+            (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
+            FROM employees e
+            INNER JOIN auth_assignment a ON a.user_id = e.user_id  where a.item_name = :auth_item) as x1
+            GROUP BY x1.user_id) as x3;";
+        return  Yii::$app
+            ->db
+            ->createCommand($sql)
+            ->bindValue(':repair_group', $this->repair_group)
+            ->bindValue(':auth_item', $this->auth_item)
+            ->queryAll();
+    }
+    //ผลรวมสถานะ
+    public function SummaryStatus($id)
+    {
+       return self::find()->where(['status' => $id,'repair_group' => $this->repair_group])->andWhere(['thai_year' => $this->thai_year])->count();
+
+    }
+
+    public function SummaryOfYear()
+    {
+        $where = ['and'];
+        $where[] = ['thai_year' => $this->thai_year];  // ใช้กรองถ้าค่ามี
+        $where[] = ['repair_group' => $this->repair_group];  // ใช้กรองถ้าค่ามี
+        $query = Helpdesk::find()
+            ->alias('h')
+            ->select([
+                'thai_year',
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 10 AND status NOT IN (4,5) AND thai_year = h.thai_year AND repair_group = h.repair_group) as m10"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 10 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m10_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 10 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m10_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 11 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m11"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 11 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m11_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 11 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m11_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 12 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m12"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 12 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m12_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 12 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m12_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 1 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m1"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 1 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m1_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 1 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m1_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 2 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m2"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 2 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m2_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 2 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 3 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m3"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 3 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m3_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 3 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m3_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 4 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m4"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 4 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m4_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 4 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m4_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 5 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m5"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 5 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m5_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 5 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m5_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 6 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m6"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 6 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m6_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 6 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m6_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 7 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m7"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 7 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m7_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 7 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m7_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 8 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m8"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 8 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m8_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 8 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m8_success"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 9 AND status NOT IN (4,5) AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m9"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 9 AND status = 5 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m9_cancel"),
+                new Expression("(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 9 AND status = 4 AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m9_success"),
+            ])
+            ->where($where)
+            ->groupBy(['thai_year'])
+            ->asArray()
+            ->one();
+
+        return $query;
     }
 }

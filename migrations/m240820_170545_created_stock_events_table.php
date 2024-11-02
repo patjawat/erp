@@ -14,6 +14,7 @@ class m240820_170545_created_stock_events_table extends Migration
     {
         $this->createTable('{{%stock_events}}', [
             'id' => $this->primaryKey()->comment('รหัสการเคลื่อนไหวสินค้า'),
+            'helpdesk_id' => $this->integer()->comment('รหัสงาน'),
             'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น order, item'),
             'code' => $this->string(50)->comment('รหัส'),
             'transaction_type' => $this->string(255)->comment('ธุรกรรม'),

@@ -32,6 +32,9 @@ $config = [
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
+        'cart' => [
+			'class' => 'asyou99\cart\Cart',
+		],
         'cartMain' => [
 			'class' => 'asyou99\cart\Cart',
 			'storage' => [

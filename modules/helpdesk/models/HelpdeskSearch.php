@@ -18,7 +18,7 @@ class HelpdeskSearch extends Helpdesk
     {
         return [
             [['id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status','q','urgency','thai_year','auth_item'], 'safe'],
         ];
     }
 
