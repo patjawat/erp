@@ -1,3 +1,6 @@
+<?php
+use yii\widgets\Pjax;
+?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -8,28 +11,88 @@
 <?php echo $this->render('../default/menu_dashbroad'); ?>
 <?php $this->endBlock(); ?>
 
+<?php Pjax::begin(); ?>
 <?php
-$sql = "SELECT x1.*,
-(select sum(o.qty * o.price) 
-     FROM orders o 
-      	INNER JOIN categorise oi ON oi.code = o.asset_item AND oi.name ='asset_item'
-		INNER JOIN categorise ot ON ot.code = oi.category_id AND ot.name='asset_type'
-     where o.name = 'order_item' AND ot.code = x1.code AND MONTH(STR_TO_DATE(o.data_json->>'$.po_date', '%Y-%m-%d')) = 9
-    ) as purchase
-FROM(SELECT 
-	t.code,
-	t.title,sum(s.qty*s.unit_price) as total
-FROM stock s 
-INNER JOIN categorise i ON i.code = s.asset_item AND i.name ='asset_item'
-INNER JOIN categorise t ON t.code = i.category_id AND t.name='asset_type'
-GROUP BY t.code) as x1;";
-$querys = Yii::$app->db->createCommand($sql)->queryAll();
+$sql1 = "SELECT 
+    x.*, 
+    COALESCE(sum_last, 0) AS sum_last,
+    COALESCE(sum_po, 0) AS sum_po,
+    COALESCE(total, 0) AS total
+FROM 
+    (SELECT 
+        t.code, 
+        t.title
+    FROM 
+        categorise t
+    WHERE 
+        t.name = 'asset_type'
+        AND t.category_id = 4
+    ) AS x
+LEFT JOIN 
+    (SELECT 
+        c.category_id AS code, 
+        SUM(IF(si.po_number IS NOT NULL, ROUND(si.qty * si.unit_price), 0)) AS sum_last
+    FROM 
+        stock_events si
+    INNER JOIN 
+        categorise c ON c.code = si.asset_item AND c.name = 'asset_item'
+    INNER JOIN 
+        warehouses w ON w.id = si.warehouse_id
+    INNER JOIN 
+        stock_events so ON si.category_id = so.id
+    WHERE 
+        MONTH(so.data_json->>'$.receive_date') < :receive_month
+        AND (IF(MONTH(so.data_json->>'$.receive_date') > 9, YEAR(so.data_json->>'$.receive_date') + 1, YEAR(so.data_json->>'$.receive_date')) + 543) = :thai_year
+    GROUP BY 
+        c.category_id
+    ) AS s ON x.code = s.code
+LEFT JOIN 
+    (SELECT 
+        c.category_id AS code, 
+        SUM(IF(si.po_number IS NOT NULL, ROUND(si.qty * si.unit_price), 0)) AS sum_po
+    FROM 
+        stock_events si
+    INNER JOIN 
+        categorise c ON c.code = si.asset_item AND c.name = 'asset_item'
+    INNER JOIN 
+        warehouses w ON w.id = si.warehouse_id
+    INNER JOIN 
+        stock_events so ON si.category_id = so.id
+    WHERE 
+        MONTH(so.data_json->>'$.receive_date') = :receive_month
+        AND (IF(MONTH(so.data_json->>'$.receive_date') > 9, YEAR(so.data_json->>'$.receive_date') + 1, YEAR(so.data_json->>'$.receive_date')) + 543) = :thai_year
+    GROUP BY 
+        c.category_id
+    ) AS p ON x.code = p.code
+LEFT JOIN 
+    (SELECT 
+        c.category_id AS code,
+        SUM(CASE WHEN (si.transaction_type = 'IN' AND w.warehouse_type = 'MAIN') THEN (si.qty * si.unit_price) ELSE 0 END) - 
+        SUM(CASE WHEN (si.transaction_type = 'OUT' AND w.warehouse_type = 'SUB') THEN (si.qty * si.unit_price) ELSE 0 END) AS total
+    FROM 
+        stock_events si
+    INNER JOIN 
+        categorise c ON c.code = si.asset_item AND c.name = 'asset_item'
+    INNER JOIN 
+        warehouses w ON w.id = si.warehouse_id
+    INNER JOIN 
+        stock_events so ON si.category_id = so.id
+    GROUP BY 
+        c.category_id
+    ) AS t ON x.code = t.code;";
+    $qerys = Yii::$app->db->createCommand($sql1,
+    [':receive_month' =>$searchModel->receive_month,
+    ':thai_year' => $searchModel->thai_year,
+    ])->queryAll();
 ?>
 
 <div class="card">
     <div class="card-body">
-        <h6><i class="fa-solid fa-chart-pie"></i> สรุปงานวัสดุคงคลัง คลังวัสดุ</h6>
-            <table class="table table-bordered table-striped">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6><i class="fa-solid fa-chart-pie"></i> สรุปงานวัสดุคงคลัง คลังวัสดุ</h6>
+            <?=$this->render('_search', ['model' => $searchModel])?>
+        </div>
+            <table class="table table-bordered table-striped mt-3">
                 <thead class="align-middle text-center">
                     <tr>
                         <th rowspan="2">ที่</th>
@@ -47,13 +110,13 @@ $querys = Yii::$app->db->createCommand($sql)->queryAll();
                     </tr>
                 </thead>
                 <tbody class="align-middle">
-                    <?php $num = 1;foreach($querys as $item):?>
+                    <?php $num = 1;foreach($qerys as $item):?>
                     <tr>
-                        <td><?=$num++;?></td>
+                        <td class="text-center"><?=$num++;?></td>
                         <td><?=$item['title']?></td>
-                        <td class="text-end fw-bolder">0.00</td>
-                        <td class="text-end fw-bolder">0.00</td>
-                        <td class="text-end fw-bolder">0.00</td>
+                        <td class="text-end fw-bolder"><?=number_format($item['sum_last'],2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format($item['sum_po'],2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format(($item['sum_po']+$item['sum_last']),2)?></td>
                         <td class="text-end fw-bolder">0.00</td>
                         <td class="text-end fw-bolder">0.00</td>
                         <td class="text-end fw-bolder">0.00</td>
@@ -66,3 +129,5 @@ $querys = Yii::$app->db->createCommand($sql)->queryAll();
 
     </div>
 </div>
+<?php Pjax::end(); ?>
+

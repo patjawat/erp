@@ -47,7 +47,7 @@ use yii\helpers\Html;
 
         </div>
         <div class="card-footer">
-        <?=Html::a('ระบบการลา <i class="fe fe-arrow-right-circle"></i>',['/lm/leave'],['class' => 'btn btn-light'])?>
+        <?=Html::a('ระบบการลา <i class="fe fe-arrow-right-circle"></i>',['/me/leave'],['class' => 'btn btn-light'])?>
 
     </div>
 </div>

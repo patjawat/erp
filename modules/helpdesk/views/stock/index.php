@@ -40,7 +40,7 @@ $cart = \Yii::$app->cart;
                     <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
 
                     <div class="d-flex justify-content-between">
-                        <span class="fw-semibold text-danger"> <i class="fa-solid fa-dollar-sign"></i><?php echo number_format($model->unit_price,2); ?></code>
+                        <span class="fw-semibold text-danger"><?php echo number_format($model->unit_price,2); ?></code>
                         <?php if($model->SumQty() >= 1):?>
                             <?=Html::a('เลือก', ['/helpdesk/stock/add-to-cart', 'id' => $model->id], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);?>
                             <?php else:?>

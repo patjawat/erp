@@ -2,15 +2,15 @@
 
 namespace app\modules\lm\models;
 
-use app\components\UserHelper;
-use app\models\Categorise;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\Organization;
 use Yii;
+use yii\db\Expression;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
+use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
+use app\modules\hr\models\Organization;
 
 /**
  * This is the model class for table "leave".
@@ -102,7 +102,10 @@ class Leave extends \yii\db\ActiveRecord
         }
 
 
-
+public function listLeaveType()
+{
+    return ArrayHelper::map(LeaveType::find()->where(['name' => 'leave_type','active' => 1])->all(),'code','title');
+}
 
 
     public function getAvatar($empid, $msg = '')
