@@ -11,7 +11,7 @@ use yii\widgets\Pjax;
 <?php echo $this->render('../default/menu_dashbroad'); ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(); ?>
+<?php Pjax::begin(['timeout' => 88888888]); ?>
 <?php
 $sql1 = "SELECT 
     x.*, 
