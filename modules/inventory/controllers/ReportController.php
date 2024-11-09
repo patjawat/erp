@@ -519,7 +519,7 @@ class ReportController extends \yii\web\Controller
         // $this->Sheet2($spreadsheet,$params);
 
         $writer = new Xlsx($spreadsheet);
-        $filePath = Yii::getAlias('@webroot') . '/myStock.xlsx';
+        $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
         $writer->save($filePath);  // สร้าง excel
 
         // if (file_exists($output_file)) {  // ตรวจสอบว่ามีไฟล์ หรือมีการสร้างไฟล์ แล้วหรือไม่
