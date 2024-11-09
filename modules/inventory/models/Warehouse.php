@@ -175,7 +175,7 @@ class Warehouse extends \yii\db\ActiveRecord
     //แสดงประเภทสินค้าบริการ
     public function ListOrderType()
     {
-        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['asset_type']])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['asset_type']])->andWhere(['category_id' => 4])->all(), 'code', 'title');
     }
 
     public function ListGroup()

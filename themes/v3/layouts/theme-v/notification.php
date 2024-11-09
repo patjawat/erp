@@ -1,19 +1,19 @@
 <?php
 
-use app\components\UserHelper;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\inventory\models\StockEvent;
-use app\modules\purchase\models\Order;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\db\Expression;
-use yii\helpers\Url;
+use app\components\UserHelper;
+use app\modules\purchase\models\Order;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\inventory\models\StockEvent;
 
 $emp = UserHelper::GetEmployee();
 
 // ดารแจ้งซ่อม
 $helpdesks = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])->andWhere(['in', 'status', [1, 2, 3]])->all();
 // ขออนุมัติ
-$approveStocks = StockEvent::find()->andFilterWhere(['name' => 'order', 'checker' => $emp->id])->andWhere(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"))->all();
+$approveStocks = isset($emp->id) ? StockEvent::find()->andFilterWhere(['name' => 'order', 'checker' => $emp->id])->andWhere(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"))->all() : 0;
 if (Yii::$app->user->can('director')) {
 $orders = Order::find()
     ->andwhere(['is not', 'pr_number', null])
@@ -32,8 +32,11 @@ $orders = Order::find()
 }
 
 // $countOrder = $orders->all(); // Execute the query
-
-$summary = (count($approveStocks) + count($helpdesks)+count($orders));
+try {
+    $summary = (count($approveStocks) + count($helpdesks)+count($orders));
+} catch (\Throwable $th) {
+    $summary = 0;
+}
 
 ?>
 

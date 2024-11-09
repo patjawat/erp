@@ -2,14 +2,14 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\components\AppHelper;
-use app\components\UserHelper;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\StockSearch;
-use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\WarehouseSearch;
 use yii\db\Expression;
 use yii\web\Controller;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\WarehouseSearch;
+use app\modules\inventory\models\StockEventSearch;
 
 /**
  * Default controller for the `warehouse` module.
@@ -58,6 +58,7 @@ class DefaultController extends Controller
             }
         }
         $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
+        $dataProvider->pagination->pageSize = 100;
 
         return [
             'searchModelWarehouse' => $searchModel,

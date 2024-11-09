@@ -2,14 +2,14 @@
 
 namespace app\modules\usermanager\models;
 
-use app\modules\hr\models\Employees;
 use Yii;
-use yii\base\NotSupportedException;
-use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
-use yii\web\IdentityInterface;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\db\ActiveRecord;
+use yii\helpers\ArrayHelper;
+use yii\web\IdentityInterface;
+use yii\base\NotSupportedException;
+use app\modules\hr\models\Employees;
+use yii\behaviors\TimestampBehavior;
 
 class User extends ActiveRecord implements IdentityInterface {
 
@@ -298,7 +298,12 @@ class User extends ActiveRecord implements IdentityInterface {
                 $auth->assign($auth->getRole($roleName), $this->id);
             }
         } else {
-            $auth->assign($auth->getRole('user'), $this->id);
+            if($this->employee->branch == 'MAIN'){
+                $auth->assign($auth->getRole('user'), $this->id);
+            }else{
+                $auth->assign($auth->getRole('branch'), $this->id);
+                $auth->assign($auth->getRole('warehouse'), $this->id);
+            }
         }
     }
 

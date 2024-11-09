@@ -2,17 +2,17 @@
 
 namespace app\components;
 
-use app\models\Categorise;
-use app\models\Hospcode;
-use app\models\Profile;
+use Yii;
+use DateTime;
 use app\models\Visit;
-use app\modules\usermanager\models\User;
+use yii\helpers\Html;
+use app\models\Profile;
 use yii\base\Component;
+use app\models\Hospcode;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use yii\helpers\BaseFileHelper;
-use yii\helpers\Html;
-use DateTime;
-use Yii;
+use app\modules\usermanager\models\User;
 
 // รวม function ตที่ใช้งานบ่อยๆ
 class AppHelper extends Component
@@ -277,7 +277,32 @@ class AppHelper extends Component
 
         return implode(' ', $return) . ' ผ่านมา';
     }
-
+//  หาชื่อเดือน
+    public static function getMonthName($monthNumber) {
+        // สร้างอาร์เรย์ที่เก็บชื่อเดือน
+        $months = [
+            1 => 'มกราคม',
+            2 => 'กุมภาพันธ์',
+            3 => 'มีนาคม',
+            4 => 'เมษายน',
+            5 => 'พฤษภาคม',
+            6 => 'มิถุนายน',
+            7 => 'กรกฎาคม',
+            8 => 'สิงหาคม',
+            9 => 'กันยายน',
+            10 => 'ตุลาคม',
+            11 => 'พฤศจิกายน',
+            12 => 'ธันวาคม'
+        ];
+    
+        // ตรวจสอบว่าเดือนถูกต้องหรือไม่
+        if ($monthNumber >= 1 && $monthNumber <= 12) {
+            return $months[$monthNumber];  // คืนค่าชื่อเดือน
+        } else {
+            return "เดือนไม่ถูกต้อง"; // หากตัวเลขไม่ใช่เดือนที่ถูกต้อง
+        }
+    }
+    
     // แปลง วัน เดือน ปี เป็น ไทย
     public static function ThaiDate($datetime, $format, $clock)
     {

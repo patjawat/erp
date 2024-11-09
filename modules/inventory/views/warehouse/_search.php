@@ -1,8 +1,8 @@
 <?php
 
 use yii\helpers\Html;
-use kartik\widgets\ActiveForm;
 use kartik\select2\Select2;
+use kartik\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\WarehouseSearch $model */
@@ -22,7 +22,7 @@ use kartik\select2\Select2;
     <?= $form->field($model, 'warehouse_name')->textInput(['placeholder' => 'ระบุชื่อคลังที่ต้องการค้นหา...'])->label('ชื่อคลัง') ?>
     <?php
                                 echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
-                                    'data' => ['MAIN' => 'คลังหลัก','SUB' => 'คลังย่อย'],
+                                    'data' => ['MAIN' => 'คลังหลัก','SUB' => 'คลังย่อย','BRANCH' => 'รพ.สต.'],
                                     'options' => ['placeholder' => 'กรุณาเลือก'],
                                     'pluginOptions' => [
                                         'width' => '200px',

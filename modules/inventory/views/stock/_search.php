@@ -40,7 +40,7 @@ $warehouse = Yii::$app->session->get('warehouse');
             ],
             ])->label(false);
             ?>
-            <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'SUB'):?>
+            <?php if(isset($warehouse) && $warehouse['warehouse_type'] !== 'MAIN'):?>
              <?=Html::a('<button type="button" class="btn btn-primary">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span>
                     </button>',['/inventory/sub-stock/show-cart'],['class' => 'brn btn-primary shadow open-modal','data' => ['size' => 'modal-xl']])?>

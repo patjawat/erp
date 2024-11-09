@@ -66,7 +66,7 @@ $products = $cart->getItems();
                     <td class="text-end">
                         <span class="fw-semibold"><?=$item->SumPriceByItem()?></span>
                     </td>
-                    <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'SUB'):?>
+                    <?php if(isset($warehouse) && $warehouse['warehouse_type'] !== 'MAIN'):?>
                     <td class="text-end">
                     <?php if($item->SumQty() > 0):?>
                     <?=Html::a('<i class="fa-solid fa-cart-plus"></i> เบิก',['/inventory/sub-stock/add-to-cart','id' => $item->id],['class' => 'add-sub-cart btn btn-sm btn-primary shadow rounded-pill'])?>

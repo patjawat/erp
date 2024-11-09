@@ -3,8 +3,6 @@
 use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
-use yii\helpers\ArrayHelper;
-use app\modules\inventory\models\Warehouse;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductTypeSearch $model */
@@ -34,25 +32,7 @@ $months = [
     ]); ?>
 
 <div class="d-flex gap-3">
-<?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-            'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-            'options' => ['placeholder' => 'เลือกคลัง'],
-            'pluginEvents' => [
-                "select2:unselect" => "function() { 
-                    $(this).submit()
-                            }",
-                            "select2:select" => "function() {
-                                $(this).submit()
-                                }",
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'width' => '200px',
-                            ],
-                            ])->label(false);
-                            
-                                    ?>
-                                    
+
     <?php
 
 echo $form->field($model, 'receive_month')->widget(Select2::classname(), [

@@ -29,20 +29,14 @@ $this->title = 'ระบบคลัง';
     <div class="col-xl-6">
         <div class="card">
             <div class="card-body">
-
                 <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่ารับ-จ่ายวัสดุ</h6>
                     <div class="mb-3">
                         <?php echo $this->render('_search_year', ['model' => $searchModel]); ?></div>
                 </div>
-                <!-- <div id="inventoryCharts"></div> -->
-                <!-- <div id="showChart">
-                    
-                </div> -->
                 <?php echo $this->render('chart_summary', ['model' => $searchModel]); ?>
             </div>
         </div>
-
     </div>
     <div class="col-xl-6">
         <!-- #### -->
@@ -63,7 +57,6 @@ $this->title = 'ระบบคลัง';
                                     <h6 class="mb-0 font-size-15">ยอดยกมา</h6>
                                 </div>
                             </div>
-
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
                                     <?php echo number_format($searchModel->LastTotalStock(),2); ?>
@@ -73,7 +66,6 @@ $this->title = 'ระบบคลัง';
                                             <p class="text-muted mb-0 text-truncate">รวมมูลค่าวัสดุคงเหลือ</p>
                                         </div>
                                         <div class="flex-shrink-0" style="position: relative;">
-
                                         </div>
                                     </div>
                             </div>
@@ -83,7 +75,6 @@ $this->title = 'ระบบคลัง';
 
             </div>
             <div class="col-6">
-
                 <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                     <div class="card-body">
                         <div>
@@ -101,7 +92,7 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo  number_format($searchModel->OutSummary('SUB'),2); ?>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo  number_format(($searchModel->OutSummary('SUB')+$searchModel->OutSummary('BRANCH')),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -115,8 +106,6 @@ $this->title = 'ระบบคลัง';
                         </div>
                     </div>
                 </div>
-
-
             </div>
             <div class="col-6">
                 <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -185,24 +174,24 @@ $this->title = 'ระบบคลัง';
                     </div>
                 </div>
             </div>
-
-            
-
-
         </div>
-
     </div>
 </div>
-
 <div class="row">
-
     <div class="col-xl-8">
-        <?php echo $this->render('list_warehouse', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'searchModel' => $searchModelWarehouse,
-            'dataProvider' => $dataProviderWarehouse,
-        ]); ?>
+        <?php
+        
+        try {
+            echo $this->render('list_warehouse', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'searchModelWarehouse' => $searchModelWarehouse,
+                'dataProviderWarehouse' => $dataProviderWarehouse,
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        ?>
         <div id="showWarehouse"></div>
     </div>
     <div class="col-xl-4">

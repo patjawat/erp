@@ -2,24 +2,24 @@
 
 namespace app\modules\hr\controllers;
 
-use app\components\AppHelper;
-use app\components\SiteHelper;
-use app\modules\hr\models\EmployeeDetailSearch;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\EmployeesSearch;
-use app\modules\hr\models\Organization;
-use app\modules\hr\models\UploadCsv;
-use ruskid\csvimporter\CSVImporter;
-use ruskid\csvimporter\CSVReader;
-use ruskid\csvimporter\MultipleImportStrategy;
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
+use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\SiteHelper;
+use ruskid\csvimporter\CSVReader;
 use yii\validators\DateValidator;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use yii\web\UploadedFile;
-use Yii;
+use ruskid\csvimporter\CSVImporter;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\UploadCsv;
+use app\modules\hr\models\Organization;
+use app\modules\hr\models\EmployeesSearch;
+use ruskid\csvimporter\MultipleImportStrategy;
+use app\modules\hr\models\EmployeeDetailSearch;
 
 /**
  * EmployeesController implements the CRUD actions for Employees model.
@@ -51,7 +51,9 @@ class EmployeesController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new EmployeesSearch();
+        $searchModel = new EmployeesSearch([
+            'branch' => 'MAIN'
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $notStatusParam = $this->request->get('not-status');
 

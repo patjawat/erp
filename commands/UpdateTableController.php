@@ -71,6 +71,7 @@ class UpdateTableController extends Controller
             ['name' => 'technician_ma', 'type' => 1],
             ['name' => 'user', 'type' => 1],
             ['name' => 'warehouse', 'type' => 1],
+            ['name' => 'branch', 'type' => 1,'description' => 'สาขา'],
             ['name' => '/*', 'type' => 2],
             ['name' => '/am/asset/depreciation', 'type' => 2],
             ['name' => '/am/asset/index', 'type' => 2],
@@ -222,6 +223,13 @@ class UpdateTableController extends Controller
             ['child' => '/inventory/warehouse/index', 'parent' => 'user'],
             ['child' => '/inventory/warehouse/list-order-request', 'parent' => 'user'],
             ['child' => '/inventory/warehouse/view', 'parent' => 'user'],
+
+            ['child' => '/inventory/stock/warehouse', 'parent' => 'branch'],
+            ['child' => '/inventory/warehouse/index', 'parent' => 'branch'],
+            ['child' => '/inventory/warehouse/list-order-request', 'parent' => 'branch'],
+            ['child' => '/inventory/warehouse/view', 'parent' => 'branch'],
+            ['child' => '/inventory/default/index', 'parent' => 'branch'],
+            
             ['child' => '/me/*', 'parent' => 'user'],
             ['child' => '/ms-word/*', 'parent' => 'user'],
             ['child' => '/profile/*', 'parent' => 'user'],
@@ -283,6 +291,50 @@ class UpdateTableController extends Controller
         }else{
             echo 'มีข้อมูลแล้ว';
         }
+    }
+
+    public function actionCreateView()
+    {
+        $sqlViewStock = "CREATE VIEW view_stock as SELECT t.code as type_code ,t.title as asset_type_name,i.code as asset_item,i.title as asset_item_name,s.warehouse_id,w.warehouse_type,w.warehouse_name,s.qty,sum(s.qty*s.unit_price) as total_price FROM stock s 
+                        INNER JOIN warehouses w ON w.id = s.warehouse_id
+                        INNER JOIN categorise i ON i.code = s.asset_item AND i.name = 'asset_item'
+                        INNER JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
+                        GROUP BY w.id,t.code;";
+        $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
+
+        $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'$.unit' as unit,
+                                    so.code,
+                                    si.po_number,
+                                    w.warehouse_type,
+                                    w.warehouse_name,
+                                    si.transaction_type,
+                                    so.order_status,
+                                    so.warehouse_id,
+                                    si.qty,
+                                    si.unit_price,
+                                    so.created_at,
+                                    
+                                    MONTH(so.data_json->>'$.receive_date') AS stock_month,
+                                    (IF(MONTH(so.data_json->>'$.receive_date') > 9, 
+                                        YEAR(so.data_json->>'$.receive_date') + 1, 
+                                        YEAR(so.data_json->>'$.receive_date')
+                                    ) + 543) AS thai_year
+                                    
+                                FROM 
+                                    stock_events so
+                                    LEFT OUTER JOIN stock_events si 
+                                        ON si.category_id = so.id AND si.name = 'order_item'
+                                    LEFT OUTER JOIN categorise i 
+                                        ON i.code = si.asset_item AND i.name = 'asset_item'
+                                    LEFT OUTER JOIN categorise t 
+                                        ON t.code = i.category_id AND t.name='asset_type'
+                                    LEFT OUTER JOIN warehouses w 
+                                        ON w.id = si.warehouse_id
+                                WHERE i.category_id <> ''
+                                ) SELECT *
+                                    
+                                FROM t;"; 
+                                $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();       
     }
 
 }

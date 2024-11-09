@@ -29,19 +29,16 @@ use app\modules\inventory\models\Warehouse;
                 </tr>
             </thead>
             <tbody class="align-middle">
-                <?php $i = 1; foreach($dataProvider->getModels() as $model):?>
+                <?php $i = 1; foreach($dataProviderWarehouse->getModels() as $model):?>
                 <tr>
                     <th scope="row"><?=$i++;?></th>
                     <td>
-
-
                         <div class="d-flex align-items-center">
                             <div class="avatar">
                                 <div class="avatar-title rounded bg-primary bg-opacity-25">
                                     <i class="fa-solid fa-store text-primary"></i>
                                 </div>
                             </div>
-
                             <div class="flex-grow-1">
                                 <a href="<?=Url::to(['/inventory/warehouse/view','id' => $model->id])?>">
                                     <h6 class="mb-0 font-size-15"><?=$model->warehouse_name?></h6>

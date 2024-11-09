@@ -1,17 +1,17 @@
 <?php
 
 
+use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\web\JsExpression;
+use kartik\form\ActiveForm;
+use kartik\widgets\Select2;
+use yii\widgets\MaskedInput;
 use app\components\AppHelper;
+use kartik\widgets\Typeahead;
 use app\components\SiteHelper;
 use iamsaint\datetimepicker\Datetimepicker;
-use kartik\widgets\Select2;
-use kartik\widgets\Typeahead;
-use yii\helpers\Html;
-use kartik\form\ActiveForm;
-use yii\helpers\Url;
-use yii\web\JsExpression;
-use yii\web\View;
-use yii\widgets\MaskedInput;
 use app\modules\filemanager\components\FileManagerHelper;
 ?>
 
@@ -237,7 +237,8 @@ use app\modules\filemanager\components\FileManagerHelper;
                     <div class="col-6">
                         <?= $form->field($model, 'phone')->textInput(['type' => 'number'])->label('โทรศัพท์') ?>
                     </div>
-                <div class="col-12">
+                    <div class="col-12">
+                    <?= $form->field($model, 'branch')->radioList(['MAIN' => 'โรงพยาบาล','BRANCH' => 'รพ.สต.'],['inline'=>true])->label('สาขา') ?>
                     <div class="alert alert-primary mt-3" role="alert">
                         <span
                             class="address2"><?=isset($model->data_json['address2']) ? $model->data_json['address2'] : '-'?></span>

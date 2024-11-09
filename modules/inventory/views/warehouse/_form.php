@@ -1,15 +1,15 @@
 <?php
 
-use kartik\widgets\ActiveForm;
-use softark\duallistbox\DualListbox;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use kartik\select2\Select2;
-use yii\db\Expression;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\Organization;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\db\Expression;
 use yii\web\JsExpression;
+use kartik\select2\Select2;
+use kartik\widgets\ActiveForm;
+use app\modules\hr\models\Employees;
+use softark\duallistbox\DualListbox;
+use app\modules\hr\models\Organization;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
 $this->title = 'ราการขอซื้อ';
@@ -86,7 +86,7 @@ $resultsJs = <<< JS
     <div class="row">
         <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12">
             <div class="d-flex justify-content-between gap-1">
-                <?=$form->field($model, 'warehouse_type')->radioList(['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],['custom' => true,'inline' => true]);?>
+                <?=$form->field($model, 'warehouse_type')->radioList(['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย','BRANCH' => 'รพ.สต.'],['custom' => true,'inline' => true]);?>
 
                 <?php
                 // echo $form->field($model, 'category_id')->widget(Select2::classname(), [
