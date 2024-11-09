@@ -332,8 +332,7 @@ $summary = Yii::$app->db->createCommand($sqlSummary,  [
 <?php
 $url = Url::to(['/inventory/report/export-excel','warehouse_id' => $searchModel->warehouse_id,'receive_month' => $searchModel->receive_month,'thai_year' => $searchModel->thai_year]);
 $js  = <<< JS
-
-    $('#download-button').on('click', function() {
+$("body").on("click", "#download-button", function (e) {
         var monthName = $('#stockeventsearch-receive_month').find(':selected').text();
         var year = $('#stockeventsearch-thai_year').find(':selected').text();
         $.ajax({

@@ -42,7 +42,7 @@ class ReportController extends \yii\web\Controller
     public function actionExportExcel()
     {
         $params = Yii::$app->request->queryParams;
-        $warehouse = Warehouse::findOne($params['warehouse_id']);
+        $warehouse = isset($params['warehouse_id']) ? Warehouse::findOne($params['warehouse_id']) : '';
         $datas = $this->findModel($params);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
