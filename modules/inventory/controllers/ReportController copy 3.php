@@ -197,6 +197,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle('I5')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $StartRow = 6;
+
         // $a = [];
         foreach ($datas as $key => $value) {
             $numRow = $StartRow++;
@@ -536,48 +537,47 @@ class ReportController extends \yii\web\Controller
 
 
      protected function findModel($params)
-        {
+    {
         //ถ้ามีการเลือกคลัง
-        if(isset($params['warehouse_id']) && $params['warehouse_id'] !==''){
-            // return $params;
+        if(isset($params['warehouse_id'])){
      
-            $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
-                SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+        $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch - x.sum_sub)) as total FROM(SELECT *,
+                    SUM(CASE 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            THEN (qty * unit_price) 
+                            ELSE 0 
+                        END) 
+                    - SUM(CASE 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id  AND stock_month < :receive_month AND thai_year = :thai_year) 
+                            THEN (qty * unit_price) 
+                            ELSE 0 
+                        END)  AS sum_last,
+    
+                    SUM(
+                    CASE 
+                        WHEN (po_number IS NOT NULL AND  warehouse_id = :warehouse_id AND stock_month = :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
-                    END) 
-                - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END)  AS sum_last,
-
+                    END
+                ) AS sum_po,
+                
                 SUM(
-                CASE 
-                    WHEN (po_number IS NOT NULL AND  warehouse_id = :warehouse_id AND order_month = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_po,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success'  AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_branch,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_sub
+                    CASE 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success'  AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        THEN (qty * unit_price) 
+                        ELSE 0 
+                    END
+                ) AS sum_branch,
+                
+                SUM(
+                    CASE 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        THEN (qty * unit_price) 
+                        ELSE 0 
+                    END
+                ) AS sum_sub
 
-        FROM view_stock_transaction GROUP BY category_id) as x";
+            FROM view_stock_transaction GROUP BY category_id) as x ";
 
         return Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $params['warehouse_id'],
@@ -586,45 +586,44 @@ class ReportController extends \yii\web\Controller
         ])->queryAll();
                
     }else{
-        // return 'All';
         // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
-        $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
-                SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+        $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch - x.sum_sub)) as total FROM(SELECT *,
+                    SUM(CASE 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            THEN (qty * unit_price) 
+                            ELSE 0 
+                        END) 
+                    - SUM(CASE 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND stock_month < :receive_month AND thai_year = :thai_year) 
+                            THEN (qty * unit_price) 
+                            ELSE 0 
+                        END)  AS sum_last,
+    
+                    SUM(
+                    CASE 
+                        WHEN (po_number IS NOT NULL AND stock_month = :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
-                    END) 
-                - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND order_month < :receive_month AND thai_year = :thai_year) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END)  AS sum_last,
-
+                    END
+                ) AS sum_po,
+                
                 SUM(
-                CASE 
-                    WHEN (po_number IS NOT NULL AND order_month = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_po,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success'  AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_branch,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_sub
+                    CASE 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        THEN (qty * unit_price) 
+                        ELSE 0 
+                    END
+                ) AS sum_branch,
+                
+                SUM(
+                    CASE 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success'  AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        THEN (qty * unit_price) 
+                        ELSE 0 
+                    END
+                ) AS sum_sub
 
-        FROM view_stock_transaction GROUP BY category_id) as x";
+            FROM view_stock_transaction GROUP BY category_id) as x ";
 
         return Yii::$app->db->createCommand($sql, [
             ':receive_month' => $params['receive_month'],
@@ -637,27 +636,27 @@ class ReportController extends \yii\web\Controller
     {
  
           //ถ้ามีการเลือกคลัง
-          if(isset($params['warehouse_id']) && $params['warehouse_id'] !==''){
+          if(isset($params['warehouse_id'])){
         $sql = "SELECT x.* FROM(SELECT *,
                     SUM(CASE 
-                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
                             THEN (qty) 
                             ELSE 0 
                         END) 
                     - SUM(CASE 
-                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND stock_month < :receive_month AND thai_year = :thai_year) 
                             THEN (qty) 
                             ELSE 0 
                         END)  AS qty_last,
 
                          (
                     SUM(CASE 
-                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
                             THEN (unit_price) 
                             ELSE 0 
                         END) 
                     - SUM(CASE 
-                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND stock_month < :receive_month AND thai_year = :thai_year) 
                             THEN (unit_price) 
                             ELSE 0 
                         END)
@@ -665,12 +664,12 @@ class ReportController extends \yii\web\Controller
 
                          (
                     SUM(CASE 
-                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
                             THEN (qty * unit_price) 
                             ELSE 0 
                         END) 
                     - SUM(CASE 
-                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND stock_month < :receive_month AND thai_year = :thai_year) 
                             THEN (qty * unit_price) 
                             ELSE 0 
                         END)
@@ -679,21 +678,21 @@ class ReportController extends \yii\web\Controller
                 -- Sum of Purchase Orders (PO) where PO number is not NULL
                     SUM(
                     CASE 
-                        WHEN (po_number IS NOT NULL AND warehouse_id = :warehouse_id AND order_month = :receive_month AND thai_year = :thai_year) 
+                        WHEN (po_number IS NOT NULL AND warehouse_id = :warehouse_id AND stock_month = :receive_month AND thai_year = :thai_year) 
                         THEN (qty) 
                         ELSE 0 
                     END
                 ) AS qty_po,
                           SUM(
                     CASE 
-                        WHEN (po_number IS NOT NULL AND warehouse_id = :warehouse_id AND order_month = :receive_month AND thai_year = :thai_year) 
+                        WHEN (po_number IS NOT NULL AND warehouse_id = :warehouse_id AND stock_month = :receive_month AND thai_year = :thai_year) 
                         THEN (unit_price) 
                         ELSE 0 
                     END
                 ) AS unit_price_po,
                           SUM(
                     CASE 
-                        WHEN (po_number IS NOT NULL AND warehouse_id = :warehouse_id AND order_month = :receive_month AND thai_year = :thai_year) 
+                        WHEN (po_number IS NOT NULL AND warehouse_id = :warehouse_id AND stock_month = :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END
@@ -701,21 +700,21 @@ class ReportController extends \yii\web\Controller
                 -- Calculate total for 'IN' transactions in sub-warehouse
                 SUM(
                     CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                         THEN (qty) 
                         ELSE 0 
                     END
                 ) AS qty_sub,
                           SUM(
                     CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                         THEN (unit_price) 
                         ELSE 0 
                     END
                 ) AS unit_price_sub,
                           SUM(
                     CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END
@@ -731,24 +730,24 @@ class ReportController extends \yii\web\Controller
           }else{
             $sql = "SELECT x.* FROM(SELECT *,
             SUM(CASE 
-                    WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                    WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
                     THEN (qty) 
                     ELSE 0 
                 END) 
             - SUM(CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND order_month < :receive_month AND thai_year = :thai_year) 
+                    WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND stock_month < :receive_month AND thai_year = :thai_year) 
                     THEN (qty) 
                     ELSE 0 
                 END)  AS qty_last,
 
                  (
             SUM(CASE 
-                    WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                    WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
                     THEN (unit_price) 
                     ELSE 0 
                 END) 
             - SUM(CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'   AND order_month < :receive_month AND thai_year = :thai_year) 
+                    WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'   AND stock_month < :receive_month AND thai_year = :thai_year) 
                     THEN (unit_price) 
                     ELSE 0 
                 END)
@@ -756,12 +755,12 @@ class ReportController extends \yii\web\Controller
 
                  (
             SUM(CASE 
-                    WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                    WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END) 
             - SUM(CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'   AND order_month < :receive_month AND thai_year = :thai_year) 
+                    WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'   AND stock_month < :receive_month AND thai_year = :thai_year) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END)
@@ -770,21 +769,21 @@ class ReportController extends \yii\web\Controller
         -- Sum of Purchase Orders (PO) where PO number is not NULL
             SUM(
             CASE 
-                WHEN (po_number IS NOT NULL AND order_month = :receive_month AND thai_year = :thai_year) 
+                WHEN (po_number IS NOT NULL AND stock_month = :receive_month AND thai_year = :thai_year) 
                 THEN (qty) 
                 ELSE 0 
             END
         ) AS qty_po,
                   SUM(
             CASE 
-                WHEN (po_number IS NOT NULL  AND order_month = :receive_month AND thai_year = :thai_year) 
+                WHEN (po_number IS NOT NULL  AND stock_month = :receive_month AND thai_year = :thai_year) 
                 THEN (unit_price) 
                 ELSE 0 
             END
         ) AS unit_price_po,
                   SUM(
             CASE 
-                WHEN (po_number IS NOT NULL  AND order_month = :receive_month AND thai_year = :thai_year) 
+                WHEN (po_number IS NOT NULL  AND stock_month = :receive_month AND thai_year = :thai_year) 
                 THEN (qty * unit_price) 
                 ELSE 0 
             END

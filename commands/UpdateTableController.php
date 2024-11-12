@@ -301,7 +301,7 @@ class UpdateTableController extends Controller
                         INNER JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
                         GROUP BY w.id,t.code;";
         $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
-
+        
         $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'$.unit' as unit,
                                     so.code,
                                     si.po_number,
@@ -312,13 +312,19 @@ class UpdateTableController extends Controller
                                     so.warehouse_id,
                                     si.qty,
                                     si.unit_price,
-                                    so.created_at,
-                                    
-                                    MONTH(so.data_json->>'$.receive_date') AS stock_month,
-                                    (IF(MONTH(so.data_json->>'$.receive_date') > 9, 
-                                        YEAR(so.data_json->>'$.receive_date') + 1, 
-                                        YEAR(so.data_json->>'$.receive_date')
-                                    ) + 543) AS thai_year
+                                    so.data_json->>'$.receive_date' as receive_date,
+           							so.created_at,
+                                    -- (CASE 
+                                    --     WHEN (so.transaction_type = 'IN') 
+                                    --     THEN MONTH(so.data_json->>'$.receive_date')
+                                    --     ELSE MONTH(so.created_at)
+                                    -- END) AS stock_month,
+                                    so.thai_year
+                                    -- MONTH(so.data_json->>'$.receive_date') AS stock_month,
+                                    -- (IF(MONTH(so.data_json->>'$.receive_date') > 9, 
+                                    --     YEAR(so.data_json->>'$.receive_date') + 1, 
+                                    --     YEAR(so.data_json->>'$.receive_date')
+                                    -- ) + 543) AS thai_year
                                     
                                 FROM 
                                     stock_events so
@@ -331,9 +337,14 @@ class UpdateTableController extends Controller
                                     LEFT OUTER JOIN warehouses w 
                                         ON w.id = si.warehouse_id
                                 WHERE i.category_id <> ''
-                                ) SELECT *
+                                ) SELECT *,(CASE 
+                                        WHEN (t.transaction_type = 'IN') 
+                                        THEN MONTH(t.receive_date)
+                                        ELSE MONTH(t.created_at)
+                                    END) AS order_month
                                     
                                 FROM t;"; 
+                                
                                 $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();       
     }
 

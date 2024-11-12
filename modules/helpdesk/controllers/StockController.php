@@ -197,8 +197,9 @@ class StockController extends \yii\web\Controller
                             'req_qty' => $item->getQuantity(),
                         ],
                     ]);
-                    if (!$newItem->save(false)) {
-                        throw new Exception('ไม่สามารถบันทึกข้อมูล Order ITems ได้');
+                    if (!$newItem->save()) {
+                        \Yii::$app->response->format = Response::FORMAT_JSON;
+                        throw new Exception($newItem->getErrors());
                     }
                     // ถ้า save icon เสร็จให้ update stock
                     $stock = Stock::findOne($item->id);

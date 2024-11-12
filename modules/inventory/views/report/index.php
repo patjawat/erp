@@ -15,27 +15,27 @@ use yii\widgets\Pjax
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['timeout' => 88888888]); ?>
-<h1><?php echo $searchModel->warehouse_id;?></h1>
 <?php
 
 //ถ้ามีการเลือกคลัง
 if($searchModel->warehouse_id){
      
-    $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch - x.sum_sub)) as total FROM(SELECT *,
+    $sql = "SELECT x.*,
+    ((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
                 SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
+                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END) 
                 - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id  AND stock_month < :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END)  AS sum_last,
 
                 SUM(
                 CASE 
-                    WHEN (po_number IS NOT NULL AND  warehouse_id = :warehouse_id AND stock_month = :receive_month AND thai_year = :thai_year) 
+                    WHEN (po_number IS NOT NULL AND  warehouse_id = :warehouse_id AND order_month = :receive_month AND thai_year = :thai_year) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END
@@ -43,7 +43,7 @@ if($searchModel->warehouse_id){
             
             SUM(
                 CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success'  AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END
@@ -67,21 +67,21 @@ if($searchModel->warehouse_id){
            
 }else{
     // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
-    $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch - x.sum_sub)) as total FROM(SELECT *,
+    $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
                 SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND stock_month < :receive_month AND thai_year = (:thai_year -1)) 
+                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END) 
                 - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND stock_month < :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND order_month < :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END)  AS sum_last,
 
                 SUM(
                 CASE 
-                    WHEN (po_number IS NOT NULL AND stock_month = :receive_month AND thai_year = :thai_year) 
+                    WHEN (po_number IS NOT NULL AND order_month = :receive_month AND thai_year = :thai_year) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END
@@ -111,160 +111,6 @@ if($searchModel->warehouse_id){
     ])->queryAll();
 }
 
-if($searchModel->warehouse_id){
-    $sqlSummary = "WITH t as (SELECT  
-t.title,
-    i.category_id,
-    so.code,
-    w.warehouse_type,
-    si.transaction_type,
-    si.qty,
-    si.unit_price,
-    
-    -- Extract month from the receive_date in JSON and convert it to integer for stock month
-    MONTH(so.data_json->>'$.receive_date') AS stock_month,
-    
-    -- Calculate Thai year with adjustment based on receive_date month
-    (IF(MONTH(so.data_json->>'$.receive_date') > 9, 
-        YEAR(so.data_json->>'$.receive_date') + 1, 
-        YEAR(so.data_json->>'$.receive_date')
-    ) + 543) AS thai_year,
-    
-    -- Calculate sum for main warehouse 'IN' transactions minus 'OUT' transactions for sub/branch warehouses
-    (
-        SUM(CASE 
-                WHEN (si.transaction_type = 'IN' AND w.warehouse_type = 'MAIN' AND so.order_status = 'success' AND so.warehouse_id = :warehouse_id AND MONTH(so.data_json->>'$.receive_date') < :receive_month AND so.thai_year = (:thai_year -1)) 
-                THEN (si.qty * si.unit_price) 
-                ELSE 0 
-            END) 
-        - SUM(CASE 
-                WHEN (si.transaction_type = 'OUT' AND w.warehouse_type IN ('SUB', 'BRANCH') AND so.order_status = 'success' AND so.warehouse_id = :warehouse_id  AND MONTH(so.data_json->>'$.receive_date') < :receive_month AND so.thai_year = :thai_year) 
-                THEN (si.qty * si.unit_price) 
-                ELSE 0 
-            END)
-    ) AS sum_last,
-    
-    -- Sum of Purchase Orders (PO) where PO number is not NULL
-        SUM(
-        CASE 
-            WHEN (si.po_number IS NOT NULL AND so.warehouse_id = :warehouse_id AND MONTH(so.data_json->>'$.receive_date') = :receive_month AND so.thai_year = :thai_year) 
-            THEN (si.qty * si.unit_price) 
-            ELSE 0 
-        END
-    ) AS sum_po,
-    
-    -- Calculate total for 'IN' transactions in branch warehouse
-    SUM(
-        CASE 
-            WHEN (si.transaction_type = 'OUT' AND w.warehouse_type = 'BRANCH' AND so.order_status = 'success'  AND so.warehouse_id = :warehouse_id AND MONTH(so.created_at) = :receive_month AND so.thai_year = :thai_year) 
-            THEN (si.qty * si.unit_price) 
-            ELSE 0 
-        END
-    ) AS sum_branch,
-    
-    -- Calculate total for 'IN' transactions in sub-warehouse
-    SUM(
-        CASE 
-            WHEN (si.transaction_type = 'OUT' AND w.warehouse_type = 'SUB' AND so.order_status = 'success' AND so.warehouse_id = :warehouse_id AND MONTH(so.created_at) = :receive_month AND so.thai_year = :thai_year) 
-            THEN (si.qty * si.unit_price) 
-            ELSE 0 
-        END
-    ) AS sum_sub
-
-FROM 
-    stock_events so
-    LEFT OUTER JOIN stock_events si 
-        ON si.category_id = so.id AND si.name = 'order_item'
-    LEFT OUTER JOIN categorise i 
-        ON i.code = si.asset_item AND i.name = 'asset_item'
-    LEFT OUTER JOIN categorise t 
-    	ON t.code = i.category_id AND t.name='asset_type'
-    LEFT OUTER JOIN warehouses w 
-        ON w.id = si.warehouse_id
- WHERE i.category_id <> ''
-) SELECT *,((t.sum_last + t.sum_po) - (t.sum_branch - t.sum_sub)) as total FROM t";
-$summary = Yii::$app->db->createCommand($sqlSummary,  [
-    ':warehouse_id' => $searchModel->warehouse_id,
-    ':receive_month' =>$searchModel->receive_month,
-    ':thai_year' => $searchModel->thai_year,
-])->queryOne();
-}else{
-    $sqlSummary = "WITH t as (SELECT  
-    t.title,
-        i.category_id,
-        so.code,
-        w.warehouse_type,
-        si.transaction_type,
-        si.qty,
-        si.unit_price,
-        
-        -- Extract month from the receive_date in JSON and convert it to integer for stock month
-        MONTH(so.data_json->>'$.receive_date') AS stock_month,
-        
-        -- Calculate Thai year with adjustment based on receive_date month
-        (IF(MONTH(so.data_json->>'$.receive_date') > 9, 
-            YEAR(so.data_json->>'$.receive_date') + 1, 
-            YEAR(so.data_json->>'$.receive_date')
-        ) + 543) AS thai_year,
-        
-        -- Calculate sum for main warehouse 'IN' transactions minus 'OUT' transactions for sub/branch warehouses
-        (
-            SUM(CASE 
-                    WHEN (si.transaction_type = 'IN' AND w.warehouse_type = 'MAIN' AND so.order_status = 'success' AND MONTH(so.data_json->>'$.receive_date') < :receive_month AND so.thai_year = (:thai_year -1)) 
-                    THEN (si.qty * si.unit_price) 
-                    ELSE 0 
-                END) 
-            - SUM(CASE 
-                    WHEN (si.transaction_type = 'OUT' AND w.warehouse_type IN ('SUB', 'BRANCH') AND so.order_status = 'success'  AND MONTH(so.data_json->>'$.receive_date') < :receive_month AND so.thai_year = :thai_year) 
-                    THEN (si.qty * si.unit_price) 
-                    ELSE 0 
-                END)
-        ) AS sum_last,
-        
-        -- Sum of Purchase Orders (PO) where PO number is not NULL
-            SUM(
-            CASE 
-                WHEN (si.po_number IS NOT NULL  AND MONTH(so.data_json->>'$.receive_date') = :receive_month AND so.thai_year = :thai_year) 
-                THEN (si.qty * si.unit_price) 
-                ELSE 0 
-            END
-        ) AS sum_po,
-        
-        -- Calculate total for 'IN' transactions in branch warehouse
-        SUM(
-            CASE 
-                WHEN (si.transaction_type = 'OUT' AND w.warehouse_type = 'BRANCH' AND so.order_status = 'success'  AND MONTH(so.created_at) = :receive_month AND so.thai_year = :thai_year) 
-                THEN (si.qty * si.unit_price) 
-                ELSE 0 
-            END
-        ) AS sum_branch,
-        
-        -- Calculate total for 'IN' transactions in sub-warehouse
-        SUM(
-            CASE 
-                WHEN (si.transaction_type = 'OUT' AND w.warehouse_type = 'SUB' AND so.order_status = 'success' AND MONTH(so.created_at) = :receive_month AND so.thai_year = :thai_year) 
-                THEN (si.qty * si.unit_price) 
-                ELSE 0 
-            END
-        ) AS sum_sub
-    
-    FROM 
-        stock_events so
-        LEFT OUTER JOIN stock_events si 
-            ON si.category_id = so.id AND si.name = 'order_item'
-        LEFT OUTER JOIN categorise i 
-            ON i.code = si.asset_item AND i.name = 'asset_item'
-        LEFT OUTER JOIN categorise t 
-            ON t.code = i.category_id AND t.name='asset_type'
-        LEFT OUTER JOIN warehouses w 
-            ON w.id = si.warehouse_id
-     WHERE i.category_id <> ''
-    ) SELECT *,((t.sum_last + t.sum_po) - (t.sum_branch - t.sum_sub)) as total FROM t";
-    $summary = Yii::$app->db->createCommand($sqlSummary,  [
-        ':receive_month' =>$searchModel->receive_month,
-        ':thai_year' => $searchModel->thai_year,
-    ])->queryOne();
-}
 ?>
 
 <div class="card">
@@ -291,9 +137,27 @@ $summary = Yii::$app->db->createCommand($sqlSummary,  [
                     </tr>
                 </thead>
                 <tbody class="align-middle">
-                    <?php $sumTotal = 0?>
+                    <?php ?>
+                    <?php
+                    $sum_last = 0;
+                    $sum_po = 0;
+                    $sum_last_total = 0;
+                    $sum_branch = 0;
+                    $sum_sub = 0;
+                    $sum_out = 0;
+                    $sum_total = 0;
+                    ?>
+                    
                     <?php $num = 1;foreach($querys as $item):?>
-                        <?php $sumTotal +=$item['total']?>
+                        <?php 
+                            $sum_last +=($item['sum_last']);
+                            $sum_po +=$item['sum_po'];
+                            $sum_last_total +=($item['sum_po']+$item['sum_last']);
+                            $sum_sub +=$item['sum_sub'];
+                            $sum_branch +=$item['sum_branch'];
+                            $sum_out +=($item['sum_branch']+$item['sum_sub']);
+                            $sum_total +=$item['total'];
+                            ?>
                     <tr>
                         <td class="text-center"><?=$num++;?></td>
                         <td><?=$item['asset_type']?></td>
@@ -306,17 +170,17 @@ $summary = Yii::$app->db->createCommand($sqlSummary,  [
                         <td class="text-end fw-bolder"><?=number_format($item['total'],2)?></td>
                     </tr>
                     <?php endforeach;?>
+           
                     <tr>
                         <td class="text-center"></td>
                         <td>รวม</td>
-                        <td class="text-end fw-bolder"><?=number_format($summary['sum_last'],2)?></td>
-                        <td class="text-end fw-bolder"><?=number_format($summary['sum_po'],2)?></td>
-                        <td class="text-end fw-bolder"><?=number_format(($summary['sum_po']+$item['sum_last']),2)?></td>
-                        <td class="text-end fw-bolder"><?=number_format($summary['sum_branch'],2)?></td>
-                        <td class="text-end fw-bolder"><?=number_format($summary['sum_sub'],2)?></td>
-                        <td class="text-end fw-bolder"><?php echo number_format(($summary['sum_branch']+$summary['sum_sub']),2)?></td>
-                        <td class="text-end fw-bolder">  
-                        <?=number_format($summary['total'],2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_last,2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_po,2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_last_total,2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_branch,2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_sub,2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_out,2)?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($sum_total,2)?></td>
                     </tr>
                 </tbody>
             </table>
