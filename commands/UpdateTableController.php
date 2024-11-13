@@ -289,8 +289,11 @@ class UpdateTableController extends Controller
     public function actionCreateView()
     {
 
-        $sqlDropView = "DROP VIEW `leave_summary`, `leave_summary_year`, `view_stock`, `view_stock_transaction`;";
-        $dropViewAll = Yii::$app->db->createCommand($sqlDropView)->execute();
+        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `leave_summary`")->execute();
+        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `leave_summary_year`")->execute();
+        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock`")->execute();
+       Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock_transaction`")->execute();
+
         $sqlViewStock = "CREATE VIEW view_stock as SELECT t.code as type_code ,t.title as asset_type_name,i.code as asset_item,i.title as asset_item_name,s.warehouse_id,w.warehouse_type,w.warehouse_name,s.qty,sum(s.qty*s.unit_price) as total_price FROM stock s 
                         INNER JOIN warehouses w ON w.id = s.warehouse_id
                         INNER JOIN categorise i ON i.code = s.asset_item AND i.name = 'asset_item'
