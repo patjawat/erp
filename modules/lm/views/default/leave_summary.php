@@ -1,36 +1,54 @@
-<!-- <div class="card border border-primary border-1 border-top-0 border-end-0 border-start-0"> -->
-<div class="card border border-primary border-1 border-top-0 border-end-0 border-start-0 mb-5">
-    <div class="card-body">
-        <div>
-            <div class="d-flex justify-content-between align-items-center">
+<?php
 
-                <div class="avatar">
-                    <div class="avatar-title rounded bg-primary bg-opacity-25">
-                        <i class="fa-solid fa-rocket mb-0 text-primary"></i>
-                    </div>
+use yii\helpers\Html;
+use app\modules\lm\models\Leave;
+use app\modules\lm\models\LeaveType;
+?>
+<div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6>สรุปประเภทการลา</h6>
                 </div>
+                <div class="table-container">
+                    <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-start">ประเภทการลา</th>
+                            <th class="text-center">ต.ค.</th>
+                            <th class="text-center">พ.ย.</th>
+                            <th class="text-center">ธ.ค.</th>
+                            <th class="text-center">ม.ค.</th>
+                            <th class="text-center">ก.พ.</th>
+                            <th class="text-center">มี.ค.</th>
+                            <th class="text-center">เม.ย.</th>
+                            <th class="text-center">พ.ค.</th>
+                            <th class="text-center">มิ.ย.</th>
+                            <th class="text-center">ก.ค.</th>
+                            <th class="text-center">ส.ค.</th>
+                            <th class="text-center">ก.ย.</th>
+                        <tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($dataProvider->getModels() as $model):?>
+                        <tr>
+                            <td class="text-start"><?php echo $model->title?></td>
+                            <td class="text-center"><?php echo $model->m10?></td>
+                            <td class="text-center"><?php echo $model->m11?></td>
+                            <td class="text-center"><?php echo $model->m12?></td>
+                            <td class="text-center"><?php echo $model->m1?></td>
+                            <td class="text-center"><?php echo $model->m2?></td>
+                            <td class="text-center"><?php echo $model->m3?></td>
+                            <td class="text-center"><?php echo $model->m4?></td>
+                            <td class="text-center"><?php echo $model->m5?></td>
+                            <td class="text-center"><?php echo $model->m6?></td>
+                            <td class="text-center"><?php echo $model->m7?></td>
+                            <td class="text-center"><?php echo $model->m8?></td>
+                            <td class="text-center"><?php echo $model->m9?></td>
 
-                <h2 class="mb-0 font-size-15">0</h2>
-
-                
-            </div>
-
-            <div>
-
-            <div>
-                                <h5 class="mt-4 pt-1 mb-0 font-size-22"><?=$title?></h5>
-                                <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted mb-0 text-truncate">รวมจำนวน<?=$title?>ทั้งหมด</p>
-                                    </div>
-                                    <div class="flex-shrink-0" style="position: relative;">
-
-                                    </div>
-                                </div>
-                            </div>
-
-                
+                        </tr>
+                        <?php endforeach?>
+                    </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-</div>

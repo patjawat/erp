@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see http://www.yiiframework.com/
  *
@@ -43,15 +44,15 @@ class UpdateTableController extends Controller
             ])->execute();
         }
         echo "update Route Success\n";
-        
+
         // update route
         foreach ($this->ChildList() as $childItem) {
             \Yii::$app->db->createCommand($sqlUpdateChild, [
                 ':parent' => $childItem['parent'],
                 ':child' => $childItem['child'],
-                ])->execute();
-            }
-            echo "update Child Success\n";
+            ])->execute();
+        }
+        echo "update Child Success\n";
 
         // }
     }
@@ -71,7 +72,7 @@ class UpdateTableController extends Controller
             ['name' => 'technician_ma', 'type' => 1],
             ['name' => 'user', 'type' => 1],
             ['name' => 'warehouse', 'type' => 1],
-            ['name' => 'branch', 'type' => 1,'description' => 'สาขา'],
+            ['name' => 'branch', 'type' => 1, 'description' => 'สาขา'],
             ['name' => '/*', 'type' => 2],
             ['name' => '/am/asset/depreciation', 'type' => 2],
             ['name' => '/am/asset/index', 'type' => 2],
@@ -87,7 +88,6 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/create', 'type' => 2],
             ['name' => '/helpdesk/repair/timeline', 'type' => 2],
             ['name' => '/helpdesk/stock/*', 'type' => 2],
-            
             ['name' => '/helpdesk/repair/summary', 'type' => 2],
             ['name' => '/helpdesk/repair/user-request-order', 'type' => 2],
             ['name' => '/helpdesk/repair/user-job', 'type' => 2],
@@ -100,7 +100,6 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/update', 'type' => 2],
             ['name' => '/helpdesk/repair/rating', 'type' => 2],
             ['name' => '/helpdesk/repair/*', 'type' => 2],
-            
             ['name' => '/hr/default/index', 'type' => 2],
             ['name' => '/hr/employees/view', 'type' => 2],
             ['name' => '/inventory/default/index', 'type' => 2],
@@ -171,7 +170,6 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/timeline', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/view', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/rating', 'parent' => 'user'],
-
             ['child' => '/helpdesk/repair/summary', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'computer'],
@@ -184,7 +182,6 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/update', 'parent' => 'computer'],
             ['child' => '/helpdesk/stock/*', 'parent' => 'computer'],
             ['child' => '/helpdesk/repair/*', 'parent' => 'computer'],
-            
             ['child' => '/helpdesk/repair/summary', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'technician'],
@@ -197,7 +194,6 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/update', 'parent' => 'technician'],
             ['child' => '/helpdesk/stock/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair/*', 'parent' => 'technician'],
-            
             ['child' => '/helpdesk/repair/summary', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-request-order', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/user-job', 'parent' => 'medical'],
@@ -210,7 +206,6 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/update', 'parent' => 'medical'],
             ['child' => '/helpdesk/stock/*', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/*', 'parent' => 'medical'],
-            
             ['child' => '/hr/default/index', 'parent' => 'user'],
             ['child' => '/hr/employees/view', 'parent' => 'user'],
             ['child' => '/inventory/default/index', 'parent' => 'user'],
@@ -223,13 +218,11 @@ class UpdateTableController extends Controller
             ['child' => '/inventory/warehouse/index', 'parent' => 'user'],
             ['child' => '/inventory/warehouse/list-order-request', 'parent' => 'user'],
             ['child' => '/inventory/warehouse/view', 'parent' => 'user'],
-
             ['child' => '/inventory/stock/warehouse', 'parent' => 'branch'],
             ['child' => '/inventory/warehouse/index', 'parent' => 'branch'],
             ['child' => '/inventory/warehouse/list-order-request', 'parent' => 'branch'],
             ['child' => '/inventory/warehouse/view', 'parent' => 'branch'],
             ['child' => '/inventory/default/index', 'parent' => 'branch'],
-            
             ['child' => '/me/*', 'parent' => 'user'],
             ['child' => '/ms-word/*', 'parent' => 'user'],
             ['child' => '/profile/*', 'parent' => 'user'],
@@ -274,7 +267,7 @@ class UpdateTableController extends Controller
     public function actionBudgetGroup()
     {
         $check = Yii::$app->db->createCommand("select * from categorise where name ='budget_group'")->queryAll();
-        if(count($check) == 0){
+        if (count($check) == 0) {
             $sql = "INSERT INTO `categorise` (`code`, `name`, `title`, `active`) VALUES
                 ('BG1', 'budget_group', 'งบบุคลากร', 1),
                 ('BG2', 'budget_group', 'งบดำเนินงาน (ค่าตอนแทน)', 1),
@@ -288,7 +281,7 @@ class UpdateTableController extends Controller
                 ('BG10', 'budget_group', 'งบค่าเสื่อม', 1);";
             Yii::$app->db->createCommand($sql)->execute();
             echo 'สำเร็จ';
-        }else{
+        } else {
             echo 'มีข้อมูลแล้ว';
         }
     }
@@ -301,8 +294,8 @@ class UpdateTableController extends Controller
                         INNER JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
                         GROUP BY w.id,t.code;";
         $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
-        
-        $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'$.unit' as unit,
+
+        $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
                                     so.code,
                                     si.po_number,
                                     w.warehouse_type,
@@ -312,19 +305,8 @@ class UpdateTableController extends Controller
                                     so.warehouse_id,
                                     si.qty,
                                     si.unit_price,
-                                    so.data_json->>'$.receive_date' as receive_date,
-           							so.created_at,
-                                    -- (CASE 
-                                    --     WHEN (so.transaction_type = 'IN') 
-                                    --     THEN MONTH(so.data_json->>'$.receive_date')
-                                    --     ELSE MONTH(so.created_at)
-                                    -- END) AS stock_month,
+                                    so.data_json->>'$.receive_date' as receive_date,so.created_at,
                                     so.thai_year
-                                    -- MONTH(so.data_json->>'$.receive_date') AS stock_month,
-                                    -- (IF(MONTH(so.data_json->>'$.receive_date') > 9, 
-                                    --     YEAR(so.data_json->>'$.receive_date') + 1, 
-                                    --     YEAR(so.data_json->>'$.receive_date')
-                                    -- ) + 543) AS thai_year
                                     
                                 FROM 
                                     stock_events so
@@ -343,9 +325,36 @@ class UpdateTableController extends Controller
                                         ELSE MONTH(t.created_at)
                                     END) AS order_month
                                     
-                                FROM t;"; 
-                                
-                                $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();       
-    }
+                                FROM t;";
+        $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();
 
+       $createLeaveSummary = Yii::$app->db->createCommand("CREATE VIEW leave_summary AS
+                            SELECT 
+                                lt.code, 
+                                lt.title, 
+                                lt.active,
+                                l.thai_year,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 1 THEN 1 END) AS m1,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 2 THEN 1 END) AS m2,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 3 THEN 1 END) AS m3,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 4 THEN 1 END) AS m4,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 5 THEN 1 END) AS m5,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 6 THEN 1 END) AS m6,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 7 THEN 1 END) AS m7,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 8 THEN 1 END) AS m8,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 9 THEN 1 END) AS m9,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 10 THEN 1 END) AS m10,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 11 THEN 1 END) AS m11,
+                                COUNT(CASE WHEN MONTH(l.date_start) = 12 THEN 1 END) AS m12
+                                FROM categorise lt
+                                LEFT OUTER JOIN `leave` l 
+                                    ON l.leave_type_id = lt.code 
+                                WHERE lt.name = 'leave_type'
+                                GROUP BY lt.code, l.thai_year")->execute();
+
+    $createLeaveSummaryYear = Yii::$app->db->createCommand("CREATE VIEW leave_summary_year AS SELECT l.thai_year,COUNT(l.id) as total FROM categorise lt
+                            LEFT OUTER JOIN `leave` l ON l.leave_type_id = lt.code 
+                            WHERE lt.name = 'leave_type' AND l.thai_year IS NOT NULL
+                            GROUP BY l.thai_year;")->execute();
+    }
 }

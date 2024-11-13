@@ -10,25 +10,29 @@
 <?php $this->endBlock(); ?>
 
 <div class="row">
-    <div class="col-8">
-        <div class="card" style="height: 422px;">
-            <div class="card-body">
-                <h6>การลาของพนักงานในแต่ละเดือน</h6>
-                <?=$this->render('leave_chart')?>
-            </div>
-        </div>
+    <div class="col-6">
+    <?php echo $this->render('leave_summary_year', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])?>
+               
     </div>
-    <div class="col-4">
-        <?=$this->render('demo1')?>
-        
+    <div class="col-6">
+<?php echo $this->render('leave_summary_month', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])?>
     </div>
-    
-    
-</div>
+    <div class="col-12">
+                 <?php echo $this->render('leave_summary', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])?>
+    </div>
 </div>
 
 <div class="row">
     <div class="col-12">
-        <?=$this->render('leave_list')?>
+        <?php // $this->render('leave_summary')?>
     </div>
 </div>

@@ -1,11 +1,11 @@
 <?php
 
-use app\modules\lm\models\Leave;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\lm\models\Leave;
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -16,7 +16,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-folder-check"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
 
 <div class="card text-start">
     <div class="card-body">
