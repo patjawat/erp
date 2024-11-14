@@ -284,23 +284,29 @@ class UpdateTableController extends Controller
         } else {
             echo 'มีข้อมูลแล้ว';
         }
+        $this->createView();
     }
 
     public function actionCreateView()
     {
 
         Yii::$app->db->createCommand("DROP VIEW IF EXISTS `leave_summary`")->execute();
+        echo "Drop leave_summary\n";
         Yii::$app->db->createCommand("DROP VIEW IF EXISTS `leave_summary_year`")->execute();
+        echo "Drop leave_summary_year\n";
         Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock`")->execute();
-       Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock_transaction`")->execute();
-
+        echo "Drop view_stock\n";
+        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock_transaction`")->execute();
+        echo "Drop view_stock_transaction\n";
+        
         $sqlViewStock = "CREATE VIEW view_stock as SELECT t.code as type_code ,t.title as asset_type_name,i.code as asset_item,i.title as asset_item_name,s.warehouse_id,w.warehouse_type,w.warehouse_name,s.qty,sum(s.qty*s.unit_price) as total_price FROM stock s 
                         INNER JOIN warehouses w ON w.id = s.warehouse_id
                         INNER JOIN categorise i ON i.code = s.asset_item AND i.name = 'asset_item'
                         INNER JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
                         GROUP BY w.id,t.code;";
         $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
-
+        echo "Create view_stock\n";
+        
         $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
                                     so.code,
                                     si.po_number,
@@ -333,8 +339,9 @@ class UpdateTableController extends Controller
                                     
                                 FROM t;";
         $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();
-
-       $createLeaveSummary = Yii::$app->db->createCommand("CREATE VIEW leave_summary AS
+        echo "Create view_stock_transaction\n";
+        
+        $createLeaveSummary = Yii::$app->db->createCommand("CREATE VIEW leave_summary AS
                             SELECT 
                                 lt.code, 
                                 lt.title, 
@@ -358,9 +365,10 @@ class UpdateTableController extends Controller
                                 WHERE lt.name = 'leave_type'
                                 GROUP BY lt.code, l.thai_year")->execute();
 
-    $createLeaveSummaryYear = Yii::$app->db->createCommand("CREATE VIEW leave_summary_year AS SELECT l.thai_year,COUNT(l.id) as total FROM categorise lt
+$createLeaveSummaryYear = Yii::$app->db->createCommand("CREATE VIEW leave_summary_year AS SELECT l.thai_year,COUNT(l.id) as total FROM categorise lt
                             LEFT OUTER JOIN `leave` l ON l.leave_type_id = lt.code 
                             WHERE lt.name = 'leave_type' AND l.thai_year IS NOT NULL
                             GROUP BY l.thai_year;")->execute();
+    echo "Create leave_summary_year\n";
     }
 }
