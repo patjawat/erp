@@ -701,21 +701,21 @@ class ReportController extends \yii\web\Controller
                 -- Calculate total for 'IN' transactions in sub-warehouse
                 SUM(
                     CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND  warehouse_id = :warehouse_id AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                         THEN (qty) 
                         ELSE 0 
                     END
                 ) AS qty_sub,
                           SUM(
                     CASE 
-                        WHEN (transaction_type = 'OUT' AND from_warehouse_type IN ('SUB','BRANCH')  AND  warehouse_id = :warehouse_id AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB','BRANCH') AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                         THEN (unit_price) 
                         ELSE 0 
                     END
                 ) AS unit_price_sub,
                           SUM(
                     CASE 
-                        WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'SUB' AND  warehouse_id = :warehouse_id AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END

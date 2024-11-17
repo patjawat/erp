@@ -43,7 +43,7 @@ if($searchModel->warehouse_id){
             
             SUM(
                 CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                    WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'BRANCH' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END
@@ -51,7 +51,7 @@ if($searchModel->warehouse_id){
             
             SUM(
                 CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
+                    WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'SUB' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
                     THEN (qty * unit_price) 
                     ELSE 0 
                 END
