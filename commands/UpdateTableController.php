@@ -310,6 +310,8 @@ class UpdateTableController extends Controller
         $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
                                     so.code,
                                     si.po_number,
+                                    wf.warehouse_type as from_warehouse_type,
+                                    wf.warehouse_name  as from_warehouse_name,
                                     w.warehouse_type,
                                     w.warehouse_name,
                                     si.transaction_type,
@@ -330,6 +332,8 @@ class UpdateTableController extends Controller
                                         ON t.code = i.category_id AND t.name='asset_type'
                                     LEFT OUTER JOIN warehouses w 
                                         ON w.id = si.warehouse_id
+                                    LEFT OUTER JOIN warehouses wf 
+                                        ON wf.id = si.from_warehouse_id
                                 WHERE i.category_id <> ''
                                 ) SELECT *,(CASE 
                                         WHEN (t.transaction_type = 'IN') 

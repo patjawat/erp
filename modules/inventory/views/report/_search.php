@@ -35,8 +35,8 @@ $months = [
 
 <div class="d-flex gap-3">
 <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-            // 'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-            'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
+            'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
+            // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
             'options' => ['placeholder' => 'เลือกคลัง'],
             'pluginEvents' => [
                 "select2:unselect" => "function() { 

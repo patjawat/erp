@@ -25,7 +25,7 @@ $items = [
         'title' => 'เบิกวัสดุ',
         'note' => 'เบิกวัสดุสำหรับในหน่วยงาน',
         'icon' => ' <i class="fa-solid fa-cart-plus mb-3 text-primary fs-1"></i>',
-        'url' =>  ['/me/store']
+        'url' =>  ['/inventory']
     ],
 ];
 ?>

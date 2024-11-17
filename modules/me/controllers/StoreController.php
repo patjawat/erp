@@ -2,16 +2,16 @@
 
 namespace app\modules\me\controllers;
 
-use app\modules\inventory\models\Product;
 use Yii;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\db\Expression;
-use app\modules\inventory\models\StockOut;
-use app\modules\inventory\models\StockEventSearch;
+use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
+use app\modules\inventory\models\Product;
+use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
+use app\modules\inventory\models\StockEventSearch;
 
 class StoreController extends \yii\web\Controller
 {
@@ -39,6 +39,7 @@ class StoreController extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->select(['stock.*',new Expression('SUM(stock.qty) AS total'),]);
         $dataProvider->query->leftJoin('categorise at', 'at.code=stock.asset_item');
+        
         if(isset($searchModel->warehouse_id)){
             $dataProvider->query->where(['warehouse_id' => $searchModel->warehouse_id]);
         }else{
@@ -52,7 +53,7 @@ class StoreController extends \yii\web\Controller
         // if(isset($selectWarehouse) && $selectWarehouse['warehouse_type'] == 'SUB'){
             //     $dataProvider->query->where(['warehouse_id' => $selectWarehouse['category_id']]);
             // }
-            $dataProvider->query->andWhere(['>', 'stock.qty', 0]);
+        $dataProvider->query->andWhere(['>', 'stock.qty', 0]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['LIKE', 'at.title', $searchModel->q],
