@@ -14,6 +14,8 @@ services:
       - ./fileupload:/app/modules/filemanager/fileupload
     links:
       - mysqlDB:db
+    command: >
+      sh -c "php yii migrate --interactive=0 && php yii update-table/index && php yii udpate-table/create-view"
     env_file:
       - ./.env
     depends_on:
