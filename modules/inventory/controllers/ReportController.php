@@ -543,12 +543,34 @@ class ReportController extends \yii\web\Controller
      
             $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
                 SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END) 
                 - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END)  AS sum_last,
@@ -590,12 +612,34 @@ class ReportController extends \yii\web\Controller
         // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
         $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
                 SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END) 
                 - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND order_month < :receive_month AND thai_year = :thai_year) 
+                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                         THEN (qty * unit_price) 
                         ELSE 0 
                     END)  AS sum_last,
@@ -640,24 +684,68 @@ class ReportController extends \yii\web\Controller
           if(isset($params['warehouse_id']) && $params['warehouse_id'] !==''){
         $sql = "SELECT x.* FROM(SELECT *,
                     SUM(CASE 
-                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                             THEN (qty) 
                             ELSE 0 
                         END) 
                     - SUM(CASE 
-                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                             THEN (qty) 
                             ELSE 0 
                         END)  AS qty_last,
 
                          (
                     SUM(CASE 
-                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                             THEN (unit_price) 
                             ELSE 0 
                         END) 
                     - SUM(CASE 
-                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                             THEN (unit_price) 
                             ELSE 0 
                         END)
@@ -665,12 +753,34 @@ class ReportController extends \yii\web\Controller
 
                          (
                     SUM(CASE 
-                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
+                            WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                             THEN (qty * unit_price) 
                             ELSE 0 
                         END) 
                     - SUM(CASE 
-                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND order_month < :receive_month AND thai_year = :thai_year) 
+                            WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND warehouse_id = :warehouse_id  AND receive_date <= LAST_DAY(
+        CONCAT(
+            (CASE 
+                WHEN order_month > 9 THEN thai_year - 1 
+                ELSE thai_year 
+            END - 543), 
+            '-', 
+            LPAD(order_month, 2, '0'), 
+            '-01'
+        )
+    )
+    ) 
                             THEN (qty * unit_price) 
                             ELSE 0 
                         END)

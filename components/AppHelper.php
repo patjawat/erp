@@ -89,6 +89,18 @@ class AppHelper extends Component
         }
     }
     
+        //แปลงปีงบประมาณไทยเป็น แบบ ค.ศ. ปกติ
+        public static function ThaiToGregorian($date = null)
+        {
+                return Yii::$app->db
+                ->createCommand('SELECT IF(MONTH(:date)>9,YEAR(:date)-1,YEAR(:date)) - 543 AS year_bud')
+                ->bindValue(':date',$date)
+                ->queryScalar();
+                // ->getRawSql();
+                
+        }
+        
+    
 
     // สร้าง Directory
     public static function CreateDir($folderName)
