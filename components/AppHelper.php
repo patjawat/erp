@@ -92,10 +92,15 @@ class AppHelper extends Component
         //แปลงปีงบประมาณไทยเป็น แบบ ค.ศ. ปกติ
         public static function ThaiToGregorian($date = null)
         {
+
                 return Yii::$app->db
-                ->createCommand('SELECT IF(MONTH(:date)>9,YEAR(:date)-1,YEAR(:date)) - 543 AS year_bud')
+                ->createCommand("SELECT LAST_DAY(CONCAT((IF(MONTH(:date)>9,YEAR(:date)-1,YEAR(:date)) - 543),'-',DATE_FORMAT(:date, '%m-%d'))) AS year_bud")
                 ->bindValue(':date',$date)
                 ->queryScalar();
+                
+
+                
+                
                 // ->getRawSql();
                 
         }

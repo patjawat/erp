@@ -1,38 +1,30 @@
-SELECT x.*,
-    ((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
-                SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = 7 AND order_month < 10 AND thai_year = (:thai_year -1)) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END) 
-                - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = 7  AND order_month < 10 AND thai_year = :thai_year) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END)  AS sum_last,
+SELECT x.category_id,x.warehouse_id,x.asset_type, 
+    SUM(x.qty*x.unit_price) as total,
 
-                SUM(
-                CASE 
-                    WHEN (po_number IS NOT NULL AND  warehouse_id = 7 AND order_month = 10 AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_po,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'BRANCH' AND order_status = 'success' AND  warehouse_id = 7 AND MONTH(created_at) = 10 AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_branch,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'SUB' AND order_status = 'success' AND  warehouse_id = 7 AND MONTH(created_at) = 10 AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_sub
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.asset_item= x.asset_item AND x1.order_status = 'success'
+    AND transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB('2024-11-01', INTERVAL 1 MONTH)) 
+    )  as last_stock_in,
 
-        FROM view_stock_transaction GROUP BY category_id) as x
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.asset_item= x.asset_item AND x1.order_status = 'success'
+    AND transaction_type = 'IN' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB('2024-11-01', INTERVAL 1 MONTH)) 
+    )  as last_stock_out,
+
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.asset_item= x.asset_item AND x1.order_status = 'success'
+    AND x1.transaction_type = 'IN' AND warehouse_type = 'MAIN' AND receive_date BETWEEN '2024-11-01' AND '2024-11-30'
+    )  as sum_month,
+
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.asset_item= x.asset_item AND order_status = 'success'
+    AND from_warehouse_type = 'BRANCH' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN '2024-11-01' AND '2024-11-30'
+    )  as sum_branch,
+
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.asset_item= x.asset_item AND order_status = 'success'
+    AND from_warehouse_type = 'SUB' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN '2024-11-01' AND '2024-11-30'
+    )  as sum_sub
+
+    FROM `view_stock_transaction` x
+    GROUP BY x.asset_item

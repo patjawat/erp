@@ -3,6 +3,7 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
+use DateTime;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
@@ -26,16 +27,26 @@ class ReportController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        $searchModel = new StockEventSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'receive_month' => date('m')
-        ]);
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+
+        $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+
+        if ($searchModel->thai_year) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 542) . '-09-30');
+        } else {
+            $searchModel->date_start = AppHelper::convertToThai(date('Y-m') . '-01');
+            $searchModel->date_end = AppHelper::convertToThai($lastDay);
+        }
+
         $dataProvider->query->groupBy('type_code');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'dateStart' => AppHelper::convertToGregorian($searchModel->date_start),
+            'dateEnd' => AppHelper::convertToGregorian($searchModel->date_end)
         ]);
     }
 
@@ -349,22 +360,22 @@ class ReportController extends \yii\web\Controller
         // เพิ่มแผ่นงานที่สอง
         $sheet2 = $spreadsheet->createSheet();  // สร้างแผ่นงานใหม่
         $sheet2->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
-        $sheet2->setCellValue('A1', 'วดป.ที่รายงาน');  
-        $sheet2->setCellValue('A2', 'ที่');  
-        $sheet2->setCellValue('B1', AppHelper::convertToThai(date('Y-m-d')));  
-        $sheet2->setCellValue('B2', 'คลัง');  
-        $sheet2->setCellValue('C2', 'รหัส');  
-        $sheet2->setCellValue('D2', 'รายการสินค้า');  
-        $sheet2->setCellValue('E2', 'ประเภท');  
-        $sheet2->setCellValue('F2', 'หน่วย');  
-        $sheet2->setCellValue('G2', 'จำนวนคงเหลือ');  
-        $sheet2->setCellValue('H2', 'มูลค่าคงเหลือ');  
-        $sheet2->setCellValue('I2', 'จำนวนรับใหม่');  
-        $sheet2->setCellValue('J2', 'มูลค่ารับใหม่');  
-        $sheet2->setCellValue('K2', 'จำนวนจ่ายใหม่');  
-        $sheet2->setCellValue('L2', 'มูลค่าจ่ายใหม่');  
-        $sheet2->setCellValue('M2', 'จำนวนคงเหลือ');  
-        $sheet2->setCellValue('N2', 'มูลค่าคงเหลือ');  
+        $sheet2->setCellValue('A1', 'วดป.ที่รายงาน');
+        $sheet2->setCellValue('A2', 'ที่');
+        $sheet2->setCellValue('B1', AppHelper::convertToThai(date('Y-m-d')));
+        $sheet2->setCellValue('B2', 'คลัง');
+        $sheet2->setCellValue('C2', 'รหัส');
+        $sheet2->setCellValue('D2', 'รายการสินค้า');
+        $sheet2->setCellValue('E2', 'ประเภท');
+        $sheet2->setCellValue('F2', 'หน่วย');
+        $sheet2->setCellValue('G2', 'จำนวนคงเหลือ');
+        $sheet2->setCellValue('H2', 'มูลค่าคงเหลือ');
+        $sheet2->setCellValue('I2', 'จำนวนรับใหม่');
+        $sheet2->setCellValue('J2', 'มูลค่ารับใหม่');
+        $sheet2->setCellValue('K2', 'จำนวนจ่ายใหม่');
+        $sheet2->setCellValue('L2', 'มูลค่าจ่ายใหม่');
+        $sheet2->setCellValue('M2', 'จำนวนคงเหลือ');
+        $sheet2->setCellValue('N2', 'มูลค่าคงเหลือ');
 
         $sheet2->getColumnDimension('A')->setWidth(12);
         $sheet2->getColumnDimension('B')->setWidth(20);
@@ -381,14 +392,13 @@ class ReportController extends \yii\web\Controller
         $sheet2->getColumnDimension('M')->setWidth(13);
         $sheet2->getColumnDimension('N')->setWidth(13);
 
-        
         $StartRowSheet2 = 3;
         $dataItems = $this->findModelItem($params);
         foreach ($dataItems as $key => $value) {
             $numRow = $StartRowSheet2++;
             // $a[] = ['B' => 'B'.$StartRow++];
             $sheet2->setCellValue('A' . $numRow, $numRow);
-            
+
             $sheet2->setCellValue('B' . $numRow, $value['warehouse_name']);
 
             $sheet2->setCellValue('C' . $numRow, $value['asset_item']);
@@ -405,7 +415,6 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('L' . $numRow, ($value['sum_sub']));
             $sheet2->setCellValue('M' . $numRow, (($value['qty_last'] - $value['qty_sub'])));
             $sheet2->setCellValue('N' . $numRow, ($value['sum_last'] + ($value['sum_po'] - $value['sum_sub'])));
-            
         }
 
         // set font style ตั้งค่า font
@@ -418,63 +427,56 @@ class ReportController extends \yii\web\Controller
         $sheet2->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
         $sheet2->getStyle('A1:N2')->getFont()->setBold(true)->setItalic(false);
 
-
-        $sheet2->setCellValue('H1','=SUM(H3:H' .(count($dataItems)+2). ')');
+        $sheet2->setCellValue('H1', '=SUM(H3:H' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('J1','=SUM(J3:J' .(count($dataItems)+2). ')');
+        $sheet2->setCellValue('J1', '=SUM(J3:J' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('L1','=SUM(L3:L' .(count($dataItems)+2). ')');
+        $sheet2->setCellValue('L1', '=SUM(L3:L' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('N1','=SUM(N3:N' .(count($dataItems)+2). ')');
+        $sheet2->setCellValue('N1', '=SUM(N3:N' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('N1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
 
-        
-        $rowsheet2B = 'B3:B'.(count($dataItems)+2);
+        $rowsheet2B = 'B3:B' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2B)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         $sheet2->getStyle($rowsheet2B)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
 
-        $rowsheet2D = 'D3:D'.(count($dataItems)+2);
+        $rowsheet2D = 'D3:D' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2D)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         $sheet2->getStyle($rowsheet2D)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        
-        $rowsheet2E = 'E3:E'.(count($dataItems)+2);
+
+        $rowsheet2E = 'E3:E' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2E)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         $sheet2->getStyle($rowsheet2E)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        
-        
-        $rowsheet2G = 'G3:G'.(count($dataItems)+2);
+
+        $rowsheet2G = 'G3:G' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2G)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet2->getStyle($rowsheet2G)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2G)->getFont()->setBold(true)->setItalic(false);
 
-
-        
-        $rowsheet2H = 'H3:H'.(count($dataItems)+2);
+        $rowsheet2H = 'H3:H' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2H)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet2->getStyle($rowsheet2H)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2H)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->getStyle($rowsheet2H)->getFont()->setBold(true)->setItalic(false);
-        
-        $rowsheet2I = 'I3:I'.(count($dataItems)+2);
+
+        $rowsheet2I = 'I3:I' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2I)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet2->getStyle($rowsheet2I)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2I)->getFont()->setBold(true)->setItalic(false);
 
-
-        
-        $rowsheet2J = 'J3:J'.(count($dataItems)+2);
+        $rowsheet2J = 'J3:J' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2J)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet2->getStyle($rowsheet2J)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -482,39 +484,37 @@ class ReportController extends \yii\web\Controller
         $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
         $sheet2->getStyle($rowsheet2J)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
-        
-        $rowsheet2K = 'K3:K'.count($dataItems);
+
+        $rowsheet2K = 'K3:K' . count($dataItems);
         $sheet2->getStyle($rowsheet2K)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet2->getStyle($rowsheet2K)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2K)->getFont()->setBold(true)->setItalic(false);
 
-
-        $rowsheet2L = 'L3:L'.(count($dataItems)+2);
+        $rowsheet2L = 'L3:L' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2L)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet2->getStyle($rowsheet2L)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2L)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->getStyle($rowsheet2L)->getFont()->setBold(true)->setItalic(false);
-        
-        $rowsheet2M = 'M3:M'.(count($dataItems)+2);
+
+        $rowsheet2M = 'M3:M' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2M)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet2->getStyle($rowsheet2M)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2M)->getFont()->setBold(true)->setItalic(false);
 
-        $rowsheet2N = 'N3:N'.(count($dataItems)+2);
+        $rowsheet2N = 'N3:N' . (count($dataItems) + 2);
         $sheet2->getStyle($rowsheet2N)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet2->getStyle($rowsheet2N)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2N)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->getStyle($rowsheet2N)->getFont()->setBold(true)->setItalic(false);
-        
-       
+
         // $this->Sheet2($spreadsheet,$params);
 
         $writer = new Xlsx($spreadsheet);
@@ -528,19 +528,16 @@ class ReportController extends \yii\web\Controller
         if (file_exists($filePath)) {
             return Yii::$app->response->sendFile($filePath);
         } else {
-            throw new \yii\web\NotFoundHttpException("The file does not exist.");
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }
-        
-
     }
 
-
-     protected function findModel($params)
-        {
-        //ถ้ามีการเลือกคลัง
-        if(isset($params['warehouse_id']) && $params['warehouse_id'] !==''){
+    protected function findModel($params)
+    {
+        // ถ้ามีการเลือกคลัง
+        if (isset($params['warehouse_id']) && $params['warehouse_id'] !== '') {
             // return $params;
-     
+
             $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
                 SUM(CASE 
                         WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
@@ -601,16 +598,15 @@ class ReportController extends \yii\web\Controller
 
         FROM view_stock_transaction GROUP BY category_id) as x";
 
-        return Yii::$app->db->createCommand($sql, [
-            ':warehouse_id' => $params['warehouse_id'],
-            ':receive_month' => $params['receive_month'],
-            ':thai_year' => $params['thai_year'],
-        ])->queryAll();
-               
-    }else{
-        // return 'All';
-        // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
-        $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
+            return Yii::$app->db->createCommand($sql, [
+                ':warehouse_id' => $params['warehouse_id'],
+                ':receive_month' => $params['receive_month'],
+                ':thai_year' => $params['thai_year'],
+            ])->queryAll();
+        } else {
+            // return 'All';
+            // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
+            $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
                 SUM(CASE 
                         WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(
         CONCAT(
@@ -670,19 +666,18 @@ class ReportController extends \yii\web\Controller
 
         FROM view_stock_transaction GROUP BY category_id) as x";
 
-        return Yii::$app->db->createCommand($sql, [
-            ':receive_month' => $params['receive_month'],
-            ':thai_year' => $params['thai_year'],
-        ])->queryAll();
-    }
+            return Yii::$app->db->createCommand($sql, [
+                ':receive_month' => $params['receive_month'],
+                ':thai_year' => $params['thai_year'],
+            ])->queryAll();
+        }
     }
 
     protected function findModelItem($params)
     {
- 
-          //ถ้ามีการเลือกคลัง
-          if(isset($params['warehouse_id']) && $params['warehouse_id'] !==''){
-        $sql = "SELECT x.* FROM(SELECT *,
+        // ถ้ามีการเลือกคลัง
+        if (isset($params['warehouse_id']) && $params['warehouse_id'] !== '') {
+            $sql = "SELECT x.* FROM(SELECT *,
                     SUM(CASE 
                             WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
         CONCAT(
@@ -833,12 +828,12 @@ class ReportController extends \yii\web\Controller
 
             FROM view_stock_transaction GROUP BY asset_item) as x";
 
-        return Yii::$app->db->createCommand($sql, [
-            ':warehouse_id' => $params['warehouse_id'],
-            ':receive_month' => $params['receive_month'],
-            ':thai_year' => $params['thai_year'],
-        ])->queryAll();
-          }else{
+            return Yii::$app->db->createCommand($sql, [
+                ':warehouse_id' => $params['warehouse_id'],
+                ':receive_month' => $params['receive_month'],
+                ':thai_year' => $params['thai_year'],
+            ])->queryAll();
+        } else {
             $sql = "SELECT x.* FROM(SELECT *,
             SUM(CASE 
                     WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success'  AND order_month < :receive_month AND thai_year = (:thai_year -1)) 
@@ -924,11 +919,10 @@ class ReportController extends \yii\web\Controller
 
     FROM view_stock_transaction GROUP BY asset_item) as x";
 
-return Yii::$app->db->createCommand($sql, [
-    ':receive_month' => $params['receive_month'],
-    ':thai_year' => $params['thai_year'],
-])->queryAll();
-          }
-
+            return Yii::$app->db->createCommand($sql, [
+                ':receive_month' => $params['receive_month'],
+                ':thai_year' => $params['thai_year'],
+            ])->queryAll();
+        }
     }
 }

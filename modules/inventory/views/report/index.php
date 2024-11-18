@@ -2,7 +2,8 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax
+use yii\widgets\Pjax;
+use app\components\AppHelper;
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
@@ -17,142 +18,94 @@ use yii\widgets\Pjax
 <?php Pjax::begin(['timeout' => 88888888]); ?>
 <?php
 
+    $date = $searchModel->thai_year.'-'.$searchModel->receive_month.'-01';
+    // $receive_date = AppHelper::ThaiToGregorian($date);
+    
+    // $dateStart =  AppHelper::convertToGregorian($searchModel->date_start);
+    // $dateEnd =  AppHelper::convertToGregorian($searchModel->date_end);
+
 // ถ้ามีการเลือกคลัง
-if ($searchModel->warehouse_id) {
-    $sql = "SELECT x.*,
-    ((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
-                SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
-        CONCAT(
-            (CASE 
-                WHEN order_month > 9 THEN thai_year - 1 
-                ELSE thai_year 
-            END - 543), 
-            '-', 
-            LPAD(order_month, 2, '0'), 
-            '-01'
-        )
-    )
-    ) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END) 
-                - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND  warehouse_id = :warehouse_id AND receive_date <= LAST_DAY(
-            CONCAT(
-                (CASE 
-                    WHEN order_month > 9 THEN thai_year - 1 
-                    ELSE thai_year 
-                END - 543), 
-                '-', 
-                LPAD(order_month, 2, '0'), 
-                '-01'
-            )
-        )
-    ) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END)  AS sum_last,
+// i
 
-                SUM(
-                CASE 
-                    WHEN (po_number IS NOT NULL AND  warehouse_id = :warehouse_id AND order_month = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_po,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'BRANCH' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_branch,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND from_warehouse_type = 'SUB' AND order_status = 'success' AND  warehouse_id = :warehouse_id AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_sub
+if($searchModel->warehouse_id && $searchModel->warehouse_id !==''){
+       
+    $sql = "SELECT x.category_id,x.warehouse_id,x.asset_type, 
+    SUM(x.qty*x.unit_price) as total,
 
-        FROM view_stock_transaction GROUP BY category_id) as x ";
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+    AND transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+    AND warehouse_id = :warehouse_id)  as last_stock_in,
 
-    $querys = Yii::$app->db->createCommand($sql, [
-        ':warehouse_id' => $searchModel->warehouse_id,
-        ':receive_month' => $searchModel->receive_month,
-        ':thai_year' => $searchModel->thai_year,
-    ])->queryAll();
-} else {
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+    AND transaction_type = 'IN' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+    AND warehouse_id = :warehouse_id)  as last_stock_out,
+
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+    AND x1.transaction_type = 'IN' AND warehouse_type = 'MAIN' AND receive_date BETWEEN :date_start AND :date_end
+    AND warehouse_id = :warehouse_id)  as sum_month,
+
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.category_id = x.category_id AND order_status = 'success'
+    AND from_warehouse_type = 'BRANCH' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN :date_start AND :date_end
+    AND warehouse_id = :warehouse_id)  as sum_branch,
+
+    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+    WHERE x1.category_id = x.category_id AND order_status = 'success'
+    AND from_warehouse_type = 'SUB' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN :date_start AND :date_end
+    AND warehouse_id = :warehouse_id)  as sum_sub
+
+    FROM `view_stock_transaction` x
+    GROUP BY x.category_id";
+
+$querys = Yii::$app->db->createCommand($sql, [
+':date_start' => $dateStart,
+':date_end' => $dateEnd,
+':warehouse_id' => $searchModel->warehouse_id,
+])->queryAll();
+
+}else{
     // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
-    $sql = "SELECT x.*,((x.sum_last + x.sum_po) - (x.sum_branch + x.sum_sub)) as total FROM(SELECT *,
-                SUM(CASE 
-                        WHEN (transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(
-        CONCAT(
-            (CASE 
-                WHEN order_month > 9 THEN thai_year - 1 
-                ELSE thai_year 
-            END - 543), 
-            '-', 
-            LPAD(order_month, 2, '0'), 
-            '-01'
-        )
-    )
-    ) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END) 
-                - SUM(CASE 
-                        WHEN (transaction_type = 'OUT' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success'  AND receive_date <= LAST_DAY(
-        CONCAT(
-            (CASE 
-                WHEN order_month > 9 THEN thai_year - 1 
-                ELSE thai_year 
-            END - 543), 
-            '-', 
-            LPAD(order_month, 2, '0'), 
-            '-01'
-        )
-    )
-    ) 
-                        THEN (qty * unit_price) 
-                        ELSE 0 
-                    END)  AS sum_last,
+    $sql = "SELECT x.category_id,x.warehouse_id,x.asset_type, 
+                SUM(x.qty*x.unit_price) as total,
 
-                SUM(
-                CASE 
-                    WHEN (po_number IS NOT NULL AND order_month = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_po,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'BRANCH' AND order_status = 'success' AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_branch,
-            
-            SUM(
-                CASE 
-                    WHEN (transaction_type = 'OUT' AND warehouse_type = 'SUB' AND order_status = 'success'  AND MONTH(created_at) = :receive_month AND thai_year = :thai_year) 
-                    THEN (qty * unit_price) 
-                    ELSE 0 
-                END
-            ) AS sum_sub
+                (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+                AND transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                )  as last_stock_in,
 
-        FROM view_stock_transaction GROUP BY category_id) as x ";
+                (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+                AND transaction_type = 'IN' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                )  as last_stock_out,
+
+                (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+                AND x1.transaction_type = 'IN' AND warehouse_type = 'MAIN' AND receive_date BETWEEN :date_start AND :date_end
+                )  as sum_month,
+
+                (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                WHERE x1.category_id = x.category_id AND order_status = 'success'
+                AND warehouse_type = 'BRANCH' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN :date_start AND :date_end
+                )  as sum_branch,
+
+                (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                WHERE x1.category_id = x.category_id AND order_status = 'success'
+                AND warehouse_type = 'SUB' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN :date_start AND :date_end
+                )  as sum_sub
+
+                FROM `view_stock_transaction` x
+                GROUP BY x.category_id";
 
     $querys = Yii::$app->db->createCommand($sql, [
-        ':receive_month' => $searchModel->receive_month,
-        ':thai_year' => $searchModel->thai_year,
+       ':date_start' => $dateStart,
+       ':date_end' => $dateEnd,
     ])->queryAll();
-}
 
+            
+}
 ?>
 
 <div class="card">
@@ -170,7 +123,7 @@ if ($searchModel->warehouse_id) {
                         <th rowspan="2">ซื้อระหว่างเดือน</th>
                         <th rowspan="2">รวม</th>
                         <th colspan="3">สินค้าที่ใช้ไป</th>
-                        <th rowspan="2">สินค้าคงเหลือ</th>
+                        <th rowspan="2">ยอดยกไป</th>
                     </tr>
                     <tr>
                         <th class="text-center">จ่ายส่วนของ รพ.สต.</th>
@@ -193,24 +146,25 @@ if ($searchModel->warehouse_id) {
                     <?php $num = 1;
                     foreach ($querys as $item): ?>
                         <?php
-                        $sum_last += ($item['sum_last']);
-                        $sum_po += $item['sum_po'];
-                        $sum_last_total += ($item['sum_po'] + $item['sum_last']);
-                        $sum_sub += $item['sum_sub'];
-                        $sum_branch += $item['sum_branch'];
-                        $sum_out += ($item['sum_branch'] + $item['sum_sub']);
-                        $sum_total += $item['total'];
+                        // $sum_last += ($item['sum_last']);
+                        // $sum_po += $item['sum_po'];
+                        // $sum_last_total += ($item['sum_po'] + $item['sum_last']);
+                        // $sum_sub += $item['sum_sub'];
+                        // $sum_branch += $item['sum_branch'];
+                        // $sum_out += ($item['sum_branch'] + $item['sum_sub']);
+                        $total =  ($item['sum_month'] + ($item['last_stock_in']-$item['last_stock_out'])) - ($item['sum_branch'] + $item['sum_sub']);
+                         $sum_total += $total;
                         ?>
                     <tr>
                         <td class="text-center"><?= $num++; ?></td>
                         <td><?= $item['asset_type'] ?></td>
-                        <td class="text-end fw-bolder"><?= number_format($item['sum_last'], 2) ?></td>
-                        <td class="text-end fw-bolder"><?= number_format($item['sum_po'], 2) ?></td>
-                        <td class="text-end fw-bolder"><?= number_format(($item['sum_po'] + $item['sum_last']), 2) ?></td>
-                        <td class="text-end fw-bolder"><?= number_format($item['sum_branch'], 2) ?></td>
-                        <td class="text-end fw-bolder"><?= number_format($item['sum_sub'], 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format(($item['last_stock_in']-$item['last_stock_out']), 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($item['sum_month'], 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format(($item['sum_month'] + ($item['last_stock_in']-$item['last_stock_out'])), 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($item['sum_branch'], 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($item['sum_sub'], 2) ?></td>
                         <td class="text-end fw-bolder"><?php echo number_format(($item['sum_branch'] + $item['sum_sub']), 2) ?></td>
-                        <td class="text-end fw-bolder"><?= number_format($item['total'], 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format($total, 2) ?></td>
                     </tr>
                     <?php endforeach; ?>
            
