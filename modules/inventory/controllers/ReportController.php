@@ -29,15 +29,18 @@ class ReportController extends \yii\web\Controller
     {
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
 
-        $searchModel = new StockEventSearch();
+        $searchModel = new StockEventSearch([
+             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+             'date_end' =>  AppHelper::convertToThai($lastDay)
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        if ($searchModel->thai_year) {
+        if ($searchModel->thai_year !=='' && $searchModel->thai_year !== null) {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 542) . '-09-30');
         } else {
-            $searchModel->date_start = AppHelper::convertToThai(date('Y-m') . '-01');
-            $searchModel->date_end = AppHelper::convertToThai($lastDay);
+            // $searchModel->date_start = AppHelper::convertToThai(date('Y-m') . '-01');
+            // $searchModel->date_end = AppHelper::convertToThai($lastDay);
         }
 
         $dataProvider->query->groupBy('type_code');
