@@ -36,8 +36,8 @@ class ReportController extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         if ($searchModel->thai_year !=='' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 542) . '-09-30');
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         } else {
             // $searchModel->date_start = AppHelper::convertToThai(date('Y-m') . '-01');
             // $searchModel->date_end = AppHelper::convertToThai($lastDay);
