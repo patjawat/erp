@@ -44,12 +44,10 @@ RUN composer install --ignore-platform-reqs
 RUN rm -rf /app/web/assets/*
 
 # Step 5: ตั้งค่าให้โฟลเดอร์ runtime และ web/assets สามารถเขียนได้
-RUN chmod -R 777 \
-    /app/runtime \
-    /app/web/assets \
-    /app/web/downloads \
-    /app/web/msword \
-    /app/web/msword/results
+RUN mkdir -p /app/web/downloads /app/web/msword /app/web/msword/results && \
+    chmod -R 777 /app/runtime /app/web/assets /app/web/downloads /app/web/msword /app/web/msword/results && \
+    chown -R www-data:www-data /app/modules/filemanager
+
 
 # Set YII_ENV to 'pro'
 RUN sed -i "s/defined('YII_ENV') or define('YII_ENV', 'dev');/defined('YII_ENV') or define('YII_ENV', 'pro');/" /app/web/index.php
