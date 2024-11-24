@@ -555,8 +555,8 @@ class ReportController extends \yii\web\Controller
                     
                     -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
                     SUM(CASE
-                        AND warehouse_id = :warehouse_id
                         WHEN x.transaction_type = 'IN' 
+                        AND warehouse_id = :warehouse_id
                              AND x.warehouse_type = 'MAIN' 
                              AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.unit_price * x.qty 
