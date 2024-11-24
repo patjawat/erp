@@ -40,7 +40,7 @@ class ReportController extends \yii\web\Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        // $dataProvider->query->groupBy('type_code');
+        $dataProvider->query->groupBy('type_code');
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         $querys = $this->GroupSummary($searchModel->warehouse_id,$dateStart,$dateEnd);
@@ -50,22 +50,17 @@ class ReportController extends \yii\web\Controller
             'dateStart' => $dateStart,
             'dateEnd' => $dateEnd,
             'searchModel' => $searchModel,
-            // 'dataProvider' => $dataProvider
+            'dataProvider' => $dataProvider
             ] );
     }
 
     public function actionExportExcel()
     {
-        // \Yii::$app->response->format = Response::FORMAT_JSON;
         $params = Yii::$app->request->queryParams;
         $dateStart = $params['date_start'];
         $dateEnd = $params['date_end'];
         $warehouse = isset($params['warehouse_id']) ? Warehouse::findOne($params['warehouse_id']) : '';
         $warehouseId = isset($params['warehouse_id']) ? $params['warehouse_id'] : '';
-        // return $this->render('test',[
-        //     'querys' => $this->ItemSummary($warehouseId,$dateStart,$dateEnd)
-        // ]);
-
         $datas = $this->GroupSummary($warehouseId,$dateStart,$dateEnd);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -547,69 +542,37 @@ class ReportController extends \yii\web\Controller
     protected function GroupSummary($warehouse_id,$dateStart,$dateEnd)
     {
         if ($warehouse_id && $warehouse_id !== '') {
-                $sql="WITH stock_data AS (
-                SELECT 
-                    x.category_id, 
-                    x.asset_type,
-                    x.warehouse_id,
-                    
-                    -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
-                    SUM(CASE
-                        AND warehouse_id = :warehouse_id
-                        WHEN x.transaction_type = 'IN' 
-                             AND x.warehouse_type = 'MAIN' 
-                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.unit_price * x.qty 
-                        ELSE 0 
-                    END) AS last_stock_in,
-            
-                    -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                         AND warehouse_id = :warehouse_id
-                             AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.unit_price * x.qty 
-                        ELSE 0 
-                    END) AS last_stock_out,
-            
-                    -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN'
-                         AND warehouse_id = :warehouse_id 
-                             AND x.warehouse_type = 'MAIN' 
-                             AND x.receive_date BETWEEN :date_start AND :date_end 
-                        THEN x.unit_price * x.qty 
-                        ELSE 0 
-                    END) AS sum_month,
-            
-                    -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT'
-                         AND warehouse_id = :warehouse_id 
-                             AND x.warehouse_type = 'BRANCH' 
-                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.unit_price * x.qty 
-                        ELSE 0 
-                    END) AS sum_branch,
-            
-                    -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                         AND warehouse_id = :warehouse_id
-                             AND x.warehouse_type = 'SUB' 
-                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.unit_price * x.qty 
-                        ELSE 0 
-                    END) AS sum_sub
-                FROM view_stock_transaction x
-                WHERE x.order_status = 'success'
-                GROUP BY x.category_id, x.asset_type
-            )
-            SELECT *,
-                ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
-            FROM stock_data";
-            
+            $sql = "WITH x2 AS ( SELECT x.category_id,x.warehouse_id,x.asset_type, 
+                    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                    WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+                    AND transaction_type = 'IN' AND warehouse_type = 'MAIN' AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                    AND warehouse_id = :warehouse_id)  as last_stock_in,
+
+                    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                    WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+                    AND transaction_type = 'IN' AND warehouse_type IN ('SUB', 'BRANCH') AND order_status = 'success' AND receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                    AND warehouse_id = :warehouse_id)  as last_stock_out,
+
+                    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                    WHERE x1.category_id = x.category_id AND x1.order_status = 'success'
+                    AND x1.transaction_type = 'IN' AND warehouse_type = 'MAIN' AND receive_date BETWEEN :date_start AND :date_end
+                    AND warehouse_id = :warehouse_id)  as sum_month,
+
+                    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                    WHERE x1.category_id = x.category_id AND order_status = 'success'
+                    AND from_warehouse_type = 'BRANCH' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN :date_start AND :date_end
+                    AND warehouse_id = :warehouse_id)  as sum_branch,
+
+                    (select IFNULL(sum(x1.unit_price * x1.qty),0) FROM view_stock_transaction x1 
+                    WHERE x1.category_id = x.category_id AND order_status = 'success'
+                    AND from_warehouse_type = 'SUB' AND x1.transaction_type = 'OUT' AND DATE_FORMAT(x1.created_at,'%Y-%m-%d') BETWEEN :date_start AND :date_end
+                    AND warehouse_id = :warehouse_id)  as sum_sub
+
+                    FROM `view_stock_transaction` x
+                    GROUP BY x.category_id) 
+                
+                SELECT *,((last_stock_in - last_stock_out) + sum_month -(sum_branch + sum_sub) ) as total1 FROM x;";
+
             return Yii::$app->db->createCommand($sql, [
                 ':date_start' => $dateStart,
                 ':date_end' => $dateEnd,
@@ -618,62 +581,61 @@ class ReportController extends \yii\web\Controller
         } else {
             // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
             $sql = "WITH stock_data AS (
-                        SELECT 
-                            x.category_id, 
-                            x.asset_type,
-                            x.warehouse_id,
-                            
-                            -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'IN' 
-                                    AND x.warehouse_type = 'MAIN' 
-                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                                THEN x.unit_price * x.qty 
-                                ELSE 0 
-                            END) AS last_stock_in,
+                    SELECT 
+                        x.category_id, 
+                        x.warehouse_id, 
+                        x.asset_type,
+                        
+                        -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
+                        (SELECT IFNULL(SUM(x1.unit_price * x1.qty), 0) 
+                        FROM view_stock_transaction x1
+                        WHERE x1.category_id = x.category_id 
+                        AND x1.order_status = 'success'
+                        AND x1.transaction_type = 'IN' 
+                        AND x1.warehouse_type = 'MAIN'
+                        AND x1.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH))) AS last_stock_in,
 
-                            -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'IN' 
-                                    AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                                THEN x.unit_price * x.qty 
-                                ELSE 0 
-                            END) AS last_stock_out,
+                        -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
+                        (SELECT IFNULL(SUM(x1.unit_price * x1.qty), 0) 
+                        FROM view_stock_transaction x1
+                        WHERE x1.category_id = x.category_id 
+                        AND x1.order_status = 'success'
+                        AND x1.transaction_type = 'IN' 
+                        AND x1.warehouse_type IN ('SUB', 'BRANCH')
+                        AND x1.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH))) AS last_stock_out,
 
-                            -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'IN' 
-                                    AND x.warehouse_type = 'MAIN' 
-                                    AND x.receive_date BETWEEN :date_start AND :date_end 
-                                THEN x.unit_price * x.qty 
-                                ELSE 0 
-                            END) AS sum_month,
+                        -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
+                        (SELECT IFNULL(SUM(x1.unit_price * x1.qty), 0) 
+                        FROM view_stock_transaction x1
+                        WHERE x1.category_id = x.category_id 
+                        AND x1.order_status = 'success'
+                        AND x1.transaction_type = 'IN' 
+                        AND x1.warehouse_type = 'MAIN'
+                        AND x1.receive_date BETWEEN :date_start AND :date_end) AS sum_month,
 
-                            -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'OUT' 
-                                    AND x.warehouse_type = 'BRANCH' 
-                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                                THEN x.unit_price * x.qty 
-                                ELSE 0 
-                            END) AS sum_branch,
+                        -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
+                        (SELECT IFNULL(SUM(x1.unit_price * x1.qty), 0) 
+                        FROM view_stock_transaction x1
+                        WHERE x1.category_id = x.category_id 
+                        AND x1.order_status = 'success'
+                        AND x1.warehouse_type = 'BRANCH' 
+                        AND x1.transaction_type = 'OUT' 
+                        AND DATE_FORMAT(x1.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end) AS sum_branch,
 
-                            -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'OUT' 
-                                    AND x.warehouse_type = 'SUB' 
-                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                                THEN x.unit_price * x.qty 
-                                ELSE 0 
-                            END) AS sum_sub
-                        FROM view_stock_transaction x
-                        WHERE x.order_status = 'success'
-                        GROUP BY x.category_id, x.asset_type
-                    )
-                    SELECT *,
-                        ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
-                    FROM stock_data";
+                        -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
+                        (SELECT IFNULL(SUM(x1.unit_price * x1.qty), 0) 
+                        FROM view_stock_transaction x1
+                        WHERE x1.category_id = x.category_id 
+                        AND x1.order_status = 'success'
+                        AND x1.warehouse_type = 'SUB' 
+                        AND x1.transaction_type = 'OUT' 
+                        AND DATE_FORMAT(x1.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end) AS sum_sub
+                    FROM view_stock_transaction x
+                    GROUP BY x.category_id,x.asset_type
+                )
+                SELECT *,
+                    ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
+                FROM stock_data;";
 
                 return Yii::$app->db->createCommand($sql, [
                 ':date_start' => $dateStart,
@@ -681,199 +643,107 @@ class ReportController extends \yii\web\Controller
             ])->queryAll();
         }
     }
+
     protected function ItemSummary($warehouse_id,$dateStart,$dateEnd)
     {
         // ถ้ามีการเลือกคลัง
     
-            $sqlold = "WITH x2 AS (
-    SELECT 
-        x.category_id,
-        x.warehouse_id,
-        x.asset_type,
-        x.asset_item,
-        x.asset_name,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS last_stock_in,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
-            THEN x.qty 
-            ELSE 0 
-        END) AS last_stock_in_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS last_stock_out,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
-            THEN x.qty 
-            ELSE 0 
-        END) AS last_stock_out_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.receive_date BETWEEN :date_start AND :date_end 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS sum_month,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.receive_date BETWEEN :date_start AND :date_end 
-            THEN x.qty 
-            ELSE 0 
-        END) AS sum_month_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'BRANCH' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS sum_branch,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'BRANCH' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.qty 
-            ELSE 0 
-        END) AS sum_branch_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'SUB' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS sum_sub,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'SUB' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.qty 
-            ELSE 0 
-        END) AS sum_sub_qty
-    FROM view_stock_transaction x
-    WHERE x.order_status = 'success'
-    GROUP BY x.category_id, x.warehouse_id, x.asset_type, x.asset_item, x.asset_name
-)
-SELECT 
-    *,
-    ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total 
-FROM x2;";
+            $sql = "WITH x2 AS (
+                        SELECT 
+                            x.category_id,
+                            x.warehouse_id,
+                            x.asset_type,
+                            x.asset_item,
+                            x.asset_name,
+                            x.warehouse_name,
+                            x.unit,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'IN' 
+                                    AND x.warehouse_type = 'MAIN' 
+                                    AND x.order_status = 'success' 
+                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
+                                THEN x.unit_price * x.qty 
+                                ELSE 0 
+                            END) AS last_stock_in,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'IN' 
+                                    AND x.warehouse_type = 'MAIN' 
+                                    AND x.order_status = 'success' 
+                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
+                                THEN x.qty 
+                                ELSE 0 
+                            END) AS last_stock_in_qty,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'IN' 
+                                    AND x.warehouse_type IN ('SUB', 'BRANCH') 
+                                    AND x.order_status = 'success' 
+                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
+                                THEN x.unit_price * x.qty 
+                                ELSE 0 
+                            END) AS last_stock_out,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'IN' 
+                                    AND x.warehouse_type IN ('SUB', 'BRANCH') 
+                                    AND x.order_status = 'success' 
+                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start AND :date_end, INTERVAL 1 MONTH)) 
+                                THEN x.qty 
+                                ELSE 0 
+                            END) AS last_stock_out_qty,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'IN' 
+                                    AND x.warehouse_type = 'MAIN' 
+                                    AND x.receive_date BETWEEN :date_start AND :date_end 
+                                THEN x.unit_price * x.qty 
+                                ELSE 0 
+                            END) AS sum_month,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'IN' 
+                                    AND x.warehouse_type = 'MAIN' 
+                                    AND x.receive_date BETWEEN :date_start AND :date_end 
+                                THEN x.qty 
+                                ELSE 0 
+                            END) AS sum_month_qty,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'OUT' 
+                                    AND x.warehouse_type = 'BRANCH' 
+                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
+                                THEN x.unit_price * x.qty 
+                                ELSE 0 
+                            END) AS sum_branch,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'OUT' 
+                                    AND x.warehouse_type = 'BRANCH' 
+                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
+                                THEN x.qty 
+                                ELSE 0 
+                            END) AS sum_branch_qty,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'OUT' 
+                                    AND x.warehouse_type = 'SUB' 
+                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
+                                THEN x.unit_price * x.qty 
+                                ELSE 0 
+                            END) AS sum_sub,
+                            SUM(CASE 
+                                WHEN x.transaction_type = 'OUT' 
+                                    AND x.warehouse_type = 'SUB' 
+                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
+                                THEN x.qty 
+                                ELSE 0 
+                            END) AS sum_sub_qty
+                        FROM view_stock_transaction x
+                        WHERE x.order_status = 'success'
+                        GROUP BY x.category_id, x.warehouse_id, x.asset_type, x.asset_item, x.asset_name
+                    )
+                    SELECT 
+                        *,
+                        ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total 
+                    FROM x2;";
 
-
-$sql ="WITH x2 AS (
-    SELECT 
-        x.category_id,
-        x.warehouse_id,
-        x.asset_type,
-        x.asset_item,
-        x.asset_name,
-        x.warehouse_name,
-        x.unit,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS last_stock_in,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-            THEN x.qty 
-            ELSE 0 
-        END) AS last_stock_in_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS last_stock_out,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                 AND x.order_status = 'success' 
-                 AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-            THEN x.qty 
-            ELSE 0 
-        END) AS last_stock_out_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.receive_date BETWEEN :date_start AND :date_end 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS sum_month,
-        SUM(CASE 
-            WHEN x.transaction_type = 'IN' 
-                 AND x.warehouse_type = 'MAIN' 
-                 AND x.receive_date BETWEEN :date_start AND :date_end 
-            THEN x.qty 
-            ELSE 0 
-        END) AS sum_month_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'BRANCH' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS sum_branch,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'BRANCH' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.qty 
-            ELSE 0 
-        END) AS sum_branch_qty,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'SUB' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.unit_price * x.qty 
-            ELSE 0 
-        END) AS sum_sub,
-        SUM(CASE 
-            WHEN x.transaction_type = 'OUT' 
-                 AND x.warehouse_type = 'SUB' 
-                 AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-            THEN x.qty 
-            ELSE 0 
-        END) AS sum_sub_qty
-    FROM view_stock_transaction x
-    WHERE x.order_status = 'success'
-    GROUP BY x.category_id, x.asset_type, x.asset_item, x.asset_name
-)
-SELECT 
-    *,
-    ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total 
-FROM x2;
-";
-
-return Yii::$app->db->createCommand($sql, [
-    ':date_start' => $dateStart,
-    ':date_end' => $dateEnd
-])->queryAll();
-
+            return Yii::$app->db->createCommand($sql, [
+                ':date_start' => $dateStart,
+                ':date_end' => $dateEnd
+            ])->queryAll();
 
     }
 }
