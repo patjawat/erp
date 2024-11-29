@@ -1139,4 +1139,46 @@ class Employees extends Yii\db\ActiveRecord
     {
         return $this->prefix.$this->fname.' '.$this->lname;
     }
+
+    //คำนวนสิทธิวันลาสะสม
+    public function LeavePermission()
+    {
+        $sql = "SELECT 
+                concat(e.fname,' ',e.lname) as fullname,
+                e.position_type,
+                pt.title,
+                DATEDIFF(CURDATE(), e.join_date) / 365 AS years_of_service,
+                    CASE 
+                        -- ข้าราชการและลูกจ้างประจำ
+                        WHEN pt.code IN ('PT1','PT6') THEN 
+                            CASE 
+                                WHEN DATEDIFF(CURDATE(), join_date) / 365 >= 10 THEN 30
+                                WHEN DATEDIFF(CURDATE(), join_date) / 365 >= 1 THEN 10
+                                ELSE 0
+                            END
+                            -- พนักงานราชการและพนักงานกระทรวงสาธารณสุข
+                        WHEN pt.code IN ('PT2', 'PT3') THEN 
+                            CASE 
+                                WHEN DATEDIFF(CURDATE(), join_date) / 365 >= 1 THEN LEAST(15, 15 + 0) -- รวมปีปัจจุบัน + สะสม
+                                WHEN DATEDIFF(CURDATE(), join_date) / 365 < 0.5 THEN 0
+                                ELSE 0
+                            END
+
+                        -- ลูกจ้างชั่วคราวและลูกจ้างรายวัน
+                        WHEN pt.code IN ('PT5') THEN 
+                            CASE 
+                                WHEN DATEDIFF(CURDATE(), join_date) / 365 >= 0.5 THEN 0
+                                ELSE 0
+                            END
+
+                        -- Default เผื่อสำหรับพนักงานประเภทอื่น
+                    ELSE 0
+                    END AS leave_days
+                    FROM `employees` e
+                    LEFT JOIN categorise pt ON pt.code = e.position_type AND pt.name ='position_type'
+                    WHERE e.status = 1 AND e.id <> 1 AND e.id = :id";
+                    $querys = Yii::$app->db->createCommand($sql)
+                    ->bindValue(':id',$this->id)
+                    ->queryOne();
+    }
 }

@@ -2,20 +2,20 @@
 
 namespace app\modules\hr\controllers;
 
-use app\components\AppHelper;
-use app\components\CategoriseHelper;
-use app\models\Categorise;
-use app\modules\hr\models\EmployeeDetail;
-use app\modules\hr\models\EmployeeDetailSearch;
-use app\modules\hr\models\Employees;
 use yii;
+use yii\web\Response;
+use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\web\Response;
+use app\components\AppHelper;
 use yii\bootstrap5\ActiveForm;
+use yii\web\NotFoundHttpException;
+use app\components\CategoriseHelper;
+use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\EmployeeDetail;
+use app\modules\hr\models\EmployeeDetailSearch;
 
 /**
  * EmployeeDetailController implements the CRUD actions for EmployeeDetail model.
@@ -229,9 +229,6 @@ class EmployeeDetailController extends Controller
             //หาตำแหน่งล่าสุดจากวันที่
             $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $data->emp_id])
                 ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc"))->one();
-            // get position By Tree diagram
-            //$position = CategoriseHelper::TreeById($model->data_json['position_name']);
-
             // get poditionBy Category design
             if ($model) {
                         $department_name = Organization::findOne($model->data_json['department']);

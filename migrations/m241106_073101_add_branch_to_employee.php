@@ -16,7 +16,6 @@ class m241106_073101_add_branch_to_employee extends Migration
 
         // เช็คว่าฟิลด์ helpdesk_id มีอยู่หรือไม่
         if (!array_key_exists('branch', Yii::$app->db->schema->getTableSchema($table)->columns)) {
-            // $this->addColumn($table, 'branch', $this->integer()->comment('รหัสงาน')); // เพิ่มฟิลด์ helpdesk_id
             $this->addColumn($table, 'branch',"ENUM('MAIN', 'BRANCH') NOT NULL COMMENT 'ประเภทการเคลื่อนไหว (MAIN = โรงพยาบาล, BRANCH = รพสต.)'"); // เพิ่มฟิลด์ helpdesk_id
         }
     }

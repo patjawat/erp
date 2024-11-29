@@ -87,7 +87,7 @@ class ImportStock2Controller extends Controller
             ['code' => '07-00048','title' => 'Container 40 ml.Gray with spoon #41116140','unit' => 'ชิ้น','qty' => '874','unit_price' => '1.39428'],
             ['code' => '07-00050','title' => 'Coombs Control cell #41116102','unit' => 'ขวด','qty' => '2','unit_price' => '100.00000'],
             ['code' => '07-00052','title' => 'Cover glass 22*22 mm 200 pcs/pack #41116140','unit' => 'แพค','qty' => '25','unit_price' => '77.00000'],
-            ['code' => '07-00056','title' => 'CuSo 4 80% #41116102','unit' => 'ขวด','qty' => '0','unit_price' => '0'],
+            ['code' => '07-00056','title' => 'CuSo 4 80% #41116102','unit' => 'ขวด','qty' => '0','unit_price' => '0'],ผ
             ['code' => '07-00057','title' => 'CuSo 4 90% #41116102','unit' => 'ขวด','qty' => '0','unit_price' => '0'],
             ['code' => '07-00058','title' => 'Cuvette for ARES #41116108','unit' => 'ถุง','qty' => '0','unit_price' => '0'],
             ['code' => '07-00059','title' => 'D-10 Hemoglobin A1C,400 test #41116004','unit' => 'กล่อง','qty' => '0','unit_price' => '0'],

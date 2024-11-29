@@ -11862,6 +11862,10 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+.loading-overlay .loading-text {
+  font-weight: 400 !important;
+}
+
 .blur-up {
   -webkit-filter: blur(5px);
   filter: blur(5px);
@@ -12126,7 +12130,7 @@ a:hover {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 99;
+  z-index: 2;
   height: 70px;
   padding-right: 24px;
   background-color: var(--bs-primary);
@@ -12204,13 +12208,13 @@ a:hover {
 tbody,
 tr,
 td {
-  font-weight: 300;
+  font-weight: 200;
 }
 
 thead,
 tfoot,
 th {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 .header-item {
@@ -12811,7 +12815,7 @@ h6 {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 99;
+  z-index: 3;
   height: 70px;
   padding-right: 24px;
   background-color: var(--bs-primary);
