@@ -15,6 +15,7 @@ use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
+use app\modules\hr\models\LeaveSummarySearch;
 
 /**
  * LeaveController implements the CRUD actions for Leave model.
@@ -65,9 +66,18 @@ class LeaveController extends Controller
         ]);
     }
 
+
     public function actionDashbroad()
     {
-        return $this->render('dashbroad');
+        $searchModel = new LeaveSummarySearch([
+            'thai_year' => AppHelper::YearBudget()
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->groupBy('code');
+        return $this->render('dashbroad/index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
     
     public function actionMe()

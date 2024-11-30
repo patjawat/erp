@@ -442,7 +442,7 @@ class Leave extends \yii\db\ActiveRecord
 
         return '<div class="d-flex justify-content-between">
                             <span class="text-muted mb-2 fs-13">
-                                <span class="badge rounded-pill badge-soft-primary text-primary fs-13 ">'.$title.'</span>
+                                <span class="badge rounded-pill badge-soft-warning text-primary fs-13 ">'.$title.'</span>
                                 <span class="text-'.$color.'"></span>
                             </span>
                             <span class="text-muted mb-0 fs-13">'.$this->statusProcess().'%</span>
@@ -454,3 +454,4 @@ class Leave extends \yii\db\ActiveRecord
                         </div>';
     }
 }
+
