@@ -58,6 +58,9 @@ use kartik\widgets\ActiveForm;
       <?php echo $form->field($model, 'leave_type_id')->checkboxList($model->listLeaveType(), 
                 ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']
             );?>
+
+<?= $form->field($model, 'status')->textInput()->label(false) ?>
+
             </div>
         </div>
         

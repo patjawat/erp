@@ -32,7 +32,8 @@ $this->params['breadcrumbs'][] = $this->title;
          
             <div class="d-flex gap-3">
                 <?php foreach($searchModel->listStatusSummary() as $status):?>
-                <p class="text-muted mb-0 fs-13"><span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><?php echo $status['title']?> <span class="badge text-bg-primary"><?php echo $status['total']?></span></span></p>
+                    <?php echo Html::a('<span class="badge rounded-pill badge-soft-primary text-primary fs-13 ">'.$status["title"].' <span class="badge text-bg-primary">  '.$status["total"].'</span></span>',[$status['code']],['data' => ['id' => $status['code']],'class' => 'filter-status'])?>
+                <!-- <p class="text-muted mb-0 fs-13"><span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><?php echo $status['title']?> <span class="badge text-bg-primary"><?php echo $status['total']?></span></span></p> -->
                 <?php endforeach;?>
             </div>
             <h2>&nbsp;</h2>
@@ -106,3 +107,18 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
+<?php
+$js = <<< JS
+
+$('.filter-status').click(function (e) { 
+    e.preventDefault();
+    var id = $(this).data('id');
+    $('#leavesearch-status').val(id);
+    $('#w0').submit();
+    console.log(id);
+    
+    
+});
+JS;
+$this->registerJs($js);
+?>

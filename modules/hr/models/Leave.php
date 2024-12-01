@@ -457,7 +457,7 @@ class Leave extends \yii\db\ActiveRecord
     public function listStatusSummary()
     {
      return  self::find()
-    ->select(['categorise.title', 'COUNT(leave.id) AS total'])
+    ->select(['categorise.code','categorise.title', 'COUNT(leave.id) AS total'])
     ->leftJoin('categorise', 'categorise.code = leave.status')
     ->where(['leave.thai_year' => $this->thai_year])
     ->groupBy('leave.status')
