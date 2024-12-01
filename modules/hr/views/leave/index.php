@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>
 <div class="card text-start">
     <div class="card-body">
         <div class="d-flex justify-content-between">
@@ -33,7 +33,6 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex gap-3">
                 <?php foreach($searchModel->listStatusSummary() as $status):?>
                     <?php echo Html::a('<span class="badge rounded-pill badge-soft-primary text-primary fs-13 ">'.$status["title"].' <span class="badge text-bg-primary">  '.$status["total"].'</span></span>',[$status['code']],['data' => ['id' => $status['code']],'class' => 'filter-status'])?>
-                <!-- <p class="text-muted mb-0 fs-13"><span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><?php echo $status['title']?> <span class="badge text-bg-primary"><?php echo $status['total']?></span></span></p> -->
                 <?php endforeach;?>
             </div>
             <h2>&nbsp;</h2>
@@ -122,3 +121,4 @@ $('.filter-status').click(function (e) {
 JS;
 $this->registerJs($js);
 ?>
+<?php Pjax::end(); ?>

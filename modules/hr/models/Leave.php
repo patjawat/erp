@@ -41,6 +41,8 @@ class Leave extends \yii\db\ActiveRecord
      */
     public $q;
     public $reason;
+    public $data_start_th;
+    public $data_end_th;
     public static function tableName()
     {
         return 'leave';
@@ -454,15 +456,42 @@ class Leave extends \yii\db\ActiveRecord
                         </div>';
     }
 
-    public function listStatusSummary()
-    {
-     return  self::find()
-    ->select(['categorise.code','categorise.title', 'COUNT(leave.id) AS total'])
-    ->leftJoin('categorise', 'categorise.code = leave.status')
-    ->where(['leave.thai_year' => $this->thai_year])
-    ->groupBy('leave.status')
-    ->asArray()
-    ->all();
-    }
-}
+            public function listStatusSummary()
+            {
+            return  self::find()
+            ->select(['categorise.code','categorise.title', 'COUNT(leave.id) AS total'])
+            ->leftJoin('categorise', 'categorise.code = leave.status')
+            ->where(['leave.thai_year' => $this->thai_year])
+            ->groupBy('leave.status')
+            ->asArray()
+            ->all();
+            }
+
+            //นับจำนวนประเภทวันลา
+            public function sumLeaveType($type = null)
+            {
+                $sum = self::find()
+                ->where(['thai_year' => $this->thai_year,'emp_id'=> $this->emp_id,'leave_type_id'=>$type,'status'=>'Allow'])
+                ->sum('sum_days');
+                if(!$sum){
+                    $sum = 0;
+                }
+                return $sum;
+                }
+
+                        //นับจำนวนสถานะ
+            public function countLeaveType($status = null)
+            {
+                // return $this->emp_id;
+                $sum = self::find()
+                ->where(['leave.thai_year' => $this->thai_year,'emp_id'=> $this->emp_id,'status'=>$status])
+                ->count('id');
+                if(!$sum){
+                    $sum = 0;
+                }
+                return $sum;
+                }
+                
+            }
+
 

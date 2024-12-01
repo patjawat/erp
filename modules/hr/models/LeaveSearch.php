@@ -18,7 +18,7 @@ class LeaveSearch extends Leave
     {
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['leave_type_id', 'data_json', 'start_date', 'start_end', 'created_at', 'updated_at', 'deleted_at','emp_id','thai_year','status','q'], 'safe'],
+            [['leave_type_id', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at','emp_id','thai_year','status','q'], 'safe'],
             [['leave_time_type'], 'number'],
         ];
     }
@@ -68,8 +68,8 @@ class LeaveSearch extends Leave
             'thai_year' => $this->thai_year,
             'leave_time_type' => $this->leave_time_type,
             'status' => $this->status,
-            'date_start' => $this->date_start,
-            'date_end' => $this->date_end,
+            // 'date_start' => $this->date_start,
+            // 'date_end' => $this->date_end,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,

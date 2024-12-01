@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
+use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $model */
@@ -21,7 +22,7 @@ use kartik\widgets\ActiveForm;
 <div class="d-flex align-items-center gap-2">
     
     <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
     <?php echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
             'options' => ['placeholder' => 'ปีงบประมาณ'],
@@ -37,14 +38,37 @@ use kartik\widgets\ActiveForm;
                             $(this).submit()
                         }",
             ]
-        ])->label(false);
-        ?>
-    
-    <div class="d-flex flex-row mb-3">
+        ])->label('ปีงบประมาณ');
+    ?>
+
+<?=$form->field($model, 'date_start')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ตั้งแต่วันที่');
+                ?>
+                <?=$form->field($model, 'date_end')->widget(Datetimepicker::className(),[
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y', 
+                    ],
+                    ])->label('ถึงวันที่');
+                ?>
+                
+    <div class="d-flex flex-row mb-3 mt-4">
         <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
     </div>
     
-    <div class="mb-3">
+    <div class="mb-3 mt-4">
         <div class="dropdown">
             <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
             aria-expanded="false"><i class="fa-solid fa-filter"></i> เพิ่มเติม

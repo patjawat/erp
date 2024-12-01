@@ -2,12 +2,14 @@
 
 namespace app\modules\me\controllers;
 
+use Yii;
+use yii\web\Response;
 use yii\web\Controller;
+use app\components\AppHelper;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\LeaveSearch;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
-use app\modules\hr\models\Employees;
-use yii\web\Response;
-use Yii;
 
 /**
  * Default controller for the `me` module
@@ -17,9 +19,18 @@ class DefaultController extends Controller
     public function actionIndex()
     {
         $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
-        return $this->render('index', [
-            'model' => $model ? $model : new Employees()
+
+        $searchModel = new LeaveSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'emp_id' => Yii::$app->user->id
         ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        return $this->render('index', [
+            'model' => $model ? $model : new Employees(),
+            'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+        ]);
+
     }
 
     public function actionTeam()

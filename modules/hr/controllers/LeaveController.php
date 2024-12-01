@@ -3,6 +3,7 @@
 namespace app\modules\hr\controllers;
 
 use Yii;
+use DateTime;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
@@ -44,25 +45,42 @@ class LeaveController extends Controller
      */
     public function actionIndex()
     {
-
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new LeaveSearch([
-            'thai_year' => AppHelper::YearBudget()
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay)
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+      
+        
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', new Expression("JSON_EXTRACT(data_json, '$.reason')"), $searchModel->q],
         ]);
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])
+          ->andFilterWhere(['<=', 'date_end', $dateEnd]);
         
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
+        
+       
         
         // $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            // 'dateStart' => $dateStart,
+            // 'dateEnd' => $dateEnd,
         ]);
     }
 
@@ -203,7 +221,6 @@ class LeaveController extends Controller
                     $model->createLeaveStep();
                 }
                 
-
                 return $this->redirect(['view', 'id' => $model->id]);
                 // return [
                 //     'status' => 'success',

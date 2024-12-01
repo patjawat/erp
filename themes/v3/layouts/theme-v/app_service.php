@@ -43,7 +43,7 @@ use app\components\UserHelper;
                         <div
                             class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
                             <i class="fa-solid fa-calendar-day fs-2"></i>
-                            <div>ระบบลา</div>
+                            <div>ขอลา</div>
                         </div>
                     </a>
                 </div>
