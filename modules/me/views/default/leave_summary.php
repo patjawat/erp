@@ -1,5 +1,5 @@
 <?php
-
+use yii\bootstrap5\Html;
 use app\components\AppHelper;
 use app\components\UserHelper;
 $emp = UserHelper::GetEmployee();
@@ -40,10 +40,11 @@ $querys = Yii::$app->db->createCommand($sql,[':emp_id'=>$emp->id,'thai_year' =>$
            
             
         </tbody>
-        <tfoot>
-            
-        </tfoot>
     </table>
+
+    </div>
+    <div class="card-footer">
+        <?=Html::a('ทะเบียนประวัติ <i class="fe fe-arrow-right-circle"></i>',['/hr/leave'],['class' => 'btn btn-light'])?>
 
     </div>
 </div>

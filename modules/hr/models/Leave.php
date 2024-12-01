@@ -453,5 +453,16 @@ class Leave extends \yii\db\ActiveRecord
                             </div>
                         </div>';
     }
+
+    public function listStatusSummary()
+    {
+     return  self::find()
+    ->select(['categorise.title', 'COUNT(leave.id) AS total'])
+    ->leftJoin('categorise', 'categorise.code = leave.status')
+    ->where(['leave.thai_year' => $this->thai_year])
+    ->groupBy('leave.status')
+    ->asArray()
+    ->all();
+    }
 }
 

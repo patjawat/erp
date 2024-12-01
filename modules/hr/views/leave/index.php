@@ -29,8 +29,16 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา <span class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h6>
+         
+            <div class="d-flex gap-3">
+                <?php foreach($searchModel->listStatusSummary() as $status):?>
+                <p class="text-muted mb-0 fs-13"><span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><?php echo $status['title']?> <span class="badge text-bg-primary"><?php echo $status['total']?></span></span></p>
+                <?php endforeach;?>
             </div>
-            <div class="d-flex justify-content-between  align-top align-items-center mt-4">
+            <h2>&nbsp;</h2>
+                
+        </div>
+        <div class="d-flex justify-content-between  align-top align-items-center mt-4">
                 <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
                 <?= Html::a('<i class="fa-solid fa-plus"></i> สร้างใหม่', ['/hr/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
         </div>
