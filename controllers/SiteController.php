@@ -2,18 +2,18 @@
 
 namespace app\controllers;
 
-use app\models\LoginForm;
-use app\models\PasswordResetRequestForm;
-use app\models\SignupForm;
-use app\modules\hr\models\Employees;
-use app\modules\usermanager\models\User;
 use Yii;
-use yii\filters\AccessControl;
 use yii\filters\Cors;
-use yii\filters\VerbFilter;
 use yii\helpers\Html;
-use yii\web\Controller;
 use yii\web\Response;
+use yii\web\Controller;
+use app\models\LoginForm;
+use app\models\SignupForm;
+use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
+use app\modules\hr\models\Employees;
+use app\models\PasswordResetRequestForm;
+use app\modules\usermanager\models\User;
 
 class SiteController extends Controller
 {
@@ -96,7 +96,7 @@ class SiteController extends Controller
         $this->layout = 'blank';
         if (!\Yii::$app->user->isGuest) {
             return $this->goHome();
-            // return $this->redirect(['/profile']);
+            // return $this->redirect(['/me']);
         }
 
         $model = new LoginForm();
@@ -104,7 +104,7 @@ class SiteController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load(\Yii::$app->request->post()) && $model->login()) {
                 // return $this->goBack();
-                return $this->redirect(['/site/index']);
+                return $this->redirect(['/me']);
                 // return $this->asJson([
                 //     'success' => true,
                 //     'model' => $model,

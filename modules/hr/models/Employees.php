@@ -751,6 +751,13 @@ class Employees extends Yii\db\ActiveRecord
         // return $this->birthday;
         // return $this->joinDate();
     }
+    // อายุงานคำนวนปี
+    public function workYear()
+    {
+        return AppHelper::Age(AppHelper::DateFormDb($this->joinDate()), true);
+       
+    }
+    
 
     // วันลาออก เกษียร
     public function endDate()
@@ -1141,7 +1148,7 @@ class Employees extends Yii\db\ActiveRecord
     }
 
     //คำนวนสิทธิวันลาสะสม
-    public function LeavePermission()
+    public function LeaveRole()
     {
         $sql = "SELECT 
                 concat(e.fname,' ',e.lname) as fullname,
@@ -1180,5 +1187,12 @@ class Employees extends Yii\db\ActiveRecord
                     $querys = Yii::$app->db->createCommand($sql)
                     ->bindValue(':id',$this->id)
                     ->queryOne();
+                    if ($querys !== false) {
+                        $emp = $querys;
+                    } else {
+                        $emp = null; 
+                    }
+                    
+                    return $emp;
     }
 }

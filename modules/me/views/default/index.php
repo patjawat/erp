@@ -1,6 +1,6 @@
 <?php
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\modules\purchase\models\Order;
 $this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [yii\web\JqueryAsset::className()]]);
@@ -45,7 +45,7 @@ foreach($orders as $order)
 
             </div>
             <div class="col-6">
-                <?php echo $this->render('leave'); ?>
+                <?php echo $this->render('leave_summary'); ?>
             </div>
             <div class="col-12">
 
@@ -98,11 +98,8 @@ foreach($orders as $order)
 </div>
 
 <div class="row">
-    <div class="col-6">
 
-
-    </div>
-    <div class="col-6">
+    <div class="col-12">
         <div id="viewOwnerAsset">Loading...</div>
     </div>
 </div>

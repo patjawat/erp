@@ -1,5 +1,5 @@
 
-<div class="card" style="height:300px;">
+<div class="card">
     <div class="card-body">
                 <h6><i class="bi bi-ui-checks"></i> ทรัพย์สินที่รับมอบหมาย <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
 <table class="table">
