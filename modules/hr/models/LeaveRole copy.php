@@ -15,11 +15,9 @@ use app\components\AppHelper;
  * @property int $thai_year
  * @property int $work_year อายุงาน
  * @property string|null $position_type_id ตำแหน่ง
- * @property string|null $leave_type_id ประเภทการขอลา
- * @property int $max_leave สิทธิสะสมวัน
- * @property int $total_leave
- * @property int $used_leave ใช้ไป
- * @property int $point_leave วันลาสะสม
+ * @property int $max_point สิทธิสะสมวัน
+ * @property int $point ยอดยกมา/วันลาคงเหลือ
+ * @property int $point_use ใช้ไปแล้ว
  */
 class LeaveRole extends \yii\db\ActiveRecord
 {
@@ -31,17 +29,17 @@ class LeaveRole extends \yii\db\ActiveRecord
         return 'leave_role';
     }
 
-    public $q;
     /**
      * {@inheritdoc}
      */
+    public $q;
     public function rules()
     {
         return [
             [['data_json','q'], 'safe'],
-            [['emp_id', 'thai_year', 'work_year', 'max_leave', 'total_leave', 'used_leave', 'point_leave'], 'required'],
-            [['emp_id', 'thai_year', 'work_year', 'max_leave', 'total_leave', 'used_leave', 'point_leave','carry_over'], 'integer'],
-            [['position_type_id', 'leave_type_id'], 'string', 'max' => 255],
+            [['emp_id', 'thai_year', 'work_year', 'max_point', 'point', 'point_use'], 'required'],
+            [['emp_id', 'thai_year', 'work_year', 'max_point', 'point', 'point_use'], 'integer'],
+            [['position_type_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -57,12 +55,9 @@ class LeaveRole extends \yii\db\ActiveRecord
             'thai_year' => 'Thai Year',
             'work_year' => 'อายุงาน',
             'position_type_id' => 'ตำแหน่ง',
-            'leave_type_id' => 'ประเภทการขอลา',
-            'max_leave' => 'สิทธิสะสมวัน',
-            'total_leave' => 'Total Leave',
-            'used_leave' => 'ใช้ไป',
-            'point_leave' => 'วันลาสะสม',
-            'carry_over' => 'วันลาสะสมที่ส่งต่อ',
+            'max_point' => 'สิทธิสะสมวัน',
+            'point' => 'ยอดยกมา/วันลาคงเหลือ',
+            'point_use' => 'ใช้ไปแล้ว',
         ];
     }
 

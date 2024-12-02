@@ -20,6 +20,7 @@ use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\lm\models\Leave;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\LeavePermission;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -162,7 +163,26 @@ class ImportLeaveController extends Controller
             echo "ดำเนินการแล้ว : " . number_format($percentage, 2) . "%\n";
         }
         return ExitCode::OK;
+    }
 
-
+    public function actionPermission()
+    {
+        $querys = Yii::$app->db2->createCommand("SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `gleave_over` l LEFT JOIN hrd_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID;")->queryAll();
+        foreach ($querys as $key => $item) {
+            $emp = Employees::findOne(['cid' => $item['PERSON_ID']]);
+            $positionType = Categorise::find()->where(['name' => 'position_type','title' =>  $item['HR_PERSON_TYPE_NAME']])->one();
+            $check = LeavePermission::find()->where(['thai_year' => $item['OVER_YEAR_ID'],'emp_id' => $emp->id])->one();
+            if($check)
+            {
+                $model = $check;
+            }else{
+                $model = new LeavePermission();
+            }
+            
+            $model->emp_id = $emp->id;
+            $model->thai_year = $item['OVER_YEAR_ID'];
+            $model->thai_year = $item['OVER_YEAR_ID'];
+        }
+        
     }
 }

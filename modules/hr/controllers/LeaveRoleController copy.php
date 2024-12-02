@@ -182,7 +182,7 @@ $sql = "WITH x AS (SELECT
     IFNULL(
         (SELECT SUM(x1.sum_days) 
          FROM `leave` x1 
-         WHERE x1.status <> 'cancel' 
+         WHERE x1.status = 'Allow' 
          AND x1.leave_type_id = 'LT4' 
          AND x1.emp_id = e.id 
          AND x1.thai_year = :thai_year), 

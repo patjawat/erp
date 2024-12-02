@@ -12,7 +12,8 @@ use yii\helpers\Html;
             <div class="row">
                 <div class="col-md-4">
                     <div class="d-flex justify-content-center flex-column">
-                        <h4 class="text-primary text-center"><?php echo $searchModel->sumLeaveType('LT4')?>/10</h4>
+                       
+                        <h4 class="text-primary text-center"><?php echo $searchModel->leaveSumDays()['used_leave']?>/<?php echo $searchModel->leaveSumDays()['sum_days']?></h4>
                         <p class="text-center">ลาพักผ่อน/คงเหลือ</p>
                     </div>
                 </div>

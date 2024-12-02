@@ -20,6 +20,7 @@ use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\LeavePermission;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -140,6 +141,42 @@ class ImportLeaveController extends Controller
         return ExitCode::OK;
     }
 
+    public function actionPermission()
+    {
+        $querys = Yii::$app->db2->createCommand("SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `gleave_over` l LEFT JOIN hrd_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID;")->queryAll();
+        foreach ($querys as $key => $item) {
+            
+            $emp = $this->Person($item['PERSON_ID']);
+            $positionType = Categorise::find()->where(['name' => 'position_type','title' =>  $item['HR_PERSON_TYPE_NAME']])->one();
+            $check = LeavePermission::find()->where(['thai_year' => $item['OVER_YEAR_ID'],'emp_id' => $emp->id])->one();
+            
+            if($check)
+            {
+                $model = $check;
+            }else{
+                $model = new LeavePermission();
+            }
+            
+            $model->emp_id = $emp->id;
+            $model->thai_year = $item['OVER_YEAR_ID'];
+            $model->position_type_id = isset($positionType['code']) ?? 0;
+            $model->leave_type_id = 'LT4';
+            $model->year_of_service = $item['OLDS'];
+            $model->leave_days = 10;
+            $model->leave_before_days = $item['DAY_LEAVE_OVER_BEFORE'];
+            $model->leave_max_days = 0;
+            $model->leave_sum_days = $item['DAY_LEAVE_OVER_BEFORE'];
+            if($model->save(false)){
+                echo 'ดำเนินการ : '.$model->emp_id. " \n";
+            }else{
+                echo 'ผิดพลาด : '.$model->emp_id. " \n";
+                return ExitCode::OK;
+            }
+    }
+    return ExitCode::OK;
+        
+    }
+    
     public static function Person($id) {
         $person = Yii::$app->db2->createCommand('SELECT * FROM `hrd_person` WHERE ID = :id')
         ->bindValue(':id',$id)->queryOne();

@@ -7,9 +7,9 @@ use yii\data\ActiveDataProvider;
 use app\modules\hr\models\LeaveRole;
 
 /**
- * LeaveRolesearch represents the model behind the search form of `app\modules\hr\models\LeaveRole`.
+ * LeaveRoleSearch represents the model behind the search form of `app\modules\hr\models\LeaveRole`.
  */
-class LeaveRolesearch extends LeaveRole
+class LeaveRoleSearch extends LeaveRole
 {
     /**
      * {@inheritdoc}
@@ -17,8 +17,8 @@ class LeaveRolesearch extends LeaveRole
     public function rules()
     {
         return [
-            [['id', 'emp_id', 'thai_year', 'work_year', 'max_leave', 'total_leave', 'used_leave', 'point_leave'], 'integer'],
-            [['data_json', 'position_type_id', 'leave_type_id','q'], 'safe'],
+            [['id', 'emp_id', 'thai_year', 'work_year', 'max_point', 'point','point_use'], 'integer'],
+            [['data_json', 'position_type_id','q'], 'safe'],
         ];
     }
 
@@ -61,16 +61,15 @@ class LeaveRolesearch extends LeaveRole
             'id' => $this->id,
             'emp_id' => $this->emp_id,
             'thai_year' => $this->thai_year,
-            'work_year' => $this->work_year,
-            'max_leave' => $this->max_leave,
-            'total_leave' => $this->total_leave,
-            'used_leave' => $this->used_leave,
-            'point_leave' => $this->point_leave,
+            // 'work_year' => $this->work_year,
+            // 'last_days' => $this->last_days,
+            'max_point' => $this->max_point,
+            'point' => $this->point,
+            'point' => $this->point,
         ]);
 
         $query->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'position_type_id', $this->position_type_id])
-            ->andFilterWhere(['like', 'leave_type_id', $this->leave_type_id]);
+            ->andFilterWhere(['like', 'position_type_id', $this->position_type_id]);
 
         return $dataProvider;
     }

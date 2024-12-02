@@ -479,7 +479,7 @@ class Leave extends \yii\db\ActiveRecord
                 return $sum;
                 }
 
-                        //นับจำนวนสถานะ
+            //นับจำนวนสถานะ
             public function countLeaveType($status = null)
             {
                 // return $this->emp_id;
@@ -491,6 +491,43 @@ class Leave extends \yii\db\ActiveRecord
                 }
                 return $sum;
                 }
+        //คำนวนวันหยุดคงเหลือ
+        public function leaveSumDays()
+        {
+            $emp = UserHelper::GetEmployee();
+            $sql = "SELECT 
+                        lp.leave_sum_days,
+                        COALESCE(SUM(l.sum_days), 0) AS used_leave
+                    FROM 
+                        leave_permission lp
+                    LEFT JOIN 
+                        `leave` l 
+                        ON l.emp_id = lp.emp_id 
+                        AND l.thai_year = lp.thai_year 
+                        AND l.leave_type_id = 'LT4' 
+                        AND l.status = 'Allow'
+                    WHERE 
+                        lp.emp_id = :emp_id
+                        AND lp.thai_year = :thai_year
+                    GROUP BY 
+                        lp.leave_sum_days";
+                        $query = Yii::$app->db->createCommand($sql)
+                        ->bindValue(':thai_year',$this->thai_year)
+                        ->bindValue(':emp_id',$emp->id)
+                        ->queryOne();
+                        try {
+                            return [
+                                'sum_days' => $query['leave_sum_days'],
+                                'used_leave' => $query['used_leave']
+                            ];
+                        } catch (\Throwable $th) {
+                            return [
+                                'sum_days' => 0,
+                                'used_leave' => 0
+                            ];
+                        }
+                      
+        }
                 
             }
 

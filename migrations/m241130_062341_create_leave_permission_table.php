@@ -3,9 +3,9 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%leave_permission}}`.
+ * Handles the creation of table `{{%leave_role}}`.
  */
-class m240912_072737_create_leave_permission_table extends Migration
+class m241130_062341_create_leave_permission_table extends Migration
 {
     /**
      * {@inheritdoc}
@@ -15,10 +15,13 @@ class m240912_072737_create_leave_permission_table extends Migration
         $this->createTable('{{%leave_permission}}', [
             'id' => $this->primaryKey(),
             'emp_id' => $this->string(255)->comment('พนักงาน'),
-            'service_time' => $this->integer()->comment('อายุงาน'),
-            'point' => $this->boolean()->comment('จำนวนที่ลาได้'),
-            'last_point' => $this->boolean()->comment('สะสมวันลา'),
-            'new_point' => $this->integer()->comment('ลาได้'),
+            'leave_days' => $this->boolean()->comment('สิทธิวันลาที่ได้'),
+            'leave_before_days' => $this->boolean()->comment('จำนวนวันลาสะสม'),
+            'leave_max_days' => $this->boolean()->comment('วันลาสะสมสูงสุด'),
+            'leave_sum_days' => $this->boolean()->comment('วันลาสะสม'),
+            'year_of_service' => $this->integer()->notNull()->comment('อายุงาน'),
+            'position_type_id' => $this->string()->comment('ตำแหน่ง'),
+            'leave_type_id' => $this->string()->comment('ประเภทการขอลา'),
             'data_json' => $this->json(),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
