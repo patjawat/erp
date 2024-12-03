@@ -48,6 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr class="table-secondary">
                     <th scope="col">ผู้ขออนุมัติการลา</th>
                     <th class="text-center" scope="col">เป็นเวลา/วัน</th>
+                    <th scope="col">ปีงบประมาณ</th>
                     <th scope="col">จากวันที่</th>
                     <th scope="col">ถึงวันที่</th>
                     <th scope="col">มอบหมาย</th>
@@ -62,6 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr class="">
                     <td  class="text-truncate" style="max-width: 250px;"><?=$model->getAvatar(false)['avatar']?></td>
                     <td class="text-center fw-semibold "><?php echo $model->sum_days?></td>
+                    <td><?php echo $model->thai_year?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
                     <td><?php echo $model->leaveWorkSend()?></td>

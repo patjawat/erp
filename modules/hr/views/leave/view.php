@@ -22,7 +22,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card text-start">
     <div class="card-body d-flex justify-content-between align-items-center">
         <div>
-            <?=$model->CreateBy()->getAvatar(false)?>
+            <?php // $model->CreateBy()->getAvatar(false)?>
+            <?=$model->employee->getAvatar(false)?>
         </div>
 
     <p>

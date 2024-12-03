@@ -315,6 +315,7 @@ class Leave extends \yii\db\ActiveRecord
     }
     public function CreateBy($msg = null)
     {
+        return $this->emp_id;
         $id = $this->created_by ? $this->created_by : null;
         return UserHelper::GetEmployee($this->created_by);
     }
