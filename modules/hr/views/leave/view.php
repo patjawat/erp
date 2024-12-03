@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\widgets\DetailView;
+use app\components\AppHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
@@ -49,32 +50,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => 'ขอ'.$model->leaveType->title
             ],
             [
-                'label' => 'สถานที่ไป',
-                 'value' =>$model->data_json['location'] ?? $model->data_json['location'] ?? '-'
+                'label' => 'ตั้งแต่วันที่',
+                'value' => AppHelper::convertToThai($model->date_start)
+            ],
+            [
+                'label' => 'ถึงวันที่',
+                'value' => AppHelper::convertToThai($model->date_end)
+            ],
+            [
+                'label' => 'เป็นเวลา',
+                'value' => $model->sum_days.' วัน'
             ],
             [
                 'label' => 'เหตุผล',
                 'value' =>$model->data_json['note'] ?? $model->data_json['note'] ?? '-'
             ],
-            [
-                'label' => 'ตั้งแต่วันที่',
-                'value' => $model->date_start
-            ],
-            [
-                'label' => 'ถึงวันที่',
-                'value' => $model->date_end
-            ],
+           
             [
                 'label' => 'ระหว่างลาติดต่อ',
                 'value' =>$model->data_json['address'] ?? $model->data_json['address'] ?? '-'
             ],
-            [
-                'label' => '  มอบหมายงานให้',
-                'format' => 'html',
-                'value' =>$model->data_json['leave_work_send_id'] ?? $model->data_json['leave_work_send_id'] ?? '-'
-            ],
+            // [
+            //     'label' => '  มอบหมายงานให้',
+            //     'format' => 'html',
+            //     'value' =>$model->data_json['leave_work_send_id'] ?? $model->data_json['leave_work_send_id'] ?? '-'
+            // ],
           
-
         ],
     ]) ?>
 
