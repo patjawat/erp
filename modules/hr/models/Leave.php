@@ -192,7 +192,7 @@ class Leave extends \yii\db\ActiveRecord
             $year = AppHelper::YearBudget();
             $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
             // รวมข้อมูล
-            $model = ArrayHelper::merge($model, $isYear);
+            $model = ArrayHelper::merge($isYear,$model);
             return ArrayHelper::map($model, 'thai_year', 'thai_year');
         }
         

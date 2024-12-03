@@ -18,7 +18,7 @@ class LeavePermissionSearch extends LeavePermission
     {
         return [
             [['id', 'leave_days', 'leave_before_days', 'leave_max_days', 'leave_sum_days', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['emp_id', 'position_type_id', 'leave_type_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['emp_id', 'position_type_id', 'leave_type_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
         ];
     }
 

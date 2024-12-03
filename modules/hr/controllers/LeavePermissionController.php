@@ -44,6 +44,15 @@ class LeavePermissionController extends Controller
     {
         $searchModel = new LeavePermissionSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+            ['like', 'fname', $searchModel->q],
+            ['like', 'lname', $searchModel->q],
+        ]);
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,

@@ -1,60 +1,62 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use kartik\widgets\Select2;
+use kartik\widgets\ActiveForm;
+use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
-/** @var app\modules\hr\models\LeavePermissionSearch $model */
+/** @var app\modules\lm\models\LeaveSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="leave-permission-search">
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
 
-    <?= $form->field($model, 'id') ?>
+<div class="d-flex align-items-center gap-2">
+    
+    <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+    <?php echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
+            'data' => $model->ListThaiYear(),
+            'options' => ['placeholder' => 'ปีงบประมาณ'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'width' => '120px',
+            ],
+            'pluginEvents' => [
+                'select2:select' => "function(result) { 
+                        $(this).submit()
+                        }",
+                        "select2:unselecting" => "function() {
+                            $(this).submit()
+                        }",
+            ]
+        ])->label('ปีงบประมาณ');
+    ?>
 
-    <?= $form->field($model, 'emp_id') ?>
-
-    <?= $form->field($model, 'service_time') ?>
-
-    <?= $form->field($model, 'leave_over') ?>
-
-    <?= $form->field($model, 'leave_over_before') ?>
-
-    <?php // echo $form->field($model, 'year_of_service') ?>
-
-    <?php // echo $form->field($model, 'position_type_id') ?>
-
-    <?php // echo $form->field($model, 'leave_type_id') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'thai_year') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <?php // echo $form->field($model, 'deleted_at') ?>
-
-    <?php // echo $form->field($model, 'deleted_by') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+    <div class="d-flex flex-row mb-3 mt-4">
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
     </div>
-
-    <?php ActiveForm::end(); ?>
-
+    
+    <div class="mb-3 mt-4">
+        <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false"><i class="fa-solid fa-filter"></i> เพิ่มเติม
+        </button>
+        <div class="dropdown-menu p-4 relative" style="width:300px">
+       
+            </div>
+        </div>
+        
+    </div>
+  
 </div>
+
+<?php ActiveForm::end(); ?>

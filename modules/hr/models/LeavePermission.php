@@ -3,6 +3,9 @@
 namespace app\modules\hr\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\modules\hr\models\Employees;
 
 /**
  * This is the model class for table "leave_permission".
@@ -34,7 +37,7 @@ class LeavePermission extends \yii\db\ActiveRecord
     {
         return 'leave_permission';
     }
-
+    public $q;
     /**
      * {@inheritdoc}
      */
@@ -43,7 +46,7 @@ class LeavePermission extends \yii\db\ActiveRecord
         return [
             [['leave_days', 'leave_before_days', 'leave_max_days', 'leave_sum_days', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['year_of_service'], 'required'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['emp_id', 'position_type_id', 'leave_type_id'], 'string', 'max' => 255],
         ];
     }
@@ -72,5 +75,26 @@ class LeavePermission extends \yii\db\ActiveRecord
             'deleted_at' => 'วันที่ลบ',
             'deleted_by' => 'ผู้ลบ',
         ];
+    }
+
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+    // แสดงปีงบประมานทั้งหมด
+    public function ListThaiYear()
+    {
+        $model = self::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear,$model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 }
