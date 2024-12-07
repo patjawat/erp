@@ -3,15 +3,17 @@
 namespace app\modules\me\controllers;
 
 use Yii;
+use DateTime;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\lm\models\Leave;
 use yii\web\NotFoundHttpException;
-use app\modules\lm\models\LeaveSearch;
+use app\modules\hrtime\models\Leave;
+use app\modules\hr\models\LeaveSearch;
 
 /**
  * LeaveController implements the CRUD actions for Leave model.
@@ -42,11 +44,38 @@ class LeaveController extends Controller
     {
 
         $me = UserHelper::GetEmployee();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new LeaveSearch([
-            'emp_id' => $me->id
+            'emp_id' => $me->id,
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay)
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+          
+            ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
+        ]);
+      
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
         
+         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])
+          ->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        
+        if (!empty($searchModel->leave_type_id)) {
+            $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,

@@ -39,7 +39,7 @@ use app\components\UserHelper;
                 </div>
 
                 <div class="col-4 mt-1">
-                    <a href="<?= Url::to(['/hr/leave']); ?>" class="open-modal-x" data-title="xxx" data-size="modal-md">
+                    <a href="<?= Url::to(['/hr/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา']); ?>" class="open-modal" data-title="xxx" data-size="modal-lg">
                         <div
                             class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
                             <i class="fa-solid fa-calendar-day fs-2"></i>

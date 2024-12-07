@@ -52,12 +52,17 @@ class LeaveController extends Controller
             'date_end' => AppHelper::convertToThai($lastDay)
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-      
-        
+        $dataProvider->query->joinWith('employee');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.reason')"), $searchModel->q],
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+          
+            ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
         ]);
+      
         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
@@ -85,14 +90,14 @@ class LeaveController extends Controller
     }
 
 
-    public function actionDashbroad()
+    public function actionDashboard()
     {
         $searchModel = new LeaveSummarySearch([
             'thai_year' => AppHelper::YearBudget()
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->groupBy('code');
-        return $this->render('dashbroad/index', [
+        return $this->render('dashboard/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -287,17 +292,32 @@ class LeaveController extends Controller
 
     public function actionCalDays()
     {
+        $date_start_type = (Float) ($this->request->get('date_start_type') == "1" ? 0 : 0.5);
+        $date_end_type = (Float) ($this->request->get('date_end_type') == "1" ? 0 : 0.5);
+        $auto = $this->request->get('auto');
+
         $date_start = preg_replace('/\D/', '', $this->request->get('date_start'));
         $date_end = preg_replace('/\D/', '', $this->request->get('date_end'));
+
         $dateStart = $date_start == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_start'));
         $dateEnd = $date_end == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_end'));
         // return $dateStart.' '.$dateEnd;
         $model = AppHelper::CalDay($dateStart, $dateEnd);
-
+        
+        
         \Yii::$app->response->format = Response::FORMAT_JSON;
+        // return $auto;
+        if($auto == "1"){
+            $total = (($model['sunDay'] + $model['summaryDay'])-($date_start_type+$date_end_type));
+        }else{
+            $total = ($model['summaryDay']-($date_start_type+$date_end_type));
+        }
 
         return [
             $model,
+            'total' => $total,
+            'start_type' => $date_start_type,
+            'start_end' => $date_end_type,
             'start' => $dateStart,
             'end' => $dateEnd,
         ];
@@ -471,13 +491,31 @@ class LeaveController extends Controller
      *
      * @throws NotFoundHttpException if the model cannot be found
      */
+    public function actionCancel($id)
+    {
+        $model = $this->findModel($id);
+        $model->status = "Cancel";
+        $model->save();
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionReqCancel($id)
+    {
+        $model = $this->findModel($id);
+        $model->status = "ReqCancel";
+        $model->save();
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
     }
-
+    
     /**
      * Finds the Leave model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

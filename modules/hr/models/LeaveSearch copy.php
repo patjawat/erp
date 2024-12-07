@@ -18,7 +18,7 @@ class LeaveSearch extends Leave
     {
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['on_holidays','leave_type_id', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at','emp_id','thai_year','status','q'], 'safe'],
+            [['leave_type_id', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at','emp_id','thai_year','status','q'], 'safe'],
             [['leave_time_type'], 'number'],
         ];
     }
@@ -65,7 +65,6 @@ class LeaveSearch extends Leave
         $query->andFilterWhere([
             'id' => $this->id,
             'emp_id' => $this->emp_id,
-            'on_holidays' => $this->on_holidays,
             'thai_year' => $this->thai_year,
             'leave_time_type' => $this->leave_time_type,
             'leave.status' => $this->status,

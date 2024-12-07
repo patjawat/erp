@@ -1,6 +1,6 @@
 <?php
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use app\components\UserHelper;
 ?>
 <div class="d-none d-lg-inline-flex ms-2 dropdown" data-aos="zoom-in" data-aos-delay="100">
@@ -37,6 +37,15 @@ use app\components\UserHelper;
                             class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
                             <i class="fa-solid fa-briefcase-medical fs-2"></i>
                             <div>ศูนย์เครื่องมือแพทย์</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-4 mt-1">
+                    <a href="<?=Url::to(['/hr/leave']);?>">
+                        <div
+                            class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
+                            <i class="fa-solid fa-briefcase-medical fs-2"></i>
+                            <div>ระบบลา</div>
                         </div>
                     </a>
                 </div>

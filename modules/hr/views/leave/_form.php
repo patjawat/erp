@@ -86,11 +86,8 @@ $resultsJs = <<< JS
                 
                 <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                 
-                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:145px;'])->label('ระหว่างลาติดต่อ') ?>
-                <div class="d-flex gap-3" style="margin-top: 34px;">
-                    <?php echo $form->field($model, 'data_json[auto]')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('ไม่รวมวันหยุด'); ?>
-                    <h6><span class="cal-days">0</span> / วัน</h6>
-                </div>
+                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:220px;'])->label('ระหว่างลาติดต่อ') ?>
+                
             </div>
             
             <div class="col-6">
@@ -121,32 +118,59 @@ $resultsJs = <<< JS
                     <?php echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
                         'data' => [
                             '1' => 'เต็มวัน',
-                            '0.5' => 'ครึงวันบ่าย',
+                            '0.5' => 'ครึงวัน',
                         ],
-                        'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                        // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
                         'pluginOptions' => [
                             'allowClear' => true,
                             'dropdownParent' => '#main-modal',
                             'width' => '150px',
                         ],
+                        'pluginEvents' => [
+                                'select2:unselect' => 'function() {
+                                    calDays();
+                                    }',
+                                    'select2:select' => 'function() {
+                                        calDays();
+                                    }',
+                            ],
                     ])->label('ประเภท');
                     ?>
 
                         <?php echo $form->field($model, 'data_json[date_end_type]')->widget(Select2::classname(), [
                             'data' => [
                                 '1' => 'เต็มวัน',
-                                '0.5' => 'ครึงวันบ่าย',
+                                '0.5' => 'ครึงวัน',
                             ],
-                            'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                            // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
                             'pluginOptions' => [
                                 'allowClear' => true,
                                 'dropdownParent' => '#main-modal',
                                 'width' => '150px',
                             ],
+                            'pluginEvents' => [
+                                'select2:unselect' => 'function() {
+                                    calDays();
+                                    }',
+                                    'select2:select' => 'function() {
+                                        calDays();
+                                    }',
+                            ],
                         ])->label('ประเภท');
                         ?>
                 
                     </div>
+                </div>
+
+                <div class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-3 px-3 rounded mb-3">
+                    
+                    <h6>เป็นเวลา <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">
+                        <?php echo $model->sum_days?></span> วัน</h6>
+                        <?php echo $form->field($model, 'on_holidays', [
+    'options' => ['class' => 'mb-2']
+])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('ไม่รวมวันหยุด'); ?>
+
+
                 </div>
                 <?php echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                     'data' => [
@@ -240,8 +264,8 @@ $js = <<< JS
         console.log('Submit');
 
         Swal.fire({
-      title: "บันทึกหรือไม่?",
-      text: "ยืนยันบันทึกการลา!",
+      title: "ยืนยัน?",
+      text: "บันทึกขออนุมัติการลา!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -281,6 +305,15 @@ $js = <<< JS
             calDays(selectedDate);
         });
 
+        $("#leave-data_json-auto").change(function() {
+            //ไม่รวมวันหยุด Auto
+            if(this.checked) {
+                calDays()
+            }else{
+                calDays()
+            }
+        });
+
 
 
         function formatDate(date) {
@@ -318,14 +351,17 @@ $js = <<< JS
                 type: "get",
                 url: "$calDaysUrl",
                 data:{
-                    date_start:\$('#leave-date_start').val(),
-                    date_end:\$('#leave-date_end').val(),
+                    date_start:$('#leave-date_start').val(),
+                    date_end:$('#leave-date_end').val(),
+                    date_start_type:$('#leave-data_json-date_start_type').val(),
+                    date_end_type:$('#leave-data_json-date_end_type').val(),
+                    auto:$('#leave-data_json-auto').is(':checked') ? 1 : 0,
                 },
                 dataType: "json",
                 success: function (res) {
-                   $('.cal-days').html(res[0].summaryDay)
-                   $('#leave-sum_days').val(res[0].summaryDay)
-                   console.log(res);
+                    console.log($('#leave-data_json-date_start_type').val());
+                   $('.cal-days').html(res.total)
+                   $('#leave-sum_days').val(res.total)
                     
                     
                 }

@@ -18,6 +18,7 @@ class m240916_104256_create_leave_table extends Migration
             'leave_type_id' => $this->string()->comment('ประเภทการขอลา'),
             'leave_time_type' => $this->double()->comment('ประเภทการลา'), 
             'sum_days' => $this->double()->comment('จำนวนวัน'), 
+            'on_holidays' => $this->boolean()->comment('นับรวมวันหยุด'), 
             'data_json' => $this->json(),
             'date_start' => $this->date()->comment('วันที่ลา'),
             'date_start_type' => $this->double()->comment('ประเภทครึ่งวันเต็มวัน'), 
