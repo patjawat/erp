@@ -390,7 +390,10 @@ class LeaveController extends Controller
     public function actionPermission()
     {
         $me = UserHelper::GetEmployee();
-        $model = LeavePermission::find()->where(['emp_id' => $me->id])->all();
+        // $model = LeavePermission::find()->where(['emp_id' => $me->id])->all();
+        $model = LeavePermission::find()->where(['emp_id' => 8])->orderBy([
+            'thai_year' => SORT_DESC,
+        ])->all();
 
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
