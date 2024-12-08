@@ -11,7 +11,7 @@ $this->title = 'My DashBoard';
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-folder-check"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
 <style>
 #pr-order>.card {
     height: 291px;
@@ -197,3 +197,5 @@ $js = <<< JS
     JS;
 $this->registerJS($js, yii\web\View::POS_END);
 ?>
+
+<?php Pjax::end(); ?>

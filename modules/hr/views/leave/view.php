@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <p>
     <?php if ($model->status !== 'Cancel'): ?>
     <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-        <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
+        <?= Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
             'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow',
         ]) ?>
     </p>

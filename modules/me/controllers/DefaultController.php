@@ -22,7 +22,7 @@ class DefaultController extends Controller
 
         $searchModel = new LeaveSearch([
             'thai_year' => AppHelper::YearBudget(),
-            'emp_id' => Yii::$app->user->id
+            'emp_id' => $model->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         return $this->render('index', [

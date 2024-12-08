@@ -495,18 +495,33 @@ class Leave extends \yii\db\ActiveRecord
     }
 
     // นับจำนวนประเภท
-    public function countLeaveType($status = null)
+    public function countLeaveType($type = null)
     {
-        // return $this->emp_id;
+
         $sum = self::find()
-            ->where(['leave.thai_year' => $this->thai_year, 'emp_id' => $this->emp_id, 'status' => $status])
-            ->count('id');
-        if (!$sum) {
-            $sum = 0;
-        }
-        return $sum;
+                ->where(['status' => 'Allow'])
+                ->andFilterWhere(['leave.thai_year' => $this->thai_year])
+                ->andFilterWhere(['emp_id' => $this->emp_id])
+                ->andFilterWhere(['leave_type_id' => $type])
+                ->count('id');
+            if (!$sum) {
+                $sum = 0;
+            }
+            return $sum;
     }
 
+    //นับจำนวนวันลาพักผ่อนคงเหลือ
+    public function sumLeavePermission()
+    {
+        $lP = LeavePermission::find()->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id])->one();
+        $leaveDays = 0;
+        if ($lP) {
+            $leaveDays = ($lP->leave_days - $this->sumLeaveType('LT4'));
+        }
+        return $leaveDays;
+       
+    }
+        
         // นับจำนวนสถานะ
         public function countLeaveStatus($status = null)
         {
@@ -522,7 +537,20 @@ class Leave extends \yii\db\ActiveRecord
             return $sum;
         }
 
-        
+    // นับจำนวนวันลาที่ขออนุมัติ
+    public function awaitLeave()
+    {
+        $sum = self::find()
+        ->where(['IN','ststua',['Pendind','']])
+        ->andFilterWhere(['leave.thai_year' => $this->thai_year])
+        ->andFilterWhere(['emp_id' => $this->emp_id])
+        ->andFilterWhere(['status' => $status])
+        ->count('id');
+    if (!$sum) {
+        $sum = 0;
+    }
+    return $sum;
+    }   
 
     // คำนวนวันหยุดคงเหลือ
     public function leaveSumDays()

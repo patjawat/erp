@@ -73,29 +73,33 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 
 
 
-<?=$form->field($model, 'date_start')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('ตั้งแต่วันที่');
-                ?>
-                <?=$form->field($model, 'date_end')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('ถึงวันที่');
-                ?>
-                
+                <div class="d-flex justify-content-between">
+    
+    <?=$form->field($model, 'date_start')->widget(Datetimepicker::className(),[
+                        'options' => [
+                            'timepicker' => false,
+                            'datepicker' => true,
+                            'mask' => '99/99/9999',
+                            'lang' => 'th',
+                            'yearOffset' => 543,
+                            'format' => 'd/m/Y', 
+                        ],
+                        ])->label('ตั้งแต่วันที่');
+                    ?>
+                    <?=$form->field($model, 'date_end')->widget(Datetimepicker::className(),[
+                        'options' => [
+                            'timepicker' => false,
+                            'datepicker' => true,
+                            'mask' => '99/99/9999',
+                            'lang' => 'th',
+                            'yearOffset' => 543,
+                            'format' => 'd/m/Y', 
+                        ],
+                        ])->label('ถึงวันที่');
+                    ?>
+                    
+    </div>
+    
                 
                     <div class="d-flex flex-row gap-4">
 

@@ -13,13 +13,15 @@ use yii\helpers\Html;
                 <div class="col-md-4">
                     <div class="d-flex justify-content-center flex-column">
                        
-                        <h4 class="text-primary text-center"><?php echo $searchModel->leaveSumDays()['used_leave']?>/<?php echo $searchModel->leaveSumDays()['sum_days']?></h4>
-                        <p class="text-center">ลาพักผ่อน/คงเหลือ</p>
+                        <h4 class="text-primary text-center">
+                        <?php echo $searchModel->sumLeavePermission()?>    
+                        <?php // echo $searchModel->leaveSumDays()['used_leave']?><?php // echo $searchModel->leaveSumDays()['sum_days']?></h4>
+                        <p class="text-center">ลาพักผ่อนเหลือ</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                 <div class="d-flex justify-content-center flex-column">
-                        <h4 class="text-center"><?php echo $searchModel->sumLeaveType('LT3')?></h4>
+                        <h4 class="text-center"><?php echo $searchModel->sumLeaveType('LT3') ?></h4>
                         <p class="text-center">ลากิจ</p>
                     </div>
                 </div>

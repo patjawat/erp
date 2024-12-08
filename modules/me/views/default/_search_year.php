@@ -37,6 +37,8 @@ echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
     ]
 ])->label(false);
 ?>
+   <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
+   <?php echo $form->field($model, 'emp_id')->hiddenInput()->label(false);?>
     <?php ActiveForm::end(); ?>
 
 </div>
