@@ -16,6 +16,7 @@ use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
+use app\modules\hr\models\LeavePermission;
 use app\modules\hr\models\LeaveSummarySearch;
 
 /**
@@ -416,53 +417,9 @@ class LeaveController extends Controller
                 'model' => $model,
             ]);
         }
-        
-       
-  
-
-        
-      
     }
 
     
-    // การอนุมัติ
-    // public function actionApprove($id)
-    // {
-    //     \Yii::$app->response->format = Response::FORMAT_JSON;
-    //     $model = $this->findModel($id);
-    //     $name = $this->request->get('name');
-    //     $checker = $this->request->get('checker');
-    //     $avatar = $model->Avatar($checker)['avatar'];
-    //     $oldObj = $model->data_json;
-    //     if ($this->request->isPost && $model->load($this->request->post())) {
-
-
-    //         $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-    //         $model->save();
-
-    //         return [
-    //             'status' => 'success',
-    //             'container' => '#leave',
-    //         ];
-    //     }
-    //     if ($this->request->isAJax) {
-    //         \Yii::$app->response->format = Response::FORMAT_JSON;
-
-    //         return [
-    //             'title' => $avatar,
-    //             'content' => $this->renderAjax('form_approve', [
-    //                 'model' => $model,
-    //                 'name' => $name,
-    //             ]),
-    //         ];
-    //     } else {
-    //         return $this->render('form_approve', [
-    //             'model' => $model,
-    //             'name' => $name,
-    //         ]);
-    //     }
-    // }
-
     // ตรวจสอบความถูกต้อง
     public function actionApproveValidator()
     {
@@ -515,6 +472,7 @@ class LeaveController extends Controller
 
         return $this->redirect(['index']);
     }
+
     
     /**
      * Finds the Leave model based on its primary key value.

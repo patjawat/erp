@@ -14,6 +14,7 @@ use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hrtime\models\Leave;
 use app\modules\hr\models\LeaveSearch;
+use app\modules\hr\models\LeavePermission;
 
 /**
  * LeaveController implements the CRUD actions for Leave model.
@@ -383,6 +384,29 @@ class LeaveController extends Controller
         return $this->redirect(['index']);
     }
 
+
+
+    //ประวัติสิทวันลาสะสม
+    public function actionPermission()
+    {
+        $me = UserHelper::GetEmployee();
+        $model = LeavePermission::find()->where(['emp_id' => $me->id])->all();
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('permission', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('permission', [
+                'model' => $model,
+            ]);
+        }
+    }
+    
     /**
      * Finds the Leave model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

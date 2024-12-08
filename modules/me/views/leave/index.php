@@ -24,13 +24,15 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา <span class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h6>
+     
+        
         </div>
         <div class="d-flex justify-content-between  align-top align-items-center mt-4">
                 <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
                 <?= Html::a('<i class="fa-solid fa-plus"></i> ขออนุมัติวันลา', ['/hr/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
         </div>
 
-        
+
 <?php echo  $this->render('@app/modules/hr/views/leave/list', [
         'searchModel' => $searchModel,
         'dataProvider' => $dataProvider

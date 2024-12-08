@@ -73,6 +73,8 @@ class LeavePermissionController extends Controller
         ]);
     }
 
+
+
     /**
      * Creates a new LeavePermission model.
      * If creation is successful, the browser will be redirected to the 'view' page.
