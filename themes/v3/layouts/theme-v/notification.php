@@ -127,7 +127,7 @@ try {
                 </div>
             </div>
             <div class="notify-all">
-                <a href="<?php echo Url::to(['/me']); ?>" class="text-primary text-center p-3">
+                <a href="<?php echo Url::to(['/me/notification']); ?>" class="text-primary text-center p-3">
                     <small>View All</small>
                 </a>
             </div>

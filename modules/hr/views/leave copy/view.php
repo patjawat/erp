@@ -18,33 +18,23 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <div class="row">
-<div class="col-xl-8 col-sm-12">
+<div class="col-xl-7 col-sm-12">
 <div class="card text-start">
     <div class="card-body d-flex justify-content-between align-items-center">
             <?= $model->employee->getAvatar(false) ?>
-                <div class="d-flex align-items-center gap-3">
-                <?php if ($model->status == 'Allow'): ?>
-                    <i class="bi bi-person-check fs-3 text-primary"></i> อนุมัติให้ลาได้
-                    <?php else: ?>
-                        
-                        <?= ($model->status == 'Checking' || $model->status == 'ReqCancel') ? '' : Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        
-                        <?php if($model->status == 'ReqCancel'):?>
-                            <span class="badge rounded-pill badge-soft-danger text-danger fs-6 "><i class="bi bi-exclamation-circle-fill"></i> ขอยกเลิกรอตรวจสอบ</span>
-
-                            <?php else:?>
-                        <?= Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
-                            'class' => 'req-cancel-btn btn btn btn-danger rounded-pill shadow',
-                            ]) ?>
-                            <?php endif; ?>
-                     <?php endif; ?>
-                </div>
+    <p>
+    <?php if ($model->status !== 'Cancel'): ?>
+    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <?= Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
+            'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow',
+        ]) ?>
+    </p>
+    <?php endif; ?>
     </div>
 </div>
 
 <div class="card">
     <div class="card-body">
-       
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
@@ -90,7 +80,21 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 </div>
 </div>
-<div class="col-xl-4 col-sm-12">
+<div class="col-xl-5 col-sm-12">
+ 
+<!-- <div class="card border">
+    <div class="card-body d-flex justify-content-between p-4">
+        <h5><?php echo $model->leaveStatus->title ?></h5>
+        <?php if ($model->status == 'ReqCancel'): ?>
+            <?php echo Html::a('<i class="fa-solid fa-xmark"></i> อนุมัติยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
+                'class' => 'cancel-btn btn btn-sm btn-primary rounded-pill shadow',
+            ]) ?>
+            <?php else: ?>
+        <p class="card-text">สถานะ</p>
+        <?php endif; ?>
+    </div>
+</div> -->
+
 <?= $this->render('list_approve', ['model' => $model]) ?>
 
 </div>

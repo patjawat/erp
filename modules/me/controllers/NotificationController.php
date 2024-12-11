@@ -2,7 +2,7 @@
 
 namespace app\modules\me\controllers;
 
-class ActivityController extends \yii\web\Controller
+class NotificationController extends \yii\web\Controller
 {
     public function actionIndex()
     {

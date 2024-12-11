@@ -675,7 +675,7 @@ class Employees extends Yii\db\ActiveRecord
     }
 
     // แผนก
-    public function ListDepartment()
+    public static function ListDepartment()
     {
         return CategoriseHelper::Department();
     }

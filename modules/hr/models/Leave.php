@@ -5,6 +5,7 @@ namespace app\modules\hr\models;
 use Yii;
 use yii\helpers\Html;
 use yii\db\Expression;
+use app\models\Approve;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -34,8 +35,6 @@ use app\modules\hr\models\Organization;
  * @property string|null $deleted_at วันที่ลบ
  * @property int|null $deleted_by ผู้ลบ
  */
-
- 
 class Leave extends \yii\db\ActiveRecord
 {
     /**
@@ -46,6 +45,7 @@ class Leave extends \yii\db\ActiveRecord
     public $reason;
     public $data_start_th;
     public $data_end_th;
+    public $q_department;
 
     public static function tableName()
     {
@@ -59,7 +59,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         return [
             [['leave_time_type', 'sum_days'], 'number'],
-            [['on_holidays','data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q'], 'safe'],
+            [['on_holidays', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q','q_department'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
         ];
@@ -111,7 +111,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         return new LeaveQuery(get_called_class());
     }
-    
+
     public function afterFind()
     {
         try {
@@ -125,43 +125,94 @@ class Leave extends \yii\db\ActiveRecord
     }
 
     // บันทึกผู้ตรวจสอบ
-    public function createLeaveStep()
+    // public function createLeaveStep()
+    // {
+    //     $leaveStep1 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 1]);
+    //     if (!$leaveStep1)
+    //         $leaveStep1 = new LeaveStep();
+    //     $leaveStep1->leave_id = $this->id;
+    //     $leaveStep1->emp_id = $this->data_json['leader'];
+    //     $leaveStep1->title = 'หัวหน้าหน่วยงาน';
+    //     $leaveStep1->level = 1;
+    //     $leaveStep1->status = 'Pending';
+    //     $leaveStep1->save();
+
+    //     $leaveStep2 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 2]);
+    //     if (!$leaveStep2)
+    //         $leaveStep2 = new LeaveStep();
+    //     $leaveStep2->leave_id = $this->id;
+    //     $leaveStep2->emp_id = $this->data_json['leader_group'];
+    //     $leaveStep2->title = 'ตรวจสอบ';
+    //     $leaveStep2->level = 2;
+    //     $leaveStep2->status = 'Pending';
+    //     $leaveStep2->save();
+
+    //     $director = SiteHelper::viewDirector();
+    //     $leaveStep3 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 3]);
+    //     if (!$leaveStep3)
+    //         $leaveStep3 = new LeaveStep();
+    //     $leaveStep3->leave_id = $this->id;
+    //     $leaveStep3->emp_id = $director['id'];
+    //     $leaveStep3->title = 'ผู้อำนวยการ';
+    //     $leaveStep3->level = 3;
+    //     $leaveStep3->status = 'Pending';
+    //     $leaveStep3->save();
+    // }
+
+    public function createApprove()
     {
-        $leaveStep1 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 1]);
+        $leaveStep1 = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
         if (!$leaveStep1)
-            $leaveStep1 = new LeaveStep();
-        $leaveStep1->leave_id = $this->id;
-        $leaveStep1->emp_id = $this->data_json['leader'];
-        $leaveStep1->title = 'หัวหน้าหน่วยงาน';
+        $leaveStep1 = new Approve();
+        $leaveStep1->from_id = $this->id;
+        $leaveStep1->name = 'leave';
+        $leaveStep1->emp_id = $this->data_json['approve_1'];
+        $leaveStep1->title = 'เห็นชอบ';
+        $leaveStep1->data_json = ['topic' => 'เห็นชอบ'];
         $leaveStep1->level = 1;
         $leaveStep1->status = 'Pending';
-        $leaveStep1->save();
+        $leaveStep1->save(false);
 
-        $leaveStep2 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 2]);
+        $leaveStep2 = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
         if (!$leaveStep2)
-            $leaveStep2 = new LeaveStep();
-        $leaveStep2->leave_id = $this->id;
-        $leaveStep2->emp_id = $this->data_json['leader_group'];
-        $leaveStep2->title = 'ตรวจสอบ';
+        $leaveStep2 = new Approve();
+        $leaveStep2->from_id = $this->id;
+        $leaveStep2->name = 'leave';
+        $leaveStep2->emp_id = $this->data_json['approve_2'];
+        $leaveStep2->title = 'เห็นชอบ';
+        $leaveStep2->data_json = ['topic' => 'เห็นชอบ'];
         $leaveStep2->level = 2;
-        $leaveStep2->status = 'Pending';
-        $leaveStep2->save();
+        $leaveStep2->status = 'None';
+        $leaveStep2->save(false);
+
+        $leaveStep3 = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
+        if (!$leaveStep3)
+        $leaveStep3 = new Approve();
+        $leaveStep3->from_id = $this->id;
+        $leaveStep3->name = 'leave';
+        $leaveStep3->title = 'ตรวจสอบ';
+        $leaveStep3->data_json = ['topic' => 'ผ่าน'];
+        $leaveStep3->level = 3;
+        $leaveStep3->status = 'None';
+        $leaveStep3->save(false);
 
         $director = SiteHelper::viewDirector();
-        $leaveStep3 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 3]);
-        if (!$leaveStep3)
-            $leaveStep3 = new LeaveStep();
-        $leaveStep3->leave_id = $this->id;
-        $leaveStep3->emp_id = $director['id'];
-        $leaveStep3->title = 'ผู้อำนวยการ';
-        $leaveStep3->level = 3;
-        $leaveStep3->status = 'Pending';
-        $leaveStep3->save();
+        $leaveStep4 = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
+        if (!$leaveStep4)
+        $leaveStep4 = new Approve();
+        $leaveStep4->from_id = $this->id;
+        $leaveStep4->name = 'leave';
+        $leaveStep4->emp_id = $director['id'];
+        $leaveStep4->title = 'อนุมัติ';
+        $leaveStep4->data_json = ['topic' => 'อนุมัติ'];
+        $leaveStep4->level = 4;
+        $leaveStep4->status = 'None';
+        $leaveStep4->save(false);
     }
 
-    public function listLeaveSteps()
+    public function listApprove()
     {
-        return LeaveStep::find()->where(['leave_id' => $this->id])->orderBy(['level' => SORT_DESC])->all();
+        return Approve::find()->where(['from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
     }
 
     // section Relationships
@@ -241,6 +292,7 @@ class Leave extends \yii\db\ActiveRecord
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
+                // 'avatar' => $employee->getAvatar(false,$this->viewLeaveType()),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
@@ -257,6 +309,10 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
+    public function viewLeaveType()
+    {
+       return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เนื่องจาก ' . $this->reason;
+    }
     //  ภาพทีมผูตรวจสอบ
     public function stackChecker()
     {
@@ -355,21 +411,21 @@ class Leave extends \yii\db\ActiveRecord
             $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
 
             return [
-                'leader' => isset($query['t1_leader']) ? [
+                'approve_1' => isset($query['t1_leader']) ? [
                     'id' => $query['t1_leader'],
                     'avatar' => $leader->getAvatar(false),
                     'fullname' => $leader->fullname,
                     'position' => $leader->positionName(),
                     'title' => 'หัวหน้างาน'
                 ] : [],
-                'leaderGroup' => [
+                'approve_2' => [
                     'id' => $query['t2_leader'],
                     'avatar' => $leader->getAvatar(false),
                     'fullname' => $leaderGroup->fullname,
                     'position' => $leaderGroup->positionName(),
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ],
-                'director' => [
+                'approve_3' => [
                     'id' => $query['t3_leader'],
                     'avatar' => $director->getAvatar(false),
                     'fullname' => $director->fullname,
@@ -381,20 +437,20 @@ class Leave extends \yii\db\ActiveRecord
             // ถ้าเป็นหัวหน้าลาเอง
             $leader = Employees::find()->where(['id' => $emp->id])->one();
             return [
-                'leader' => [
+                'approve_1' => [
                     'id' => $leader->id,
                     'avatar' => $leader->getAvatar(false),
                     'fullname' => $leader->fullname,
                     'position' => $leader->positionName(),
                     'title' => 'หัวหน้างาน'
                 ],
-                'leaderGroup' => [
+                'approve_2' => [
                     'id' => $leader->id,
                     'fullname' => $leader->fullname,
                     'position' => $leader->positionName(),
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ],
-                'director' => [
+                'approve_3' => [
                     'id' => $leader->id,
                     'fullname' => $leader->fullname,
                     'position' => $leader->positionName(),
@@ -461,13 +517,14 @@ class Leave extends \yii\db\ActiveRecord
     public function listStatusSummary()
     {
         $query = Leave::find();
-        $query->select(['categorise.code', 'categorise.title', 'COUNT(leave.id) AS total'])
+        $query
+            ->select(['categorise.code', 'categorise.title', 'COUNT(leave.id) AS total'])
             ->leftJoin('categorise', 'categorise.code = leave.status')
             ->where(['leave.thai_year' => $this->thai_year])
             ->andFilterWhere(['leave.emp_id' => $this->emp_id])
             ->groupBy('leave.status')
             ->asArray();
-        
+
         $data = $query->all();
         return $data;
     }
@@ -483,6 +540,7 @@ class Leave extends \yii\db\ActiveRecord
         }
         return $sum;
     }
+
     public function sumLeaveStatus($status = null)
     {
         $sum = self::find()
@@ -497,20 +555,19 @@ class Leave extends \yii\db\ActiveRecord
     // นับจำนวนประเภท
     public function countLeaveType($type = null)
     {
-
         $sum = self::find()
-                ->where(['status' => 'Allow'])
-                ->andFilterWhere(['leave.thai_year' => $this->thai_year])
-                ->andFilterWhere(['emp_id' => $this->emp_id])
-                ->andFilterWhere(['leave_type_id' => $type])
-                ->count('id');
-            if (!$sum) {
-                $sum = 0;
-            }
-            return $sum;
+            ->where(['status' => 'Allow'])
+            ->andFilterWhere(['leave.thai_year' => $this->thai_year])
+            ->andFilterWhere(['emp_id' => $this->emp_id])
+            ->andFilterWhere(['leave_type_id' => $type])
+            ->count('id');
+        if (!$sum) {
+            $sum = 0;
+        }
+        return $sum;
     }
 
-    //นับจำนวนวันลาพักผ่อนคงเหลือ
+    // นับจำนวนวันลาพักผ่อนคงเหลือ
     public function sumLeavePermission()
     {
         $lP = LeavePermission::find()->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id])->one();
@@ -519,38 +576,37 @@ class Leave extends \yii\db\ActiveRecord
             $leaveDays = ($lP->leave_days - $this->sumLeaveType('LT4'));
         }
         return $leaveDays;
-       
     }
-        
-        // นับจำนวนสถานะ
-        public function countLeaveStatus($status = null)
-        {
-            // return $this->emp_id;
-            $sum = self::find()
-                ->andFilterWhere(['leave.thai_year' => $this->thai_year])
-                ->andFilterWhere(['emp_id' => $this->emp_id])
-                ->andFilterWhere(['status' => $status])
-                ->count('id');
-            if (!$sum) {
-                $sum = 0;
-            }
-            return $sum;
+
+    // นับจำนวนสถานะ
+    public function countLeaveStatus($status = null)
+    {
+        // return $this->emp_id;
+        $sum = self::find()
+            ->andFilterWhere(['leave.thai_year' => $this->thai_year])
+            ->andFilterWhere(['emp_id' => $this->emp_id])
+            ->andFilterWhere(['status' => $status])
+            ->count('id');
+        if (!$sum) {
+            $sum = 0;
         }
+        return $sum;
+    }
 
     // นับจำนวนวันลาที่ขออนุมัติ
     public function awaitLeave()
     {
         $sum = self::find()
-        ->where(['IN','ststua',['Pendind','']])
-        ->andFilterWhere(['leave.thai_year' => $this->thai_year])
-        ->andFilterWhere(['emp_id' => $this->emp_id])
-        ->andFilterWhere(['status' => $status])
-        ->count('id');
-    if (!$sum) {
-        $sum = 0;
+            ->where(['IN', 'ststua', ['Pendind', '']])
+            ->andFilterWhere(['leave.thai_year' => $this->thai_year])
+            ->andFilterWhere(['emp_id' => $this->emp_id])
+            ->andFilterWhere(['status' => $status])
+            ->count('id');
+        if (!$sum) {
+            $sum = 0;
+        }
+        return $sum;
     }
-    return $sum;
-    }   
 
     // คำนวนวันหยุดคงเหลือ
     public function leaveSumDays()

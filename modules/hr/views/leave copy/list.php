@@ -2,14 +2,10 @@
 
 use yii\bootstrap5\Html;
 ?>
-
-
-
 <table class="table table-striped mt-3">
             <thead>
                 <tr class="table-secondary">
                     <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">หนวยงาน</th>
                     <th class="text-center" scope="col">เป็นเวลา/วัน</th>
                     <th scope="col">ปีงบประมาณ</th>
                     <th scope="col">จากวันที่</th>
@@ -25,7 +21,6 @@ use yii\bootstrap5\Html;
                 <?php foreach($dataProvider->getModels() as $model):?>
                 <tr class="">
                     <td  class="text-truncate" style="max-width: 250px;"><?=$model->getAvatar(false)['avatar']?></td>
-                    <td class="text-start"><?=$model->getAvatar(false)['department']?></td>
                     <td class="text-center fw-semibold "><?php echo $model->sum_days?></td>
                     <td><?php echo $model->thai_year?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
@@ -33,7 +28,10 @@ use yii\bootstrap5\Html;
                     <td><?php echo $model->leaveWorkSend()?></td>
                     <td><?php echo $model->stackChecker()?></td>
                     <td class="fw-light align-middle text-start">
-                        <?php echo $model->showStatus();?>
+                        <?php
+                       // echo $model->statusProcess();
+                       echo $model->showStatus();
+                        ?>
 
                 </td>
                     <td class="fw-center align-middle text-center">
@@ -66,12 +64,3 @@ use yii\bootstrap5\Html;
                 ],
             ]); ?>
         </div>
-<?php
-$js = <<< JS
-    var offcanvasElement = document.getElementById('offcanvasExample');
-    var offcanvas = new bootstrap.Offcanvas(offcanvasElement, {
-    backdrop: 'static'
-    });
-JS;
-$this->registerJs($js);
-?>

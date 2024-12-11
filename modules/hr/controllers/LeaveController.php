@@ -7,6 +7,7 @@ use DateTime;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
+use app\models\Approve;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -16,6 +17,7 @@ use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
+use app\modules\hr\models\Organization;
 use app\modules\hr\models\LeavePermission;
 use app\modules\hr\models\LeaveSummarySearch;
 
@@ -69,7 +71,7 @@ class LeaveController extends Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
         
-         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])
           ->andFilterWhere(['<=', 'date_end', $dateEnd]);
@@ -78,6 +80,32 @@ class LeaveController extends Controller
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
         
+        // search employee department
+         // ค้นหาคามกลุ่มโครงสร้าง
+         $org1 = Organization::findOne($searchModel->q_department);
+         // ถ้ามีกลุ่มย่อย
+         if (isset($org1) && $org1->lvl == 1) {
+             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+             FROM tree t1
+             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+             WHERE t2.name = :name;';
+             $querys = Yii::$app
+                 ->db
+                 ->createCommand($sql)
+                 ->bindValue(':name', $org1->name)
+                 ->queryAll();
+             $arrDepartment = [];
+             foreach ($querys as $tree) {
+                 $arrDepartment[] = $tree['id'];
+             }
+             if (count($arrDepartment) > 0) {
+                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+             } else {
+                 $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+             }
+         } else {
+             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+         }
        
         
         // $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
@@ -207,8 +235,8 @@ class LeaveController extends Controller
         $model->data_json = [
             'title' => $this->request->get('title'),
             'address' => $model->CreateBy()->fulladdress,
-            'leader' => $model->Approve()['leader']['id'],
-            'leader_group' => $model->Approve()['leaderGroup']['id'],
+            'approve_1' => $model->Approve()['approve_1']['id'],
+            'approve_2' => $model->Approve()['approve_2']['id'],
             'leave_contact_phone' => $model->CreateBy()->phone,
             'director' => \Yii::$app->site::viewDirector()['id'],
             'director_fullname' => \Yii::$app->site::viewDirector()['fullname'],
@@ -224,7 +252,7 @@ class LeaveController extends Controller
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 
                 if($model->save()){
-                    $model->createLeaveStep();
+                    $model->createApprove();
                 }
                 
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -279,8 +307,8 @@ class LeaveController extends Controller
             $model->data_json['location'] == '' ? $model->addError('data_json[location]', $requiredName) : null;
             $model->data_json['address'] == '' ? $model->addError('data_json[address]', $requiredName) : null;
             $model->data_json['leave_work_send_id'] == '' ? $model->addError('data_json[leave_work_send_id]', $requiredName) : null;
-            $model->data_json['leader'] == '' ? $model->addError('data_json[leader]', $requiredName) : null;
-            $model->data_json['leader_group'] == '' ? $model->addError('data_json[leader_group]', $requiredName) : null;
+            $model->data_json['approve_1'] == '' ? $model->addError('data_json[approve_1]', $requiredName) : null;
+            $model->data_json['approve_2'] == '' ? $model->addError('data_json[approve_2]', $requiredName) : null;
             // $model->unit_price == "" ? $model->addError('unit_price', $requiredName) : null;
         }
         foreach ($model->getErrors() as $attribute => $errors) {
@@ -373,10 +401,11 @@ class LeaveController extends Controller
 
     public function actionApprove($id)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
-        $model = LeaveStep::findOne(["id" => $id, "emp_id" => $me->id]);
-        $leave = Leave::findOne($model->leave_id);
+        // $model = Approve::findOne(["id" => $id, "emp_id" => $me->id]);
+        $model = Approve::findOne(["id" => $id]);
+        $nextApprove = Approve::findOne(["from_id" => $model->from_id,'level' => ($model->level+1)]);
+        $leave = Leave::findOne($model->from_id);
         if(!$model)
         {
             return [
@@ -385,16 +414,26 @@ class LeaveController extends Controller
             ];
         }
         if ($this->request->isPost && $model->load($this->request->post())) {
-           
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $approveDate = ["approve_date" => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
+            if($model->level == 3){
+                $model->emp_id = $me->id;
+            }
+            
             if($model->save()){
-                if($model->level == 3){
+                if($nextApprove){
+                    $nextApprove->status = 'Pending';
+                    $nextApprove->save();
+                }
+                if($model->level == 4){
                     $leave->status = 'Allow';
                     $leave->save();
                     
                 }else{
                     $leave->status = 'Checking';
                     $leave->save();
-                    
                 }
                 
                 return [
@@ -407,7 +446,7 @@ class LeaveController extends Controller
             if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $this->request->get('title'),
+                'title' => '<i class="bi bi-person-exclamation"></i> '.$this->request->get('title'),
                 'content' => $this->renderAjax('form_approve', [
                     'model' => $model,
                 ]),

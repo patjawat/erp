@@ -57,16 +57,16 @@ $resultsJs = <<< JS
                         try {
                             //code...
                             if($model->isNewRecord){
-                                $initEmployee =  Employees::find()->where(['id' => $model->Approve()['leader']['id']])->one()->getAvatar(false);    
+                                $initEmployee =  Employees::find()->where(['id' => $model->Approve()['approve_1']['id']])->one()->getAvatar(false);    
                             }else{
-                                $initEmployee =  Employees::find()->where(['id' => $model->data_json['leader']])->one()->getAvatar(false);    
+                                $initEmployee =  Employees::find()->where(['id' => $model->data_json['approve_1']])->one()->getAvatar(false);    
                             }
                             // $initEmployee =  Employees::find()->where(['id' => $model->Approve()['leader']['id']])->one()->getAvatar(false);
                         } catch (\Throwable $th) {
                             $initEmployee = '';
                         }
 
-                        echo $form->field($model, 'data_json[leader]')->widget(Select2::classname(), [
+                        echo $form->field($model, 'data_json[approve_1]')->widget(Select2::classname(), [
                             'initValueText' => $initEmployee,
                             // 'initValueText' => $model->Approve()['leader']['avatar'],
                             'options' => ['placeholder' => 'เลือกรายการ...'],
@@ -110,11 +110,11 @@ $resultsJs = <<< JS
 <?php
                         try {
                             //code...
-                            $initEmployee =  Employees::find()->where(['id' => $model->data_json['leader_group']])->one()->getAvatar(false);
+                            $initEmployee =  Employees::find()->where(['id' => $model->data_json['approve_2']])->one()->getAvatar(false);
                         } catch (\Throwable $th) {
                             $initEmployee = '';
                         }
-                        echo $form->field($model, 'data_json[leader_group]')->widget(Select2::classname(), [
+                        echo $form->field($model, 'data_json[approve_2]')->widget(Select2::classname(), [
                             'initValueText' => $initEmployee,
                             'options' => ['placeholder' => 'เลือกรายการ...'],
                             'size' => Select2::LARGE,
