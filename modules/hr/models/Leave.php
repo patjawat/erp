@@ -309,6 +309,45 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
+
+    // แสดงสถานะในรูปแบบสี
+    public function viewStatus()
+    {
+               switch ($this->status) {
+            case "Pending":
+             $color = 'warning';
+             $icon = '<i class="bi bi-hourglass-split"></i>';
+              break;
+            case "Allow":
+                $color = 'success';
+                $icon = '<i class="bi bi-check-circle-fill text-success"></i>';
+              break;
+              case "ReqCancel":
+                $color = 'warning';
+                $icon = '<i class="bi bi-exclamation-triangle text-danger"></i>';
+              break;
+              case "Cancel":
+                $color = 'secondary';
+                $icon = '<i class="bi bi-exclamation-circle-fill text-secondary"></i>';
+              break;
+              case "Checking":
+                $color = 'warning';
+                $icon = '<i class="fa-solid fa-magnifying-glass"></i>';
+              break;
+              case "Reject":
+                $color = 'danger';
+                $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
+              break;
+              
+            default:
+            $color = '';
+            $icon = '';
+          }
+          
+          return '<span class="badge rounded-pill badge-soft-'.$color.' text-primary fs-13 ">'.$icon.' '.$this->leaveStatus->title.'</span>';
+          
+    }
+    
     public function viewLeaveType()
     {
        return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เนื่องจาก ' . $this->reason;

@@ -13,7 +13,7 @@ use yii\bootstrap5\Html;
                     <th scope="col">มอบหมาย</th>
                     <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
                     <th class="text-start">ความคืบหน้า</th>
-                    <th class="text-center">สถานะ</th>
+                    <th class="text-start">สถานะ</th>
                     <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
@@ -30,10 +30,11 @@ use yii\bootstrap5\Html;
                     <td><?php echo $model->leaveWorkSend()?></td>
                     <td><?php echo $model->stackChecker()?></td>
                     <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $model->showStatus();?></td>
-                    <td class="fw-center align-middle text-center">
-                        <?php
+                    <td class="fw-center align-middle text-start">
+        
+                          <?php
                         try {
-                            echo $model->leaveStatus->title;
+                            echo $model->viewStatus();
                         } catch (\Throwable $th) {
                             //throw $th;
                         }
