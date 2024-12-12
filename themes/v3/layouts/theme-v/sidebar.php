@@ -1,7 +1,7 @@
 <?php
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
 $moduleId = Yii::$app->controller->module->id; 
 ?>
 <style>
@@ -55,6 +55,12 @@ $moduleId = Yii::$app->controller->module->id;
                     <a class="side-nav-link <?=$moduleId == 'inventory' ? 'active' : null?>" href="<?= Url::to(['/inventory']) ?>">
                     <i class="fa-solid fa-cubes-stacked fs-4"></i>
                         <span> คลัง</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link <?=$moduleId == 'dms' ? 'active' : null?>" href="<?= Url::to(['/dms']) ?>">
+                    <i class="bi bi-journal-text fs-4"></i>
+                        <span> สารบรรณ</span>
                     </a>
                 </li>
                 <?php if(Yii::$app->user->can('admin')):?>

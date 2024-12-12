@@ -42,7 +42,7 @@ use yii\bootstrap5\Html;
                     </td>
 
                     <td class="text-center">
-                    <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
+                    <?php echo Html::a('<i class="fa-solid fa-print me-1"></i>', 
                             ['/hr/leave/word', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'btn btn-sm btn-light', 'target' => '_blank']) ?>
                         <?=Html::a('<i class="fa-solid fa-eye me-1"></i>',['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'btn btn-sm btn-primary open-modalx','data' => ['size' => 'modal-lg']]) ?>
