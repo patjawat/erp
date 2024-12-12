@@ -72,10 +72,3 @@ $js = <<< JS
 JS;
 $this->registerJs($js);
 ?>
-
-docker run \
-    -e ANTHROPIC_API_KEY=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 \
-    -v $HOME/.anthropic:/home/computeruse/.anthropic \
-    -p 5900:5900 -p 8501:8501 \
-    -p 6080:6080 -p 8080:8080 \
-    -it ghcr.io/anthropics/anthropic-quickstarts:computer-use-demo-latest
