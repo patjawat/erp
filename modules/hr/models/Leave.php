@@ -319,14 +319,14 @@ class Leave extends \yii\db\ActiveRecord
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (LeaveStep::find()->where(['leave_id' => $this->id])->andWhere(['!=', 'status', 'Pending'])->all() as $key => $item) {
-            $emp = Employees::findOne(['id' => $item->emp_id]);
+        foreach (Approve::find()->where(['from_id' => $this->id])->andWhere(['!=', 'status', 'None'])->all() as $key => $item) {
+           try {
             $data .= Html::a(
-                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up'.($item->status == 'Reject' ? ' border-danger' : null),
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
-                        'src' => $emp->showAvatar()
+                        'src' => $item->employee->showAvatar()
                     ]]),
                 ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
                 [
@@ -338,10 +338,15 @@ class Leave extends \yii\db\ActiveRecord
                         'bs-placement' => 'top',
                         'bs-title' => $item->title,
                         'bs-html' => 'true',
-                        'bs-content' => $emp->fullname . '<br>' . $emp->positionName()
+                        'bs-content' => $item->employee->fullname . '<br>' . ($item->status == 'Reject' ? '<i class="bi bi-exclamation-circle text-danger"></i> ไม่' : '<i class="bi bi-check-circle-fill text-primary"></i> ').$item->data_json['topic']
                     ]
                 ]
             );
+           
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+    
         }
         $data .= '</div>';
         return $data;
@@ -362,8 +367,8 @@ class Leave extends \yii\db\ActiveRecord
 
     public function statusProcess()
     {
-        $total = LeaveStep::find()->where(['leave_id' => $this->id])->count();
-        $accept = LeaveStep::find()->where(['leave_id' => $this->id, 'status' => 'Approve'])->count();
+        $total = Approve::find()->where(['from_id' => $this->id])->count();
+        $accept = Approve::find()->where(['from_id' => $this->id, 'status' => 'Approve'])->count();
         if ($total > 0) {
             $percentageCompleted = ($accept / $total) * 100;
         } else {
@@ -486,13 +491,14 @@ class Leave extends \yii\db\ActiveRecord
 
     public function showStatus()
     {
-        $leaveStep = LeaveStep::find()->where(['leave_id' => $this->id])->andWhere(['!=', 'status', 'Pending'])->orderBy(['level' => SORT_DESC])->one();
+        $leaveStep = Approve::find()->where(['from_id' => $this->id])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();
 
         $color = 'primary';
         $statusName = '';
         if ($leaveStep) {
-            $status = $leaveStep->status == 'Approve' ? '<i class="bi bi-check-circle fw-semibold text-success"></i> ผ่าน' : '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่ผ่าน';
-            $title = $leaveStep->title . ' ' . $status;
+            $status = $leaveStep->status == 'Approve' ? '<i class="bi bi-check-circle fw-semibold text-success"></i> ผ่าน' : '<i class="bi bi-exclamation-circle-fill text-danger"></i> ไม่ผ่าน';
+            // $title = $leaveStep->title . ' ' . $status;
+            $title = $leaveStep->title;
             $color = '';
         } else {
             $status = '';
@@ -512,6 +518,7 @@ class Leave extends \yii\db\ActiveRecord
                             <div class="progress-bar bg-' . $color . '" role="progressbar" aria-label="Progress" aria-valuenow="' . $this->statusProcess() . '" aria-valuemin="0" aria-valuemax="100" style="width: ' . $this->statusProcess() . '%;">
                             </div>
                         </div>';
+                        
     }
 
     public function listStatusSummary()

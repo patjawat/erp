@@ -108,7 +108,7 @@ class LeaveController extends Controller
          }
        
         
-        // $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
+        $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -423,15 +423,21 @@ class LeaveController extends Controller
             }
             
             if($model->save()){
+                
                 if($nextApprove){
                     $nextApprove->status = 'Pending';
                     $nextApprove->save();
                 }
+                
+            // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
                 if($model->level == 4){
                     $leave->status = 'Allow';
                     $leave->save();
-                    
-                }else{
+                }else if($model->status == 'Reject')
+                {
+                    $leave->status = 'Reject';
+                    $leave->save();
+                }else{                    
                     $leave->status = 'Checking';
                     $leave->save();
                 }
