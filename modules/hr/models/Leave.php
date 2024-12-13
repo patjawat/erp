@@ -352,6 +352,23 @@ class Leave extends \yii\db\ActiveRecord
     {
        return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เนื่องจาก ' . $this->reason;
     }
+
+    //ผู้ตรวจสอบการลา
+    public function checkerName($level)
+    {
+        $check = Approve::find()->where(['from_id' => $this->id, 'level' => $level])->andWhere(['IS NOT', 'emp_id', null])->one();
+        if ($check) {
+            return [
+                'fullname' => $check->employee->fullname,
+                'position' => $check->employee->positionName(),
+            ];
+        }else{
+            return [
+                'fullname' => '',
+                'position' => ''
+            ];
+        }
+    }
     //  ภาพทีมผูตรวจสอบ
     public function stackChecker()
     {

@@ -2,6 +2,7 @@
 namespace app\modules\hr\controllers;
 
 use yii;
+use DateTime;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
@@ -12,63 +13,51 @@ use app\components\SiteHelper;
 use PhpOffice\PhpWord\Settings;
 use yii\helpers\BaseFileHelper;
 use app\modules\am\models\Asset;
+use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 
 class DocumentController extends \yii\web\Controller
 {
 
     
-    // ใบเบิกวัสดุ
-    public function actionStockOrder($id)
+    // ใบพักผ่อน
+    public function actionLeave($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $model = StockEvent::findOne($id);
+        $model = Leave::findOne($id);
         $this->CreateDir($model->id);
-        $title = 'ใบเบิกวัสดุ';
-        $result_name = $title . '.docx';
-        $word_name = 'billofmaterials.docx';
+        $title = 'LT3';
+        $result_name = $title .'-'.$model->id.'.docx';
+        $word_name = 'LT3-ใบลาพักผ่อน.docx';
 
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/inventory/' . $result_name);
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
-        $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
-        $templateProcessor->setValue('date', Yii::$app->thaiFormatter->asDateTime(date('Y-m-y'), 'php:d/m/Y'));
-        $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
-        $templateProcessor->setValue('department', $model->CreateBy()['department']);
- 
-
-        $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);  // ผู้อำนวยการโรงพยาบาล
-        $templateProcessor->setValue('org_name', 'ผู้อำนวนยการ' . $this->GetInfo()['company_name']);  // ชื่อโรงพยาบาล
-
-        // วันที่สั่งจ่าย
-        try {
-            $dateTime = $model->data_json['player_date'];
-            $paydate = explode(' ', $dateTime)[0];
-            Yii::$app->thaiFormatter->asDate($paydate, 'long');
-            $templateProcessor->setValue('pay_date', $datetime);  // วันที่
-        } catch (\Throwable $th) {
-            $templateProcessor->setValue('pay_date', '-');  // วันที่
-        }
-
-        $templateProcessor->setValue('pay_name', $model->ShowPlayer()['fullname']);  // ผู้จ่าย
-
-        $templateProcessor->cloneRow('detail', count($model->getItems()));
-        $i = 1;
-        $num = 1;
-        foreach ($model->getItems() as $item) {
-            $templateProcessor->setValue('no#' . $i, $num++);
-            $templateProcessor->setValue('detail#' . $i, $item->product->title);
-            $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
-            // $templateProcessor->setValue('qty#' . $i, $item->qty);
-            $templateProcessor->setValue('qty#' . $i, $item->qty);
-            $templateProcessor->setValue('unitprice#' . $i, $item->unit_price);
-            $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price), 2));
-            $i++;
-        }
-
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/' . $result_name);
+        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
+        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $createDate  = new DateTime($model->created_at);
+        $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
+        $templateProcessor->setValue('y', $createDate->format('Y') + 543);
+        $templateProcessor->setValue('d', $createDate->format('d'));
+        $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
+        $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
+        $templateProcessor->setValue('fullname', $model->employee->fullname);
+        $templateProcessor->setValue('position', $model->employee->positionName());
+        $templateProcessor->setValue('department', $model->employee->departmentName());
+        $templateProcessor->setValue('dateStart', $dateStart);
+        $templateProcessor->setValue('dateEnd', $dateEnd);
+        $templateProcessor->setValue('days', $model->sum_days);
+        $templateProcessor->setValue('address', $model->data_json['address']);
+        $templateProcessor->setValue('checker1', $model->checkerName(1)['fullname']);
+        $templateProcessor->setValue('position1', $model->checkerName(1)['position']);
+        $templateProcessor->setValue('checker3', $model->checkerName(3)['fullname']);
+        $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
+        $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
+        
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
         // return $this->Show($result_name);
     }
 

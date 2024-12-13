@@ -1,8 +1,8 @@
 <?php
+use yii\helpers\Url;
+use yii\helpers\Html;
 use app\components\AppHelper;
 use app\modules\hr\models\EmployeeDetail;
-use yii\helpers\Html;
-use yii\helpers\Url;
 ?>
 
 <div class="card">

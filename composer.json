@@ -85,7 +85,8 @@
         "asyou99/yii2-cart": "dev-master",
         "kartik-v/yii2-sortable": "dev-master",
         "execut/yii2-loading-overlay": "dev-master",
-        "phpoffice/phpspreadsheet": "dev-master"
+        "phpoffice/phpspreadsheet": "dev-master",
+        "tecnickcom/tcpdf": "dev-main"
         
     },
     "require-dev": {
