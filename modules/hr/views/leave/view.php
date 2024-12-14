@@ -34,9 +34,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php echo Html::a('<i class="fa-solid fa-circle-exclamation text-danger"></i> อนุมัติยกเลิกวันลา',['/hr/leave/cancel', 'id' => $model->id],['class'=> 'btn btn-warning rounded-pill shadow cancel-btn'])?>
 
                     <?php else: ?>
-                    <?= Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
+                    <?= $model->status !== 'Reject' ? Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
                             'class' => 'req-cancel-btn btn btn btn-danger rounded-pill shadow',
-                        ]) ?>
+                        ]) : '' ?>
                     <?php endif; ?>
                     <?php endif; ?>
                     <?php endif; ?>
@@ -53,15 +53,11 @@ $this->params['breadcrumbs'][] = $this->title;
     'model' => $model,
     'attributes' => array_filter([
         [
-            'label' => 'สถานะ',
+            'label' => 'เขียนเมื่อ',
             'format' => 'html',
-            'value' => $model->viewStatus()
+            'value' => $model->viewCreated()
         ],
-        $model->status == 'Cancel' ? [
-            'label' => 'ผู้ดำเนินการยกเลิก',
-            'format' => 'html',
-            'value' => ($model->data_json['cancel_fullname'] ?? '-'). (' วันเวลา '.Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'],'medium') ?? '')
-        ] : null,
+       
         [
             'label' => 'เรื่อง',
             'value' => 'ขอ' . ($model->leaveType->title ?? '-')
@@ -86,6 +82,16 @@ $this->params['breadcrumbs'][] = $this->title;
             'label' => 'ระหว่างลาติดต่อ',
             'value' => $model->data_json['address'] ?? '-'
         ],
+        [
+            'label' => 'สถานะ',
+            'format' => 'html',
+            'value' => $model->viewStatus()
+        ],
+        $model->status == 'Cancel' ? [
+            'label' => 'ผู้ดำเนินการยกเลิก',
+            'format' => 'html',
+            'value' => ($model->data_json['cancel_fullname'] ?? '-'). (' วันเวลา '.Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'],'medium') ?? '')
+        ] : null,
     ])
 ]) ?>
 

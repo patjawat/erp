@@ -21,7 +21,7 @@ use yii\bootstrap5\Html;
     <tbody class="align-middle">
         <?php foreach($dataProvider->getModels() as $model):?>
         <tr class="">
-            <td class="text-truncate" style="max-width: 250px;">
+            <td class="text-truncate" style="max-width: 230px;">
                 <?=$model->getAvatar(false)['avatar']?></td>
             <td class="text-center fw-semibold"><?php echo $model->sum_days?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>

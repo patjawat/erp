@@ -352,7 +352,7 @@ class AppHelper extends Component
         // return ($wan > 0 ? "ผ่านมาแล้ว " . $wan . " วัน " : " วันนี้ ") . ($hour > 0 ? $hour . " ชั่วโมง " : null) . ($minute > 0 ?  $minute. " นาที " : null) . ($second > 0 ? $second . " วินาที" : null);
         // ($wan > 0 ? "ผ่านมาแล้ว " . $wan . " วัน " : " วันนี้ ");
         if ($wan <= 7) {
-            return ($wan > 0 ? 'ผ่านมาแล้ว ' . $wan . ' วัน ' : ' วันนี้ ');
+            return ($wan > 0 ? '<i class="bi bi-calendar2-check-fill"></i> ผ่านมาแล้ว ' . $wan . ' วัน ' : ('<i class="bi bi-clock-history"></i> วันนี้ ').Yii::$app->formatter->asDateTime($begin, 'php:H:i:s'));
         } else {
             return $begin;
         }
