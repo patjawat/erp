@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <i class="bi bi-person-check fs-3 text-primary"></i> อนุมัติให้ลาได้
                     <?php else: ?>
 
-                    <?= ($model->status == 'Checking' || $model->status == 'ReqCancel') ? '' : Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?= ($model->status == 'Pending') ?  Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) : ''?>
 
                     <?php if ($model->status == 'ReqCancel'): ?>
                     <?php echo Html::a('<i class="fa-solid fa-circle-exclamation text-danger"></i> อนุมัติยกเลิกวันลา',['/hr/leave/cancel', 'id' => $model->id],['class'=> 'btn btn-warning rounded-pill shadow cancel-btn'])?>
