@@ -19,9 +19,17 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <div class="row">
     <div class="col-xl-8 col-sm-12">
-        <div class="card text-start">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <?= $model->employee->getAvatar(false) ?>
+
+
+        <div class="row">
+            <div class="col-12">
+
+
+            <div class="card border-0 rounded-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+
+        <?= $model->employee->getAvatar(false) ?>
                 <div class="d-flex align-items-center gap-3">
                 <?php if ($model->status !== 'Cancel'): ?>
                     <?php if ($model->status == 'Allow'): ?>
@@ -41,63 +49,58 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif; ?>
                     <?php endif; ?>
                 </div>
-            </div>
         </div>
 
+        <table class="table border-0 table-striped-columns mt-3">
+            <tbody>
+                <tr>
+                    <td>เรื่อง : </td>
+                    <td><span class="text-pink fw-semibold">ขอ<?php echo ($model->leaveType->title ?? '-')?></span></td>
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                    <?= DetailView::widget([
-    'model' => $model,
-    'attributes' => array_filter([
-        [
-            'label' => 'เขียนเมื่อ',
-            'format' => 'html',
-            'value' => $model->viewCreated()
-        ],
-       
-        [
-            'label' => 'เรื่อง',
-            'value' => 'ขอ' . ($model->leaveType->title ?? '-')
-        ],
-        [
-            'label' => 'ตั้งแต่วันที่',
-            'value' => AppHelper::convertToThai($model->date_start ?? '')
-        ],
-        [
-            'label' => 'ถึงวันที่',
-            'value' => AppHelper::convertToThai($model->date_end ?? '')
-        ],
-        [
-            'label' => 'เป็นเวลา',
-            'value' => $model->sum_days . ' วัน'
-        ],
-        [
-            'label' => 'เหตุผล',
-            'value' => $model->data_json['note'] ?? '-'
-        ],
-        [
-            'label' => 'ระหว่างลาติดต่อ',
-            'value' => $model->data_json['address'] ?? '-'
-        ],
-        [
-            'label' => 'สถานะ',
-            'format' => 'html',
-            'value' => $model->viewStatus()
-        ],
-        $model->status == 'Cancel' ? [
-            'label' => 'ผู้ดำเนินการยกเลิก',
-            'format' => 'html',
-            'value' => ($model->data_json['cancel_fullname'] ?? '-'). (' วันเวลา '.Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'],'medium') ?? '')
-        ] : null,
-    ])
-]) ?>
+                    <td>เขียนเมื่อ : </td>
+                    <td><span class="text-pink fw-semibold"><?php echo $model->viewCreated()?></span></td>
+                </tr>
+                <tr>
+                    <td>ระหว่างวันที่ : </td>
+                    <td>
+                        <?php echo AppHelper::convertToThai($model->date_start ?? '')?> ถึงวันที่ <?php echo AppHelper::convertToThai($model->date_end ?? '')?>
+                    </td>
 
+                    <td>เป็นเวลา : </td>
+                    <td><?php echo $model->sum_days?> วัน</td>
+                </tr>
 
-                    </div>
-                </div>
+                <tr>
+                    <td>เหตุผล : </td>
+                    <td colspan="4"><?php echo $model->data_json['reason'] ?? '-'?></td>
+                    
+                   
+                </tr>
+                <tr>
+                    <td>ระหว่างลาติดต่อ : </td>
+                    <td><?php echo $model->data_json['address'] ?? '-'?></td>
+                    <td>โทรศัพท์ : </td>
+                    <td><?php echo $model->data_json['phone'] ?? '-'?></td>
+                </tr>
+                <tr>
+                    <?php if($model->status == 'Cancel'):?>
+                    <td>สถานะ : </td>
+                    <td><?php echo  $model->viewStatus()?></td>
+                    <td>ผู้ดำเนินการยกเลิก : </td>
+                    <td><?php echo ($model->data_json['cancel_fullname'] ?? '-'). (' วันเวลา '.Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'],'medium') ?? '')?></td>
+                    <?php else:?>
+                        <td>สถานะ : </td>
+                        <td  colspan="4"><?php echo  $model->viewStatus()?></td>
+                    <?php endif?>
+                </tr>
+                    
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+            
             </div>
             <div class="col-12">
                 <div class="card">

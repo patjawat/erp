@@ -16,8 +16,8 @@ $items = [
         'url' => ['/me/purchase']
     ],
     [
-        'title' => 'ระบบลา',
-        'note' => 'ยื่นใบลาและตรวจสอบสถานะ',
+        'title' => 'งานสารบรรณ',
+        'note' => 'หนังสือรับ-ส่งของหน่วยงาน',
         'icon' => ' <i class="fa-solid fa-calendar-day mb-3 text-primary fs-1"></i>',
         'url' =>  ['/me/leave']
     ],
