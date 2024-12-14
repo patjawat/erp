@@ -295,10 +295,10 @@ class LeaveController extends Controller
             $dateStart = preg_replace('/\D/', '', $model->date_start) !== '' ? AppHelper::convertToGregorian($model->date_start) : '';
             $dateEnd = preg_replace('/\D/', '', $model->date_end) !== '' ? AppHelper::convertToGregorian($model->date_end) : '';
             
-            // if($dateStart > $dateEnd ){
-            //     $model->addError('date_start', 'มากกว่าวันสุดท้าย');
-            //     $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
-            // }
+            if($dateStart > $dateEnd ){
+                $model->addError('date_start', 'มากกว่าวันสุดท้าย');
+                $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
+            }
 
             $model->data_json['date_start_type'] == '' ? $model->addError('data_json[date_start_type]', $requiredName) : null;
             $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
