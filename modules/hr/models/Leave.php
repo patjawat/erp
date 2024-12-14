@@ -258,30 +258,45 @@ class Leave extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
+    
     // สรุปการลารายบุคคล
     public function leaveEmpSummary()
     {
-        $sql = "SELECT 
-                lt.code,
-                lt.title,
-                COALESCE(SUM(l.sum_days), 0) AS total
+        // $sql = "SELECT 
+        //         lt.code,
+        //         lt.title,
+        //         COALESCE(SUM(l.sum_days), 0) AS total
+        //         FROM 
+        //             categorise lt
+        //         LEFT JOIN 
+        //             `leave` l ON lt.code = l.leave_type_id 
+        //                     AND l.emp_id = 8 
+        //                     AND l.thai_year = :thai_year
+        //         WHERE 
+        //             lt.name = 'leave_type' 
+        //             AND lt.code IN ('LT1', 'LT2', 'LT3','LT4')
+        //         GROUP BY 
+        //             lt.code, lt.title;";
+        $sql = "WITH summary AS (
+                SELECT 
+                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT1' THEN l.sum_days ELSE 0 END), 0) AS last_lt1,
+                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT3' THEN l.sum_days ELSE 0 END), 0) AS last_lt3,
+                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT4' THEN l.sum_days ELSE 0 END), 0) AS last_lt4
                 FROM 
-                    categorise lt
-                LEFT JOIN 
-                    `leave` l ON lt.code = l.leave_type_id 
-                            AND l.emp_id = 8 
-                            AND l.thai_year = :thai_year
+                    `leave` l
                 WHERE 
-                    lt.name = 'leave_type' 
-                    AND lt.code IN ('LT1', 'LT2', 'LT3','LT4')
-                GROUP BY 
-                    lt.code, lt.title;";
+                    l.emp_id = :emp_id 
+                    AND thai_year = :thai_year 
+                    AND l.status = 'Allow'
+                )
+                SELECT * FROM summary";
 
         return Yii::$app
             ->db
             ->createCommand($sql)
             ->bindValue(':thai_year', $this->thai_year)
-            ->queryAll();
+            ->bindValue(':emp_id',$this->emp_id)
+            ->queryOne();
     }
 
     public function getAvatar($empid, $msg = '')

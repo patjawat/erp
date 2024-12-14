@@ -1,42 +1,40 @@
 
-<?php
-$sql = "SELECT lt.code,lt.title,
-IFNULL((SELECT SUM(l.sum_days) FROM `leave` l WHERE l.emp_id = :emp_id AND thai_year = :thai_year AND l.status = 'Pending' AND l.leave_type_id = lt.code),0) as pending,
-IFNULL((SELECT SUM(l.sum_days) FROM `leave` l WHERE l.emp_id = :emp_id AND thai_year = :thai_year AND l.status = 'Allow' AND l.leave_type_id = lt.code),0) as total
-FROM `categorise` lt
-WHERE lt.name = 'leave_type' AND lt.code IN('LT1','LT3','LT4');";
 
-$querys = Yii::$app->db->createCommand($sql)
-->bindValue(':thai_year',$model->thai_year)
-->bindValue(':emp_id',$model->emp_id)
-->queryAll();
-?>
-<div
-    class="table-responsive"
->
+<h5>สถิติการลาในปีงบประมาณนี้ <?=$model->thai_year?></h5>
     <table
         class="table table-striped table-hover align-middle"
-    >
+        >
         <thead class="table-primary">
-            <caption>
-            สถิติการลาในปีงบประมาณนี้ <?=$model->thai_year?>
-            </caption>
             <tr>
-                <th>ประเภทการลา</th>
-                <th class="text-center">ลามาแล้ว/วัน</th>
+                <th>ประเภทลา</th>
+                <th class="text-center">ลามาแล้ว</th>
+                <th class="text-center">ลาครั้งนี้</th>
+                <th class="text-center">รวมเป็น</th>
 
             </tr>
         </thead>
         <tbody class="table-group-divider">
-            <?php foreach($querys as $item):?>
             <tr>
-                <td scope="row"><?php echo $item['title']?></td>
-                <td class="text-center"><?php echo $item['total']?></td>
+                <td scope="row">ลาป่วย</td>
+                <td class="text-center"><?php echo $model->leaveEmpSummary()['last_lt1']?></td>
+                <td class="text-center"><?php echo $model->leave_type_id == 'LT1' ? $model->sum_days : 0?></td>
+                <td class="text-center"><?php echo $model->leave_type_id == 'LT1' ? ($model->sum_days + $model->leaveEmpSummary()['last_lt1']) : 0?></td>
             </tr>
-            <?php endforeach?>
+            <tr>
+                <td scope="row">ลากิจ</td>
+                <td class="text-center"><?php echo $model->leaveEmpSummary()['last_lt3']?></td>
+                <td class="text-center"><?php echo $model->leave_type_id == 'LT3' ? $model->sum_days : 0?></td>
+                <td class="text-center"><?php echo $model->leave_type_id == 'LT3' ? ($model->sum_days + $model->leaveEmpSummary()['last_lt3']) : 0?></td>
+            </tr>
+            <tr>
+                <td scope="row">ลาพักผ่อน</td>
+                <td class="text-center"><?php echo $model->leaveEmpSummary()['last_lt4']?></td>
+                <td class="text-center"><?php echo $model->leave_type_id == 'LT4' ? $model->sum_days : 0?></td>
+                <td class="text-center"><?php echo $model->leave_type_id == 'LT4' ? ($model->sum_days + $model->leaveEmpSummary()['last_lt4']) : 0?></td>
+            </tr>
+           
         </tbody>
         <tfoot>
             
         </tfoot>
     </table>
-</div>

@@ -402,8 +402,8 @@ class LeaveController extends Controller
     public function actionApprove($id)
     {
         $me = UserHelper::GetEmployee();
-        // $model = Approve::findOne(["id" => $id, "emp_id" => $me->id]);
-        $model = Approve::findOne(["id" => $id]);
+        $model = Approve::findOne(["id" => $id, "emp_id" => $me->id]);
+        // $model = Approve::findOne(["id" => $id]);
         $nextApprove = Approve::findOne(["from_id" => $model->from_id,'level' => ($model->level+1)]);
         $leave = Leave::findOne($model->from_id);
         if(!$model)
@@ -495,8 +495,16 @@ class LeaveController extends Controller
      */
     public function actionCancel($id)
     {
+        $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
         $model->status = "Cancel";
+        $checkerCancel = [
+            'cancel_date' => date('Y-m-d H:i:s'),
+            'cancel_user_id' => \Yii::$app->user->identity->id,
+            'cancel_emp_id' => $me->id,
+            'cancel_fullname' => $me->fullname,
+        ];
+        $model->data_json = ArrayHelper::merge($model->data_json, $checkerCancel);
         $model->save();
 
         return $this->redirect(['view', 'id' => $model->id]);

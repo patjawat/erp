@@ -18,82 +18,96 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <div class="row">
-<div class="col-xl-8 col-sm-12">
-<div class="card text-start">
-    <div class="card-body d-flex justify-content-between align-items-center">
-            <?= $model->employee->getAvatar(false) ?>
+    <div class="col-xl-8 col-sm-12">
+        <div class="card text-start">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <?= $model->employee->getAvatar(false) ?>
                 <div class="d-flex align-items-center gap-3">
-                <?php if ($model->status == 'Allow'): ?>
+                <?php if ($model->status !== 'Cancel'): ?>
+                    <?php if ($model->status == 'Allow'): ?>
                     <i class="bi bi-person-check fs-3 text-primary"></i> อนุมัติให้ลาได้
                     <?php else: ?>
-                        
-                        <?= ($model->status == 'Checking' || $model->status == 'ReqCancel') ? '' : Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                        
-                        <?php if($model->status == 'ReqCancel'):?>
-                            <span class="badge rounded-pill badge-soft-danger text-danger fs-6 "><i class="bi bi-exclamation-circle-fill"></i> ขอยกเลิกรอตรวจสอบ</span>
 
-                            <?php else:?>
-                        <?= Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
+                    <?= ($model->status == 'Checking' || $model->status == 'ReqCancel') ? '' : Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+
+                    <?php if ($model->status == 'ReqCancel'): ?>
+                    <?php echo Html::a('<i class="fa-solid fa-circle-exclamation text-danger"></i> อนุมัติยกเลิกวันลา',['/hr/leave/cancel', 'id' => $model->id],['class'=> 'btn btn-warning rounded-pill shadow cancel-btn'])?>
+
+                    <?php else: ?>
+                    <?= Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
                             'class' => 'req-cancel-btn btn btn btn-danger rounded-pill shadow',
-                            ]) ?>
-                            <?php endif; ?>
-                     <?php endif; ?>
+                        ]) ?>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                    <?php endif; ?>
                 </div>
-    </div>
-</div>
+            </div>
+        </div>
 
-<div class="card">
-    <div class="card-body">
-       
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            [
-                'label' => 'เรื่อง',
-                'value' => 'ขอ' . $model->leaveType->title
-            ],
-            [
-                'label' => 'ตั้งแต่วันที่',
-                'value' => AppHelper::convertToThai($model->date_start)
-            ],
-            [
-                'label' => 'ถึงวันที่',
-                'value' => AppHelper::convertToThai($model->date_end)
-            ],
-            [
-                'label' => 'เป็นเวลา',
-                'value' => $model->sum_days . ' วัน'
-            ],
-            [
-                'label' => 'เหตุผล',
-                'value' => $model->data_json['note'] ?? $model->data_json['note'] ?? '-'
-            ],
-            [
-                'label' => 'ระหว่างลาติดต่อ',
-                'value' => $model->data_json['address'] ?? $model->data_json['address'] ?? '-'
-            ],
-            // [
-            //     'label' => '  มอบหมายงานให้',
-            //     'format' => 'html',
-            //     'value' =>$model->data_json['leave_work_send_id'] ?? $model->data_json['leave_work_send_id'] ?? '-'
-            // ],
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                    <?= DetailView::widget([
+    'model' => $model,
+    'attributes' => array_filter([
+        [
+            'label' => 'สถานะ',
+            'format' => 'html',
+            'value' => $model->viewStatus()
         ],
-    ]) ?>
+        $model->status == 'Cancel' ? [
+            'label' => 'ผู้ดำเนินการยกเลิก',
+            'format' => 'html',
+            'value' => ($model->data_json['cancel_fullname'] ?? '-'). (' วันเวลา '.Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'],'medium') ?? '')
+        ] : null,
+        [
+            'label' => 'เรื่อง',
+            'value' => 'ขอ' . ($model->leaveType->title ?? '-')
+        ],
+        [
+            'label' => 'ตั้งแต่วันที่',
+            'value' => AppHelper::convertToThai($model->date_start ?? '')
+        ],
+        [
+            'label' => 'ถึงวันที่',
+            'value' => AppHelper::convertToThai($model->date_end ?? '')
+        ],
+        [
+            'label' => 'เป็นเวลา',
+            'value' => $model->sum_days . ' วัน'
+        ],
+        [
+            'label' => 'เหตุผล',
+            'value' => $model->data_json['note'] ?? '-'
+        ],
+        [
+            'label' => 'ระหว่างลาติดต่อ',
+            'value' => $model->data_json['address'] ?? '-'
+        ],
+    ])
+]) ?>
 
-</div>
-</div>
 
-<div class="card">
-    <div class="card-body">
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <?= $this->render('view_summary', ['model' => $model]) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<?= $this->render('view_summary', ['model' => $model]) ?>
-</div>
-</div>
-</div>
-<div class="col-xl-4 col-sm-12">
-<?= $this->render('list_approve', ['model' => $model]) ?>
 
-</div>
+    </div>
+    <div class="col-xl-4 col-sm-12">
+
+        <?php echo $this->render('list_approve', ['model' => $model]) ?>
+    </div>
 </div>
 
 <?php Pjax::end(); ?>
@@ -106,7 +120,7 @@ $js = <<< JS
         const url = e.target.href;
         Swal.fire({
             title: 'ยืนยัน?',
-            text: "คุณต้องการยกเลิกใช่หรือไม!",
+            text: "อนุมัติให้ยกเลิกวันลาใช่หรือไม!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
