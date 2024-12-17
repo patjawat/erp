@@ -25,7 +25,7 @@ use yii\bootstrap5\Html;
                     <td><?php echo $model->thai_year?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
-                    <td><?php echo $model->leaveWorkSend()?></td>
+                    <td><?php echo $model->leaveWorkSend()->getAvatar(false, $msg)?></td>
                     <td><?php echo $model->stackChecker()?></td>
                     <td class="fw-light align-middle text-start">
                         <?php

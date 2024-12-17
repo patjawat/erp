@@ -29,7 +29,7 @@ use yii\bootstrap5\Html;
             <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             </td>
-            <td><?php echo $model->leaveWorkSend()?></td>
+            <td><?php echo $model->leaveWorkSend()['avatar']?></td>
             <td><?php echo $model->stackChecker()?></td>
             <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $model->showStatus();?></td>
             <td class="fw-center align-middle text-start">
@@ -55,9 +55,9 @@ use yii\bootstrap5\Html;
                     <?=Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด',['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modalx','data' => ['size' => 'modal-lg']]) ?>
                 <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
 
-                <?php echo $model->status == 'Allow' ? Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
-                            ['/hr/document/leave', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
-                            ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) : '' ?>
+                <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
+                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) ?>
                     </div>
                 </div>
 

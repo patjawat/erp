@@ -303,7 +303,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['id' => $this->emp_id])->one();
-            $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> ' . $this->createdDays();
+            $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เขียนเมื่อ' . $this->createdDays();
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
@@ -365,7 +365,7 @@ class Leave extends \yii\db\ActiveRecord
     //นับเวลาที่ผ่านมาแล้ว
     public function createdDays()
     {
-            return AppHelper::Duration($this->created_at, time());
+            return AppHelper::timeDifference($this->created_at);
     }
     
         //แสดงวันที่สร้าง
@@ -388,11 +388,13 @@ class Leave extends \yii\db\ActiveRecord
             return [
                 'fullname' => $check->employee->fullname,
                 'position' => $check->employee->positionName(),
+                'approve_date' => isset($this->data_json['approve_date']) ? Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long') : '',
             ];
         }else{
             return [
                 'fullname' => '',
-                'position' => ''
+                'position' => '',
+                'approve_date'=>''
             ];
         }
     }
@@ -442,9 +444,17 @@ class Leave extends \yii\db\ActiveRecord
         try {
             $model = Employees::find()->where(['id' => $this->data_json['leave_work_send_id']])->one();
             $msg = 'ผู้ปฏิบัติหน้าที่แทน';
-            return $model->getAvatar(false, $msg);
+            return [
+                'fullname' => $model->fullname,
+                'position' => $model->positionName(),
+                'avatar' => $model->getAvatar(false, $msg),
+            ];
         } catch (\Throwable $th) {
-            return null;
+            return [
+                'fullname' => '',
+                'position' => '',
+                'avatar' => '',
+            ];
         }
     }
 

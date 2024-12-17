@@ -20,16 +20,16 @@ class DocumentController extends \yii\web\Controller
 {
 
     
-    // ใบพักผ่อน
-    public function actionLeave($id)
+    // ลากิจส่วนตัว ลาป่วย ลาคลอดบุตร
+    public function actionLeavelt1($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = Leave::findOne($id);
         $this->CreateDir($model->id);
-        $title = 'LT3';
+        $title = 'LT1-ใบลากิจ';
         $result_name = $title .'-'.$model->id.'.docx';
-        $word_name = 'LT3-ใบลาพักผ่อน.docx';
+        $word_name = 'LT1-ใบลากิจ.docx';
 
         @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
@@ -37,6 +37,7 @@ class DocumentController extends \yii\web\Controller
         $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('title',$model->leaveType->title);
         $createDate  = new DateTime($model->created_at);
         $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
         $templateProcessor->setValue('y', $createDate->format('Y') + 543);
@@ -45,9 +46,11 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
         $templateProcessor->setValue('fullname', $model->employee->fullname);
         $templateProcessor->setValue('position', $model->employee->positionName());
+        $templateProcessor->setValue('level_name', $model->employee->positionLevelName() ? 'ระดับ'.$model->employee->positionLevelName() : '');
         $templateProcessor->setValue('department', $model->employee->departmentName());
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
+        $templateProcessor->setValue('reason', $model->reason);
         $templateProcessor->setValue('days', $model->sum_days);
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('checker1', $model->checkerName(1)['fullname']);
@@ -61,6 +64,51 @@ class DocumentController extends \yii\web\Controller
         // return $this->Show($result_name);
     }
 
+    // ใบพักผ่อน
+    public function actionLeavelt4($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = Leave::findOne($id);
+        $this->CreateDir($model->id);
+        $title = 'LT4';
+        $result_name = $title .'-'.$model->id.'.docx';
+        $word_name = 'LT4-ใบลาพักผ่อน.docx';
+
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+
+        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
+        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $createDate  = new DateTime($model->created_at);
+        $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
+        $templateProcessor->setValue('y', $createDate->format('Y') + 543);
+        $templateProcessor->setValue('d', $createDate->format('d'));
+        $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
+        $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
+        $templateProcessor->setValue('fullname', '('.$model->employee->fullname.')');
+        $templateProcessor->setValue('position', $model->employee->positionName());
+        $templateProcessor->setValue('department', $model->employee->departmentName());
+        $templateProcessor->setValue('dateStart', $dateStart);
+        $templateProcessor->setValue('dateEnd', $dateEnd);
+        $templateProcessor->setValue('days', $model->sum_days);
+        $templateProcessor->setValue('address', $model->data_json['address']);
+        $templateProcessor->setValue('send', '('.$model->leaveWorkSend()['fullname'].')');
+        $templateProcessor->setValue('sendPosition', $model->leaveWorkSend()['position']);
+        $templateProcessor->setValue('approve1', '('.$model->checkerName(1)['fullname'].')');
+        $templateProcessor->setValue('approveDate1', $model->checkerName(1)['approve_date']);
+        $templateProcessor->setValue('position1', $model->checkerName(1)['position']);
+        $templateProcessor->setValue('approve3', '('.$model->checkerName(3)['fullname'].')');
+        $templateProcessor->setValue('approveDate3', $model->checkerName(3)['approve_date']);
+        $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
+        $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
+        
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
+        // return $this->Show($result_name);
+    }
+    
     // ดึงค่ากน่วยงาน
 
     protected function GetInfo()

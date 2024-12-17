@@ -367,12 +367,13 @@ class LeaveController extends Controller
         $model = $this->findModel($id);
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
-
+        $old_json = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
             if($model->save()){
                 return $this->redirect(['view', 'id' => $model->id]);
             }
