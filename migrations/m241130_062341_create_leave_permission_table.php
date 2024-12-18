@@ -17,7 +17,7 @@ class m241130_062341_create_leave_permission_table extends Migration
             'emp_id' => $this->string(255)->comment('พนักงาน'),
             'leave_days' => $this->boolean()->comment('สิทธิวันลาที่ได้'),
             'leave_before_days' => $this->boolean()->comment('จำนวนวันลาสะสม'),
-            'leave_max_days' => $this->boolean()->comment('วันลาสะสมสูงสุด'),
+            'leave_limit' => $this->boolean()->commengot('วันลาสะสมสูงสุด'),
             'leave_sum_days' => $this->boolean()->comment('วันลาสะสม'),
             'year_of_service' => $this->integer()->notNull()->comment('อายุงาน'),
             'position_type_id' => $this->string()->comment('ตำแหน่ง'),

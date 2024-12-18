@@ -65,6 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-3">
         <div class="card">
             <div class="card-body">
+                <a href="<?php echo Url::to(['/hr/leave/dashboard-approve'])?>">
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <span class="h5 fw-semibold"><?php echo $searchModel->countLeaveStatus('Checking') ?> รายการ</span>
                     <div class="relative">
@@ -72,10 +73,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> อยู่ระหว่างรอผู้อำนวนการ/อนุมัติ<span>
-                </div>
-            </div>
-        </div>
+                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> อยู่ระหว่างรอผู้อำนวนการ/อนุมัติ<span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
     </div>
     <div class="col-3">
         <div class="card">

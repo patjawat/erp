@@ -14,7 +14,7 @@ use app\modules\hr\models\Employees;
  * @property string|null $emp_id พนักงาน
  * @property int|null $leave_days สิทธิวันลาที่ได้
  * @property int|null $leave_before_days จำนวนวันลาสะสม
- * @property int|null $leave_max_days วันลาสะสมสูงสุด
+ * @property int|null $leave_limit วันลาสะสมสูงสุด
  * @property int|null $leave_sum_days วันลาสะสม
  * @property int $year_of_service อายุงาน
  * @property string|null $position_type_id ตำแหน่ง
@@ -44,7 +44,7 @@ class LeavePermission extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['leave_days', 'leave_before_days', 'leave_max_days', 'leave_sum_days', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['leave_days', 'leave_before_days', 'leave_limit', 'leave_sum_days', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['year_of_service'], 'required'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['emp_id', 'position_type_id', 'leave_type_id'], 'string', 'max' => 255],
@@ -61,7 +61,7 @@ class LeavePermission extends \yii\db\ActiveRecord
             'emp_id' => 'พนักงาน',
             'leave_days' => 'สิทธิวันลาที่ได้',
             'leave_before_days' => 'จำนวนวันลาสะสม',
-            'leave_max_days' => 'วันลาสะสมสูงสุด',
+            'leave_limit' => 'วันลาสะสมสูงสุด',
             'leave_sum_days' => 'วันลาสะสม',
             'year_of_service' => 'อายุงาน',
             'position_type_id' => 'ตำแหน่ง',

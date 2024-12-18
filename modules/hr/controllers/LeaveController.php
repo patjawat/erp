@@ -400,6 +400,19 @@ class LeaveController extends Controller
         }
     }
 
+    //แสดงรายการที่รอ Approve
+    public function actionDashboardApprove()
+    {
+        $searchModel = new LeaveSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['status' => 'Pending']);
+        $dataProvider->query->andWhere(['thai_year' => AppHelper::YearBudget()]);
+        return $this->render('dashboard_approve',[
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     public function actionApprove($id)
     {
         $me = UserHelper::GetEmployee();
@@ -424,7 +437,6 @@ class LeaveController extends Controller
             }
             
             if($model->save()){
-                
                 if($nextApprove){
                     $nextApprove->status = 'Pending';
                     $nextApprove->save();

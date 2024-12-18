@@ -17,7 +17,7 @@ class LeavePermissionSearch extends LeavePermission
     public function rules()
     {
         return [
-            [['id', 'leave_days', 'leave_before_days', 'leave_max_days', 'leave_sum_days', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['id', 'leave_days', 'leave_before_days', 'leave_limit', 'leave_sum_days', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['emp_id', 'position_type_id', 'leave_type_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
         ];
     }
@@ -61,7 +61,7 @@ class LeavePermissionSearch extends LeavePermission
             'id' => $this->id,
             'leave_days' => $this->leave_days,
             'leave_before_days' => $this->leave_before_days,
-            'leave_max_days' => $this->leave_max_days,
+            'leave_limit' => $this->leave_limit,
             'leave_sum_days' => $this->leave_sum_days,
             'year_of_service' => $this->year_of_service,
             'thai_year' => $this->thai_year,

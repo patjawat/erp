@@ -164,7 +164,7 @@ class ImportLeaveController extends Controller
             $model->year_of_service = $item['OLDS'];
             $model->leave_days = 10;
             $model->leave_before_days = $item['DAY_LEAVE_OVER_BEFORE'];
-            $model->leave_max_days = 0;
+            $model->leave_limit = 0;
             $model->leave_sum_days = $item['DAY_LEAVE_OVER_BEFORE'];
             if($model->save(false)){
                 echo 'ดำเนินการ : '.$model->emp_id. " \n";

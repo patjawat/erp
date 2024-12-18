@@ -258,6 +258,18 @@ class Leave extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
+    // แสดงข้อมูลวันลาที่เหลือ
+    public function leaveCount()
+    {
+        // ลามาแล้ว
+        $lastDays = self::find()
+            ->where([
+                'emp_id' => $this->emp_id,
+                'thai_year' => $this->thai_year,
+                'leave_type_id' => $this->leave_type_id
+            ])
+            ->sum('sum_days');
+    }
     
     // สรุปการลารายบุคคล
     public function leaveEmpSummary()
@@ -673,7 +685,7 @@ class Leave extends \yii\db\ActiveRecord
         $lP = LeavePermission::find()->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id])->one();
         $leaveDays = 0;
         if ($lP) {
-            $leaveDays = ($lP->leave_days - $this->sumLeaveType('LT4'));
+            $leaveDays = ($lP->leave_sum_days - $this->sumLeaveType('LT4'));
         }
         return $leaveDays;
     }

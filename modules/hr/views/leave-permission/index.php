@@ -41,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'thai_year',
             'employee.fullname',
-            'leave_max_days',
+            'leave_limit',
             'leave_sum_days'
             
             

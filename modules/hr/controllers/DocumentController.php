@@ -92,7 +92,9 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('department', $model->employee->departmentName());
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
-        $templateProcessor->setValue('days', $model->sum_days);
+        $templateProcessor->setValue('days', $model->sum_days);//จำนวนวันที่ลา
+        $templateProcessor->setValue('last_days', $model->sum_days); //ลามาแล้ว
+        $templateProcessor->setValue('total', $model->sum_days); // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('send', '('.$model->leaveWorkSend()['fullname'].')');
         $templateProcessor->setValue('sendPosition', $model->leaveWorkSend()['position']);
@@ -103,6 +105,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('approveDate3', $model->checkerName(3)['approve_date']);
         $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
+        
         
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
