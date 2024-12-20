@@ -76,12 +76,10 @@ class LeavePermissionController extends Controller
             $data[] = [
                 'id' => $employee->id,
                 'fullname' => $employee->fullname,
-                'position_type_id' => $employee->position_type,
-                'position_type' => $employee->positionTypeName(),
                 'join_date' => $employee->joinDate(),
                 'year_of_service' => $employee->workYear()['year'],
                 'month_of_service' => $employee->workYear()['month'],
-                'leave_limit' => $employee->leaveLimit(),
+                'leave_limit' => $this->getLeaveDays($employee->id,($thaiYear-1))
             ];
         }
         return $data;
@@ -251,11 +249,19 @@ class LeavePermissionController extends Controller
         return $datas;
         
     }
-
-
+    
     protected function getLeaveDays($emp_id,$thaiYear)
     {
-        $sql = "SELECT 
+        $sql = "WITH x AS (
+                    SELECT 
+                        e.id,
+                        CONCAT(e.fname, ' ', e.lname) AS fullname,
+                        e.position_type,
+                        pt.title AS position_title,
+                        l.thai_year,
+                        TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) AS years_of_service,
+                        l.leave_type_id,
+                        lt.title AS leave_title,
                         CASE 
                             WHEN pt.code IN ('PT1', 'PT6') THEN 
                                 CASE 
@@ -275,76 +281,35 @@ class LeavePermissionController extends Controller
                                 END
                             ELSE 0
                         END AS max_leave,
+                        IFNULL(
+                            (SELECT SUM(x1.sum_days) 
+                            FROM `leave` x1 
+                            WHERE x1.status = 'Allow' 
+                            AND x1.emp_id = e.id 
+                            AND x1.leave_type_id = l.leave_type_id 
+                            AND x1.thai_year = :thai_year), 
+                            0
+                        ) AS used_leave,
+                    lp.leave_over,
+                    lp.leave_over_before
                     FROM `employees` e
+                    LEFT JOIN categorise pt ON pt.code = e.position_type AND pt.name = 'position_type'
+                    LEFT JOIN `leave` l ON l.emp_id = e.id
+                    LEFT JOIN leave_permission lp ON lp.emp_id = e.id
+                    LEFT JOIN categorise lt ON lt.code = l.leave_type_id AND lt.name = 'leave_type'
                     WHERE e.status = 1 
-                    AND e.id <> 1;";
+                    AND e.id <> 1 
+                    AND l.thai_year = :thai_year
+                    AND l.emp_id = :emp_id
+                    AND l.leave_type_id = 'LT4'
+                    AND lp.thai_year = :thai_year
+                    GROUP BY e.id, l.leave_type_id, pt.title, lt.title, l.thai_year
+                )
+                SELECT x.*,((x.leave_over+leave_over_before)-used_leave) as send_leave
+                FROM x;";
             $querys = Yii::$app->db->createCommand($sql)
             ->bindValue(':thai_year',$thaiYear)
             ->bindValue(':emp_id',$emp_id)
             ->queryOne();
     }
-    
-    
-    // protected function getLeaveDays($emp_id,$thaiYear)
-    // {
-    //     $sql = "WITH x AS (
-    //                 SELECT 
-    //                     e.id,
-    //                     CONCAT(e.fname, ' ', e.lname) AS fullname,
-    //                     e.position_type,
-    //                     pt.title AS position_title,
-    //                     l.thai_year,
-    //                     TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) AS years_of_service,
-    //                     l.leave_type_id,
-    //                     lt.title AS leave_title,
-    //                     CASE 
-    //                         WHEN pt.code IN ('PT1', 'PT6') THEN 
-    //                             CASE 
-    //                                 WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 10 THEN 30
-    //                                 WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 1 THEN 10
-    //                                 ELSE 0
-    //                             END
-    //                         WHEN pt.code IN ('PT2', 'PT3') THEN 
-    //                             CASE 
-    //                                 WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 1 THEN 15
-    //                                 ELSE 0
-    //                             END
-    //                         WHEN pt.code IN ('PT5') THEN 
-    //                             CASE 
-    //                                 WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 0.5 THEN 0
-    //                                 ELSE 0
-    //                             END
-    //                         ELSE 0
-    //                     END AS max_leave,
-    //                     IFNULL(
-    //                         (SELECT SUM(x1.sum_days) 
-    //                         FROM `leave` x1 
-    //                         WHERE x1.status = 'Allow' 
-    //                         AND x1.emp_id = e.id 
-    //                         AND x1.leave_type_id = l.leave_type_id 
-    //                         AND x1.thai_year = :thai_year), 
-    //                         0
-    //                     ) AS used_leave,
-    //                 lp.leave_over,
-    //                 lp.leave_over_before
-    //                 FROM `employees` e
-    //                 LEFT JOIN categorise pt ON pt.code = e.position_type AND pt.name = 'position_type'
-    //                 LEFT JOIN `leave` l ON l.emp_id = e.id
-    //                 LEFT JOIN leave_permission lp ON lp.emp_id = e.id
-    //                 LEFT JOIN categorise lt ON lt.code = l.leave_type_id AND lt.name = 'leave_type'
-    //                 WHERE e.status = 1 
-    //                 AND e.id <> 1 
-    //                 AND l.thai_year = :thai_year
-    //                 AND l.emp_id = :emp_id
-    //                 AND l.leave_type_id = 'LT4'
-    //                 AND lp.thai_year = :thai_year
-    //                 GROUP BY e.id, l.leave_type_id, pt.title, lt.title, l.thai_year
-    //             )
-    //             SELECT x.*,((x.leave_over+leave_over_before)-used_leave) as send_leave
-    //             FROM x;";
-    //         $querys = Yii::$app->db->createCommand($sql)
-    //         ->bindValue(':thai_year',$thaiYear)
-    //         ->bindValue(':emp_id',$emp_id)
-    //         ->queryOne();
-    // }
 }

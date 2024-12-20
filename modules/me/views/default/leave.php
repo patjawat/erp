@@ -14,7 +14,7 @@ use yii\helpers\Html;
                     <div class="d-flex justify-content-center flex-column">
                        
                         <h4 class="text-primary text-center">
-                        <?php echo $searchModel->sumLeavePermission()?>    
+                        <?php echo $searchModel->sumLeavePermission()['sum']?>    
                         <?php // echo $searchModel->leaveSumDays()['used_leave']?><?php // echo $searchModel->leaveSumDays()['sum_days']?></h4>
                         <p class="text-center">ลาพักผ่อนเหลือ</p>
                     </div>

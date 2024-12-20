@@ -28,7 +28,6 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card border-0 rounded-3">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-
         <?= $model->employee->getAvatar(false) ?>
                 <div class="d-flex align-items-center gap-3">
                 <?php if ($model->status !== 'Cancel'): ?>
@@ -36,15 +35,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     <i class="bi bi-person-check fs-3 text-primary"></i> อนุมัติให้ลาได้
                     <?php else: ?>
 
-                    <?= ($model->status == 'Pending') ?  Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) : ''?>
+                    <?= ($model->status == 'Pending') ? Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
 
                     <?php if ($model->status == 'ReqCancel'): ?>
-                    <?php echo Html::a('<i class="fa-solid fa-circle-exclamation text-danger"></i> อนุมัติยกเลิกวันลา',['/hr/leave/cancel', 'id' => $model->id],['class'=> 'btn btn-warning rounded-pill shadow cancel-btn'])?>
+                    <?php echo Html::a('<i class="fa-solid fa-circle-exclamation text-danger"></i> อนุมัติยกเลิกวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow cancel-btn']) ?>
 
                     <?php else: ?>
                     <?= $model->status !== 'Reject' ? Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
-                            'class' => 'req-cancel-btn btn btn btn-danger rounded-pill shadow',
-                        ]) : '' ?>
+                        'class' => 'req-cancel-btn btn btn btn-danger rounded-pill shadow',
+                    ]) : '' ?>
                     <?php endif; ?>
                     <?php endif; ?>
                     <?php endif; ?>
@@ -55,43 +54,51 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody>
                 <tr>
                     <td>เรื่อง : </td>
-                    <td><span class="text-pink fw-semibold">ขอ<?php echo ($model->leaveType->title ?? '-')?></span></td>
+                    <td><span class="text-pink fw-semibold">ขอ<?php echo ($model->leaveType->title ?? '-') ?></span></td>
 
                     <td>เขียนเมื่อ : </td>
-                    <td><span class="text-pink fw-semibold"><?php echo $model->viewCreated()?></span></td>
+                    <td><span class="text-pink fw-semibold"><?php echo $model->viewCreated() ?></span></td>
                 </tr>
                 <tr>
                     <td>ระหว่างวันที่ : </td>
                     <td>
-                        <?php echo AppHelper::convertToThai($model->date_start ?? '')?> ถึงวันที่ <?php echo AppHelper::convertToThai($model->date_end ?? '')?>
+                    <i class="fa-solid fa-calendar-check"></i> <?php echo AppHelper::convertToThai($model->date_start ?? '') ?> ถึงวันที่ <i class="fa-solid fa-calendar-check"></i> <?php echo AppHelper::convertToThai($model->date_end ?? '') ?>
                     </td>
 
                     <td>เป็นเวลา : </td>
-                    <td><?php echo $model->sum_days?> วัน</td>
+                    <td>
+                    <span class="badge rounded-pill badge-soft-danger text-primary fs-13 "><?php echo $model->sum_days ?> วัน</span></td>
                 </tr>
 
                 <tr>
                     <td>เหตุผล : </td>
-                    <td colspan="4"><?php echo $model->data_json['reason'] ?? '-'?></td>
+                    <td colspan="4"><?php echo $model->data_json['reason'] ?? '-' ?></td>
                     
                    
                 </tr>
                 <tr>
                     <td>ระหว่างลาติดต่อ : </td>
-                    <td><?php echo $model->data_json['address'] ?? '-'?></td>
+                    <td><?php echo $model->data_json['address'] ?? '-' ?></td>
                     <td>โทรศัพท์ : </td>
-                    <td><?php echo $model->data_json['phone'] ?? '-'?></td>
+                    <td><?php echo $model->data_json['phone'] ?? '-' ?></td>
                 </tr>
                 <tr>
-                    <?php if($model->status == 'Cancel'):?>
+                    <?php if ($model->status == 'Cancel'): ?>
                     <td>สถานะ : </td>
-                    <td><?php echo  $model->viewStatus()?></td>
+                    <td><?php echo $model->viewStatus() ?></td>
                     <td>ผู้ดำเนินการยกเลิก : </td>
-                    <td><?php echo ($model->data_json['cancel_fullname'] ?? '-'). (' วันเวลา '.Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'],'medium') ?? '')?></td>
-                    <?php else:?>
+                    <td><?php echo ($model->data_json['cancel_fullname'] ?? '-') . (' วันเวลา ' . Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'], 'medium') ?? '') ?></td>
+                    <?php else: ?>
                         <td>สถานะ : </td>
-                        <td  colspan="4"><?php echo  $model->viewStatus()?></td>
-                    <?php endif?>
+                        <td  colspan="4"><?php echo $model->viewStatus() ?></td>
+                    <?php endif ?>
+                </tr>
+
+                <tr>
+                <td>ประวัติการลา : </td>
+                <td><?php echo Html::a('<i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม', ['/hr/leave/view-history','emp_id' => $model->emp_id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xxl']]) ?></td>
+                <td>วันลาพักผ่อนสม : </td>
+                <td><?php echo $model->sumLeavePermission()['sum']?></td>
                 </tr>
                     
                 

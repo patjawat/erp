@@ -215,7 +215,7 @@ class Employees extends Yii\db\ActiveRecord
             // $this->join_date = AppHelper::DateFormDb($this->join_date);
             // $this->age_join_date = AppHelper::Age(AppHelper::DateFormDb($this->join_date));
             $this->age_join_date = AppHelper::Age(AppHelper::DateFormDb($this->joinDate()));
-            $this->age = AppHelper::Age($this->birthday);
+            $this->age = AppHelper::Age($this->birthday)['year'];
             $this->blood_group = isset($this->data_json['blood_group']) ? $this->data_json['blood_group'] : null;
             $this->born = isset($this->data_json['born']) ? $this->data_json['born'] : null;
             $this->ethnicity = isset($this->data_json['ethnicity']) ? $this->data_json['ethnicity'] : null;
@@ -226,7 +226,7 @@ class Employees extends Yii\db\ActiveRecord
             // $this->status = $this->UpdateFormDetail()['status'] ? $this->UpdateFormDetail()['status'] : '-';
         } catch (\Throwable $th) {
         }
-        $this->age_y = AppHelper::Age($this->birthday, true);
+        $this->age_y = AppHelper::Age($this->birthday, true)['year'];
 
         parent::afterFind();
     }
@@ -848,6 +848,39 @@ class Employees extends Yii\db\ActiveRecord
     return    Yii::$app->db->createCommand($sql,[':thai_year' =>$thai_year,':emp_id' => $this->id])->queryAll();
     }
 
+// สิทวันลาพักผ่อนสะสม
+    public function LeaveLimit()
+    {
+            $sql = "SELECT 
+                        CASE 
+                            WHEN pt.code IN ('PT1', 'PT6') THEN 
+                                CASE 
+                                    WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 10 THEN 30
+                                    WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 1 THEN 10
+                                    ELSE 0
+                                END
+                            WHEN pt.code IN ('PT2', 'PT3') THEN 
+                                CASE 
+                                    WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 1 THEN 15
+                                    ELSE 0
+                                END
+                            WHEN pt.code IN ('PT5') THEN 
+                                CASE 
+                                    WHEN TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) >= 0.5 THEN 0
+                                    ELSE 0
+                                END
+                            ELSE 0
+                        END AS leave_limit
+                    FROM `employees` e
+                     LEFT JOIN categorise pt ON pt.code = e.position_type AND pt.name = 'position_type'
+                    WHERE e.status = 1 
+                    AND e.id = :id;";
+                    
+                    $command = Yii::$app->db->createCommand($sql);
+                    $command->bindValue(':id', $this->id);
+                    return $command->queryScalar();  
+    }
+    
     // section Relationships
     public function getUser()
     {

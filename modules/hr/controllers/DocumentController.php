@@ -93,7 +93,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('days', $model->sum_days);//จำนวนวันที่ลา
-        $templateProcessor->setValue('last_days', $model->sum_days); //ลามาแล้ว
+        $templateProcessor->setValue('last_days', $model->leaveLastDays()); //ลามาแล้ว
         $templateProcessor->setValue('total', $model->sum_days); // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('send', '('.$model->leaveWorkSend()['fullname'].')');

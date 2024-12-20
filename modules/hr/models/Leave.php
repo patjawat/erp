@@ -258,9 +258,11 @@ class Leave extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-    // แสดงข้อมูลวันลาที่เหลือ
-    public function leaveCount()
+    // แสดงข้อมูลวันลาที่มี่ผ่านมา
+    public function leaveLastDays()
     {
+
+        // return $this->leave_type_id;
         // ลามาแล้ว
         $lastDays = self::find()
             ->where([
@@ -268,27 +270,14 @@ class Leave extends \yii\db\ActiveRecord
                 'thai_year' => $this->thai_year,
                 'leave_type_id' => $this->leave_type_id
             ])
+            ->andwhere(['<','date_start',$this->date_start])
             ->sum('sum_days');
+    return $lastDays ?? 0;
     }
     
     // สรุปการลารายบุคคล
     public function leaveEmpSummary()
     {
-        // $sql = "SELECT 
-        //         lt.code,
-        //         lt.title,
-        //         COALESCE(SUM(l.sum_days), 0) AS total
-        //         FROM 
-        //             categorise lt
-        //         LEFT JOIN 
-        //             `leave` l ON lt.code = l.leave_type_id 
-        //                     AND l.emp_id = 8 
-        //                     AND l.thai_year = :thai_year
-        //         WHERE 
-        //             lt.name = 'leave_type' 
-        //             AND lt.code IN ('LT1', 'LT2', 'LT3','LT4')
-        //         GROUP BY 
-        //             lt.code, lt.title;";
         $sql = "WITH summary AS (
                 SELECT 
                     IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT1' THEN l.sum_days ELSE 0 END), 0) AS last_lt1,
@@ -300,6 +289,7 @@ class Leave extends \yii\db\ActiveRecord
                     l.emp_id = :emp_id 
                     AND thai_year = :thai_year 
                     AND l.status = 'Allow'
+                    AND date_start < :date_start
                 )
                 SELECT * FROM summary";
 
@@ -308,6 +298,7 @@ class Leave extends \yii\db\ActiveRecord
             ->createCommand($sql)
             ->bindValue(':thai_year', $this->thai_year)
             ->bindValue(':emp_id',$this->emp_id)
+            ->bindValue(':date_start',$this->date_start)
             ->queryOne();
     }
 
@@ -685,9 +676,16 @@ class Leave extends \yii\db\ActiveRecord
         $lP = LeavePermission::find()->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id])->one();
         $leaveDays = 0;
         if ($lP) {
+            $total = $lP->leave_sum_days;
             $leaveDays = ($lP->leave_sum_days - $this->sumLeaveType('LT4'));
+        }else{
+            $total = 0;
         }
-        return $leaveDays;
+        
+        return[
+            'total' => $total,
+            'sum' =>  $leaveDays
+        ]; 
     }
 
     // นับจำนวนสถานะ

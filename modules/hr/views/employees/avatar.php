@@ -71,7 +71,7 @@ use app\modules\hr\models\EmployeeDetail;
                                     </code>
                             </p>
                             <p><i class="fa-solid fa-business-time"></i>
-                            อายุราชการ <?= $model->workLife() ?></p>
+                            อายุราชการ <?= $model->workLife()['full'] ?></p>
                         
 
                         <?php endif; ?>

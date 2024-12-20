@@ -382,7 +382,8 @@ class AppHelper extends Component
             $dmy = explode('-', $date);  // แยก วัน/เดือน/ปี
             $year = (int) $dmy[0];  // กำหนดเป็น int เพื่อการคำนวณ
             $year = $year + 543;  // ปี พ.ศ.-543
-            return $dmy[2] . '/' . $dmy[1] . '/' . $year;  // ได้รูปแบบ 20/10/2566
+             return $dmy[2] . '/' . $dmy[1] . '/' . $year;  // ได้รูปแบบ 20/10/2566
+         
         } catch (\Throwable $th) {
             return null;
         }
@@ -424,11 +425,17 @@ class AppHelper extends Component
             ->bindParam(':birthday', $getDate)
             ->queryOne();
 
-        if ($year) {
-            return $query['years'];
-        } else {
-            return $query['years'] . ' ปี ' . $query['months'] . ' เดือน ' . $query['days'] . ' วัน';
-        }
+        return [
+            'full' => $query['years'] . ' ปี ' . $query['months'] . ' เดือน ' . $query['days'] . ' วัน',
+            'year' => $query['years'],
+            'month' => $query['months'],
+            'day' => $query['days'],
+        ];
+        // if ($year) {
+        //     return $query['years'];
+        // } else {
+        //     return $query['years'] . ' ปี ' . $query['months'] . ' เดือน ' . $query['days'] . ' วัน';
+        // }
         // } catch (\Throwable $th) {
         //    return null;
         // }

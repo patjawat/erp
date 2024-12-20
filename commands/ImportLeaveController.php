@@ -143,7 +143,7 @@ class ImportLeaveController extends Controller
 
     public function actionPermission()
     {
-        $querys = Yii::$app->db2->createCommand("SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `gleave_over` l LEFT JOIN hrd_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID;")->queryAll();
+        $querys = Yii::$app->db2->createCommand("SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `gleave_over` l LEFT JOIN hrd_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID where OVER_YEAR_ID = '2567' AND PERSON_ID = 8;")->queryAll();
         foreach ($querys as $key => $item) {
             
             $emp = $this->Person($item['PERSON_ID']);
@@ -162,10 +162,10 @@ class ImportLeaveController extends Controller
             $model->position_type_id = isset($positionType['code']) ?? 0;
             $model->leave_type_id = 'LT4';
             $model->year_of_service = $item['OLDS'];
-            $model->leave_days = 10;
+            // $model->leave_days = 10;
             $model->leave_before_days = $item['DAY_LEAVE_OVER_BEFORE'];
             $model->leave_limit = 0;
-            $model->leave_sum_days = $item['DAY_LEAVE_OVER_BEFORE'];
+            // $model->leave_sum_days = $item['DAY_LEAVE_OVER_BEFORE'];
             if($model->save(false)){
                 echo 'ดำเนินการ : '.$model->emp_id. " \n";
             }else{

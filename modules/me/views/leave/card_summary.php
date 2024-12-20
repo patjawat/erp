@@ -62,7 +62,7 @@
                 </div>
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> วันลาพักผ่อนคงเหลือ</span>
-                    <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->sumLeavePermission() ?></span>
+                    <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->sumLeavePermission()['sum'] ?></span>
                 </div>
             </div>
         </div>

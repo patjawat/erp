@@ -3,25 +3,24 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%leave_role}}`.
+ * Handles the creation of table `{{%leave_entitled}}`.
  */
-class m241130_062341_create_leave_permission_table extends Migration
+class m241220_085905_create_leave_entitled_table extends Migration
 {
     /**
      * {@inheritdoc}
+     * คำนวนสวิทธิการลาของแต่ละปี
      */
     public function safeUp()
     {
-        $this->createTable('{{%leave_permission}}', [
+        $this->createTable('{{%leave_entitled}}', [
             'id' => $this->primaryKey(),
             'emp_id' => $this->string(255)->comment('พนักงาน'),
-            'leave_days' => $this->boolean()->comment('สิทธิวันลาที่ได้'),
-            'leave_before_days' => $this->boolean()->comment('จำนวนวันลาสะสม'),
-            'leave_limit' => $this->boolean()->commengot('วันลาสะสมสูงสุด'),
-            'leave_sum_days' => $this->boolean()->comment('วันลาสะสม'),
-            'year_of_service' => $this->integer()->notNull()->comment('อายุงาน'),
-            'position_type_id' => $this->string()->comment('ตำแหน่ง'),
-            'leave_type_id' => $this->string()->comment('ประเภทการขอลา'),
+            'position_type_id' => $this->string()->comment('ประเภทตำแหน่ง'),
+            'leave_type_id' => $this->string()->comment('ประเภทการลา'),
+            'month_of_service' => $this->integer()->notNull()->comment('อายุงาน(เดือน)'),
+            'year_of_service' => $this->integer()->notNull()->comment('อายุงาน(ปี)'),
+            'days' => $this->integer()->notNull()->comment('วันที่ลาได้'),
             'data_json' => $this->json(),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
@@ -38,6 +37,6 @@ class m241130_062341_create_leave_permission_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%leave_permission}}');
+        $this->dropTable('{{%leave_entitled}}');
     }
 }

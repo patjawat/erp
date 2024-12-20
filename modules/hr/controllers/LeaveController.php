@@ -400,6 +400,36 @@ class LeaveController extends Controller
         }
     }
 
+
+    
+    public function actionViewHistory($emp_id)
+    {
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $searchModel = new LeaveSearch([
+            'emp_id' => $emp_id,
+            'thai_year' => AppHelper::YearBudget(),
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/hr/views/leave/list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/hr/views/leave/list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+      
+    }
     //แสดงรายการที่รอ Approve
     public function actionDashboardApprove()
     {
