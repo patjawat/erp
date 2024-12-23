@@ -21,7 +21,7 @@ use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
-use app\modules\hr\models\LeavePermission;
+use app\modules\filemanager\models\Uploads;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -40,10 +40,11 @@ class ImportDocumentController extends Controller
      */
     public function actionIndex()
     {
-        // $this->Receive();
+        $this->Receive();
         $this->Inside();
     }
 
+    //หนังสือับ
     public static function Receive()
     {
         $querys = Yii::$app->db2->createCommand("SELECT *
@@ -78,27 +79,11 @@ class ImportDocumentController extends Controller
                 $model = new Documents([
                     'ref' => $ref
                 ]);
-                $this->CreateDir($ref);
                 
-                //นำเข้า File
-                if ($item['IMG']) {
-
-                    $name = time() . '.pdf';
-                    file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $item['IMG']);
-
-                    $upload = new Uploads;
-                    $upload->ref = $ref;
-                    $upload->name = 'document';
-                    $upload->file_name = $name;
-                    $upload->real_filename = $name;
-                    $upload->type = 'pdf';
-                    $upload->save(false);
-                }
-
-                
-
                 echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
             }
+            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            $model->ref = $ref;
             $model->doc_type_id = 'received';
             $model->doc_number = $item['BOOK_NUMBER'];
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
@@ -141,7 +126,8 @@ class ImportDocumentController extends Controller
     }
 
     public static function Inside()
-    {
+    { 
+       
         $querys = Yii::$app->db2->createCommand("SELECT *
                         FROM gbook_index_inside
                         LEFT JOIN grecord_org ON gbook_index_inside.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
@@ -155,7 +141,9 @@ class ImportDocumentController extends Controller
         $num = 1;
         $total = count($querys);
         foreach ($querys as $key => $item) {
+           
             $checkDoc = Documents::findOne([
+                // 'ref' => $ref,
                 'doc_type_id' => 'inside',
                 'topic' => $item['BOOK_NAME'],
                 'doc_regis_number' => $item['BOOK_NUM_IN'],
@@ -164,6 +152,7 @@ class ImportDocumentController extends Controller
                 'doc_date' => $item['BOOK_DATE'],
                 'doc_receive' => $item['DATE_SAVE'],
                 'document_org_id' => $item['RECORD_ORG_ID'],
+                
             ]);
             $percentage = (($num++) / $total) * 100;
             if ($checkDoc) {
@@ -174,6 +163,8 @@ class ImportDocumentController extends Controller
 
                 echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
             }
+            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            $model->ref = $ref;
             $model->doc_type_id = 'inside';
             $model->doc_number = $item['BOOK_NUMBER'];
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
@@ -182,8 +173,13 @@ class ImportDocumentController extends Controller
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org_id = $item['RECORD_ORG_ID'];
+            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+            $fileName = $item['BOOK_FILE_NAME']; // ชื่อไฟล์ที่ต้องการตรวจสอบ
+            // self::UploadFile($fileName,$item['BOOK_ID']);
             try {
-                // code...
+
+                // กำหนดพาธของไดเรกทอรี
+           
 
                 $model->save(false);
             } catch (\Throwable $th) {
@@ -210,7 +206,56 @@ class ImportDocumentController extends Controller
         return ExitCode::OK;
     }
     
+    public function actionUploadFile()
+    {
+        $directory = Yii::getAlias('@app/bookpdf/');
 
+        foreach (Documents::find()->all() as  $document) {
+            echo 'update => ' . $document->doc_number. "\n";
+            $ref = $document->ref;
+            $checkFileUpload = Uploads::findOne(['ref' => $ref]);
+            if(!$checkFileUpload){
+                $fileName = $document->data_json['filename'];
+                 $filePath = $directory .$fileName ;
+        
+                // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+                if (file_exists($filePath) && is_file($filePath)) {
+                  
+                     $this->CreateDir($ref);
+                   
+                        $name = $fileName;
+                        $destinationPath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $fileName;
+
+                        if (copy($filePath, $destinationPath)) {
+                            $upload = new Uploads();
+                                $upload->ref = $ref;
+                                $upload->name = 'document';
+                                $upload->file_name = $name;
+                                $upload->real_filename = $name;
+                                $upload->type = 'pdf';
+                                $upload->save(false);
+                                echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf". "\n";
+                    }
+                        
+                    } else {
+                        echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=".$fileName. "\n";
+                    }
+            }
+        }
+        // $filePath = $directory . $fileName;
+        
+        // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+        // if (file_exists($filePath) && is_file($filePath)) {
+        //     echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf". "\n";
+        // } else {
+        //     echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=".$id. "\n";
+        // }
+
+       
+                    
+
+    }
+    
     public static function Person($id)
     {
         $person = Yii::$app

@@ -1,11 +1,11 @@
 <?php
 
 namespace app\modules\filemanager\controllers;
-use app\modules\filemanager\models\Uploads;
 use Yii;
-use app\modules\filemanager\components\FileManagerHelper;
 use yii\web\Response;
 use yii\web\UploadedFile;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 class UploadsController extends \yii\web\Controller
 {
@@ -23,7 +23,30 @@ class UploadsController extends \yii\web\Controller
             $id = Yii::$app->request->get('id');
             $model = Uploads::findOne($id);
             $filename = $model->real_filename;
-            $filepath = FileManagerHelper::getUploadPath().$model->ref.'/thumbnail/'. $filename;
+            $filepathCheck = FileManagerHelper::getUploadPath().$model->ref.'/thumbnail/'. $filename;
+            if (!file_exists($filepathCheck)) {
+                $filepath = FileManagerHelper::getUploadPath().$model->ref.'/'. $filename;
+            }else{
+                $filepath = $filepathCheck;
+            }
+            $this->setHttpHeaders($model->type);
+            \Yii::$app->response->data = file_get_contents($filepath);
+            return \Yii::$app->response;
+
+        }else{
+            return false;
+        }
+
+    }
+
+    public function actionShowPdf()
+    {
+        if(!Yii::$app->user->isGuest){
+
+            $id = Yii::$app->request->get('id');
+            $model = Uploads::findOne($id);
+            $filename = $model->real_filename;
+            $filepath = FileManagerHelper::getUploadPath().$model->ref.'/'. $filename;
             $this->setHttpHeaders($model->type);
             \Yii::$app->response->data = file_get_contents($filepath);
             return \Yii::$app->response;

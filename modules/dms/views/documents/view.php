@@ -6,14 +6,17 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
 
-$this->title = $model->doc_type_id;
+$this->title = $model->topic;
 $this->params['breadcrumbs'][] = ['label' => 'Documents', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="documents-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+<div class="card">
+    <div class="card-body">
+
+
+    <h5><i class="bi bi-journal-text fs-4"></i> <?= Html::encode($this->title) ?></h5>
 
     <p>
         <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
@@ -29,21 +32,25 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
-            'doc_type_id',
-            'topic',
-            'org_id',
+            [
+                'attribute' => 'org_id',
+                'value' => $model->documentOrg->title ?? '-'
+            ],
+            [
+                'attribute' => 'doc_type_id',
+                'value' => $model->documentType->title ?? '-'
+            ],
+
             'thai_year',
             'doc_regis_number',
             'doc_number',
             'urgent',
             'secret',
-            'doc_date',
-            'doc_expire',
-            'doc_receive',
-            'doc_time',
-            'data_json',
         ],
     ]) ?>
 
+
 </div>
+</div>
+<?php echo $model->Upload('document')?>
+

@@ -2,11 +2,14 @@
 
 namespace app\modules\dms\controllers;
 
+use Yii;
+use app\models\Uploads;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -38,8 +41,10 @@ class DocumentsController extends Controller
      */
     public function actionIndex()
     {
+        $type = $this->request->get('doc_type');
         $searchModel = new DocumentSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['doc_type_id' => $type]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -101,6 +106,43 @@ class DocumentsController extends Controller
             'model' => $model,
         ]);
     }
+
+    public function actionShow($id)
+    {
+        $model = $this->findModel($id);
+        if(!Yii::$app->user->isGuest){
+
+            $id = Yii::$app->request->get('id');
+            $fileUpload = Uploads::findOne(['ref' => $model->ref]);
+            $filename = $fileUpload->real_filename;
+            $filepath = FileManagerHelper::getUploadPath().$fileUpload->ref.'/'. $filename;
+            if (!file_exists($filepath)) {
+                throw new \yii\web\NotFoundHttpException('The requested file does not exist.');
+            }
+            
+            $this->setHttpHeaders($fileUpload->type);
+            \Yii::$app->response->data = file_get_contents($filepath);
+            return \Yii::$app->response;
+
+        }else{
+            return false;
+        }
+
+    }
+    
+    protected function setHttpHeaders($type)
+    {
+        
+        \Yii::$app->response->format = yii\web\Response::FORMAT_RAW;
+        if($type == 'png'){
+            \Yii::$app->response->headers->add('content-type','image/png');
+        }
+        
+        if($type == 'pdf'){
+            \Yii::$app->response->headers->add('content-type','application/pdf');
+
+        }
+        }
 
     /**
      * Deletes an existing Documents model.

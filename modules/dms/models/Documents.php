@@ -4,6 +4,7 @@ namespace app\modules\dms\models;
 
 use Yii;
 use app\models\Categorise;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "documents".
@@ -77,5 +78,10 @@ class Documents extends \yii\db\ActiveRecord
         public function viewDocDate()
         {
             return Yii::$app->thaiFormatter->asDate($this->doc_date, 'medium');
+        }
+
+        public function Upload($name)
+        {
+            return FileManagerHelper::FileUpload($this->ref, $name);
         }
 }

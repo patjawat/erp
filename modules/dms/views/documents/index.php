@@ -48,19 +48,18 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="d-flex justify-content-between">
  
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
     
 </div>
 
 
 
     <table
-        class="table table-primary"
+        class="table table-hover table-striped"
     >
         <thead>
             <tr>
                 <th scope="col" style="width:55px;">เลขรับ</th>
-                <th scope="col" style="width:240px;">จาก</th>
                 <th scope="col">เรื่อง</th>
                 <th scope="col">วันที่หนังสือ</th>
                 <th scope="col">แก้ไข</th>
@@ -71,22 +70,25 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php foreach($dataProvider->getModels() as $item):?>
             <tr class="">
                 <td><?php echo $item->doc_regis_number?></td>
-                <td scope="row"><?php echo $item->documentOrg->title ?? '-';?></td>
                 <td class="fw-light align-middle">
+                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>" class="text-dark">
+                        
                         <div class=" d-flex flex-column">
                             <span class="fw-normal fs-6"><?php echo $item->topic?></span>
                             
-                       </div>
-                       <span class="badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13">
-                                <?php echo $item->doc_number?></span>
-                    </td>
+                        </div>
+                        <!-- <span class="badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13"> -->
+                            <span class="text-primary fw-lighter fs-13">
+                                <?php echo $item->documentOrg->title ?? '-';?></span>
+                            </a>
+                            </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
                             <span class="fw-normal fs-6"><?php echo $item->viewDocDate()?></span>
                             <span class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
                        </div>
                     </td>
-                <td>R1C3</td>
+                <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i>',['update', 'id' => $item->id])?></td>
                 <td>R1C3</td>
             </tr>
             <?php endforeach;?>

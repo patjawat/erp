@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use kartik\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
@@ -17,7 +17,6 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'topic')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'org_id')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
 
@@ -37,7 +36,6 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'doc_time')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'data_json')->textInput() ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
