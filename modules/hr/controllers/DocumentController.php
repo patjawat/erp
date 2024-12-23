@@ -105,6 +105,8 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('approveDate3', $model->checkerName(3)['approve_date']);
         $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
+        // $templateProcessor->setValue('l_days', $model->data_json['leave_days']);
+
         
         
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
