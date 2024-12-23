@@ -62,14 +62,18 @@ class AppHelper extends Component
                             END AS date_count;";
          //หาจำนวนวันหยุด
          $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
+         //ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
+        //  $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'holiday_me' AND date_start BETWEEN :date_start AND :date_end";
  
          $summaryDay =   Yii::$app->db->createCommand($sqlDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
          $sunDay =   Yii::$app->db->createCommand($sqlSundays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
          $holiday =   Yii::$app->db->createCommand($sqlHoliday)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+        //  $holidayMe =   Yii::$app->db->createCommand($sqlHolidayMe)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
              return [
                  'summaryDay' =>  $summaryDay,
                  'sunDay' =>  $sunDay,
-                 'holidy' =>  $holiday
+                 'holidy' =>  $holiday,
+                //  'holidy_me' =>  $holidayMe
              ];
      }
 

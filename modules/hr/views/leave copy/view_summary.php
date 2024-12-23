@@ -1,8 +1,8 @@
 
 <?php
 $sql = "SELECT lt.code,lt.title,
-IFNULL((SELECT SUM(l.sum_days) FROM `leave` l WHERE l.emp_id = :emp_id AND thai_year = :thai_year AND l.status = 'Pending' AND l.leave_type_id = lt.code),0) as pending,
-IFNULL((SELECT SUM(l.sum_days) FROM `leave` l WHERE l.emp_id = :emp_id AND thai_year = :thai_year AND l.status = 'Allow' AND l.leave_type_id = lt.code),0) as total
+IFNULL((SELECT SUM(l.total_days) FROM `leave` l WHERE l.emp_id = :emp_id AND thai_year = :thai_year AND l.status = 'Pending' AND l.leave_type_id = lt.code),0) as pending,
+IFNULL((SELECT SUM(l.total_days) FROM `leave` l WHERE l.emp_id = :emp_id AND thai_year = :thai_year AND l.status = 'Allow' AND l.leave_type_id = lt.code),0) as total
 FROM `categorise` lt
 WHERE lt.name = 'leave_type' AND lt.code IN('LT1','LT3','LT4');";
 

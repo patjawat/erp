@@ -69,3 +69,7 @@
     </div>
 </div>
 <!--End  BoxStatus -->
+<?php
+// echo $searchModel->thai_year;
+// echo $searchModel->emp_id;
+?>

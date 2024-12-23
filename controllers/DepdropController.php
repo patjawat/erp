@@ -2,23 +2,23 @@
 
 namespace app\controllers;
 
-use app\components\AppHelper;
-use app\components\CategoriseHelper;
+use Yii;
+use yii\helpers\Html;
+use yii\web\Response;
 use app\models\Amphure;
-use app\models\Categorise;
 use app\models\Company;
-use app\models\District;
 use app\models\Profile;
+use yii\web\Controller;
+use app\models\District;
+use app\models\Categorise;
+use yii\filters\VerbFilter;
+use app\components\AppHelper;
 use app\models\ProfileSearch;
 use app\modules\am\models\Asset;
-use app\modules\hr\models\Employees;
 use app\modules\sm\models\Product;
-use yii\filters\VerbFilter;
-use yii\helpers\Html;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use Yii;
+use app\components\CategoriseHelper;
+use app\modules\hr\models\Employees;
 
 class DepdropController extends \yii\web\Controller
 {
@@ -149,7 +149,10 @@ class DepdropController extends \yii\web\Controller
                 'id' => $model->id,
                 'text' => $model->getAvatar(false),
                 'fullname' => $model->fullname,
+                'position_type_id' => $model->position_type,
                 'position_name' => $model->positionName(),
+                'month_of_service' => $model->workLife()['month'],
+                'years_of_service' => $model->workLife()['year'],
                 'position_name_text' => $model->data_json['position_name_text'],
                 // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
                 'avatar' => $model->getAvatar(false)

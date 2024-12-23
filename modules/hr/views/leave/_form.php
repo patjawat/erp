@@ -165,7 +165,7 @@ $resultsJs = <<< JS
                 <div class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-3 px-3 rounded mb-3">
                     
                     <h6>เป็นเวลา <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">
-                        <?php echo $model->sum_days?></span> วัน</h6>
+                        <?php echo $model->total_days?></span> วัน</h6>
                         <?php echo $form->field($model, 'on_holidays', [
     'options' => ['class' => 'mb-2']
 ])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('ไม่รวมวันหยุด'); ?>
@@ -242,7 +242,7 @@ $resultsJs = <<< JS
 
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'sum_days')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
@@ -264,34 +264,34 @@ $js = <<< JS
         console.log('Submit');
 
         Swal.fire({
-      title: "ยืนยัน?",
-      text: "บันทึกขออนุมัติการลา!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "ยกเลิก!",
-      confirmButtonText: "ใช่, ยืนยัน!"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        
-        \$.ajax({
-            url: form.attr('action'),
-            type: 'post',
-            data: form.serialize(),
-            dataType: 'json',
-            success: async function (response) {
-                form.yiiActiveForm('updateMessages', response, true);
-                if(response.status == 'success') {
-                    closeModal()
-                    // success()
-                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+        title: "ยืนยัน?",
+        text: "บันทึกขออนุมัติการลา!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก!",
+        confirmButtonText: "ใช่, ยืนยัน!"
+        }).then((result) => {
+        if (result.isConfirmed) {
+            
+            \$.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: async function (response) {
+                    form.yiiActiveForm('updateMessages', response, true);
+                    if(response.status == 'success') {
+                        closeModal()
+                        // success()
+                        await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                    }
                 }
-            }
-        });
+            });
 
-      }
-    });
+        }
+        });
         return false;
     });
 
@@ -305,7 +305,7 @@ $js = <<< JS
             calDays(selectedDate);
         });
 
-        $("#leave-data_json-auto").change(function() {
+        $("#leave-on_holidays").change(function() {
             //ไม่รวมวันหยุด Auto
             if(this.checked) {
                 calDays()
@@ -347,6 +347,7 @@ $js = <<< JS
 
       function calDays()
         {
+            console.log($('#leave-date_end').val())
             \$.ajax({
                 type: "get",
                 url: "$calDaysUrl",
@@ -355,13 +356,13 @@ $js = <<< JS
                     date_end:$('#leave-date_end').val(),
                     date_start_type:$('#leave-data_json-date_start_type').val(),
                     date_end_type:$('#leave-data_json-date_end_type').val(),
-                    auto:$('#leave-data_json-auto').is(':checked') ? 1 : 0,
+                    on_holidays:$('#leave-on_holidays').is(':checked') ? 1 : 0,
                 },
                 dataType: "json",
                 success: function (res) {
                     console.log($('#leave-data_json-date_start_type').val());
                    $('.cal-days').html(res.total)
-                   $('#leave-sum_days').val(res.total)
+                   $('#leave-total_days').val(res.total)
                     
                     
                 }

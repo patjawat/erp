@@ -51,7 +51,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('reason', $model->reason);
-        $templateProcessor->setValue('days', $model->sum_days);
+        $templateProcessor->setValue('days', $model->total_days);
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('checker1', $model->checkerName(1)['fullname']);
         $templateProcessor->setValue('position1', $model->checkerName(1)['position']);
@@ -92,9 +92,9 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('department', $model->employee->departmentName());
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
-        $templateProcessor->setValue('days', $model->sum_days);//จำนวนวันที่ลา
+        $templateProcessor->setValue('days', $model->total_days);//จำนวนวันที่ลา
         $templateProcessor->setValue('last_days', $model->leaveLastDays()); //ลามาแล้ว
-        $templateProcessor->setValue('total', $model->sum_days); // รวมเป็น
+        $templateProcessor->setValue('total', $model->total_days); // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('send', '('.$model->leaveWorkSend()['fullname'].')');
         $templateProcessor->setValue('sendPosition', $model->leaveWorkSend()['position']);

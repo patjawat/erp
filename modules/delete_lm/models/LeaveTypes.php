@@ -77,7 +77,7 @@ class LeaveTypes extends \yii\db\ActiveRecord
             $model = LeavePermission::find()->where(['leave_type_id' => $leaveTypeId,'position_type_id' => $positionTypeId])->one();
             
             if($model){
-                return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 ">'.$model->sum_days.'</span>';
+                return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 ">'.$model->total_days.'</span>';
             }else{
                 return '<span class="badge rounded-pill badge-soft-secondary text-secondary fs-13">-</span>';
             }

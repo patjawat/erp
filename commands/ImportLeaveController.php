@@ -20,7 +20,7 @@ use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
-use app\modules\hr\models\LeavePermission;
+use app\modules\hr\models\LeaveEntitlements;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -104,7 +104,7 @@ class ImportLeaveController extends Controller
             $leave->thai_year = $item['LEAVE_YEAR_ID'];
             $leave->date_start = $item['LEAVE_DATE_BEGIN'];
             $leave->date_end = $item['LEAVE_DATE_END'];
-            $leave->sum_days = $item['LEAVE_DATE_SUM'];
+            $leave->total_days = $item['LEAVE_DATE_SUM'];
             $leave->status = $item['STATUS_CODE'];
             $leave->data_json = [
                 'cid' => $item['LEAVE_PERSON_CODE'],
@@ -141,20 +141,20 @@ class ImportLeaveController extends Controller
         return ExitCode::OK;
     }
 
-    public function actionPermission()
+    public function actionEtitlements()
     {
-        $querys = Yii::$app->db2->createCommand("SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `gleave_over` l LEFT JOIN hrd_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID where OVER_YEAR_ID = '2567' AND PERSON_ID = 8;")->queryAll();
+        $querys = Yii::$app->db2->createCommand("SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `gleave_over` l LEFT JOIN hrd_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID;")->queryAll();
         foreach ($querys as $key => $item) {
             
             $emp = $this->Person($item['PERSON_ID']);
             $positionType = Categorise::find()->where(['name' => 'position_type','title' =>  $item['HR_PERSON_TYPE_NAME']])->one();
-            $check = LeavePermission::find()->where(['thai_year' => $item['OVER_YEAR_ID'],'emp_id' => $emp->id])->one();
+            $check = LeaveEntitlements::find()->where(['thai_year' => $item['OVER_YEAR_ID'],'emp_id' => $emp->id])->one();
             
             if($check)
             {
                 $model = $check;
             }else{
-                $model = new LeavePermission();
+                $model = new LeaveEntitlements();
             }
             
             $model->emp_id = $emp->id;
@@ -162,10 +162,11 @@ class ImportLeaveController extends Controller
             $model->position_type_id = isset($positionType['code']) ?? 0;
             $model->leave_type_id = 'LT4';
             $model->year_of_service = $item['OLDS'];
+            $model->month_of_service = 0;
             // $model->leave_days = 10;
-            $model->leave_before_days = $item['DAY_LEAVE_OVER_BEFORE'];
-            $model->leave_limit = 0;
-            // $model->leave_sum_days = $item['DAY_LEAVE_OVER_BEFORE'];
+            $model->days = $item['DAY_LEAVE_OVER_BEFORE'];
+            // $model->leave_limit = 0;
+            // $model->leave_total_days = $item['DAY_LEAVE_OVER_BEFORE'];
             if($model->save(false)){
                 echo 'ดำเนินการ : '.$model->emp_id. " \n";
             }else{
@@ -186,3 +187,29 @@ class ImportLeaveController extends Controller
         }
     }
 }
+
+
+SELECT x4.*,(x4.days-x4.sum_leave) as total FROM(
+    SELECT x3.*,
+    COALESCE((SELECT days FROM leave_entitlements WHERE emp_id = x3.emp_id AND leave_type_id = x3.leave_type_id AND thai_year=2567),0) as days,
+    COALESCE((SELECT sum(total_days) FROM `leave` WHERE emp_id = x3.emp_id AND leave_type_id = x3.leave_type_id AND thai_year=2567),0) as sum_leave
+    FROM(
+    SELECT x2.*,
+    (SELECT max_days FROM `leave_policies` WHERE position_type_id = x2.position_type AND year_of_service <= x2.years_of_service ORDER BY year_of_service DESC limit 1) as max_days
+    FROM(
+    select x1.* from (SELECT 
+                e.id as emp_id,
+                concat(e.fname,' ',e.lname) as fullname,
+                lt.title as leave_type_name,
+                l.leave_type_id,
+                e.position_type,
+                pt.title as position_type_name,
+                TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) AS years_of_service
+                FROM employees e 
+                LEFT JOIN leave_policies lp ON lp.position_type_id = e.position_type
+                LEFT JOIN `leave` l ON e.id = l.emp_id AND l.leave_type_id = 'LT4'
+                JOIN categorise lt ON l.leave_type_id = lt.code AND lt.name = 'leave_type'
+                JOIN categorise pt ON e.position_type = pt.code AND pt.name = 'position_type'
+                AND e.position_type NOT IN('PT5')
+                GROUP BY e.id  
+                ORDER BY `e`.`id` ASC) as x1) as x2) as x3) as x4;

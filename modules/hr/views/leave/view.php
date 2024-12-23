@@ -67,7 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     <td>เป็นเวลา : </td>
                     <td>
-                    <span class="badge rounded-pill badge-soft-danger text-primary fs-13 "><?php echo $model->sum_days ?> วัน</span></td>
+                    <span class="badge rounded-pill badge-soft-danger text-primary fs-13 "><?php echo $model->total_days ?> วัน</span></td>
                 </tr>
 
                 <tr>

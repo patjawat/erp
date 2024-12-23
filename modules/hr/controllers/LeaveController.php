@@ -15,6 +15,7 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
+use app\modules\hr\models\Calendar;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\hr\models\Organization;
@@ -295,7 +296,7 @@ class LeaveController extends Controller
             $dateStart = preg_replace('/\D/', '', $model->date_start) !== '' ? AppHelper::convertToGregorian($model->date_start) : '';
             $dateEnd = preg_replace('/\D/', '', $model->date_end) !== '' ? AppHelper::convertToGregorian($model->date_end) : '';
             
-            if($dateStart > $dateEnd ){
+            if($dateStart > $dateEnd && $dateEnd !=='' ){
                 $model->addError('date_start', 'มากกว่าวันสุดท้าย');
                 $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
             }
@@ -323,7 +324,7 @@ class LeaveController extends Controller
     {
         $date_start_type = (Float) ($this->request->get('date_start_type') == "1" ? 0 : 0.5);
         $date_end_type = (Float) ($this->request->get('date_end_type') == "1" ? 0 : 0.5);
-        $auto = $this->request->get('auto');
+        $on_holidays = $this->request->get('on_holidays');
 
         $date_start = preg_replace('/\D/', '', $this->request->get('date_start'));
         $date_end = preg_replace('/\D/', '', $this->request->get('date_end'));
@@ -336,14 +337,17 @@ class LeaveController extends Controller
         
         \Yii::$app->response->format = Response::FORMAT_JSON;
         // return $auto;
-        if($auto == "1"){
-            $total = (($model['sunDay'] + $model['summaryDay'])-($date_start_type+$date_end_type));
+        if($on_holidays == "1"){
+            $holidaysMe = Calendar::find()->where(['name' => 'holiday_me'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
+            $total = (($model['sunDay'] + $model['summaryDay'])-($date_start_type+$date_end_type))  - $holidaysMe;
         }else{
+            $holidaysMe = 'x';
             $total = ($model['summaryDay']-($date_start_type+$date_end_type));
         }
 
         return [
             $model,
+            'holiday_me' => $holidaysMe,
             'total' => $total,
             'start_type' => $date_start_type,
             'start_end' => $date_end_type,

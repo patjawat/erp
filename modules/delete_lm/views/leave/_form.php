@@ -112,7 +112,7 @@ $resultsJs = <<< JS
 
                 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
                 <?php // $form->field($model, 'leave_type_id')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'sum_days')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>

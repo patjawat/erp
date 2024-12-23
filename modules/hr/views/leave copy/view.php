@@ -52,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'label' => 'เป็นเวลา',
-                'value' => $model->sum_days . ' วัน'
+                'value' => $model->total_days . ' วัน'
             ],
             [
                 'label' => 'เหตุผล',

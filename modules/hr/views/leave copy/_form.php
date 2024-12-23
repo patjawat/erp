@@ -165,7 +165,7 @@ $resultsJs = <<< JS
                 <div class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-3 px-3 rounded mb-3">
                     
                     <h6>เป็นเวลา <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">
-                        <?php echo $model->sum_days?></span> วัน</h6>
+                        <?php echo $model->total_days?></span> วัน</h6>
                         <?php echo $form->field($model, 'on_holidays', [
     'options' => ['class' => 'mb-2']
 ])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('ไม่รวมวันหยุด'); ?>
@@ -242,7 +242,7 @@ $resultsJs = <<< JS
 
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'sum_days')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
@@ -361,7 +361,7 @@ $js = <<< JS
                 success: function (res) {
                     console.log($('#leave-data_json-date_start_type').val());
                    $('.cal-days').html(res.total)
-                   $('#leave-sum_days').val(res.total)
+                   $('#leave-total_days').val(res.total)
                     
                     
                 }

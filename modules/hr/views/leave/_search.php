@@ -1,6 +1,8 @@
 <?php
 
+use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Employees;
@@ -46,22 +48,41 @@ use iamsaint\datetimepicker\Datetimepicker;
         ])->label('ปีงบประมาณ');
         ?>
     <?php
-        echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
-            'data' => $model->listEmployees(),
-            'options' => ['placeholder' => 'เลือกบุคลากร ...'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '230px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                $(this).submit()
-                }',
-                'select2:unselecting' => 'function() {
-                    $(this).submit()
-                }',
-            ]
-        ])->label('บุคลากร');
+    
+      $url = Url::to(['/depdrop/employee-by-id']);
+      try {
+          $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->fullname;
+      } catch (\Throwable $th) {
+          $initEmployee = '';
+      }
+      echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
+          'initValueText' => $initEmployee,
+          'options' => ['placeholder' => 'เลือกบุคลากร ...'],
+          'pluginOptions' => [
+              'width' => '230px',
+              'allowClear' => true,
+              'minimumInputLength' => 1,
+              'language' => [
+                  'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
+              ],
+              'ajax' => [
+                  'url' => $url,
+                  'dataType' => 'json',
+                  'data' => new JsExpression('function(params) { return {q:params.term}; }')
+              ],
+              'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+              'templateResult' => new JsExpression('function(city) { return city.fullname; }'),
+              'templateSelection' => new JsExpression('function (city) { return city.fullname; }'),
+          ],
+          'pluginEvents' => [
+              'select2:select' => 'function(result) { 
+              $(this).submit()
+              }',
+              'select2:unselecting' => 'function() {
+                  $(this).submit()
+              }',
+          ]
+      ])->label('บุคลากร');
         ?>
 
     <div class="d-flex flex-row mb-3 mt-4">

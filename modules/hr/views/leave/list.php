@@ -23,7 +23,7 @@ use yii\bootstrap5\Html;
         <tr class="">
             <td class="text-truncate" style="max-width: 230px;">
                 <?=$model->getAvatar(false)['avatar']?></td>
-            <td class="text-center fw-semibold"><?php echo $model->sum_days?></td>
+            <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
             <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>

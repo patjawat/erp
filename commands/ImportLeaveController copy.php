@@ -131,7 +131,7 @@ class ImportLeaveController extends Controller
                 $checkLeave->thai_year = $item['LEAVE_YEAR_ID'];
                 $checkLeave->date_start = $item['LEAVE_DATE_BEGIN'];
                 $checkLeave->date_end = $item['LEAVE_DATE_END'];
-                $checkLeave->sum_days =$item['LEAVE_DATE_SUM'];
+                $checkLeave->total_days =$item['LEAVE_DATE_SUM'];
                 $checkLeave->data_json = [
                         'cid' => $item['LEAVE_PERSON_CODE'],
                         'fullname' => $item['LEAVE_PERSON_FULLNAME'],

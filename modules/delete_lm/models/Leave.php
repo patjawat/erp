@@ -18,7 +18,7 @@ use app\modules\hr\models\Organization;
  * @property int $id
  * @property string|null $leave_type_id ประเภทการขอลา
  * @property float|null $leave_time_type ประเภทการลา
- * @property float|null $sum_days จำนวนวัน
+ * @property float|null $total_days จำนวนวัน
  * @property string|null $data_json
  * @property string|null $date_start วันที่ลา
  * @property string|null $date_end ถึงวันที่
@@ -47,7 +47,7 @@ class Leave extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['leave_time_type', 'sum_days'], 'number'],
+            [['leave_time_type', 'total_days'], 'number'],
             [['data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
@@ -63,7 +63,7 @@ class Leave extends \yii\db\ActiveRecord
             'id' => 'ID',
             'leave_type_id' => 'ประเภทการขอลา',
             'leave_time_type' => 'ประเภทการลา',
-            'sum_days' => 'จำนวนวัน',
+            'total_days' => 'จำนวนวัน',
             'data_json' => 'Data Json',
             'date_start' => 'วันที่ลา',
             'date_end' => 'ถึงวันที่',
@@ -112,7 +112,7 @@ class Leave extends \yii\db\ActiveRecord
         $sql = "SELECT 
                 lt.code,
                 lt.title,
-                COALESCE(SUM(l.sum_days), 0) AS total
+                COALESCE(SUM(l.total_days), 0) AS total
                 FROM 
                     categorise lt
                 LEFT JOIN 

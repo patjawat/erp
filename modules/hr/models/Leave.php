@@ -22,7 +22,7 @@ use app\modules\hr\models\Organization;
  * @property int $id
  * @property string|null $leave_type_id ประเภทการขอลา
  * @property float|null $leave_time_type ประเภทการลา
- * @property float|null $sum_days จำนวนวัน
+ * @property float|null $total_days จำนวนวัน
  * @property string|null $data_json
  * @property string|null $date_start วันที่ลา
  * @property string|null $date_end ถึงวันที่
@@ -58,7 +58,7 @@ class Leave extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['leave_time_type', 'sum_days'], 'number'],
+            [['leave_time_type', 'total_days'], 'number'],
             [['on_holidays', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q','q_department'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
@@ -74,7 +74,7 @@ class Leave extends \yii\db\ActiveRecord
             'id' => 'ID',
             'leave_type_id' => 'ประเภทการขอลา',
             'leave_time_type' => 'ประเภทการลา',
-            'sum_days' => 'จำนวนวัน',
+            'total_days' => 'จำนวนวัน',
             'data_json' => 'Data Json',
             'date_start' => 'วันที่ลา',
             'date_end' => 'ถึงวันที่',
@@ -233,7 +233,15 @@ class Leave extends \yii\db\ActiveRecord
 
     public function listLeaveType()
     {
-        return ArrayHelper::map(LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->all(), 'code', 'title');
+        $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        if($me->gender == 'ชาย')
+        {
+            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in','code',['LT2']])->all();
+        }else{
+            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in','code',['LT5','LT7']])->all();        
+        }
+            
+        return ArrayHelper::map($list, 'code', 'title');
     }
 
     public function listStatus()
@@ -271,7 +279,7 @@ class Leave extends \yii\db\ActiveRecord
                 'leave_type_id' => $this->leave_type_id
             ])
             ->andwhere(['<','date_start',$this->date_start])
-            ->sum('sum_days');
+            ->sum('total_days');
     return $lastDays ?? 0;
     }
     
@@ -280,9 +288,9 @@ class Leave extends \yii\db\ActiveRecord
     {
         $sql = "WITH summary AS (
                 SELECT 
-                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT1' THEN l.sum_days ELSE 0 END), 0) AS last_lt1,
-                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT3' THEN l.sum_days ELSE 0 END), 0) AS last_lt3,
-                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT4' THEN l.sum_days ELSE 0 END), 0) AS last_lt4
+                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT1' THEN l.total_days ELSE 0 END), 0) AS last_lt1,
+                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT3' THEN l.total_days ELSE 0 END), 0) AS last_lt3,
+                    IFNULL(SUM(CASE WHEN l.leave_type_id = 'LT4' THEN l.total_days ELSE 0 END), 0) AS last_lt4
                 FROM 
                     `leave` l
                 WHERE 
@@ -637,7 +645,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         $sum = self::find()
             ->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id, 'leave_type_id' => $type, 'status' => 'Allow'])
-            ->sum('sum_days');
+            ->sum('total_days');
         if (!$sum) {
             $sum = 0;
         }
@@ -648,7 +656,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         $sum = self::find()
             ->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id, 'status' => $status])
-            ->sum('sum_days');
+            ->sum('total_days');
         if (!$sum) {
             $sum = 0;
         }
@@ -673,11 +681,11 @@ class Leave extends \yii\db\ActiveRecord
     // นับจำนวนวันลาพักผ่อนคงเหลือ
     public function sumLeavePermission()
     {
-        $lP = LeavePermission::find()->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id])->one();
+        $lP = LeaveEntitlements::find()->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id])->one();
         $leaveDays = 0;
         if ($lP) {
-            $total = $lP->leave_sum_days;
-            $leaveDays = ($lP->leave_sum_days - $this->sumLeaveType('LT4'));
+            $total = $lP->days;
+            $leaveDays = ($lP->days - $this->sumLeaveType('LT4'));
         }else{
             $total = 0;
         }
@@ -723,8 +731,8 @@ class Leave extends \yii\db\ActiveRecord
     {
         $emp = UserHelper::GetEmployee();
         $sql = "SELECT 
-                        lp.leave_sum_days,
-                        COALESCE(SUM(l.sum_days), 0) AS used_leave
+                        lp.leave_total_days,
+                        COALESCE(SUM(l.total_days), 0) AS used_leave
                     FROM 
                         leave_permission lp
                     LEFT JOIN 
@@ -737,7 +745,7 @@ class Leave extends \yii\db\ActiveRecord
                         lp.emp_id = :emp_id
                         AND lp.thai_year = :thai_year
                     GROUP BY 
-                        lp.leave_sum_days";
+                        lp.leave_total_days";
         $query = Yii::$app
             ->db
             ->createCommand($sql)
@@ -746,12 +754,12 @@ class Leave extends \yii\db\ActiveRecord
             ->queryOne();
         try {
             return [
-                'sum_days' => $query['leave_sum_days'],
+                'total_days' => $query['leave_total_days'],
                 'used_leave' => $query['used_leave']
             ];
         } catch (\Throwable $th) {
             return [
-                'sum_days' => 0,
+                'total_days' => 0,
                 'used_leave' => 0
             ];
         }

@@ -21,7 +21,7 @@ use yii\bootstrap5\Html;
                 <?php foreach($dataProvider->getModels() as $model):?>
                 <tr class="">
                     <td  class="text-truncate" style="max-width: 250px;"><?=$model->getAvatar(false)['avatar']?></td>
-                    <td class="text-center fw-semibold "><?php echo $model->sum_days?></td>
+                    <td class="text-center fw-semibold "><?php echo $model->total_days?></td>
                     <td><?php echo $model->thai_year?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
