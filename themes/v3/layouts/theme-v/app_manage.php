@@ -44,7 +44,7 @@ use app\components\UserHelper;
                     <a href="<?=Url::to(['/hr/leave']);?>">
                         <div
                             class="d-flex flex-column align-items-center justify-content-center bg-light p-4 rounded-2">
-                            <i class="fa-solid fa-briefcase-medical fs-2"></i>
+                            <i class="bi bi-calendar-check-fill fs-2"></i>
                             <div>ระบบลา</div>
                         </div>
                     </a>

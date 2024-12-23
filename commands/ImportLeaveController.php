@@ -189,27 +189,27 @@ class ImportLeaveController extends Controller
 }
 
 
-SELECT x4.*,(x4.days-x4.sum_leave) as total FROM(
-    SELECT x3.*,
-    COALESCE((SELECT days FROM leave_entitlements WHERE emp_id = x3.emp_id AND leave_type_id = x3.leave_type_id AND thai_year=2567),0) as days,
-    COALESCE((SELECT sum(total_days) FROM `leave` WHERE emp_id = x3.emp_id AND leave_type_id = x3.leave_type_id AND thai_year=2567),0) as sum_leave
-    FROM(
-    SELECT x2.*,
-    (SELECT max_days FROM `leave_policies` WHERE position_type_id = x2.position_type AND year_of_service <= x2.years_of_service ORDER BY year_of_service DESC limit 1) as max_days
-    FROM(
-    select x1.* from (SELECT 
-                e.id as emp_id,
-                concat(e.fname,' ',e.lname) as fullname,
-                lt.title as leave_type_name,
-                l.leave_type_id,
-                e.position_type,
-                pt.title as position_type_name,
-                TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) AS years_of_service
-                FROM employees e 
-                LEFT JOIN leave_policies lp ON lp.position_type_id = e.position_type
-                LEFT JOIN `leave` l ON e.id = l.emp_id AND l.leave_type_id = 'LT4'
-                JOIN categorise lt ON l.leave_type_id = lt.code AND lt.name = 'leave_type'
-                JOIN categorise pt ON e.position_type = pt.code AND pt.name = 'position_type'
-                AND e.position_type NOT IN('PT5')
-                GROUP BY e.id  
-                ORDER BY `e`.`id` ASC) as x1) as x2) as x3) as x4;
+// SELECT x4.*,(x4.days-x4.sum_leave) as total FROM(
+//     SELECT x3.*,
+//     COALESCE((SELECT days FROM leave_entitlements WHERE emp_id = x3.emp_id AND leave_type_id = x3.leave_type_id AND thai_year=2567),0) as days,
+//     COALESCE((SELECT sum(total_days) FROM `leave` WHERE emp_id = x3.emp_id AND leave_type_id = x3.leave_type_id AND thai_year=2567),0) as sum_leave
+//     FROM(
+//     SELECT x2.*,
+//     (SELECT max_days FROM `leave_policies` WHERE position_type_id = x2.position_type AND year_of_service <= x2.years_of_service ORDER BY year_of_service DESC limit 1) as max_days
+//     FROM(
+//     select x1.* from (SELECT 
+//                 e.id as emp_id,
+//                 concat(e.fname,' ',e.lname) as fullname,
+//                 lt.title as leave_type_name,
+//                 l.leave_type_id,
+//                 e.position_type,
+//                 pt.title as position_type_name,
+//                 TIMESTAMPDIFF(YEAR, e.join_date, CURDATE()) AS years_of_service
+//                 FROM employees e 
+//                 LEFT JOIN leave_policies lp ON lp.position_type_id = e.position_type
+//                 LEFT JOIN `leave` l ON e.id = l.emp_id AND l.leave_type_id = 'LT4'
+//                 JOIN categorise lt ON l.leave_type_id = lt.code AND lt.name = 'leave_type'
+//                 JOIN categorise pt ON e.position_type = pt.code AND pt.name = 'position_type'
+//                 AND e.position_type NOT IN('PT5')
+//                 GROUP BY e.id  
+//                 ORDER BY `e`.`id` ASC) as x1) as x2) as x3) as x4;

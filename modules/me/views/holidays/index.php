@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
                
                 'droppable' => true,
                 'drop'              => new \yii\web\JsExpression("
-                function(date, jsEvent, ui, resourceId) {
+                    function(date, jsEvent, ui, resourceId) {
                     console.log('drop', date.format(), resourceId);
     
                     if ($('#drop-remove').is(':checked')) {
@@ -53,23 +53,31 @@ $this->params['breadcrumbs'][] = $this->title;
                     "),
                     'eventDrop'         => new \yii\web\JsExpression("
                     function(event, delta, revertFunc, jsEvent, ui, view,info) {
-                        
-                            // id: event.id, // ระบุ ID ของ event
-                            // start: event.start.format(), // วันเริ่มต้นที่แก้ไข
-                            // end: event.end ? event.end.format() : null // วันสิ้นสุดที่แก้ไข (ถ้ามี)
-                            // console.log('eventDrop',event.end.format());
+                        var id =  event.id;
+                        var start = event.start.format();
+                        var end = event.end ? event.end.format() : null;
+                        // console.log('eventDrop',start);
+                        updateEvent(id,start,end)
                 
                }
                "),
                'select'=> new \yii\web\JsExpression("function(start, end, jsEvent, view) {
-               addEvent(moment(start).format(),moment(end).format())
-                    // กำหนดปฏิทิน
-                var calendar = $('#calendar').fullCalendar('getCalendar');
+                        addEvent(moment(start).format(),moment(end).format())
+                            // กำหนดปฏิทิน
+                        var calendar = $('#calendar').fullCalendar('getCalendar');
                 
                 // เพิ่ม Event แบบ dynamic
         
 
-                }"),
+            }"),
+            'eventClick' => new \yii\web\JsExpression("
+                function(calEvent, jsEvent, view) {
+                var id =  calEvent.id;
+                viewEvent(id)
+
+            }
+            "),
+                
                 'eventRender' => new \yii\web\JsExpression("
                 function(event, element) {
                     if (event.imageUrl) {
@@ -87,6 +95,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $addEvent = Url::to(['/me/holidays/create']);
+$updateEvent = Url::to(['/me/holidays/update']);
+$viewEventUrl = Url::to(['/me/holidays/view']);
 $js = <<< JS
 function addEvent(start,end){
     console.log('Add Event'+start+' '+end);
@@ -108,15 +118,21 @@ function addEvent(start,end){
                 data:{'start':start,'end':end},
                 dataType: "json",
                 success: function (res) {
-                    console.log(res)
-                }
-            });
-            $('#calendar').fullCalendar('renderEvent', {
+                    if(res.status == 'error'){
+                        warning(res.massages)
+                    }else{
+                        $('#calendar').fullCalendar('renderEvent', {
+                    id:res.data.id,
                     title: 'OFF',
                     start: start,
                     end: end,
                     allDay: true
                 }, true);
+                success(res.massages)
+                    }
+                }
+            });
+         
             }
         });
 }
@@ -125,11 +141,29 @@ function updateEvent(id,start,end)
 {
     $.ajax({
                 type: "post",
-                url: "$addEvent",
-                data:{'start':start,'end':end},
+                url: "$updateEvent",
+                data:{'id':id,'start':start,'end':end},
                 dataType: "json",
                 success: function (res) {
                     console.log(res)
+                    success();
+                }
+            });
+}
+
+function viewEvent(id)
+{
+    $.ajax({
+                type: "get",
+                url: "$viewEventUrl",
+                data:{id:id,title:'แสดงรายละเอียด'},
+                dataType: "json",
+                success: function (res) {
+                    $("#main-modal").modal("show");
+                    $("#main-modal-label").html(res.title);
+                    $(".modal-body").html(res.content);
+                    $(".modal-footer").html(res.footer);
+                    $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                 }
             });
 }

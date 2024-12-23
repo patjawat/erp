@@ -104,7 +104,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         </div>
         <div class="d-flex flex-row mb-3 mt-4">
             <?php // echo Html::a('<i class="bi bi-person-fill-gear"></i> สิทธิวันลา',['/me/leave/permission','title' => '<i class="bi bi-person-fill-gear"></i> สิทธิวันลา'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
-            <?php echo Html::a('<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน',['/me/holidays','title' => '<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']])?>
+            <?php echo Html::a('<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน',['/me/holidays','title' => '<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน'],['id' => 'calendar-me','class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']])?>
             
         </div>
 
