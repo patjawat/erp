@@ -3,11 +3,15 @@
 namespace app\modules\dms\controllers;
 
 use Yii;
+use yii\web\Response;
 use app\models\Uploads;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\dms\models\Documents;
+use app\components\PdfSignatureValidator; // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
+
 use app\modules\dms\models\DocumentSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -41,11 +45,22 @@ class DocumentsController extends Controller
      */
     public function actionIndex()
     {
-        $type = $this->request->get('doc_type');
-        $searchModel = new DocumentSearch();
+        $group = $this->request->get('document_group');
+        $searchModel = new DocumentSearch([
+            'document_group' => $group, 
+            // 'thai_year' => AppHelper::YearBudget(),
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['doc_type_id' => $type]);
-
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+            ['like', 'doc_regis_number', $searchModel->q],
+            // ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
+        ]);
+        $dataProvider->setSort(['defaultOrder' => [
+            'doc_regis_number'=>SORT_DESC,
+            'thai_year'=>SORT_DESC,
+            ]]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -107,6 +122,48 @@ class DocumentsController extends Controller
         ]);
     }
 
+//แสดง File และแสดงความเห็น
+    public function actionFileComment($id)
+    {
+        $model = $this->findModel($id);
+        if($this->request->isAJax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+                return [
+                    'title' => $this->request->get('tilte'),
+                    'content' => $this->renderAjax('file_comment', [
+                        'model' => $model,
+                    ])
+                 ];
+            }else{
+                return $this->render('file_comment', [
+                    'model' => $model,
+                ]);
+            }
+    }
+
+    
+//แสดง File และแสดงความเห็น
+public function actionShareFile($id)
+{
+    $model = $this->findModel($id);
+    if($this->request->isAJax){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => '<i class="fas fa-share"></i> ส่งต่อ',
+                'content' => $this->renderAjax('share_file', [
+                    'model' => $model,
+                ])
+             ];
+        }else{
+            return $this->render('share_file', [
+                'model' => $model,
+            ]);
+        }
+}
+
+    
     public function actionShow($id)
     {
         $model = $this->findModel($id);
@@ -173,4 +230,7 @@ class DocumentsController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+
+    
 }

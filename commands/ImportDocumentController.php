@@ -41,10 +41,10 @@ class ImportDocumentController extends Controller
     public function actionIndex()
     {
         $this->Receive();
-        $this->Inside();
+        $this->Send();
     }
 
-    //หนังสือับ
+    // หนังสือับ
     public static function Receive()
     {
         $querys = Yii::$app->db2->createCommand("SELECT *
@@ -61,14 +61,14 @@ class ImportDocumentController extends Controller
         $total = count($querys);
         foreach ($querys as $key => $item) {
             $checkDoc = Documents::findOne([
-                'doc_type_id' => 'received',
+                'document_group' => 'receive',
                 'topic' => $item['BOOK_NAME'],
                 'doc_regis_number' => $item['BOOK_NUM_IN'],
                 'doc_number' => $item['BOOK_NUMBER'],
                 'thai_year' => $item['BOOK_YEAR_ID'],
                 'doc_date' => $item['BOOK_DATE'],
                 'doc_receive' => $item['DATE_SAVE'],
-                'document_org_id' => $item['RECORD_ORG_ID'],
+                'document_org' => $item['RECORD_ORG_ID'],
             ]);
             $percentage = (($num++) / $total) * 100;
             if ($checkDoc) {
@@ -79,23 +79,43 @@ class ImportDocumentController extends Controller
                 $model = new Documents([
                     'ref' => $ref
                 ]);
-                
+
                 echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
             }
+
+            switch ($item['BOOK_URGENT_ID']) {
+                case '01':
+                    $docSpeed = 'ปกติ';
+                    break;
+                case '02':
+                    $docSpeed = 'ด่วน';
+                    break;
+                case '03':
+                    $docSpeed = 'ด่วนมาก';
+                    break;
+                case '04':
+                    $docSpeed = 'ด่วนที่สุด';
+                    break;
+                default:
+                $docSpeed = '';
+                    break;
+            }
+
             $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             $model->ref = $ref;
-            $model->doc_type_id = 'received';
+            $model->document_group = 'receive';
+            $model->doc_speed =  $docSpeed;
+            $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
             $model->doc_number = $item['BOOK_NUMBER'];
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
             $model->topic = $item['BOOK_NAME'];
             $model->doc_receive = $item['DATE_SAVE'];
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
-            $model->document_org_id = $item['RECORD_ORG_ID'];
+            $model->document_org = $item['RECORD_ORG_ID'];
+            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
 
-            
             try {
-
                 $model->save(false);
             } catch (\Throwable $th) {
                 echo 'นำเข้าใหม่ => ' . $item['BOOK_NUM_IN'] . ' => ' . $th . "\n";
@@ -117,17 +137,12 @@ class ImportDocumentController extends Controller
             $org->save(false);
 
             // End หน่วงานที่รับส่งหนังสือ
-
-
-
-            
         }
         return ExitCode::OK;
     }
 
-    public static function Inside()
-    { 
-       
+    public static function send()
+    {
         $querys = Yii::$app->db2->createCommand("SELECT *
                         FROM gbook_index_inside
                         LEFT JOIN grecord_org ON gbook_index_inside.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
@@ -141,18 +156,16 @@ class ImportDocumentController extends Controller
         $num = 1;
         $total = count($querys);
         foreach ($querys as $key => $item) {
-           
             $checkDoc = Documents::findOne([
                 // 'ref' => $ref,
-                'doc_type_id' => 'inside',
+                'document_group' => 'send',
                 'topic' => $item['BOOK_NAME'],
                 'doc_regis_number' => $item['BOOK_NUM_IN'],
                 'doc_number' => $item['BOOK_NUMBER'],
                 'thai_year' => $item['BOOK_YEAR_ID'],
                 'doc_date' => $item['BOOK_DATE'],
                 'doc_receive' => $item['DATE_SAVE'],
-                'document_org_id' => $item['RECORD_ORG_ID'],
-                
+                'document_org' => $item['RECORD_ORG_ID'],
             ]);
             $percentage = (($num++) / $total) * 100;
             if ($checkDoc) {
@@ -163,23 +176,42 @@ class ImportDocumentController extends Controller
 
                 echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
             }
+
+            switch ($item['BOOK_URGENT_ID']) {
+                case '01':
+                    $docSpeed = 'ปกติ';
+                    break;
+                case '02':
+                    $docSpeed = 'ด่วน';
+                    break;
+                case '03':
+                    $docSpeed = 'ด่วนมาก';
+                    break;
+                case '04':
+                    $docSpeed = 'ด่วนที่สุด';
+                    break;
+                default:
+                $docSpeed = '';
+                    break;
+            }
+            
             $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             $model->ref = $ref;
-            $model->doc_type_id = 'inside';
+            $model->document_group = 'inside';
+            $model->doc_speed =  $docSpeed;
+            $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
             $model->doc_number = $item['BOOK_NUMBER'];
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
             $model->topic = $item['BOOK_NAME'];
             $model->doc_receive = $item['DATE_SAVE'];
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
-            $model->document_org_id = $item['RECORD_ORG_ID'];
+            $model->document_org = $item['RECORD_ORG_ID'];
             $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
-            $fileName = $item['BOOK_FILE_NAME']; // ชื่อไฟล์ที่ต้องการตรวจสอบ
+            $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
             // self::UploadFile($fileName,$item['BOOK_ID']);
             try {
-
                 // กำหนดพาธของไดเรกทอรี
-           
 
                 $model->save(false);
             } catch (\Throwable $th) {
@@ -205,57 +237,51 @@ class ImportDocumentController extends Controller
         }
         return ExitCode::OK;
     }
-    
+
     public function actionUploadFile()
     {
         $directory = Yii::getAlias('@app/bookpdf/');
 
-        foreach (Documents::find()->all() as  $document) {
-            echo 'update => ' . $document->doc_number. "\n";
+        foreach (Documents::find()->all() as $document) {
+            echo 'update => ' . $document->doc_number . "\n";
             $ref = $document->ref;
             $checkFileUpload = Uploads::findOne(['ref' => $ref]);
-            if(!$checkFileUpload){
+            if (!$checkFileUpload) {
                 $fileName = $document->data_json['filename'];
-                 $filePath = $directory .$fileName ;
-        
+                $filePath = $directory . $fileName;
+
                 // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
                 if (file_exists($filePath) && is_file($filePath)) {
-                  
-                     $this->CreateDir($ref);
-                   
-                        $name = $fileName;
-                        $destinationPath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $fileName;
+                    $this->CreateDir($ref);
 
-                        if (copy($filePath, $destinationPath)) {
-                            $upload = new Uploads();
-                                $upload->ref = $ref;
-                                $upload->name = 'document';
-                                $upload->file_name = $name;
-                                $upload->real_filename = $name;
-                                $upload->type = 'pdf';
-                                $upload->save(false);
-                                echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf". "\n";
+                    $name = $fileName;
+                    $destinationPath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $fileName;
+
+                    if (copy($filePath, $destinationPath)) {
+                        $upload = new Uploads();
+                        $upload->ref = $ref;
+                        $upload->name = 'document';
+                        $upload->file_name = $name;
+                        $upload->real_filename = $name;
+                        $upload->type = 'pdf';
+                        $upload->save(false);
+                        echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf" . "\n";
                     }
-                        
-                    } else {
-                        echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=".$fileName. "\n";
-                    }
+                } else {
+                    echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=" . $fileName . "\n";
+                }
             }
         }
         // $filePath = $directory . $fileName;
-        
+
         // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
         // if (file_exists($filePath) && is_file($filePath)) {
         //     echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf". "\n";
         // } else {
         //     echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=".$id. "\n";
         // }
-
-       
-                    
-
     }
-    
+
     public static function Person($id)
     {
         $person = Yii::$app
@@ -279,5 +305,4 @@ class ImportDocumentController extends Controller
         }
         return;
     }
-    
 }

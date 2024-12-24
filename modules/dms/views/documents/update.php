@@ -5,17 +5,13 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
 
-$this->title = 'Update Documents: ' . $model->doc_type_id;
+$this->title = 'แก้ไขหนังสือ: ' . $model->document_type;
 $this->params['breadcrumbs'][] = ['label' => 'Documents', 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->doc_type_id, 'url' => ['view', 'id' => $model->id]];
+$this->params['breadcrumbs'][] = ['label' => $model->document_type, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
-<div class="documents-update">
-
-    <h1><?= Html::encode($this->title) ?></h1>
 
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>
 
-</div>

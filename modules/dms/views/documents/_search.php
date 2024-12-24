@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
@@ -17,9 +18,28 @@ use yii\widgets\ActiveForm;
     ],
 ]); ?>
 
-<div class="d-flex justify-content-between">
-    <?= $form->field($model, 'id')->label(false) ?>
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
+<div class="d-flex justify-content-between align-top align-items-center gap-1">
+    <?= $form->field($model, 'q')->label('คำค้นหา...') ?>
+    <?php
+        echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
+            'data' => $model->ListThaiYear(),
+            'options' => ['placeholder' => 'ปีงบประมาณ'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'width' => '130px',
+            ],
+            'pluginEvents' => [
+                'select2:select' => 'function(result) { 
+                        $(this).submit()
+                        }',
+                'select2:unselecting' => 'function() {
+                            $(this).submit()
+                        }',
+            ]
+        ])->label('ปีงบประมาณ');
+        ?>
+    <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
+        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-4']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

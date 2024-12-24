@@ -17,11 +17,12 @@ class m241212_150029_create_documents_table extends Migration
             'ref' => $this->string(255),
             'doc_number' => $this->string()->comment('เลขที่หนังสือ'),
             'topic' => $this->text()->comment('ชื่อเรื่อง'),
-            'doc_type_id' => $this->string()->comment('ประเภทหนังสือ'),
-            'document_org_id' => $this->string()->comment('จากหน่วยงาน'),
+            'document_group' => $this->string()->comment('หมวดหนังสือ'),
+            'document_tag' => $this->string()->comment('ประเภทหนังสือ'),
+            'document_org' => $this->string()->comment('จากหน่วยงาน'),
             'thai_year' => $this->string()->comment('ปี พ.ศ.'),
             'doc_regis_number' => $this->string()->comment('เลขรับ'),
-            'urgent' => $this->string()->comment('ชั้นความเร็ว'),
+            'doc_speed' => $this->string()->comment('ชั้นความเร็ว'),
             'secret' => $this->string()->comment('ชั้นความลับ'),
             'doc_date' => $this->string()->comment('วันที่หนังสือ'),
             'doc_expire' => $this->string()->comment('วันหมดอายุ'),
@@ -32,10 +33,21 @@ class m241212_150029_create_documents_table extends Migration
 
         $sql = Yii::$app->db->createCommand("select * from categorise where name = 'document_type'")->queryAll();
         if(count($sql) < 1){
-        $this->insert('categorise', ['code' => 'inbox', 'name' => 'document_type', 'title' => 'หนังสือเข้า']);
-        $this->insert('categorise', ['code' => 'received', 'name' => 'document_type', 'title' => 'หนังสือรับ']);
-        $this->insert('categorise', ['code' => 'send', 'name' => 'document_type', 'title' => 'หนังสือส่ง']);
-        $this->insert('categorise', ['code' => 'inside', 'name' => 'document_type', 'title' => 'หนังสือภายใน']);
+        $this->insert('categorise', ['code' => 'DT1', 'name' => 'document_type', 'title' => 'หนังสือภายนอก']);
+        $this->insert('categorise', ['code' => 'DT2', 'name' => 'document_type', 'title' => 'หนังสือภายใน']);
+        $this->insert('categorise', ['code' => 'DT3', 'name' => 'document_type', 'title' => 'หนังสือประทับตรา']);
+        $this->insert('categorise', ['code' => 'DT4', 'name' => 'document_type', 'title' => 'หนังสือสั่งการ']);
+        $this->insert('categorise', ['code' => 'DT5', 'name' => 'document_type', 'title' => 'หนังสือประชาสัมพันธ์']);
+        $this->insert('categorise', ['code' => 'DT6', 'name' => 'document_type', 'title' => 'หนังสือที่เจ้าหน้าที่ทำขึ้นหรือรับไว้เป็นหลักฐานในราชการ']);
+        $this->insert('categorise', ['code' => 'DT7', 'name' => 'document_type', 'title' => 'หนังสือวิทยุ']);
+        $this->insert('categorise', ['code' => 'DT8', 'name' => 'document_type', 'title' => 'หนังสือขอประวัติการรักษาพยาบาล']);
+        $this->insert('categorise', ['code' => 'DT9', 'name' => 'document_type', 'title' => 'หนังสือคำสั่ง']);
+        }
+
+        $sqlUrgent = Yii::$app->db->createCommand("select * from categorise where name = 'document_group'")->queryAll();
+        if(count($sqlUrgent) < 1){
+        $this->insert('categorise', ['code' => 'receive', 'name' => 'document_group', 'title' => 'หนังสือรับ']);
+        $this->insert('categorise', ['code' => 'send', 'name' => 'document_group', 'title' => 'หนังสือส่ง']);
         }
 
         $sqlUrgent = Yii::$app->db->createCommand("select * from categorise where name = 'urgent'")->queryAll();

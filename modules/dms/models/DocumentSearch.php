@@ -18,7 +18,7 @@ class DocumentSearch extends Documents
     {
         return [
             [['id'], 'integer'],
-            [['doc_type_id', 'topic', 'document_org_id', 'thai_year', 'doc_regis_number', 'doc_number', 'urgent', 'secret', 'doc_date', 'doc_expire', 'doc_receive', 'doc_time', 'data_json'], 'safe'],
+            [['q','document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive', 'doc_time', 'data_json','document_group'], 'safe'],
         ];
     }
 
@@ -59,15 +59,16 @@ class DocumentSearch extends Documents
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'document_group' => $this->document_group,
         ]);
 
-        $query->andFilterWhere(['like', 'doc_type_id', $this->doc_type_id])
+        $query->andFilterWhere(['like', 'document_type', $this->document_type])
             ->andFilterWhere(['like', 'topic', $this->topic])
-            ->andFilterWhere(['like', 'document_org_id', $this->document_org_id])
+            ->andFilterWhere(['like', 'document_org', $this->document_org])
             ->andFilterWhere(['like', 'thai_year', $this->thai_year])
             ->andFilterWhere(['like', 'doc_regis_number', $this->doc_regis_number])
             ->andFilterWhere(['like', 'doc_number', $this->doc_number])
-            ->andFilterWhere(['like', 'urgent', $this->urgent])
+            ->andFilterWhere(['like', 'doc_speed', $this->doc_speed])
             ->andFilterWhere(['like', 'secret', $this->secret])
             ->andFilterWhere(['like', 'doc_date', $this->doc_date])
             ->andFilterWhere(['like', 'doc_expire', $this->doc_expire])

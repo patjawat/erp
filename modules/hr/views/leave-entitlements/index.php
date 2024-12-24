@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex justify-content-between  align-top align-items-center">
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
             <div class="d-flex gap-2">
-                <?= Html::a('<i class="bi bi-plus-circle-fill"></i> กำหนดสิทธิรายลุคคล', ['create','title' => 'กำหนดสิทธิลาพักผ่อน'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="bi bi-plus-circle-fill"></i> กำหนดสิทธิรายบุคคล', ['create','title' => 'กำหนดสิทธิลาพักผ่อน'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="fa-solid fa-user-clock"></i> กำหนดสิทธิทั้งหมด', ['create-all','title' => 'กำหนดสิทธิลาพักผ่อนทั้งหมด'], ['class' => 'btn btn-warning create-all','data' => ['size' => 'modal-md']]) ?>
             </div>
         </div>
