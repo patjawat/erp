@@ -59,6 +59,7 @@ foreach($orders as $order)
                 <div id="viewApprovePurchase">Loading...</div> -->
 
 
+                <?php echo $this->render('document'); ?>
                 <?php echo $this->render('team_work'); ?>
 
             </div>

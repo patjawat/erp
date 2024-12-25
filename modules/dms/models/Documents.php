@@ -7,6 +7,7 @@ use app\models\Uploads;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\modules\hr\models\Employees;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -46,7 +47,7 @@ class Documents extends \yii\db\ActiveRecord
     {
         return [
             [['topic'], 'string'],
-            [['data_json', 'q','document_group'], 'safe'],
+            [['data_json', 'q','document_group','department_tag','employee_tag'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -143,5 +144,41 @@ class Documents extends \yii\db\ActiveRecord
         }else{
             return false;
         }
+    }
+
+    public function listEmployee()
+    {
+        // ดึงข้อมูลจากตาราง Employee
+         $employees = Employees::find()->limit(5)->all();
+         return ArrayHelper::map($employees, 'id', function($model){
+            return $model->fullname;
+         });
+    }
+
+    //ดึงค่าไปแสดงตอนที่เรา update
+    public function listEmployeeSelectTag()
+    {
+        try {
+
+        // ดึงข้อมูลจากฐานข้อมูล
+        $items = Employees::find()
+            ->select(['id', 'fname', 'lname']) // เลือกเฉพาะฟิลด์ที่ต้องการ
+            ->where(['id' => $this->data_json['employee_tag']]) // เฉพาะรายการที่เคยเลือก
+            ->andWhere(['status' => 1])
+            ->andWhere(['>','id',1])
+            ->asArray()
+            ->all();
+    
+        // คืนค่าในรูปแบบ [id => 'fname lname']
+        $result = [];
+        foreach ($items as $item) {
+            $result[$item['id']] = $item['fname'] . ' ' . $item['lname'];
+        }
+    
+        return $result;
+                    
+    } catch (\Throwable $th) {
+        return [];
+    }
     }
 }

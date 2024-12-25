@@ -6,14 +6,16 @@ use Yii;
 use yii\web\Response;
 use app\models\Uploads;
 use yii\web\Controller;
+use yii\bootstrap5\Html;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\dms\models\Documents;
-use app\components\PdfSignatureValidator; // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
+use app\modules\hr\models\Employees;
+use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentSearch;
-use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\components\FileManagerHelper; // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -112,8 +114,13 @@ class DocumentsController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        $old = $model->data_json;
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->data_json = ArrayHelper::merge($old, $model->data_json);
+            // return $model;
+            $model->save();
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -121,6 +128,33 @@ class DocumentsController extends Controller
             'model' => $model,
         ]);
     }
+
+
+    public function actionGetItems()
+{
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    // ดึงข้อมูลจากฐานข้อมูลหรือแหล่งข้อมูลอื่น
+    $items = Employees::find()
+        ->select(['id', 'fname','lname']) // เลือกเฉพาะฟิลด์ที่ต้องการ
+        ->andWhere(['status' => 1])
+        ->andWhere(['>','id',1])
+        ->asArray()
+        ->all();
+
+    // คืนค่าในรูปแบบ ['id' => 'value', 'name' => 'label']
+    return array_map(function ($item) {
+        return ['id' => $item['id'], 'name' => ($item['fname'].' '.$item['lname'])];
+    }, $items);
+     // เตรียมข้อมูลในรูปแบบ [id => HTML]
+    //  $result = [];
+    //  foreach ($items as $item) {
+    //      $result[$item->id] = $item->getImg() . $item->fname . ' ' . $item->lname;
+    //  }
+ 
+    //  return $result;
+     
+}
 
 //แสดง File และแสดงความเห็น
     public function actionFileComment($id)
