@@ -56,6 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <th scope="col">เรื่อง</th>
                 <th scope="col" class="text-center" style="width:105px;">ไฟล์แนบ</th>
                 <th scope="col" style="width:130px;">วันที่หนังสือ</th>
+                <th scope="col" class="text-center">อ่าน</th>
                 <th scope="col">แก้ไข</th>
                 <th scope="col" style="width:60px;">ส่งต่อ</th>
             </tr>
@@ -94,6 +95,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             <span class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
                        </div>
                     </td>
+                    <td class="text-center">
+                    <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                        <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?></td>
+                    </span>    
                 <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?></td>
                 <td>
                 <?php echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    

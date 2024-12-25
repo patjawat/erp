@@ -18,7 +18,7 @@ class m241212_150029_create_documents_table extends Migration
             'doc_number' => $this->string()->comment('เลขที่หนังสือ'),
             'topic' => $this->text()->comment('ชื่อเรื่อง'),
             'document_group' => $this->string()->comment('หมวดหนังสือ'),
-            'document_tag' => $this->string()->comment('ประเภทหนังสือ'),
+            'document_type' => $this->string()->comment('ประเภทหนังสือ'),
             'document_org' => $this->string()->comment('จากหน่วยงาน'),
             'thai_year' => $this->string()->comment('ปี พ.ศ.'),
             'doc_regis_number' => $this->string()->comment('เลขรับ'),
@@ -29,6 +29,7 @@ class m241212_150029_create_documents_table extends Migration
             'doc_receive' => $this->string()->comment('ลงวันรับเข้า'),
             'doc_time' => $this->string()->comment('เวลารับ'),
             'data_json' => $this->json(),
+            'view_json' => $this->json(),
         ]);  
 
         $sql = Yii::$app->db->createCommand("select * from categorise where name = 'document_type'")->queryAll();

@@ -3,6 +3,7 @@
 namespace app\modules\dms\models;
 
 use Yii;
+use yii\helpers\Json;
 use app\models\Uploads;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -47,7 +48,7 @@ class Documents extends \yii\db\ActiveRecord
     {
         return [
             [['topic'], 'string'],
-            [['data_json', 'q','document_group','department_tag','employee_tag'], 'safe'],
+            [['data_json','view_json', 'q','document_group','department_tag','employee_tag'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -97,6 +98,23 @@ class Documents extends \yii\db\ActiveRecord
     {
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
+
+    public function viewCount()
+    {
+        if ($this->view_json === null) {
+            return 0;
+        }
+        
+        $views = $this->view_json;
+        
+        // If JSON string, decode it
+        if (is_string($this->view_json)) {
+            $views = json_decode($this->view_json, true);
+        }
+        
+        return is_array($views) ? count($views) : 0;
+   
+}
     // แสดงปีงบประมานทั้งหมด
 
     public function ListThaiYear()

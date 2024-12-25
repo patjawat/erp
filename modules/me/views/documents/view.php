@@ -85,10 +85,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <iframe src="<?= Url::to(['/dms/documents/show','id' => $model->id]);?>&embedded=true" width='100%' height='1000px' frameborder="0"></iframe>
                             </div>
                             <div id="track" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('track')?>
+                                <?php echo $this->render('@app/modules/dms/views/documents/track')?>
                             </div>
                             <div id="history" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('history',['model' => $model])?>
+                                <?php echo $this->render('@app/modules/dms/views/documents/history',['model' => $model])?>
                             </div>
 
                         </div>

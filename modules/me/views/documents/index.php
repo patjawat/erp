@@ -21,7 +21,7 @@ use app\modules\dms\models\Documents;
 <div class="d-flex justify-content-between align-top align-items-center">
  
     <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
-    <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลขหนังสือรับ', ['/dms/documents/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+    <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลขหนังสือรับ', ['/me/documents/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
 </div>
 
             <table
@@ -41,7 +41,7 @@ use app\modules\dms\models\Documents;
             <tr class="">
                 <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
                 <td class="fw-light align-middle">
-                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>" class="text-dark">
+                    <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>" class="text-dark">
                         <div class=" d-flex flex-column">
                         
                             <span class="fw-semibold fs-6">
@@ -62,7 +62,7 @@ use app\modules\dms\models\Documents;
                             </a>
                             </td>
                             <td class="text-center">
-                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
+                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/me/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
                            </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
@@ -71,7 +71,7 @@ use app\modules\dms\models\Documents;
                        </div>
                     </td>
                 <!-- <td>
-                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    
+                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/me/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    
                </td> -->
             </tr>
             <?php endforeach;?>
@@ -80,7 +80,7 @@ use app\modules\dms\models\Documents;
             <tr class="">
                 <td class="fw-semibold"><?php echo $empItem->doc_regis_number?></td>
                 <td class="fw-light align-middle">
-                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $empItem->id])?>" class="text-dark">
+                    <a href="<?php echo Url::to(['/me/documents/view','id' => $empItem->id])?>" class="text-dark">
                         <div class=" d-flex flex-column">
                         
                             <span class="fw-semibold fs-6">
@@ -101,7 +101,7 @@ use app\modules\dms\models\Documents;
                             </a>
                             </td>
                             <td class="text-center">
-                            <?php echo $empItem->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $empItem->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
+                            <?php echo $empItem->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/me/documents/file-comment','id' => $empItem->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
                            </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
@@ -110,7 +110,7 @@ use app\modules\dms\models\Documents;
                        </div>
                     </td>
                 <!-- <td>
-                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    
+                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/me/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    
                </td> -->
             </tr>
             <?php endforeach;?>
