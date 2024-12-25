@@ -2,7 +2,6 @@
 
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use softark\duallistbox\DualListbox;
@@ -23,7 +22,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php  echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin(); ?>
-<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <div class="card">
     <div class="card-body">
 
@@ -108,6 +106,46 @@ use iamsaint\datetimepicker\Datetimepicker;
                     'options' => ['disabled' => false],
                 ])->label('ส่งหน่วยงาน');?>
 
+
+<div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h6><i class="bi bi-person-circle"></i> กรรมการตรวจรับ</h6>
+                            </div>
+                            <?php // $model->StackComittee()?>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <?=  Html::a('รายการ', [
+                            '/purchase/order-item/committee','category_id' => $model->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'
+                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                        </div>
+                    </div>
+
+                    
+                <div class="border border-secondary border-opacity-25 p-3 rounded py-5">
+
+              
+                    <?php 
+                        echo DualListbox::widget([
+                            'model' => $model,
+                            'attribute' => 'data_json[employee_tag]',
+                            'items' => $model->listEmployeeSelectTag(),
+                            'options' => [
+                                'id' => 'myDualListbox', // กำหนด ID ให้ custom
+                                'multiple' => true,
+                                'size' => 8,
+                                'encode' => false, // รองรับ HTML
+                            ],
+                            'clientOptions' => [
+                                'moveOnSelect' => false,
+                                'nonSelectedListLabel' => 'รายชื่อบุคลากร',
+                                'selectedListLabel' => 'ส่งต่อบุคลากร',
+                            ],
+                        ]);
+                        ?>
+
+                </div>
 
                 <div class="d-flex justify-content-between align-top align-items-center mt-5">
                     <?= $form->field($model, 'req_approve')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('เสนอผู้อำนวยการ'); ?>

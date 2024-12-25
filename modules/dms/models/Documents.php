@@ -5,10 +5,12 @@ namespace app\modules\dms\models;
 use Yii;
 use yii\helpers\Json;
 use app\models\Uploads;
+use yii\bootstrap5\Html;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\modules\hr\models\Employees;
+use app\modules\dms\models\DocumentTags;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -25,7 +27,7 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @property string|null $secret ชั้นความลับ
  * @property string|null $doc_date วันที่หนังสือ
  * @property string|null $doc_expire วันหมดอายุ
- * @property string|null $doc_receive ลงวันรับเข้า
+ * @property string|null $doc_date ลงวันรับเข้า
  * @property string|null $doc_time เวลารับ
  * @property string|null $data_json
  */
@@ -47,9 +49,10 @@ class Documents extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_date','doc_date','doc_time'], 'required'],
             [['topic'], 'string'],
-            [['data_json','view_json', 'q','document_group','department_tag','employee_tag'], 'safe'],
-            [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive', 'doc_time'], 'string', 'max' => 255],
+            [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date'], 'safe'],
+            [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
 
@@ -70,7 +73,7 @@ class Documents extends \yii\db\ActiveRecord
             'secret' => 'ชั้นความลับ',
             'doc_date' => 'วันที่หนังสือ',
             'doc_expire' => 'วันหมดอายุ',
-            'doc_receive' => 'ลงวันรับเข้า',
+            'doc_date' => 'ลงวันรับเข้า',
             'doc_time' => 'เวลารับ',
             'data_json' => 'Data Json',
         ];
@@ -199,4 +202,47 @@ class Documents extends \yii\db\ActiveRecord
         return [];
     }
     }
+
+// การติดตาม
+public function listTrack()
+{
+    return DocumentTags::find()->where(['document_id' => $this->id])->andWhere(['in','name',['employee_tag','req_approve']])->all();
+}
+    // แสดงการส่งต่อรายบุคคล
+    public function StackDocumentTags($tag_name)
+    {
+        // try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (DocumentTags::find()->where(['document_id' => $this->id,'name' => $tag_name])->all() as $key => $item) {
+            $emp = Employees::findOne(['id' => $item->emp_id]);
+            $data .= Html::a(
+                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+        'data' => [
+            'expand' => '-20',
+            'sizes' => 'auto',
+            'src' =>$emp->showAvatar()
+            ]
+    ]),
+                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                [
+                    'class' => 'open-modal',
+                    'data' => [
+                        'size' => 'modal-md',
+                        "bs-trigger" => "hover focus",
+                        "bs-toggle" => "popover",
+                        "bs-placement" => "top",
+                        "bs-title" => 'title',
+                        "bs-html" => "true",
+                        "bs-content" => $emp->fullname . "<br>" . $emp->positionName()
+                    ]
+                ]
+            );
+        }
+        $data .= '</div>';
+        return $data;
+        // } catch (\Throwable $th) {
+        // }
+    }
+
 }

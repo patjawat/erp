@@ -26,10 +26,17 @@ class m241212_150029_create_documents_table extends Migration
             'secret' => $this->string()->comment('ชั้นความลับ'),
             'doc_date' => $this->string()->comment('วันที่หนังสือ'),
             'doc_expire' => $this->string()->comment('วันหมดอายุ'),
-            'doc_receive' => $this->string()->comment('ลงวันรับเข้า'),
+            'doc_receive_date' => $this->string()->comment('ลงวันรับเข้า'),
+            'req_approve' => $this->bool()->comment('เสนอผู้อำนวยการ'),
             'doc_time' => $this->string()->comment('เวลารับ'),
             'data_json' => $this->json(),
             'view_json' => $this->json(),
+            'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
+            'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
+            'created_by' => $this->integer()->comment('ผู้สร้าง'),
+            'updated_by' => $this->integer()->comment('ผู้แก้ไข'),
+            'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
+            'deleted_by' => $this->integer()->comment('ผู้ลบ')
         ]);  
 
         $sql = Yii::$app->db->createCommand("select * from categorise where name = 'document_type'")->queryAll();

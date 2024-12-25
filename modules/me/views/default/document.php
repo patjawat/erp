@@ -6,6 +6,7 @@ use app\modules\dms\models;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
+use app\modules\dms\models\DocumentTags;
 ?>
  <?php
  $emp = UserHelper::GetEmployee();
@@ -18,9 +19,10 @@ use app\modules\dms\models\Documents;
  ->addParams([':department' => $emp->department])
  ->all();
 
- $employeeTag = Documents::find()
- ->andWhere(new Expression("JSON_CONTAINS(data_json->'$.employee_tag','\"$emp->id\"')"))
-->all();
+//  $dataProviderTag = Documents::find()
+//  ->andWhere(new Expression("JSON_CONTAINS(data_json->'$.employee_tag','\"$emp->id\"')"))
+// ->all();
+ $dataProviderTag = DocumentTags::find()->andWhere(['emp_id' => $emp->id])->all();
 
 ?>
 
@@ -82,7 +84,7 @@ use app\modules\dms\models\Documents;
             </tr>
             <?php endforeach;?>
 
-            <?php foreach( $employeeTag as $empTag):?>
+            <?php foreach($dataProviderTag as $empTag):?>
             <tr class="">
                 <td class="fw-semibold"><?php echo $empTag->doc_regis_number?></td>
                 <td class="fw-light align-middle">

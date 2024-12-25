@@ -4,12 +4,12 @@ namespace app\modules\dms\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\dms\models\Documents;
+use app\modules\dms\models\DocumentTags;
 
 /**
- * DocumentSearch represents the model behind the search form of `app\modules\dms\models\Documents`.
+ * DocumentTagsSearch represents the model behind the search form of `app\modules\dms\models\DocumentTags`.
  */
-class DocumentSearch extends Documents
+class DocumentTagsSearch extends DocumentTags
 {
     /**
      * {@inheritdoc}
@@ -18,7 +18,7 @@ class DocumentSearch extends Documents
     {
         return [
             [['id'], 'integer'],
-            [['q','document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time', 'data_json','document_group'], 'safe'],
+            [['ref', 'name', 'doc_number', 'doc_regis_number', 'emp_id', 'status', 'department_id', 'document_org_id', 'data_json'], 'safe'],
         ];
     }
 
@@ -40,7 +40,7 @@ class DocumentSearch extends Documents
      */
     public function search($params)
     {
-        $query = Documents::find();
+        $query = DocumentTags::find();
 
         // add conditions that should always apply here
 
@@ -59,21 +59,16 @@ class DocumentSearch extends Documents
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'document_group' => $this->document_group,
         ]);
 
-        $query->andFilterWhere(['like', 'document_type', $this->document_type])
-            ->andFilterWhere(['like', 'topic', $this->topic])
-            ->andFilterWhere(['like', 'document_org', $this->document_org])
-            ->andFilterWhere(['like', 'thai_year', $this->thai_year])
-            ->andFilterWhere(['like', 'doc_regis_number', $this->doc_regis_number])
+        $query->andFilterWhere(['like', 'ref', $this->ref])
+            ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'doc_number', $this->doc_number])
-            ->andFilterWhere(['like', 'doc_speed', $this->doc_speed])
-            ->andFilterWhere(['like', 'secret', $this->secret])
-            ->andFilterWhere(['like', 'doc_date', $this->doc_date])
-            ->andFilterWhere(['like', 'doc_expire', $this->doc_expire])
-            ->andFilterWhere(['like', 'doc_receive_date', $this->doc_receive_date])
-            ->andFilterWhere(['like', 'doc_time', $this->doc_time])
+            ->andFilterWhere(['like', 'doc_regis_number', $this->doc_regis_number])
+            ->andFilterWhere(['like', 'emp_id', $this->emp_id])
+            ->andFilterWhere(['like', 'status', $this->status])
+            ->andFilterWhere(['like', 'department_id', $this->department_id])
+            ->andFilterWhere(['like', 'document_org_id', $this->document_org_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;

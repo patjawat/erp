@@ -7,9 +7,7 @@ use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
-use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
-use app\modules\dms\models\DocumentTagsSearch;
 
 class DocumentsController extends \yii\web\Controller
 {
@@ -34,19 +32,21 @@ class DocumentsController extends \yii\web\Controller
                 'doc_regis_number'=>SORT_DESC,
                 'thai_year'=>SORT_DESC,
                 ]]);
-
-                $searchModelTag = new DocumentTagsSearch();
-
-                $dataProviderTag = $searchModelTag->search($this->request->queryParams);
-                $dataProviderTag->query->andWhere(['emp_id' => $emp->id]);
-              
-       
-
-                    
+                $dataProviderEmployee = $searchModel->search($this->request->queryParams);
+                $dataProviderEmployee->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.employee_tag','\"$emp->id\"')"));
+                $dataProviderEmployee->query->andFilterWhere([
+                    'or',
+                    ['like', 'topic', $searchModel->q],
+                    ['like', 'doc_regis_number', $searchModel->q],
+                ]);
+                $dataProviderEmployee->setSort(['defaultOrder' => [
+                    'doc_regis_number'=>SORT_DESC,
+                    'thai_year'=>SORT_DESC,
+                    ]]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProviderDepartment' => $dataProviderDepartment,
-            'dataProviderTag' => $dataProviderTag
+            'dataProviderEmployee' => $dataProviderEmployee
         ]);
     }
 
@@ -68,7 +68,7 @@ class DocumentsController extends \yii\web\Controller
         $model->view_json  = ArrayHelper::merge($view_count, $model->view_json);
         $model->save();
         
-        return $this->render('@app/modules/dms/views/documents/view', [
+        return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
     }

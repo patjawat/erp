@@ -7,24 +7,22 @@
         <thead>
             <tr>
                 <th scope="col">หน่วยงาน</th>
+                <th scope="col">ชื่อ</th>
                 <th scope="col">สถานะ</th>
                 <th scope="col">การปฏิบัติ</th>
                 <th scope="col">เวลา</th>
             </tr>
         </thead>
         <tbody>
+            <?php foreach($model->listTrack() as $item):?>
             <tr class="">
-                <td scope="row">R1C1</td>
-                <td>R1C2</td>
-                <td>R1C3</td>
-                <td>R1C3</td>
+                <td scope="row"><?php echo $item->employee->departmentName()?></td>
+                <td><?php echo $item->employee->fullname?></td>
+                <td><?php echo $item->status;?></td>
+                <td><?php echo $item->status;?></td>
+                <td><?php echo $item->status;?></td>
             </tr>
-            <tr class="">
-                <td scope="row">Item</td>
-                <td>Item</td>
-                <td>Item</td>
-                <td>Item</td>
-            </tr>
+          <?php endforeach;?>
         </tbody>
     </table>
 </div>

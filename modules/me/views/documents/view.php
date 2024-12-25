@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <iframe src="<?= Url::to(['/dms/documents/show','id' => $model->id]);?>&embedded=true" width='100%' height='1000px' frameborder="0"></iframe>
                             </div>
                             <div id="track" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('@app/modules/dms/views/documents/track')?>
+                                <?php echo $this->render('@app/modules/dms/views/documents/track',['model' => $model])?>
                             </div>
                             <div id="history" class="tab-pane" role="tabpanel">
                                 <?php echo $this->render('@app/modules/dms/views/documents/history',['model' => $model])?>
@@ -98,16 +98,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     <div class="col-4">
 
-                        <p>
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-                            <?= Html::a('<i class="fa-solid fa-trash-can"></i> ลบ', ['delete', 'id' => $model->id], [
-                                'class' => 'btn btn-danger',
-                                'data' => [
-                                    'confirm' => 'Are you sure you want to delete this item?',
-                                    'method' => 'post',
-                                ],
-                            ]) ?>
-                        </p>
 
                         <?= DetailView::widget([
                             'model' => $model,
