@@ -90,6 +90,7 @@ $moduleId = Yii::$app->controller->module->id;
                 style="height: 98.1478px; transform: translate3d(0px, 0px, 0px);"></div>
         </div>
     </div>
+
 </aside>
 <?php
 $js = <<< JS

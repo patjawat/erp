@@ -7,6 +7,7 @@ $modules = require __DIR__ . '/add_modules.php';
 
 $config = [
     'id' => 'basic',
+    'version' => '1.1.0', // กำหนด version ที่นี่
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'homeUrl' => ['/site'],

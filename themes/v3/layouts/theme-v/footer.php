@@ -5,7 +5,10 @@ use app\components\SiteHelper;
 <footer class="footer">
 		   <div class="container-fluid">
 			   <div class="d-flex justify-content-between">
-				  <span id="date">	copyright &#169; 2024 | <?=Html::a('มูลนิธิรามาธิบดี','https://www.ramafoundation.or.th/')?></span>
+				<div class="d-felx flex-column">
+					<span id="date">	copyright &#169; 2024 | <?=Html::a('มูลนิธิรามาธิบดี','https://www.ramafoundation.or.th/')?></span>
+					<span>Version <?php echo Yii::$app->version?></span>
+				</div>
 	
 		          
 				    <div class="d-flex justify-content-start gap-4">
