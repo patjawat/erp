@@ -92,12 +92,6 @@ use iamsaint\datetimepicker\Datetimepicker;
                     </div>
 
                 </div>
-                <?php echo $model->Upload('document')?>
-
-
-
-            </div>
-            <div class="col-6">
                 <?=$form->field($model, 'data_json[department_tag]')->widget(\kartik\tree\TreeViewInput::className(), [
                     'query' => Organization::find()->addOrderBy('root, lft'),
                     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
@@ -108,15 +102,19 @@ use iamsaint\datetimepicker\Datetimepicker;
                     'options' => ['disabled' => false],
                 ])->label('ส่งหน่วยงาน');?>
 
-
-                <div class="d-flex justify-content-between align-top align-items-center mt-5">
-                    <?= $form->field($model, 'req_approve')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('เสนอผู้อำนวยการ'); ?>
-
-
+<div class="d-flex justify-content-between align-top align-items-center mt-5">
                     <div class="form-group mt-3 d-flex justify-content-center gap-3">
                         <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
                     </div>
                 </div>
+
+            </div>
+            <div class="col-6">
+            <?php echo $model->Upload('document')?>
+               
+
+
+             
 
 
             </div>
