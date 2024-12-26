@@ -27,7 +27,7 @@ class m241212_150029_create_documents_table extends Migration
             'doc_date' => $this->string()->comment('วันที่หนังสือ'),
             'doc_expire' => $this->string()->comment('วันหมดอายุ'),
             'doc_receive_date' => $this->string()->comment('ลงวันรับเข้า'),
-            'req_approve' => $this->bool()->comment('เสนอผู้อำนวยการ'),
+            'req_approve' => $this->boolean()->defaultValue(true)->comment('เสนอผู้อำนวยการ'),
             'doc_time' => $this->string()->comment('เวลารับ'),
             'data_json' => $this->json(),
             'view_json' => $this->json(),
