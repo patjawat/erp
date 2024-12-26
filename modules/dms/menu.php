@@ -14,5 +14,5 @@ $listAssetGroups = Categorise::find()
         <?=Html::a('<i class="fa-solid fa-download"></i> หนังสือรับ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">0</span>',['/dms/documents','document_group' => 'receive'],['class' => 'btn btn-light'])?>
         <?=Html::a('<i class="fa-solid fa-paper-plane"></i> หนังสือส่ง <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">0</span>',['/dms/documents','document_group' => 'send'],['class' => 'btn btn-light'])?>
 
-    <?=Html::a('<i class="fa-solid fa-gear"></i> ตั้งค่า',['/hr/leave-permission'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-gear"></i> ตั้งค่า',['/hr/leave-entitlements'],['class' => 'btn btn-light'])?>
 </div>
