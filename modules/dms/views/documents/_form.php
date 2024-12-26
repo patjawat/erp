@@ -31,6 +31,9 @@ use iamsaint\datetimepicker\Datetimepicker;
 
             <div class="col-6">
                 <div class="row">
+                    <div class="col-12">
+                    <?= $form->field($model, 'topic')->textInput(['maxlength' => true]) ?>
+                    </div>
                     <div class="col-6">
                         <?php echo $form->field($model, 'document_type')->widget(Select2::classname(), [
                                 'data' => $model->ListDocumentType(),
@@ -50,16 +53,17 @@ use iamsaint\datetimepicker\Datetimepicker;
                             ?>
 
                     </div>
-                    <div class="col-6">
+                    <div class="col-3">
                         <?= $form->field($model, 'doc_regis_number')->textInput(['maxlength' => true]) ?>
                     </div>
-                </div>
-                <div class="row">
                     <div class="col-3">
                         <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
                     </div>
+                </div>
+                <div class="row">
+                  
                     <div class="col-9">
-                        <?= $form->field($model, 'topic')->textInput(['maxlength' => true]) ?>
+                      
 
                     </div>
 
@@ -83,12 +87,30 @@ use iamsaint\datetimepicker\Datetimepicker;
                                 'yearOffset' => 543,
                                 'format' => 'd/m/Y',
                             ],
-                        ])->label('ตั้งแต่วันที่') ?>
+                        ])->label('วันที่หนังสือ') ?>
                         <div class="d-flex gap-2">
-                            <?= $form->field($model, 'doc_receive_date')->textInput(['maxlength' => true]) ?>
+                            <?php echo $form->field($model, 'doc_receive_date')->widget(Datetimepicker::className(), [
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y',
+                            ],
+                        ])->label('วันที่ลงรับ') ?>
                             <?= $form->field($model, 'doc_time')->textInput(['maxlength' => true]) ?>
                         </div>
-                        <?= $form->field($model, 'doc_expire')->textInput(['maxlength' => true]) ?>
+                        <?php echo $form->field($model, 'doc_expire')->widget(Datetimepicker::className(), [
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y',
+                            ],
+                        ])->label('เวลา') ?>
                     </div>
 
                 </div>
@@ -102,8 +124,9 @@ use iamsaint\datetimepicker\Datetimepicker;
                     'options' => ['disabled' => false],
                 ])->label('ส่งหน่วยงาน');?>
 
-<div class="d-flex justify-content-between align-top align-items-center mt-5">
+<div class="d-flex justify-content-center align-top align-items-center mt-5">
                     <div class="form-group mt-3 d-flex justify-content-center gap-3">
+                    <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary rounded-pill shadow me-2','onclick' => 'window.history.back()',]);?>
                         <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
                     </div>
                 </div>
@@ -111,17 +134,8 @@ use iamsaint\datetimepicker\Datetimepicker;
             </div>
             <div class="col-6">
             <?php echo $model->Upload('document')?>
-               
-
-
-             
-
-
             </div>
-
         </div>
-
-
     </div>
 </div>
 <?php ActiveForm::end(); ?>
@@ -172,6 +186,28 @@ var thaiYear = function (ct) {
             yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
             closeOnDateSelect:true,
         });
+
+        $("#documents-doc_receive_date").datetimepicker({
+            timepicker:false,
+            format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
+            lang:'th',  // แสดงภาษาไทย
+            onChangeMonth:thaiYear,
+            onShow:thaiYear,
+            yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+            closeOnDateSelect:true,
+        });
+
+
+        $("#documents-doc_expire").datetimepicker({
+            timepicker:false,
+            format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
+            lang:'th',  // แสดงภาษาไทย
+            onChangeMonth:thaiYear,
+            onShow:thaiYear,
+            yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+            closeOnDateSelect:true,
+        });
+        
         
 JS;
 $this->registerJS($js);
