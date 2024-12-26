@@ -19,7 +19,7 @@ $items = [
         'title' => 'งานสารบรรณ',
         'note' => 'หนังสือรับ-ส่งของหน่วยงาน',
         'icon' => ' <i class="fa-solid fa-calendar-day mb-3 text-primary fs-1"></i>',
-        'url' =>  ['/me/leave']
+        'url' =>  ['/me/documents']
     ],
     [
         'title' => 'เบิกวัสดุ',
