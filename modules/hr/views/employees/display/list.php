@@ -1,9 +1,9 @@
 <?php
-use app\components\AppHelper;
-use yii\bootstrap5\Breadcrumbs;
-use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\components\AppHelper;
+use yii\bootstrap5\LinkPager;
+use yii\bootstrap5\Breadcrumbs;
 
 $this->title = 'ทะเบียนประวัติ';
 $this->params['breadcrumbs'][] = $this->title;
@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </span>
                                 <span>
                                     <!-- <i class="bi bi-clock text-primary"></i> 1 ปี 2 เดือน 3 วัน -->
-                                    <i class="bi bi-clock text-primary"></i> <?= $model->age_join_date ?>
+                                    <i class="bi bi-clock text-primary"></i> <?= $model->age_join_date['full'] ?>
                                 </span>
                             </div>
 
