@@ -54,6 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="d-flex justify-content-between">
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
+                                <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active show" data-bs-toggle="pill" href="#home1" role="pill"
                                         aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-info-circle"></i>

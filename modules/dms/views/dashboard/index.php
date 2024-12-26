@@ -1,9 +1,80 @@
 <?php
+$this->title = 'Dashboard DMS'
 /** @var yii\web\View $this */
 ?>
-<h1>dashboard/index</h1>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-chart-simple me-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
 
-<p>
-    You may change the content of this page by modifying
-    the file <code><?= __FILE__; ?></code>.
-</p>
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/dms/menu') ?>
+<?php $this->endBlock(); ?>
+
+<div class="row">
+    <div class="col-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="h5 fw-semibold">0 ครั้ง</span>
+                    <div class="relative">
+                        <i class="fa-solid fa-download text-black-50 fs-1 mt-1"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> ทะเบียนรับ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-3">
+
+    <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="h5 fw-semibold">0 ครั้ง</span>
+                    <div class="relative">
+                        <i class="fa-solid fa-paper-plane text-black-50 fs-1 mt-1"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> ทะเบียนรับส่ง</span>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <div class="col-3">
+        <div class="card">
+            <div class="card-body">
+                <a href="/hr/leave/dashboard-approve">
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="h5 fw-semibold">0 ครั้ง</span>
+                    <div class="relative">
+                        <i class="bi bi-person-check text-black-50 fs-2"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> ทะเบียนประกาศ<span>
+                            </span></span></div>
+                        </a></div><a href="/hr/leave/dashboard-approve">
+                    </a></div><a href="/hr/leave/dashboard-approve">
+                </a>
+    </div>
+    <div class="col-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="h5 fw-semibold">0 ครั้ง</span>
+                    <div class="relative">
+                        <i class="bi bi-eraser text-black-50 fs-2"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> นโยบาย</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
