@@ -25,7 +25,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin(['id' => 'form-document']); ?>
-<?= $form->field($model, 'ref')->textInput(['maxlength' => 50])->label(false); ?>
+<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <div class="card">
     <div class="card-body">
 
@@ -39,7 +39,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
                 <div class="row">
                     <div class="col-12">
-                        <?= $form->field($model, 'topic')->textArea(['rows' => 4]) ?>
+                        <?= $form->field($model, 'topic')->textArea(['rows' => 2]) ?>
                     </div>
                     <div class="col-6">
 
@@ -82,19 +82,18 @@ use iamsaint\datetimepicker\Datetimepicker;
                         ?>
                     </div>
                     <div class="col-6">
-                    <?php echo $form->field($model, 'doc_date')->label('ลงรับวันที่') ?>
+                    <?php // echo $form->field($model, 'doc_date')->label('ลงรับวันที่') ?>
                         <?php 
-                        // echo $form->field($model, 'doc_date')->widget(Datetimepicker::className(), [
-                        //     'options' => [
-                        //         'timepicker' => false,
-                        //         'datepicker' => true,
-                        //         'mask' => '99/99/9999',
-                        //         'lang' => 'th',
-                        //         'yearOffset' => 543,
-                        //         'format' => 'd/m/Y',
-                        //         'ariaRequired' => true
-                        //     ],
-                        // ])->label('วันที่หนังสือ')
+                        echo $form->field($model, 'doc_date')->widget(Datetimepicker::className(), [
+                            'options' => [
+                                'timepicker' => false,
+                                'datepicker' => true,
+                                'mask' => '99/99/9999',
+                                'lang' => 'th',
+                                'yearOffset' => 543,
+                                'format' => 'd/m/Y'
+                            ],
+                        ])->label('วันที่หนังสือ')
                          ?>
                     </div>
                     <div class="col-6">
@@ -197,78 +196,78 @@ $js = <<< JS
     // });
 
 
-    // \$('#form-document').on('beforeSubmit', function (e) {
-    //         var form = \$(this);
-    //         console.log('Submit');
+    \$('#form-document').on('beforeSubmit', function (e) {
+            var form = \$(this);
+            console.log('Submit');
 
-    //         Swal.fire({
-    //         title: "ยืนยัน?",
-    //         text: "บันทึกหนังสือ!",
-    //         icon: "warning",
-    //         showCancelButton: true,
-    //         confirmButtonColor: "#3085d6",
-    //         cancelButtonColor: "#d33",
-    //         cancelButtonText: "ยกเลิก!",
-    //         confirmButtonText: "ใช่, ยืนยัน!"
-    //         }).then((result) => {
-    //         if (result.isConfirmed) {
+            Swal.fire({
+            title: "ยืนยัน?",
+            text: "บันทึกหนังสือ!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            cancelButtonText: "ยกเลิก!",
+            confirmButtonText: "ใช่, ยืนยัน!"
+            }).then((result) => {
+            if (result.isConfirmed) {
                 
-    //             \$.ajax({
-    //                 url: form.attr('action'),
-    //                 type: 'post',
-    //                 data: form.serialize(),
-    //                 dataType: 'json',
-    //                 success: async function (response) {
-    //                     form.yiiActiveForm('updateMessages', response, true);
-    //                     if(response.status == 'success') {
-    //                         closeModal()
-    //                         // success()
-    //                         await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-    //                     }
-    //                 }
-    //             });
+                \$.ajax({
+                    url: form.attr('action'),
+                    type: 'post',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: async function (response) {
+                        form.yiiActiveForm('updateMessages', response, true);
+                        if(response.status == 'success') {
+                            closeModal()
+                            // success()
+                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                        }
+                    }
+                });
 
-    //         }
-    //         });
-    //         return false;
-    //     });
+            }
+            });
+            return false;
+        });
         
-    // var thaiYear = function (ct) {
-    //             var leap=3;
-    //             var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
-    //             if(ct){
-    //                 var yearL=new Date(ct).getFullYear()-543;
-    //                 leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
-    //                 if(leap==2){
-    //                     dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
-    //                 }
-    //             }
-    //             this.setOptions({
-    //                 i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
-    //             })
-    //         };
+    var thaiYear = function (ct) {
+                var leap=3;
+                var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
+                if(ct){
+                    var yearL=new Date(ct).getFullYear()-543;
+                    leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
+                    if(leap==2){
+                        dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
+                    }
+                }
+                this.setOptions({
+                    i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
+                })
+            };
 
 
-    //         \$("#documents-doc_receive_date").datetimepicker({
-    //             timepicker:false,
-    //             format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-    //             lang:'th',  // แสดงภาษาไทย
-    //             onChangeMonth:thaiYear,
-    //             onShow:thaiYear,
-    //             yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-    //             closeOnDateSelect:true,
-    //         });
+            \$("#documents-doc_receive_date").datetimepicker({
+                timepicker:false,
+                format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
+                lang:'th',  // แสดงภาษาไทย
+                onChangeMonth:thaiYear,
+                onShow:thaiYear,
+                yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+                closeOnDateSelect:true,
+            });
 
 
-    //         \$("#documents-doc_expire").datetimepicker({
-    //             timepicker:false,
-    //             format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-    //             lang:'th',  // แสดงภาษาไทย
-    //             onChangeMonth:thaiYear,
-    //             onShow:thaiYear,
-    //             yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-    //             closeOnDateSelect:true,
-    //         });
+            \$("#documents-doc_expire").datetimepicker({
+                timepicker:false,
+                format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
+                lang:'th',  // แสดงภาษาไทย
+                onChangeMonth:thaiYear,
+                onShow:thaiYear,
+                yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
+                closeOnDateSelect:true,
+            });
             
             
     JS;

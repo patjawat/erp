@@ -49,7 +49,7 @@ class Documents extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_date','doc_date','doc_time'], 'required'],
+            [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number','doc_time'], 'required'],
             [['topic'], 'string'],
             [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
