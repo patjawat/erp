@@ -49,7 +49,7 @@ class DocumentsController extends Controller
         $group = $this->request->get('document_group');
         $searchModel = new DocumentSearch([
             'document_group' => $group,
-            // 'thai_year' => AppHelper::YearBudget(),
+            'thai_year' => (Date('Y')+543),
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere([
