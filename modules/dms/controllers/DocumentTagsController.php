@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\SiteHelper;
 use yii\web\NotFoundHttpException;
+use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentTagsSearch;
 
@@ -128,7 +129,12 @@ class DocumentTagsController extends Controller
                 $model->document_id = $document_id;
                 $model->ref = $this->request->post('ref');
                 $model->name = $name;
+                $model->status = 'Pending';
                 $model->emp_id = $info['director_name'];
+                
+                $document = Documents::findOne($document_id);
+                $document->status = 'เสนอผ.อ.';
+                $document->save();
                 // return $model;
                 if($model->save()){
                     return [

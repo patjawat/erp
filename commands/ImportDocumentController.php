@@ -53,6 +53,7 @@ class ImportDocumentController extends Controller
                         LEFT JOIN hrd_person ON gbook_index.PERSON_SAVE_ID = hrd_person.ID
                         LEFT JOIN hrd_prefix ON hrd_person.HR_PREFIX_ID = hrd_prefix.HR_PREFIX_ID
                         LEFT JOIN gbook_index_send_leader ON gbook_index.BOOK_ID = gbook_index_send_leader.BOOK_LD_ID
+                        LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index.BOOK_SECRET_ID
                         WHERE gbook_index.BOOK_USE = 'true'
                         -- AND gbook_index.DATE_SAVE BETWEEN '2024-01-01'  AND '2024-01-31'
                         ORDER BY gbook_index.BOOK_NUM_IN DESC")->queryAll();
@@ -69,6 +70,7 @@ class ImportDocumentController extends Controller
                 'doc_date' => $item['BOOK_DATE'],
                 'doc_receive_date' => $item['DATE_SAVE'],
                 'document_org' => $item['RECORD_ORG_ID'],
+                
             ]);
             $percentage = (($num++) / $total) * 100;
             if ($checkDoc) {
@@ -113,7 +115,9 @@ class ImportDocumentController extends Controller
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
+            $mdoel->secert = $item['BOOK_SECRET_NAME'];
             $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+            
 
             try {
                 $model->save(false);
@@ -149,6 +153,7 @@ class ImportDocumentController extends Controller
                         LEFT JOIN hrd_person ON gbook_index_inside.PERSON_SAVE_ID = hrd_person.ID
                         LEFT JOIN hrd_prefix ON hrd_person.HR_PREFIX_ID = hrd_prefix.HR_PREFIX_ID
                         LEFT JOIN gbook_send_inside_leader ON gbook_index_inside.BOOK_ID = gbook_send_inside_leader.BOOK_LD_ID
+                        LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index.BOOK_SECRET_ID
                         WHERE gbook_index_inside.BOOK_USE = 'true'
                         --   AND gbook_index_inside.DATE_SAVE BETWEEN '2024-01-01'  AND '2024-01-31'
                         ORDER BY gbook_index_inside.BOOK_ID DESC;")->queryAll();
@@ -208,6 +213,7 @@ class ImportDocumentController extends Controller
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
             $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+            $mdoel->secert = $item['BOOK_SECRET_NAME'];
             $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
             // self::UploadFile($fileName,$item['BOOK_ID']);
             try {

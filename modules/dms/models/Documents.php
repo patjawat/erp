@@ -51,7 +51,7 @@ class Documents extends \yii\db\ActiveRecord
         return [
             [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number','doc_time'], 'required'],
             [['topic'], 'string'],
-            [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date'], 'safe'],
+            [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -97,6 +97,17 @@ class Documents extends \yii\db\ActiveRecord
             return $this->hasMany(DocumentTags::class, ['document_id' => 'id']);
         }
 
+
+        //คำนวนเลขรับเข้า
+        public function runNumber()
+        {
+            $model =  self::find()->select('doc_regis_number')->where(['thai_year' => (date('Y')+543)])->orderBy(['doc_regis_number' => SORT_DESC])->one();
+            if($model){
+                return $model->doc_regis_number+1;
+            }else{
+                return 1;
+            }
+        }
         
     // แสดงรูปแบบ format วันที่หนังสือ
     public function viewDocDate()
@@ -161,6 +172,28 @@ class Documents extends \yii\db\ActiveRecord
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
+    }
+
+
+    
+    //ชั้นความลับ
+    public function DocSecret()
+    {
+        $model = Categorise::find()
+        ->where(['name' => 'document_secret'])
+        ->asArray()
+        ->all();
+    return ArrayHelper::map($model, 'code', 'title');
+    }
+
+    //ชั้นความเร็ว
+    public function DocSpeed()
+    {
+        $model = Categorise::find()
+        ->where(['name' => 'urgent'])
+        ->asArray()
+        ->all();
+    return ArrayHelper::map($model, 'code', 'title');
     }
     // ตรวจเช็คว่ามีการแบไฟล์หรือไม่
     public function isFile()

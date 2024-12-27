@@ -88,14 +88,33 @@ class DocumentsController extends Controller
      */
     public function actionCreate()
     {
+        //ถ้าเป็นหนังสทือราชการถ้ปีปัจจบัน
         $model = new Documents([
-            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10)
+            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
+            'thai_year' => (Date('Y')+543),
+            'document_group' => 'receive',
         ]);
 
+        $model->doc_regis_number = $model->runNumber();
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            if($model->data_json['department_tag'] == ""){
+                 $model->status = 'ลงรับ';
+            }else{
+                 $model->status = 'ส่งหน่วยงาน';
+                
+            }
+            $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+            $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+            if($model->doc_expire !=='__/__/____'){
+                $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
+            }else{
+                $model->doc_expire = "";
+            }
+
                 if(!$model->save()){
-                    \Yii::$app->response->format = Response::FORMAT_JSON;
                     return $model->getErrors();
                 }
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -122,12 +141,18 @@ class DocumentsController extends Controller
         // $model->doc_date = AppHelper::convertToThai($model->doc_date);
         // $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
         $old_json = $model->data_json;
+        $model->doc_date = AppHelper::convertToThai($model->doc_date);
+        $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            // $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-            // $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
-            // $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
+            $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+            $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+            if($model->doc_expire !=='__/__/____'){
+                $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
+            }else{
+                $model->doc_expire = "";
+            }
             if ($model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -146,6 +171,31 @@ class DocumentsController extends Controller
         //     return $this->redirect(['view', 'id' => $model->id]);
     }
 
+
+     // ตรวจสอบความถูกต้อง
+     public function actionValidator()
+     {
+         \Yii::$app->response->format = Response::FORMAT_JSON;
+         $model = new Documents();
+         $requiredName = 'ต้องระบุ';
+         if ($this->request->isPost && $model->load($this->request->post())) {
+             if (isset($model->doc_date)) {
+                 preg_replace('/\D/', '', $model->doc_date) == '' ? $model->addError('doc_date', $requiredName) : null;
+             }
+             if (isset($model->doc_receive_date)) {
+                 preg_replace('/\D/', '', $model->doc_receive_date) == '' ? $model->addError('doc_receive_date', $requiredName) : null;
+             }
+            
+            //  $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;
+         }
+         foreach ($model->getErrors() as $attribute => $errors) {
+             $result[Html::getInputId($model, $attribute)] = $errors;
+         }
+         if (!empty($result)) {
+             return $this->asJson($result);
+         }
+     }
+     
     public function actionGetItems()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;

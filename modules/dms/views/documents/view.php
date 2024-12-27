@@ -13,6 +13,15 @@ $this->params['breadcrumbs'][] = ['label' => 'Documents', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/dms/menu') ?>
+<?php $this->endBlock(); ?>
 <div class="card">
     <div class="card-body">
         <div class="d-flex align-items-center">
@@ -32,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php endif;?>
 
                             <?php if($model->doc_speed == 'ด่วน'):?>
-                            <span class="badge text-bg-waring fs-13"><i class="fa-solid fa-circle-exclamation"></i>
+                            <span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i>
                                 ด่วน</span>
                             <?php endif;?>
 

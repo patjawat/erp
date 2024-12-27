@@ -8,8 +8,8 @@ use kartik\widgets\ActiveForm;
 // use softark\duallistbox\DualListbox;
 use app\modules\hr\models\Organization;
 use iamsaint\datetimepicker\Datetimepicker;
-// use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
+// use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
@@ -24,18 +24,27 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
-<?php $form = ActiveForm::begin(['id' => 'form-document']); ?>
+<?php $form = ActiveForm::begin([
+    'id' => 'form-document',
+    'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/dms/documents/validator']
+]); ?>
 <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
+<?= $form->field($model, 'document_group')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <div class="card">
     <div class="card-body">
 
         <div class="row">
-            <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12">
-                <?php // echo $model->Upload('document') ?>
-                <iframe src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true" width='100%'
+            <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
+                <div class="d-flex justify-content-between align-item-middle mb-3">
+                    <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
+                    <?php echo Html::a('<i class="fa-solid fa-upload"></i> อัพโหลดไฟล์', ['/'], ['class' => 'btn btn-primary shadow rounded-pill']) ?>
+                </div>
+                <iframe src="<?= Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true" width='100%'
                     height='1000px' frameborder="0"></iframe>
             </div>
-            <div class="col-xl-5 col-lg-5 col-md-6 col-sm-12">
+            <div class="col-xl-5 col-lg-5 col-md-6 col-sm-12 px-5 pt-3">
+                <h6><i class="fa-solid fa-circle-info text-primary fs-3"></i> ข้อมูลรายละเอียดของหนังสือ</h6>
 
                 <div class="row">
                     <div class="col-12">
@@ -82,8 +91,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                         ?>
                     </div>
                     <div class="col-6">
-                    <?php // echo $form->field($model, 'doc_date')->label('ลงรับวันที่') ?>
-                        <?php 
+                        <?php
                         echo $form->field($model, 'doc_date')->widget(Datetimepicker::className(), [
                             'options' => [
                                 'timepicker' => false,
@@ -94,23 +102,39 @@ use iamsaint\datetimepicker\Datetimepicker;
                                 'format' => 'd/m/Y'
                             ],
                         ])->label('วันที่หนังสือ')
-                         ?>
+                        ?>
                     </div>
                     <div class="col-6">
                         <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
                     </div>
                     <div class="col-6">
-                        <?= $form->field($model, 'secret')->textInput(['maxlength' => true]) ?>
+                        <?php
+                        echo $form->field($model, 'secret')->widget(Select2::classname(), [
+                            'data' => $model->DocSecret(),
+                            'options' => ['placeholder' => 'เลือกชั้นความลับ'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                        ])->label('ชั้นความลับ');
+                        ?>
                     </div>
                     <div class="col-6">
-                        <?= $form->field($model, 'doc_speed')->textInput(['maxlength' => true]) ?>
+                        <?php
+                    echo $form->field($model, 'doc_speed')->widget(Select2::classname(), [
+                        'data' => $model->DocSpeed(),
+                        'options' => ['placeholder' => 'เลือกชั้นความลับ'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ])->label('ชั้นเร็ว');
+                    ?>
                     </div>
 
                 </div>
 
-
                 <div class="row">
                     <div class="col-3">
+                      
                         <?= $form->field($model, 'doc_regis_number')->textInput(['maxlength' => true]) ?>
                     </div>
                     <div class="col-3">
@@ -145,7 +169,10 @@ use iamsaint\datetimepicker\Datetimepicker;
                         ])->label('วันหมดอายุ') ?>
                     </div>
                 </div>
-                <?= $form->field($model, 'data_json[department_tag]')->widget(\kartik\tree\TreeViewInput::className(), [
+
+
+
+            <?= $form->field($model, 'data_json[department_tag]')->widget(\kartik\tree\TreeViewInput::className(), [
                     'query' => Organization::find()->addOrderBy('root, lft'),
                     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
                     'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
@@ -155,20 +182,17 @@ use iamsaint\datetimepicker\Datetimepicker;
                     'options' => ['disabled' => false],
                 ])->label('ส่งหน่วยงาน'); ?>
 
-                <div class="d-flex justify-content-center align-top align-items-center mt-5">
-                    <div class="form-group mt-3 d-flex justify-content-center gap-3">
-                        <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [
-                                'class' => 'btn btn-secondary rounded-pill shadow me-2',
-                                'onclick' => 'window.history.back()',
-                            ]); ?>
-                        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-                    </div>
+            <div class="d-flex justify-content-center align-top align-items-center mt-5">
+                <div class="form-group mt-3 d-flex justify-content-center gap-3">
+                    <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [
+                            'class' => 'btn btn-secondary rounded-pill shadow me-2',
+                            'onclick' => 'window.history.back()',
+                        ]); ?>
+                    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
                 </div>
-
             </div>
-
-
         </div>
+    </div>
     </div>
 </div>
 <?php ActiveForm::end(); ?>
@@ -176,25 +200,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 $url = Url::to(['/dms/documents/get-items']);
 $js = <<< JS
-
-    // \$(document).ready(function () {
-    //     \$.ajax({
-    //         url: '$url',
-    //         type: 'GET',
-    //         success: function (data) {
-    //             var dualListbox = \$('#myDualListbox');
-    //             data.forEach(function (item) {
-    //                 dualListbox.append('<option value=\"' + item.id + '\">' + item.name + '</option>');
-    //             });
-    //             dualListbox.bootstrapDualListbox('refresh');
-               
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error('Error loading items:', error);
-    //         }
-    //     });
-    // });
-
 
     \$('#form-document').on('beforeSubmit', function (e) {
             var form = \$(this);

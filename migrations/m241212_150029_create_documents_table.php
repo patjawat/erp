@@ -29,6 +29,7 @@ class m241212_150029_create_documents_table extends Migration
             'doc_receive_date' => $this->string()->comment('ลงวันรับเข้า'),
             'req_approve' => $this->boolean()->defaultValue(true)->comment('เสนอผู้อำนวยการ'),
             'doc_time' => $this->string()->comment('เวลารับ'),
+            'status' => $this->string()->comment('สถานะ'),
             'data_json' => $this->json(),
             'view_json' => $this->json(),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
@@ -65,6 +66,15 @@ class m241212_150029_create_documents_table extends Migration
         $this->insert('categorise', ['code' => 'ด่วนมาก', 'name' => 'urgent', 'title' => 'ด่วนมาก']);
         $this->insert('categorise', ['code' => 'ด่วนที่สุด', 'name' => 'urgent', 'title' => 'ด่วนที่สุด']);
         }
+
+        $sqlUrgent = Yii::$app->db->createCommand("select * from categorise where name = 'document_secret'")->queryAll();
+        if(count($sqlUrgent) < 1){
+        $this->insert('categorise', ['code' => 'ปกติ', 'name' => 'document_secret', 'title' => 'ปกติ']);
+        $this->insert('categorise', ['code' => 'ลับ', 'name' => 'document_secret', 'title' => 'ลับ']);
+        $this->insert('categorise', ['code' => 'ลับมาก', 'name' => 'document_secret', 'title' => 'ลับมาก']);
+        $this->insert('categorise', ['code' => 'ลับที่สุด', 'name' => 'document_secret', 'title' => 'ลับที่สุด']);
+        }
+
 
         
     }

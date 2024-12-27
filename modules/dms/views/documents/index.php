@@ -75,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php endif;?>   
 
                             <?php if($item->doc_speed == 'ด่วน'):?>
-                            <span class="badge text-bg-waring fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วน</span> 
+                            <span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วน</span> 
                             <?php endif;?>   
                             <?php echo $item->topic?>
                             
@@ -99,7 +99,7 @@ $this->params['breadcrumbs'][] = $this->title;
                        </div>
                     </td>
                     <td class="text-center">
-                    
+                    <?php echo $item->status;?>
                     </td>
                 <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?></td>
                 <td>
