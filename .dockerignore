@@ -11,3 +11,5 @@ db/
 .sh
 .yml
 modules/filemanager/fileupload/
+web/assets
+vendors/
