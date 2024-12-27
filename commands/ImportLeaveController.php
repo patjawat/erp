@@ -118,7 +118,7 @@ class ImportLeaveController extends Controller
                 'reason' => $item['LEAVE_BECAUSE'],
                 'leave_date_sum' => $item['LEAVE_DATE_SUM'],
                 'day_type_id' => $item['DAY_TYPE_ID'],
-                'leave_contact' => $item['LEAVE_CONTACT'],
+                'address' => $item['LEAVE_CONTACT'],
                 'leave_datetime_regis' => $item['LEAVE_DATETIME_REGIS'],
                 'leave_type_code' => $item['LEAVE_TYPE_CODE'],
                 'leave_person_id' => $item['LEAVE_PERSON_ID'],
