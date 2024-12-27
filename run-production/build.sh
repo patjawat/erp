@@ -5,6 +5,8 @@ docker tag erp:1.1 patjawat/erp:1.1 &&
 # สร้าง image ขึ้น docker hub
 docker push patjawat/erp:1.1 &&
 # ลบ image ที่เก่าออก
-docker builder prune -a
+docker image prune -f
+
+
 
 

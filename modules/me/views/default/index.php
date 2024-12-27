@@ -59,7 +59,8 @@ foreach($orders as $order)
                 <div id="viewApprovePurchase">Loading...</div> -->
 
 
-                <?php echo $this->render('document'); ?>
+                <?php // echo $this->render('document'); ?>
+                <div id="viewDocument"></div>
                 <?php echo $this->render('team_work'); ?>
 
             </div>
@@ -115,6 +116,7 @@ $urlRepair = Url::to(['/me/repair']);
 $ApproveStockUrl = Url::to(['/me/approve/stock-out']);
 $ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
 $ownerAssetUrl = Url::to(['/me/owner']);
+$documentUrl = Url::to(['/me/documents']);
 // $urlRepair = Url::to(['/me/repair-me']);
 $js = <<< JS
 
@@ -122,10 +124,27 @@ $js = <<< JS
     // loadApproveStock();
     loadPurchase();
     loadOwnerAsset();
+    loadDocumentMe();
+    
+
+    //หนังสือ
+    async function  loadDocumentMe(){
+        await $.ajax({
+            type: "get",
+            url: "$documentUrl",
+            dataType: "json",
+            data:{
+                list:true 
+            },
+            success: function (res) {
+                    $('#viewDocument').html(res.content);
+            }
+        });
+    }
     
     //ประวัติการซ่อม
     async function  loadRepairHostory(){
-        await \$.ajax({
+        await $.ajax({
             type: "get",
             url: "$urlRepair",
             data:{
@@ -143,7 +162,7 @@ $js = <<< JS
 
      //ขอเบิกวัสดุ
      async function  loadApproveStock(){
-        await \$.ajax({
+        await $.ajax({
             type: "get",
             url: "$ApproveStockUrl",
             dataType: "json",

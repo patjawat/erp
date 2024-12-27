@@ -91,6 +91,13 @@ class Documents extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'document_type'])->andOnCondition(['name' => 'document_type']);
     }
 
+        // การ tags หนังสือ
+        public function getDocumentTags()
+        {
+            return $this->hasMany(DocumentTags::class, ['document_id' => 'id']);
+        }
+
+        
     // แสดงรูปแบบ format วันที่หนังสือ
     public function viewDocDate()
     {
@@ -146,6 +153,15 @@ class Documents extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'code', 'title');
     }
 
+    // แสดงหน่วยงานภานนอก
+    public function ListDocumentOrg()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'document_org'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
     // ตรวจเช็คว่ามีการแบไฟล์หรือไม่
     public function isFile()
     {

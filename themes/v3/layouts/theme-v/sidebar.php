@@ -58,7 +58,7 @@ $moduleId = Yii::$app->controller->module->id;
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link <?=$moduleId == 'dms' ? 'active' : null?>" href="<?= Url::to(['/dms']) ?>">
+                    <a class="side-nav-link <?=$moduleId == 'dms' ? 'active' : null?>" href="<?= Url::to(['/dms/dashboard']) ?>">
                     <i class="bi bi-journal-text fs-4"></i>
                         <span> สารบรรณ</span>
                     </a>

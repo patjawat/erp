@@ -75,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                         <div class="tab-content p-0">
                             <div id="home1" class="tab-pane active show" role="tabpanel">
-                                <iframe src="<?= Url::to(['/dms/documents/show','id' => $model->id]);?>&embedded=true"
+                                <iframe src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
                                     width='100%' height='1000px' frameborder="0"></iframe>
                             </div>
                             <div id="track" class="tab-pane" role="tabpanel">

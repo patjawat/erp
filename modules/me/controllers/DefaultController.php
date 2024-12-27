@@ -25,6 +25,8 @@ class DefaultController extends Controller
             'emp_id' => $model->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+
+        
         return $this->render('index', [
             'model' => $model ? $model : new Employees(),
             'searchModel' => $searchModel,

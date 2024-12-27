@@ -93,7 +93,11 @@ class DocumentsController extends Controller
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
+                if(!$model->save()){
+                    \Yii::$app->response->format = Response::FORMAT_JSON;
+                    return $model->getErrors();
+                }
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
@@ -115,15 +119,15 @@ class DocumentsController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
+        // $model->doc_date = AppHelper::convertToThai($model->doc_date);
+        // $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
         $old_json = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-            $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
-            $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
+            // $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+            // $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+            // $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
             if ($model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -168,7 +172,7 @@ class DocumentsController extends Controller
     }
 
     // แสดง File และแสดงความเห็น
-    public function actionFileComment($id)
+    public function actionFileComment($ref)
     {
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
@@ -207,12 +211,12 @@ class DocumentsController extends Controller
         }
     }
 
-    public function actionShow($id)
+    public function actionShow($ref)
     {
-        $model = $this->findModel($id);
+        // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
             $id = Yii::$app->request->get('id');
-            $fileUpload = Uploads::findOne(['ref' => $model->ref]);
+            $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
             if (!$fileUpload) {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
@@ -221,7 +225,7 @@ class DocumentsController extends Controller
                 $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
             }
             if (!$fileUpload && !file_exists($filepath)) {
-                throw new \yii\web\NotFoundHttpException('The requested file does not exist.');
+                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             }
 
             $this->setHttpHeaders($type);

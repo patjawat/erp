@@ -19,33 +19,35 @@ class DocumentsController extends \yii\web\Controller
         $searchModel = new DocumentSearch([
             'document_group' => 'receive', 
         ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('documentTags');
-        $dataProvider->query->andFilterWhere([
+        $dataProviderDepartment = $searchModel->search($this->request->queryParams);
+        $dataProviderDepartment->query->andFilterWhere([
             '>', 
-            new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(documents.data_json->'$.department_tag'))"), 
+            new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(data_json->'$.department_tag'))"), 
             0
             ])->addParams([':department' => $emp->department]);
-            $dataProvider->query->orFilterWhere(['emp_id' => 1]);
-          
+            $dataProviderDepartment->query->andFilterWhere([
+                'or',
+                ['like', 'topic', $searchModel->q],
+                ['like', 'doc_regis_number', $searchModel->q],
+            ]);
+            $dataProviderDepartment->setSort(['defaultOrder' => [
+                'doc_regis_number'=>SORT_DESC,
+                'thai_year'=>SORT_DESC,
+                ]]);
 
-            if($this->request->isAJax){
-                Yii::$app->response->format = Response::FORMAT_JSON;
-    
-                    return [
-                        'title' => $this->request->get('tilte'),
-                        'content' => $this->renderAjax('index', [
-                            'list' => $this->request->get('list'),
-                            'searchModel' => $searchModel,
-                            'dataProvider' => $dataProvider,
-                        ])
-                     ];
-                }else{
-                    return $this->render('index', [
-                        'searchModel' => $searchModel,
-                        'dataProvider' => $dataProvider,
-                    ]);
-                }
+                $searchModelTag = new DocumentTagsSearch();
+
+                $dataProviderTag = $searchModelTag->search($this->request->queryParams);
+                $dataProviderTag->query->andWhere(['emp_id' => $emp->id]);
+              
+       
+
+                    
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProviderDepartment' => $dataProviderDepartment,
+            'dataProviderTag' => $dataProviderTag
+        ]);
     }
 
     public function actionView($id)
