@@ -6,20 +6,55 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\widgets\DetailView;
 ?>
+    <?php Pjax::begin(['id' => 'document-tag']); ?>
 <div class="card border">
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="fa-solid fa-user-pen"></i> เสนอผู้อำนวยการ</h6>
         </div>
+        <div class="d-flex justify-content-between">
+            <?php echo $model->StackDocumentTags('req_approve')?>
+          <?php 
+          try {
+            echo $model->documentApprove()['data_json']['comment'];
+          } catch (\Throwable $th) {
+            //throw $th;
+          }
+          ?>
+        </div>
+    
+    </div>
 
-        <?php Pjax::begin(['id' => 'document-tag']); ?>
-        <?php echo $model->StackDocumentTags('req_approve')?>
-        <?php Pjax::end(); ?>
+    <div class="card-footer">
+
+    <?php if($model->status == 'DS1'):?>
+        <?= Html::a('<i class="fa-solid fa-file-signature"></i> เสนอผู้อำนวนการ', ['/dms/document-tags/req-approve'], ['class' => 'btn btn-sm btn-primary rounded-pill req-approve float-end', 'data' => ['document_id' => $model->id,'ref' => $model->ref, 'name' => 'req_approve']]) ?>
+    <?php endif;?>
+    <?php if($model->status == 'DS3'):?>
+            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> ลงความเห็น', ['/dms/document-tags/comment','id' => $model->id,'tilte' => '<i class="fa-regular fa-pen-to-square"></i> ลงความเห็น'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal float-end']) ?>
+            <?php endif;?>
+            
+     
+            <?php if($model->status == 'DS4'):?>
+                <div class="d-flex justify-content-between">
+                    <span>
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <?php
+
+                    try {
+                        echo Yii::$app->thaiFormatter->asDateTime($model->documentApprove()['data_json']['comment_date'], 'medium');
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                    ?>
+                    </span>
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="fa-solid fa-circle-check"></i> ผอ.ลงนามแล้ว</span>
+                </div>
+            <?php endif;?>
     </div>
-    <div class="card-footer d-flex justify-content-end">
-        <?= Html::a('<i class="fa-solid fa-file-circle-check"></i> เสนอ', ['/dms/document-tags/req-approve'], ['class' => 'btn btn-sm btn-primary rounded-pill req-approve', 'data' => ['document_id' => $model->id,'ref' => $model->ref, 'name' => 'req_approve']]) ?>
-    </div>
+    
 </div>
+<?php Pjax::end(); ?>
 
 <?php
 $js = <<< JS

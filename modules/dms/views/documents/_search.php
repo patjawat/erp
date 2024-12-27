@@ -38,6 +38,26 @@ use yii\widgets\ActiveForm;
             ]
         ])->label('ปี พ.ศ.');
         ?>
+
+<?php
+                    echo $form->field($model, 'status')->widget(Select2::classname(), [
+                        'data' => $model->listStatus(),
+                        'options' => ['placeholder' => 'เลือกสถานะ'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'width' => '130px',
+                        ],
+                        'pluginEvents' => [
+                'select2:select' => 'function(result) { 
+                        $(this).submit()
+                        }',
+                'select2:unselecting' => 'function() {
+                            $(this).submit()
+                        }',
+            ]
+                    ])->label('สถานะ');
+                    ?>
+                    
     <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
         <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-4']) ?>
     </div>

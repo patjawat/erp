@@ -3,14 +3,21 @@
 namespace app\modules\dms\models;
 
 use Yii;
+use yii\helpers\Url;
 use yii\helpers\Json;
-use app\models\Uploads;
+use Imagine\Image\Box;
+use yii\imagine\Image;
+use yii\base\Component;
 use yii\bootstrap5\Html;
+use yii\web\UploadedFile;
 use app\models\Categorise;
+use kartik\file\FileInput;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\DocumentTags;
+use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -49,6 +56,7 @@ class Documents extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number','doc_time'], 'required'],
             [['topic'], 'string'],
             [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status'], 'safe'],
@@ -79,6 +87,12 @@ class Documents extends \yii\db\ActiveRecord
         ];
     }
 
+        // สถานะ
+        public function getDocumentStatus()
+        {
+            return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'document_status']);
+        }
+        
     // section Relationships
     public function getDocumentOrg()
     {
@@ -115,7 +129,7 @@ class Documents extends \yii\db\ActiveRecord
         return Yii::$app->thaiFormatter->asDate($this->doc_date, 'medium');
     }
 
-    public function Upload($name)
+    public function Uploadx($name)
     {
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
@@ -154,15 +168,26 @@ class Documents extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-    // แสดงรายการประเภทเอกสาร
-    public function ListDocumentType()
+    // แสดงรายการสถานะ
+    public function ListStatus()
     {
         $model = Categorise::find()
-            ->where(['name' => 'document_type'])
+            ->where(['name' => 'document_status'])
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
     }
+
+        // แสดงรายการประเภทเอกสาร
+        public function ListDocumentType()
+        {
+            $model = Categorise::find()
+                ->where(['name' => 'document_type'])
+                ->asArray()
+                ->all();
+            return ArrayHelper::map($model, 'code', 'title');
+        }
+        
 
     // แสดงหน่วยงานภานนอก
     public function ListDocumentOrg()
@@ -294,4 +319,70 @@ public function listTrack()
         // }
     }
 
+//ข้อมูลการลงความเห็น
+    public function documentApprove()
+{
+    try {
+        return DocumentTags::findOne(['document_id' => $this->id,'name'=> 'req_approve']);
+    } catch (\Throwable $th) {
+        return [];
+    }
+}   
+
+
+
+public function Upload()
+{
+
+    $ref = $this->ref;
+    $name = 'document';
+    list($initialPreview, $initialPreviewConfig) = FileManagerHelper::getInitialPreview($ref, $name);
+    return FileInput::widget([
+        'name' => 'upload_ajax[]',
+        'options' => ['multiple' => true, 'accept' => '*'],
+        'pluginOptions' => [
+            'overwriteInitial' => false,
+            'initialPreviewShowDelete' => true,
+            'initialPreviewAsData' => true,
+            'initialPreview' => $initialPreview,
+            'initialPreviewConfig' => $initialPreviewConfig,
+            'initialPreviewDownloadUrl' => Url::to(['@web/visit/{filename}']),
+            'uploadUrl' => Url::to(['/filemanager/uploads/upload-ajax']),
+            'uploadExtraData' => [
+                'ref' => $ref,
+                'name' => $name,
+            ],
+            'maxFileCount' => 1,
+            'previewFileIconSettings' => [
+                // configure your icon file extensions
+                'doc' => '<i class="fas fa-file-word text-primary"></i>',
+                'docx' => '<i class="fa-regular fa-file-word"></i>',
+                'xls' => '<i class="fas fa-file-excel text-success"></i>',
+                'ppt' => '<i class="fas fa-file-powerpoint text-danger"></i>',
+                'pdf' => '<i class="fas fa-file-pdf text-danger"></i>',
+                'zip' => '<i class="fas fa-file-archive text-muted"></i>',
+                'htm' => '<i class="fas fa-file-code text-info"></i>',
+                'txt' => '<i class="fas fa-file-alt text-info"></i>',
+                'mov' => '<i class="fas fa-file-video text-warning"></i>',
+                'mp3' => '<i class="fas fa-file-audio text-warning"></i>',
+                'jpg' => '<i class="fas fa-file-image text-danger"></i>',
+                'gif' => '<i class="fas fa-file-image text-muted"></i>',
+                'png' => '<i class="fas fa-file-image text-primary"></i>',
+            ],
+        ],
+        'pluginEvents' => [
+        'filebatchuploadsuccess' => 'function(event, data) {
+            console.log("Upload Success:", data);
+            // alert("Upload completed successfully!");
+          reloadPdf()
+           $("#main-modal").modal("toggle");   
+        }',
+        'filedeleted' => 'function(event, key) {
+            console.log("File deleted with key:", key);
+            // alert("File deleted successfully!");
+            reloadPdf()
+        }',
+    ],
+    ]);
+}
 }

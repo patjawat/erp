@@ -75,6 +75,14 @@ class m241212_150029_create_documents_table extends Migration
         $this->insert('categorise', ['code' => 'ลับที่สุด', 'name' => 'document_secret', 'title' => 'ลับที่สุด']);
         }
 
+        $sqlUrgent = Yii::$app->db->createCommand("select * from categorise where name = 'document_status'")->queryAll();
+        if(count($sqlUrgent) < 1){
+        $this->insert('categorise', ['code' => 'DS1', 'name' => 'document_status', 'title' => 'ลงทะเบียนรับ']);
+        $this->insert('categorise', ['code' => 'DS2', 'name' => 'document_status', 'title' => 'ส่งหน่วยงาน']);
+        $this->insert('categorise', ['code' => 'DS3', 'name' => 'document_status', 'title' => 'เสนอ ผอ.']);
+        $this->insert('categorise', ['code' => 'DS4', 'name' => 'document_status', 'title' => 'ผอ.ลงนาม']);
+        $this->insert('categorise', ['code' => 'DS5', 'name' => 'document_status', 'title' => 'อ่าน']);
+        }
 
         
     }

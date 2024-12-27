@@ -3,6 +3,8 @@
 namespace app\modules\dms\models;
 
 use Yii;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
 
@@ -25,6 +27,8 @@ class DocumentTags extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+
+     public $comment;
     public static function tableName()
     {
         return 'document_tags';
@@ -37,7 +41,7 @@ class DocumentTags extends \yii\db\ActiveRecord
     {
         return [
             [['data_json'], 'safe'],
-            [['ref', 'name', 'doc_number','document_id','doc_regis_number', 'emp_id', 'status', 'department_id', 'document_org_id'], 'string', 'max' => 255],
+            [['ref', 'name', 'doc_number', 'document_id', 'doc_regis_number', 'emp_id', 'status', 'department_id', 'document_org_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -59,13 +63,38 @@ class DocumentTags extends \yii\db\ActiveRecord
             'data_json' => 'Data Json',
         ];
     }
+
+
+    public function afterFind()
+    {
+        try {
+            $this->comment = isset($this->data_json['comment']) ? $this->data_json['comment'] : '';
+        } catch (\Throwable $th) {
+        }
+
+        parent::afterFind();
+    }
+    
+    // สถานะ
+    public function getDocumentStatus()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'document_status']);
+    }
+
     public function getEmployee()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
     public function getDocument()
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
 
+    public function listCommentTags()
+    {
+        $model = Categorise::find()->where(['name' => 'document_comment_tags'])->all();
+        
+        return ArrayHelper::map($model, 'title', 'title');
+    }
 }

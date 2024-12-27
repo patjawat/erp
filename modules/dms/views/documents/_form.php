@@ -1,5 +1,6 @@
 <?php
 
+use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
@@ -38,10 +39,13 @@ use iamsaint\datetimepicker\Datetimepicker;
             <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
                 <div class="d-flex justify-content-between align-item-middle mb-3">
                     <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
-                    <?php echo Html::a('<i class="fa-solid fa-upload"></i> อัพโหลดไฟล์', ['/'], ['class' => 'btn btn-primary shadow rounded-pill']) ?>
+                    <?php echo Html::a('<i class="fa-solid fa-upload"></i> อัพโหลดไฟล์', ['/dms/documents/upload-file','id' => $model->id], ['class' => 'btn btn-primary shadow rounded-pill open-modal']) ?>
                 </div>
+                <?php Pjax::begin(['id' => 'showDocument']); ?>
                 <iframe src="<?= Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true" width='100%'
                     height='1000px' frameborder="0"></iframe>
+
+                    <?php Pjax::end(); ?>
             </div>
             <div class="col-xl-5 col-lg-5 col-md-6 col-sm-12 px-5 pt-3">
                 <h6><i class="fa-solid fa-circle-info text-primary fs-3"></i> ข้อมูลรายละเอียดของหนังสือ</h6>
@@ -153,7 +157,10 @@ use iamsaint\datetimepicker\Datetimepicker;
                                     'format' => 'd/m/Y',
                                 ],
                             ])->label('ลงรับวันที่') ?>
-                            <?= $form->field($model, 'doc_time')->textInput(['maxlength' => true]) ?>
+                            <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
+                        'mask' => '99:99',
+                    ]) ?>
+                       
                         </div>
                     </div>
                     <div class="col-6">
@@ -237,6 +244,13 @@ $js = <<< JS
             return false;
         });
         
+
+        function reloadPdf()
+        {
+            $.pjax.reload({ container:"#showDocument", history:false,replace: false,timeout: false}); 
+           
+             
+        }
     var thaiYear = function (ct) {
                 var leap=3;
                 var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
@@ -276,5 +290,5 @@ $js = <<< JS
             
             
     JS;
-$this->registerJS($js);
+$this->registerJS($js,View::POS_END);
 ?>

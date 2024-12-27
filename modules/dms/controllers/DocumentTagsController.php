@@ -3,10 +3,15 @@
 namespace app\modules\dms\controllers;
 
 use Yii;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\Controller;
+use yii\bootstrap5\Html;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentTags;
@@ -117,7 +122,7 @@ class DocumentTagsController extends Controller
             $emp_id = $info['director_name'];
             $document_id =$this->request->post('document_id');
             $name =$this->request->post('name');
-            $check = DocumentTags::findOne(['document_id' =>$document_id,'name' => $name,'emp_id' => $emp_id]);
+            $check = DocumentTags::findOne(['document_id' =>$document_id,'name' => $name,'emp_id' => $emp_id,'status' => 'DS4']);
             if($check){
                 return [
                     'status' => 'error',
@@ -129,11 +134,11 @@ class DocumentTagsController extends Controller
                 $model->document_id = $document_id;
                 $model->ref = $this->request->post('ref');
                 $model->name = $name;
-                $model->status = 'Pending';
+                $model->status = 'DS3';
                 $model->emp_id = $info['director_name'];
-                
+                $model->data_json = ['req_approve_date' => date('Y-m-d H:i:s')];
                 $document = Documents::findOne($document_id);
-                $document->status = 'เสนอผ.อ.';
+                $document->status = 'DS3';
                 $document->save();
                 // return $model;
                 if($model->save()){
@@ -165,6 +170,80 @@ class DocumentTagsController extends Controller
         return $this->render('update', [
             'model' => $model,
         ]);
+    }
+
+
+     // ตรวจสอบความถูกต้อง
+     public function actionCommentValidator()
+     {
+         \Yii::$app->response->format = Response::FORMAT_JSON;
+         $model = new DocumentTags();
+         $requiredName = 'ต้องระบุ';
+         if ($this->request->isPost && $model->load($this->request->post())) {
+              $model->data_json['comment'] == '' ? $model->addError('data_json[comment]', $requiredName) : null;
+         }
+         foreach ($model->getErrors() as $attribute => $errors) {
+             $result[Html::getInputId($model, $attribute)] = $errors;
+         }
+         if (!empty($result)) {
+             return $this->asJson($result);
+         }
+     }
+     
+     
+    //ลงความเห็น
+    public function actionComment($id)
+    {
+        $emp = UserHelper::GetEmployee();
+        $model = DocumentTags::findOne(['document_id' => $id,'name' => 'req_approve']);
+        $old = $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->status = 'DS4';
+            $commentDate = [
+                'comment_date' => date('Y-m-d H:i:s'),
+                'comment_name' => $emp->fullname,
+            ];
+            $model->data_json = ArrayHelper::merge($old,$commentDate,$model->data_json);
+
+            $model->save();
+
+            //เปลี่ยนสถานะเอกสารเป็น ผอ.ลงนาม
+            $document = Documents::findOne($model->document_id);
+            $document->status = 'DS4';
+            $document->save(false);
+            
+            //ถ้าหาไม่มีให้บันทึกโดยอันโนมัติ
+             $checkNewTag  = Categorise::findOne(['name' => 'document_comment_tags','title' => $model->data_json['comment']]);
+             if(!$checkNewTag){
+                 $newTag = new Categorise();
+                 $newTag->name = 'document_comment_tags';
+                 $newTag->title = $model->data_json['comment'];
+                 $newTag->save();
+             }
+            
+            return [
+                'status' => 'success',
+                'container' => '#document-tag',
+                'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว', 
+            ];
+        }
+
+
+        if($this->request->isAJax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'title' => $this->request->get('tilte'),
+                    'content' => $this->renderAjax('_form_comment', [
+                        'model' => $model,
+                    ])
+                 ];
+            }else{
+                return $this->render('_form_comment', [
+                    'model' => $model,
+                ]);
+            }
+
     }
 
     /**

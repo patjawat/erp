@@ -9,7 +9,7 @@
                 <th scope="col">หน่วยงาน</th>
                 <th scope="col">ชื่อ</th>
                 <th scope="col">สถานะ</th>
-                <th scope="col">การปฏิบัติ</th>
+                <th scope="col">ความเห็น</th>
                 <th scope="col">เวลา</th>
             </tr>
         </thead>
@@ -18,8 +18,8 @@
             <tr class="">
                 <td scope="row"><?php echo $item->employee->departmentName()?></td>
                 <td><?php echo $item->employee->fullname?></td>
-                <td><?php echo $item->status;?></td>
-                <td><?php echo $item->status;?></td>
+                <td><?php echo $item->documentStatus->title;?></td>
+                <td><?php echo $item->comment;?></td>
                 <td><?php echo $item->status;?></td>
             </tr>
           <?php endforeach;?>

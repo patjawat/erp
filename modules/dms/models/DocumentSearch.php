@@ -18,7 +18,7 @@ class DocumentSearch extends Documents
     {
         return [
             [['id'], 'integer'],
-            [['q','document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time', 'data_json','document_group'], 'safe'],
+            [['q','document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time', 'data_json','document_group','status'], 'safe'],
         ];
     }
 
@@ -60,6 +60,7 @@ class DocumentSearch extends Documents
         $query->andFilterWhere([
             'id' => $this->id,
             'document_group' => $this->document_group,
+            'status' => $this->status,
         ]);
 
         $query->andFilterWhere(['like', 'document_type', $this->document_type])

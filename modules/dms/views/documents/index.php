@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </a>
                             </td>
                             <td class="text-center">
-                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','ref' => $item->ref],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
+                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
                            </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
@@ -99,7 +99,7 @@ $this->params['breadcrumbs'][] = $this->title;
                        </div>
                     </td>
                     <td class="text-center">
-                    <?php echo $item->status;?>
+                    <?php echo $item->documentStatus->title;?>
                     </td>
                 <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?></td>
                 <td>

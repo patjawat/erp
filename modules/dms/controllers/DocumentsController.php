@@ -101,10 +101,9 @@ class DocumentsController extends Controller
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
             if($model->data_json['department_tag'] == ""){
-                 $model->status = 'ลงรับ';
+                 $model->status = 'DS1';
             }else{
-                 $model->status = 'ส่งหน่วยงาน';
-                
+                 $model->status = 'DS2';
             }
             $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
             $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
@@ -153,6 +152,16 @@ class DocumentsController extends Controller
             }else{
                 $model->doc_expire = "";
             }
+
+            if($model->status !== 'DS4'){
+                
+                if($model->data_json['department_tag'] == ""){
+                    $model->status = 'DS1';
+                }else{
+                    $model->status = 'DS2';
+                }
+            }
+           
             if ($model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -222,7 +231,7 @@ class DocumentsController extends Controller
     }
 
     // แสดง File และแสดงความเห็น
-    public function actionFileComment($ref)
+    public function actionFileComment($id)
     {
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
@@ -298,6 +307,24 @@ class DocumentsController extends Controller
         }
     }
 
+    public function actionUploadFile($id)
+    {
+        $model = $this->findModel($id);
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => '<i class="fas fa-share"></i> อัพโหลดไฟล์',
+                'content' => $this->renderAjax('_upload_file', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_upload_file', [
+                'model' => $model,
+            ]);
+        }
+    }
     /**
      * Deletes an existing Documents model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
