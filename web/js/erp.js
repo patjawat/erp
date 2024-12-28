@@ -165,6 +165,35 @@ $("body").on("click", ".open-modal", function (e) {
 });
 
 
+$("body").on("click", ".open-modal-fullscreen", function (e) {
+  e.preventDefault();
+  var url = $(this).attr("href");
+  var size = $(this).data("size");
+
+  $.ajax({
+    type: "get",
+    url: url,
+    dataType: "json",
+    success: function (response) {
+      $("#fullscreen-modal").modal("show");
+      $("#fullscreen-modal-label").html(response.title);
+      $(".modal-body").html(response.content);
+      $(".modal-footer").html(response.footer);
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+      $(".modal-dialog").addClass(size);
+      $(".modal-content").addClass("card-outline card-primary");
+    },
+    error: function (xhr) {
+      $("#fullscreen-modal-label").html('เกิดข้อผิดพลาด');
+      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+      $(".modal-dialog").addClass("modal-md");
+    },
+  });
+});
+
+
+
 $("body").on("click", ".confirm-order", async function (e) {
   e.preventDefault();
   var title = $(this).data('title');

@@ -26,29 +26,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <style>
 
-.modal-fullscreen .modal-dialog {
-    max-width: 100%;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-.modal-fullscreen .modal-header{
-   padding:0.5rem 0.5rem;
-   padding-left:2rem;
-}
-.modal-fullscreen .modal-content {
-    height: 100%;
-    border: 0;
-    border-radius: 0;
-}
-
-.modal-fullscreen .modal-body {
-    overflow-y: auto;
-    height: calc(100% - 56px); /* Adjust for header/footer height if needed */
-}
-
 </style>
 <?php Pjax::begin(['timeout' => 80000]); ?>
 
@@ -81,9 +58,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <tr>
                 <th scope="col" style="width:55px;">เลขรับ</th>
                 <th scope="col">เรื่อง</th>
+                <th scope="col" style="width:200px;">ลงความเห็น</th>
                 <th scope="col" class="text-center" style="width:105px;">ไฟล์แนบ</th>
-                <th scope="col" style="width:130px;">วันที่หนังสือ</th>
-                <th scope="col" class="text-center">สถานะ</th>
+                <th scope="col" style="width:130px;">วันที่รับ</th>
+                <th scope="col" class="text-center" style="width:130px;">สถานะ</th>
                 <th scope="col">แก้ไข</th>
                 <th scope="col" style="width:60px;">ส่งต่อ</th>
             </tr>
@@ -101,10 +79,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span> 
                             <?php endif;?>   
 
-                            <?php if($item->doc_speed == 'ด่วน'):?>
-                            <span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วน</span> 
+                            <?php if($item->secret == 'ลับที่สุด'):?>
+                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i> ลับที่สุด</span> 
                             <?php endif;?>   
-                            <?php echo $item->topic?>
+                            <span class="text-truncate">
+                                <?php echo $item->topic?>
+
+                            </span>
                             
                         </div>
                         <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
@@ -116,13 +97,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             </span>
                             </a>
                             </td>
+                            <td>
+                                <?php echo $item->StackDocumentTags('comment')?>
+                            </td>
                             <td class="text-center">
-                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
+                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/clip-file','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
                            </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <span class="fw-normal fs-6"><?php echo $item->viewDocDate()?></span>
-                            <span class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
+                            <?php
+                             echo $item->viewCreate()['avatar'];
+                            ?>
+                            <!-- <span class="fw-normal fs-6"><?php echo $item->viewReceiveDate()?></span>
+                            <span class="fw-lighter fs-13"><?php echo isset($item->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->doc_time : ''?></span> -->
                        </div>
                     </td>
                     <td class="text-center">
@@ -169,33 +156,6 @@ $js = <<< JS
 
 
 
-
-$("body").on("click", ".open-modal-fullscreen", function (e) {
-  e.preventDefault();
-  var url = $(this).attr("href");
-  var size = $(this).data("size");
-
-  $.ajax({
-    type: "get",
-    url: url,
-    dataType: "json",
-    success: function (response) {
-      $("#fullscreen-modal").modal("show");
-      $("#fullscreen-modal-label").html(response.title);
-      $(".modal-body").html(response.content);
-      $(".modal-footer").html(response.footer);
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-      $(".modal-dialog").addClass(size);
-      $(".modal-content").addClass("card-outline card-primary");
-    },
-    error: function (xhr) {
-      $("#fullscreen-modal-label").html('เกิดข้อผิดพลาด');
-      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-      $(".modal-dialog").addClass("modal-md");
-    },
-  });
-});
 
 
 
