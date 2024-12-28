@@ -81,8 +81,9 @@ $this->params['breadcrumbs'][] = $this->title;
             <tr>
                 <th scope="col" style="width:55px;">เลขรับ</th>
                 <th scope="col">เรื่อง</th>
+                <th scope="col">ลงความเห็น</th>
                 <th scope="col" class="text-center" style="width:105px;">ไฟล์แนบ</th>
-                <th scope="col" style="width:130px;">วันที่หนังสือ</th>
+                <th scope="col" style="width:130px;">วันที่รับ</th>
                 <th scope="col" class="text-center">สถานะ</th>
                 <th scope="col">แก้ไข</th>
                 <th scope="col" style="width:60px;">ส่งต่อ</th>
@@ -101,8 +102,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span> 
                             <?php endif;?>   
 
-                            <?php if($item->doc_speed == 'ด่วน'):?>
-                            <span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วน</span> 
+                            <?php if($item->secret == 'ลับที่สุด'):?>
+                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i> ลับที่สุด</span> 
                             <?php endif;?>   
                             <?php echo $item->topic?>
                             
@@ -116,13 +117,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             </span>
                             </a>
                             </td>
+                            <td>
+                                <?php echo $item->StackDocumentTags('comment')?>
+                            </td>
                             <td class="text-center">
-                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
+                            <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/clip-file','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>    
                            </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <span class="fw-normal fs-6"><?php echo $item->viewDocDate()?></span>
-                            <span class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
+                            <?php
+                             echo $item->viewCreate()['avatar'];
+                            ?>
+                            <!-- <span class="fw-normal fs-6"><?php echo $item->viewReceiveDate()?></span>
+                            <span class="fw-lighter fs-13"><?php echo isset($item->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->doc_time : ''?></span> -->
                        </div>
                     </td>
                     <td class="text-center">

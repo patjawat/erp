@@ -115,7 +115,7 @@ class ImportDocumentController extends Controller
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
-            $mdoel->secert = $item['BOOK_SECRET_NAME'];
+            $model->secret = $item['BOOK_SECRET_NAME'] ?? '-';
             $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
             
 
@@ -213,7 +213,7 @@ class ImportDocumentController extends Controller
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
             $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
-            $mdoel->secert = $item['BOOK_SECRET_NAME'];
+            $mdoel->secret = $item['BOOK_SECRET_NAME'];
             $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
             // self::UploadFile($fileName,$item['BOOK_ID']);
             try {

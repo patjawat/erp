@@ -6,6 +6,7 @@ use Yii;
 use yii\helpers\Url;
 use yii\helpers\Json;
 use Imagine\Image\Box;
+use yii\db\Expression;
 use yii\imagine\Image;
 use yii\base\Component;
 use yii\bootstrap5\Html;
@@ -16,7 +17,10 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\DocumentTags;
+use app\modules\usermanager\models\User;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -59,7 +63,7 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number','doc_time'], 'required'],
             [['topic'], 'string'],
-            [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status'], 'safe'],
+            [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status','ref'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -84,6 +88,24 @@ class Documents extends \yii\db\ActiveRecord
             'doc_date' => 'ลงวันรับเข้า',
             'doc_time' => 'เวลารับ',
             'data_json' => 'Data Json',
+        ];
+    }
+
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
         ];
     }
 
@@ -129,7 +151,13 @@ class Documents extends \yii\db\ActiveRecord
         return Yii::$app->thaiFormatter->asDate($this->doc_date, 'medium');
     }
 
-    public function Uploadx($name)
+        // แสดงรูปแบบ format วันที่หนังสือ
+        public function viewReceiveDate()
+        {
+            return Yii::$app->thaiFormatter->asDate($this->doc_receive_date, 'medium');
+        }
+        
+    public function UploadClipFile($name)
     {
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
@@ -277,6 +305,12 @@ class Documents extends \yii\db\ActiveRecord
     }
     }
 
+
+    //รายการแสดงความเห็น
+    public function listComment()
+{
+    return DocumentTags::find()->where(['document_id' => $this->id,'name' => 'comment'])->all();
+}
 // การติดตาม
 public function listTrack()
 {
@@ -285,7 +319,7 @@ public function listTrack()
     // แสดงการส่งต่อรายบุคคล
     public function StackDocumentTags($tag_name)
     {
-        // try {
+        try {
         $data = '';
         $data .= '<div class="avatar-stack">';
         foreach (DocumentTags::find()->where(['document_id' => $this->id,'name' => $tag_name])->all() as $key => $item) {
@@ -306,17 +340,44 @@ public function listTrack()
                         "bs-trigger" => "hover focus",
                         "bs-toggle" => "popover",
                         "bs-placement" => "top",
-                        "bs-title" => 'title',
+                        "bs-title" => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
                         "bs-html" => "true",
-                        "bs-content" => $emp->fullname . "<br>" . $emp->positionName()
+                        "bs-content" => $emp->fullname . "<br>" . $item->comment
                     ]
                 ]
             );
         }
         $data .= '</div>';
         return $data;
-        // } catch (\Throwable $th) {
-        // }
+        } catch (\Throwable $th) {
+            return 'เกิดข้อผิดพลาด';
+        }
+    }
+//แสดงข้อมูลผู้รับเข้า
+    public function viewCreate()
+    {
+            try {
+
+                
+                $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+                $createDate = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium').' '.$this->doc_time;
+                // $msg = $employee->departmentName();
+                return [
+                    'avatar' => $employee->getAvatar(false, $createDate),
+                    'department' => $employee->departmentName(),
+                    'fullname' => $employee->fullname,
+                    'position_name' => $employee->positionName(),
+                    'create_date' => $createDate
+                ];
+            } catch (\Throwable $th) {
+                return [
+                    'avatar' => '',
+                    'department' => '',
+                    'fullname' => '',
+                    'position_name' => '',
+                    'product_type_name' => ''
+                ];
+            }
     }
 
 //ข้อมูลการลงความเห็น
@@ -331,58 +392,9 @@ public function listTrack()
 
 
 
-public function Upload()
-{
+// public function Upload($refData = null)
+// {
 
-    $ref = $this->ref;
-    $name = 'document';
-    list($initialPreview, $initialPreviewConfig) = FileManagerHelper::getInitialPreview($ref, $name);
-    return FileInput::widget([
-        'name' => 'upload_ajax[]',
-        'options' => ['multiple' => true, 'accept' => '*'],
-        'pluginOptions' => [
-            'overwriteInitial' => false,
-            'initialPreviewShowDelete' => true,
-            'initialPreviewAsData' => true,
-            'initialPreview' => $initialPreview,
-            'initialPreviewConfig' => $initialPreviewConfig,
-            'initialPreviewDownloadUrl' => Url::to(['@web/visit/{filename}']),
-            'uploadUrl' => Url::to(['/filemanager/uploads/upload-ajax']),
-            'uploadExtraData' => [
-                'ref' => $ref,
-                'name' => $name,
-            ],
-            'maxFileCount' => 1,
-            'previewFileIconSettings' => [
-                // configure your icon file extensions
-                'doc' => '<i class="fas fa-file-word text-primary"></i>',
-                'docx' => '<i class="fa-regular fa-file-word"></i>',
-                'xls' => '<i class="fas fa-file-excel text-success"></i>',
-                'ppt' => '<i class="fas fa-file-powerpoint text-danger"></i>',
-                'pdf' => '<i class="fas fa-file-pdf text-danger"></i>',
-                'zip' => '<i class="fas fa-file-archive text-muted"></i>',
-                'htm' => '<i class="fas fa-file-code text-info"></i>',
-                'txt' => '<i class="fas fa-file-alt text-info"></i>',
-                'mov' => '<i class="fas fa-file-video text-warning"></i>',
-                'mp3' => '<i class="fas fa-file-audio text-warning"></i>',
-                'jpg' => '<i class="fas fa-file-image text-danger"></i>',
-                'gif' => '<i class="fas fa-file-image text-muted"></i>',
-                'png' => '<i class="fas fa-file-image text-primary"></i>',
-            ],
-        ],
-        'pluginEvents' => [
-        'filebatchuploadsuccess' => 'function(event, data) {
-            console.log("Upload Success:", data);
-            // alert("Upload completed successfully!");
-          reloadPdf()
-           $("#main-modal").modal("toggle");   
-        }',
-        'filedeleted' => 'function(event, key) {
-            console.log("File deleted with key:", key);
-            // alert("File deleted successfully!");
-            reloadPdf()
-        }',
-    ],
-    ]);
-}
+   
+// }
 }

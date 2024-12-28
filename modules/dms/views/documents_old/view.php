@@ -1,6 +1,5 @@
 <?php
 
-use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
@@ -30,6 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
         <span class="text-primary fw-normal fs-13">
             <div class="border border-secondary border-opacity-25 p-3 rounded">
+
                 <!-- Tab panes -->
                 <div class="row">
                     <div class="col-8">
@@ -57,8 +57,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                         <div class="tab-content p-0">
                             <div id="home1" class="tab-pane active show" role="tabpanel">
-                            <iframe src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
-                            width='100%' height='1000px' frameborder="0"></iframe>
+                                <iframe src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
+                                    width='100%' height='1000px' frameborder="0"></iframe>
                             </div>
                             <div id="track" class="tab-pane" role="tabpanel">
                                 <?php echo $this->render('track',['model' => $model])?>
@@ -66,60 +66,40 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div id="history" class="tab-pane" role="tabpanel">
                                 <?php echo $this->render('history',['model' => $model])?>
                             </div>
+
                         </div>
+
                     </div>
 
+
                     <div class="col-4 py-2">
-                    
-                       <div class="listComment"></div>
-                       <div class="viewFormComment"></div>
+             
+                       
+                        <?php echo $this->render('req_approve_tags',['model' => $model])?>
+                    <?php echo $this->render('employee_tags',['model' => $model])?>
+                    <p>
+                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                            <?php echo Html::a('<i class="fa-solid fa-trash-can"></i> ลบ', ['delete', 'id' => $model->id], [
+                                'class' => 'btn btn-danger',
+                                'data' => [
+                                    'confirm' => 'Are you sure you want to delete this item?',
+                                    'method' => 'post',
+                                ],
+                            ]) ?>
+                        </p>
+
+
                     </div>
+
                 </div>
+
+
+
+
+
+
+
             </div>
 
     </div>
 </div>
-
-
-<?php
-$getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
-$listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
-$js = <<< JS
-    getComment();
-    listComment()
-    async function getComment()
-    {
-     
-        await $.ajax({
-            type: "get",
-            url: "$getCommentUrl",
-            dataType: "json",
-            success: async function (res) {
-                $('.viewFormComment').html(res.content)
-               
-                 
-            }
-        });
-    }
-
-    async function listComment()
-    {
-     
-        await $.ajax({
-            type: "get",
-            url: "$listCommentUrl",
-            dataType: "json",
-            success: async function (res) {
-                $('.listComment').html(res.content)
-                console.log('listcomment');
-                
-                 
-            }
-        });
-    }
-
-
-
-JS;
-$this->registerJS($js);
-?>

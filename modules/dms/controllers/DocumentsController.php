@@ -6,15 +6,17 @@ use Yii;
 use yii\web\Response;
 use app\models\Uploads;
 use yii\web\Controller;
-use yii\bootstrap5\Html;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
+use yii\bootstrap5\Html;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
+use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
-use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\components\FileManagerHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -76,9 +78,21 @@ class DocumentsController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $model = $this->findModel($id);
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->renderAjax('view_title',['model' => $model]),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -90,36 +104,37 @@ class DocumentsController extends Controller
     {
         //ถ้าเป็นหนังสทือราชการถ้ปีปัจจบัน
         $model = new Documents([
-            'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'thai_year' => (Date('Y')+543),
             'document_group' => 'receive',
         ]);
+        // $model->ref =  substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
 
         $model->doc_regis_number = $model->runNumber();
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            if($model->data_json['department_tag'] == ""){
-                 $model->status = 'DS1';
-            }else{
-                 $model->status = 'DS2';
-            }
-            $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-            $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
-            if($model->doc_expire !=='__/__/____'){
-                $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
-            }else{
-                $model->doc_expire = "";
-            }
+                
+                // if($model->data_json['department_tag'] == ""){
+                //     $model->status = 'DS1';
+                // }else{
+                //     $model->status = 'DS2';
+                // }
+                $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+                $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+                if($model->doc_expire !=='__/__/____'){
+                    $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
+                }else{
+                    $model->doc_expire = "";
+                }
 
                 if(!$model->save()){
                     return $model->getErrors();
                 }
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['index']);
             }
         } else {
-            $model->loadDefaultValues();
+            // $model->loadDefaultValues();
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(),10);
         }
 
         return $this->render('create', [
@@ -163,7 +178,7 @@ class DocumentsController extends Controller
             }
            
             if ($model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['index']);
             }
         }
 
@@ -231,27 +246,65 @@ class DocumentsController extends Controller
     }
 
     // แสดง File และแสดงความเห็น
-    public function actionFileComment($id)
+    public function actionComment($id)
     {
-        $model = $this->findModel($id);
+        $emp = UserHelper::GetEmployee();
+        $model = new DocumentTags([
+            'document_id' => $id,
+            'emp_id' => $emp->id
+        ]);
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if($model->save()){
+                
+                return [
+                    'status' => 'success',
+                    'data' => $model,
+                ];
+            }
+        }
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $this->request->get('tilte'),
-                'content' => $this->renderAjax('file_comment', [
+                'title' => 'xxx',
+                'content' => $this->renderAjax('_form_comment', [
                     'model' => $model,
                 ])
             ];
         } else {
-            return $this->render('file_comment', [
+            return $this->render('_form_comment', [
                 'model' => $model,
             ]);
         }
     }
+// แสดง File และแสดงความเห็น
+public function actionListComment($id)
+{
+   
+    $model = $this->findModel($id);
+    
+    if ($this->request->isAJax) {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'title' => 'xxx',
+            'content' => $this->renderAjax('list_comment', [
+                'model' => $model,
+            ])
+        ];
+    } else {
+        return $this->render('list_comment', [
+            'model' => $model,
+        ]);
+    }
+}
+
+
 
     // แสดง File และแสดงความเห็น
-    public function actionShareFile($id)
+    public function actionClipFile($id)
     {
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
@@ -307,7 +360,7 @@ class DocumentsController extends Controller
         }
     }
 
-    public function actionUploadFile($id)
+    public function actionUploadFile($ref)
     {
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
@@ -316,12 +369,12 @@ class DocumentsController extends Controller
             return [
                 'title' => '<i class="fas fa-share"></i> อัพโหลดไฟล์',
                 'content' => $this->renderAjax('_upload_file', [
-                    'model' => $model,
+                    'ref' => $ref,
                 ])
             ];
         } else {
             return $this->render('_upload_file', [
-                'model' => $model,
+                'ref' => $ref,
             ]);
         }
     }

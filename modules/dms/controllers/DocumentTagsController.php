@@ -192,59 +192,59 @@ class DocumentTagsController extends Controller
      
      
     //ลงความเห็น
-    public function actionComment($id)
-    {
-        $emp = UserHelper::GetEmployee();
-        $model = DocumentTags::findOne(['document_id' => $id,'name' => 'req_approve']);
-        $old = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            $model->status = 'DS4';
-            $commentDate = [
-                'comment_date' => date('Y-m-d H:i:s'),
-                'comment_name' => $emp->fullname,
-            ];
-            $model->data_json = ArrayHelper::merge($old,$commentDate,$model->data_json);
+    // public function actionComment($id)
+    // {
+    //     $emp = UserHelper::GetEmployee();
+    //     $model = DocumentTags::findOne(['document_id' => $id,'name' => 'req_approve']);
+    //     $old = $model->data_json;
+    //     if ($this->request->isPost && $model->load($this->request->post())) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         $model->status = 'DS4';
+    //         $commentDate = [
+    //             'comment_date' => date('Y-m-d H:i:s'),
+    //             'comment_name' => $emp->fullname,
+    //         ];
+    //         $model->data_json = ArrayHelper::merge($old,$commentDate,$model->data_json);
 
-            $model->save();
+    //         $model->save();
 
-            //เปลี่ยนสถานะเอกสารเป็น ผอ.ลงนาม
-            $document = Documents::findOne($model->document_id);
-            $document->status = 'DS4';
-            $document->save(false);
+    //         //เปลี่ยนสถานะเอกสารเป็น ผอ.ลงนาม
+    //         $document = Documents::findOne($model->document_id);
+    //         $document->status = 'DS4';
+    //         $document->save(false);
             
-            //ถ้าหาไม่มีให้บันทึกโดยอันโนมัติ
-             $checkNewTag  = Categorise::findOne(['name' => 'document_comment_tags','title' => $model->data_json['comment']]);
-             if(!$checkNewTag){
-                 $newTag = new Categorise();
-                 $newTag->name = 'document_comment_tags';
-                 $newTag->title = $model->data_json['comment'];
-                 $newTag->save();
-             }
+    //         //ถ้าหาไม่มีให้บันทึกโดยอันโนมัติ
+    //          $checkNewTag  = Categorise::findOne(['name' => 'document_comment_tags','title' => $model->data_json['comment']]);
+    //          if(!$checkNewTag){
+    //              $newTag = new Categorise();
+    //              $newTag->name = 'document_comment_tags';
+    //              $newTag->title = $model->data_json['comment'];
+    //              $newTag->save();
+    //          }
             
-            return [
-                'status' => 'success',
-                'container' => '#document-tag',
-                'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว', 
-            ];
-        }
+    //         return [
+    //             'status' => 'success',
+    //             'container' => '#document-tag',
+    //             'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว', 
+    //         ];
+    //     }
 
 
-        if($this->request->isAJax){
-            Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'title' => $this->request->get('tilte'),
-                    'content' => $this->renderAjax('_form_comment', [
-                        'model' => $model,
-                    ])
-                 ];
-            }else{
-                return $this->render('_form_comment', [
-                    'model' => $model,
-                ]);
-            }
+    //     if($this->request->isAJax){
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //             return [
+    //                 'title' => $this->request->get('tilte'),
+    //                 'content' => $this->renderAjax('_form_comment', [
+    //                     'model' => $model,
+    //                 ])
+    //              ];
+    //         }else{
+    //             return $this->render('_form_comment', [
+    //                 'model' => $model,
+    //             ]);
+    //         }
 
-    }
+    // }
 
     /**
      * Deletes an existing DocumentTags model.

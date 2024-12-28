@@ -30,9 +30,12 @@ $this->params['breadcrumbs'][] = $this->title;
         <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
         <span class="text-primary fw-normal fs-13">
             <div class="border border-secondary border-opacity-25 p-3 rounded">
+
                 <!-- Tab panes -->
                 <div class="row">
                     <div class="col-8">
+                  <?php echo $model->ref;?>
+
                         <div class="d-flex justify-content-between">
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
@@ -74,7 +77,15 @@ $this->params['breadcrumbs'][] = $this->title;
                        <div class="listComment"></div>
                        <div class="viewFormComment"></div>
                     </div>
+
                 </div>
+
+
+
+
+
+
+
             </div>
 
     </div>
@@ -111,8 +122,6 @@ $js = <<< JS
             dataType: "json",
             success: async function (res) {
                 $('.listComment').html(res.content)
-                console.log('listcomment');
-                
                  
             }
         });

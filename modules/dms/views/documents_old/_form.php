@@ -4,13 +4,11 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use kartik\file\FileInput;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 // use softark\duallistbox\DualListbox;
 use app\modules\hr\models\Organization;
 use iamsaint\datetimepicker\Datetimepicker;
-use app\modules\filemanager\components\FileManagerHelper;
 
 // use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
@@ -32,7 +30,7 @@ use app\modules\filemanager\components\FileManagerHelper;
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/dms/documents/validator']
 ]); ?>
-
+<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <?= $form->field($model, 'document_group')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <div class="card">
     <div class="card-body">
@@ -41,16 +39,12 @@ use app\modules\filemanager\components\FileManagerHelper;
             <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
                 <div class="d-flex justify-content-between align-item-middle mb-3">
                     <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
-                    <button type="button" class="btn btn-primary shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                    <i class="fa-solid fa-upload"></i> อัพโหลดไฟล์
-</button>
-
-                    <?php // echo Html::a('<i class="fa-solid fa-upload"></i> อัพโหลดไฟล์', ['/dms/documents/upload-file','ref' => $model->ref], ['class' => 'btn btn-primary shadow rounded-pill open-modal']) ?>
+                    <?php echo Html::a('<i class="fa-solid fa-upload"></i> อัพโหลดไฟล์', ['/dms/documents/upload-file','id' => $model->id], ['class' => 'btn btn-primary shadow rounded-pill open-modal']) ?>
                 </div>
                 <?php Pjax::begin(['id' => 'showDocument']); ?>
-                <!-- <iframe src="<?php //  Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true" width='100%'
-                    height='1000px' frameborder="0"></iframe> -->
-                    <iframe id="myIframe" width="100%" height="1000px" frameborder="0"></iframe>
+                <iframe src="<?= Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true" width='100%'
+                    height='1000px' frameborder="0"></iframe>
+
                 <?php Pjax::end(); ?>
             </div>
             <div class="col-xl-5 col-lg-5 col-md-6 col-sm-12 px-5 pt-3">
@@ -74,7 +68,11 @@ use app\modules\filemanager\components\FileManagerHelper;
                             data-bs-target="#pills-clip" type="button" role="tab" aria-controls="pills-clip"
                             aria-selected="false"><i class="fas fa-paperclip"></i> ไฟล์แนบ</button>
                     </li>
-                   
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pills-disabled-tab" data-bs-toggle="pill"
+                            data-bs-target="#pills-disabled" type="button" role="tab" aria-controls="pills-disabled"
+                            aria-selected="false" disabled>Disabled</button>
+                    </li>
                 </ul>
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane fade show active" id="pills-general" role="tabpanel" aria-labelledby="pills-general-tab" tabindex="0">
@@ -88,7 +86,8 @@ use app\modules\filemanager\components\FileManagerHelper;
                         tabindex="0">
                         <?php echo $model->UploadClipFile('document_clip')?>
                     </div>
-                    
+                    <div class="tab-pane fade" id="pills-disabled" role="tabpanel" aria-labelledby="pills-disabled-tab"
+                        tabindex="0">...</div>
                 </div>
 
 
@@ -102,81 +101,12 @@ use app\modules\filemanager\components\FileManagerHelper;
         </div>
     </div>
 </div>
-
-
-<!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-      <?php 
-                $name  = 'document';
-                list($initialPreview, $initialPreviewConfig) = FileManagerHelper::getInitialPreview($model->ref,$name);
-                echo  FileInput::widget([
-                    'name' => 'upload_ajax[]',
-                    'options' => ['multiple' => true, 'accept' => '*'],
-                    'pluginOptions' => [
-                        'overwriteInitial' => false,
-                        'initialPreviewShowDelete' => true,
-                        'initialPreviewAsData' => true,
-                        'initialPreview' => $initialPreview,
-                        'initialPreviewConfig' => $initialPreviewConfig,
-                        'initialPreviewDownloadUrl' => Url::to(['@web/visit/{filename}']),
-                        'uploadUrl' => Url::to(['/filemanager/uploads/upload-ajax']),
-                        'uploadExtraData' => [
-                            'ref' => $model->ref,
-                            'name' => $name,
-                        ],
-                        'maxFileCount' => 100,
-                        'previewFileIconSettings' => [
-                            // configure your icon file extensions
-                            'doc' => '<i class="fas fa-file-word text-primary"></i>',
-                            'docx' => '<i class="fa-regular fa-file-word"></i>',
-                            'xls' => '<i class="fas fa-file-excel text-success"></i>',
-                            'ppt' => '<i class="fas fa-file-powerpoint text-danger"></i>',
-                            'pdf' => '<i class="fas fa-file-pdf text-danger"></i>',
-                            'zip' => '<i class="fas fa-file-archive text-muted"></i>',
-                            'htm' => '<i class="fas fa-file-code text-info"></i>',
-                            'txt' => '<i class="fas fa-file-alt text-info"></i>',
-                            'mov' => '<i class="fas fa-file-video text-warning"></i>',
-                            'mp3' => '<i class="fas fa-file-audio text-warning"></i>',
-                            'jpg' => '<i class="fas fa-file-image text-danger"></i>',
-                            'gif' => '<i class="fas fa-file-image text-muted"></i>',
-                            'png' => '<i class="fas fa-file-image text-primary"></i>',
-                        ],
-                       
-                    ],
-                    'pluginEvents' => [
-                        'fileuploaded' => 'function(event, data, previewId, index) {
-                            // loadPdf()
-                        }',
-                        'filebatchuploadsuccess' => 'function(event, data) {
-                            loadPdf()
-                        }',
-                    ],
-                ]);
-                ?>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Understood</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <?php ActiveForm::end(); ?>
 
 <?php
 $url = Url::to(['/dms/documents/get-items']);
-$showPdfUrl = Url::to(['/dms/documents/show?ref='.$model->ref]);
 $js = <<< JS
-    loadPdf()
+
     $(document).ready(function () {
         $.ajax({
             url: '$url',
@@ -232,17 +162,9 @@ $js = <<< JS
         });
         
 
-        function loadPdf()
+        function reloadPdf()
         {
-            $('#myIframe').attr('src', '$showPdfUrl');
-            // $.ajax({
-            //     type: "get",
-            //     url: "$showPdfUrl",
-            //     dataType: "json",
-            //     success: function (res) {
-            //     }
-            // });
-            // $.pjax.reload({ container:"#showDocument", history:false,replace: false,timeout: false}); 
+            $.pjax.reload({ container:"#showDocument", history:false,replace: false,timeout: false}); 
            
              
         }

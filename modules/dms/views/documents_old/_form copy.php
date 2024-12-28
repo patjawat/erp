@@ -3,7 +3,6 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\select2\Select2;
-use kartik\widgets\FileInput;
 use kartik\widgets\ActiveForm;
 use softark\duallistbox\DualListbox;
 use app\modules\hr\models\Organization;
@@ -91,7 +90,8 @@ use iamsaint\datetimepicker\Datetimepicker;
                     </div>
 
                 </div>
-                
+                <?php echo $model->Upload('document')?>
+
 
 
             </div>

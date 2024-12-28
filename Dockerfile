@@ -36,7 +36,7 @@ COPY ./ /app/
 
 # Step 4: ติดตั้ง dependencies ผ่าน composer
 
-RUN composer install --ignore-platform-reqs
+# RUN composer install --ignore-platform-reqs
 # RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
 

@@ -74,21 +74,26 @@ use app\modules\filemanager\components\FileManagerHelper;
                             data-bs-target="#pills-clip" type="button" role="tab" aria-controls="pills-clip"
                             aria-selected="false"><i class="fas fa-paperclip"></i> ไฟล์แนบ</button>
                     </li>
-                   
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pills-disabled-tab" data-bs-toggle="pill"
+                            data-bs-target="#pills-disabled" type="button" role="tab" aria-controls="pills-disabled"
+                            aria-selected="false" disabled>Disabled</button>
+                    </li>
                 </ul>
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane fade show active" id="pills-general" role="tabpanel" aria-labelledby="pills-general-tab" tabindex="0">
-                    <?php echo $this->render('_form_general',['form' => $form,'model' => $model]);?>
+                    <?php //  echo $this->render('_form_general',['form' => $form,'model' => $model]);?>
                     </div>
                     <div class="tab-pane fade" id="pills-send" role="tabpanel" aria-labelledby="pills-send-tab"
                         tabindex="0">
-                        <?php echo $this->render('_form_send',['form' => $form,'model' => $model]);?>
+                        <?php // echo $this->render('_form_send',['form' => $form,'model' => $model]);?>
                     </div>
                     <div class="tab-pane fade" id="pills-clip" role="tabpanel" aria-labelledby="pills-clip-tab"
                         tabindex="0">
-                        <?php echo $model->UploadClipFile('document_clip')?>
+                        <?php // echo $model->UploadClipFile('document_clip')?>
                     </div>
-                    
+                    <div class="tab-pane fade" id="pills-disabled" role="tabpanel" aria-labelledby="pills-disabled-tab"
+                        tabindex="0">...</div>
                 </div>
 
 
@@ -114,51 +119,51 @@ use app\modules\filemanager\components\FileManagerHelper;
       </div>
       <div class="modal-body">
       <?php 
-                $name  = 'document';
-                list($initialPreview, $initialPreviewConfig) = FileManagerHelper::getInitialPreview($model->ref,$name);
-                echo  FileInput::widget([
-                    'name' => 'upload_ajax[]',
-                    'options' => ['multiple' => true, 'accept' => '*'],
-                    'pluginOptions' => [
-                        'overwriteInitial' => false,
-                        'initialPreviewShowDelete' => true,
-                        'initialPreviewAsData' => true,
-                        'initialPreview' => $initialPreview,
-                        'initialPreviewConfig' => $initialPreviewConfig,
-                        'initialPreviewDownloadUrl' => Url::to(['@web/visit/{filename}']),
-                        'uploadUrl' => Url::to(['/filemanager/uploads/upload-ajax']),
-                        'uploadExtraData' => [
-                            'ref' => $model->ref,
-                            'name' => $name,
-                        ],
-                        'maxFileCount' => 100,
-                        'previewFileIconSettings' => [
-                            // configure your icon file extensions
-                            'doc' => '<i class="fas fa-file-word text-primary"></i>',
-                            'docx' => '<i class="fa-regular fa-file-word"></i>',
-                            'xls' => '<i class="fas fa-file-excel text-success"></i>',
-                            'ppt' => '<i class="fas fa-file-powerpoint text-danger"></i>',
-                            'pdf' => '<i class="fas fa-file-pdf text-danger"></i>',
-                            'zip' => '<i class="fas fa-file-archive text-muted"></i>',
-                            'htm' => '<i class="fas fa-file-code text-info"></i>',
-                            'txt' => '<i class="fas fa-file-alt text-info"></i>',
-                            'mov' => '<i class="fas fa-file-video text-warning"></i>',
-                            'mp3' => '<i class="fas fa-file-audio text-warning"></i>',
-                            'jpg' => '<i class="fas fa-file-image text-danger"></i>',
-                            'gif' => '<i class="fas fa-file-image text-muted"></i>',
-                            'png' => '<i class="fas fa-file-image text-primary"></i>',
-                        ],
+                // $name  = 'document';
+                // list($initialPreview, $initialPreviewConfig) = FileManagerHelper::getInitialPreview($model->ref,$name);
+                // echo  FileInput::widget([
+                //     'name' => 'upload_ajax[]',
+                //     'options' => ['multiple' => true, 'accept' => '*'],
+                //     'pluginOptions' => [
+                //         'overwriteInitial' => false,
+                //         'initialPreviewShowDelete' => true,
+                //         'initialPreviewAsData' => true,
+                //         'initialPreview' => $initialPreview,
+                //         'initialPreviewConfig' => $initialPreviewConfig,
+                //         'initialPreviewDownloadUrl' => Url::to(['@web/visit/{filename}']),
+                //         'uploadUrl' => Url::to(['/filemanager/uploads/upload-ajax']),
+                //         'uploadExtraData' => [
+                //             'ref' => $model->ref,
+                //             'name' => $name,
+                //         ],
+                //         'maxFileCount' => 100,
+                //         'previewFileIconSettings' => [
+                //             // configure your icon file extensions
+                //             'doc' => '<i class="fas fa-file-word text-primary"></i>',
+                //             'docx' => '<i class="fa-regular fa-file-word"></i>',
+                //             'xls' => '<i class="fas fa-file-excel text-success"></i>',
+                //             'ppt' => '<i class="fas fa-file-powerpoint text-danger"></i>',
+                //             'pdf' => '<i class="fas fa-file-pdf text-danger"></i>',
+                //             'zip' => '<i class="fas fa-file-archive text-muted"></i>',
+                //             'htm' => '<i class="fas fa-file-code text-info"></i>',
+                //             'txt' => '<i class="fas fa-file-alt text-info"></i>',
+                //             'mov' => '<i class="fas fa-file-video text-warning"></i>',
+                //             'mp3' => '<i class="fas fa-file-audio text-warning"></i>',
+                //             'jpg' => '<i class="fas fa-file-image text-danger"></i>',
+                //             'gif' => '<i class="fas fa-file-image text-muted"></i>',
+                //             'png' => '<i class="fas fa-file-image text-primary"></i>',
+                //         ],
                        
-                    ],
-                    'pluginEvents' => [
-                        'fileuploaded' => 'function(event, data, previewId, index) {
-                            // loadPdf()
-                        }',
-                        'filebatchuploadsuccess' => 'function(event, data) {
-                            loadPdf()
-                        }',
-                    ],
-                ]);
+                //     ],
+                //     'pluginEvents' => [
+                //         'fileuploaded' => 'function(event, data, previewId, index) {
+                //             // loadPdf()
+                //         }',
+                //         'filebatchuploadsuccess' => 'function(event, data) {
+                //             loadPdf()
+                //         }',
+                //     ],
+                // ]);
                 ?>
 
       </div>

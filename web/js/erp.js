@@ -20,7 +20,7 @@ jQuery(document).on("pjax:start", function () {
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
-  $('#page-content').loadingOverlay('remove');
+  $('body').find('#page-content').loadingOverlay('remove');
   // $('#page-content').show();
   // $('#page-loadding').hide();
 });
