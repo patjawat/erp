@@ -36,13 +36,14 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="d-flex justify-content-between">
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
-                                <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+                                <?php // echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal"><i class="fa-solid fa-chevron-left"></i> ย้อนกลับ</button>
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active show" data-bs-toggle="pill" href="#home1" role="pill"
                                         aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-info-circle"></i>
                                         รายละเอียด</a>
                                 </li>
-                                <li class="nav-item" role="presentation">
+                                <!-- <li class="nav-item" role="presentation">
                                     <a class="nav-link" data-bs-toggle="pill" href="#track" role="pill"
                                         aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-binoculars"></i>
                                         การติดตาม</a>
@@ -51,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <a class="nav-link" data-bs-toggle="pill" href="#history" role="pill"
                                         aria-selected="true" tabindex="-1"><i class="fas fa-fw fa-history"></i>
                                         ประวัติ</a>
-                                </li>
+                                </li> -->
                             </ul>
 
                         </div>

@@ -20,13 +20,14 @@ class DocumentsController extends \yii\web\Controller
             'document_group' => 'receive', 
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('documentTags');
+        // $dataProvider->query->joinWith('documentTags');
         $dataProvider->query->andFilterWhere([
             '>', 
             new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(documents.data_json->'$.department_tag'))"), 
             0
             ])->addParams([':department' => $emp->department]);
-            $dataProvider->query->orFilterWhere(['emp_id' => 1]);
+            // $dataProvider->query->orFilterWhere(['emp_id' => 1]);
+            $dataProvider->query->orWhere(new Expression("JSON_CONTAINS(documents.data_json->'$.employee_tag','\"$emp->id\"')"));
           
 
             if($this->request->isAJax){
@@ -66,9 +67,21 @@ class DocumentsController extends \yii\web\Controller
         $model->view_json  = ArrayHelper::merge($view_count, $model->view_json);
         $model->save();
         
-        return $this->render('@app/modules/dms/views/documents/view', [
-            'model' => $this->findModel($id),
-        ]);
+       
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->renderAjax('@app/modules/dms/views/documents/view_title',['model' => $model]),
+                'content' => $this->renderAjax('@app/modules/dms/views/documents/view', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('@app/modules/dms/views/documents/view', [
+                'model' => $model,
+            ]);
+        }
     }
 
 

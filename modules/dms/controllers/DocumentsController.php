@@ -114,11 +114,15 @@ class DocumentsController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 
-                // if($model->data_json['department_tag'] == ""){
-                //     $model->status = 'DS1';
-                // }else{
-                //     $model->status = 'DS2';
-                // }
+                if($model->req_approve == 1){
+                    $model->status = 'DS3';
+                }
+                
+                if($model->data_json['department_tag'] == ""){
+                    $model->status = 'DS1';
+                }else{
+                    $model->status = 'DS2';
+                }
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                 $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
                 if($model->doc_expire !=='__/__/____'){
@@ -387,7 +391,12 @@ public function actionListComment($id)
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $ref = $model->ref;
+        if($model->delete()){
+            FileManagerHelper::removeUploadDir($ref);   
+        }
+        
 
         return $this->redirect(['index']);
     }

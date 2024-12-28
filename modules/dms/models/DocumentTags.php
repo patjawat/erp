@@ -125,7 +125,8 @@ class DocumentTags extends \yii\db\ActiveRecord
     {
         // try {
             $employee = Employees::find()->where(['id' => $this->emp_id])->one();
-            $msg = $this->data_json['comment'];
+            $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
+            $msg = '<span class="badge bg-primary text-white">'.$createdAt.'</span>  '.$this->data_json['comment'];
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
@@ -146,6 +147,15 @@ class DocumentTags extends \yii\db\ActiveRecord
     }
 
 
+    public function viewCreate()
+    {
+           try {
+            return  Yii::$app->thaiFormatter->asDate($this->created_at, 'medium').' '.$this->doc_time;
+           } catch (\Throwable $th) {
+            return null;
+           }
+    }
+    
     public function listCommentTags()
     {
         $model = Categorise::find()->where(['name' => 'document_comment_tags'])->all();

@@ -16,15 +16,17 @@ use yii\widgets\DetailView;
                             <?= Html::encode($model->topic) ?>
                         </span>
                         <span class="fw-semibold fs-6">
-                            <?php if($model->doc_speed == 'ด่วนที่สุด'):?>
-                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i>
-                                ด่วนที่สุด</span>
-                            <?php endif;?>
+                                <?php if($model->doc_speed == 'ด่วนที่สุด'):?>
+                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span> 
+                            <?php endif;?>   
 
-                            <?php if($model->doc_speed == 'ด่วน'):?>
-                            <span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i>
-                                ด่วน</span>
-                            <?php endif;?>
+                            <?php if($model->secret == 'ลับที่สุด'):?>
+                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i> ลับที่สุด</span> 
+                            <?php endif;?>   
+                            <span class="text-truncate">
+                                <?php echo $model->topic?>
+
+                            </span>
 
                     </div>
                     <span class="text-primary">
