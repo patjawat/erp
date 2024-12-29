@@ -23,10 +23,7 @@ use yii\widgets\DetailView;
                             <?php if($model->secret == 'ลับที่สุด'):?>
                             <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i> ลับที่สุด</span> 
                             <?php endif;?>   
-                            <span class="text-truncate">
-                                <?php echo $model->topic?>
-
-                            </span>
+                            
 
                     </div>
                     <span class="text-primary">

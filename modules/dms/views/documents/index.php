@@ -52,40 +52,41 @@ $this->params['breadcrumbs'][] = $this->title;
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
-                            <th scope="col" style="width:55px;">เลขรับ</th>
-                            <th scope="col">เรื่อง</th>
-                            <th scope="col" style="width:200px;">ลงความเห็น</th>
-                            <th scope="col" class="text-center" style="width:105px;">ไฟล์แนบ</th>
-                            <th scope="col" style="width:130px;">วันที่รับ</th>
-                            <th scope="col" class="text-center" style="width:130px;">สถานะ</th>
-                            <th scope="col">แก้ไข</th>
-                            <th scope="col" style="width:60px;">ส่งต่อ</th>
+                            <th style="width:70px;">เลขรับ</th>
+                            <th>เรื่อง</th>
+                            <th style="width:200px;">ลงความเห็น</th>
+                            <th class="text-center" style="width:105px;">ไฟล์แนบ</th>
+                            <th style="width:130px;">วันที่รับ</th>
+                            <th class="text-center" style="width:130px;">สถานะ</th>
+                            <th>แก้ไข</th>
+                            <th style="width:60px;">ส่งต่อ</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
                         <?php foreach($dataProvider->getModels() as $item):?>
-                        <tr class="">
+                        <tr class="" style="max-width:200px">
                             <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
                                     class="text-dark open-modal-fullscreen">
-                                    <div class=" d-flex flex-column">
-
-                                        <span class="fw-semibold fs-6">
+                                    <div class=" d-flex flex-column" style="max-width:1000px">
+                                        <div>
+                                            <p class="text-truncate fw-semibold fs-6 mb-0">
                                             <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
-                                            <span class="badge text-bg-danger fs-13"><i
-                                                    class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
+                                            <span class="badge text-bg-danger fs-13">
+                                                <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                                            </span>
                                             <?php endif;?>
 
                                             <?php if($item->secret == 'ลับที่สุด'):?>
                                             <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
-                                                ลับที่สุด</span>
-                                            <?php endif;?>
-                                            <span class="text-truncate">
-                                                <?php echo $item->topic?>
-
+                                                ลับที่สุด
                                             </span>
+                                            <?php endif;?>
+                                                <?php echo $item->topic?>
+                                            </p>
 
+                                        </div>
                                     </div>
                                     <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>
@@ -98,7 +99,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?php
+                                    <?php
 // try {
 //     echo '<span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"><i class="fa-solid fa-user-tag"></i> '.count($item->data_json['employee_tag']).'</span>';
 // } catch (\Throwable $th) {
@@ -107,7 +108,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
-    
+
 
                                 </a>
                             </td>

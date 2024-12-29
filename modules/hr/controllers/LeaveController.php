@@ -109,7 +109,7 @@ class LeaveController extends Controller
          }
        
         
-        $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
+        $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
