@@ -53,8 +53,9 @@ use yii\bootstrap5\Html;
                     <div class="dropdown-menu dropdown-menu-right" style="">
 
                     <?=Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด',['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modalx','data' => ['size' => 'modal-lg']]) ?>
-                <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
-
+                    <?php if($model->status !== 'Allow'):?>
+                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
+                    <?php endif;?>
                 <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
                             [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) ?>
