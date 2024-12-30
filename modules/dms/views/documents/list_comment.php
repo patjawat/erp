@@ -15,7 +15,7 @@ use app\components\AppHelper
              $createdAt = Yii::$app->thaiFormatter->asDate($dateTime, 'medium');
              $time = explode(' ', $dateTime)[1]; // แยกเวลาจากวันที่
             ?>
-            <span class="badge bg-primary text-white"><?php echo $createdAt;?></span>
+            <span class="badge bg-primary text-white me-3"><?php echo $createdAt;?></span>
 
             <?php if($item->created_by == Yii::$app->user->id):?>
             <div class="dropdown float-end">
