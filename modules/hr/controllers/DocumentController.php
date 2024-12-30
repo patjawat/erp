@@ -36,6 +36,8 @@ class DocumentController extends \yii\web\Controller
 
         $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
+        $lastDateStart = Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_start, 'long');
+        $lastDateEnd = Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_end, 'long');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('title',$model->leaveType->title);
         $createDate  = new DateTime($model->created_at);
@@ -50,7 +52,11 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('department', $model->employee->departmentName());
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
+        $templateProcessor->setValue('lastDateStart', $lastDateStart ?? '-');
+        $templateProcessor->setValue('lastDateEnd',$lastDateStart ?? '-');
+        $templateProcessor->setValue('lastDays',$model->LastDays()['data']->total_days);
         $templateProcessor->setValue('reason', $model->reason);
+        $templateProcessor->setValue('leaveType', $model->leaveType->title);
         $templateProcessor->setValue('days', $model->total_days);
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('checker1', $model->checkerName(1)['fullname']);
@@ -93,7 +99,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('days', $model->total_days);//จำนวนวันที่ลา
-        $templateProcessor->setValue('last_days', $model->leaveLastDays()); //ลามาแล้ว
+        $templateProcessor->setValue('last_days', $model->LastDays()['sum_all']); //ลามาแล้ว
         $templateProcessor->setValue('total', $model->total_days); // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('send', '('.$model->leaveWorkSend()['fullname'].')');
