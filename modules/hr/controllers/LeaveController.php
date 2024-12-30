@@ -322,8 +322,10 @@ class LeaveController extends Controller
 
     public function actionCalDays()
     {
-        $date_start_type = (Float) ($this->request->get('date_start_type') == "1" ? 0 : 0.5);
-        $date_end_type = (Float) ($this->request->get('date_end_type') == "1" ? 0 : 0.5);
+        // $date_start_type = (Float) ($this->request->get('date_start_type') == "1" ? 0 : 0.5);
+        // $date_end_type = (Float) ($this->request->get('date_end_type') == "1" ? 0 : 0.5);
+        $date_start_type = (Float) ($this->request->get('date_start_type'));
+        $date_end_type = (Float) ($this->request->get('date_end_type'));
         $on_holidays = $this->request->get('on_holidays');
 
         $date_start = preg_replace('/\D/', '', $this->request->get('date_start'));

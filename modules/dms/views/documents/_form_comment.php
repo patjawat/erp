@@ -33,8 +33,12 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?= $form->field($model, 'emp_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
-<?= $form->field($model, 'data_json[comment]')->textArea(['maxlength' => 50])->label(false); ?>
+<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
+<?php if($model->isNewRecord):?>
 <span class="btn btn-primary rounded-pill shadow save-comment"><i class="fa-solid fa-paper-plane"></i> ลงความเห็น</span>
+<?php else:?>
+    <span class="btn btn-warning rounded-pill shadow save-comment"><i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น</span>
+<?php endif;?>
 <?php ActiveForm::end(); ?>
 
 <?php
@@ -58,6 +62,7 @@ $('.save-comment').click(function (e) {
                    // รีเซ็ตฟอร์ม
                    form[0].reset();
                    listComment()
+                   getComment();
                     // Handle success, such as closing modal or reloading data
                 }
             },

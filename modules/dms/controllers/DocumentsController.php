@@ -283,6 +283,57 @@ class DocumentsController extends Controller
             ]);
         }
     }
+
+    public function actionUpdateComment($id)
+    {
+        $emp = UserHelper::GetEmployee();
+        $model = DocumentTags::findOne($id);
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if($model->save()){
+                
+                return [
+                    'status' => 'success',
+                    'data' => $model,
+                ];
+            }
+        }
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => 'xxx',
+                'content' => $this->renderAjax('_form_comment', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_comment', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+    public function actionDeleteComment($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = DocumentTags::findOne($id);
+        if($model->created_by == Yii::$app->user->id){
+
+            $model->delete();
+            return [
+                'status' => 'success',
+                'data' => $model,
+            ];
+        }else{
+            return [
+                'status' => 'error',
+            ];
+        }
+    }
+    
 // แสดง File และแสดงความเห็น
 public function actionListComment($id)
 {

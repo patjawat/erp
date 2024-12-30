@@ -98,6 +98,22 @@ function warning($msg = "") {
   });
 }
 
+
+function confirm(text)
+{
+   Swal.fire({
+    title: 'ยืนยัน',
+    text: text,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ยืนยัน!",
+    cancelButtonText: "ยกเลิก",
+  }).then(async (result) => {
+    return result.value;
+  });
+}
 $("body").on("click", ".setview", function (e) {
   var url = $(this).attr('href');
           e.preventDefault();
@@ -324,6 +340,8 @@ $("body").on("click", ".select-employee", function (e) {
     }
   });
 });
+
+
 
 $(".show-setting").on("click", function () {
   $(".right-setting").addClass("show");

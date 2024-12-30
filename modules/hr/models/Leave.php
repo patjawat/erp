@@ -59,7 +59,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         return [
             [['leave_time_type', 'total_days'], 'number'],
-            [['on_holidays', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q','q_department'], 'safe'],
+            [['on_holidays', 'data_json', 'date_start', 'date_end','leave_start_type','leave_end_type','created_at', 'updated_at', 'deleted_at', 'emp_id', 'q','q_department'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
         ];

@@ -126,7 +126,7 @@ class DocumentTags extends \yii\db\ActiveRecord
         // try {
             $employee = Employees::find()->where(['id' => $this->emp_id])->one();
             $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
-            $msg = '<span class="badge bg-primary text-white">'.$createdAt.'</span>  '.$this->data_json['comment'];
+            $msg = '<i class="fa-regular fa-comment"></i> '.$this->data_json['comment'];
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),

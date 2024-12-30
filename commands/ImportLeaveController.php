@@ -51,7 +51,8 @@ class ImportLeaveController extends Controller
                     LEAVE_DATE_BEGIN,
                     LEAVE_DATE_END,
                     LEAVE_DATE_SUM,
-                    DAY_TYPE_ID,
+                    gleave_register.DAY_TYPE_ID,
+                    DAY_TYPE_NAME,
                     LEAVE_CONTACT,
                     LEAVE_DATETIME_REGIS,
                     LEAVE_TYPE_CODE,
@@ -75,6 +76,7 @@ class ImportLeaveController extends Controller
                     LEFT JOIN gleave_type ON gleave_register.LEAVE_TYPE_CODE = gleave_type.LEAVE_TYPE_ID
                     LEFT JOIN gleave_status ON gleave_register.LEAVE_STATUS_CODE = gleave_status.STATUS_CODE
                     LEFT JOIN gleave_location ON gleave_register.LOCATION_ID = gleave_location.LOCATION_ID
+                    LEFT JOIN gleave_day_type ON gleave_day_type.DAY_TYPE_ID = gleave_register.DAY_TYPE_ID
                     ORDER BY gleave_register.ID DESC;')->queryAll();
         $num = 1;
         $total = count($querys);
@@ -104,8 +106,22 @@ class ImportLeaveController extends Controller
             $leave->thai_year = $item['LEAVE_YEAR_ID'];
             $leave->date_start = $item['LEAVE_DATE_BEGIN'];
             $leave->date_end = $item['LEAVE_DATE_END'];
-            $leave->total_days = $item['LEAVE_DATE_SUM'];
             $leave->status = $item['STATUS_CODE'];
+            if($item['DAY_TYPE_ID'] == 2){
+                $leave->date_start_type = 0.5;
+                $leave->date_end_type = 0;
+                $leave->total_days = $item['LEAVE_DATE_SUM'] - 0.5;
+            }elseif($item['DAY_TYPE_ID'] == 3){
+                $leave->total_days = $item['LEAVE_DATE_SUM'] - 0.5;
+                $leave->date_start_type = 0;
+                $leave->date_end_type = 0.5;
+            }else{
+                $leave->date_start_type = 0;
+                $leave->date_end_type = 0;
+                $leave->total_days = $item['LEAVE_DATE_SUM'];
+            }
+            
+            
             $leave->data_json = [
                 'cid' => $item['LEAVE_PERSON_CODE'],
                 'fullname' => $item['LEAVE_PERSON_FULLNAME'],

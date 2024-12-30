@@ -118,8 +118,54 @@ $js = <<< JS
             }
         });
     }
+    
+    $("body").on("click", ".update-comment", function (e) {
+        e.preventDefault();
+        console.log('update commetn');
+         $.ajax({
+            type: "get",
+            url: $(this).attr('href'),
+            dataType: "json",
+            success: async function (res) {
+                $('.viewFormComment').html(res.content)       
+            }
+        });
+    });
+
+    $("body").on("click", ".delete-comment", function (e) {
+        e.preventDefault();
+        console.log('update commetn');
+        // var confirm = confirm('ต้องการลบหรือไม่!');
 
 
+        Swal.fire({
+        title: 'ยืนยัน',
+        text: 'ต้องการลบหรือไม่',
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "ใช่, ยืนยัน!",
+        cancelButtonText: "ยกเลิก",
+    }).then(async (result) => {
+        if(result.value == true)
+    
+            $.ajax({
+                type: "post",
+                url: $(this).attr('href'),
+                dataType: "json",
+                success: async function (res) {
+                    if(res.status == 'success'){
+                        listComment()    
+                        }else{
+                            warning()
+                        }
+                    }
+                });
+
+            });
+        
+    });
 
 JS;
 $this->registerJS($js);
