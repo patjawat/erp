@@ -352,7 +352,9 @@ class Leave extends \yii\db\ActiveRecord
     // แสดงสถานะในรูปแบบสี
     public function viewStatus()
     {
-               switch ($this->status) {
+        try {
+
+        switch ($this->status) {
             case "Pending":
              $color = 'warning';
              $icon = '<i class="bi bi-hourglass-split"></i>';
@@ -384,6 +386,9 @@ class Leave extends \yii\db\ActiveRecord
           }
           
           return '<span class="badge rounded-pill badge-soft-'.$color.' text-primary fs-13 ">'.$icon.' '.$this->leaveStatus->title.'</span>';
+        } catch (\Throwable $th) {
+           return null;
+        }
           
     }
     //นับเวลาที่ผ่านมาแล้ว
