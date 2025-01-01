@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8d5688baf3ab9978a50806d6f14907fa",
+    "content-hash": "8e4e4c5f952ed3b81f8bcc2a3a04ecf2",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -146,16 +146,16 @@
         },
         {
             "name": "bower-asset/bootstrap",
-            "version": "v5.3.3",
+            "version": "v5.3.0-alpha1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/twbs/bootstrap.git",
-                "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
+                "url": "git@github.com:twbs/bootstrap.git",
+                "reference": "cf9454caa00872899215603e5e036d9a824b1b11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/6e1f75f420f68e1d52733b8e407fc7c3766c9dba",
-                "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
+                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/cf9454caa00872899215603e5e036d9a824b1b11",
+                "reference": "cf9454caa00872899215603e5e036d9a824b1b11"
             },
             "type": "bower-asset"
         },
@@ -203,13 +203,13 @@
             "version": "5.x-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/RobinHerbots/Inputmask.git",
-                "reference": "719edfe0ecb686ef22a02321a9f1ed0fcd8962fe"
+                "url": "git@github.com:RobinHerbots/Inputmask.git",
+                "reference": "5069a1acaf2682401b92ea500a35dfc5314b83dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/719edfe0ecb686ef22a02321a9f1ed0fcd8962fe",
-                "reference": "719edfe0ecb686ef22a02321a9f1ed0fcd8962fe"
+                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/5069a1acaf2682401b92ea500a35dfc5314b83dc",
+                "reference": "5069a1acaf2682401b92ea500a35dfc5314b83dc"
             },
             "require": {
                 "bower-asset/jquery": ">=1.7"
@@ -1298,98 +1298,6 @@
             "time": "2023-06-01T07:04:22+00:00"
         },
         {
-            "name": "execut/yii2-base",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/execut/yii2-base.git",
-                "reference": "8c699f2d604c9db35521d19bb796dfb13603ed84"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/execut/yii2-base/zipball/8c699f2d604c9db35521d19bb796dfb13603ed84",
-                "reference": "8c699f2d604c9db35521d19bb796dfb13603ed84",
-                "shasum": ""
-            },
-            "require": {
-                "yiisoft/yii2": ">=2.0.13",
-                "yiisoft/yii2-jui": "@dev"
-            },
-            "default-branch": true,
-            "type": "yii2-extension",
-            "autoload": {
-                "psr-4": {
-                    "execut\\yii\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "eXeCUT"
-                }
-            ],
-            "description": "My base classes for yii2",
-            "homepage": "https://github.com/execut/yii2-base",
-            "keywords": [
-                "yii2"
-            ],
-            "support": {
-                "issues": "https://github.com/execut/yii2-base/issues",
-                "source": "https://github.com/execut/yii2-base/tree/1.14.2"
-            },
-            "time": "2020-11-18T07:16:31+00:00"
-        },
-        {
-            "name": "execut/yii2-loading-overlay",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/execut/yii2-loading-overlay.git",
-                "reference": "3c93782ba8250a5057e2fab0dbb9c046204b2c2f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/execut/yii2-loading-overlay/zipball/3c93782ba8250a5057e2fab0dbb9c046204b2c2f",
-                "reference": "3c93782ba8250a5057e2fab0dbb9c046204b2c2f",
-                "shasum": ""
-            },
-            "require": {
-                "execut/yii2-base": "@dev",
-                "yiisoft/yii2": "@dev"
-            },
-            "default-branch": true,
-            "type": "yii2-extension",
-            "autoload": {
-                "psr-4": {
-                    "execut\\loadingOverlay\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "eXeCUT"
-                }
-            ],
-            "description": "Yii2 loading overlay widget",
-            "homepage": "https://github.com/execut/yii2-loading-overlay",
-            "keywords": [
-                "yii2 loading overlay",
-                "yii2 widget"
-            ],
-            "support": {
-                "issues": "https://github.com/execut/yii2-loading-overlay/issues?state=open",
-                "source": "https://github.com/execut/yii2-loading-overlay",
-                "wiki": "https://github.com/execut/yii2-loading-overlay/wiki"
-            },
-            "time": "2021-02-17T08:12:59+00:00"
-        },
-        {
             "name": "ezyang/htmlpurifier",
             "version": "v4.18.0",
             "source": {
@@ -1653,12 +1561,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client.git",
-                "reference": "d8d201ba8a189a3cd7fb34e4da569f2ed440eee7"
+                "reference": "a0da60ef45caffbc75d44c08b85fa32c4d41f691"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client/zipball/d8d201ba8a189a3cd7fb34e4da569f2ed440eee7",
-                "reference": "d8d201ba8a189a3cd7fb34e4da569f2ed440eee7",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client/zipball/a0da60ef45caffbc75d44c08b85fa32c4d41f691",
+                "reference": "a0da60ef45caffbc75d44c08b85fa32c4d41f691",
                 "shasum": ""
             },
             "require": {
@@ -1713,13 +1621,13 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client/issues",
-                "source": "https://github.com/googleapis/google-api-php-client/tree/v2.18.2"
+                "source": "https://github.com/googleapis/google-api-php-client/tree/main"
             },
-            "time": "2024-12-16T22:52:40+00:00"
+            "time": "2024-12-27T18:27:51+00:00"
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.387.0",
+            "version": "v0.388.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
@@ -1757,7 +1665,7 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.387.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.388.0"
             },
             "time": "2024-12-21T01:06:13+00:00"
         },
@@ -2313,12 +2221,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hamcrest/hamcrest-php.git",
-                "reference": "515bc471fce72631265184d96d1777770f16d230"
+                "reference": "ea3c21ca78e9696dbd7d8f16e1141ca7be241e6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/515bc471fce72631265184d96d1777770f16d230",
-                "reference": "515bc471fce72631265184d96d1777770f16d230",
+                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/ea3c21ca78e9696dbd7d8f16e1141ca7be241e6a",
+                "reference": "ea3c21ca78e9696dbd7d8f16e1141ca7be241e6a",
                 "shasum": ""
             },
             "require": {
@@ -2357,7 +2265,7 @@
                 "issues": "https://github.com/hamcrest/hamcrest-php/issues",
                 "source": "https://github.com/hamcrest/hamcrest-php/tree/master"
             },
-            "time": "2024-11-24T15:17:53+00:00"
+            "time": "2025-01-01T06:33:44+00:00"
         },
         {
             "name": "iamsaint/yii2-datetimepicker",
@@ -7014,12 +6922,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "687d87c4d5aea1ef3b6ec2998e4fdb3a6d0d596c"
+                "reference": "7c8d73f6ba1ba67bfb0966495617b7f7fd0f57d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/687d87c4d5aea1ef3b6ec2998e4fdb3a6d0d596c",
-                "reference": "687d87c4d5aea1ef3b6ec2998e4fdb3a6d0d596c",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/7c8d73f6ba1ba67bfb0966495617b7f7fd0f57d1",
+                "reference": "7c8d73f6ba1ba67bfb0966495617b7f7fd0f57d1",
                 "shasum": ""
             },
             "require": {
@@ -7111,7 +7019,7 @@
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
                 "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/master"
             },
-            "time": "2024-12-23T16:59:44+00:00"
+            "time": "2024-12-31T03:59:46+00:00"
         },
         {
             "name": "phpoffice/phpword",
@@ -8402,12 +8310,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "2.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -8556,12 +8464,12 @@
             "default-branch": true,
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "3.6-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -9293,12 +9201,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "2.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -9624,12 +9532,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "f5b263522ed6ea28ccfd2686f47e788c5b01f4b3"
+                "reference": "4816fbb5f69d37bb8972bfcec21f4a94f2bc267d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/f5b263522ed6ea28ccfd2686f47e788c5b01f4b3",
-                "reference": "f5b263522ed6ea28ccfd2686f47e788c5b01f4b3",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/4816fbb5f69d37bb8972bfcec21f4a94f2bc267d",
+                "reference": "4816fbb5f69d37bb8972bfcec21f4a94f2bc267d",
                 "shasum": ""
             },
             "require": {
@@ -9738,7 +9646,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-10T10:45:50+00:00"
+            "time": "2024-12-30T16:53:25+00:00"
         },
         {
             "name": "yiisoft/yii2-authclient",
@@ -10167,19 +10075,19 @@
             "default-branch": true,
             "type": "yii2-extension",
             "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0.x-dev"
-                },
-                "composer-exit-on-patch-failure": true,
                 "patches": {
-                    "phpunit/phpunit-mock-objects": {
-                        "Fix PHP 7 and 8 compatibility": "https://yiisoft.github.io/phpunit-patches/phpunit_mock_objects.patch"
-                    },
                     "phpunit/phpunit": {
                         "Fix PHP 7 compatibility": "https://yiisoft.github.io/phpunit-patches/phpunit_php7.patch",
                         "Fix PHP 8 compatibility": "https://yiisoft.github.io/phpunit-patches/phpunit_php8.patch"
+                    },
+                    "phpunit/phpunit-mock-objects": {
+                        "Fix PHP 7 and 8 compatibility": "https://yiisoft.github.io/phpunit-patches/phpunit_mock_objects.patch"
                     }
-                }
+                },
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                },
+                "composer-exit-on-patch-failure": true
             },
             "autoload": {
                 "psr-4": {
@@ -11438,16 +11346,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.3.1",
+            "version": "v5.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b"
+                "reference": "447a020a1f875a434d62f2a401f53b82a396e494"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/8eea230464783aa9671db8eea6f8c6ac5285794b",
-                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/447a020a1f875a434d62f2a401f53b82a396e494",
+                "reference": "447a020a1f875a434d62f2a401f53b82a396e494",
                 "shasum": ""
             },
             "require": {
@@ -11490,9 +11398,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.1"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.4.0"
             },
-            "time": "2024-10-08T18:51:32+00:00"
+            "time": "2024-12-30T11:07:19+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -14075,7 +13983,6 @@
         "kartik-v/yii2-popover-x": 20,
         "asyou99/yii2-cart": 20,
         "kartik-v/yii2-sortable": 20,
-        "execut/yii2-loading-overlay": 20,
         "phpoffice/phpspreadsheet": 20
     },
     "prefer-stable": false,

@@ -84,7 +84,6 @@
         "edofre/yii2-fullcalendar": "V1.0.11",
         "asyou99/yii2-cart": "dev-master",
         "kartik-v/yii2-sortable": "dev-master",
-        "execut/yii2-loading-overlay": "dev-master",
         "phpoffice/phpspreadsheet": "dev-master",
         "cgsmith/yii2-flatpickr-widget": "~1.1",
         "codenix-sv/yii2-flatpickr" : "~2.0"

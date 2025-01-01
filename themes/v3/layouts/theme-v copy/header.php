@@ -2,13 +2,37 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use app\components\UserHelper;
 ?>
-<header class="topbar-header">
+<style>
+.color-switchers .btn.blue.active {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4070F4;
+}
+
+.color-box .color-switchers .btn {
+    display: inline-block;
+    height: 40px;
+    width: 40px;
+    border: none;
+    outline: none;
+    border-radius: 50%;
+    margin: 0 5px;
+    cursor: pointer;
+    background: #4070F4;
+}
+
+
+</style>
+<header id="page-topbar" class="topbar-header">
     <div class="navbar-header">
         <div class="left-bar">
             <div class="navbar-brand-box">
-
+                <a href="index.html" class="logo logo-dark">
+                    <span class="logo-sm">
+                        <i class="bi bi-box fs-2 text-white"></i></span>
+                    <span class="logo-lg"><img
+                            src="https://bootstrapplanet.com/themes/marvel/app/assets/images/logo-white.png"
+                            alt="Lettstart Admin"></span>
+                </a>
                 <a href="<?=Url::to(['/'])?>" class="logo logo-light">
                     <span class="logo-sm">
                         <i class="bi bi-box fs-2"></i>
@@ -52,6 +76,60 @@ use app\components\UserHelper;
             <?=$this->render('app_service')?>
             <?=$this->render('app_manage')?>
 
+            <!-- <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="bi bi-people-fill fs-4"></i>',['/hr/employees'],['class' => 'btn header-item notify-icon','data' => [
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"right",
+                        "bs-title"=>"บุคลากร",
+                         "bs-content"=>"ข้อมูลบุคลากรในองค์กร"
+                ]])?>
+            </div>
+            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="bi bi-folder-check fs-4"></i>',['/am/asset'],['class' => 'btn header-item notify-icon','data' => [
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"right",
+                        "bs-title"=>"ทรัพย์สิน",
+                         "bs-content"=>"ข้อมูลทรัพย์สินในองค์กร"
+                ]])?>
+            </div>
+
+            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="bi bi-box fs-4"></i>',['/sm'],['class' => 'btn header-item notify-icon','data' => [
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"right",
+                        "bs-title"=>"พัสดุ",
+                         "bs-content"=>"พัสดุ"
+                ]])?>
+            </div>
+
+
+            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="fa-solid fa-store"></i>',['/inventory/store'],['class' => 'btn header-item notify-icon','data' => [
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"right",
+                        "bs-title"=>"คลังวัสดุ/ครุภัณฑ์",
+                         "bs-content"=>"เบิกวัสดุ/ครุภัฑ์เพื่อใช้ใหน่วยงาน"
+                ]])?>
+            </div>
+
+
+            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+                <?=Html::a('<i class="bi bi-ui-checks"></i>',
+                ['/pm'],['class' => 'btn header-item notify-icon','data' => [
+                        "bs-trigger"=>"hover focus",
+                        "bs-toggle"=> "popover",
+                        "bs-placement"=>"right",
+                        "bs-title"=>"แผนงานโครงการ",
+                         "bs-content"=>"แผนงานโครงการ"
+                ]])?>
+            </div> -->
+
+
+
 
 
             <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
@@ -90,6 +168,11 @@ use app\components\UserHelper;
                      . Html::endForm();
                     ?>
                     <?php endif; ?>
+
+
+                    <!-- <a href="javascript: void(0);" class="text-danger dropdown-item">
+                        <i class="bx bx-log-in me-1 text-danger"></i> Logout
+                    </a> -->
                 </div>
             </div>
             <div class="d-inline-flex" data-aos="zoom-in" data-aos-delay="600">
@@ -98,3 +181,16 @@ use app\components\UserHelper;
         </div>
     </div>
 </header>
+
+
+<?php
+use app\components\UserHelper;
+$js = <<< JS
+
+const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+// const exampleEl = document.getElementById('popStore')
+// const popover = new bootstrap.Popover(exampleEl, options)
+JS;
+$this->registerJS($js, View::POS_END);
+?>

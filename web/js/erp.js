@@ -1,16 +1,12 @@
-// alert()
-// const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-// const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+$('#page-content').show()
+$('#loader').hide()
 
 window.onbeforeunload = function () {
-
-  $('#page-content').loadingOverlay();
+  $('#page-content').hide()
+  $('#loader').show()
   NProgress.start();
-  
-  // $('#modal-dialog').modal('hide');
-  // $('#awaitLogin').show();
-  // $('#content-container').hide();
-  // $('#cover-spin').hide(0)
+
 };
 
 jQuery(document).on("pjax:start", function () {
@@ -20,9 +16,6 @@ jQuery(document).on("pjax:start", function () {
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
-  $('body').find('#page-content').loadingOverlay('remove');
-  // $('#page-content').show();
-  // $('#page-loadding').hide();
 });
 
 // focus เวลาเปิก select2
@@ -32,7 +25,6 @@ $(document).on("select2:open", () => {
     .focus();
 });
 
-$(".loading-page").hide();
 
 $(".link-loading").click(function (e) {
   $(".loading-page").show();

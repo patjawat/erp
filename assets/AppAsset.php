@@ -24,7 +24,6 @@ class AppAsset extends AssetBundle
     public $css = [
         // "css/site.css",
         'css/custom.css',
-        'css/LoadingOverlay.css',
         // "css/v2.css",
         // "css/docs.css",
         'css/fontawesome-free-6.6.0-web/css/all.css',
@@ -43,7 +42,6 @@ class AppAsset extends AssetBundle
         // 'js/v2.js',
         'js/erp.js',
         'js/waves.js',
-        'js/LoadingOverlay.js',
         // 'js/erp-app.js',
         // 'js/vendor-app.min.js',
         'sweetalert2/dist/sweetalert2.all.min.js',
@@ -61,6 +59,5 @@ class AppAsset extends AssetBundle
     public $depends = [
         'yii\web\YiiAsset',
         'yii\bootstrap5\BootstrapAsset',
-        'execut\loadingOverlay\LoadingOverlayAsset'
     ];
 }
