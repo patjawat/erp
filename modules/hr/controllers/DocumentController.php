@@ -6,6 +6,7 @@ use DateTime;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
+use yii\helpers\FileHelper;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\Processor;
@@ -18,8 +19,11 @@ use yii\web\NotFoundHttpException;
 
 class DocumentController extends \yii\web\Controller
 {
+    public function actionIndex()
+    {
+        return $this->render('index');
+    }
 
-    
     // ลากิจส่วนตัว ลาป่วย ลาคลอดบุตร
     public function actionLeavelt1($id)
     {
@@ -28,46 +32,50 @@ class DocumentController extends \yii\web\Controller
         $model = Leave::findOne($id);
         $this->CreateDir($model->id);
         $title = 'LT1-ใบลากิจ';
-        $result_name = $title .'-'.$model->id.'.docx';
+        $result_name = $title . '-' . $model->id . '.docx';
         $word_name = 'LT1-ใบลากิจ.docx';
 
         @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
-        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
-        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
-        $lastDateStart = Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_start, 'long');
-        $lastDateEnd = Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_end, 'long');
-        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('title',$model->leaveType->title);
-        $createDate  = new DateTime($model->created_at);
-        $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
-        $templateProcessor->setValue('y', $createDate->format('Y') + 543);
-        $templateProcessor->setValue('d', $createDate->format('d'));
-        $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
-        $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
-        $templateProcessor->setValue('fullname', $model->employee->fullname);
-        $templateProcessor->setValue('position', $model->employee->positionName());
-        $templateProcessor->setValue('level_name', $model->employee->positionLevelName() ? 'ระดับ'.$model->employee->positionLevelName() : '');
-        $templateProcessor->setValue('department', $model->employee->departmentName());
-        $templateProcessor->setValue('dateStart', $dateStart);
-        $templateProcessor->setValue('dateEnd', $dateEnd);
-        $templateProcessor->setValue('lastDateStart', $lastDateStart ?? '-');
-        $templateProcessor->setValue('lastDateEnd',$lastDateStart ?? '-');
-        $templateProcessor->setValue('lastDays',$model->LastDays()['data']->total_days);
-        $templateProcessor->setValue('reason', $model->reason);
-        $templateProcessor->setValue('leaveType', $model->leaveType->title);
-        $templateProcessor->setValue('days', $model->total_days);
-        $templateProcessor->setValue('address', $model->data_json['address']);
-        $templateProcessor->setValue('checker1', $model->checkerName(1)['fullname']);
-        $templateProcessor->setValue('position1', $model->checkerName(1)['position']);
-        $templateProcessor->setValue('checker3', $model->checkerName(3)['fullname']);
-        $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
-        $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
-        
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
-        // return $this->Show($result_name);
+        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start ?? '0000-00-00', 'long');
+        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end  ?? '0000-00-00', 'long');
+        $lastDateStart = Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_start  ?? '0000-00-00', 'long');
+        $lastDateEnd = Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_end  ?? '0000-00-00', 'long');
+        $createDate = new DateTime($model->created_at  ?? '0000-00-00');
+        $data = [
+            'word_name' => $word_name,
+            'result_name' => $result_name,
+            'items' => [
+                'org_name' => $this->GetInfo()['company_name'],
+                'title' => $model->leaveType->title,
+                'm' => AppHelper::getMonthName($createDate->format('m')),
+                'y' => $createDate->format('Y') + 543,
+                'd' => $createDate->format('d'),
+                'director' => $this->GetInfo()['director_fullname'],
+                'createDate' => Yii::$app->thaiFormatter->asDate($model->created_at, 'long'),
+                'fullname' => $model->employee->fullname,
+                'position' => $model->employee->positionName(),
+                'level_name' => $model->employee->positionLevelName() ? 'ระดับ' . $model->employee->positionLevelName() : '',
+                'department' => $model->employee->departmentName(),
+                'dateStart' => $dateStart,
+                'dateEnd' => $dateEnd,
+                'lastDateStart' => $lastDateStart ?? '-',
+                'lastDateEnd' => $lastDateStart ?? '-',
+                'lastDays' => $model->LastDays()['data']->total_days ?? 0,
+                'reason' => $model->reason,
+                'leaveType' => $model->leaveType->title,
+                'days' => $model->total_days,
+                'address' => $model->data_json['address'],
+                'checker1' => $model->checkerName(1)['fullname'],
+                'position1' => $model->checkerName(1)['position'],
+                'checker3' => $model->checkerName(3)['fullname'],
+                'position3' => $model->checkerName(3)['position'],
+                'status' => $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต',
+            ]
+        ];
+        return $this->CreateFile($data);
+
     }
 
     // ใบพักผ่อน
@@ -76,9 +84,9 @@ class DocumentController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = Leave::findOne($id);
-        $this->CreateDir($model->id);
+        // $this->CreateDir($model->id);
         $title = 'LT4';
-        $result_name = $title .'-'.$model->id.'.docx';
+        $result_name = $title . '-' . $model->id . '.docx';
         $word_name = 'LT4-ใบลาพักผ่อน.docx';
 
         @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
@@ -86,40 +94,38 @@ class DocumentController extends \yii\web\Controller
 
         $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
+        $createDate = new DateTime($model->created_at);
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $createDate  = new DateTime($model->created_at);
         $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
         $templateProcessor->setValue('y', $createDate->format('Y') + 543);
         $templateProcessor->setValue('d', $createDate->format('d'));
         $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
-        $templateProcessor->setValue('fullname', '('.$model->employee->fullname.')');
+        $templateProcessor->setValue('fullname',  $model->employee->fullname);
         $templateProcessor->setValue('position', $model->employee->positionName());
         $templateProcessor->setValue('department', $model->employee->departmentName());
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
-        $templateProcessor->setValue('days', $model->total_days);//จำนวนวันที่ลา
-        $templateProcessor->setValue('last_days', $model->LastDays()['sum_all']); //ลามาแล้ว
-        $templateProcessor->setValue('total', $model->total_days); // รวมเป็น
+        $templateProcessor->setValue('days', $model->total_days);  // จำนวนวันที่ลา
+        $templateProcessor->setValue('last_days', $model->LastDays()['sum_all']);  // ลามาแล้ว
+        $templateProcessor->setValue('total', $model->total_days);  // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
-        $templateProcessor->setValue('send', '('.$model->leaveWorkSend()['fullname'].')');
+        $templateProcessor->setValue('send', ($model->leaveWorkSend()['fullname'] == null ?  '' : ('(' . $model->leaveWorkSend()['fullname'] . ')')));
         $templateProcessor->setValue('sendPosition', $model->leaveWorkSend()['position']);
-        $templateProcessor->setValue('approve1', '('.$model->checkerName(1)['fullname'].')');
+        $templateProcessor->setValue('approve1', '(' . $model->checkerName(1)['fullname'] . ')');
         $templateProcessor->setValue('approveDate1', $model->checkerName(1)['approve_date']);
         $templateProcessor->setValue('position1', $model->checkerName(1)['position']);
-        $templateProcessor->setValue('approve3', '('.$model->checkerName(3)['fullname'].')');
+        $templateProcessor->setValue('approve3', $model->checkerName(3)['fullname'] == null ? '' : ('(' . $model->checkerName(3)['fullname'] . ')'));
         $templateProcessor->setValue('approveDate3', $model->checkerName(3)['approve_date']);
         $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
         // $templateProcessor->setValue('l_days', $model->data_json['leave_days']);
 
-        
-        
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
         // return $this->Show($result_name);
     }
-    
+
     // ดึงค่ากน่วยงาน
 
     protected function GetInfo()
@@ -154,21 +160,35 @@ class DocumentController extends \yii\web\Controller
         return;
     }
 
+    // function สร้าง Word
+    public function CreateFile($data)
+    {
+        $result_name = $data['result_name'];
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $data['word_name']);  // เลือกไฟล์ template ที่เราสร้างไว้
+        foreach ($data['items'] as $key => $value) {
+            $templateProcessor->setValue($key, $value);
+        }
+
+        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        return $this->Show($result_name);
+    }
+
     private function Show($filename)
     {
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',
-                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
-                'content' => $this->renderAjax('@app/views/ms-word/word', ['filename' => $filename]),
+                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                // 'content' => $this->renderAjax('show', ['filename' => $filename]),
             ];
         } else {
             echo '<p>';
             echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/asset_result.docx'), ['class' => 'btn btn-info']);  // สร้าง link download
             echo '</p>';
             // echo '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src='.Url::to(Yii::getAlias('@web').'/msword/temp/asset_result.docx', true).'&embedded=true"  style="position: absolute;width:99%; height: 90%;border: none;"></iframe>';
-            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/temp/asset_result.docx', true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
+            echo '<iframe src="https://docs.google.com/viewerng/viewer?url=' . Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename, true) . '&embedded=true"  style="position: absolute;width:100%; height: 100%;border: none;"></iframe>';
         }
     }
 }

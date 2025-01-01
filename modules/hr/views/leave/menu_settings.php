@@ -10,7 +10,8 @@ $listAssetGroups = Categorise::find()
 ?>
 <div class="d-flex gap-2">
 
-<?=Html::a('<i class="fa-solid fa-bars"></i> หน้าหลัก',['/hr/leave'],['class' => 'btn btn-light'])?>
+<?=Html::a('<i class="fa-solid fa-angle-left"></i> หน้าหลัก',['/hr/leave'],['class' => 'btn btn-light'])?>
     <?=Html::a('<i class="fa-solid fa-gear"></i> นโยบายการลา',['/hr/leave-policies'],['class' => 'btn btn-light'])?>
     <?=Html::a('<i class="fa-solid fa-gear"></i> กำหนดสิทธิลาพักผ่อน',['/hr/leave-entitlements'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-mug-hot"></i> วันหยุด',['/hr/holiday'],['class' => 'btn btn-light'])?>
 </div>
