@@ -145,7 +145,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                     </div>
 
                 </div>
-
+                <?= $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
                 <div class="d-flex justify-content-center align-top align-items-center mt-5">
                     <div class="form-group mt-3 d-flex justify-content-center gap-2">
                         <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [

@@ -11,11 +11,15 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
+  $('#page-content').hide()
+  $('#loader').show()
   
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
+  $('#page-content').show()
+$('#loader').hide()
 });
 
 // focus เวลาเปิก select2

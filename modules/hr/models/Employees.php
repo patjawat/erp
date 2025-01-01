@@ -8,6 +8,7 @@ use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\AppHelper;
 use app\components\CategoriseHelper;
+use app\modules\usermanager\models\User;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -884,7 +885,8 @@ class Employees extends Yii\db\ActiveRecord
     // section Relationships
     public function getUser()
     {
-        return $this->hasOne(User::class, ['id' => 'user_id']);
+        return $this->hasOne(User::class, ['id' => '
+        ']);
     }
 
     public function getProvincName()

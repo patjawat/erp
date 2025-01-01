@@ -198,7 +198,6 @@ $js = <<< JS
     \$('#form-document').on('beforeSubmit', function (e) {
             var form = \$(this);
             console.log('Submit');
-
             Swal.fire({
             title: "ยืนยัน?",
             text: "บันทึกหนังสือ!",
@@ -225,6 +224,8 @@ $js = <<< JS
                         }
                     }
                 });
+
+            }else{
 
             }
             });

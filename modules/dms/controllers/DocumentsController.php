@@ -182,6 +182,15 @@ class DocumentsController extends Controller
             }
            
             if ($model->save()) {
+                
+                
+                try {
+                    
+                    $message = $model->topic;
+                    $model->sendMessage();
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
                 return $this->redirect(['index']);
             }
         }

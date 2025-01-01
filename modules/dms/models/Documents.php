@@ -3,6 +3,7 @@
 namespace app\modules\dms\models;
 
 use Yii;
+use Exception;
 use yii\helpers\Url;
 use yii\helpers\Json;
 use Imagine\Image\Box;
@@ -13,6 +14,7 @@ use yii\bootstrap5\Html;
 use yii\web\UploadedFile;
 use app\models\Categorise;
 use kartik\file\FileInput;
+use yii\httpclient\Client;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
@@ -145,6 +147,34 @@ class Documents extends \yii\db\ActiveRecord
             }
         }
         
+
+        public function sendMessage($lineId)
+        {
+            $message = $thi->topic;
+            
+            try {
+
+                $client = new Client();
+                // $token = 'u090Q5IjiP3BOCPbGGdn1Vdj16AZ6mVtz2SV9Bd22ce';
+                $token = $lineId;
+                $response = $client
+                    ->createRequest()
+                    ->setMethod('POST')
+                    ->setUrl('https://notify-api.line.me/api/notify')
+                    ->setHeaders(['Authorization' => 'Bearer ' . $token])
+                    ->setData(['message' => $message])
+                    ->send();
+    
+                if ($response->isOk) {
+                    return $response->data;
+                } else {
+                    throw new Exception('Failed to send message: ' . $response->content);
+                }
+                // code...
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
+        }
     // แสดงรูปแบบ format วันที่หนังสือ
     public function viewDocDate()
     {

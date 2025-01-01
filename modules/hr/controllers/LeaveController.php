@@ -423,13 +423,13 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave/list', [
+                'content' => $this->renderAjax('history', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave/list', [
+            return $this->render('history', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);

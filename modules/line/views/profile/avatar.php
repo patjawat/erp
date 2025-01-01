@@ -1,9 +1,9 @@
 <?php
-use app\components\AppHelper;
-use app\modules\hr\models\EmployeeDetail;
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
+use app\components\AppHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\EmployeeDetail;
 
 ?>
 <style>
@@ -36,7 +36,7 @@ use app\modules\hr\models\Employees;
 
                     <p>
                     <i class="fa-solid fa-business-time"></i>
-                    อายุราชการ <?= $model->workLife() ?>
+                    อายุราชการ <?php // $model->workLife()['full'] ?>
                 </p>
                 </div>
             </div>

@@ -5,8 +5,10 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use kartik\select2\Select2;
-use kartik\widgets\ActiveForm;
+use app\components\UserHelper;
 // use softark\duallistbox\DualListbox;
+use kartik\widgets\ActiveForm;
+use app\modules\hr\models\Employees;
 use softark\duallistbox\DualListbox;
 use app\modules\hr\models\Organization;
 use iamsaint\datetimepicker\Datetimepicker;
@@ -52,3 +54,8 @@ use iamsaint\datetimepicker\Datetimepicker;
     ?>
 
 </div>
+
+<?php
+$me = Employees::findOne(Yii::$app->user->id);
+// echo $me->user->line_id;
+?>
