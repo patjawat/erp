@@ -1,7 +1,7 @@
 <?php
 
-use yii\helpers\Html;
 use yii\web\View;
+use yii\helpers\Html;
 use kartik\widgets\ActiveForm;
 use iamsaint\datetimepicker\Datetimepicker;
 /** @var yii\web\View $this */
@@ -14,11 +14,11 @@ use iamsaint\datetimepicker\Datetimepicker;
     <?php $form = ActiveForm::begin([
         'id' => 'form',
         'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
-        'validationUrl' =>['/lm/holiday/validator']
+        'validationUrl' =>['/hr/holiday/validator']
         ]); ?>
     <?= $form->field($model, 'name')->hiddenInput(['value' => 'holiday'])->label(false) ?>
 <div class="row">
-<div class="col-8">
+<div class="col-12">
     
 <?php echo $form->field($model, 'date_start')->widget(Datetimepicker::className(),[
         'options' => [
@@ -31,9 +31,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         ],
         ])->label('วันที่') ?>
 </div>
-<div class="col-4">
-    <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true])->label('ปีงบประมาน') ?>
-</div>
+
 </div>
 
         <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>

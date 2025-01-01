@@ -47,11 +47,12 @@ class HolidayController extends Controller
         $searchModel = new CalendarSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['name' => 'holiday']);
-        if($searchModel){
-            $dataProvider->query->andFilterWhere(['=','thai_year', $searchModel->thai_year]);
-        }else{
-            $dataProvider->query->andFilterWhere(['=','thai_year', AppHelper::YearBudget()]);
-        }
+        // if($searchModel){
+        //     $dataProvider->query->andFilterWhere(['=','thai_year', $searchModel->thai_year]);
+        // }else{
+        //     $dataProvider->query->andFilterWhere(['=','thai_year', AppHelper::YearBudget()]);
+        // }
+        $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -82,7 +83,7 @@ class HolidayController extends Controller
                 $requiredName = 'ต้องระบุ';
     
                 preg_replace('/\D/', '',$model->date_start) == '' ? $model->addError('date_start', $requiredName) : null;
-                $model->thai_year == '' ? $model->addError('thai_year', $requiredName) : null;
+                // $model->thai_year == '' ? $model->addError('thai_year', $requiredName) : null;
                 $model->title == '' ? $model->addError('title', $requiredName) : null;
     
                 foreach ($model->getErrors() as $attribute => $errors) {
