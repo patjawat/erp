@@ -74,10 +74,10 @@ use app\components\UserHelper;
                 <?php endif;?>
                 <div aria-labelledby="page-header-profile-dropdown" class="dropdown-menu-right dropdown-menu">
                     <a href="<?=Url::to('/profile')?>" class="dropdown-item">
-                        <i class="bx bx-user me-1"></i> Profile
+                    <i class="fa-solid fa-clipboard-user fs-4 me-3"></i> โปรไฟล์
                     </a>
                     <a href="<?=Url::to('/profile/setting')?>" class="dropdown-item">
-                        <i class="bx bx-wrench me-1"></i> Settings
+                        <i class="fa-solid fa-user-gear fs-4 me-3"></i> ตั้งค่า
                     </a>
                     <div class="dropdown-divider"></div>
                     <?php if(!Yii::$app->user->isGuest):?>

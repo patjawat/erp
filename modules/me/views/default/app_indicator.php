@@ -5,63 +5,56 @@ use yii\helpers\Url;
 $items = [
     [
         'title' => 'แจ้งซ่อม',
-        'note' => 'ระบบแจ้งซ่อมทั่วไปและทรัพย์สิน',
-        'icon' => ' <i class="fa-solid fa-triangle-exclamation mb-3 text-primary fs-1"></i>',
-        'url' => ['/me/repair']
+        'icon' => 'fa-solid fa-circle-exclamation fs-1',
+        'url' => ['/me/repair'],
     ],
     [
         'title' => 'ขอซื้อขอจ้าง',
-        'note' => 'ขอซื้อขอจ้างและติดตาม',
-        'icon' => '<i class="fa-solid fa-shop mb-3 text-primary fs-1"></i>',
-        'url' => ['/me/purchase']
-    ],
-    [
-        'title' => 'งานสารบรรณ',
-        'note' => 'หนังสือรับ-ส่งของหน่วยงาน',
-        'icon' => ' <i class="fa-solid fa-calendar-day mb-3 text-primary fs-1"></i>',
-        'url' =>  ['/me/documents']
+        'icon' => 'fa-solid fa-bag-shopping fs-1',
+        'url' => ['/me/purchase'],
     ],
     [
         'title' => 'เบิกวัสดุ',
-        'note' => 'เบิกวัสดุสำหรับในหน่วยงาน',
-        'icon' => ' <i class="fa-solid fa-cart-plus mb-3 text-primary fs-1"></i>',
-        'url' =>  ['/inventory']
+        'icon' => 'fa-solid fa-cart-shopping fs-1',
+        'url' => ['/inventory'],
     ],
+    [
+        'title' => 'จองรถ',
+        'icon' => 'fa-solid fa-route fs-1',
+        'url' => ['/me/booking-car'],
+    ],
+    [
+        'title' => 'จองห้องประชุม',
+        'icon' => 'fa-solid fa-person-chalkboard fs-1',
+        'url' => ['/me/booking-room'],
+    ],
+    [
+        'title' => 'ความเสี่ยง',
+        'icon' => 'fa-solid fa-triangle-exclamation fs-1',
+        'url' => ['/me/risk'],
+    ],
+   
 ];
 ?>
  <!-- App Service -->
- <div class="row mt-4">
-<?php foreach($items as $item):?>
-     <div class="col-6">
-         <div class="card bg-light position-relative border border-primary border-4 border-top-0 border-end-0 border-start-0 border-bottom-1 zoom-in">
-             
-         <div class="card-body">
-         <!-- <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">2</span> -->
-         <a href="<?=Url::to($item['url'])?>">
-             <div>
-                 <div class="d-flex justify-content-between align-items-center">
-                     <?=$item['icon']?>
-                         <h6 class="mb-0 font-size-15"><?=$item['title']?></h6>
-                         
-                     </div>
-
-                     <div>
-
-                         <div class="d-flex align-items-end overflow-hidden">
-                             <div class="flex-grow-1">
-                                 <p class="text-muted mb-0 text-truncate"><?=$item['note']?></p>
-                             </div>
-                             <div class="flex-shrink-0" style="position: relative;">
-
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-         </div>
-         </a>      
-
-     </div>
-<?php endforeach;?>
-
- </div>
+ <div class="container">
+                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-3 g-3 mt-2">
+                    <?php foreach($items as $item):?>
+                    <div class="col mt-1">
+                        <a href="<?php echo Url::to($item['url'])?>">
+                            <div class="card border-0 shadow-sm hover-card bg-light">
+                                <div
+                                    class="d-flex justify-content-center align-items-center bg-primary opacity-75 p-4 rounded-top">
+                                    <i class="<?php echo $item['icon']?> text-white"></i>
+                                </div>
+                                <div class="card-body">
+                    
+                                    <h6 class="text-center"><?php echo $item['title']?></h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <?php endforeach;?>
+                    
+                </div>
+            </div>

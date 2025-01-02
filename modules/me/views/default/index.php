@@ -9,7 +9,7 @@ use app\modules\purchase\models\Order;
 $this->title = 'My DashBoard';
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check"></i> <?php echo $this->title; ?>
+<i class="fa-solid fa-clipboard-user fs-1"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
 <style>

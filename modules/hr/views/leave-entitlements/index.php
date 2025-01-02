@@ -51,6 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <th scope="col" style="width:80px;">ปีงบประมาณ</th>
                         <th scope="col">ชื่อ-นามสกุล</th>
+                        <th scope="col" class="text-center">วันลาสะสม</th>
                         <th scope="col" class="text-center">วันลาที่ได้</th>
                         <th scope="col" class="text-center">ใช้ไป</th>
                         <th scope="col" class="text-center">คงเหลือ</th>
@@ -61,6 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="">
                         <td><?php echo $item->thai_year?></td>
                         <td scope="row"><?php echo $item->employee->getAvatar(false)?></td>
+                        <td class="text-center fw-semibold"><?php echo $item->balance;?></td>
                         <td class="text-center fw-semibold"><?php echo $item->days;?></td>
                         <td class="text-center fw-semibold"><?php echo $item->getSummary()['leave_use'];?></td>
                         <td class="text-center fw-semibold"><?php echo $item->getSummary()['leave_total'];?></td>

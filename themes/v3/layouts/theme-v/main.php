@@ -78,6 +78,7 @@ $moduleId = Yii::$app->controller->module->id;
 
         <div class="page-wrapper">
             <?php echo $this->render('header'); ?>
+			
             <?php echo $this->render('sidebar'); ?>
 
             <div class="main-content">

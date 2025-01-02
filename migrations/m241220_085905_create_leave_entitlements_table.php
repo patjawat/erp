@@ -20,6 +20,8 @@ class m241220_085905_create_leave_entitlements_table extends Migration
             'leave_type_id' => $this->string()->comment('ประเภทการลา'),
             'month_of_service' => $this->integer()->notNull()->comment('อายุงาน(เดือน)'),
             'year_of_service' => $this->integer()->notNull()->comment('อายุงาน(ปี)'),
+            'balance' => $this->integer()->notNull()->comment('วันที่ลาพักผ่อนสะสม'),
+            'leave_on_year' => $this->integer()->notNull()->comment('วันที่ลาพักผ่อนประจำปี'),
             'days' => $this->integer()->notNull()->comment('วันที่ลาได้'),
             'data_json' => $this->json(),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),

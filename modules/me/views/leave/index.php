@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check"></i> <?= $this->title; ?>
+<i class="fa-solid fa-calendar"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>

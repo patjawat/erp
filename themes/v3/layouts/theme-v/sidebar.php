@@ -2,71 +2,187 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\components\UserHelper;
 $moduleId = Yii::$app->controller->module->id; 
 ?>
 <style>
-
+.sidebar .metismenu>li>a {
+    padding: 8px 30px !important;
+}
 </style>
+
+
+<style>
+.employee-welcome-card {
+    margin-bottom: 24px;
+    position: relative;
+    background: linear-gradient(90.31deg, #d2ebff -1.02%, #0866ad 99.59%);
+}
+
+.employee-welcome-card::before {
+    z-index: 1;
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 20px;
+    border-radius: 0px 0px 10px 0px;
+    width: 100px;
+    height: 100%;
+    transform: skew(10deg);
+    background: linear-gradient(90.31deg, #5ca1d4 -1.02%, #0866ad 132.59%);
+    animation: fadeIn 1s ease-in-out;
+}
+
+.welcome-img {
+    z-index: 20;
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 50;
+        transform: translateX(100px);
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+</style>
+
 <aside class="sidebar">
     <div class="scroll-content" id="metismenu" data-scrollbar="true" tabindex="-1"
         style="overflow: hidden; outline: none;">
+        <div class="p-2">
+            <div class="card employee-welcome-card shadow">
+                <div class="card-body" style="z-index: 2;">
+                    <div class="d-flex flex-column justify-content-center">
+
+                        <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'rounded-pill border border-white w-50 mb-3','style' => 'margin-left:3rem'])?>
+                        <h6 class="text-center text-white"><?=UserHelper::GetEmployee()->fullname?></h6>
+                        <h6 class="text-center"><?=UserHelper::GetEmployee()->positionName()?></h6>
+                        <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> My Dashboard',['/me'],['class' => 'btn btn-primary shadow rounded-pill'])?>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <div class="scroll-content">
-            
             <ul id="side-menu" class="metismenu list-unstyled">
                 <li class="side-nav-title side-nav-item menu-title fs-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-list"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>    
-                Menu</li>
+                    <i class="bi bi-ui-checks fs-5"></i>
+                    Menu
+                </li>
                 <li class="">
                     <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> <span>&nbsp;Main Dashboard</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-gauge">
+                            <path d="m12 14 4-4" />
+                            <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+                        </svg> <span>&nbsp;Main Dashboard</span>
                         <!-- <span class="menu-arrow"></span> -->
                     </a>
-                   
-                </li>
+
+
+                <!-- <li class="side-nav-title side-nav-item menu-title fs-6">
+                    <i class="bi bi-ui-checks fs-5"></i> บริการ
+                </li> -->
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
-                    <i class="fa-solid fa-user-tie"></i>
-                        <span> My Dashboard</span>
-                    </a>
-                </li>
-                <li class="side-nav-title side-nav-item menu-title fs-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-list"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>    
-                Module</li>
-                <li>
-                    <a class="side-nav-link <?=$moduleId == 'hr' ? 'active' : null?>" href="<?= Url::to(['/hr']) ?>">
-                        <i class="bi bi-people-fill fs-4"></i>
-                        <span> บุคลากร</span>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/leave']) ?>">
+                        <i class="fa-solid fa-calendar"></i>
+                        <span> ทะเบียนการลา</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link <?=$moduleId == 'am' ? 'active' : null?>" href="<?= Url::to(['/am']) ?>">
-                        <i class="bi bi-folder-check fs-4"></i>
-                        <span> ทรัพย์สิน</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="side-nav-link <?=$moduleId == 'sm' ? 'active' : null?>" href="<?= Url::to(['/sm']) ?>">
-                    <i class="bi bi-box fs-4"></i>
-                        <span> พัสดุ</span>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/time']) ?>">
+                    <i class="fa-solid fa-business-time"></i>
+                        <span> เวลาเข้า-ออก</span>
                     </a>
                 </li>
                 
                 <li>
-                    <a class="side-nav-link <?=$moduleId == 'inventory' ? 'active' : null?>" href="<?= Url::to(['/inventory']) ?>">
-                    <i class="fa-solid fa-cubes-stacked fs-4"></i>
-                        <span> คลัง</span>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/salary']) ?>">
+                    <i class="fa-solid fa-wallet"></i>
+                        <span> เงินเดือน</span>
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link <?=$moduleId == 'dms' ? 'active' : null?>" href="<?= Url::to(['/dms/dashboard']) ?>">
-                    <i class="bi bi-journal-text fs-4"></i>
-                        <span> สารบรรณ</span>
+                    <a class="side-nav-link" href="<?= Url::to(['/profile/setting']) ?>">
+                    <i class="fa-solid fa-user-gear"></i>
+                        <span> ตั้งค่าโปรไฟล์</span>
                     </a>
                 </li>
+                <!-- <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/purchase']) ?>">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        <span> ขอซื้อขอจ้าง</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/repair']) ?>">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                        <span> แจ้งซ่อม</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/inventory']) ?>">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                        <span> เบิกวัสดุ</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
+                    <i class="fa-solid fa-route"></i>
+                        <span> จองรถ</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
+                    <i class="fa-solid fa-person-chalkboard"></i>
+                        <span> จองห้องประชุม</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me']) ?>">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>ความเสี่ยง</span>
+                    </a>
+                </li> -->
+               
+                
+
                 <?php if(Yii::$app->user->can('admin')):?>
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/settings']) ?>">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings fs-4 me-2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-settings fs-4 me-2">
+                            <path
+                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
                         <span> การตั้งค่าระบบ</span>
                     </a>
                 </li>
@@ -78,8 +194,8 @@ $moduleId = Yii::$app->controller->module->id;
                     </a>
                 </li> -->
                 <li>
-             
-              
+
+
         </div>
         <div class="scrollbar-track scrollbar-track-x" style="display: none;">
             <div class="scrollbar-thumb scrollbar-thumb-x" style="width: 250px; transform: translate3d(0px, 0px, 0px);">
