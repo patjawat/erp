@@ -10,7 +10,7 @@ use yii\helpers\Html;
 .card-img-top {}
 </style>
 
-<div class="row row-cols-1 row-cols-xl-12 row-cols-lg-3 row-cols-md-4">
+<div class="row row-cols-1 row-cols-xl-12 row-cols-lg-5 row-cols-md-4">
     <?php foreach($dataProvider->getModels() as $key => $model):?>
     <div class="col">
 
