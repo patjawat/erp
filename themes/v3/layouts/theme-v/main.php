@@ -78,12 +78,7 @@ $moduleId = Yii::$app->controller->module->id;
 
         <div class="page-wrapper">
             <?php echo $this->render('header'); ?>
-
-            <?php if ($moduleId == 'settings' || $moduleId == 'usermanager') { ?>
-            <?php echo $this->render('sidebar_setting'); ?>
-            <?php } else { ?>
             <?php echo $this->render('sidebar'); ?>
-            <?php }?>
 
             <div class="main-content">
                 <div class="page-content">
