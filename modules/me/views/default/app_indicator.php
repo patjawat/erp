@@ -27,12 +27,7 @@ $items = [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
         'url' => ['/me/booking-room'],
-    ],
-    [
-        'title' => 'ความเสี่ยง',
-        'icon' => 'fa-solid fa-triangle-exclamation fs-1',
-        'url' => ['/me/risk'],
-    ],
+    ]
    
 ];
 ?>

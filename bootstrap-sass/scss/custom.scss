@@ -345,7 +345,7 @@ a:hover {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 2;
+  z-index: 1;
   height: 70px;
   padding-right: 24px;
   background-color: var(--bs-primary);
@@ -1137,19 +1137,19 @@ h6 {
   border-color: transparent
 }
 
-.navbar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 70px
-}
+// .navbar-header {
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+//   height: 70px
+// }
 
-.navbar-header .left-bar,
-.navbar-header .right-bar {
-  display: flex;
-  align-items: center;
-  height: 100%
-}
+// .navbar-header .left-bar,
+// .navbar-header .right-bar {
+//   display: flex;
+//   align-items: center;
+//   height: 100%
+// }
 
 .navbar-header .hamburg-icon {
   background: 0 0;

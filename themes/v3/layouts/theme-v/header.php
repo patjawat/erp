@@ -5,8 +5,9 @@ use yii\helpers\Html;
 use app\components\UserHelper;
 ?>
 <header class="topbar-header">
-    <div class="navbar-header">
-        <div class="left-bar">
+<!-- navbar-header -->
+    <div class="d-flex align-items-center justify-content-between" style="height: 70px;">
+        <div class="d-flex align-items-center h-100">
             <div class="navbar-brand-box">
 
                 <a href="<?=Url::to(['/'])?>" class="logo logo-light">
@@ -20,7 +21,7 @@ use app\components\UserHelper;
             </div>
             <button type="button" id="vertical-menu-btn" class="btn hamburg-icon">
                 <!-- <i class="mdi mdi-menu"></i> -->
-                <i class="fa-solid fa-bars"></i>
+                <i class="fa-solid fa-bars text-white fs-4"></i>
             </button>
             <form class="app-search d-none d-lg-block">
                 <div class="search-box position-relative">
@@ -30,7 +31,7 @@ use app\components\UserHelper;
             </form>
 
         </div>
-        <div class="right-bar">
+        <div class="">
             <div class="d-inline-flex ms-0 ms-sm-2 d-lg-none dropdown">
                 <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-search-dropdown"
                     aria-expanded="false" class="btn header-item notify-icon">

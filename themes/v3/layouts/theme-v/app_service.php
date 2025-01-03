@@ -47,14 +47,7 @@ $items = [
         'modal' => false,
         'size' => 'modal-lg'
     ],
-    [
-        'title' => 'ความเสี่ยง',
-        'icon' => 'fa-solid fa-triangle-exclamation fs-1',
-        'url' => ['/me/risk'],
-        'modal' => false,
-        'size' => 'modal-lg'
 
-    ],
    
 ];
 ?>
