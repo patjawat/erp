@@ -108,8 +108,8 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('days', $model->total_days);  // จำนวนวันที่ลา
         $templateProcessor->setValue('last_days', $model->LastDays()['sum_all']);  // ลามาแล้ว
-        $templateProcessor->setValue('ld', $model->entitlements()->data_json['last_day'] ?? null);  // วันละพักผ่อนสะสม
-        $templateProcessor->setValue('sum', $model->entitlements()->days);  // รวมวันลาพักผ่อนที่ใช้ได้
+        $templateProcessor->setValue('ld', $model->entitlements()->data_json['last_day'] ?? 0);  // วันละพักผ่อนสะสม
+        $templateProcessor->setValue('sum', $model->entitlements()->days ?? 0);  // รวมวันลาพักผ่อนที่ใช้ได้
         $templateProcessor->setValue('total', $model->total_days);  // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('send', ($model->leaveWorkSend()['fullname'] == null ?  '' : ('(' . $model->leaveWorkSend()['fullname'] . ')')));
