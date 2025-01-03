@@ -80,7 +80,7 @@ $moduleId = Yii::$app->controller->module->id;
                         <h6 class="text-center text-white"><?=UserHelper::GetEmployee()->fullname?></h6>
                         <h6 class="text-center"><?=UserHelper::GetEmployee()->positionName()?></h6>
                         <div class="d-flex justify-content-between gap-2">
-                            <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> Dashboard',['/me'],['class' => 'btn btn-primary shadow rounded-pill'])?>
+                            <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> MyDashboard',['/me'],['class' => 'btn btn-primary shadow rounded-pill'])?>
                             <?=Html::a('<i class="fa-solid fa-power-off"></i>',['/site/logout'],['class' => 'btn btn-danger shadow rounded-pill logout'])?>
                             
                         </div>
