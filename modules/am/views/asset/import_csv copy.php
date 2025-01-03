@@ -2,9 +2,7 @@
 use yii\helpers\Html;
 use yii\bootstrap4\Toast;
 
-use app\models\Categorise;
 use yii\widgets\ActiveForm;
-
 
 $this->title = 'นำเข้าข้อมูล';
 ?>
@@ -16,27 +14,18 @@ $this->title = 'นำเข้าข้อมูล';
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock(); ?>
-<?php if($status == 'success'):?>
-<div class="row d-felx justify-content-center">
-  <div class="col-6">
-  <div class="alert alert-success" role="alert">
-  นำเข้าสำเร็จ
-</div>
 
-  </div>
-</div>
-  <?php else:?>
 <div class="d-flex justify-content-center" style="width: 100%">
   <div class="card" style="width: 25%; margin-right:10px;">
     <div class="card-body">
       <h5 class="card-title"><i class="fa-solid fa-file-import me-1"></i> นำเข้า CSV</h5>
       <h6 class="card-subtitle mb-2 text-muted ">ระบบนำเข้าข้อมูลด้วยไฟล์ CSV</h6>
-      <div style="width: 100%" class="d-flex justify-content-center mt-3">
+        <div style="width: 100%" class="d-flex justify-content-center mt-3">
           <?php
           $form = ActiveForm::begin(['id' => 'form-csv','options' => ['enctype' => 'multipart/form-data']]);
           ?>
           <div >
-            <?= $form->field($model, 'csvFile')->fileInput(['id' => 'file','class'=>'form-control']) ?>
+            <?= $form->field($model, 'file')->fileInput(['id' => 'file','class'=>'form-control']) ?>
           </div>
 
           <div style="width: 100%" class="d-flex justify-content-center">
@@ -58,4 +47,43 @@ $this->title = 'นำเข้าข้อมูล';
   </div>
 </div>
 
-<?php endif;?>
+
+
+
+<?php if(!empty($error)) {
+?>
+<?php foreach($error as $x):?>
+  <div class="alert alert-danger alert-dismissible fade show">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <strong><i class="bi bi-exclamation-circle-fill"></i>  แจ้งเตือน!</strong> <?= $x ?>
+  </div>
+<?php endforeach;?>
+<?php 
+}else{
+  if ($success == true){
+?>
+  
+  <div class="alert alert-success alert-dismissible fade show">
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <strong><i class="bi bi-check-circle-fill"></i> แจ้งเตือน!</strong> นำเข้าไฟล์ CSV และอัปโหลดข้อมูลสำเร็จ
+    </div>
+  </div>
+  <?php 
+  }
+}
+
+?>
+
+
+
+<h1><?= Html::encode($this->title) ?></h1>
+
+<?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
+
+<?= $form->field($model, 'csvFile')->fileInput() ?>
+
+<div class="form-group">
+    <?= Html::submitButton('Import', ['class' => 'btn btn-primary']) ?>
+</div>
+
+<?php ActiveForm::end(); ?>

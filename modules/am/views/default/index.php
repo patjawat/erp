@@ -1,16 +1,17 @@
 <?php
 /** @var yii\web\View $this */
+use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Json;
+use yii\db\Expression;
 use app\models\Categorise;
 use app\modules\am\models\Asset;
-use yii\db\Expression;
-use yii\helpers\Json;
-use yii\helpers\Url;
 
 $this->title = 'บริหารทรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check"></i> <?=$this->title;?>
+<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
 <?php $this->endBlock();?>
 <?php $this->beginBlock('sub-title');?>
 <?php $this->endBlock();?><?php $this->beginBlock('sub-title');?>
@@ -226,7 +227,6 @@ $yData = Json::encode($data);
 $getDataLabel = Json::encode($dataLabel);
 // $dataLabel = Json::encode($data['name']);
 
-use yii\web\View;
 $js = <<< JS
 
 var options = {

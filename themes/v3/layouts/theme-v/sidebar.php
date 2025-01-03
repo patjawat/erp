@@ -76,7 +76,7 @@ $moduleId = Yii::$app->controller->module->id;
                 <div class="card-body" style="z-index: 2;">
                     <div class="d-flex flex-column justify-content-center">
 
-                        <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'rounded-pill border border-white w-50 mb-3','style' => 'margin-left:3rem'])?>
+                        <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'rounded-pill border border-white w-50 mb-3','style' => 'margin-left:3rem;max-height:100px;'])?>
                         <h6 class="text-center text-white"><?=UserHelper::GetEmployee()->fullname?></h6>
                         <h6 class="text-center"><?=UserHelper::GetEmployee()->positionName()?></h6>
                         <div class="d-flex justify-content-between gap-2">

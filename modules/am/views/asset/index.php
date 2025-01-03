@@ -1,13 +1,13 @@
 <?php
 
-use app\modules\am\models\Asset;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use kartik\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use yii\grid\ActionColumn;
 use app\components\AppHelper;
 use app\components\SiteHelper;
+use app\modules\am\models\Asset;
 
 
 
@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'title-container','timeout' => 50000 ]); ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check"></i> <?=$this->title;?>
+<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 ทั้งหมด <span id="showTotalCount"><?=$dataProvider->getTotalCount()?></span> รายการ

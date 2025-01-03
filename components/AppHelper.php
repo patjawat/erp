@@ -34,12 +34,53 @@ class AppHelper extends Component
         return $cid;
     }
 
-     //นับวันหยุด
-     public static function CalDay($dateStart, $dateEnd)
-     {
- 
-         //นับวันหยุดไม่รวมเสาร์-อาทิตย์
-         $sqlDays = "WITH RECURSIVE date_range AS (
+    // แปลงเป็นตัวเลข
+    public static function formatNumber($input)
+    {
+        // ตัวอย่างการใช้งาน
+        // echo formatNumber("2,590.00"); // แสดงผล: 2590
+        // echo "\n";
+        // echo formatNumber("2590");     // แสดงผล: 2590
+        // ตรวจสอบว่ามีคอมม่าหรือจุดทศนิยมในสตริงหรือไม่
+        if (strpos($input, ',') !== false || strpos($input, '.') !== false) {
+            // ลบคอมม่าออก
+            $output = str_replace(',', '', $input);
+            // ลบจุดทศนิยม (ถ้ามี)
+            $output = explode('.', $output)[0];
+            return $output;
+        }
+        // หากไม่มีคอมม่าหรือจุดทศนิยม ให้แสดงผลตามค่าเดิม
+        return $input;
+    }
+ //แปลงรูปแบบ format 'Y-m-d'
+    public static function convertToYMD($date)
+    {
+        // แยกวันที่ออกเป็นวัน เดือน ปี
+        $dateParts = explode("/", $date);
+
+        // ตรวจสอบรูปแบบวันที่
+        if (count($dateParts) !== 3) {
+            return 'Invalid date format.'.$date;
+        }
+
+        $day = $dateParts[0];
+        $month = $dateParts[1];
+        $year = $dateParts[2];
+
+        // ตรวจสอบว่าปีเป็น พ.ศ. หรือ ค.ศ.
+        if ($year > 2500) {
+            $year = $year - 543;  // แปลง พ.ศ. เป็น ค.ศ.
+        }
+
+        // แปลงเป็นรูปแบบ y-m-d
+        return sprintf('%d-%02d-%02d', $year, $month, $day);
+    }
+
+    // นับวันหยุด
+    public static function CalDay($dateStart, $dateEnd)
+    {
+        // นับวันหยุดไม่รวมเสาร์-อาทิตย์
+        $sqlDays = "WITH RECURSIVE date_range AS (
                         SELECT :date_start AS date
                         UNION ALL
                         SELECT DATE_ADD(date, INTERVAL 1 DAY)
@@ -48,9 +89,9 @@ class AppHelper extends Component
                         )
                         SELECT count(date) as count_days FROM date_range
                         WHERE DAYNAME(date) NOT IN('Saturday','Sunday');";
-         
-         // นับจำนวนวันเสาร์-อาทิตย์      
-         $sqlSundays = "SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบเสาร์-อาทิตย์
+
+        // นับจำนวนวันเสาร์-อาทิตย์
+        $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบเสาร์-อาทิตย์
                         - CASE 
                             WHEN DAYOFWEEK(:date_start) = 7 THEN 1 -- ถ้าวันแรกเป็นเสาร์ ให้ลบ 1
                             WHEN DAYOFWEEK(:date_end) = 7 THEN 1 -- ถ้าวันสุดท้ายเป็นเสาร์ ให้ลบ 1
@@ -59,57 +100,50 @@ class AppHelper extends Component
                         - CASE
                             WHEN DAYOFWEEK(:date_end) = 1 THEN 1 -- ถ้าวันสุดท้ายเป็นอาทิตย์ ให้ลบอีก 1
                             ELSE 0
-                            END AS date_count;";
-         //หาจำนวนวันหยุด
-         $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
-         //ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
+                            END AS date_count;';
+        // หาจำนวนวันหยุด
+        $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
+        // ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
         //  $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'holiday_me' AND date_start BETWEEN :date_start AND :date_end";
- 
-         $summaryDay =   Yii::$app->db->createCommand($sqlDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
-         $sunDay =   Yii::$app->db->createCommand($sqlSundays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
-         $holiday =   Yii::$app->db->createCommand($sqlHoliday)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
-        //  $holidayMe =   Yii::$app->db->createCommand($sqlHolidayMe)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
-             return [
-                 'summaryDay' =>  $summaryDay,
-                 'sunDay' =>  $sunDay,
-                 'holidy' =>  $holiday,
-                //  'holidy_me' =>  $holidayMe
-             ];
-     }
 
+        $summaryDay = Yii::$app->db->createCommand($sqlDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+        $sunDay = Yii::$app->db->createCommand($sqlSundays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+        $holiday = Yii::$app->db->createCommand($sqlHoliday)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+        //  $holidayMe =   Yii::$app->db->createCommand($sqlHolidayMe)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+        return [
+            'summaryDay' => $summaryDay,
+            'sunDay' => $sunDay,
+            'holidy' => $holiday,
+            //  'holidy_me' =>  $holidayMe
+        ];
+    }
 
     // หาปีงบประมาณไทย
     public static function YearBudget($date = null)
     {
-        if($date){
-            return Yii::$app->db
-            ->createCommand('SELECT IF(MONTH(:date)>9,YEAR(:date)+1,YEAR(:date)) + 543 AS year_bud')
-            ->bindValue(':date',$date)
-            ->queryScalar();
+        if ($date) {
+            return Yii::$app
+                ->db
+                ->createCommand('SELECT IF(MONTH(:date)>9,YEAR(:date)+1,YEAR(:date)) + 543 AS year_bud')
+                ->bindValue(':date', $date)
+                ->queryScalar();
             // ->getRawSql();
-            
-        }else{
+        } else {
             return Yii::$app->db->createCommand('SELECT IF(MONTH(NOW())>9,YEAR(NOW())+1,YEAR(NOW())) + 543 AS year_bud')->queryScalar();
         }
     }
-    
-        //แปลงปีงบประมาณไทยเป็น แบบ ค.ศ. ปกติ
-        public static function ThaiToGregorian($date = null)
-        {
 
-                return Yii::$app->db
-                ->createCommand("SELECT LAST_DAY(CONCAT((IF(MONTH(:date)>9,YEAR(:date)-1,YEAR(:date)) - 543),'-',DATE_FORMAT(:date, '%m-%d'))) AS year_bud")
-                ->bindValue(':date',$date)
-                ->queryScalar();
-                
+    // แปลงปีงบประมาณไทยเป็น แบบ ค.ศ. ปกติ
+    public static function ThaiToGregorian($date = null)
+    {
+        return Yii::$app
+            ->db
+            ->createCommand("SELECT LAST_DAY(CONCAT((IF(MONTH(:date)>9,YEAR(:date)-1,YEAR(:date)) - 543),'-',DATE_FORMAT(:date, '%m-%d'))) AS year_bud")
+            ->bindValue(':date', $date)
+            ->queryScalar();
 
-                
-                
-                // ->getRawSql();
-                
-        }
-        
-    
+        // ->getRawSql();
+    }
 
     // สร้าง Directory
     public static function CreateDir($folderName)
@@ -135,7 +169,7 @@ class AppHelper extends Component
     // แปลง พ.ศ. เป็น ค.ศ.
     public static function convertToGregorian($date)
     {
-        if ($date !== null || $date !== "__/__/____") {
+        if ($date !== null || $date !== '__/__/____') {
             list($day, $month, $year) = explode('/', $date);
             $y = ($year - 543);
             return "{$y}-{$month}-{$day}";
@@ -161,7 +195,7 @@ class AppHelper extends Component
         $position = 0;
 
         while ($number > 0) {
-            $digit = (int)$number % 10;
+            $digit = (int) $number % 10;
 
             if ($position == 0 && $digit == 1 && $string != '') {
                 $string = 'เอ็ด' . $string;
@@ -238,25 +272,26 @@ class AppHelper extends Component
         return implode($ex, $returnText);
     }
 
-//ใช้คำนวนวันเวลาที่ผ่านมา 
-    public static function timeDifference($dateTime) {
+    // ใช้คำนวนวันเวลาที่ผ่านมา
+    public static function timeDifference($dateTime)
+    {
         $currentDateTime = new DateTime();
         $targetDateTime = new DateTime($dateTime);
-    
+
         $interval = $currentDateTime->diff($targetDateTime);
-        
+
         if ($interval->y >= 1) {
-            return $interval->y . " ปี";
+            return $interval->y . ' ปี';
         } elseif ($interval->m >= 1) {
-            return $interval->m . " เดือน";
+            return $interval->m . ' เดือน';
         } elseif ($interval->d >= 7) {
-            return floor($interval->d / 7) . " สัปดาห์";
+            return floor($interval->d / 7) . ' สัปดาห์';
         } elseif ($interval->d >= 1) {
-            return $interval->d . " วัน";
+            return $interval->d . ' วัน';
         } elseif ($interval->h >= 1) {
-            return $interval->h . " ชั่วโมง";
+            return $interval->h . ' ชั่วโมง';
         } else {
-            return $interval->i . " นาที";
+            return $interval->i . ' นาที';
         }
     }
 
@@ -298,8 +333,10 @@ class AppHelper extends Component
 
         return implode(' ', $return) . ' ผ่านมา';
     }
-//  หาชื่อเดือน
-    public static function getMonthName($monthNumber) {
+
+    //  หาชื่อเดือน
+    public static function getMonthName($monthNumber)
+    {
         // สร้างอาร์เรย์ที่เก็บชื่อเดือน
         $months = [
             1 => 'มกราคม',
@@ -315,15 +352,15 @@ class AppHelper extends Component
             11 => 'พฤศจิกายน',
             12 => 'ธันวาคม'
         ];
-    
+
         // ตรวจสอบว่าเดือนถูกต้องหรือไม่
         if ($monthNumber >= 1 && $monthNumber <= 12) {
             return $months[$monthNumber];  // คืนค่าชื่อเดือน
         } else {
-            return "เดือนไม่ถูกต้อง"; // หากตัวเลขไม่ใช่เดือนที่ถูกต้อง
+            return 'เดือนไม่ถูกต้อง';  // หากตัวเลขไม่ใช่เดือนที่ถูกต้อง
         }
     }
-    
+
     // แปลง วัน เดือน ปี เป็น ไทย
     public static function ThaiDate($datetime, $format, $clock)
     {
@@ -356,7 +393,7 @@ class AppHelper extends Component
         // return ($wan > 0 ? "ผ่านมาแล้ว " . $wan . " วัน " : " วันนี้ ") . ($hour > 0 ? $hour . " ชั่วโมง " : null) . ($minute > 0 ?  $minute. " นาที " : null) . ($second > 0 ? $second . " วินาที" : null);
         // ($wan > 0 ? "ผ่านมาแล้ว " . $wan . " วัน " : " วันนี้ ");
         if ($wan <= 7) {
-            return ($wan > 0 ? '<i class="bi bi-calendar2-check-fill"></i> ผ่านมาแล้ว ' . $wan . ' วัน ' : ('<i class="bi bi-clock-history"></i> วันนี้ ').Yii::$app->formatter->asDateTime($begin, 'php:H:i:s'));
+            return ($wan > 0 ? '<i class="bi bi-calendar2-check-fill"></i> ผ่านมาแล้ว ' . $wan . ' วัน ' : ('<i class="bi bi-clock-history"></i> วันนี้ ') . Yii::$app->formatter->asDateTime($begin, 'php:H:i:s'));
         } else {
             return $begin;
         }
@@ -386,8 +423,7 @@ class AppHelper extends Component
             $dmy = explode('-', $date);  // แยก วัน/เดือน/ปี
             $year = (int) $dmy[0];  // กำหนดเป็น int เพื่อการคำนวณ
             $year = $year + 543;  // ปี พ.ศ.-543
-             return $dmy[2] . '/' . $dmy[1] . '/' . $year;  // ได้รูปแบบ 20/10/2566
-         
+            return $dmy[2] . '/' . $dmy[1] . '/' . $year;  // ได้รูปแบบ 20/10/2566
         } catch (\Throwable $th) {
             return null;
         }
