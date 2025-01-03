@@ -15,6 +15,7 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\LeaveEntitlements;
 
 /**
  * This is the model class for table "leave".
@@ -232,6 +233,12 @@ class Leave extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'leave_status']);
     }
 
+    //สิทธวันลา
+    public function Entitlements()
+    {
+        return LeaveEntitlements::find()->where(['emp_id' => $this->emp_id,'thai_year' => $this->thai_year])->one();
+    }
+    
     public function listLeaveType()
     {
         $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();

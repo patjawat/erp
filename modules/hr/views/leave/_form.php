@@ -284,6 +284,11 @@ $js = <<< JS
       \$('#form-elave').on('beforeSubmit', function (e) {
         var form = \$(this);
         console.log('Submit');
+        if($('#leave-total_days').val() <= 0){
+            alert('no');
+            return false;
+        }
+        
 
         Swal.fire({
         title: "ยืนยัน?",

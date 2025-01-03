@@ -237,6 +237,8 @@ $querys = Yii::$app->db->createCommand($sql)
 ->queryAll();
 $data = [];
 foreach ($querys as $item) {
+
+    $last_day = LeaveEntitlements::find()->where(['emp_id' => $item['emp_id'],'thai_year' =>($thaiYear -1) ])->one();
     $newModel = new LeaveEntitlements(
         [
             'emp_id' => $item['emp_id'],
@@ -245,7 +247,10 @@ foreach ($querys as $item) {
             'year_of_service' => (int)$item['years_of_service'],
             'month_of_service' => 0,
             'days' => $item['froward_days'],
-            'thai_year' => $thaiYear
+            'thai_year' => $thaiYear,
+            'data_json' => [
+                'last_day' => $last_day->getSummary()['leave_total'] ?? 0
+            ]
             ]
         );
         if($newModel->save(false)){

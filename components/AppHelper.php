@@ -39,7 +39,6 @@ class AppHelper extends Component
     {
         // ตัวอย่างการใช้งาน
         // echo formatNumber("2,590.00"); // แสดงผล: 2590
-        // echo "\n";
         // echo formatNumber("2590");     // แสดงผล: 2590
         // ตรวจสอบว่ามีคอมม่าหรือจุดทศนิยมในสตริงหรือไม่
         if (strpos($input, ',') !== false || strpos($input, '.') !== false) {
@@ -52,26 +51,22 @@ class AppHelper extends Component
         // หากไม่มีคอมม่าหรือจุดทศนิยม ให้แสดงผลตามค่าเดิม
         return $input;
     }
- //แปลงรูปแบบ format 'Y-m-d'
+    //แปลงรูปแบบ format 'Y-m-d'
     public static function convertToYMD($date)
     {
         // แยกวันที่ออกเป็นวัน เดือน ปี
         $dateParts = explode("/", $date);
-
         // ตรวจสอบรูปแบบวันที่
         if (count($dateParts) !== 3) {
             return 'Invalid date format.'.$date;
         }
-
         $day = $dateParts[0];
         $month = $dateParts[1];
         $year = $dateParts[2];
-
         // ตรวจสอบว่าปีเป็น พ.ศ. หรือ ค.ศ.
         if ($year > 2500) {
             $year = $year - 543;  // แปลง พ.ศ. เป็น ค.ศ.
         }
-
         // แปลงเป็นรูปแบบ y-m-d
         return sprintf('%d-%02d-%02d', $year, $month, $day);
     }

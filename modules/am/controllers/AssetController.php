@@ -535,7 +535,7 @@ class AssetController extends Controller
                        $model->price = AppHelper::formatNumber($data[12]); //ราคา
                        $model->receive_date = AppHelper::convertToYMD($data[6]); //วันที่รับเข้า
                        $model->asset_status =  AssetHelper::findByName('asset_status',$data[17]) ;//วิธีการได้มา
-                       $model->department = Organization::find()->where(['name' => $data[7]])->one()->id; //หน่วยงานภายในตามโครงสร้าง
+                       $model->department = Organization::find()->where(['name' => $data[7]])->one()->id ?? 0; //หน่วยงานภายในตามโครงสร้าง
                        // เพิ่มคอลัมน์ตามไฟล์ CSV
                        $model->save(false);
 

@@ -1,4 +1,5 @@
 <?php
+use yii\helpers\Url;
 use yii\bootstrap5\Html;
 ?>
 
@@ -22,7 +23,10 @@ use yii\bootstrap5\Html;
         <?php foreach($dataProvider->getModels() as $model):?>
         <tr class="">
             <td class="text-truncate" style="max-width: 230px;">
-                <?=$model->getAvatar(false)['avatar']?></td>
+                <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
+                <?=$model->getAvatar(false)['avatar']?>
+                </a>
+            </td>
             <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>

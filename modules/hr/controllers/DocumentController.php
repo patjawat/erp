@@ -96,7 +96,7 @@ class DocumentController extends \yii\web\Controller
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
         $createDate = new DateTime($model->created_at);
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
+        // $templateProcessor->setValue('m', AppHelper::getMonthName($createDate->format('m')));
         $templateProcessor->setValue('y', $createDate->format('Y') + 543);
         $templateProcessor->setValue('d', $createDate->format('d'));
         $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
@@ -108,6 +108,8 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('days', $model->total_days);  // จำนวนวันที่ลา
         $templateProcessor->setValue('last_days', $model->LastDays()['sum_all']);  // ลามาแล้ว
+        $templateProcessor->setValue('ld', $model->entitlements()->data_json['last_day'] ?? null);  // วันละพักผ่อนสะสม
+        $templateProcessor->setValue('sum', $model->entitlements()->days);  // รวมวันลาพักผ่อนที่ใช้ได้
         $templateProcessor->setValue('total', $model->total_days);  // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
         $templateProcessor->setValue('send', ($model->leaveWorkSend()['fullname'] == null ?  '' : ('(' . $model->leaveWorkSend()['fullname'] . ')')));
@@ -118,6 +120,8 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('approve3', $model->checkerName(3)['fullname'] == null ? '' : ('(' . $model->checkerName(3)['fullname'] . ')'));
         $templateProcessor->setValue('approveDate3', $model->checkerName(3)['approve_date']);
         $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
+        $templateProcessor->setValue('position4', $model->checkerName(4)['position']);
+        $templateProcessor->setValue('approveDate4', $model->checkerName(4)['approve_date']);
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
         // $templateProcessor->setValue('l_days', $model->data_json['leave_days']);
 

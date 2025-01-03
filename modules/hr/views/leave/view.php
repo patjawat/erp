@@ -24,12 +24,14 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
             <div class="col-12">
 
-
             <div class="card border-0 rounded-3">
     <div class="card-body">
         <div class="d-flex justify-content-between">
         <?= $model->employee->getAvatar(false) ?>
                 <div class="d-flex align-items-center gap-3">
+                <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
+                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'btn btn-light rounded-pill', 'target' => '_blank','data-pjax' => '0','disable']) ?>
                 <?php if ($model->status !== 'Cancel'): ?>
                     <?php if ($model->status == 'Allow'): ?>
                     <i class="bi bi-person-check fs-3 text-primary"></i> อนุมัติให้ลาได้
@@ -47,6 +49,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif; ?>
                     <?php endif; ?>
                     <?php endif; ?>
+
+                   
                 </div>
         </div>
 
