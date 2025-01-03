@@ -8,37 +8,57 @@ $items = [
     [
         'title' => 'แจ้งซ่อม',
         'icon' => 'fa-solid fa-circle-exclamation fs-1',
-        'url' => ['/helpdesk/general'],
+        'url' => ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],
+        'modal' => true,
+        'size' => 'modal-md'
     ],
     [
         'title' => 'ขอซื้อขอจ้าง',
         'icon' => 'fa-solid fa-bag-shopping fs-1',
-        'url' => ['/dms/dashboard'],
+        'url' => ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง'],
+        'modal' => true,
+        'size' => 'modal-md'
     ],
     [
         'title' => 'เบิกวัสดุ',
         'icon' => 'fa-solid fa-cart-shopping fs-1',
-        'url' => ['/helpdesk/computer'],
+        'url' => ['/inventory'],
+        'modal' => false,
+        'size' => 'modal-lg'
+    ],
+    [
+        'title' => 'ขอลา',
+        'icon' => 'fa-solid fa-calendar-day fs-1',
+        'url' => ['/hr/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'],
+        'modal' => true,
+        'size' => 'modal-lg'
     ],
     [
         'title' => 'จองรถ',
         'icon' => 'fa-solid fa-route fs-1',
-        'url' => ['/helpdesk/medical'],
+        'url' => ['/me/booking-car'],
+        'modal' => false,
+        'size' => 'modal-lg'
     ],
     [
         'title' => 'จองห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/hr/leave'],
+       'url' => ['/me/booking-room'],
+        'modal' => false,
+        'size' => 'modal-lg'
     ],
     [
         'title' => 'ความเสี่ยง',
         'icon' => 'fa-solid fa-triangle-exclamation fs-1',
-        'url' => ['/inventory'],
+        'url' => ['/me/risk'],
+        'modal' => false,
+        'size' => 'modal-lg'
+
     ],
    
 ];
 ?>
-<div class="d-none d-lg-inline-flex ms-2 dropdown" data-aos="zoom-in" data-aos-delay="100">
+<div class="d-none d-lg-inline-flex ms-2 dropdown">
     <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-app-dropdown"
         aria-expanded="false" class="btn header-item notify-icon">
         <i class="bi bi-ui-checks-grid"></i>
@@ -49,20 +69,19 @@ $items = [
 
             <h5 class="text-center mt-3"><i class="bi bi-ui-checks-grid"></i> เมนูด่วน</h5>
 
-
             <div class="container">
-                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-3 g-3 mt-2">
+                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-4 g-3 mt-2">
                     <?php foreach($items as $item):?>
                     <div class="col mt-1">
-                        <a href="<?php echo Url::to($item['url'])?>">
+                        <a href="<?php echo Url::to($item['url'])?>" class="<?php echo $item['modal'] ? 'open-modal' : null;?>" data-size="<?php echo $item['modal'] ? $item['size'] : null;?>">
                             <div class="card border-0 shadow-sm hover-card bg-light">
                                 <div
-                                    class="d-flex justify-content-center align-items-center bg-danger opacity-75 p-4 rounded-top">
-                                    <i class="<?php echo $item['icon']?> text-white"></i>
+                                    class="d-flex justify-content-center align-items-center bg-warning  p-4 rounded-top">
+                                    <i class="<?php echo $item['icon']?>"></i>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body p-1">
                     
-                                    <h6 class="text-center"><i class="fa-solid fa-plus"></i> <?php echo $item['title']?></h6>
+                                    <p class="text-center fw-semibold mb-0"><i class="fa-solid fa-plus"></i> <?php echo $item['title']?></p>
                                 </div>
                             </div>
                         </a>

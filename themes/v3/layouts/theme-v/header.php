@@ -54,19 +54,19 @@ use app\components\UserHelper;
 
 
 
-            <div class="d-none d-lg-inline-flex" data-aos="zoom-in" data-aos-delay="200">
+            <div class="d-none d-lg-inline-flex">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
                 </button>
             </div>
             <?=$this->render('notification');?>
             <?php // echo $this->render('app_cart')?>
-            <div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="400">
+            <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
                 <?php if(!Yii::$app->user->isGuest):?>
                 <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-profile-dropdown"
                     aria-expanded="false" class="btn header-item">
                     <?php if(UserHelper::GetEmployee()):?>
-                    <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'avatar avatar-xs me-0','data-aos' => 'zoom-in','data-aos-delay'=>"500"])?>
+                    <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'avatar avatar-xs me-0'])?>
                     <span class="d-none d-xl-inline-block ms-1"><?=UserHelper::GetEmployee()->fullname?></span>
                     <?php endif;?>
                     <i class="bx bx-chevron-down d-none d-xl-inline-block"></i>
@@ -92,7 +92,7 @@ use app\components\UserHelper;
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="d-inline-flex" data-aos="zoom-in" data-aos-delay="600">
+            <div class="d-inline-flex">
                 <?=Html::a('  <i class="fa-solid fa-sliders fs-6"></i>',['/setting'],['class' => 'btn header-item notify-icon']);?>
             </div>
         </div>

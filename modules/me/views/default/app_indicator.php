@@ -24,7 +24,7 @@ $items = [
         'url' => ['/me/booking-car'],
     ],
     [
-        'title' => 'จองห้องประชุม',
+        'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
         'url' => ['/me/booking-room'],
     ],
@@ -38,18 +38,18 @@ $items = [
 ?>
  <!-- App Service -->
  <div class="container">
-                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-3 g-3 mt-2">
+                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-4 g-3 mt-2">
                     <?php foreach($items as $item):?>
                     <div class="col mt-1">
                         <a href="<?php echo Url::to($item['url'])?>">
                             <div class="card border-0 shadow-sm hover-card bg-light">
                                 <div
-                                    class="d-flex justify-content-center align-items-center bg-primary opacity-75 p-4 rounded-top">
+                                    class="d-flex justify-content-center align-items-center bg-primary opacity-75 p-3 rounded-top">
                                     <i class="<?php echo $item['icon']?> text-white"></i>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body p-1">
                     
-                                    <h6 class="text-center"><?php echo $item['title']?></h6>
+                                    <p class="text-center fw-semibold mb-0"><?php echo $item['title']?></p>
                                 </div>
                             </div>
                         </a>

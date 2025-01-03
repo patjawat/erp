@@ -42,7 +42,7 @@ try {
 
 
 <?php if ($summary > 0): ?>
-<div class="d-inline-flex ms-0 ms-sm-2 dropdown" data-aos="zoom-in" data-aos-delay="300">
+<div class="d-inline-flex ms-0 ms-sm-2 dropdown">
     <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-notification-dropdown"
         aria-expanded="false" class="btn header-item notify-icon position-relative">
 
