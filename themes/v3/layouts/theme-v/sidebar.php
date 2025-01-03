@@ -5,11 +5,6 @@ use yii\helpers\Html;
 use app\components\UserHelper;
 $moduleId = Yii::$app->controller->module->id; 
 ?>
-<style>
-.sidebar .metismenu>li>a {
-    padding: 8px 30px !important;
-}
-</style>
 
 
 <style>
@@ -17,6 +12,7 @@ $moduleId = Yii::$app->controller->module->id;
     margin-bottom: 24px;
     position: relative;
     background: linear-gradient(90.31deg, #d2ebff -1.02%, #0866ad 99.59%);
+    transition: border-color 0.3s ease, transform 0.3s ease;
 }
 
 .employee-welcome-card::before {
@@ -68,12 +64,14 @@ $moduleId = Yii::$app->controller->module->id;
         opacity: 1;
     }
 }
+
+
+
 </style>
 
 <aside class="sidebar">
-    <div class="scroll-content" id="metismenu" data-scrollbar="true" tabindex="-1"
-        style="overflow: hidden; outline: none;">
-        <div class="p-2">
+    <div class="scroll-content" id="metismenu" data-scrollbar="true" tabindex="-1" style="overflow: hidden; outline: none;">
+        <div class="p-2 employee-welcome">
             <div class="card employee-welcome-card shadow">
                 <div class="card-body" style="z-index: 2;">
                     <div class="d-flex flex-column justify-content-center">
@@ -81,13 +79,18 @@ $moduleId = Yii::$app->controller->module->id;
                         <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'rounded-pill border border-white w-50 mb-3','style' => 'margin-left:3rem'])?>
                         <h6 class="text-center text-white"><?=UserHelper::GetEmployee()->fullname?></h6>
                         <h6 class="text-center"><?=UserHelper::GetEmployee()->positionName()?></h6>
-                        <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> My Dashboard',['/me'],['class' => 'btn btn-primary shadow rounded-pill'])?>
+                        <div class="d-flex justify-content-between gap-2">
+                            <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> Dashboard',['/me'],['class' => 'btn btn-primary shadow rounded-pill'])?>
+                            <?=Html::a('<i class="fa-solid fa-power-off"></i>',['/site/logout'],['class' => 'btn btn-danger shadow rounded-pill logout'])?>
+                            
+                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
 
+        
         <div class="scroll-content">
             <ul id="side-menu" class="metismenu list-unstyled">
                 <li class="side-nav-title side-nav-item menu-title fs-6">
@@ -96,19 +99,15 @@ $moduleId = Yii::$app->controller->module->id;
                 </li>
                 <li class="">
                     <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-gauge">
-                            <path d="m12 14 4-4" />
-                            <path d="M3.34 19a10 10 0 1 1 17.32 0" />
-                        </svg> <span>&nbsp;Main Dashboard</span>
+                        <i class="fa-solid fa-gauge-high"></i> <span>&nbsp;Main Dashboard</span>
                         <!-- <span class="menu-arrow"></span> -->
                     </a>
+                    
+                    
+                    <!-- <li class="side-nav-title side-nav-item menu-title fs-6">
+                        <i class="bi bi-ui-checks fs-5"></i> บริการ
+                    </li> -->
 
-
-                <!-- <li class="side-nav-title side-nav-item menu-title fs-6">
-                    <i class="bi bi-ui-checks fs-5"></i> บริการ
-                </li> -->
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me/leave']) ?>">
                         <i class="fa-solid fa-calendar"></i>
@@ -211,7 +210,37 @@ $moduleId = Yii::$app->controller->module->id;
 <?php
 $js = <<< JS
 
-    JS;
+$("body").on("click", ".logout", async function (e) {
+  e.preventDefault();
+  var url = $(this).attr("href");
+
+  await Swal.fire({
+    title: "ยืนยัน?",
+    text: "ต้องการออกจากระบบ!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ลบเลย!",
+    cancelButtonText: "ยกเลิก",
+  }).then(async (result) => {
+    console.log("result", result.value);
+    if (result.value == true) {
+      await $.ajax({
+        type: "post",
+        url: url,
+        dataType: "json",
+        success:  function (response) {
+          
+        },
+      });
+    }
+  });
+});
+
+
+
+JS;
 $this->registerJS($js, View::POS_END);
 
 ?>

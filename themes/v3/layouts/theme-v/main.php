@@ -101,14 +101,19 @@ $moduleId = Yii::$app->controller->module->id;
         </div>
     </main>
 
-    <?php
-        $js = <<< JS
+<?php
+$js = <<< JS
 
-
+const metisMenu = $('.employee-welcome');
+console.log(metisMenu);
 			var scrollBarCont, isfullscreen = false, ddSliderIns;
 			var sidebarActive = localStorage.getItem("classes") == '' ? false : true;
+			var sidebarMenu = $('#side-menu > li > a.side-nav-link>i')
 			if(sidebarActive){
 				\$("body").addClass('left-side-menu-condensed');
+				$('.employee-welcome').addClass('d-none')
+				sidebarMenu.addClass('fs-4');
+				
 			}
 					\$("#vertical-menu-btn").on("click", function (e) {
 					e.preventDefault();
@@ -117,12 +122,17 @@ $moduleId = Yii::$app->controller->module->id;
 					if(\$(window).width() > 1024) {
 						if (\$("body").hasClass("left-side-menu-condensed")) {
 							\$("body").removeClass("left-side-menu-condensed");
+							$('.employee-welcome').removeClass('d-none')
+							sidebarMenu.removeClass('fs-4');
 						}
 						else {
 							\$("body").addClass('left-side-menu-condensed');
+							$('.employee-welcome').addClass('d-none')
+							sidebarMenu.addClass('fs-4');
 						}
 						var classList = document.body.classList.value.trim();
 						localStorage.setItem("classes", classList);
+						
 					}
 					else {
 						\$("body").toggleClass("show-sidebar");
@@ -185,7 +195,7 @@ $moduleId = Yii::$app->controller->module->id;
 			    });
 
 
-			JS;
+JS;
 $this->registerJS($js, View::POS_END);
 ?>
 

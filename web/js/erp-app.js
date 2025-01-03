@@ -99,6 +99,7 @@ $(document).ready(function(){
 	$("#vertical-menu-btn").on("click", function (e) {
 		e.preventDefault();
 		e.stopPropagation();
+	
 		if($(window).width() > 1024) {
 			if ($("body").hasClass("left-side-menu-condensed")) {
 				$("body").removeClass("left-side-menu-condensed");
