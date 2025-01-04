@@ -28,10 +28,10 @@ $this->title = 'รายงานระบบลา';
             <span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel"></i> ส่งออก</span>
             <?php // Html::a('<i class="fa-regular fa-file-excel"></i> ส่งออก', ['/hr/leave/export-leave', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-success rounded-pill shadow export-leave', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
-<table class="table table-bordered">
+<table class="table table-bordered table-striped table-hover">
         <thead>
             <tr>
-                <th>ลำดับ</th>
+                <th class="text-center">ลำดับ</th>
                 <th>ชื่อ นามสกุล</th>
                 <th>ตำแหน่ง</th>
                 <th>ฝ่าย/แผนก</th>
@@ -42,10 +42,10 @@ $this->title = 'รายงานระบบลา';
                 <th class="text-center">รวมได้ลาแล้ว</th>
             </tr>
         </thead>
-        <tbody>
-            <?php foreach($dataProvider->getModels() as $item):?>
+        <tbody class="table-group-divider">
+            <?php foreach($dataProvider->getModels() as $key => $item):?>
             <tr>
-                <td>1</td>
+                <td class="text-center"><?php echo $key+1?></td>
                 <td><?php echo $item->employee->fullname?></td>
                 <td><?php echo $item->employee->positionName()?></td>
                 <td><?php echo $item->employee->departmentName()?></td>
