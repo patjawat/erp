@@ -20,7 +20,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 }
 </style>
 <?php $form = ActiveForm::begin([
-    'action' => ['index'],
+    'action' => ['report'],
     'method' => 'get',
     'options' => [
         'data-pjax' => 1
@@ -28,10 +28,11 @@ use iamsaint\datetimepicker\Datetimepicker;
 ]); ?>
 
 <div class="d-flex gap-2">
-    <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+
+    <?php //echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+    <?php echo $form->field($model, 'data_json[export]')->hiddenInput()->label(false) ?>
    
     <?php
-    
       $url = Url::to(['/depdrop/employee-by-id']);
       try {
           $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->fullname;
@@ -129,10 +130,6 @@ use iamsaint\datetimepicker\Datetimepicker;
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body position-relative">
-
-            xx
-
-
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
@@ -150,12 +147,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                 ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
 
 
-            <div class="d-flex flex-row gap-4">
-                <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
-
-                <?php echo $form->field($model, 'leave_type_id')->checkboxList($model->listLeaveType(),
-                        ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
-            </div>
+           
 
             <div class="offcanvas-footer">
             <?php echo Html::submitButton(

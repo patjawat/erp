@@ -19,11 +19,7 @@ use iamsaint\datetimepicker\Datetimepicker;
     ],
 ]); ?>
 <div>
-
-
     <div class="d-flex gap-2">
-
-
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
         <?php echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),

@@ -50,7 +50,8 @@ class LeaveController extends Controller
             'emp_id' => $me->id,
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay)
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' => ['Pending','Checking','Verify','ReqCancel','Allow']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
@@ -58,31 +59,40 @@ class LeaveController extends Controller
             'or',
             ['like', 'cid', $searchModel->q],
             ['like', 'email', $searchModel->q],
-          
             ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
         ]);
-      
+
         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
         
-         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        try {
+      
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])
-          ->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);              
+        } catch (\Throwable $th) {
+
+        }
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
+        if (!empty($searchModel->status)) {
+            $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
+        }
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
+
+
 
     public function actionCalendar()
     {

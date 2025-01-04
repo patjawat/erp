@@ -47,6 +47,10 @@ class Leave extends \yii\db\ActiveRecord
     public $data_start_th;
     public $data_end_th;
     public $q_department;
+    public $sum_lt1;
+    public $sum_lt2;
+    public $sum_lt3;
+    public $sum_lt4;
 
     public static function tableName()
     {

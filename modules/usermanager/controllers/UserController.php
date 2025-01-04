@@ -187,6 +187,18 @@ class UserController extends Controller
         return $this->redirect(['index']);
     }
 
+    // สลับ user
+    public function actionSwitchTo($id)
+    {
+        if (Yii::$app->user->can('admin')){
+            $model = $this->findModel($id);
+            Yii::$app->user->login($model);
+            return $this->redirect(['/usermanager']);
+        }else{
+            return $this->renderContent('<h2>ไม่ได้รับสิทธิ</h2>');
+        }
+    }
+
     /**
      * Finds the User model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
