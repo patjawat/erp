@@ -130,9 +130,6 @@ use iamsaint\datetimepicker\Datetimepicker;
         </div>
         <div class="offcanvas-body position-relative">
 
-            xx
-
-
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',

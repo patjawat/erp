@@ -420,7 +420,96 @@ public function listTrack()
     }
 }   
 
+// รายงานแยกตามเดือน
+public function getChartSummary($name)
+{
+    return self::find()->select([
+        'thai_year',
+        'm1' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 1 THEN 1 END)'),
+        'm2' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 2 THEN 1 END)'),
+        'm3' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 3 THEN 1 END)'),
+        'm4' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 4 THEN 1 END)'),
+        'm5' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 5 THEN 1 END)'),
+        'm6' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 6 THEN 1 END)'),
+        'm7' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 7 THEN 1 END)'),
+        'm8' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 8 THEN 1 END)'),
+        'm9' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 9 THEN 1 END)'),
+        'm10' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 10 THEN 1 END)'),
+        'm11' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 11 THEN 1 END)'),
+        'm12' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 12 THEN 1 END)'),
+    ])
+    ->where(['thai_year' => $this->thai_year,'document_group' => $name])
+    ->groupBy('thai_year')
+            ->asArray()
+            ->one();
+}
 
+//ตารางประเภทหนังสือแยกตามหน่วยงานที่ส่งมา 10 อันดับ
+public function summaryOrg()
+{
+        return self::find()
+        ->select([
+            'c.title as org_name',
+            'd.thai_year',
+            new Expression('COUNT(CASE WHEN d.document_type = "DT1" THEN 1 END) AS DT1'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT2" THEN 1 END) AS DT2'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT3" THEN 1 END) AS DT3'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT4" THEN 1 END) AS DT4'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT5" THEN 1 END) AS DT5'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT6" THEN 1 END) AS DT6'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT7" THEN 1 END) AS DT7'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT8" THEN 1 END) AS DT8'),
+            new Expression('COUNT(CASE WHEN d.document_type = "DT9" THEN 1 END) AS DT9'),
+            new Expression('COUNT(CASE WHEN d.document_type NOT IN ("DT1", "DT2", "DT3", "DT4", "DT5", "DT8", "DT9") THEN 1 END) AS other_count'),
+            new Expression('count(d.id) as total_count'),
+            
+        ])
+        ->alias('d')
+        ->leftJoin(['c' => Categorise::tableName()], [
+            'and',
+            'c.code = d.document_org',
+            ['c.name' => 'document_org'],
+        ])
+        ->where(['thai_year' => $this->thai_year])
+        ->groupBy(['c.code', 'd.thai_year'])
+        ->orderBy([
+            'd.thai_year' => SORT_DESC,
+            'total_count' => SORT_DESC,
+        ])
+        ->limit(10)
+        ->asArray()->all();
+}
+// สรุปประเภทหนังสือรับ
+public function summaryDocType()
+{
+    return self::find()
+    ->select([
+        new Expression('IFNULL(c.title, "ไม่ระบุ") AS title'),  // ใช้ IFNULL สำหรับค่า null
+        new Expression('COUNT(d.id) AS total'),  // นับจำนวนเอกสาร
+    ])
+    ->alias('d')
+    ->leftJoin(['c' => Categorise::tableName()], [
+        'and',
+        'c.code = d.document_type',
+        ['c.name' => 'document_type'],
+    ])
+    ->where(['thai_year' => $this->thai_year])
+    ->groupBy(['c.code'])  // กลุ่มตาม code ของ categorise
+        ->asArray()->all();
+}
+
+//ชั้นเร็ว
+public function summaryDocSpeed()
+{
+    return self::find()
+    ->select([
+        new Expression('doc_speed AS title'),  // ใช้ IFNULL สำหรับค่า null
+        new Expression('COUNT(id) AS total'),  // นับจำนวนเอกสาร
+    ])
+    ->where(['thai_year' => $this->thai_year])
+    ->groupBy(['doc_speed'])  // กลุ่มตาม code ของ categorise
+    ->asArray()->all();
+}
 
 // public function Upload($refData = null)
 // {
