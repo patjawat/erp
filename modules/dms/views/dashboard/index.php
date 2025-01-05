@@ -3,7 +3,7 @@ $this->title = 'Dashboard DMS'
 /** @var yii\web\View $this */
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-chart-simple me-1"></i> <?= $this->title; ?>
+<i class="fa-solid fa-chart-simple me-1 fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -17,13 +17,13 @@ $this->title = 'Dashboard DMS'
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold">0 ทะเบียนรับ</span>
+                    <span class="h5 fw-semibold"><?php echo number_format($searchModel->CountType('receive'))?> ทะเบียนรับ</span>
                     <div class="relative">
                         <i class="fa-solid fa-download text-black-50 fs-1 mt-1"></i>
                     </div>
                 </div>
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> x</span>
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> ทะเบียนรับ</span>
                 </div>
             </div>
         </div>
@@ -32,7 +32,7 @@ $this->title = 'Dashboard DMS'
     <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold">0 ทะเบียนรับส่ง</span>
+                    <span class="h5 fw-semibold"><?php echo number_format($searchModel->CountType('send'))?> ทะเบียนรับส่ง</span>
                     <div class="relative">
                         <i class="fa-solid fa-paper-plane text-black-50 fs-1 mt-1"></i>
                     </div>

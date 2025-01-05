@@ -22,15 +22,14 @@
             <tr class="">
                 <td scope="row" class="text-center"><?php echo $key + 1?></td>
                 <td><?php echo $item['org_name']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['DT1']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['DT2']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['DT3']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['DT5']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['DT8']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['DT9']?></td>
-            
-                <td class="text-center fw-semibold"><?php echo $item['other_count']?></td>
-                <td class="text-center fw-semibold"><?php echo $item['total_count']?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['DT1'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['DT2'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['DT3'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['DT5'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['DT8'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['DT9'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['other_count'])?></td>
+                <td class="text-center fw-semibold"><?php echo number_format($item['total_count'])?></td>
             </tr>
            <?php endforeach;?>
         </tbody>

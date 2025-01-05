@@ -11,7 +11,7 @@ use yii\helpers\Json;
     <div class="card-body">
 
         <div class="d-flex justify-content-between">
-            <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> จำนวนหนังสือ (จำแนกตามวันที่ส่ง)</h6>
+            <h6 class="card-title"><i class="fa-solid fa-paper-plane text-primary"></i> จำนวนหนังสือ (จำแนกตามวันที่ส่ง)</h6>
             <div class="mb-3">
             <?php echo $this->render('_search_year', ['model' => $model]); ?>
             </div>

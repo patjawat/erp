@@ -419,7 +419,11 @@ public function listTrack()
         return [];
     }
 }   
-
+//นับจำนวนตามประเภท
+public function CountType($group)
+{
+    return self::find()->where(['thai_year' => $this->thai_year,'document_group' => $group])->count();
+}
 // รายงานแยกตามเดือน
 public function getChartSummary($name)
 {

@@ -12,7 +12,7 @@ use yii\helpers\Json;
     <div class="card-body">
 
         <div class="d-flex justify-content-between">
-            <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> หนังสือรับแยกรายเดือน (จำแนกตามวันที่รับ)</h6>
+            <h6 class="card-title"><i class="fa-solid fa-download text-primary"></i> หนังสือรับแยกรายเดือน (จำแนกตามวันที่รับ)</h6>
             <div class="mb-3">
             
             </div>
