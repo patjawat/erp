@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center">#</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $model):?>
                 <tr class="">
                     <td scope="row"><?=$model->CreateBy()->getAvatar(false)?></td>

@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
-                    <h6>สรุปสถิติการลารายปี</h6>
+                    <h6><i class="fa-solid fa-chart-simple"></i> สรุปสถิติการลารายปี</h6>
                       
                 </div>
         <div id="chartSummaryYear"></div>

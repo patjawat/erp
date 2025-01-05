@@ -18,13 +18,13 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
+<i class="fa-solid fa-mug-hot fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php // echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
+<?php echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
 <?php $this->endBlock(); ?>
 
 

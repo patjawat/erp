@@ -39,7 +39,7 @@ $this->title ="อยู่ระหว่างรอผู้อำนวน�
                 </tr>
         </thead>
         <?php foreach($dataProvider->getModels() as $item):?>
-        <tbody class="align-middle">
+        <tbody class="align-middle table-group-divider">
             <tr>
             <td class="text-center"><input type="checkbox" class="item-checkbox"></td>
                 <td scope="row"> <?=$item->getAvatar(false)['avatar']?></td>

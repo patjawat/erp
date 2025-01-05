@@ -56,7 +56,7 @@ $products = $cart->getItems();
                     <th scope="col" class="text-end">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
       <?php
       $models = $dataProvider->getModels();
     //   usort($models, function($a, $b) {

@@ -32,19 +32,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 รายการ
             </h6>
         </div>
-        <table class="table table-primary">
+        <table class="table table-striped table-hover">
             <thead>
-                <tr>
-                    <th scope="col">ประเภทตำแหน่ง</th>
-                    <th scope="col" class="text-center">อายุงาน</th>
-                    <th scope="col" class="text-center">สิทธลา</th>
-                    <th scope="col" class="text-center">สะสมวันลา</th>
-                    <th scope="col" class="text-center">สะสมวันลาสูงสุด</th>
-                    <th scope="col" class="text-start">เพิ่มเติม</th>
-                    <th scope="col" class="text-center">ดำเนินการ</th>
+                <tr >
+                    <th scope="col" class="fw-semibold">ประเภทตำแหน่ง</th>
+                    <th scope="col" class="text-center fw-semibold">อายุงาน</th>
+                    <th scope="col" class="text-center fw-semibold">สิทธลา</th>
+                    <th scope="col" class="text-center fw-semibold">สะสมวันลา</th>
+                    <th scope="col" class="text-center fw-semibold">สะสมวันลาสูงสุด</th>
+                    <th scope="col" class="text-start fw-semibold">เพิ่มเติม</th>
+                    <th scope="col" class="text-center fw-semibold">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr class="">
                     <td scope="row"><?php echo $item->positionType->title?></td>

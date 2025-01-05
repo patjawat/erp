@@ -27,7 +27,7 @@ use yii\helpers\Html;
                     <th class="text-end" style="width:200px">ราคาต่อหน่วย</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php $num =1; foreach($model->listLotNumber() as $model):?>
                 <tr class="">
                     <td scope="row"><?=$num++?></td>

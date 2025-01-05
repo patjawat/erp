@@ -44,20 +44,18 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
 
-            <table
-                class="table table-primary"
-            >
+        <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th scope="col" style="width:80px;">ปีงบประมาณ</th>
-                        <th scope="col">ชื่อ-นามสกุล</th>
-                        <th scope="col" class="text-center">วันลาสะสม</th>
-                        <th scope="col" class="text-center">วันลาที่ได้</th>
-                        <th scope="col" class="text-center">ใช้ไป</th>
-                        <th scope="col" class="text-center">คงเหลือ</th>
+                        <th scope="col" class="fw-semibold" style="width:80px;">ปีงบประมาณ</th>
+                        <th scope="col" class="fw-semibold">ชื่อ-นามสกุล</th>
+                        <th scope="col" class="text-center fw-semibold">วันลาสะสม</th>
+                        <th scope="col" class="text-center fw-semibold">วันลาที่ได้</th>
+                        <th scope="col" class="text-center fw-semibold">ใช้ไป</th>
+                        <th scope="col" class="text-center fw-semibold">คงเหลือ</th>
                     </tr>
                 </thead>
-                <tbody class="align-middle">
+                <tbody class="align-middle table-group-divider">
                     <?php foreach($dataProvider->getModels() as $item):?>
                     <tr class="">
                         <td><?php echo $item->thai_year?></td>

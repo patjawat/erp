@@ -14,9 +14,8 @@ $this->title = 'ระบบการลา';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-box-seam"></i> <?= $this->title; ?>
+<i class="fa-solid fa-calendar-day fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>

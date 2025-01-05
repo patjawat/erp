@@ -223,7 +223,7 @@ $summary = Yii::$app->db->createCommand($sqlSummary, [':receive_month' =>$search
                         <th class="text-center">รวม</th>
                     </tr>
                 </thead>
-                <tbody class="align-middle">
+                <tbody class="align-middle table-group-divider">
                     <?php $num = 1;foreach($qerys as $item):?>
                     <tr>
                         <td class="text-center"><?=$num++;?></td>

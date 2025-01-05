@@ -41,7 +41,7 @@ $this->title = 'ตั้งค่าระบบคลัง';
                     <th scope="col" style="width:150px">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $model): ?>
                 <tr class="">
                     <td scope="row"><?=$model->id ?></td>

@@ -17,7 +17,7 @@ use yii\bootstrap5\Html;
                     <th class="text-center">#</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $model):?>
                 <tr class="">
                     <td  class="text-truncate" style="max-width: 250px;"><?=$model->getAvatar(false)['avatar']?></td>

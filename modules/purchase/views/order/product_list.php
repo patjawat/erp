@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <th scope="col"  style="width:180px">ดำเนินการ</th>
             </tr>
         </thead>
-        <tbody class="align-middle">
+        <tbody class="align-middle table-group-divider">
             <?php foreach ($dataProvider->getModels() as $item) { ?>
             <tr class="">
                 <td scope="row"><?php echo $item->Avatar(); ?></td>

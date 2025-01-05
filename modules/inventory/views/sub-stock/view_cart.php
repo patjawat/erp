@@ -31,7 +31,7 @@ use yii\widgets\Pjax;
             <th scope="col" class="text-center align-center" style="width:32px;">#</th>
         </tr>
     </thead>
-    <tbody class="align-middle">
+    <tbody class="align-middle table-group-divider">
         <?php $balanced = 0;foreach($products as $item):?>
             <?php
             if($item->getQuantity() > $item->SumQty()){

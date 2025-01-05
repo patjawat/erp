@@ -27,7 +27,7 @@ use app\modules\inventory\models\Warehouse;
       <th>ร้อยละปริมาณวัสดุ</th>
     </tr>
   </thead>
-  <tbody class="align-middle">
+  <tbody class="align-middle table-group-divider">
     <?php $i = 1; foreach($dataProvider->getModels() as $model):?>
     <tr>
       <th scope="row"><?=$i++;?></th>

@@ -1,6 +1,8 @@
-
+<?php
+$this->title = 'Dashboard';
+?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<i class="fa-solid fa-gauge-high fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>

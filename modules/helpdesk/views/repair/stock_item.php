@@ -28,7 +28,7 @@ $cart = \Yii::$app->cart;
                     <th scope="col" class="text-center align-center" style="width:32px;">#</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php if(isset($model->stockEvent->id) && $model->stockEvent->getItems() !== null):?>
                 <?php foreach($model->stockEvent->getItems() as $stockItem):?>
                 <tr class="">

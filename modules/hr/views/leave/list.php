@@ -3,9 +3,10 @@ use yii\helpers\Url;
 use yii\bootstrap5\Html;
 ?>
 
-<table class="table table-striped mt-3">
-    <thead>
-        <tr class="table-secondary">
+
+    <table class="table table-striped table-hover">
+        <thead>
+        <tr>
             <th scope="col">ผู้ขออนุมัติการลา</th>
             <th class="text-center" scope="col">วัน</th>
             <th scope="col">จากวันที่</th>
@@ -19,7 +20,7 @@ use yii\bootstrap5\Html;
             <th class="text-center">ดำเนินการ</th>
         </tr>
     </thead>
-    <tbody class="align-middle">
+    <tbody class="align-middle table-group-divider">
         <?php foreach($dataProvider->getModels() as $model):?>
         <tr class="">
             <td class="text-truncate" style="max-width: 230px;">

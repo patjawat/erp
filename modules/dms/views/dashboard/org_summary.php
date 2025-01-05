@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-body">
 <h6><i class="bi bi-ui-checks"></i> ตารางประเภทหนังสือแยกตามหน่วยงานที่ส่งมา 10 อันดับ</h6>
-<table class="table table-bordered table-striped table-hover">
+<table class="table table-striped table-hover">
       
     <thead>
         <tr>

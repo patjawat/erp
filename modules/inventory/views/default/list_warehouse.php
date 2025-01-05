@@ -18,20 +18,20 @@ use app\modules\inventory\models\Warehouse;
                 </div>
             </div>
         </div>
-        <table class="table">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
-                    <th>รายการ</th>
-                    <th>ผู้ดูแล</th>
-                    <th class="text-center">รอดำเนินการ</th>
-                    <th class="text-end">มูลค่าวัสดุคงคลัง</th>
+                    <th class="text-end fw-semibold" scope="col">#</th>
+                    <th class="fw-semibold">รายการ</th>
+                    <th class="fw-semibold">ผู้ดูแล</th>
+                    <th class="text-center fw-semibold">รอดำเนินการ</th>
+                    <th class="text-end fw-semibold">มูลค่าวัสดุคงคลัง</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php $i = 1; foreach($dataProviderWarehouse->getModels() as $model):?>
                 <tr>
-                    <th scope="row"><?=$i++;?></th>
+                    <th class="text-end fw-semibold" scope="row"><?=$i++;?></th>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="avatar">

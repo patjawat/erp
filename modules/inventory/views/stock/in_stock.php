@@ -42,18 +42,18 @@ $products = $cart->getItems();
                 </div>
                 <?php endif;?>
         </div>
-        <table class="table">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">ชื่อรายการ</th>
-                    <th class="text-start">ประเภท</th>
-                    <th scope="col" class="text-center">คงเหลือ</th>
-                    <th scope="col" class="text-center">หน่วย</th>
-                    <th scope="col" class="text-end">มูลค่า</th>
-                    <th scope="col" class="text-end">ดำเนินการ</th>
+                    <th scope="col" class="fw-semibold">ชื่อรายการ</th>
+                    <th class="text-start fw-semibold">ประเภท</th>
+                    <th scope="col" class="text-center fw-semibold">คงเหลือ</th>
+                    <th scope="col" class="text-center fw-semibold">หน่วย</th>
+                    <th scope="col" class="text-end fw-semibold">มูลค่า</th>
+                    <th scope="col" class="text-end fw-semibold">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr>
                     <th scope="row"><?=Html::a($item->product->Avatar(),['/inventory/stock/view-stock-card','id' => $item->id])?>

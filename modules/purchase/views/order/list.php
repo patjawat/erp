@@ -1,11 +1,11 @@
 <?php
 
-use app\modules\sm\models\Order;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\sm\models\Order;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <h6>ทะเบียนคุม</h6>
         <div class="table-responsive" style="height:800px">
-            <table class="table table-primary">
+        <table class="table table-striped table-hover">
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>

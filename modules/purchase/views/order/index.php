@@ -1,12 +1,12 @@
 <?php
 
-use app\modules\sm\models\Order;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\widgets\Pjax;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\sm\models\Order;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
@@ -82,7 +82,7 @@ if($searchModel->date_between == 'pr_create_date'){
                     <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $model): ?>
                 <tr>
                     <td><span class="fw-semibold "><?=$model->pq_number?></span></td>

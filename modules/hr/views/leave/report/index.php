@@ -5,7 +5,7 @@ use yii\helpers\Html;
 $this->title = 'รายงานระบบลา';
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-chart-simple"></i> <?= $this->title; ?>
+<i class="fa-solid fa-chart-simple fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -28,8 +28,8 @@ $this->title = 'รายงานระบบลา';
             <span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel"></i> ส่งออก</span>
             <?php // Html::a('<i class="fa-regular fa-file-excel"></i> ส่งออก', ['/hr/leave/export-leave', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-success rounded-pill shadow export-leave', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
-<table class="table table-bordered table-striped table-hover">
-        <thead>
+        <table class="table table-bordered table-striped table-hover">
+        <thead class="">
             <tr>
                 <th class="text-center">ลำดับ</th>
                 <th>ชื่อ นามสกุล</th>

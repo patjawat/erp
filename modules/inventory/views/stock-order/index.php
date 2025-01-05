@@ -57,7 +57,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                     <th class="text-end" style="width:100px">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php  $row = 1;foreach ($dataProvider->getModels() as $item): ?>
                 <tr>
                 <td class="text-center"><?= $row++ ?></td>

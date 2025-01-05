@@ -64,20 +64,20 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 </div>
             </div>
         </div>
-        <table class="table table-primary">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th class="text-center">#</th>
-                    <th scope="col">รหัส/วันที่รับเข้าคลัง</th>
-                    <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
-                    <th>รับจาก</th>
-                    <th>เจ้าหน้าที่</th>
-                    <th style="width:130px" class="text-end">มูลค่า</th>
-                    <th style="width:100px" class="text-center">สถานะ</th>
-                    <th class="text-center" style="width:100px">ดำเนินการ</th>
+                    <th class="fw-semibold" scope="col">รหัส/วันที่รับเข้าคลัง</th>
+                    <th class="fw-semibold">เลขทะเบียนคุม/ประเภทวัสดุ</th>
+                    <th class="fw-semibold">รับจาก</th>
+                    <th class="fw-semibold">เจ้าหน้าที่</th>
+                    <th style="width:130px" class="text-end fw-semibold">มูลค่า</th>
+                    <th style="width:100px" class="text-center fw-semibold">สถานะ</th>
+                    <th class="text-center fw-semibold" style="width:100px">ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody class="align-middle">
+            <tbody class="align-middle table-group-divider">
                 <?php $row = 1;
                     foreach ($dataProvider->getModels() as $item): ?>
                 <tr>

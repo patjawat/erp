@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="text-center" style="width:20px">สถานะ</th>
                         <th class="text-center" scope="col" style="width: 100px;">ดำเนินการ</th>
                         </thead>
-                        <tbody class="align-middle">
+                        <tbody class="align-middle table-group-divider">
                             <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="rounded">
                                 <td scope="row">

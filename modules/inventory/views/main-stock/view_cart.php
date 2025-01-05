@@ -30,7 +30,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                         <th scope="col" class="text-center align-center" style="width:32px;">#</th>
                     </tr>
                 </thead>
-                <tbody class="align-middle">
+                <tbody class="align-middle table-group-divider">
                     <?php $sumQty = 0; $getQuantity=0; foreach($products as $item):?>
                         <?php
                               $sumQty += (float)$item->SumQty();

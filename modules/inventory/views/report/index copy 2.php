@@ -178,7 +178,7 @@ if ($searchModel->warehouse_id) {
                         <th class="text-center">รวม</th>
                     </tr>
                 </thead>
-                <tbody class="align-middle">
+                <tbody class="align-middle table-group-divider">
                     <?php ?>
                     <?php
                     $sum_last = 0;
