@@ -188,7 +188,7 @@ class UserController extends Controller
     }
 
     // สลับ user
-    public function actionSwitchTo($id)
+    public function actionTo($id)
     {
         if (Yii::$app->user->can('admin')){
             $model = $this->findModel($id);

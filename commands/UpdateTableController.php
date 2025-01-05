@@ -33,7 +33,7 @@ class UpdateTableController extends Controller
     {
         // if (BaseConsole::confirm("Are you sure?")) {
         // SQL query ที่ต้องการรัน
-        $sqlUpdateAuthItems = 'INSERT INTO auth_item (type, name) VALUES (:type, :name) ON DUPLICATE KEY UPDATE name = VALUES(name), type = VALUES(type)';
+        $sqlUpdateAuthItems = 'INSERT INTO auth_item (type, name,description) VALUES (:type, :name, :description) ON DUPLICATE KEY UPDATE name = VALUES(name), type = VALUES(type), description = VALUES(description)';
         $sqlUpdateChild = 'INSERT INTO auth_item_child (parent, child) VALUES (:parent, :child) ON DUPLICATE KEY UPDATE child = VALUES(child), parent = VALUES(parent)';
 
         // update route
@@ -41,6 +41,7 @@ class UpdateTableController extends Controller
             \Yii::$app->db->createCommand($sqlUpdateAuthItems, [
                 ':name' => $authItem['name'],
                 ':type' => $authItem['type'],
+                ':description' => $authItem['description'],
             ])->execute();
         }
         echo "update Route Success\n";
@@ -60,109 +61,133 @@ class UpdateTableController extends Controller
     public static function RouteList()
     {
         return [
-            ['name' => 'admin', 'type' => 1],
-            ['name' => 'computer', 'type' => 1],
-            ['name' => 'computer_ma', 'type' => 1],
-            ['name' => 'director', 'type' => 1],
-            ['name' => 'hr', 'type' => 1],
-            ['name' => 'medical', 'type' => 1],
-            ['name' => 'medical_ma', 'type' => 1],
-            ['name' => 'purchase', 'type' => 1],
-            ['name' => 'technician', 'type' => 1],
-            ['name' => 'technician_ma', 'type' => 1],
-            ['name' => 'user', 'type' => 1],
-            ['name' => 'warehouse', 'type' => 1],
+            ['name' => 'admin', 'type' => 1, 'description' => 'ผู้ดูแลระบบ'],
+            ['name' => 'computer', 'type' => 1, 'description' => 'ศูนย์คอม'],
+            ['name' => 'computer_ma', 'type' => 1, 'description' => 'หัวหน้าศูนย์คอม'],
+            ['name' => 'director', 'type' => 1, 'description' => 'ผู้อำนวยการ'],
+            ['name' => 'hr', 'type' => 1, 'description' => 'เจ้าหน้าที่ฝ่ายบุคคล'],
+            ['name' => 'medical', 'type' => 1, 'description' => 'ศูนย์เครื่องมือแพทย์'],
+            ['name' => 'medical_ma', 'type' => 1, 'description' => ''],
+            ['name' => 'purchase', 'type' => 1, 'description' => 'เจ้าหน้าที่จัดซื้อ'],
+            ['name' => 'technician', 'type' => 1, 'description' => 'งานซ่อมบำรุง'],
+            ['name' => 'technician_ma', 'type' => 1, 'description' => 'หัวหน้างานซ่อมบำรุง'],
+            ['name' => 'user', 'type' => 1, 'description' => 'ผู้ใช้งานทั่วไป'],
+            ['name' => 'warehouse', 'type' => 1, 'description' => 'ผู้จัดการคลัง'],
             ['name' => 'branch', 'type' => 1, 'description' => 'สาขา'],
-            ['name' => '/*', 'type' => 2],
-            ['name' => '/am/asset/depreciation', 'type' => 2],
-            ['name' => '/am/asset/index', 'type' => 2],
-            ['name' => '/am/asset/qrcode', 'type' => 2],
-            ['name' => '/am/asset/view', 'type' => 2],
-            ['name' => '/am/default/index', 'type' => 2],
-            ['name' => '/depdrop/*', 'type' => 2],
-            ['name' => '/employees/*', 'type' => 2],
-            ['name' => '/helpdesk/computer/*', 'type' => 2],
-            ['name' => '/helpdesk/default/repair-select', 'type' => 2],
-            ['name' => '/helpdesk/general/*', 'type' => 2],
-            ['name' => '/helpdesk/medical/*', 'type' => 2],
-            ['name' => '/helpdesk/repair/create', 'type' => 2],
-            ['name' => '/helpdesk/repair/timeline', 'type' => 2],
-            ['name' => '/helpdesk/stock/*', 'type' => 2],
-            ['name' => '/helpdesk/repair/summary', 'type' => 2],
-            ['name' => '/helpdesk/repair/user-request-order', 'type' => 2],
-            ['name' => '/helpdesk/repair/user-job', 'type' => 2],
-            ['name' => '/helpdesk/repair/list-accept', 'type' => 2],
-            ['name' => '/helpdesk/repair/view', 'type' => 2],
-            ['name' => '/helpdesk/repair/accept-job', 'type' => 2],
-            ['name' => '/helpdesk/repair/switch-group', 'type' => 2],
-            ['name' => '/helpdesk/repair/cancel-job', 'type' => 2],
-            ['name' => '/helpdesk/repair/add-part', 'type' => 2],
-            ['name' => '/helpdesk/repair/update', 'type' => 2],
-            ['name' => '/helpdesk/repair/rating', 'type' => 2],
-            ['name' => '/helpdesk/repair/*', 'type' => 2],
-            ['name' => '/hr/default/index', 'type' => 2],
-            ['name' => '/hr/employees/view', 'type' => 2],
-            ['name' => '/hr/leave/*', 'type' => 2],
-            ['name' => '/inventory/default/index', 'type' => 2],
-            ['name' => '/inventory/default/product-summary', 'type' => 2],
-            ['name' => '/inventory/default/warehouse', 'type' => 2],
-            ['name' => '/inventory/stock-out/index', 'type' => 2],
-            ['name' => '/inventory/stock-out/stock', 'type' => 2],
-            ['name' => '/inventory/stock/view-chart-total', 'type' => 2],
-            ['name' => '/inventory/stock/warehouse', 'type' => 2],
-            ['name' => '/inventory/warehouse/index', 'type' => 2],
-            ['name' => '/inventory/warehouse/list-order-request', 'type' => 2],
-            ['name' => '/inventory/warehouse/view', 'type' => 2],
-            ['name' => '/me/*', 'type' => 2],
-            ['name' => '/profile/*', 'type' => 2],
-            ['name' => '/purchase/document/download-file', 'type' => 2],
-            ['name' => '/purchase/gr-order/update', 'type' => 2],
-            ['name' => '/purchase/order-item/committee', 'type' => 2],
-            ['name' => '/purchase/order-item/committee-detail', 'type' => 2],
-            ['name' => '/purchase/order-item/create', 'type' => 2],
-            ['name' => '/purchase/order-item/delete', 'type' => 2],
-            ['name' => '/purchase/order-item/update', 'type' => 2],
-            ['name' => '/purchase/order/delete-item', 'type' => 2],
-            ['name' => '/purchase/order/document', 'type' => 2],
-            ['name' => '/purchase/order/product-list', 'type' => 2],
-            ['name' => '/purchase/order/update-item', 'type' => 2],
-            ['name' => '/purchase/order/view', 'type' => 2],
-            ['name' => '/purchase/po-order/create', 'type' => 2],
-            ['name' => '/purchase/po-order/index', 'type' => 2],
-            ['name' => '/purchase/po-order/update', 'type' => 2],
-            ['name' => '/purchase/pq-order/index', 'type' => 2],
-            ['name' => '/purchase/pq-order/update', 'type' => 2],
-            ['name' => '/purchase/pr-order/checker-confirm', 'type' => 2],
-            ['name' => '/purchase/pr-order/create', 'type' => 2],
-            ['name' => '/purchase/pr-order/director-confirm', 'type' => 2],
-            ['name' => '/purchase/pr-order/index', 'type' => 2],
-            ['name' => '/purchase/pr-order/leader-confirm', 'type' => 2],
-            ['name' => '/purchase/pr-order/update', 'type' => 2],
-            ['name' => '/settings/*', 'type' => 2],
-            ['name' => '/site/*', 'type' => 2],
-            ['name' => '/sm/default/accept-pr-order', 'type' => 2],
-            ['name' => '/sm/default/budget-chart', 'type' => 2],
-            ['name' => '/sm/default/chart', 'type' => 2],
-            ['name' => '/sm/default/index', 'type' => 2],
-            ['name' => '/sm/default/pq-order', 'type' => 2],
-            ['name' => '/sm/default/pr-order', 'type' => 2],
-            ['name' => '/usermanager/*', 'type' => 2],
-            ['name' => '/warehouse/*', 'type' => 2],
-            ['name' => 'purchase/po-order/index', 'type' => 2],
-            ['name' => '/ms-word/*', 'type' => 2],
+            ['name' => 'inventory', 'type' => 1, 'description' => 'ระบบคลัง'],
+            ['name' => 'sm', 'type' => 1, 'description' => 'บริหารพัสดุ'],
+            ['name' => 'leave', 'type' => 1, 'description' => 'ระบบลา'],
+            ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
+            ['name' => '/*', 'type' => 2, 'description' => ''],
+            
+
+            
+            ['name' => '/dms/*', 'type' => 2,'description' =>''],
+            ['name' => '/dms/dashboard', 'type' => 2,'description' =>'Dashboard'],
+            ['name' => '/dms/documents', 'type' => 2,'description' =>'หนังสือรับ'],
+            ['name' => '/dms/documents/create', 'type' => 2,'description' =>'ออกเลขหนังสือ'],
+            ['name' => '/dms/documents/update', 'type' => 2,'description' =>'แก้ไขหนังสือ'],
+            ['name' => '/dms/documents/view', 'type' => 2,'description' =>'แสดงหนังสือ'],
+            ['name' => '/dms/documents/delete', 'type' => 2,'description' =>'ลบหนังสือ'],
+            ['name' => '/am/asset/depreciation', 'type' => 2,'description' =>''],
+            ['name' => '/am/asset/index', 'type' => 2,'description' =>''],
+            ['name' => '/am/asset/qrcode', 'type' => 2,'description' =>''],
+            ['name' => '/am/asset/view', 'type' => 2,'description' =>''],
+            ['name' => '/am/default/index', 'type' => 2,'description' =>''],
+            ['name' => '/depdrop/*', 'type' => 2,'description' =>''],
+            ['name' => '/employees/*', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/computer/*', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/default/repair-select', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/general/*', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/medical/*', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/create', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/timeline', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/stock/*', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/summary', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/user-request-order', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/user-job', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/list-accept', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/view', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/accept-job', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/switch-group', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/cancel-job', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/add-part', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/update', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/rating', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/repair/*', 'type' => 2,'description' =>''],
+            ['name' => '/hr/default/index', 'type' => 2,'description' =>''],
+            ['name' => '/hr/employees/view', 'type' => 2,'description' =>''],
+            //Router
+            ['name' => '/hr/leave/*', 'type' => 2,'description' =>''],
+            ['name' => '/hr/leave/create', 'type' => 2,'description' =>''],
+            ['name' => '/hr/leave/update', 'type' => 2,'description' =>''],
+            ['name' => '/hr/leave/view', 'type' => 2,'description' =>''],
+            ['name' => '/hr/leave/view-history', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/default/index', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/default/product-summary', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/default/warehouse', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock-out/index', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock-out/stock', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock/view-chart-total', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock/warehouse', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/warehouse/index', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/warehouse/list-order-request', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/warehouse/view', 'type' => 2,'description' =>''],
+            ['name' => '/me/*', 'type' => 2,'description' =>''],
+            ['name' => '/profile/*', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/document/download-file', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/gr-order/update', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order-item/committee', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order-item/committee-detail', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order-item/create', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order-item/delete', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order-item/update', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order/delete-item', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order/document', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order/product-list', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order/update-item', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/order/view', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/po-order/create', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/po-order/index', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/po-order/update', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pq-order/index', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pq-order/update', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pr-order/checker-confirm', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pr-order/create', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pr-order/director-confirm', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pr-order/index', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pr-order/leader-confirm', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/pr-order/update', 'type' => 2,'description' =>''],
+            ['name' => '/settings/*', 'type' => 2,'description' =>''],
+            ['name' => '/site/*', 'type' => 2,'description' =>''],
+            ['name' => '/sm/default/accept-pr-order', 'type' => 2,'description' =>''],
+            ['name' => '/sm/default/budget-chart', 'type' => 2,'description' =>''],
+            ['name' => '/sm/default/chart', 'type' => 2,'description' =>''],
+            ['name' => '/sm/default/index', 'type' => 2,'description' =>''],
+            ['name' => '/sm/default/pq-order', 'type' => 2,'description' =>''],
+            ['name' => '/sm/default/pr-order', 'type' => 2,'description' =>''],
+            ['name' => '/usermanager/*', 'type' => 2,'description' =>''],
+            ['name' => '/warehouse/*', 'type' => 2,'description' =>''],
+            ['name' => 'purchase/po-order/index', 'type' => 2,'description' =>''],
+            ['name' => '/ms-word/*', 'type' => 2,'description' =>''],
         ];
     }
 
+    //กำหนดสิทธิให้กับแต่ละกลุ่ม
     public static function ChildList()
     {
         return [
             ['child' => '/*', 'parent' => 'admin'],
+
+            // ระบบสารบรรณ
+            ['child' => '/dms/*', 'parent' => 'document'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],
             ['child' => '/am/asset/index', 'parent' => 'user'],
             ['child' => '/am/asset/qrcode', 'parent' => 'user'],
             ['child' => '/am/asset/view', 'parent' => 'user'],
             ['child' => '/am/default/index', 'parent' => 'user'],
             ['child' => '/depdrop/*', 'parent' => 'user'],
+            // ซ่อมบำรุง
             ['child' => '/helpdesk/computer/*', 'parent' => 'computer'],
             ['child' => '/helpdesk/default/repair-select', 'parent' => 'user'],
             ['child' => '/helpdesk/general/*', 'parent' => 'technician'],
@@ -209,7 +234,13 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/*', 'parent' => 'medical'],
             ['child' => '/hr/default/index', 'parent' => 'user'],
             ['child' => '/hr/employees/view', 'parent' => 'user'],
-            ['child' => '/hr/leave/*', 'parent' => 'user'],
+
+            //ระบบลา
+            ['child' => '/hr/leave/create', 'parent' => 'user'],
+            ['child' => '/hr/leave/update', 'parent' => 'user'],
+            ['child' => '/hr/leave/view', 'parent' => 'user'],
+            ['child' => '/hr/leave/view-history', 'parent' => 'user'],
+            ['child' => '/hr/leave/*', 'parent' => 'leave'],
             ['child' => '/inventory/default/index', 'parent' => 'user'],
             ['child' => '/inventory/default/product-summary', 'parent' => 'user'],
             ['child' => '/inventory/default/warehouse', 'parent' => 'user'],
@@ -291,16 +322,15 @@ class UpdateTableController extends Controller
 
     public function actionCreateView()
     {
-
-        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `leave_summary`")->execute();
+        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary`')->execute();
         echo "Drop leave_summary\n";
-        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `leave_summary_year`")->execute();
+        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary_year`')->execute();
         echo "Drop leave_summary_year\n";
-        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock`")->execute();
+        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock`')->execute();
         echo "Drop view_stock\n";
-        Yii::$app->db->createCommand("DROP VIEW IF EXISTS `view_stock_transaction`")->execute();
+        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock_transaction`')->execute();
         echo "Drop view_stock_transaction\n";
-        
+
         $sqlViewStock = "CREATE VIEW view_stock as SELECT t.code as type_code ,t.title as asset_type_name,i.code as asset_item,i.title as asset_item_name,s.warehouse_id,w.warehouse_type,w.warehouse_name,s.qty,sum(s.qty*s.unit_price) as total_price FROM stock s 
                         INNER JOIN warehouses w ON w.id = s.warehouse_id
                         INNER JOIN categorise i ON i.code = s.asset_item AND i.name = 'asset_item'
@@ -308,7 +338,7 @@ class UpdateTableController extends Controller
                         GROUP BY w.id,t.code;";
         $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
         echo "Create view_stock\n";
-        
+
         $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
                                     so.code,
                                     si.po_number,
@@ -321,7 +351,7 @@ class UpdateTableController extends Controller
                                     so.warehouse_id,
                                     si.qty,
                                     si.unit_price,
-                                    so.data_json->>'$.receive_date' as receive_date,so.created_at,
+                                    so.data_json->>'\$.receive_date' as receive_date,so.created_at,
                                     so.thai_year
                                     
                                 FROM 
@@ -346,7 +376,7 @@ class UpdateTableController extends Controller
                                 FROM t;";
         $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();
         echo "Create view_stock_transaction\n";
-        
+
         $createLeaveSummary = Yii::$app->db->createCommand("CREATE VIEW leave_summary AS
                             SELECT 
                                 lt.code, 
@@ -371,10 +401,10 @@ class UpdateTableController extends Controller
                                 WHERE lt.name = 'leave_type'
                                 GROUP BY lt.code, l.thai_year")->execute();
 
-$createLeaveSummaryYear = Yii::$app->db->createCommand("CREATE VIEW leave_summary_year AS SELECT l.thai_year,COUNT(l.id) as total FROM categorise lt
+        $createLeaveSummaryYear = Yii::$app->db->createCommand("CREATE VIEW leave_summary_year AS SELECT l.thai_year,COUNT(l.id) as total FROM categorise lt
                             LEFT OUTER JOIN `leave` l ON l.leave_type_id = lt.code 
                             WHERE lt.name = 'leave_type' AND l.thai_year IS NOT NULL
                             GROUP BY l.thai_year;")->execute();
-    echo "Create leave_summary_year\n";
+        echo "Create leave_summary_year\n";
     }
 }
