@@ -35,7 +35,7 @@ class DocumentsController extends \yii\web\Controller
     
                     return [
                         'title' => $this->request->get('tilte'),
-                        'content' => $this->renderAjax('index', [
+                        'content' => $this->renderAjax('list_show', [
                             'list' => $this->request->get('list'),
                             'searchModel' => $searchModel,
                             'dataProvider' => $dataProvider,
