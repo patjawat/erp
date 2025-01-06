@@ -75,7 +75,7 @@ class DocumentSearch extends Documents
             ->andFilterWhere(['like', 'doc_expire', $this->doc_expire])
             ->andFilterWhere(['like', 'doc_receive_date', $this->doc_receive_date])
             ->andFilterWhere(['like', 'doc_time', $this->doc_time])
-            ->andFilterWhere(['like', 'data_json', $this->data_json]);
+            ->andFilterWhere(['like', 'documents.data_json', $this->data_json]);
 
         return $dataProvider;
     }

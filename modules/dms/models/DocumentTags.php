@@ -19,11 +19,9 @@ use app\modules\dms\models\Documents;
  * @property string|null $ref
  * @property string|null $name ชื่อการ tags เอกสาร
  * @property string|null $doc_number เลขที่หนังสือ
- * @property string|null $doc_regis_number เลขรับ
  * @property string|null $emp_id
  * @property string|null $status สถานะ
  * @property string|null $department_id
- * @property string|null $document_org_id จากหน่วยงาน
  * @property string|null $data_json
  */
 class DocumentTags extends \yii\db\ActiveRecord
@@ -44,8 +42,8 @@ class DocumentTags extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['data_json'], 'safe'],
-            [['ref', 'name', 'doc_number', 'document_id', 'doc_regis_number', 'emp_id', 'status', 'department_id', 'document_org_id'], 'string', 'max' => 255],
+            [['data_json','tag_id','reading'], 'safe'],
+            [['ref', 'name', 'doc_number', 'document_id','tag_id', 'status', 'department_id', 'document_org_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -59,7 +57,6 @@ class DocumentTags extends \yii\db\ActiveRecord
             'ref' => 'Ref',
             'name' => 'ชื่อการ tags เอกสาร',
             'doc_number' => 'เลขที่หนังสือ',
-            'doc_regis_number' => 'เลขรับ',
             'emp_id' => 'Emp ID',
             'status' => 'สถานะ',
             'department_id' => 'Department ID',
@@ -124,7 +121,7 @@ class DocumentTags extends \yii\db\ActiveRecord
     public function getAvatar($empid, $msg = '')
     {
         // try {
-            $employee = Employees::find()->where(['id' => $this->emp_id])->one();
+            $employee = Employees::find()->where(['id' => $this->created_by])->one();
             $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
             $msg = '<i class="fa-regular fa-comment"></i> '.$this->data_json['comment'];
             // $msg = $employee->departmentName();
@@ -162,4 +159,26 @@ class DocumentTags extends \yii\db\ActiveRecord
         
         return ArrayHelper::map($model, 'title', 'title');
     }
+       //ดึงค่าไปแสดงตอนที่เรา update
+       public function listEmployeeSelectTag()
+       {
+           try {
+   
+            $employees = Employees::find()
+               ->select(['id', 'concat(fname, " ", lname) as fullname'])
+               ->andWhere(['status' => '1'])
+               ->andWhere(['<>','id','1'])
+               ->asArray()
+               ->all();
+           
+               // return ArrayHelper::map($employees,'id','fname');
+           return ArrayHelper::map($employees,'id',function($model){
+               return $model['fullname'];
+           });
+                       
+       } catch (\Throwable $th) {
+           return [];
+       }
+       }
+       
 }

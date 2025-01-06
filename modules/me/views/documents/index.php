@@ -27,7 +27,7 @@ use app\modules\dms\models\Documents;
             
         </div>
         <?php endif;?>
-
+      
         <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
@@ -41,10 +41,13 @@ use app\modules\dms\models\Documents;
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
                         <?php foreach($dataProvider->getModels() as $item):?>
+                            <?php // if($item->viewCount()['reading'] <= 0):?>
                         <tr class="" style="max-width:200px">
-                            <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
+                            <td class="fw-semibold">
+      
+                            <?php echo $item->doc_regis_number?></td>
                             <td class="fw-light align-middle">
-                                <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
+                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>"
                                     class="text-dark open-modal-fullscreen">
                                     <div class=" d-flex flex-column" style="max-width:1000px">
                                         <div>
@@ -106,6 +109,7 @@ use app\modules\dms\models\Documents;
                             </td>
 
                         </tr>
+                        <?php //endif;?>
                         <?php endforeach;?>
 
                     </tbody>

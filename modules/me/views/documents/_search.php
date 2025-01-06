@@ -2,7 +2,7 @@
 
 use yii\helpers\Html;
 use kartik\select2\Select2;
-use yii\widgets\ActiveForm;
+use kartik\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $model */
@@ -12,6 +12,7 @@ use yii\widgets\ActiveForm;
 
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
+    'id' => 'document-search',
     'method' => 'get',
     'options' => [
         'data-pjax' => 1
@@ -38,9 +39,46 @@ use yii\widgets\ActiveForm;
             ]
         ])->label('ปี พ.ศ.');
         ?>
+
+<div class="dropdown mt-2">
+                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false"><i class="fa-solid fa-filter"></i> เพิ่มเติม
+                </button>
+                <div class="dropdown-menu p-4 relative" style="width:500px">
+
+                    <div class="d-flex flex-row gap-4">
+
+                    <?= $form->field($model, 'data_json[show_reading]')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('แสดงที่อ่านแล้ว'); ?>                      
+                    </div>
+
+                </div>
+            </div>
+        
     <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-4']) ?>
-    </div>
+    <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-2']) ?>
+</div>
 
-    <?php ActiveForm::end(); ?>
+<?php ActiveForm::end(); ?>
 
+
+<?php
+
+$js = <<< JS
+
+$( "#documentsearch-data_json-show_reading" ).prop( "checked", localStorage.getItem('show_reading') == 1 ? true : false );
+$("body").on("change", "#documentsearch-data_json-show_reading", function (e) {
+                        if ($(this).is(':checked')) {
+                            // alert('Checkbox is checked!');
+                            localStorage.setItem('show_reading',1);
+                            
+                        } else {
+                            // alert('Checkbox is unchecked!');
+                            localStorage.setItem('show_reading',0);
+                        }
+                        $(this).submit();
+                    });
+
+              
+JS;
+$this->registerJS($js)
+?>

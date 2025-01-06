@@ -72,7 +72,7 @@ $items = [
     [
         'title' => 'การเงิน',
         'icon' => 'fa-solid fa-calculator fs-1',
-        'url' => ['/accounting'],
+        'url' => ['/finance'],
         'padding' => 'p-3',
         'show' => true
     ]

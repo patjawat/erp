@@ -30,9 +30,20 @@ use iamsaint\datetimepicker\Datetimepicker;
     // 'validationUrl' => ['/dms/documents/validator']
 ]); ?>
 <!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
-<?= $form->field($model, 'emp_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'tag_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
+<?php
+// echo $form->field($model, 'data_json[employee_tag]')->widget(Select2::classname(), [
+//     'data' => $model->listEmployeeSelectTag(),
+//     'options' => ['placeholder' => 'Select a state ...'],
+//     'pluginOptions' => [
+//         'allowClear' => true,
+//         'multiple' => true,
+//         'dropdownParent' => '#fullscreen-modal',
+//     ],
+// ]);
+?>
 <?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
 <?php if($model->isNewRecord):?>
 <span class="btn btn-primary rounded-pill shadow save-comment"><i class="fa-solid fa-paper-plane"></i> ลงความเห็น</span>

@@ -20,15 +20,15 @@ class DocumentsController extends \yii\web\Controller
             'document_group' => 'receive', 
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->joinWith('documentTags');
-        $dataProvider->query->andFilterWhere([
-            '>', 
-            new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(documents.data_json->'$.department_tag'))"), 
-            0
-            ])->addParams([':department' => $emp->department]);
-            // $dataProvider->query->orFilterWhere(['emp_id' => 1]);
-            $dataProvider->query->orWhere(new Expression("JSON_CONTAINS(documents.data_json->'$.employee_tag','\"$emp->id\"')"));
-          
+        $dataProvider->query->joinWith('documentTags');
+        $dataProvider->query->andWhere(['name' => 'employee', 'tag_id' => $emp->id]);
+        if(isset($searchModel->data_json['show_reading']) && $searchModel->data_json['show_reading'] == '0'){    
+            $dataProvider->query->andFilterWhere(['not','reading',null]);
+        }else{
+            $dataProvider->query->andFilterWhere(['reading' => null]);
+            
+        }
+
 
             if($this->request->isAJax){
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -55,17 +55,35 @@ class DocumentsController extends \yii\web\Controller
         $model = $this->findModel($id);
         $emp = UserHelper::GetEmployee();
 
-        $view_count[] = [
-            'date_time' => date('Y-m-d H:i:s'),
-            'emp_id' => $emp->id,
-            'fullname' => $emp->fullname,
-            'department' => $emp->departmentName(),
-        ];
-        if ($model->view_json === null) {
-            $model->view_json = [];
+        // $view_count[] = [
+        //     'date_time' => date('Y-m-d H:i:s'),
+        //     'emp_id' => $emp->id,
+        //     'fullname' => $emp->fullname,
+        //     'department' => $emp->departmentName(),
+        // ];
+        // if ($model->view_json === null) {
+        //     $model->view_json = [];
+        // }
+
+        $checkView = DocumentTags::find()->where([
+            'name' => 'employee',
+            'tag_id' => $emp->id,
+            'document_id' => $model->id,
+            'name' => 'employee'
+        ])->one();
+       
+        if($checkView){
+            $reading =  $checkView;
+            $reading->name = 'employee';
+            $reading->reading =  date('Y-m-d H:i:s');
+            $reading->tag_id = $emp->id;
+            $reading->document_id = $model->id;
+            $reading->save(false);
         }
-        $model->view_json  = ArrayHelper::merge($view_count, $model->view_json);
-        $model->save();
+    
+        
+        // $model->view_json  = ArrayHelper::merge($view_count, $model->view_json);
+        // $model->save();
         
        
         if ($this->request->isAJax) {

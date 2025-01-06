@@ -50,15 +50,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
         <span class="text-primary fw-normal fs-13">
 
-
-
             <div class="border border-secondary border-opacity-25 p-3 rounded">
                 
-
                 <!-- Tab panes -->
-
-
-
                 <div class="row">
                     <div class="col-8">
                     <div class="d-flex justify-content-between">

@@ -27,7 +27,7 @@ use app\modules\dms\models\Documents;
             <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลขหนังสือรับ', ['/me/documents/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
         <?php endif;?>
-
+       
         <table class="table table-striped table-fixed">
             <thead>
                 <tr>
@@ -40,6 +40,8 @@ use app\modules\dms\models\Documents;
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach($dataProvider->getModels() as $item):?>
+                    
+                    <?php // if($item->viewCount()['reading'] <= 0):?>
                 <tr class="">
                     <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
                     <td class="fw-light align-middle">
@@ -79,6 +81,7 @@ use app\modules\dms\models\Documents;
                 <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/me/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    
                </td> -->
                 </tr>
+                <?php // endif;?>
                 <?php endforeach;?>
 
             </tbody>

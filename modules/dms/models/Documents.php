@@ -17,6 +17,7 @@ use kartik\file\FileInput;
 use yii\httpclient\Client;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
@@ -58,6 +59,8 @@ class Documents extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $q;
+    public $tags;
+    public $reading;
 
     public function rules()
     {
@@ -65,7 +68,7 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number','doc_time'], 'required'],
             [['topic'], 'string'],
-            [['data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status','ref'], 'safe'],
+            [['reading','tags','department_tag','data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status','ref'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -110,6 +113,16 @@ class Documents extends \yii\db\ActiveRecord
             ],
         ];
     }
+    public function afterFind()
+    {
+        try {
+            $this->reading = $this->viewCount()['reading'];
+        } catch (\Throwable $th) {
+        }
+
+        parent::afterFind();
+    }
+    
 
         // สถานะ
         public function getDocumentStatus()
@@ -194,18 +207,16 @@ class Documents extends \yii\db\ActiveRecord
 
     public function viewCount()
     {
-        if ($this->view_json === null) {
+        try {
+            return  DocumentTags::find()
+            ->where(['document_id' => '21017'])
+            ->andWhere(['IS NOT', 'reading', null])
+            ->count();
+           
+        } catch (\Throwable $th) {
             return 0;
         }
-        
-        $views = $this->view_json;
-        
-        // If JSON string, decode it
-        if (is_string($this->view_json)) {
-            $views = json_decode($this->view_json, true);
-        }
-        
-        return is_array($views) ? count($views) : 0;
+       
    
 }
     // แสดงปีงบประมานทั้งหมด
@@ -313,29 +324,42 @@ class Documents extends \yii\db\ActiveRecord
     {
         try {
 
-        // ดึงข้อมูลจากฐานข้อมูล
-        $items = Employees::find()
-            ->select(['id', 'fname', 'lname']) // เลือกเฉพาะฟิลด์ที่ต้องการ
-            ->where(['id' => $this->data_json['employee_tag']]) // เฉพาะรายการที่เคยเลือก
-            ->andWhere(['status' => 1])
-            ->andWhere(['>','id',1])
+         $employees = Employees::find()
+            ->select(['id', 'concat(fname, " ", lname) as fullname'])
+            ->andWhere(['status' => '1'])
+            ->andWhere(['<>','id','1'])
             ->asArray()
             ->all();
-    
-        // คืนค่าในรูปแบบ [id => 'fname lname']
-        $result = [];
-        foreach ($items as $item) {
-            $result[$item['id']] = $item['fname'] . ' ' . $item['lname'];
-        }
-    
-        return $result;
+        
+            // return ArrayHelper::map($employees,'id','fname');
+        return ArrayHelper::map($employees,'id',function($model){
+            return $model['fullname'];
+        });
                     
     } catch (\Throwable $th) {
         return [];
     }
     }
+// update ค่า tags ไปหาบุคลอื่นๆ
+public function UpdateToTags()
+{
 
+    foreach ($this->data_json['department_tag'] as $key => $item) {
+        $model = new DocumentTags();
+        $model->document_id = $this->id;
+        $model->name = 'department';
+        $model->tag_id = $item;
+        $model->save();
+    }
+    // $modelIn = DocumentTags::find()->where(['document_id' => $this->id,'name' => 'employee_tag'])
+    // ->andFilterWhere(['IN','emp_id',$this->department_tag])
+    // ->all();
 
+    // $modelNotIn = DocumentTags::find()->where(['document_id' => $this->id,'name' => 'employee_tag'])
+    // ->andFilterWhere(['not in','emp_id',$this->tags])
+    // ->all();
+    // return $modelNotIn;
+}
     //รายการแสดงความเห็น
     public function listComment()
 {

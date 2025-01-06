@@ -64,16 +64,16 @@ services:
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  # phpmyadmin_mysql:
-  #   image: phpmyadmin
-  #   container_name: ${CONTAINER_NAME}_pma
-  #   restart: always
-  #   links:
-  #     - mysqlDB:db
-  #   ports:
-  #     - ${PAM_PORT}:80
-  #   environment:
-  #     MYSQL_USERNAME: root
-  #     MYSQL_ROOT_PASSWORD: docker
-  #     PMA_HOST: mysqlDB
-  #     UPLOAD_LIMIT: 300M
+  phpmyadmin_mysql:
+    image: phpmyadmin
+    container_name: ${CONTAINER_NAME}_pma
+    restart: always
+    links:
+      - mysqlDB:db
+    ports:
+      - ${PAM_PORT}:80
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: docker
+      PMA_HOST: mysqlDB
+      UPLOAD_LIMIT: 300M

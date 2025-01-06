@@ -7,8 +7,8 @@ use app\components\AppHelper
 <div class="py-4">
     <?php foreach($model->listComment() as $item):?>
 
-    <div class="d-flex justify-content-between d-flex align-items-start mb-0">
-        <?php echo $item->getAvatar('xx',false)['avatar']?>
+    <div class="d-flex justify-content-between d-flex align-items-start mb-2">
+        <?php  echo $item->getAvatar('xx',false)['avatar']?>
         <div class="d-flex align-items-start">
             <?php
              $dateTime = $item->created_at;

@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\accounting;
+namespace app\modules\finance;
 
 /**
  * accounting module definition class
@@ -10,7 +10,7 @@ class Module extends \yii\base\Module
     /**
      * {@inheritdoc}
      */
-    public $controllerNamespace = 'app\modules\accounting\controllers';
+    public $controllerNamespace = 'app\modules\finance\controllers';
 
     /**
      * {@inheritdoc}

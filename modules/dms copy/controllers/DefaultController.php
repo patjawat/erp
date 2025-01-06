@@ -1,11 +1,11 @@
 <?php
 
-namespace app\modules\accounting\controllers;
+namespace app\modules\dms\controllers;
 
 use yii\web\Controller;
 
 /**
- * Default controller for the `accounting` module
+ * Default controller for the `dms` module
  */
 class DefaultController extends Controller
 {

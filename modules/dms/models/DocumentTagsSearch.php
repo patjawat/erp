@@ -18,7 +18,7 @@ class DocumentTagsSearch extends DocumentTags
     {
         return [
             [['id'], 'integer'],
-            [['ref', 'name', 'doc_number', 'doc_regis_number', 'emp_id', 'status', 'department_id', 'document_org_id', 'data_json'], 'safe'],
+            [['ref', 'name', 'doc_number', 'emp_id', 'status', 'department_id', 'document_org_id', 'data_json','reading'], 'safe'],
         ];
     }
 
@@ -59,17 +59,18 @@ class DocumentTagsSearch extends DocumentTags
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'reading' => $this->reading,
         ]);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'name', $this->name])
+
             ->andFilterWhere(['like', 'doc_number', $this->doc_number])
-            ->andFilterWhere(['like', 'doc_regis_number', $this->doc_regis_number])
             ->andFilterWhere(['like', 'emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'department_id', $this->department_id])
             ->andFilterWhere(['like', 'document_org_id', $this->document_org_id])
-            ->andFilterWhere(['like', 'data_json', $this->data_json]);
+            ->andFilterWhere(['like', 'document_tags.data_json', $this->data_json]);
 
         return $dataProvider;
     }
