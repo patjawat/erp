@@ -52,14 +52,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
-                            <th style="width:70px;">เลขรับ</th>
-                            <th>เรื่อง</th>
-                            <th style="width:200px;">ลงความเห็น</th>
-                            <th class="text-center" style="width:105px;">ไฟล์แนบ</th>
-                            <th style="width:130px;">วันที่รับ</th>
-                            <th class="text-center" style="width:130px;">สถานะ</th>
-                            <th>แก้ไข</th>
-                            <th style="width:60px;">ส่งต่อ</th>
+                            <th style="width:150px;" class="fw-semibold">เลขรับ</th>
+                            <th class="fw-semibold">เรื่อง</th>
+                            <th class="fw-semibold" style="width:350px;">ลงความเห็น</th>
+                            <th class="fw-semibold text-center" style="width:200px;">ไฟล์แนบ</th>
+                            <th class="fw-semibold" style="width:750px;">วันที่รับ</th>
+                            <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
+                            <th class="fw-semibold">แก้ไข</th>
+                            <th class="fw-semibold" style="width:150px;">ส่งต่อ</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
@@ -153,7 +153,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 </div>
 
-<div class="iq-card-footer text-muted d-flex justify-content-end mt-4">
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([
         'pagination' => $dataProvider->pagination,
         'firstPageLabel' => 'หน้าแรก',
