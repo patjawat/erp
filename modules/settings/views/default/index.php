@@ -91,7 +91,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-solid fa-clipboard-user fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center"> บุคคลากร</h6>
+                        <h6 class="text-center"> บุคลากร</h6>
                     </div>
                 </div>
             </a>
@@ -104,7 +104,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="bi bi-folder-check fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center"> ทรัพสินย์</h6>
+                        <h6 class="text-center"> ทรัพย์สิน</h6>
                     </div>
                 </div>
             </a>
