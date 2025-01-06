@@ -68,6 +68,7 @@ $modules['purchase'] = ['class' => 'app\modules\purchase\Module'];  // ระบ
 $modules['me'] = ['class' => 'app\modules\me\Module'];  // โปรไฟล์ของฉัน
 $modules['lm'] = ['class' => 'app\modules\lm\Module'];  // ระบบลา
 $modules['dms'] = ['class' => 'app\modules\dms\Module'];  // document mannger system ระบบสารบรรณ
+$modules['accounting'] = ['class' => 'app\modules\accounting\Module'];  // การเงิน
 $modules['backoffice'] = ['class' => 'app\modules\backoffice\Module'];  // backoffice เดิม
 $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module

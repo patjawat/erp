@@ -226,7 +226,7 @@ $config = [
             // 'line-group/*',
             'summary/*',
             // 'helpdesk/*',
-            // 'purchase/*',
+            'accounting/*',
             'debug/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',

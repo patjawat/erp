@@ -52,11 +52,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
-                            <th style="width:150px;" class="fw-semibold">เลขรับ</th>
+                            <th style="width:250px;" class="fw-semibold">เลขรับ</th>
                             <th class="fw-semibold">เรื่อง</th>
                             <th class="fw-semibold" style="width:350px;">ลงความเห็น</th>
-                            <th class="fw-semibold text-center" style="width:200px;">ไฟล์แนบ</th>
-                            <th class="fw-semibold" style="width:750px;">วันที่รับ</th>
+                            <th class="fw-semibold text-center" style="width:250px;">ไฟล์แนบ</th>
+                            <th class="fw-semibold" style="width:990px;">วันที่รับ</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
                             <th class="fw-semibold" style="width:150px;">ส่งต่อ</th>
@@ -99,16 +99,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-                                    <?php
-// try {
-//     echo '<span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"><i class="fa-solid fa-user-tag"></i> '.count($item->data_json['employee_tag']).'</span>';
-// } catch (\Throwable $th) {
-//     //throw $th;
-// }
-?>
-
-
-
 
                                 </a>
                             </td>
@@ -116,7 +106,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php echo $item->StackDocumentTags('comment')?>
                             </td>
                             <td class="text-center">
-                                <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/clip-file','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                                <?php // echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/clip-file','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                                <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
                             </td>
                             <td class="fw-light align-middle">
                                 <div class=" d-flex flex-column">

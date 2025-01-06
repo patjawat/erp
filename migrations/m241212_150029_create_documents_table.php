@@ -32,6 +32,7 @@ class m241212_150029_create_documents_table extends Migration
             'status' => $this->string()->comment('สถานะ'),
             'data_json' => $this->json(),
             'view_json' => $this->json(),
+            'view_json' => $this->json(),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),

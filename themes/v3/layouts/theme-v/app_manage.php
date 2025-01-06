@@ -59,7 +59,7 @@ $items = [
         'icon' => 'fa-regular fa-circle-user fs-1',
         'url' => ['/hr'],
         'padding' => 'p-3',
-        'show' => Yii::$app->user->can('hr') ? true : false,
+        'show' => true
         
     ],
     [
@@ -67,8 +67,16 @@ $items = [
         'icon' => 'bi bi-folder-check fs-1',
         'url' => ['/am'],
         'padding' => 'p-2',
-        'show' => Yii::$app->user->can('am') ? true : false,
+       'show' => true
+    ],
+    [
+        'title' => 'การเงิน',
+        'icon' => 'fa-solid fa-calculator fs-1',
+        'url' => ['/accounting'],
+        'padding' => 'p-3',
+        'show' => true
     ]
+    
 ];
 ?>
 <div class="d-none d-lg-inline-flex ms-2 dropdown">
