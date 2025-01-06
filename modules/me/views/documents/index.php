@@ -31,12 +31,12 @@ use app\modules\dms\models\Documents;
         <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
-                            <th style="width100px;" class="fw-semibold">เลขรับ</th>
-                            <th class="fw-semibold">เรื่อง</th>
+                            <th style="width:80px;" class="fw-semibold">เลขรับ</th>
+                            <th class="fw-semibold" style="width:900px;">เรื่อง</th>
                             <th class="fw-semibold" style="width:150px;">ลงความเห็น</th>
                             <th class="fw-semibold text-center" style="width:150px;">ไฟล์แนบ</th>
-                            <th class="fw-semibold" style="width:100px;">วันที่รับ</th>
-                            <th class="fw-semibold text-center" style="width:100px;">สถานะ</th>
+                            <th class="fw-semibold" style="width:300px;">วันที่รับ</th>
+                            <th class="fw-semibold text-center" style="width:200px;">สถานะ</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
