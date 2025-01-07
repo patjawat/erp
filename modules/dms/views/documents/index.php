@@ -56,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th class="fw-semibold">เรื่อง</th>
                             <th class="fw-semibold" style="width:650px;">ลงความเห็น</th>
                             <th class="fw-semibold text-center" style="width:300px;">ไฟล์แนบ</th>
-                            <th class="fw-semibold" style="width:990px;">วันที่รับ</th>
+                            <th class="fw-semibold" style="width:1000px;">วันที่รับ</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
                             <th class="fw-semibold" style="width:150px;">ส่งต่อ</th>
@@ -90,12 +90,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </div>
                                     <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>
-                                        <?php  echo $item->documentOrg->title ?? '-';?>
-                                        <span
-                                            class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                                            <?php  echo $item->documentOrg->title ?? '-';?>
+                                        <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
                                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                         </span>
                                     </span>
+
+                                        <span class="badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13">
+                                        <i class="fa-solid fa-tags"></i> <?php echo $item->viewCount()?>
+                                        </span>
+                                   
                                 </a>
                             </td>
                             <td>
@@ -151,13 +155,18 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]); ?>
 </div>
-<?php Pjax::end(); ?>
 
+<button type="button" class="btn btn-primary" 
+            data-bs-toggle="popover" 
+            data-bs-trigger="hover" 
+            data-bs-content="This is a popover on hover!">
+      Hover me
+    </button>
+
+<?php Pjax::end(); ?>
 
 <?php
 $js = <<< JS
-
-
 
 
 

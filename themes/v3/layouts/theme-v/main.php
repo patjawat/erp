@@ -104,6 +104,10 @@ $moduleId = Yii::$app->controller->module->id;
 <?php
 $js = <<< JS
 
+const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+$('[data-toggle="popover"]').popover({container: 'body' });
+
 const metisMenu = $('.employee-welcome');
 console.log(metisMenu);
 			var scrollBarCont, isfullscreen = false, ddSliderIns;
