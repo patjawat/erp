@@ -77,6 +77,7 @@ class DocumentsController extends Controller
      */
     public function actionView($id)
     {
+        // $this->layout = '@app/views/layouts/document';
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -94,6 +95,7 @@ class DocumentsController extends Controller
         }
     }
 
+    
     /**
      * Creates a new Documents model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -162,47 +164,8 @@ class DocumentsController extends Controller
         $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-            //  $model->UpdateToTags();
-            // return $model->department_tag;
-            $data = [];
-            $arrayDepartment = explode(",", $model->data_json['department_tag']);
             
-            $clearDepartmentTag = DocumentTags::deleteAll([
-                'and',
-                ['not in', 'tag_id', $arrayDepartment],
-                ['document_id' => $model->id,'name' => 'department']
-            ]);
-
-            $clearDEmployeeTag = DocumentTags::deleteAll([
-                'and',
-                ['not in', 'tag_id', $arrayDepartment],
-                ['document_id' => $model->id,'name' => 'employee']  
-            ]);
-
            
-            foreach ($arrayDepartment as $key => $value):
-                $check = DocumentTags::find()->where(['document_id' => $model->id, 'tag_id' => $value])->one();
-                $new = $check ? $check : new DocumentTags();
-                $new->name = 'department';
-                $new->document_id = $model->id;
-                $new->tag_id = $value;
-                $new->save(false);
-                $data[] = $new;
-            endforeach;
-
-            foreach ($model->data_json['employee_tag'] as $key => $value):
-                $check = DocumentTags::find()->where(['document_id' => $model->id, 'tag_id' => $value])->one();
-                $new = $check ? $check : new DocumentTags();
-                $new->name = 'employee';
-                $new->document_id = $model->id;
-                $new->tag_id = $value;
-                $new->save(false);
-                $data[] = $new;
-            endforeach;
-            
-            
-            // return $data;   
-
             $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
             $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
             if($model->doc_expire !=='__/__/____'){
@@ -221,7 +184,7 @@ class DocumentsController extends Controller
             }
            
             if ($model->save()) {
-                
+                $model->UpdateDocumentTags();
                 
                 try {
                     
@@ -283,20 +246,24 @@ class DocumentsController extends Controller
         ]);
         
         if ($this->request->isPost && $model->load($this->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            // Yii::$app->response->format = Response::FORMAT_JSON;
+
+            
             if($model->save()){
-                
-                return [
-                    'status' => 'success',
-                    'data' => $model,
-                ];
+               $model->UpdateDocumentTags();
+            // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
+            return $this->redirect(['view', 'id' => $model->document_id]);
+                // return [
+                //     'status' => 'success',
+                //     'data' => $model,
+                // ];
             }
         }
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => 'xxx',
+                'title' =>$this->request->get('title'),
                 'content' => $this->renderAjax('_form_comment', [
                     'model' => $model,
                 ])
@@ -313,10 +280,15 @@ class DocumentsController extends Controller
         $emp = UserHelper::GetEmployee();
         $model = DocumentTags::findOne($id);
         
+        $tags = DocumentTags::find()->where(['name' => 'employee','document_id' => $model->document_id])->all();
+        $list = ArrayHelper::map($tags, 'tag_id','tag_id');
+        $model->tags_employee = $list;
+
+
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             if($model->save()){
-                
+                $model->UpdateDocumentTags();
                 return [
                     'status' => 'success',
                     'data' => $model,
@@ -368,9 +340,10 @@ public function actionListComment($id)
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         return [
-            'title' => 'xxx',
+            'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น',
             'content' => $this->renderAjax('list_comment', [
                 'model' => $model,
+              
             ])
         ];
     } else {

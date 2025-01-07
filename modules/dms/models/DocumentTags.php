@@ -7,6 +7,7 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -29,8 +30,9 @@ class DocumentTags extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $comment;
+    public $tags_employee;
 
-     public $comment;
     public static function tableName()
     {
         return 'document_tags';
@@ -42,8 +44,8 @@ class DocumentTags extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['data_json','tag_id','reading'], 'safe'],
-            [['ref', 'name', 'doc_number', 'document_id','tag_id', 'status', 'department_id', 'document_org_id'], 'string', 'max' => 255],
+            [['data_json', 'tag_id', 'reading','tags_employee'], 'safe'],
+            [['ref', 'name', 'doc_number', 'document_id', 'tag_id', 'status', 'department_id', 'document_org_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -65,8 +67,6 @@ class DocumentTags extends \yii\db\ActiveRecord
         ];
     }
 
-
-
     public function behaviors()
     {
         return [
@@ -84,7 +84,6 @@ class DocumentTags extends \yii\db\ActiveRecord
         ];
     }
 
-    
     public function afterFind()
     {
         try {
@@ -94,7 +93,7 @@ class DocumentTags extends \yii\db\ActiveRecord
 
         parent::afterFind();
     }
-    
+
     // สถานะ
     public function getDocumentStatus()
     {
@@ -103,7 +102,7 @@ class DocumentTags extends \yii\db\ActiveRecord
 
     public function getEmployee()
     {
-        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+        return $this->hasOne(Employees::class, ['id' => 'tag_id']);
     }
 
     public function getDocument()
@@ -111,27 +110,26 @@ class DocumentTags extends \yii\db\ActiveRecord
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
 
-        //นับเวลาที่ผ่านมาแล้ว
-        public function createdDays()
-        {
-                return AppHelper::timeDifference($this->created_at);
-        }
-    
-        
+    // นับเวลาที่ผ่านมาแล้ว
+    public function createdDays()
+    {
+        return AppHelper::timeDifference($this->created_at);
+    }
+
     public function getAvatar($empid, $msg = '')
     {
         // try {
-            $employee = Employees::find()->where(['id' => $this->created_by])->one();
-            $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
-            $msg = '<i class="fa-regular fa-comment"></i> '.$this->data_json['comment'];
-            // $msg = $employee->departmentName();
-            return [
-                'avatar' => $employee->getAvatar(false, $msg),
-                'department' => $employee->departmentName(),
-                'fullname' => $employee->fullname,
-                'position_name' => $employee->positionName(),
-                // 'product_type_name' => $this->data_json['product_type_name']
-            ];
+        $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+        $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
+        $msg = '<i class="fa-regular fa-comment"></i> ' . $this->data_json['comment'];
+        // $msg = $employee->departmentName();
+        return [
+            'avatar' => $employee->getAvatar(false, $msg),
+            'department' => $employee->departmentName(),
+            'fullname' => $employee->fullname,
+            'position_name' => $employee->positionName(),
+            // 'product_type_name' => $this->data_json['product_type_name']
+        ];
         // } catch (\Throwable $th) {
         //     return [
         //         'avatar' => '',
@@ -143,42 +141,89 @@ class DocumentTags extends \yii\db\ActiveRecord
         // }
     }
 
-
     public function viewCreate()
     {
-           try {
-            return  Yii::$app->thaiFormatter->asDate($this->created_at, 'medium').' '.$this->doc_time;
-           } catch (\Throwable $th) {
+        try {
+            return Yii::$app->thaiFormatter->asDate($this->created_at, 'medium') . ' ' . $this->doc_time;
+        } catch (\Throwable $th) {
             return null;
-           }
+        }
     }
-    
+
     public function listCommentTags()
     {
         $model = Categorise::find()->where(['name' => 'document_comment_tags'])->all();
-        
+
         return ArrayHelper::map($model, 'title', 'title');
     }
-       //ดึงค่าไปแสดงตอนที่เรา update
-       public function listEmployeeSelectTag()
-       {
-           try {
-   
+
+    // ดึงค่าไปแสดงตอนที่เรา update
+    public function listEmployeeSelectTag()
+    {
+        try {
+            // หาบุคคลที่เคย tag ไปแล้ว
+            $tags = self::find()->select('tag_id')
+            
+            ->where(['name' => 'employee', 'document_id' => $this->document_id])
+            ->andWhere(['<>', 'tag_id',$this->created_by])
+            ->All();
+            $allTag = ArrayHelper::getColumn($tags, 'tag_id');
+            // หาบุคคลที่ยังไม่ได้ tag ไป  และ ไม่ใช่ admin
             $employees = Employees::find()
-               ->select(['id', 'concat(fname, " ", lname) as fullname'])
-               ->andWhere(['status' => '1'])
-               ->andWhere(['<>','id','1'])
-               ->asArray()
-               ->all();
-           
-               // return ArrayHelper::map($employees,'id','fname');
-           return ArrayHelper::map($employees,'id',function($model){
-               return $model['fullname'];
-           });
-                       
-       } catch (\Throwable $th) {
-           return [];
-       }
-       }
-       
+                ->select(['id', 'concat(fname, " ", lname) as fullname'])
+                ->andWhere(['status' => '1'])
+                ->andWhere(['<>', 'id', '1'])
+                ->andWhere(['not in', 'id', $allTag])
+                ->asArray()
+                ->all();
+
+            return ArrayHelper::map($employees, 'id', function ($model) {
+                return $model['fullname'];
+            });
+        } catch (\Throwable $th) {
+            return [];
+        }
+    }
+
+    // บันทึก tag ไปยัง document
+    public function UpdateDocumentTags()
+    {
+        $me = UserHelper::GetEmployee();
+        try {
+            $dicrector = 0;
+
+            // $clearDEmployeeTag = self::deleteAll([
+            //     'and',
+            //     ['not in', 'tag_id', $this->tags_employee],
+            //     ['document_id' => $this->document_id, 'name' => 'employee','crated_by' => $me->id]
+            // ]);
+            // foreach ($this->data_json['employee_tag'] as $key => $value):
+            foreach ($this->tags_employee as $key => $value):
+                $check = DocumentTags::find()->where(['name' => 'employee','document_id' => $this->document_id, 'tag_id' => $value])->one();
+                $new = $check ? $check : new DocumentTags();
+                $new->name = 'employee';
+                $new->document_id = $this->document_id;
+                $new->tag_id = $value;
+                $new->save(false);
+                // if($new->employee->isDicrector())
+                // {
+                //     $dicrector = 1;
+                // }
+                
+            endforeach;
+            // return $dicrector;
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
+    }
+    // public function updateTagToDocument()
+    // {
+    //     try {
+    //         $model = Documents::findOne($this->document_id);
+    //         $model->data_json['employee_tag'] = $this->tag_id;
+    //         $model->save();
+    //     } catch (\Throwable $th) {
+    //         return false;
+    //     }
+    // }
 }

@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <style>
 
 </style>
-<?php Pjax::begin(['timeout' => 80000]); ?>
+<?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
 <div class="documents-index">
 
@@ -54,8 +54,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th style="width:250px;" class="fw-semibold">เลขรับ</th>
                             <th class="fw-semibold">เรื่อง</th>
-                            <th class="fw-semibold" style="width:350px;">ลงความเห็น</th>
-                            <th class="fw-semibold text-center" style="width:250px;">ไฟล์แนบ</th>
+                            <th class="fw-semibold" style="width:650px;">ลงความเห็น</th>
+                            <th class="fw-semibold text-center" style="width:300px;">ไฟล์แนบ</th>
                             <th class="fw-semibold" style="width:990px;">วันที่รับ</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
-                                    class="text-dark open-modal-fullscreen">
+                                    class="text-dark open-modal-fullscree-xn">
                                     <div class=" d-flex flex-column" style="max-width:1000px">
                                         <div>
                                             <p class="text-truncate fw-semibold fs-6 mb-0">
@@ -96,10 +96,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                         </span>
                                     </span>
-
-
-
-
                                 </a>
                             </td>
                             <td>
@@ -130,7 +126,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
                             </td>
                             <td>
-                                <?php echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                                <?php echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
                             </td>
                         </tr>
                         <?php endforeach;?>

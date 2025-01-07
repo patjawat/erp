@@ -48,7 +48,7 @@ use app\modules\dms\models\Documents;
                             <?php echo $item->doc_regis_number?></td>
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>"
-                                    class="text-dark open-modal-fullscreen">
+                                    class="text-dark open-modal-fullscreen-x">
                                     <div class=" d-flex flex-column" style="max-width:1000px">
                                         <div>
                                             <p class="text-truncate fw-semibold fs-6 mb-0">

@@ -34,38 +34,19 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 <div class="border border-secondary border-opacity-25 p-3 rounded py-5">
 <?php
-echo $form->field($model, 'data_json[employee_tag]')->widget(Select2::classname(), [
+
+$tags = DocumentTags::find()->where(['name' => 'employee','document_id' => $model->id])->all();
+$list = ArrayHelper::map($tags, 'tag_id','tag_id');
+$model->tags_employee = $list;
+echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
     'data' => $model->listEmployeeSelectTag(),
     'options' => ['placeholder' => 'Select a state ...'],
     'pluginOptions' => [
         'allowClear' => true,
        'multiple' => true,
     ],
-]);
+])->label('ส่งต่อ');
 
-// echo DualListbox::widget([
-//     'model' => $model,
-//     'attribute' => 'data_json[employee_tag]',
-//     'items' => $model->listEmployeeSelectTag(),
-// 'items' => [
-//     [1 => 'Employee 1'],
-//     [2 => 'Employee 2'],
-//     [3 => 'Employee 2'],
-//     [4 => 'Employee 2'],
-// ],
-// 'options' => [
-//     'id' => 'myDualListbox', // กำหนด ID ให้ custom
-//     'multiple' => true,
-//     'size' => 10,
-//     'encode' => false, // รองรับ HTML
-// ],
-// 'clientOptions' => [
-//     'moveOnSelect' => false,
-//     'nonSelectedListLabel' => 'รายชื่อบุคลากร',
-//     'selectedListLabel' => 'ส่งต่อบุคลากร',
-//     'selectorMinimalHeight' => 300, // ความสูงของ Dual Listbox
-// ],
-// ]);
 ?>
 
 </div>

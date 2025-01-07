@@ -79,6 +79,7 @@ $moduleId = Yii::$app->controller->module->id;
                         <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'rounded-pill border border-white w-50 mb-3','style' => 'margin-left:3rem;max-height:100px;'])?>
                         <h6 class="text-center text-white"><?=UserHelper::GetEmployee()->fullname?></h6>
                         <h6 class="text-center"><?=UserHelper::GetEmployee()->positionName()?></h6>
+
                         <div class="d-flex justify-content-between gap-2">
                             <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> MyDashboard',['/me'],['class' => 'btn btn-primary shadow rounded-pill'])?>
                             <?=Html::a('<i class="fa-solid fa-power-off"></i>',['/site/logout'],['class' => 'btn btn-danger shadow rounded-pill logout'])?>

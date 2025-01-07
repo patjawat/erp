@@ -146,16 +146,16 @@
         },
         {
             "name": "bower-asset/bootstrap",
-            "version": "v5.3.0-alpha1",
+            "version": "v5.3.3",
             "source": {
                 "type": "git",
-                "url": "git@github.com:twbs/bootstrap.git",
-                "reference": "cf9454caa00872899215603e5e036d9a824b1b11"
+                "url": "https://github.com/twbs/bootstrap.git",
+                "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/cf9454caa00872899215603e5e036d9a824b1b11",
-                "reference": "cf9454caa00872899215603e5e036d9a824b1b11"
+                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/6e1f75f420f68e1d52733b8e407fc7c3766c9dba",
+                "reference": "6e1f75f420f68e1d52733b8e407fc7c3766c9dba"
             },
             "type": "bower-asset"
         },
@@ -164,12 +164,12 @@
             "version": "v1.7.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/uxsolutions/bootstrap-datepicker.git",
+                "url": "git@github.com:eternicode/bootstrap-datepicker.git",
                 "reference": "d364be5b066b38f3675a5a1dc174ce1ab1f3360e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uxsolutions/bootstrap-datepicker/zipball/d364be5b066b38f3675a5a1dc174ce1ab1f3360e",
+                "url": "https://api.github.com/repos/eternicode/bootstrap-datepicker/zipball/d364be5b066b38f3675a5a1dc174ce1ab1f3360e",
                 "reference": "d364be5b066b38f3675a5a1dc174ce1ab1f3360e"
             },
             "require": {
@@ -1627,16 +1627,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.388.0",
+            "version": "v0.389.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "89b7126578e0aaf6d5584d6ef7c7af165766c850"
+                "reference": "6274e67ee52b1a416ccee0a4eaf337d1139cdaf8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/89b7126578e0aaf6d5584d6ef7c7af165766c850",
-                "reference": "89b7126578e0aaf6d5584d6ef7c7af165766c850",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/6274e67ee52b1a416ccee0a4eaf337d1139cdaf8",
+                "reference": "6274e67ee52b1a416ccee0a4eaf337d1139cdaf8",
                 "shasum": ""
             },
             "require": {
@@ -1665,9 +1665,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.388.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.389.0"
             },
-            "time": "2024-12-21T01:06:13+00:00"
+            "time": "2025-01-05T01:04:21+00:00"
         },
         {
             "name": "google/auth",
@@ -6922,12 +6922,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "7c8d73f6ba1ba67bfb0966495617b7f7fd0f57d1"
+                "reference": "c58a8e37bcbf6d95fa78e2b81111e2a89b4f4e62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/7c8d73f6ba1ba67bfb0966495617b7f7fd0f57d1",
-                "reference": "7c8d73f6ba1ba67bfb0966495617b7f7fd0f57d1",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/c58a8e37bcbf6d95fa78e2b81111e2a89b4f4e62",
+                "reference": "c58a8e37bcbf6d95fa78e2b81111e2a89b4f4e62",
                 "shasum": ""
             },
             "require": {
@@ -7019,7 +7019,7 @@
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
                 "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/master"
             },
-            "time": "2024-12-31T03:59:46+00:00"
+            "time": "2025-01-03T01:23:55+00:00"
         },
         {
             "name": "phpoffice/phpword",
@@ -7027,12 +7027,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PHPWord.git",
-                "reference": "feadceb1f8ac977497ea7a4a80d0cfd9cffb13ef"
+                "reference": "f24aabca176858b5b549d7425e33fa5cde30e0a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/feadceb1f8ac977497ea7a4a80d0cfd9cffb13ef",
-                "reference": "feadceb1f8ac977497ea7a4a80d0cfd9cffb13ef",
+                "url": "https://api.github.com/repos/PHPOffice/PHPWord/zipball/f24aabca176858b5b549d7425e33fa5cde30e0a9",
+                "reference": "f24aabca176858b5b549d7425e33fa5cde30e0a9",
                 "shasum": ""
             },
             "require": {
@@ -7129,7 +7129,7 @@
                 "issues": "https://github.com/PHPOffice/PHPWord/issues",
                 "source": "https://github.com/PHPOffice/PHPWord/tree/master"
             },
-            "time": "2024-10-12T06:45:12+00:00"
+            "time": "2025-01-01T09:15:53+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -7213,12 +7213,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "709ec107af3cb2f385b9617be72af8cf62441d02"
+                "reference": "ec5b843c254a9ec675c12e8d03dfec42a3c0bd8b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/709ec107af3cb2f385b9617be72af8cf62441d02",
-                "reference": "709ec107af3cb2f385b9617be72af8cf62441d02",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/ec5b843c254a9ec675c12e8d03dfec42a3c0bd8b",
+                "reference": "ec5b843c254a9ec675c12e8d03dfec42a3c0bd8b",
                 "shasum": ""
             },
             "require": {
@@ -7315,7 +7315,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-14T21:12:59+00:00"
+            "time": "2025-01-03T19:56:49+00:00"
         },
         {
             "name": "piwik/device-detector",
@@ -8526,12 +8526,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mailer.git",
-                "reference": "c2f7e0d8d7ac8fe25faccf5d8cac462805db2663"
+                "reference": "48db05b1f61fa78a7dd426729ae7d3bb099ddb8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mailer/zipball/c2f7e0d8d7ac8fe25faccf5d8cac462805db2663",
-                "reference": "c2f7e0d8d7ac8fe25faccf5d8cac462805db2663",
+                "url": "https://api.github.com/repos/symfony/mailer/zipball/48db05b1f61fa78a7dd426729ae7d3bb099ddb8a",
+                "reference": "48db05b1f61fa78a7dd426729ae7d3bb099ddb8a",
                 "shasum": ""
             },
             "require": {
@@ -8598,7 +8598,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:18:03+00:00"
+            "time": "2024-12-18T17:30:13+00:00"
         },
         {
             "name": "symfony/mime",
@@ -9532,12 +9532,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "4816fbb5f69d37bb8972bfcec21f4a94f2bc267d"
+                "reference": "89933f83a20d047e6b53b2d5e17b9d2dc67cf6ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/4816fbb5f69d37bb8972bfcec21f4a94f2bc267d",
-                "reference": "4816fbb5f69d37bb8972bfcec21f4a94f2bc267d",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/89933f83a20d047e6b53b2d5e17b9d2dc67cf6ab",
+                "reference": "89933f83a20d047e6b53b2d5e17b9d2dc67cf6ab",
                 "shasum": ""
             },
             "require": {
@@ -9646,7 +9646,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-30T16:53:25+00:00"
+            "time": "2025-01-06T14:53:58+00:00"
         },
         {
             "name": "yiisoft/yii2-authclient",
@@ -11887,12 +11887,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "8afd8554c471373b47b5a59138e8feea69e60bfe"
+                "reference": "0d1066fa8302c0bdd897628c0fab01bffbbd6c3a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/8afd8554c471373b47b5a59138e8feea69e60bfe",
-                "reference": "8afd8554c471373b47b5a59138e8feea69e60bfe",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0d1066fa8302c0bdd897628c0fab01bffbbd6c3a",
+                "reference": "0d1066fa8302c0bdd897628c0fab01bffbbd6c3a",
                 "shasum": ""
             },
             "require": {
@@ -11982,7 +11982,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-20T07:00:31+00:00"
+            "time": "2025-01-06T08:24:41+00:00"
         },
         {
             "name": "sebastian/cli-parser",

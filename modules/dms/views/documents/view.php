@@ -23,11 +23,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
+<?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 <div class="card">
     <div class="card-body">
-        
-
-        <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
         <span class="text-primary fw-normal fs-13">
             <div class="border border-secondary border-opacity-25 p-3 rounded">
                 <!-- Tab panes -->
@@ -36,23 +34,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="d-flex justify-content-between">
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
-                                <?php // echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
-                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal"><i class="fa-solid fa-chevron-left"></i> ย้อนกลับ</button>
+                                <?php  echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+                                <!-- <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal"><i class="fa-solid fa-chevron-left"></i> ย้อนกลับ</button> -->
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active show" data-bs-toggle="pill" href="#home1" role="pill"
                                         aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-info-circle"></i>
                                         รายละเอียด</a>
                                 </li>
-                                <!-- <li class="nav-item" role="presentation">
-                                    <a class="nav-link" data-bs-toggle="pill" href="#track" role="pill"
-                                        aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-binoculars"></i>
-                                        การติดตาม</a>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link" data-bs-toggle="pill" href="#history" role="pill"
-                                        aria-selected="true" tabindex="-1"><i class="fas fa-fw fa-history"></i>
-                                        ประวัติ</a>
-                                </li> -->
                             </ul>
 
                         </div>
@@ -69,18 +57,16 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </div>
                     </div>
-
                     <div class="col-4 py-2">
-                    
+                    <h6><i class="fa-regular fa-comments fs-2"></i> การลงความเห็น</h6>
                        <div class="listComment"></div>
                        <div class="viewFormComment"></div>
+                        <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
                     </div>
                 </div>
             </div>
-
     </div>
 </div>
-
 
 <?php
 $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
@@ -90,15 +76,12 @@ $js = <<< JS
     listComment()
     async function getComment()
     {
-     
         await $.ajax({
             type: "get",
             url: "$getCommentUrl",
             dataType: "json",
             success: async function (res) {
                 $('.viewFormComment').html(res.content)
-               
-                 
             }
         });
     }
@@ -112,9 +95,6 @@ $js = <<< JS
             dataType: "json",
             success: async function (res) {
                 $('.listComment').html(res.content)
-                console.log('listcomment');
-                
-                 
             }
         });
     }
@@ -134,10 +114,6 @@ $js = <<< JS
 
     $("body").on("click", ".delete-comment", function (e) {
         e.preventDefault();
-        console.log('update commetn');
-        // var confirm = confirm('ต้องการลบหรือไม่!');
-
-
         Swal.fire({
         title: 'ยืนยัน',
         text: 'ต้องการลบหรือไม่',
@@ -149,7 +125,6 @@ $js = <<< JS
         cancelButtonText: "ยกเลิก",
     }).then(async (result) => {
         if(result.value == true)
-    
             $.ajax({
                 type: "post",
                 url: $(this).attr('href'),
@@ -162,11 +137,9 @@ $js = <<< JS
                         }
                     }
                 });
-
-            });
-        
+            }); 
     });
-
 JS;
 $this->registerJS($js);
 ?>
+<?php Pjax::end(); ?>

@@ -5,10 +5,12 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use kartik\select2\Select2;
-use kartik\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
 // use softark\duallistbox\DualListbox;
+use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
-use iamsaint\datetimepicker\Datetimepicker;
+use app\modules\dms\models\DocumentTags;
+;
 
 // use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
@@ -34,15 +36,19 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
 <?php
-// echo $form->field($model, 'data_json[employee_tag]')->widget(Select2::classname(), [
-//     'data' => $model->listEmployeeSelectTag(),
-//     'options' => ['placeholder' => 'Select a state ...'],
-//     'pluginOptions' => [
-//         'allowClear' => true,
-//         'multiple' => true,
-//         'dropdownParent' => '#fullscreen-modal',
-//     ],
-// ]);
+
+
+
+echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
+    'data' => $model->listEmployeeSelectTag(),
+    'options' => ['placeholder' => 'เลือกผู้ส่งต่อ ...'],
+    'pluginOptions' => [
+        'allowClear' => true,
+       'multiple' => true,
+    ],
+])->label('ส่งต่อ');
+
+
 ?>
 <?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
 <?php if($model->isNewRecord):?>
@@ -61,7 +67,8 @@ $js = <<< JS
 $('.save-comment').click(function (e) { 
     e.preventDefault();
 
-    var form = $('#fullscreen-modal').find("#form-comment");
+    // var form = $('#fullscreen-modal').find("#form-comment");
+    var form = $("#form-comment");
         $.ajax({
             url: form.attr('action'),
             type: 'post',

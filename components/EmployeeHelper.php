@@ -2,13 +2,13 @@
 
 namespace app\components;
 
-use app\models\Categorise;
-use app\modules\hr\models\Employees;
 use Yii;
 use yii\base\Component;
-use app\modules\usermanager\models\User;
 use yii\bootstrap5\Html;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\modules\hr\models\Employees;
+use app\modules\usermanager\models\User;
 
 // ใช้ง
 // ใช้งานเกี่ยวกับ user
@@ -18,8 +18,6 @@ class EmployeeHelper extends Component
    //  public static function Duration($end){
    //     return round(abs(strtotime(date('Y-m-d 00:00:00')) - strtotime($model->created_at))/60/60/24);
    // }
-
-
 
    public static function Initail($id)
    {
@@ -39,6 +37,19 @@ $id = $ids ? \Yii::$app->session->set('employee')['id'] : null;
    }
 
 
+   public static function isDirector($user_id){
+   
+      $sql = "SELECT * FROM `auth_assignment` WHERE item_name = 'director' AND user_id = :user_id;";
+      $query = Yii::$app->db->createCommand($sql)
+         ->bindValue(':user_id', $user_id)
+         ->queryOne();
+      if($query){
+         return true;
+      }else{
+         return false;
+      }
+   }
+   
    public static function checkNull(){
       $education = Employees::find()->where(['education' => null])->count('id');
       $position = Employees::find()->where(['position_name' => null])->count('id');

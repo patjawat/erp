@@ -7,6 +7,7 @@ use yii\db\Expression;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\AppHelper;
+use app\components\EmployeeHelper;
 use app\components\CategoriseHelper;
 use app\modules\usermanager\models\User;
 use app\modules\filemanager\models\Uploads;
@@ -203,7 +204,8 @@ class Employees extends Yii\db\ActiveRecord
     {
         try {
             // $this->cid = AppHelper::cidFormat($this->cid);
-
+         
+            
             if ($this->UpdateFormDetail()['new_fullname']) {  // ถ้ามีการเปลี่ยนชื่อ
                 $this->fullname = $this->UpdateFormDetail()['new_fullname'];
             } else {
@@ -284,6 +286,11 @@ class Employees extends Yii\db\ActiveRecord
         }
     }
 
+    public function isDirector()
+    {
+
+        return EmployeeHelper::isDirector($this->user_id);
+    }
     /**
      * หาปีที่เกษียณอายุ ครบ 60 ปี โดยกำหนดให้เป็นสิ้นเดือนกันยายนของปีนั้นๆ.
      *
