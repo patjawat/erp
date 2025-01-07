@@ -21,7 +21,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var app\modules\dms\models\Documents $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<?= $form->field($model, 'req_approve')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('เสนอผู้อำนวยการ'); ?>
+<?php //  $form->field($model, 'req_approve')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('เสนอผู้อำนวยการ'); ?>
 <?= $form->field($model, 'data_json[department_tag]')->widget(\kartik\tree\TreeViewInput::className(), [
     'query' => Organization::find()->addOrderBy('root, lft'),
     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],

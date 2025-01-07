@@ -395,6 +395,12 @@ class Documents extends \yii\db\ActiveRecord
         return DocumentTags::find()->where(['document_id' => $this->id])->andWhere(['in', 'name', ['employee_tag', 'req_approve']])->all();
     }
 
+    // นับจำนวนที่ส่งต่อ
+    public function countStackDocumentTags()
+    {
+        return DocumentTags::find()->where(['document_id' => $this->id, 'name' => 'employee'])->count();
+    }
+
     // แสดงการส่งต่อรายบุคคล
     public function StackDocumentTags($tag_name)
     {

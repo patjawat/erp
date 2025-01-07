@@ -88,6 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                         </div>
                                     </div>
+                                    </a>
                                     <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>
                                             <?php  echo $item->documentOrg->title ?? '-';?>
@@ -95,12 +96,28 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                         </span>
                                     </span>
-
-                                        <span class="badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13">
-                                        <i class="fa-solid fa-tags"></i> <?php echo $item->viewCount()?>
-                                        </span>
+                                                <?php if($item->countStackDocumentTags() >= 1):?>
+                                                    <?php
+                                                        echo Html::a('<i class="fa-solid fa-tags"></i>'.$item->countStackDocumentTags(),
+                                                            ['/dms/documents/list-comment', 'id' => $item->id,'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                                                            [
+                                                                'class' => 'open-modal badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13',
+                                                                'data' => [
+                                                                    'size' => 'modal-md',
+                                                                    'bs-trigger' => 'hover focus',
+                                                                    'bs-toggle' => 'popover',
+                                                                    'bs-placement' => 'top',
+                                                                    'bs-title' => '<i class="fa-solid fa-tags"></i> ส่งต่อ',
+                                                                    'bs-html' => 'true',
+                                                                    'bs-content' => $item->StackDocumentTags('employee')
+                                                                ]
+                                                            ]
+                                                        );
+                                                        ?>
+                                
+                                        <?php endif?>
                                    
-                                </a>
+                              
                             </td>
                             <td>
                                 <?php echo $item->StackDocumentTags('comment')?>
@@ -156,12 +173,6 @@ $this->params['breadcrumbs'][] = $this->title;
     ]); ?>
 </div>
 
-<button type="button" class="btn btn-primary" 
-            data-bs-toggle="popover" 
-            data-bs-trigger="hover" 
-            data-bs-content="This is a popover on hover!">
-      Hover me
-    </button>
 
 <?php Pjax::end(); ?>
 
