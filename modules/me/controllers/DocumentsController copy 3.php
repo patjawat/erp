@@ -19,66 +19,83 @@ class DocumentsController extends \yii\web\Controller
         $department = $emp->department;
         $searchModel = new DocumentSearch([
             'document_group' => 'receive', 
-            'show_reading' => 0
         ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('documentTags');
+        $dataProvider->query->andWhere("JSON_CONTAINS(documents.data_json->'$.tags_employee', '\"$emp->id\"', '$')");
+        // $dataProvider->query->andFilterWhere("NOT JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+        // $dataProvider->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+        
         $dataProviderDepartment = $searchModel->search($this->request->queryParams);
-        if(isset($searchModel->show_reading) && $searchModel->show_reading == 1){  
-            $dataProviderDepartment->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
-          }else{
-       $dataProviderDepartment->query->andWhere("NOT JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
-      
-   }
+        $dataProviderDepartment->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+        $dataProviderDepartment->query->andFilterWhere([
+            '>', 
+            new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(data_json->'$.department_tag'))"), 
+            0
+            ])->addParams([':department' => $emp->department]);
 
-        $dataProviderDepartment->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.tags_department','\"$emp->department\"')"));
+            if($searchModel->show_reading == '1'){  
+                //   แสดงที่ยังไม่ได้อ่าน
+            // $dataProvider->query->andWhere("NOT JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+            // $dataProviderDepartment->query->andWhere("NOT JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+            }else{
+            //   แสดงที่เจ้าตัวอ่านแล้ว
+            // $dataProvider->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+            // $dataProviderDepartment->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+                
+            }
             
-            $dataProviderDepartment->query->andFilterWhere([
-                'or',
-                ['like', 'topic', $searchModel->q],
-                ['like', 'doc_regis_number', $searchModel->q],
-            ]);
-   
-            $dataProviderDepartment->setSort(['defaultOrder' => [
-                'doc_regis_number'=>SORT_DESC,
-                'thai_year'=>SORT_DESC,
-                ]]);
+    //     $dataProvider->query->andWhere(['or',
+    //     new Expression("JSON_CONTAINS(documents.data_json->'$.employee_tag', :empId, '$')", [
+    //         ':empId' => json_encode($emp->id)
+    //     ]),
+    //     new Expression(
+    //         'FIND_IN_SET(:department, JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, "$.tags_department"))) > 0',
+    //         [':department' => $department]
+    //     )
+    // ]);
 
-                
-                $dataProviderEmployee = $searchModel->search($this->request->queryParams);
-                $dataProviderEmployee->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.tags_employee','\"$emp->id\"')"));
-               
-                if(isset($searchModel->show_reading) && $searchModel->show_reading == 1){  
-                      $dataProviderEmployee->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
-                    }else{
-                 $dataProviderEmployee->query->andWhere("NOT JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
-                
-             }
-                $dataProviderEmployee->query->andFilterWhere([
-                    'or',
-                    ['like', 'topic', $searchModel->q],
-                    ['like', 'doc_regis_number', $searchModel->q],
-                ]);
-                $dataProviderEmployee->setSort(['defaultOrder' => [
-                    'doc_regis_number'=>SORT_DESC,
-                    'thai_year'=>SORT_DESC,
-                    ]]);
-
+        
+        // $dataProvider->query->andWhere("JSON_CONTAINS(tags_employee, '\"$emp->id\"', '$')");
+        // $dataProvider->query->andFilterWhere([
+        //     '>', 
+        //     new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(documents.data_json->'$.tags_department'))"), 
+        //     0
+        //     ])->addParams([':department' => $emp->department]);
+        
+        // $dataProvider->query->andWhere([
+        //     'or',
+        //     ['and', ["JSON_CONTAINS(tags_employee, '\"$emp->id\"', '$')"]], 
+        //     ['and', [
+        //         '>', 
+        //         new Expression("FIND_IN_SET(:department, JSON_UNQUOTE(documents.data_json->'$.tags_department'))"), 
+        //         0
+        //         ]] 
+        // ]);
+        // if($searchModel->show_reading == '1'){  
+              // แสดงที่ยังไม่ได้อ่าน
+        // $dataProvider->query->andWhere("NOT JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+        // }else{
+          // แสดงที่เจ้าตัวอ่านแล้ว
+        // $dataProvider->query->andWhere("JSON_CONTAINS(view_json, :json, '$')")->addParams([':json' => json_encode(['emp_id' => $emp->id])]);
+            
+        // }
             if($this->request->isAJax){
                 Yii::$app->response->format = Response::FORMAT_JSON;
     
                     return [
                         'title' => $this->request->get('tilte'),
                         'content' => $this->renderAjax('list_show', [
-                            'list' => true,
+                            'list' => $this->request->get('list'),
                             'searchModel' => $searchModel,
-                            'dataProviderDepartment' => $dataProviderDepartment,
-                            'dataProviderEmployee' => $dataProviderEmployee
+                            'dataProvider' => $dataProvider,
                         ])
                      ];
                 }else{
                     return $this->render('index', [
                         'searchModel' => $searchModel,
-                        'dataProviderDepartment' => $dataProviderDepartment,
-                        'dataProviderEmployee' => $dataProviderEmployee
+                        'dataProvider' => $dataProvider,
+                        'dataProviderDepartment' => $dataProviderDepartment
                     ]);
                 }
     }

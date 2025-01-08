@@ -115,15 +115,15 @@ class DocumentsController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 
-                if($model->req_approve == 1){
-                    $model->status = 'DS3';
-                }
+                // if($model->req_approve == 1){
+                //     $model->status = 'DS3';
+                // }
                 
-                if($model->data_json['department_tag'] == ""){
-                    $model->status = 'DS1';
-                }else{
-                    $model->status = 'DS2';
-                }
+                // if($model->data_json['department_tag'] == ""){
+                //     $model->status = 'DS1';
+                // }else{
+                //     $model->status = 'DS2';
+                // }
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                 $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
                 if($model->doc_expire !=='__/__/____'){
@@ -139,6 +139,7 @@ class DocumentsController extends Controller
             }
         } else {
             // $model->loadDefaultValues();
+           
             $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(),10);
         }
 
@@ -162,10 +163,23 @@ class DocumentsController extends Controller
         $old_json = $model->data_json;
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
         $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
+       
+        try {
+            $a = [
+                'tags_department' =>   implode(',', $model->data_json['tags_department'])
+            ];
+            $model->data_json = ArrayHelper::merge($old_json,$a);
+       
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        //convert to 
+      
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-            
            
+            // $result = '[' . $model->data_json['tags_department'] . ']'; // เพิ่ม [ และ ] รอบสตริง
+          
             $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
             $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
             if($model->doc_expire !=='__/__/____'){
@@ -174,17 +188,22 @@ class DocumentsController extends Controller
                 $model->doc_expire = "";
             }
 
-            if($model->status !== 'DS4'){
+            // if($model->status !== 'DS4'){
                 
-                if($model->data_json['department_tag'] == ""){
-                    $model->status = 'DS1';
-                }else{
-                    $model->status = 'DS2';
-                }
-            }
+            //     if($model->data_json['department_tag'] == ""){
+            //         $model->status = 'DS1';
+            //     }else{
+            //         $model->status = 'DS2';
+            //     }
+            // }
            
+            $tagDepartment = [
+                'tags_department' =>  explode(',', $model->data_json['tags_department'])
+            ];
+            $model->data_json = ArrayHelper::merge($model->data_json,$tagDepartment,);
+            // return $model->data_json;
             if ($model->save()) {
-                $model->UpdateDocumentTags();
+                // $model->UpdateDocumentTags();
                 
                 try {
                     

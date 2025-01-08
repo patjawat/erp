@@ -2,6 +2,7 @@
 
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
@@ -33,6 +34,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="card">
         <div class="card-body">
+            <?php
+            $ayy = ["14,15,3"];
+          
+            ?>
             <div class="d-flex justify-content-between align-top align-items-center">
                 <h6>
                     <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ

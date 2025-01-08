@@ -22,7 +22,8 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <?php //  $form->field($model, 'req_approve')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('เสนอผู้อำนวยการ'); ?>
-<?= $form->field($model, 'data_json[department_tag]')->widget(\kartik\tree\TreeViewInput::className(), [
+<?php
+echo $form->field($model, 'data_json[tags_department]')->widget(\kartik\tree\TreeViewInput::className(), [
     'query' => Organization::find()->addOrderBy('root, lft'),
     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
     'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
@@ -30,7 +31,26 @@ use iamsaint\datetimepicker\Datetimepicker;
     'asDropdown' => true,
     'multiple' => true,
     'options' => ['disabled' => false],
-])->label('ส่งหน่วยงาน'); ?>
+])->label('ส่งหน่วยงาน');
+ ?>
+              <?php
+              
+//               $form->field($model, 'tags_department')->widget(\kartik\tree\TreeViewInput::className(), [
+//     'name' => 'department',
+//     'id' => 'treeID',
+//     'query' => Organization::find()->addOrderBy('root, lft'),
+//     'value' => 1,
+//     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+//     'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+//     'fontAwesome' => true,
+//     'asDropdown' => true,
+//     'multiple' => false,
+//     'options' => ['disabled' => false, 'allowClear' => true,'class' => 'close'],
+//     'pluginOptions' => [
+//         'allowClear' => true
+//     ],
+// ])->label('หน่วยงานภายในตามโครงสร้าง');
+?>
 
 <div class="border border-secondary border-opacity-25 p-3 rounded py-5">
 <?php
@@ -38,7 +58,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 $tags = DocumentTags::find()->where(['name' => 'employee','document_id' => $model->id])->all();
 $list = ArrayHelper::map($tags, 'tag_id','tag_id');
 $model->tags_employee = $list;
-echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
+echo $form->field($model, 'data_json[tags_employee]')->widget(Select2::classname(), [
     'data' => $model->listEmployeeSelectTag(),
     'options' => ['placeholder' => 'Select a state ...'],
     'pluginOptions' => [

@@ -60,8 +60,9 @@ class Documents extends \yii\db\ActiveRecord
      */
     public $q;
 
-    public $tags_employee;
+    // public $tags_employee;
     public $reading;
+    public $show_reading;
 
     public function rules()
     {
@@ -69,7 +70,7 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year', 'topic', 'doc_number', 'secret', 'doc_speed', 'document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_time'], 'required'],
             [['topic'], 'string'],
-            [['reading', 'tags_employee','department_tag', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_receive_date', 'status', 'ref'], 'safe'],
+            [['reading','show_reading', 'tags_employee','tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_receive_date', 'status', 'ref'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -117,7 +118,7 @@ class Documents extends \yii\db\ActiveRecord
     public function afterFind()
     {
         try {
-            $this->reading = $this->viewCount()['reading'];
+            // $this->reading = $this->viewCount()['reading'];
         } catch (\Throwable $th) {
         }
 

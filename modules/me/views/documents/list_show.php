@@ -13,7 +13,7 @@ use app\modules\dms\models\Documents;
             <h6>
                 <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ
                 <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
+                    class="badge rounded-pill text-bg-primary"><?php echo number_format(($dataProviderEmployee->getTotalCount()+$dataProviderDepartment->getTotalCount()), 0) ?></span>
                 รายการ
             </h6>
             <?php if(isset($list)):?>
@@ -39,9 +39,7 @@ use app\modules\dms\models\Documents;
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
-                <?php foreach($dataProvider->getModels() as $item):?>
-                    
-                    <?php // if($item->viewCount()['reading'] <= 0):?>
+                <?php foreach($dataProviderEmployee->getModels() as $item):?>
                 <tr class="">
                     <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
                     <td class="fw-light align-middle">
@@ -77,12 +75,48 @@ use app\modules\dms\models\Documents;
                                 class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
                         </div>
                     </td>
-                    <!-- <td>
-                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/me/documents/share-file','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>    
-               </td> -->
                 </tr>
-                <?php // endif;?>
                 <?php endforeach;?>
+
+                <?php foreach($dataProviderDepartment->getModels() as $item):?>
+                <tr class="">
+                    <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
+                    <td class="fw-light align-middle">
+                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>" class="text-dark open-modal-fullscreen">
+                            <div class=" d-flex flex-column">
+
+                                <span class="fw-semibold fs-6">
+                                    <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                    <span class="badge text-bg-danger fs-13"><i
+                                            class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
+                                    <?php endif;?>
+
+                                    <?php if($item->doc_speed == 'ด่วน'):?>
+                                    <span class="badge text-bg-waring fs-13"><i
+                                            class="fa-solid fa-circle-exclamation"></i> ด่วน</span>
+                                    <?php endif;?>
+                                    <?php echo $item->topic?>
+
+                            </div>
+                            <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
+                            <span class="text-primary fw-normal fs-13">
+                                <i class="fa-solid fa-inbox"></i> <?php  echo $item->documentOrg->title ?? '-';?>
+                            </span>
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                    </td>
+                    <td class="fw-light align-middle">
+                        <div class=" d-flex flex-column">
+                            <span class="fw-normal fs-6"><?php echo $item->viewDocDate()?></span>
+                            <span
+                                class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach;?>
+                
 
             </tbody>
         </table>
