@@ -22,6 +22,7 @@ class m241216_103744_create_document_tags_table extends Migration
             'document_org_id' => $this->string()->comment('จากหน่วยงาน'),
             'status' => $this->string()->comment('สถานะ'),
             'department_id' => $this->string(),
+            'reading' => $this->dateTime(),
             'data_json' => $this->json(),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),

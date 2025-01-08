@@ -27,7 +27,10 @@ use app\modules\dms\models\Documents;
             
         </div>
         <?php endif;?>
+      <?php
       
+      echo $dataProvider->query->createCommand()->rawSql;
+      ?>
         <table class="table table-striped table-fixed">
                     <thead>
                         <tr>

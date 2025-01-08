@@ -21,7 +21,14 @@ class DocumentsController extends \yii\web\Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('documentTags');
-        $dataProvider->query->andWhere(['name' => 'employee', 'tag_id' => $emp->id]);
+        // $dataProvider->query->andWhere(['name' => 'employee', 'tag_id' => $emp->id]);
+        $dataProvider->query->andWhere([
+            'or',
+            // ['tag_id' => $emp->department],
+            // ['reading' => null]
+            ['and', ['name' => 'employee', 'tag_id' => $emp->id]], // First OR condition
+        ['and', ['name' => 'department', 'tag_id' => $emp->department, 'reading' => NULL]] // Second OR condition
+        ]);
         if(isset($searchModel->data_json['show_reading']) && $searchModel->data_json['show_reading'] == '0'){    
             $dataProvider->query->andFilterWhere(['not','reading',null]);
         }else{
