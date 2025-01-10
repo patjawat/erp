@@ -41,22 +41,22 @@ use app\modules\dms\models\Documents;
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach($dataProviderEmployee->getModels() as $item):?>
                 <tr class="">
-                    <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
+                    <td class="fw-semibold"><?php echo $item->document->doc_regis_number?></td>
                     <td class="fw-light align-middle">
                         <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>" class="text-dark open-modal-fullscreen">
                             <div class=" d-flex flex-column">
 
                                 <span class="fw-semibold fs-6">
-                                    <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                    <?php if($item->document->doc_speed == 'ด่วนที่สุด'):?>
                                     <span class="badge text-bg-danger fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
                                     <?php endif;?>
 
-                                    <?php if($item->doc_speed == 'ด่วน'):?>
+                                    <?php if($item->document->doc_speed == 'ด่วน'):?>
                                     <span class="badge text-bg-waring fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i> ด่วน</span>
                                     <?php endif;?>
-                                    <?php echo $item->topic?>
+                                    <?php echo $item->document->topic?>
 
                             </div>
                             <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
@@ -66,13 +66,13 @@ use app\modules\dms\models\Documents;
                         </a>
                     </td>
                     <td class="text-center">
-                        <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                        <?php echo $item->document->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
                     </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <span class="fw-normal fs-6"><?php echo $item->viewDocDate()?></span>
+                            <span class="fw-normal fs-6"><?php echo $item->document->viewDocDate()?></span>
                             <span
-                                class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
+                                class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->document->doc_date)?></span>
                         </div>
                     </td>
                 </tr>
@@ -80,22 +80,22 @@ use app\modules\dms\models\Documents;
 
                 <?php foreach($dataProviderDepartment->getModels() as $item):?>
                 <tr class="">
-                    <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
+                    <td class="fw-semibold"><?php  echo $item->document->doc_regis_number?></td>
                     <td class="fw-light align-middle">
                         <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>" class="text-dark open-modal-fullscreen">
                             <div class=" d-flex flex-column">
 
                                 <span class="fw-semibold fs-6">
-                                    <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                    <?php if($item->document->doc_speed == 'ด่วนที่สุด'):?>
                                     <span class="badge text-bg-danger fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
                                     <?php endif;?>
 
-                                    <?php if($item->doc_speed == 'ด่วน'):?>
+                                    <?php if($item->document->doc_speed == 'ด่วน'):?>
                                     <span class="badge text-bg-waring fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i> ด่วน</span>
                                     <?php endif;?>
-                                    <?php echo $item->topic?>
+                                    <?php echo $item->document->topic?>
 
                             </div>
                             <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
@@ -105,13 +105,13 @@ use app\modules\dms\models\Documents;
                         </a>
                     </td>
                     <td class="text-center">
-                        <?php echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                        <?php echo $item->document->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
                     </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <span class="fw-normal fs-6"><?php echo $item->viewDocDate()?></span>
+                            <span class="fw-normal fs-6"><?php echo $item->document->viewDocDate()?></span>
                             <span
-                                class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->doc_date)?></span>
+                                class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->document->doc_date)?></span>
                         </div>
                     </td>
                 </tr>

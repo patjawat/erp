@@ -5,6 +5,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\widgets\DetailView;
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
@@ -46,8 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                         <div class="tab-content p-0">
                             <div id="home1" class="tab-pane active show" role="tabpanel">
-                            <iframe src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
-                            width='100%' height='800px' frameborder="0"></iframe>
+                            <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true" frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
                             </div>
                             <div id="track" class="tab-pane" role="tabpanel">
                                 <?php echo $this->render('track',['model' => $model])?>
@@ -62,6 +62,13 @@ $this->params['breadcrumbs'][] = $this->title;
                        <div class="listComment"></div>
                        <div class="viewFormComment"></div>
                         <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
+
+                        <?php
+                        $emp = UserHelper::GetEmployee();
+                        echo $emp->id.'<br>';
+                        echo $emp->department.'<br>';
+                        
+                        ?>
                     </div>
                 </div>
             </div>
@@ -74,6 +81,16 @@ $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
 $js = <<< JS
     getComment();
     listComment()
+
+    const iframe = document.getElementById("myIframe");
+
+    iframe.onload = () => {
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    if (iframeDocument) {
+        iframeDocument.body.style.zoom = "150%";
+    }
+    };
+
     async function getComment()
     {
         await $.ajax({

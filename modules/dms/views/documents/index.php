@@ -11,12 +11,23 @@ use app\modules\dms\models\Documents;
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-
-$this->title = 'หนังสือรับ';
+if($searchModel->document_group == 'receive'){
+    $this->title = 'หนังสือรับ';
+}
+if($searchModel->document_group == 'send')
+{
+    $this->title = 'หนังสือส่ง';
+    
+}
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
+<?php if($searchModel->document_group == 'receive'):?>
+<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
+<?php endif; ?>
+<?php if($searchModel->document_group == 'send'):?>
+<i class="fa-solid fa-paper-plane text-danger"></i></i> <?= $this->title; ?>
+<?php endif; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -40,7 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ?>
             <div class="d-flex justify-content-between align-top align-items-center">
                 <h6>
-                    <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ
+                    <i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?>
                     <span
                         class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                     รายการ
@@ -49,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex justify-content-between align-top align-items-center">
 
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
-                <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลขหนังสือรับ', ['/dms/documents/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
             </div>
 
             <div class="table-responsive">
@@ -103,7 +114,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </span>
                                                 <?php if($item->countStackDocumentTags() >= 1):?>
                                                     <?php
-                                                        echo Html::a('<i class="fa-solid fa-tags"></i>'.$item->countStackDocumentTags(),
+                                                        echo Html::a('<i class="fa-solid fa-tags"></i> '.$item->countStackDocumentTags(),
                                                             ['/dms/documents/list-comment', 'id' => $item->id,'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
                                                             [
                                                                 'class' => 'open-modal badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13',

@@ -49,12 +49,12 @@ use kartik\widgets\ActiveForm;
             <div class="d-flex flex-row gap-4">
 
                 <?= $form->field($model, 'show_reading')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('แสดงที่อ่านแล้ว'); ?>
+
             </div>
 
         </div>
     </div>
 
-    <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
     <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-2']) ?>
 </div>
 
@@ -65,8 +65,8 @@ use kartik\widgets\ActiveForm;
 
 $js = <<< JS
 
-    \$( "#documentsearch-show_reading" ).prop( "checked", localStorage.getItem('show_reading') == 1 ? true : false );
-    \$("body").on("change", "#documentsearch-show_reading", function (e) {
+    \$( "#documentsdetailsearch-show_reading" ).prop( "checked", localStorage.getItem('show_reading') == 1 ? true : false );
+    \$("body").on("change", "#documentsdetailsearch-show_reading", function (e) {
                             if (\$(this).is(':checked')) {
                                 // alert('Checkbox is checked!');
                                 localStorage.setItem('show_reading',1);

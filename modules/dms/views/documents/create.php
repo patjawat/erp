@@ -10,7 +10,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Documents', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="documents-create">
-    <?= $this->render('_form', [
+    <?= $this->render('_form_'.$model->document_group, [
         'model' => $model
     ]) ?>
 

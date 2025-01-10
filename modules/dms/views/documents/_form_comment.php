@@ -32,7 +32,7 @@ use app\modules\dms\models\DocumentTags;
     // 'validationUrl' => ['/dms/documents/validator']
 ]); ?>
 <!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
-<?= $form->field($model, 'tag_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
 <?php

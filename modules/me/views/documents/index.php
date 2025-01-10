@@ -6,7 +6,18 @@ use app\modules\dms\models;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
+$this->title = 'ทะเบียนหนังสือ';
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/dms/menu') ?>
+<?php $this->endBlock(); ?>
+
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-top align-items-center">
@@ -33,7 +44,7 @@ use app\modules\dms\models\Documents;
         <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" data-bs-toggle="tab" href="#home"><span class="badge rounded-pill text-bg-danger"><?php echo $dataProviderEmployee->getTotalCount()?></span> ถึงฉัน</a>
+      <a class="nav-link active" data-bs-toggle="tab" href="#home"><span class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderEmployee->getTotalCount()?></span> ถึงฉัน</a>
     </li>
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span class="badge rounded-pill text-bg-danger"><?php echo $dataProviderDepartment->getTotalCount()?></span> ถึงหน่วยงาน</a>
@@ -44,16 +55,20 @@ use app\modules\dms\models\Documents;
   <!-- Tab panes -->
   <div class="tab-content">
     <div id="home" class="tab-pane active"><br>
-<?php echo $this->render('list_document',[
+<?php
+echo $this->render('list_document',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProviderEmployee
-        ])?>
+        ])
+        ?>
     </div>
     <div id="menu1" class="tab-pane fade"><br>
-    <?php echo $this->render('list_document',[
+    <?php 
+    echo $this->render('list_document',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProviderDepartment,
-        ])?>
+        ])
+        ?>
     </div>
 
   </div>

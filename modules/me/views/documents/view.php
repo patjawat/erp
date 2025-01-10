@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div>
     <span class="h5">
         <?= Html::encode($this->title) ?>
-        
+
     </span>
 <span class="fw-semibold fs-6">
                                 <?php if($model->doc_speed == 'ด่วนที่สุด'):?>

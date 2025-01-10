@@ -16,6 +16,7 @@ use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
+use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
 /**
@@ -106,7 +107,7 @@ class DocumentsController extends Controller
         //ถ้าเป็นหนังสทือราชการถ้ปีปัจจบัน
         $model = new Documents([
             'thai_year' => (Date('Y')+543),
-            'document_group' => 'receive',
+            'document_group' => $this->request->get('document_group')
         ]);
         // $model->ref =  substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
 
@@ -164,16 +165,7 @@ class DocumentsController extends Controller
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
         $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
        
-        try {
-            $a = [
-                'tags_department' =>   implode(',', $model->data_json['tags_department'])
-            ];
-            $model->data_json = ArrayHelper::merge($old_json,$a);
-       
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-        //convert to 
+        
       
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -197,13 +189,13 @@ class DocumentsController extends Controller
             //     }
             // }
            
-            $tagDepartment = [
-                'tags_department' =>  explode(',', $model->data_json['tags_department'])
-            ];
-            $model->data_json = ArrayHelper::merge($model->data_json,$tagDepartment,);
+            // $tagDepartment = [
+            //     'tags_department' =>  explode(',', $model->data_json['tags_department'])
+            // ];
+            // $model->data_json = ArrayHelper::merge($model->data_json,$tagDepartment,);
             // return $model->data_json;
             if ($model->save()) {
-                // $model->UpdateDocumentTags();
+                $model->UpdateDocumentTags();
                 
                 try {
                     
@@ -214,6 +206,8 @@ class DocumentsController extends Controller
                     }
                 return $this->redirect(['index']);
             }
+        }else{
+            $model->loadDefaultValues();
         }
 
         return $this->render('update', [
@@ -258,18 +252,18 @@ class DocumentsController extends Controller
     public function actionComment($id)
     {
         $emp = UserHelper::GetEmployee();
-        $model = new DocumentTags([
+        $model = new DocumentsDetail([
             'document_id' => $id,
-            'tag_id' => $emp->id,
+            'to_id' => $emp->id,
             'name' => 'comment'
         ]);
         
         if ($this->request->isPost && $model->load($this->request->post())) {
-            // Yii::$app->response->format = Response::FORMAT_JSON;
+            Yii::$app->response->format = Response::FORMAT_JSON;
 
-            
+            $model->UpdateDocumentsDetail();
+
             if($model->save()){
-               $model->UpdateDocumentTags();
             // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
             return $this->redirect(['view', 'id' => $model->document_id]);
                 // return [

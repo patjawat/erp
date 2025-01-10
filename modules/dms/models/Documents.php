@@ -22,8 +22,8 @@ use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\dms\models\DocumentTags;
 use app\modules\usermanager\models\User;
+use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -70,7 +70,7 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year', 'topic', 'doc_number', 'secret', 'doc_speed', 'document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_time'], 'required'],
             [['topic'], 'string'],
-            [['reading','show_reading', 'tags_employee','tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_receive_date', 'status', 'ref'], 'safe'],
+            [['reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_receive_date', 'status', 'ref'], 'safe'],
             [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -207,10 +207,7 @@ class Documents extends \yii\db\ActiveRecord
     public function viewCount()
     {
         try {
-            return DocumentTags::find()
-                ->where(['document_id' => '21017'])
-                ->andWhere(['IS NOT', 'reading', null])
-                ->count();
+            return count($this->view_json);
         } catch (\Throwable $th) {
             return 0;
         }
@@ -337,57 +334,52 @@ class Documents extends \yii\db\ActiveRecord
     public function UpdateDocumentTags()
     {
         try {
-            $arrayDepartment = explode(',', $this->data_json['department_tag']);
-            $clearDepartmentTag = DocumentTags::deleteAll([
+            if($this->tags_department){
+
+            $arrayDepartment = explode(',', $this->tags_department);
+            $clearDepartmentTag = DocumentsDetail::deleteAll([
                 'and',
-                ['not in', 'tag_id', $arrayDepartment],
+                ['not in', 'to_id', $arrayDepartment],
                 ['document_id' => $this->id, 'name' => 'department']
             ]);
             foreach ($arrayDepartment as $key => $value):
-                $check = DocumentTags::find()->where(['name' => 'department','document_id' => $this->id, 'tag_id' => $value])->one();
-                $new = $check ? $check : new DocumentTags();
+                $check = DocumentsDetail::find()->where(['name' => 'department', 'document_id' => $this->id, 'to_id' => $value])->one();
+                $new = $check ? $check : new DocumentsDetail();
                 $new->name = 'department';
                 $new->document_id = $this->id;
-                $new->tag_id = $value;
+                $new->to_id = $value;
                 $new->save(false);
             endforeach;
+                            
+        }
             // code...
         } catch (\Throwable $th) {
-            // throw $th;
         }
-        
+
         try {
             $dicrector = 0;
-            $clearDEmployeeTag = DocumentTags::deleteAll([
+            $clearDEmployeeTag = DocumentsDetail::deleteAll([
                 'and',
-                ['not in', 'tag_id', $this->tags_employee],
+                ['not in', 'to_id', $this->tags_employee],
                 ['document_id' => $this->id, 'name' => 'employee']
             ]);
 
-            // foreach ($this->data_json['employee_tag'] as $key => $value):
             foreach ($this->tags_employee as $key => $value):
-                $check = DocumentTags::find()->where(['name' => 'employee','document_id' => $this->id, 'tag_id' => $value])->one();
-                $new = $check ? $check : new DocumentTags();
+                $check = DocumentsDetail::find()->where(['name' => 'employee', 'document_id' => $this->id, 'to_id' => $value])->one();
+                $new = $check ? $check : new DocumentsDetail();
                 $new->name = 'employee';
                 $new->document_id = $this->id;
-                $new->tag_id = $value;
+                $new->to_id = $value;
                 $new->save(false);
-                // if($new->employee->isDicrector())
-                // {
-                //     $dicrector = 1;
-                // }
-                
             endforeach;
-            // return $dicrector;
         } catch (\Throwable $th) {
-            // throw $th;
         }
     }
 
     // รายการแสดงความเห็น
     public function listComment()
     {
-        return DocumentTags::find()->where(['document_id' => $this->id, 'name' => 'comment'])->all();
+        return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'comment'])->all();
     }
 
     // การติดตาม
@@ -399,7 +391,7 @@ class Documents extends \yii\db\ActiveRecord
     // นับจำนวนที่ส่งต่อ
     public function countStackDocumentTags()
     {
-        return DocumentTags::find()->where(['document_id' => $this->id, 'name' => 'employee'])->count();
+        return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'employee'])->count();
     }
 
     // แสดงการส่งต่อรายบุคคล
@@ -410,37 +402,37 @@ class Documents extends \yii\db\ActiveRecord
             $count = count($querys) - 2;
             $data = '';
             $data .= '<div class="avatar-stack">';
-            $count > 0 ? $data .=Html::a('+'.$count,['/dms/documents/list-comment', 'id' => $this->id,'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],['class' => 'open-modal avatar-sm rounded-circle shadow bg-secondary text-white text-center p-2 fs-13','data' => [
-                            'size' => 'modal-md',]]) : '';
+            $count > 0 ? $data .= Html::a('+' . $count, ['/dms/documents/list-comment', 'id' => $this->id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'], ['class' => 'open-modal avatar-sm rounded-circle shadow bg-secondary text-white text-center p-2 fs-13', 'data' => [
+                'size' => 'modal-md',
+            ]]) : '';
             foreach ($querys as $key => $item) {
-                $emp = Employees::findOne(['id' => $item->tag_id]);
-                if($key <=1){
-                $data .= Html::a(
-                    Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
-                        'data' => [
-                            'expand' => '-20',
-                            'sizes' => 'auto',
-                            'src' => $emp->showAvatar()
-                        ]]),
-                    ['/dms/documents/list-comment', 'id' => $item->document_id,'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
-                    [
-                        'class' => 'open-modal',
-                        'data' => [
-                            'size' => 'modal-md',
-                            'bs-trigger' => 'hover focus',
-                            'bs-toggle' => 'popover',
-                            'bs-placement' => 'top',
-                            'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
-                            'bs-html' => 'true',
-                            'bs-content' => $emp->fullname . '<br>' . $item->comment
+                $emp = Employees::findOne(['id' => $item->to_id]);
+                if ($key <= 1) {
+                    $data .= Html::a(
+                        Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                            'data' => [
+                                'expand' => '-20',
+                                'sizes' => 'auto',
+                                'src' => $emp->showAvatar()
+                            ]]),
+                        ['/dms/documents/list-comment', 'id' => $item->document_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                        [
+                            'class' => 'open-modal',
+                            'data' => [
+                                'size' => 'modal-md',
+                                'bs-trigger' => 'hover focus',
+                                'bs-toggle' => 'popover',
+                                'bs-placement' => 'top',
+                                'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
+                                'bs-html' => 'true',
+                                'bs-content' => $emp->fullname . '<br>' . $item->comment
+                            ]
                         ]
-                    ]
-                );
-            }else{
-               
+                    );
+                } else {
+                }
             }
-            }
-            
+
             $data .= '</div>';
             return $data;
         } catch (\Throwable $th) {

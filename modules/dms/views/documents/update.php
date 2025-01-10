@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => $model->document_type, 'url' => ['v
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 
-    <?= $this->render('_form', [
-        'model' => $model,
+<?= $this->render('_form_'.$model->document_group, [
+        'model' => $model
     ]) ?>
 

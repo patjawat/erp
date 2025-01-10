@@ -8,6 +8,7 @@ use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 // use softark\duallistbox\DualListbox;
 use app\modules\hr\models\Organization;
+use app\modules\dms\models\DocumentsDetail;
 use iamsaint\datetimepicker\Datetimepicker;
 
 // use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
