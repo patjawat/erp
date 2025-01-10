@@ -26,7 +26,7 @@ class m241212_150029_create_documents_table extends Migration
             'secret' => $this->string()->comment('ชั้นความลับ'),
             'doc_date' => $this->string()->comment('วันที่หนังสือ'),
             'doc_expire' => $this->string()->comment('วันหมดอายุ'),
-            'doc_receive_date' => $this->string()->comment('ลงวันรับเข้า'),
+            'doc_transactions_date' => $this->string()->comment('วันที่รับ-ส่ง'),
             'req_approve' => $this->boolean()->defaultValue(true)->comment('เสนอผู้อำนวยการ'),
             'doc_time' => $this->string()->comment('เวลารับ'),
             'status' => $this->string()->comment('สถานะ'),

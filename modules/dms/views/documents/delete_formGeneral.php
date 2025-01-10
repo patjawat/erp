@@ -51,7 +51,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
                     <div class="col-6">
                         <div class="d-flex gap-2">
-                            <?php echo $form->field($model, 'doc_receive_date')->widget(Datetimepicker::className(), [
+                            <?php echo $form->field($model, 'doc_transactions_date')->widget(Datetimepicker::className(), [
                                             'options' => [
                                                 'timepicker' => false,
                                                 'datepicker' => true,

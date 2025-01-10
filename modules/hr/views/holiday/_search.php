@@ -23,7 +23,7 @@ use yii\widgets\ActiveForm;
         
         <div class="form-group">
             <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']) ?>
-            <?=html::a('<i class="fa-solid fa-rotate-right"></i>',['/lm/holiday'], ['class' => 'btn btn-warning'])?>
+            <?=html::a('<i class="fa-solid fa-rotate-right"></i>',['/hr/holiday'], ['class' => 'btn btn-warning'])?>
         </div>
     </div>
 

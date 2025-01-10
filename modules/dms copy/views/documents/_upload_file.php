@@ -84,7 +84,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                             ],
                         ])->label('ตั้งแต่วันที่') ?>
                         <div class="d-flex gap-2">
-                            <?= $form->field($model, 'doc_receive_date')->textInput(['maxlength' => true]) ?>
+                            <?= $form->field($model, 'doc_transactions_date')->textInput(['maxlength' => true]) ?>
                             <?= $form->field($model, 'doc_time')->textInput(['maxlength' => true]) ?>
                         </div>
                         <?= $form->field($model, 'doc_expire')->textInput(['maxlength' => true]) ?>

@@ -68,8 +68,8 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year','topic','doc_number','secret','doc_speed','document_type', 'document_org', 'document_group', 'doc_regis_number','doc_time'], 'required'],
             [['topic'], 'string'],
-            [['reading','tags','department_tag','data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_receive_date','status','ref'], 'safe'],
-            [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_receive_date', 'doc_time'], 'string', 'max' => 255],
+            [['reading','tags','department_tag','data_json','view_json', 'q','document_group','department_tag','employee_tag','req_approve','doc_transactions_date','status','ref'], 'safe'],
+            [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
 
@@ -197,7 +197,7 @@ class Documents extends \yii\db\ActiveRecord
         // แสดงรูปแบบ format วันที่หนังสือ
         public function viewReceiveDate()
         {
-            return Yii::$app->thaiFormatter->asDate($this->doc_receive_date, 'medium');
+            return Yii::$app->thaiFormatter->asDate($this->doc_transactions_date, 'medium');
         }
         
     public function UploadClipFile($name)

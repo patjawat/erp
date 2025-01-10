@@ -56,6 +56,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public $q;
     public $thai_year;
     public $show_reading;
+    public $comment;
     public static function tableName()
     {
         return 'documents_detail';
@@ -119,6 +120,16 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
 
+    public function afterFind()
+    {
+        try {
+            $this->comment = isset($this->data_json['comment']) ? $this->data_json['comment'] : '';
+        } catch (\Throwable $th) {
+        }
+
+        parent::afterFind();
+    }
+    
     
     public function ListThaiYear()
     {
@@ -170,11 +181,13 @@ class DocumentsDetail extends \yii\db\ActiveRecord
      {
          $me = UserHelper::GetEmployee();
  
-             // $clearDEmployeeTag = self::deleteAll([
-             //     'and',
-             //     ['not in', 'tag_id', $this->tags_employee],
-             //     ['document_id' => $this->document_id, 'name' => 'employee','crated_by' => $me->id]
-             // ]);
+         try {
+
+             $clearDEmployeeTag = self::deleteAll([
+                 'and',
+                 ['not in', 'tag_id', $this->tags_employee],
+                 ['document_id' => $this->document_id, 'name' => 'employee','crated_by' => $me->id]
+             ]);
              // foreach ($this->data_json['employee_tag'] as $key => $value):
              foreach ($this->tags_employee as $key => $value):
                  $check = DocumentsDetail::find()->where(['name' => 'employee','document_id' => $this->document_id, 'to_id' => $value])->one();
@@ -189,6 +202,10 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                  // }
                  
              endforeach;
+                         //code...
+         } catch (\Throwable $th) {
+            //throw $th;
+         }
              // return $dicrector;
      }
 
@@ -216,10 +233,10 @@ class DocumentsDetail extends \yii\db\ActiveRecord
      
      public function getAvatar($empid, $msg = '')
     {
-        // try {
+        try {
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
         $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
-        // $msg = '<i class="fa-regular fa-comment"></i> ' . $this->data_json['comment'];
+        $msg = '<i class="fa-regular fa-comment"></i> ' . $this->data_json['comment'];
         // $msg = $employee->departmentName();
         return [
             'avatar' => $employee->getAvatar(false, $msg),
@@ -228,15 +245,15 @@ class DocumentsDetail extends \yii\db\ActiveRecord
             'position_name' => $employee->positionName(),
             // 'product_type_name' => $this->data_json['product_type_name']
         ];
-        // } catch (\Throwable $th) {
-        //     return [
-        //         'avatar' => '',
-        //         'department' => '',
-        //         'fullname' => '',
-        //         'position_name' => '',
-        //         'product_type_name' => ''
-        //     ];
-        // }
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'department' => '',
+                'fullname' => '',
+                'position_name' => '',
+                'product_type_name' => ''
+            ];
+        }
     }
     
 

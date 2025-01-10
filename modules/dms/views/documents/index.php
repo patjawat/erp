@@ -194,7 +194,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $js = <<< JS
-
+const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+$('[data-toggle="popover"]').popover({container: 'body' });
 
 
 

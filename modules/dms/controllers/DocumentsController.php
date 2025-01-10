@@ -3,6 +3,7 @@
 namespace app\modules\dms\controllers;
 
 use Yii;
+use DateTime;
 use yii\web\Response;
 use app\models\Uploads;
 use yii\web\Controller;
@@ -108,7 +109,12 @@ class DocumentsController extends Controller
         $model = new Documents([
             'thai_year' => (Date('Y')+543),
             'document_group' => $this->request->get('document_group')
+            
         ]);
+        $model->doc_transactions_date = AppHelper::convertToThai(date('Y-m-d'));
+        $dateTime = new DateTime();
+        $time = $dateTime->format("H:i");
+        $model->doc_time = $time;
         // $model->ref =  substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
 
         $model->doc_regis_number = $model->runNumber();
@@ -126,7 +132,7 @@ class DocumentsController extends Controller
                 //     $model->status = 'DS2';
                 // }
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-                $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+                $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
                 if($model->doc_expire !=='__/__/____'){
                     $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
                 }else{
@@ -160,10 +166,10 @@ class DocumentsController extends Controller
     {
         $model = $this->findModel($id);
         // $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        // $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
+        // $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
         $old_json = $model->data_json;
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
+        $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
        
         
       
@@ -173,7 +179,7 @@ class DocumentsController extends Controller
             // $result = '[' . $model->data_json['tags_department'] . ']'; // เพิ่ม [ และ ] รอบสตริง
           
             $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-            $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+            $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
             if($model->doc_expire !=='__/__/____'){
                 $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
             }else{
@@ -234,8 +240,8 @@ class DocumentsController extends Controller
              if (isset($model->doc_date)) {
                  preg_replace('/\D/', '', $model->doc_date) == '' ? $model->addError('doc_date', $requiredName) : null;
              }
-             if (isset($model->doc_receive_date)) {
-                 preg_replace('/\D/', '', $model->doc_receive_date) == '' ? $model->addError('doc_receive_date', $requiredName) : null;
+             if (isset($model->doc_transactions_date)) {
+                 preg_replace('/\D/', '', $model->doc_transactions_date) == '' ? $model->addError('doc_transactions_date', $requiredName) : null;
              }
             
             //  $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;

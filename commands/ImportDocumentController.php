@@ -68,7 +68,7 @@ class ImportDocumentController extends Controller
                 'doc_number' => $item['BOOK_NUMBER'],
                 'thai_year' => $item['BOOK_YEAR_ID'],
                 'doc_date' => $item['BOOK_DATE'],
-                'doc_receive_date' => $item['DATE_SAVE'],
+                'doc_transactions_date' => $item['DATE_SAVE'],
                 'document_org' => $item['RECORD_ORG_ID'],
                 
             ]);
@@ -111,7 +111,7 @@ class ImportDocumentController extends Controller
             $model->doc_number = $item['BOOK_NUMBER'];
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
             $model->topic = $item['BOOK_NAME'];
-            $model->doc_receive_date = $item['DATE_SAVE'];
+            $model->doc_transactions_date = $item['DATE_SAVE'];
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
@@ -169,7 +169,7 @@ class ImportDocumentController extends Controller
                 'doc_number' => $item['BOOK_NUMBER'],
                 'thai_year' => $item['BOOK_YEAR_ID'],
                 'doc_date' => $item['BOOK_DATE'],
-                'doc_receive_date' => $item['DATE_SAVE'],
+                'doc_transactions_date' => $item['DATE_SAVE'],
                 'document_org' => $item['RECORD_ORG_ID'],
             ]);
             $percentage = (($num++) / $total) * 100;
@@ -208,7 +208,7 @@ class ImportDocumentController extends Controller
             $model->doc_number = $item['BOOK_NUMBER'];
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
             $model->topic = $item['BOOK_NAME'];
-            $model->doc_receive_date = $item['DATE_SAVE'];
+            $model->doc_transactions_date = $item['DATE_SAVE'];
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];

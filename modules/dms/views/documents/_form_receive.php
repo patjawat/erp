@@ -129,7 +129,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     <div class="col-6">
                         <div class="d-flex gap-2">
-                            <?php echo $form->field($model, 'doc_receive_date')->widget(Datetimepicker::className(), [
+                            <?php echo $form->field($model, 'doc_transactions_date')->widget(Datetimepicker::className(), [
                                             'options' => [
                                                 'timepicker' => false,
                                                 'datepicker' => true,
@@ -432,7 +432,7 @@ $js = <<< JS
             };
 
 
-            \$("#documents-doc_receive_date").datetimepicker({
+            \$("#documents-doc_transactions_date").datetimepicker({
                 timepicker:false,
                 format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
                 lang:'th',  // แสดงภาษาไทย

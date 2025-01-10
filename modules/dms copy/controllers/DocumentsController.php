@@ -123,7 +123,7 @@ class DocumentsController extends Controller
                     $model->status = 'DS2';
                 }
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-                $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+                $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
                 if($model->doc_expire !=='__/__/____'){
                     $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
                 }else{
@@ -156,10 +156,10 @@ class DocumentsController extends Controller
     {
         $model = $this->findModel($id);
         // $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        // $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
+        // $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
         $old_json = $model->data_json;
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        $model->doc_receive_date = AppHelper::convertToThai($model->doc_receive_date);
+        $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             //  $model->UpdateToTags();
@@ -204,7 +204,7 @@ class DocumentsController extends Controller
             // return $data;   
 
             $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-            $model->doc_receive_date = AppHelper::convertToGregorian($model->doc_receive_date);
+            $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
             if($model->doc_expire !=='__/__/____'){
                 $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
             }else{
@@ -258,8 +258,8 @@ class DocumentsController extends Controller
              if (isset($model->doc_date)) {
                  preg_replace('/\D/', '', $model->doc_date) == '' ? $model->addError('doc_date', $requiredName) : null;
              }
-             if (isset($model->doc_receive_date)) {
-                 preg_replace('/\D/', '', $model->doc_receive_date) == '' ? $model->addError('doc_receive_date', $requiredName) : null;
+             if (isset($model->doc_transactions_date)) {
+                 preg_replace('/\D/', '', $model->doc_transactions_date) == '' ? $model->addError('doc_transactions_date', $requiredName) : null;
              }
             
             //  $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;

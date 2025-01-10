@@ -44,6 +44,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/dms/menu') ?>
+
+</h1>
 <?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-document',
@@ -78,11 +80,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             data-bs-target="#pills-general" type="button" role="tab" aria-controls="pills-general"
                             aria-selected="true"><i class="fa-solid fa-circle-info"></i> ข้อมูลรายละเอียดของหนังสือ</button>
                             
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pills-send-tab" data-bs-toggle="pill"
-                            data-bs-target="#pills-send" type="button" role="tab" aria-controls="pills-send"
-                            aria-selected="false"><i class="fa-solid fa-user-tag"></i> ส่งต่อ</button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pills-clip-tab" data-bs-toggle="pill"
@@ -129,7 +126,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     <div class="col-6">
                         <div class="d-flex gap-2">
-                            <?php echo $form->field($model, 'doc_receive_date')->widget(Datetimepicker::className(), [
+                            <?php echo $form->field($model, 'doc_transactions_date')->widget(Datetimepicker::className(), [
                                             'options' => [
                                                 'timepicker' => false,
                                                 'datepicker' => true,
@@ -141,7 +138,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ])->label('ส่งวันที่') ?>
                             <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
                                     'mask' => '99:99',
-                                ]) ?>
+                                ])->label('เวลา') ?>
 
                         </div>
                     </div>
@@ -237,39 +234,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 
                     </div>
-                    <div class="tab-pane fade" id="pills-send" role="tabpanel" aria-labelledby="pills-send-tab"
-                        tabindex="0">
-                       
-                        <?php
-                                echo $form->field($model, 'tags_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                                    'query' => Organization::find()->addOrderBy('root, lft'),
-                                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                                    'fontAwesome' => true,
-                                    'asDropdown' => true,
-                                    'multiple' => true,
-                                    'options' => ['disabled' => false],
-                                ])->label('ส่งหน่วยงาน');
-                                ?>
-
-                        <?php
-
-                        $tags = DocumentsDetail::find()->where(['name' => 'employee','document_id' => $model->id])->all();
-                        $list = ArrayHelper::map($tags, 'to_id','to_id');
-                        $model->tags_employee = $list;
-                        echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
-                            'data' => $model->listEmployeeSelectTag(),
-                            'options' => ['placeholder' => 'Select a state ...'],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            'multiple' => true,
-                            ],
-                        ])->label('ส่งต่อ');
-
-                        ?>
-
-
-                    </div>
+                   
                     <div class="tab-pane fade" id="pills-clip" role="tabpanel" aria-labelledby="pills-clip-tab"
                         tabindex="0">
                         <?php echo $model->UploadClipFile('document_clip')?>
@@ -432,7 +397,7 @@ $js = <<< JS
             };
 
 
-            \$("#documents-doc_receive_date").datetimepicker({
+            \$("#documents-doc_transactions_date").datetimepicker({
                 timepicker:false,
                 format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
                 lang:'th',  // แสดงภาษาไทย

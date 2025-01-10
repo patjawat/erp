@@ -87,6 +87,20 @@ $this->title = 'Calendar';
 
                     </tbody>
                 </table>
+
+                <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+                    <?= yii\bootstrap5\LinkPager::widget([
+                        'pagination' => $dataProvider->pagination,
+                        'firstPageLabel' => 'หน้าแรก',
+                        'lastPageLabel' => 'หน้าสุดท้าย',
+                        'options' => [
+                            'listOptions' => 'pagination pagination-sm',
+                            'class' => 'pagination-sm',
+                        ],
+                    ]); ?>
+                </div>
+
+
             </div>
         </div>
     </div>
