@@ -628,7 +628,7 @@ class LeaveController extends Controller
         if($on_holidays == "1"){
             $total = ($model['allDays']-($date_start_type+$date_end_type)-$holidaysMe);
         }else{
-            $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['holiday']);
+            $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
         }
 
         return [
