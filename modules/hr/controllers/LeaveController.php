@@ -515,6 +515,7 @@ class LeaveController extends Controller
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
             'thai_year' => AppHelper::YearBudget(),
+            'on_holidays' => 0
         ]);
 
         $model->data_json = [
@@ -623,17 +624,20 @@ class LeaveController extends Controller
         
         \Yii::$app->response->format = Response::FORMAT_JSON;
         // return $auto;
+        $holidaysMe = Calendar::find()->where(['name' => 'holiday_me'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
         if($on_holidays == "1"){
-            $holidaysMe = Calendar::find()->where(['name' => 'holiday_me'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
-            $total = (($model['sunDay'] + $model['summaryDay'])-($date_start_type+$date_end_type))  - $holidaysMe;
+            $total = ($model['allDays']-($date_start_type+$date_end_type)-$holidaysMe);
         }else{
-            $holidaysMe = 'x';
-            $total = ($model['summaryDay']-($date_start_type+$date_end_type));
+            $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['holiday']);
         }
 
         return [
             $model,
+            'allDays' => $model['allDays'],
+            'satsunDays' => $model['satsunDays'],
+            'holiday' => $model['holiday'],
             'holiday_me' => $holidaysMe,
+            'on_holidays' => $on_holidays,
             'total' => $total,
             'start_type' => $date_start_type,
             'start_end' => $date_end_type,
@@ -641,7 +645,7 @@ class LeaveController extends Controller
             'end' => $dateEnd,
         ];
     }
-
+    
     /**
      * Updates an existing Leave model.
      * If update is successful, the browser will be redirected to the 'view' page.

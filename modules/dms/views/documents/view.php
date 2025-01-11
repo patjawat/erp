@@ -62,13 +62,6 @@ $this->params['breadcrumbs'][] = $this->title;
                        <div class="listComment"></div>
                        <div class="viewFormComment"></div>
                         <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
-
-                        <?php
-                        $emp = UserHelper::GetEmployee();
-                        echo $emp->id.'<br>';
-                        echo $emp->department.'<br>';
-                        
-                        ?>
                     </div>
                 </div>
             </div>

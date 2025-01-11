@@ -98,11 +98,10 @@ $resultsJs = <<< JS
                 ])->label('ประเภท');
                 ?>
                 <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:118px;'])->label('เหตุผล/เนื่องจาก') ?>
-
-                <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
+                
 
                 <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:220px;'])->label('ระหว่างลาติดต่อ') ?>
-
+                <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
             </div>
 
             <div class="col-6">
@@ -179,19 +178,11 @@ $resultsJs = <<< JS
                     </div>
                 </div>
 
-                <div
-                    class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-3 px-3 rounded mb-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <div class="flex-fill">
 
-                    <h6>เป็นเวลา <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">
-                            <?php echo $model->total_days ?></span> วัน</h6>
-                    <?php echo $form->field($model, 'on_holidays', [
-                            'options' => ['class' => 'mb-2']
-                        ])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('ไม่รวมวันหยุด'); ?>
-
-
-                </div>
-                <?php
-                echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+                    <?php
+                    echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                     'data' => [
                         'ภายในจังหวัด' => 'ภายในจังหวัด',
                         'ต่างจังหวัด' => 'ต่างจังหวัด',
@@ -201,9 +192,53 @@ $resultsJs = <<< JS
                     'pluginOptions' => [
                         'allowClear' => true,
                         'dropdownParent' => '#main-modal',
+                        'width' => '100%',
                     ],
-                ])->label('สถานที่ไป');
-                ?>
+                    ])->label('สถานที่ไป');
+                    ?>
+                    </div>
+                    <div class="flex-fill">
+                        <?php
+                    echo $form->field($model, 'on_holidays')->widget(Select2::classname(), [
+                    'data' => [0 => 'ปกติ', 1 => 'กำหนดเอง'],
+                    'options' => ['placeholder' => 'เลือก...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                         'width' => '100%',
+                    ],
+                    'pluginEvents' => [
+                        'select2:unselect' => 'function() {
+                           calDays()
+                            }',
+                        'select2:select' => 'function() {
+                                  calDays()
+                            }',
+                    ],
+                    ])->label('การคำนวณหยุด');
+                    ?>
+                    </div>
+                </div>
+                
+                <div
+                    class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
+
+                    <?php echo $model->total_days ?></span></h6>
+
+                    <div>
+                                <h6>จำนวนที่ลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">
+
+                            </div>
+                    <?php 
+                    // echo $form->field($model, 'on_holidays', [
+                    //         'options' => ['class' => 'mb-2']
+                    //     ])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('วันหยุดแบบกำหนดเอง');
+                        
+                        ?>
+
+
+                </div>
+
                 <?php
                 try {
                     $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
@@ -383,7 +418,7 @@ $js = <<< JS
                     date_end:\$('#leave-date_end').val(),
                     date_start_type:\$('#leave-data_json-date_start_type').val(),
                     date_end_type:\$('#leave-data_json-date_end_type').val(),
-                    on_holidays:\$('#leave-on_holidays').is(':checked') ? 1 : 0,
+                    on_holidays:$('#leave-on_holidays').val(),
                 },
                 dataType: "json",
                 success: function (res) {

@@ -11,8 +11,8 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
-use app\modules\hrtime\models\Leave;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\hr\models\LeavePermission;
 
@@ -136,7 +136,7 @@ class LeaveController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
+        return $this->render('@app/modules/hr/views/leave/view', [
             'model' => $this->findModel($id),
         ]);
     }

@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
 
-<?php echo  $this->render('@app/modules/hr/views/leave/list', [
+<?php echo  $this->render('list', [
         'searchModel' => $searchModel,
         'dataProvider' => $dataProvider
     ]);
