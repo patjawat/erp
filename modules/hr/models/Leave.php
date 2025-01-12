@@ -288,7 +288,8 @@ class Leave extends \yii\db\ActiveRecord
             ->where([
                 'emp_id' => $this->emp_id,
                 'thai_year' => $this->thai_year,
-                'leave_type_id' => $this->leave_type_id
+                'leave_type_id' => $this->leave_type_id,
+                'status' => 'Allow'
             ])
             ->andwhere(['<','date_start',$this->date_start])
             ->sum('total_days');
@@ -297,7 +298,8 @@ class Leave extends \yii\db\ActiveRecord
             ->where([
                 'emp_id' => $this->emp_id,
                 'thai_year' => $this->thai_year,
-                'leave_type_id' => $this->leave_type_id
+                'leave_type_id' => $this->leave_type_id,
+                 'status' => 'Allow'
             ])
             ->andwhere(['<','date_start',$this->date_start])
             ->one();
