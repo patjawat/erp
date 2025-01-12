@@ -33,13 +33,15 @@ use iamsaint\datetimepicker\Datetimepicker;
     <?php
     
       $url = Url::to(['/depdrop/employee-by-id']);
-      try {
-          $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->fullname;
-      } catch (\Throwable $th) {
-          $initEmployee = '';
-      }
+    //   try {
+        //   $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->fullname;
+    //   } catch (\Throwable $th) {
+    //       $initEmployee = '';
+    //   }
+    // echo $initEmployee;
+  
       echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
-          'initValueText' => $initEmployee,
+        'data' => $model->listEmployees(),
           'options' => ['placeholder' => 'เลือกบุคลากร ...'],
           'pluginOptions' => [
               'width' => '230px',
@@ -48,14 +50,14 @@ use iamsaint\datetimepicker\Datetimepicker;
               'language' => [
                   'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
               ],
-              'ajax' => [
-                  'url' => $url,
-                  'dataType' => 'json',
-                  'data' => new JsExpression('function(params) { return {q:params.term}; }')
-              ],
-              'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-              'templateResult' => new JsExpression('function(city) { return city.fullname; }'),
-              'templateSelection' => new JsExpression('function (city) { return city.fullname; }'),
+            //   'ajax' => [
+            //       'url' => $url,
+            //       'dataType' => 'json',
+            //       'data' => new JsExpression('function(params) { return {q:params.term}; }')
+            //   ],
+            //   'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+            //   'templateResult' => new JsExpression('function(city) { return city.fullname; }'),
+            //   'templateSelection' => new JsExpression('function (city) { return city.fullname; }'),
           ],
           'pluginEvents' => [
               'select2:select' => 'function(result) { 
@@ -189,6 +191,16 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 
 $js = <<< JS
+
+
+    $("#leavesearch-date_start").on('change', function() {
+            $('#leavesearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
+    $("#leavesearch-date_end").on('change', function() {
+            $('#leavesearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
 
         var thaiYear = function (ct) {
             var leap=3;

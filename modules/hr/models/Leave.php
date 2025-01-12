@@ -797,9 +797,9 @@ class Leave extends \yii\db\ActiveRecord
 
     public function listEmployees()
     {
-        $employes = Employees::find()->where(['status' => 1])->all();
+        $employes = Employees::find()->select(['id', new Expression("CONCAT(fname, ' ', lname) AS fullname")])->where(['status' => 1])->asArray()->all();
         return ArrayHelper::map($employes, 'id', function ($model) {
-            return $model->fullname;
+            return $model['fullname'];
         });
     }
 }
