@@ -626,7 +626,7 @@ class LeaveController extends Controller
         // return $auto;
         $holidaysMe = Calendar::find()->where(['name' => 'holiday_me'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
         if($on_holidays == "1"){
-            $total = ($model['allDays']-($date_start_type+$date_end_type)-$holidaysMe);
+            $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
         }else{
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
         }

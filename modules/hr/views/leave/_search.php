@@ -93,34 +93,10 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 <div class="d-flex justify-content-between gap-2">
                 <?php
-                    echo $form->field($model, 'date_start')->widget(FlatpickrWidget::class, [
-                        'options' => [
-                           'class' => 'form-control',
-                           'placeholder' => 'เลือกวันที่',
-                        //    'id' => 'leave-date_end',
-                       ],
-                       'clientOptions' => [
-                           // เพิ่ม options ของ flatpickr ตามต้องการ
-                           'allowInput' => false,
-                           'dateFormat' => 'd/m/Y',
-                           'locale' => 'th'
-                       ],
-                   ])->label('ตั้งแต่วันที่');
+                    echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');
                     ?>
                 <?php
-                    echo $form->field($model, 'date_end')->widget(FlatpickrWidget::class, [
-                        'options' => [
-                           'class' => 'form-control',
-                           'placeholder' => 'เลือกวันที่',
-                        //    'id' => 'leave-date_end',
-                       ],
-                       'clientOptions' => [
-                           // เพิ่ม options ของ flatpickr ตามต้องการ
-                           'allowInput' => false,
-                           'dateFormat' => 'd/m/Y',
-                           'locale' => 'th'
-                       ],
-                   ])->label('ถึงวันที่');
+                    echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');
                     ?>
             </div>
 
@@ -199,7 +175,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 $js = <<< JS
 
-
+    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
     $("#leavesearch-date_start").on('change', function() {
             $('#leavesearch-thai_year').val(null).trigger('change');
             // $(this).submit();

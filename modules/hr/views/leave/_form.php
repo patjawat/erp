@@ -17,8 +17,6 @@ use kartik\widgets\ActiveForm;
 // use karatae99\datepicker\DatePicker;
 use app\widgets\FlatpickrWidget;
 use app\modules\hr\models\Employees;
-// use app\widgets\Flatpickr\FlatpickrWidget;
-use app\widgets\datepicker\ThaiDatePicker;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\widgets\Flatpickr\FlatpickrBuddhistWidget;
 
@@ -120,30 +118,9 @@ $resultsJs = <<< JS
             <div class="col-6">
                 <div class="d-flex justify-content-between gap-3">
                     <div>
-<?= $form->field($model, 'date_start')->widget(FlatpickrWidget::class, [
-    'options' => [
-        'placeholder' => 'เลือกวันที่',
-    ],
-    'clientOptions' => [
-        'weekNumbers' => true,
-        'dateFormat' => 'd/m/Y',
-        'locale' => 'th',
-        'id' => 'leave-date_start',
-    ],
-]); ?>
-<?php
-echo $form->field($model, 'date_end')->widget(FlatpickrWidget::class, [
-    'options' => [
-        'placeholder' => 'เลือกวันที่',
-    ],
-    'clientOptions' => [
-        'weekNumbers' => true,
-        'dateFormat' => 'd/m/Y',
-        'locale' => 'th',
-        'id' => 'leave-date_end',
-    ],
-]);
- ?>
+            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
+            <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
+
                     </div>
                     <div>
                         <?php
@@ -321,6 +298,8 @@ echo $form->field($model, 'date_end')->widget(FlatpickrWidget::class, [
 $calDaysUrl = Url::to(['/hr/leave/cal-days']);
 $js = <<< JS
 
+
+      thaiDatepicker('#leave-date_start,#leave-date_end')
 
 
       \$('#form-elave').on('beforeSubmit', function (e) {

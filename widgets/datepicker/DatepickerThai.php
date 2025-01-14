@@ -1,18 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: User
- * Date: 07.09.2017
- * Time: 18:31
- */
-
-namespace iamsaint\datetimepicker;
+namespace app\widgets\datepicker;
 
 use yii\web\View;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\widgets\InputWidget;
 
-class Datetimepicker extends InputWidget
+class DatepickerThai extends InputWidget
 {
     public $options = [];
 
@@ -55,10 +49,10 @@ class Datetimepicker extends InputWidget
             }
             $options .= "}\n";
         }
-
-        $JavaScript = "jQuery('";
+        // thaiDatepicker('#leave-date_start,#leave-date_end')
+        $JavaScript = "thaiDatepicker('";
         $JavaScript .= '#'.$this->options['id'];
-        $JavaScript .= "').datetimepicker({$options});";
+        $JavaScript .= "');";
 
         $this->getView()->registerJs($JavaScript, View::POS_END);
     }

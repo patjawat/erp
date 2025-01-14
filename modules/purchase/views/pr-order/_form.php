@@ -1,14 +1,14 @@
 <?php
 
-use app\modules\hr\models\Employees;
-use kartik\datecontrol\DateControl;
-use kartik\form\ActiveForm;
-use kartik\select2\Select2;
-use iamsaint\datetimepicker\Datetimepicker;
-use yii\helpers\Html;
 use yii\web\View;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\web\JsExpression;
+use kartik\form\ActiveForm;
+use kartik\select2\Select2;
+use kartik\datecontrol\DateControl;
+use app\modules\hr\models\Employees;
+use app\widgets\datepicker\DatepickerThai;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
 $this->title = 'ราการขอซื้อ';
@@ -83,47 +83,12 @@ $resultsJs = <<< JS
 <div class="row">
     <div class="col-6">
 
-    <?=$form->field($model, 'data_json[pr_create_date]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('วันที่ขอซื้อ');
+    <?=$form->field($model, 'data_json[pr_create_date]')->textInput(['placeholder' => 'เลือกวันที่ขอซื้อ'])->label('วันที่ขอซื้อ');
                 ?>
 
-
-        <?php
-        // echo $form
-        //     ->field($model, 'data_json[po_create_date]')
-        //     ->widget(DateControl::classname(), [
-        //         'type' => DateControl::FORMAT_DATE,
-        //         'language' => 'th',
-        //         'widgetOptions' => [
-        //             'options' => ['placeholder' => 'ระบุวันที่ขอซื้อ ...'],
-        //             'pluginOptions' => [
-        //                 'autoclose' => true
-        //             ]
-        //         ]
-        //     ])
-        //     ->label('วันที่ขอซื้อ');
-    ?>
 </div>
         <div class="col-6">
-        <?=$form->field($model, 'data_json[due_date]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('วันที่ต้องการ');
-                ?>
+        <?=$form->field($model, 'data_json[due_date]')->textInput(['placeholder' => 'เลือกวันที่ต้องการ'])->label('วันที่ต้องการ');?>
 
 
     </div>
@@ -258,8 +223,8 @@ try {
 
 
 
-
-\$('#form-order').on('beforeSubmit', function (e) {
+    thaiDatepicker('#order-data_json-pr_create_date,#order-data_json-due_date')
+    $('#form-order').on('beforeSubmit', function (e) {
                 var form = \$(this);
                 \$.ajax({
                     url: form.attr('action'),
@@ -284,43 +249,6 @@ try {
                 return false;
             });
 
-
-
-    var thaiYear = function (ct) {
-        var leap=3;  
-        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
-        if(ct){  
-            var yearL=new Date(ct).getFullYear()-543;  
-            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
-            if(leap==2){  
-                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
-            }  
-        }              
-        this.setOptions({  
-            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
-        })                
-    };    
-     
-   
-    $("#order-data_json-pr_create_date").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-        lang:'th',  // แสดงภาษาไทย
-        onChangeMonth:thaiYear,          
-        onShow:thaiYear,                  
-        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-        closeOnDateSelect:true,
-    });   
-
-    $("#order-data_json-due_date").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-        lang:'th',  // แสดงภาษาไทย
-        onChangeMonth:thaiYear,          
-        onShow:thaiYear,                  
-        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-        closeOnDateSelect:true,
-    });       
 
 
 JS;

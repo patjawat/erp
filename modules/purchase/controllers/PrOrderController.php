@@ -2,18 +2,19 @@
 
 namespace app\modules\purchase\controllers;
 
+use Yii;
+use yii\helpers\Html;
+use yii\web\Response;
+use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
+use yii\web\NotFoundHttpException;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
-use Yii;
-use yii\db\Expression;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\web\Response;
 
 /**
  * PrOrderController implements the CRUD actions for Order model.
@@ -310,7 +311,7 @@ class PrOrderController extends Controller
             }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
@@ -336,7 +337,7 @@ class PrOrderController extends Controller
             }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);

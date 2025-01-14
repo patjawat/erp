@@ -11,7 +11,7 @@ use kartik\widgets\ActiveForm;
 // use softark\duallistbox\DualListbox;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
-use iamsaint\datetimepicker\Datetimepicker;
+// use iamsaint\datetimepicker\Datetimepicker;
 use app\modules\filemanager\components\FileManagerHelper;
 
 if($model->document_group == 'receive'){
@@ -129,16 +129,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     <div class="col-6">
                         <div class="d-flex gap-2">
-                            <?php echo $form->field($model, 'doc_transactions_date')->widget(Datetimepicker::className(), [
-                                            'options' => [
-                                                'timepicker' => false,
-                                                'datepicker' => true,
-                                                'mask' => '99/99/9999',
-                                                'lang' => 'th',
-                                                'yearOffset' => 543,
-                                                'format' => 'd/m/Y',
-                                            ],
-                                        ])->label('ลงรับวันที่') ?>
+                            <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกลงรับวันที่'])->label('ลงรับวันที่') ?>
                             <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
                                     'mask' => '99:99',
                                 ]) ?>
@@ -193,30 +184,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <div class="col-3">
                         <?php
-                        echo $form->field($model, 'doc_date')->widget(Datetimepicker::className(), [
-                            'options' => [
-                                'timepicker' => false,
-                                'datepicker' => true,
-                                'mask' => '99/99/9999',
-                                'lang' => 'th',
-                                'yearOffset' => 543,
-                                'format' => 'd/m/Y'
-                            ],
-                        ])->label('วันที่หนังสือ')
+                        echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
                         ?>
                     </div>
                  
                     <div class="col-3">
-                    <?php echo $form->field($model, 'doc_expire')->widget(Datetimepicker::className(), [
-                            'options' => [
-                                'timepicker' => false,
-                                'datepicker' => true,
-                                'mask' => '99/99/9999',
-                                'lang' => 'th',
-                                'yearOffset' => 543,
-                                'format' => 'd/m/Y',
-                            ],
-                        ])->label('วันหมดอายุ') ?>
+                    <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันหมดอายุ'])->label('วันหมดอายุ') ?>
                         </div>
 
                     <div class="col-12">
@@ -416,43 +389,9 @@ $js = <<< JS
            
              
         }
-    var thaiYear = function (ct) {
-                var leap=3;
-                var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
-                if(ct){
-                    var yearL=new Date(ct).getFullYear()-543;
-                    leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
-                    if(leap==2){
-                        dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
-                    }
-                }
-                this.setOptions({
-                    i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
-                })
-            };
 
-
-            \$("#documents-doc_transactions_date").datetimepicker({
-                timepicker:false,
-                format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-                lang:'th',  // แสดงภาษาไทย
-                onChangeMonth:thaiYear,
-                onShow:thaiYear,
-                yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-                closeOnDateSelect:true,
-            });
-
-
-            \$("#documents-doc_expire").datetimepicker({
-                timepicker:false,
-                format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-                lang:'th',  // แสดงภาษาไทย
-                onChangeMonth:thaiYear,
-                onShow:thaiYear,
-                yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-                closeOnDateSelect:true,
-            });
-            
+        thaiDatepicker('#documents-doc_transactions_date,#documents-doc_expire,#documents-doc_date');
+           
             
     JS;
 $this->registerJS($js,View::POS_END);

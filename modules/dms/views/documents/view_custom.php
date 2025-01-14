@@ -25,37 +25,16 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
-<div class="card">
-    <div class="card-body">
-        <span class="text-primary fw-normal fs-13">
-            <div class="border border-secondary border-opacity-25 p-3 rounded">
+
                 <!-- Tab panes -->
                 <div class="row">
                     <div class="col-8">
-                        <div class="d-flex justify-content-between">
-                            <!-- Nav tabs -->
-                            <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
-                                <?php  echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
-                                <!-- <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal"><i class="fa-solid fa-chevron-left"></i> ย้อนกลับ</button> -->
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link active show" data-bs-toggle="pill" href="#home1" role="pill"
-                                        aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-info-circle"></i>
-                                        รายละเอียด</a>
-                                </li>
-                            </ul>
-
-                        </div>
-                        <div class="tab-content p-0">
-                            <div id="home1" class="tab-pane active show" role="tabpanel">
-                            <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true" frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
-                            </div>
-                            <div id="track" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('track',['model' => $model])?>
-                            </div>
-                            <div id="history" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('history',['model' => $model])?>
-                            </div>
-                        </div>
+                    <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true" frameborder="0" style="width: 100%; height: 900px; border: none;"></iframe>
+                    <?php  echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+                       
+                    <?php // echo $this->render('history',['model' => $model])?>
+                    <?php // echo $this->render('track',['model' => $model])?>
+ 
                     </div>
                     <div class="col-4 py-2">
                     <h6><i class="fa-regular fa-comments fs-2"></i> การลงความเห็น</h6>
@@ -65,8 +44,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
             </div>
-    </div>
-</div>
 
 <?php
 $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
@@ -75,18 +52,21 @@ $js = <<< JS
     getComment();
     listComment()
 
+    // ดึงค่าความสูงของหน้าจอ
+    const screenHeight = window.innerHeight;
+
+  
+    console.log(screenHeight); // แสดงค่าความสูงของหน้าจอ
+
     const iframe = document.getElementById("myIframe");
-      // ดึงค่าความสูงของหน้าจอ
-      const screenHeight = window.innerHeight;
-        iframe.style.height = screenHeight - 100 + "px";
+    iframe.style.height = screenHeight - 100 + "px";
 
-
-    iframe.onload = () => {
-    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    if (iframeDocument) {
-        iframeDocument.body.style.zoom = "150%";
-    }
-    };
+    // iframe.onload = () => {
+    // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    // if (iframeDocument) {
+    //     iframeDocument.body.style.zoom = "150%";
+    // }
+    // };
 
     async function getComment()
     {

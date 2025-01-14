@@ -123,6 +123,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
+    
+
     \$('.filter-status').click(function (e) { 
         e.preventDefault();
         var id = \$(this).data('id');

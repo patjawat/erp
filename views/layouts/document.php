@@ -41,7 +41,7 @@ $style = 2;
     <body>
     <?php $this->beginBody() ?>
 
-    <div class="container-fuild p-4">
+    <div class="container-fuild">
         <?= $content?>
     </div>
 
