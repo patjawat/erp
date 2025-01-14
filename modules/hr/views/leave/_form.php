@@ -125,6 +125,7 @@ $resultsJs = <<< JS
         'placeholder' => 'เลือกวันที่',
     ],
     'clientOptions' => [
+        'weekNumbers' => true,
         'dateFormat' => 'd/m/Y',
         'locale' => 'th',
         'id' => 'leave-date_start',
@@ -136,6 +137,7 @@ echo $form->field($model, 'date_end')->widget(FlatpickrWidget::class, [
         'placeholder' => 'เลือกวันที่',
     ],
     'clientOptions' => [
+        'weekNumbers' => true,
         'dateFormat' => 'd/m/Y',
         'locale' => 'th',
         'id' => 'leave-date_end',

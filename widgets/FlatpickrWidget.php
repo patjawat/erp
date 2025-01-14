@@ -49,7 +49,8 @@ class FlatpickrWidget extends InputWidget
         $inputId = $this->options['id'];
         
         // Register Flatpickr assets
-        $view->registerCssFile('https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+        // $view->registerCssFile('https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+        $view->registerCssFile('https://npmcdn.com/flatpickr/dist/themes/dark.css');
         $view->registerJsFile('https://cdn.jsdelivr.net/npm/flatpickr', ['position' => View::POS_END]);
         $view->registerJsFile('https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js', ['position' => View::POS_END]);
         
