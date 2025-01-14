@@ -33,6 +33,8 @@ $moduleId = Yii::$app->controller->module->id;
 
     <title><?php echo Html::encode($this->title); ?></title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+
     <!-- <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet"> -->
 
     <!-- <link rel="preconnect" href="https://fonts.googleapis.com">

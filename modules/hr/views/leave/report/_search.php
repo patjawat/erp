@@ -91,28 +91,34 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 <div class="d-flex justify-content-between gap-2">
                 <?php
-                    echo $form->field($model, 'date_start')->widget(Datetimepicker::className(), [
+                    echo $form->field($model, 'date_start')>widget(FlatpickrWidget::class, [
                         'options' => [
-                            'timepicker' => false,
-                            'datepicker' => true,
-                            'mask' => '99/99/9999',
-                            'lang' => 'th',
-                            'yearOffset' => 543,
-                            'format' => 'd/m/Y',
-                        ],
-                    ])->label('ตั้งแต่วันที่');
+                           'class' => 'form-control',
+                           'placeholder' => 'เลือกวันที่',
+                           'id' => 'leave-date_end',
+                       ],
+                       'clientOptions' => [
+                           // เพิ่ม options ของ flatpickr ตามต้องการ
+                           'allowInput' => false,
+                           'dateFormat' => 'd/m/Y',
+                           'locale' => 'th',
+                       ],
+                   ])->label('ตั้งแต่วันที่');
                     ?>
                 <?php
-                    echo $form->field($model, 'date_end')->widget(Datetimepicker::className(), [
+                    echo $form->field($model, 'date_end')>widget(FlatpickrWidget::class, [
                         'options' => [
-                            'timepicker' => false,
-                            'datepicker' => true,
-                            'mask' => '99/99/9999',
-                            'lang' => 'th',
-                            'yearOffset' => 543,
-                            'format' => 'd/m/Y',
-                        ],
-                    ])->label('ถึงวันที่');
+                           'class' => 'form-control',
+                           'placeholder' => 'เลือกวันที่',
+                           'id' => 'leave-date_end',
+                       ],
+                       'clientOptions' => [
+                           // เพิ่ม options ของ flatpickr ตามต้องการ
+                           'allowInput' => false,
+                           'dateFormat' => 'd/m/Y',
+                           'locale' => 'th',
+                       ],
+                   ])->label('ถึงวันที่');
                     ?>
             </div>
 
@@ -184,41 +190,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 
 $js = <<< JS
-
-        var thaiYear = function (ct) {
-            var leap=3;
-            var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
-            if(ct){
-                var yearL=new Date(ct).getFullYear()-543;
-                leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
-                if(leap==2){
-                    dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
-                }
-            }
-            this.setOptions({
-                i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
-            })
-        };
-
-        \$("#leavesearch-date_start").datetimepicker({
-            timepicker:false,
-            format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-            lang:'th',  // แสดงภาษาไทย
-            onChangeMonth:thaiYear,
-            onShow:thaiYear,
-            yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-            closeOnDateSelect:true,
-        });
-
-        \$("#leavesearch-date_end").datetimepicker({
-            timepicker:false,
-            format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-            lang:'th',  // แสดงภาษาไทย
-            onChangeMonth:thaiYear,
-            onShow:thaiYear,
-            yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-            closeOnDateSelect:true,
-        });
 
     JS;
 $this->registerJS($js, View::POS_END);
