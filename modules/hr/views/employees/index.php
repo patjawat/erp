@@ -1,16 +1,16 @@
 <?php
 
-use app\components\AppHelper;
-use app\components\EmployeeHelper;
-use app\components\SiteHelper;
-use app\modules\hr\models\Employees;
-use kartik\grid\GridView;
-use yii\bootstrap5\LinkPager;
-use yii\grid\ActionColumn;
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use yii\grid\ActionColumn;
+use app\components\AppHelper;
+use yii\bootstrap5\LinkPager;
+use app\components\SiteHelper;
+use app\components\EmployeeHelper;
+use app\modules\hr\models\Employees;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeesSearch $searchModel */
@@ -66,7 +66,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
             <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-<?= $this->render('export_employee', ['dataProvider' => $dataProvider]) ?>
+<button id="download-button" class="btn btn-primary shadow"><i class="fa-solid fa-file-export"></i> ส่งออกข้อมูลบุคลากร</button>
 
 
             
@@ -109,6 +109,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php
+$url = Url::to(['/hr/employees/export-excel']);
 $js = <<< JS
 
         $('#hr-container').on('pjax:success', function() {
@@ -117,6 +118,39 @@ $js = <<< JS
             \$('#showTotalCount').text(\$('#totalCount').text())
             // \$.pjax.reload({ container:'#title-container', history:false,replace: false});         
         });
+
+        \$("body").on("click", "#download-button", function (e) {
+            var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
+            var year = \$('#stockeventsearch-thai_year').find(':selected').text();
+            var form = $('#employees-filter')
+            \$.ajax({
+                url: '$url', // Adjust to match your controller and action URL
+                method: 'GET',
+                data: form.serialize(),
+                xhrFields: {
+                    responseType: 'blob' // Important for handling binary data
+                },
+                beforeSend: function(){
+                    beforLoadModal();
+                },
+                success: function(data) {
+                    \$("#main-modal").modal("toggle");
+                    var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
+                    var filename = 'ข้อมูลบุคลากร'+'.xlsx';
+                    const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename;
+                    link.click();
+                    $("#main-modal").modal("hide");
+                },
+                error: function() {
+                    alert('File could not be downloaded.');
+                }
+            });
+        });
+
+        
 
     JS;
     $this->registerJS($js,View::POS_END)

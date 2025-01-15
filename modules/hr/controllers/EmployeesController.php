@@ -17,9 +17,19 @@ use ruskid\csvimporter\CSVImporter;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\UploadCsv;
 use app\modules\hr\models\Organization;
+use PhpOffice\PhpSpreadsheet\Style\Font;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use app\modules\hr\models\EmployeesSearch;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockEvent;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use app\modules\inventory\models\StockSummary;
 use ruskid\csvimporter\MultipleImportStrategy;
 use app\modules\hr\models\EmployeeDetailSearch;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 /**
  * EmployeesController implements the CRUD actions for Employees model.
@@ -499,5 +509,206 @@ class EmployeesController extends Controller
             'status' => $status,
             'error' => $error
         ]);
+    }
+
+    public function actionExportExcel()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $searchModel = new EmployeesSearch([
+            'branch' => 'MAIN'
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $notStatusParam = $this->request->get('not-status');
+
+        if (isset($searchModel->user_register) && $searchModel->user_register == 0) {
+            $dataProvider->query->andWhere(['user_id' => 0]);
+        }
+        if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
+            $dataProvider->query->andWhere(['!=','user_id',0]);
+        }
+
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+            ['like', 'fname', $searchModel->q],
+            ['like', 'lname', $searchModel->q],
+        ]);
+
+        $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
+
+        // ค้นหาคามกลุ่มโครงสร้าง
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+            FROM tree t1
+            JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+            WHERE t2.name = :name;';
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
+            }
+            // Yii::$app->response->format = Response::FORMAT_JSON;
+            // $dataDepartment =  ArrayHelper::merge($arrDepartment,$org1->lft);
+            // $arrDepartment;
+            // $arrDepartment[]  = $org1->lft;
+
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+        }
+        // จบการค้นหา
+
+        if (!$searchModel->status && $searchModel->all_status == 0) {
+            $dataProvider->query->andWhere(['status' => 1]);
+        }
+
+        if (!$searchModel->status && $searchModel->all_status == 0) {
+            if ($notStatusParam) {
+                $dataProvider->query->andWhere(['is', 'status', new \yii\db\Expression('null')]);
+            } else {
+                // $dataProvider->query->andWhere(['NOT', ['status' => [5, 7, 8]]]);
+            }
+        }
+
+        $dataProvider->query->andWhere(new \yii\db\Expression("CONCAT(fname,' ', lname) LIKE :term", [':term' => '%' . $searchModel->fullname . '%']));
+
+        // ค้นหาตามอายุ
+        if ($searchModel->range1 && !$searchModel->range2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) = ' . $searchModel->range1));
+        }
+        // ค้นหาระหว่างช่วงอายุ
+        if ($searchModel->range1 && $searchModel->range2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) BETWEEN ' . $searchModel->range1 . ' AND ' . $searchModel->range2));
+        }
+
+        $dataProvider->pagination->pageSize = 30000;
+
+  
+
+        $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
+        $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->getColumnDimension('A')->setWidth(8);
+        $sheet->getColumnDimension('B')->setWidth(18);
+        $sheet->getColumnDimension('C')->setWidth(8);
+        $sheet->getColumnDimension('D')->setWidth(9);
+        $sheet->getColumnDimension('E')->setWidth(13);
+        $sheet->getColumnDimension('F')->setWidth(13);
+        $sheet->getColumnDimension('G')->setWidth(13);
+        $sheet->getColumnDimension('H')->setWidth(8);
+        $sheet->getColumnDimension('I')->setWidth(25);
+        $sheet->getColumnDimension('J')->setWidth(50);
+        $sheet->getColumnDimension('K')->setWidth(13);
+        $sheet->getColumnDimension('L')->setWidth(13);
+        $sheet->getColumnDimension('M')->setWidth(18);
+        $sheet->getColumnDimension('N')->setWidth(13);
+        $sheet->getColumnDimension('O')->setWidth(13);
+        $sheet->getColumnDimension('P')->setWidth(15);
+        $sheet->getColumnDimension('Q')->setWidth(13);
+        $sheet->getColumnDimension('R')->setWidth(25);
+        $sheet->getColumnDimension('S')->setWidth(13);
+        $sheet->getColumnDimension('T')->setWidth(13);
+        $sheet->getColumnDimension('U')->setWidth(25);
+        $sheet->getColumnDimension('V')->setWidth(18);
+        $sheet->getColumnDimension('W')->setWidth(17);
+        $sheet->getColumnDimension('X')->setWidth(18);
+        $sheet->getColumnDimension('Y')->setWidth(18);
+        $sheet->getColumnDimension('Z')->setWidth(13);
+        
+        $setHeader = 'A1:Z1';
+        $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
+        $sheet->getStyle('A1:Z1')->getFont()->setBold(true)->setItalic(false);
+        // ตั้งชื่อแผ่นงาน
+        $sheet->setTitle('ข้อมูลบุคลากร');
+        $sheet->setCellValue('A1', 'ลำดับ');
+        $sheet->setCellValue('B1', 'เลขบัตรประชาชน');
+        $sheet->setCellValue('C1', 'เพศ');
+        $sheet->setCellValue('D1', 'คำนำหน้า');
+        $sheet->setCellValue('E1', 'ชื่อ');
+        $sheet->setCellValue('F1', 'นามสกุล');
+        $sheet->setCellValue('G1', 'วันเกิด');
+        $sheet->setCellValue('H1', 'อายุ');
+        $sheet->setCellValue('I1', 'Email');
+        $sheet->setCellValue('J1', 'ที่อยู่');
+        $sheet->setCellValue('K1', 'รหัสไปรษณีย์');
+        $sheet->setCellValue('L1', 'วันที่เริ่มงาน');
+        $sheet->setCellValue('M1', 'อายุราชการ');
+        $sheet->setCellValue('N1', 'เกษียณ');
+        $sheet->setCellValue('O1', 'คงเหลือ/ปี');
+        $sheet->setCellValue('P1', 'หมายเลขโทรศัพท์');
+        $sheet->setCellValue('Q1', 'สถานะ');
+        $sheet->setCellValue('R1', 'ตำแหน่งปัจจุบัน');
+        $sheet->setCellValue('S1', 'วันที่แต่งตั้ง');
+        $sheet->setCellValue('T1', 'เลขตำแหน่ง');
+        $sheet->setCellValue('U1', 'ประเภท');
+        $sheet->setCellValue('V1', 'ระดับตำแหน่ง');
+        $sheet->setCellValue('W1', 'ความเชี่ยวชาญ');
+        $sheet->setCellValue('X1', 'ประเภท/กลุ่มงาน');
+        $sheet->setCellValue('Y1', 'เงินเดือน');
+        $StartRowSheet = 2;
+        // $dataItems = $this->findModelItem($params);
+        foreach ($dataProvider->getModels() as $key => $value) {
+            $numRow = $StartRowSheet++;
+            // $a[] = ['B' => 'B'.$StartRow++];
+            $sheet->setCellValue('A' . $numRow, $numRow);
+            $sheet->setCellValue('B' . $numRow, $value->cid);
+            $sheet->getStyle('B' . $numRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
+            $sheet->setCellValue('C' . $numRow, $value->gender);
+            $sheet->getStyle('C' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->setCellValue('D' . $numRow, $value->prefix);
+            $sheet->setCellValue('E' . $numRow, $value->fname);
+            $sheet->setCellValue('F' . $numRow, $value->lname);
+            $sheet->setCellValue('G' . $numRow, Yii::$app->thaiFormatter->asDate(AppHelper::DateToDb($value->birthday), 'php:d/m/Y'));
+            $sheet->setCellValue('H' . $numRow, $value->age_y);
+            $sheet->setCellValue('I' . $numRow, $value->email);
+            $sheet->setCellValue('J' . $numRow, $value->address);
+            $sheet->setCellValue('K' . $numRow, $value->zipcode);
+            $sheet->setCellValue('L' . $numRow, Yii::$app->thaiFormatter->asDate($value->joinDate(), 'php:d/m/Y'));
+            $sheet->setCellValue('M' . $numRow, $value->workLife()['full']);
+            $sheet->setCellValue('N' . $numRow, Yii::$app->thaiFormatter->asDate($value->year60(), 'php:d/m/Y'));
+            $sheet->setCellValue('O' . $numRow, $value->leftYear60());
+            $sheet->setCellValue('P' . $numRow, $value->phone);
+            $sheet->setCellValue('Q' . $numRow, $value->statusName());
+            $sheet->setCellValue('R' . $numRow, $value->positionName(['icon' => false]));
+            $sheet->setCellValue('S' . $numRow, Yii::$app->thaiFormatter->asDate($value->nowPosition()['date_start'], 'php:d/m/Y'));
+            $sheet->setCellValue('T' . $numRow, $value->nowPosition()['position_number']);
+            $sheet->setCellValue('U' . $numRow, $value->positionTypeName());
+            $sheet->setCellValue('V' . $numRow, $value->positionLevelName());
+            $sheet->setCellValue('W' . $numRow, $value->expertiseName());
+            $sheet->setCellValue('X' . $numRow, $value->positionGroupName());
+            $sheet->setCellValue('Y' . $numRow, $value->salary ? number_format($value->salary, 2) : '');
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/บุคลากร.xlsx';
+        $writer->save($filePath);  // สร้าง excel
+
+        // if (file_exists($output_file)) {  // ตรวจสอบว่ามีไฟล์ หรือมีการสร้างไฟล์ แล้วหรือไม่
+        //     echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/myData.xlsx'), ['class' => 'btn btn-info', 'target' => '_blank']);  // สร้าง link download
+        // }
+
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
     }
 }

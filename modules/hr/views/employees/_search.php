@@ -1,13 +1,13 @@
 <?php
 
 use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use kartik\widgets\Select2;
-use app\components\AppHelper;
 use yii\widgets\Pjax;
-use app\modules\hr\models\Organization;
+use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use yii\bootstrap5\ActiveForm;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeesSearch $model */
@@ -78,7 +78,7 @@ use app\modules\hr\models\Employees;
                 ])->label('ประเภท') ?>
 
 
-<?php $form->field($model, 'department')->widget(Select2::classname(), [
+            <?php $form->field($model, 'department')->widget(Select2::classname(), [
                     'data' => $model->ListDepartment(),
                     'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
@@ -88,20 +88,20 @@ use app\modules\hr\models\Employees;
                 
 
                 <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-    'name' => 'department',
-    'id' => 'treeID',
-    'query' => Organization::find()->addOrderBy('root, lft'),
-    'value' => 1,
-    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-    'fontAwesome' => true,
-    'asDropdown' => true,
-    'multiple' => false,
-    'options' => ['disabled' => false, 'allowClear' => true,'class' => 'close'],
-    'pluginOptions' => [
-        'allowClear' => true
-    ],
-])->label('หน่วยงานภายในตามโครงสร้าง');?>
+                    'name' => 'department',
+                    'id' => 'treeID',
+                    'query' => Organization::find()->addOrderBy('root, lft'),
+                    'value' => 1,
+                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                    'fontAwesome' => true,
+                    'asDropdown' => true,
+                    'multiple' => false,
+                    'options' => ['disabled' => false, 'allowClear' => true,'class' => 'close'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                ])->label('หน่วยงานภายในตามโครงสร้าง');?>
 
 
 

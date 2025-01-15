@@ -18,8 +18,8 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\inventory\models\StockSummary;
-// Microsoft Excel
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+// Microsoft Excel
 use app\modules\inventory\models\StockEventSearch;
 use app\modules\inventory\models\StockSummarySearch;
 
