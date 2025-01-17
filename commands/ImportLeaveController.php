@@ -161,7 +161,7 @@ class ImportLeaveController extends Controller
 
     public function actionCreateApprove()
     {
-        $leaves = Leave::find()->where(['id' => 11399])->all();
+        $leaves = Leave::find()->all();
         foreach ($leaves as $item) {
             $leave = Leave::find()->where(['id' => $item->id])->one();
             if($leave){
