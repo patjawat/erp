@@ -92,12 +92,8 @@ use iamsaint\datetimepicker\Datetimepicker;
         ?>
 
 <div class="d-flex justify-content-between gap-2">
-                <?php
-                    echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');
-                    ?>
-                <?php
-                    echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');
-                    ?>
+                <?php echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');?>
+                <?php echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');?>
             </div>
 
     <div class="d-flex flex-row mb-3 mt-4">

@@ -2,14 +2,14 @@
 
 namespace app\components;
 
+use Yii;
+use yii\base\Component;
+use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\models\SiteSetting;
 use app\models\VisitCounter;
-use PHPUnit\Framework\Constraint\IsEmpty;
-use yii\base\Component;
-use yii\bootstrap5\Html;
-use Yii;
 use app\modules\hr\models\Employees;
+use PHPUnit\Framework\Constraint\IsEmpty;
 
 class SiteHelper extends Component
 {
@@ -18,6 +18,7 @@ class SiteHelper extends Component
                 $model = Categorise::findOne(['name' => 'site']);
                 $siteUrl = isset($model->data_json['website']) ? $model->data_json['website'] : '-';
                 $siteName = isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
+                $director =  Employees::find()->where(['id' => $model->data_json['director_name']])->one();
 
                 try {
                         $leader = Employees::findOne($model->data_json['leader']);
@@ -27,6 +28,7 @@ class SiteHelper extends Component
 
 
                 return [
+                        'director' => $director,
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
                         'doc_number' => isset($model->data_json['doc_number']) ? $model->data_json['doc_number'] : null, //เลขที่หนังสือ
                         'director_name' => isset($model->data_json['director_name']) ? $model->data_json['director_name'] : null,

@@ -62,7 +62,7 @@ class HolidaysController extends \yii\web\Controller
             if ($this->request->post()) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $start = $this->request->post('start');
-                $check = Calendar::findOne(['emp_id' => $me->id, 'date_start' => $start, 'name' => 'holiday_me']);
+                $check = Calendar::findOne(['emp_id' => $me->id, 'date_start' => $start, 'name' => 'off']);
                 if ($check) {
                     return [
                         'status' => 'error',
@@ -74,7 +74,7 @@ class HolidaysController extends \yii\web\Controller
                 $model = new Calendar([
                     'emp_id' => $me->id,
                     'title' => 'OFF',
-                    'name' => 'holiday_me',
+                    'name' => 'off',
                     'date_start' => $start,
                     'date_end' => $start,
                     'thai_year' => AppHelper::YearBudget(),

@@ -68,6 +68,7 @@ class ImportLeaveController extends Controller
                     LEADER_PERSON_POSITION,
                     LEAVE_TYPE_ID,
                     LEAVE_TYPE_NAME,
+                    USER_CONFIRM_CHECK_ID,
                     STATUS_CODE,
                     STATUS_NAME,
                     gleave_location.LOCATION_ID,
@@ -85,10 +86,7 @@ class ImportLeaveController extends Controller
 
            $sendwork = $this->Person($item['LEAVE_WORK_SEND_ID']);
            $leaderId = $this->Person($item['LEADER_PERSON_ID']);
-        //    if($sendwork){
-        //        echo $sendwork->fname. " \n";
-            
-        //    }
+           $userCheckId = $this->Person($item['USER_CONFIRM_CHECK_ID']);
 
             $leave_work_send_id = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
 
@@ -142,12 +140,16 @@ class ImportLeaveController extends Controller
                 'phone' => $item['LEAVE_CONTACT_PHONE'],
                 'leave_work_send' => $item['LEAVE_WORK_SEND'],
                 'leave_work_send_id' => isset($sendwork) ? $sendwork->id : 0,
+                'approve_1' => isset($leaderId) ? (string)$leaderId->id : 0,
+                'approve_3' => isset($userCheckId) ? (string)$userCheckId->id : 0,
+                'approve_fulname_3' => isset($userCheckId) ? (string)$userCheckId->fullname : 0,
                 'leader' => isset($leaderId) ? (string)$leaderId->id : 0,
                 'leader_person_name' => $item['LEADER_PERSON_NAME'],
                 'leader_person_position' => $item['LEADER_PERSON_POSITION'],
             ];
 
             if($leave->save()){
+                $leave->createApprove();
                 // $leave->createLeaveStep();
                 $percentage = (($num++) / $total) * 100;
                 echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
@@ -155,6 +157,18 @@ class ImportLeaveController extends Controller
 
         }
         return ExitCode::OK;
+    }
+
+    public function actionCreateApprove()
+    {
+        $leaves = Leave::find()->where(['id' => 11399])->all();
+        foreach ($leaves as $item) {
+            $leave = Leave::find()->where(['id' => $item->id])->one();
+            if($leave){
+                $leave->createApprove();
+                echo 'ดำเนินการแล้ว : '.$leave->createApprove(). "\n";
+            }
+        }
     }
 
     public function actionEtitlements()

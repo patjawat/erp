@@ -624,8 +624,8 @@ class LeaveController extends Controller
         
         \Yii::$app->response->format = Response::FORMAT_JSON;
         // return $auto;
-        $holidaysMe = Calendar::find()->where(['name' => 'holiday_me'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
-        if($on_holidays == "1"){
+        $holidaysMe = Calendar::find()->where(['name' => 'off'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
+        if($model['dayOff'] >=1){
             $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
         }else{
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
@@ -636,7 +636,8 @@ class LeaveController extends Controller
             'allDays' => $model['allDays'],
             'satsunDays' => $model['satsunDays'],
             'holiday' => $model['holiday'],
-            'holiday_me' => $holidaysMe,
+            'isDayOff' => $model['dayOff'],
+            'dayOff' => $holidaysMe,
             'on_holidays' => $on_holidays,
             'total' => $total,
             'start_type' => $date_start_type,

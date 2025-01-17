@@ -9,16 +9,16 @@
 
 namespace app\commands;
 
-use app\components\AppHelper;
-use app\modules\filemanager\models\Uploads;
-use app\modules\hr\models\EmployeeDetail;
-use app\modules\hr\models\Employees;
-use yii\console\Controller;
+use Yii;
 use yii\console\ExitCode;
+use yii\console\Controller;
 use yii\helpers\ArrayHelper;
 use yii\helpers\BaseConsole;
+use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
-use Yii;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\EmployeeDetail;
+use app\modules\filemanager\models\Uploads;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -286,6 +286,41 @@ class ImportEmployeeController extends Controller
         }
 
         return $data;
+    }
+
+    public function actionSignature()
+    {
+        $sql = "SELECT p.HR_CID,s.* FROM `hrd_tr_signature` s LEFT JOIN hrd_person p ON p.ID = s.PERSON_ID;";
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        foreach ($querys as $query) {
+            $employee =  Employees::find()->where(['cid' => $query['HR_CID']])->one();
+            if($employee){
+                // echo $employee->fullname." \n";
+                $upload = Uploads::find()->where(['ref' => $employee->ref,'name' => 'signature'])->one();
+                $ref = $employee->ref;
+                $this->CreateDir($ref);
+                // if(!$upload){
+                //     echo "No \n";
+                // }else{
+                //     echo "Yes \n";
+
+                // }
+            if (!$upload && $query['IMG']) {
+                $name = time() . '.jpg';
+                file_put_contents(\Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $query['IMG']);
+
+                $upload = new Uploads();
+                $upload->ref = $ref;
+                $upload->name = 'signature';
+                $upload->file_name = $name;
+                $upload->real_filename = $name;
+                $upload->type = 'jpg';
+                $upload->save(false);
+                echo $employee->fullname." \n";
+            }
+           
+        }
+        }
     }
 
     public static function CreateDir($folderName)

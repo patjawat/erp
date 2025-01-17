@@ -47,31 +47,8 @@ use iamsaint\datetimepicker\Datetimepicker;
         ])->label('ปีงบประมาณ');
         ?>
        <div class="d-flex justify-content-between gap-2" style="width:250px">
-    <?=
-    $form->field($model, 'date_start')->widget(Datetimepicker::className(), [
-        'options' => [
-            'timepicker' => false,
-            'datepicker' => true,
-            'mask' => '99/99/9999',
-            'lang' => 'th',
-            'yearOffset' => 543,
-            'format' => 'd/m/Y',
-        ],
-    ])->label('ตั้งแต่วันที่');
-    ?>
-        <?=
-        $form->field($model, 'date_end')->widget(Datetimepicker::className(), [
-            'options' => [
-                'timepicker' => false,
-                'datepicker' => true,
-                'mask' => '99/99/9999',
-                'lang' => 'th',
-                'yearOffset' => 543,
-                'format' => 'd/m/Y',
-            ],
-        ])->label('ถึงวันที่');
-        ?>
-        
+       <?php echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');?>
+       <?php echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');?>
       
             </div>
         <div class="d-flex flex-row mb-3 mt-4">
@@ -113,43 +90,8 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 
 $js = <<< JS
-
-        var thaiYear = function (ct) {
-            var leap=3;
-            var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];
-            if(ct){
-                var yearL=new Date(ct).getFullYear()-543;
-                leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;
-                if(leap==2){
-                    dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];
-                }
-            }
-            this.setOptions({
-                i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,
-            })
-        };
-
-        \$("#leavesearch-date_start").datetimepicker({
-            timepicker:false,
-            format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-            lang:'th',  // แสดงภาษาไทย
-            onChangeMonth:thaiYear,
-            onShow:thaiYear,
-            yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-            closeOnDateSelect:true,
-        });
-
-        \$("#leavesearch-date_end").datetimepicker({
-            timepicker:false,
-            format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
-            lang:'th',  // แสดงภาษาไทย
-            onChangeMonth:thaiYear,
-            onShow:thaiYear,
-            yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-            closeOnDateSelect:true,
-        });
-
-    JS;
+    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+JS;
 $this->registerJS($js, View::POS_END);
 
 ?>

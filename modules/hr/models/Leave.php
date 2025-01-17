@@ -64,7 +64,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         return [
             [['leave_time_type', 'total_days'], 'number'],
-            [['balance','on_holidays', 'data_json', 'date_start', 'date_end','leave_start_type','leave_end_type','created_at', 'updated_at', 'deleted_at', 'emp_id', 'q','q_department'], 'safe'],
+            [['balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
         ];
@@ -167,53 +167,79 @@ class Leave extends \yii\db\ActiveRecord
 
     public function createApprove()
     {
-        $leaveStep1 = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
-        if (!$leaveStep1)
-        $leaveStep1 = new Approve();
-        $leaveStep1->from_id = $this->id;
-        $leaveStep1->name = 'leave';
-        $leaveStep1->emp_id = $this->data_json['approve_1'];
-        $leaveStep1->title = 'เห็นชอบ';
-        $leaveStep1->data_json = ['topic' => 'เห็นชอบ'];
-        $leaveStep1->level = 1;
-        $leaveStep1->status = 'Pending';
-        $leaveStep1->save(false);
+        $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
+        try {
+            // if (!$leaveStep1) {
+                $leaveStep1 = $leaveStep1Check ? $leaveStep1Check : new Approve();
+                $leaveStep1->from_id = $this->id;
+                $leaveStep1->name = 'leave';
+                $leaveStep1->emp_id = $this->data_json['approve_1'];
+                $leaveStep1->title = 'เห็นชอบ';
+                $leaveStep1->data_json = ['topic' => 'เห็นชอบ'];
+                $leaveStep1->level = 1;
+                $leaveStep1->status = 'Pending';
+                $leaveStep1->save(false);
+            // }
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
 
-        $leaveStep2 = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
-        if (!$leaveStep2)
-        $leaveStep2 = new Approve();
-        $leaveStep2->from_id = $this->id;
-        $leaveStep2->name = 'leave';
-        $leaveStep2->emp_id = $this->data_json['approve_2'];
-        $leaveStep2->title = 'เห็นชอบ';
-        $leaveStep2->data_json = ['topic' => 'เห็นชอบ'];
-        $leaveStep2->level = 2;
-        $leaveStep2->status = 'None';
-        $leaveStep2->save(false);
+        try {
+            $leaveStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
+            // if (!$leaveStep2) {
+                $leaveStep2 = $leaveStep2Check ? $leaveStep2Check : new Approve();
+                $leaveStep2->from_id = $this->id;
+                $leaveStep2->name = 'leave';
+                $leaveStep2->emp_id = $this->data_json['approve_2'];
+                $leaveStep2->title = 'เห็นชอบ';
+                $leaveStep2->data_json = ['topic' => 'เห็นชอบ'];
+                $leaveStep2->level = 2;
+                $leaveStep2->status = 'None';
+                $leaveStep2->save(false);
+            // }
+            // code...
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
 
-        $leaveStep3 = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
-        if (!$leaveStep3)
-        $leaveStep3 = new Approve();
-        $leaveStep3->from_id = $this->id;
-        $leaveStep3->name = 'leave';
-        $leaveStep3->title = 'ตรวจสอบ';
-        $leaveStep3->data_json = ['topic' => 'ผ่าน'];
-        $leaveStep3->level = 3;
-        $leaveStep3->status = 'None';
-        $leaveStep3->save(false);
+        // try {
+            $leaveStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
+            // if (!$leaveStep3) {
+                $leaveStep3 = $leaveStep3Check ? $leaveStep3Check : new Approve();
+                $leaveStep3->from_id = $this->id;
+                $leaveStep3->name = 'leave';
+                $leaveStep3->title = 'ตรวจสอบ';
+                $leaveStep3->emp_id = $this->data_json['approve_3'];
+                $leaveStep3->data_json = ['topic' => 'ผ่าน'];
+                $leaveStep3->level = 3;
+                $leaveStep3->status = 'None';
+               $leaveStep3->save(false);
+            //    return  $this->data_json['approve_3'].' = '.$leaveStep3->from_id;
+            // }
+            // code...
+        // } catch (\Throwable $th) {
+        //     // throw $th;
+        // }
 
         $director = SiteHelper::viewDirector();
-        $leaveStep4 = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
-        if (!$leaveStep4)
-        $leaveStep4 = new Approve();
-        $leaveStep4->from_id = $this->id;
-        $leaveStep4->name = 'leave';
-        $leaveStep4->emp_id = $director['id'];
-        $leaveStep4->title = 'อนุมัติ';
-        $leaveStep4->data_json = ['topic' => 'อนุมัติ'];
-        $leaveStep4->level = 4;
-        $leaveStep4->status = 'None';
-        $leaveStep4->save(false);
+        $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
+        try {
+            // if (!$leaveStep4) {
+            
+                $leaveStep4 = $leaveStep4Check ? $leaveStep4Check : new Approve();
+                $leaveStep4->from_id = $this->id;
+                $leaveStep4->name = 'leave';
+                $leaveStep4->emp_id = $director['id'];
+                $leaveStep4->title = 'อนุมัติ';
+                $leaveStep4->data_json = ['topic' => 'อนุมัติ'];
+                $leaveStep4->level = 4;
+                $leaveStep4->status = 'None';
+                $leaveStep4->save(false);
+            // }
+            // code...
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
     }
 
     public function listApprove()
@@ -237,22 +263,21 @@ class Leave extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'leave_status']);
     }
 
-    //สิทธวันลา
+    // สิทธวันลา
     public function Entitlements()
     {
-        return LeaveEntitlements::find()->where(['emp_id' => $this->emp_id,'thai_year' => $this->thai_year])->one();
+        return LeaveEntitlements::find()->where(['emp_id' => $this->emp_id, 'thai_year' => $this->thai_year])->one();
     }
-    
+
     public function listLeaveType()
     {
         $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
-        if($me->gender == 'ชาย')
-        {
-            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in','code',['LT2']])->all();
-        }else{
-            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in','code',['LT5','LT7']])->all();        
+        if ($me->gender == 'ชาย') {
+            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in', 'code', ['LT2']])->all();
+        } else {
+            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in', 'code', ['LT5', 'LT7']])->all();
         }
-            
+
         return ArrayHelper::map($list, 'code', 'title');
     }
 
@@ -281,7 +306,6 @@ class Leave extends \yii\db\ActiveRecord
     // แสดงข้อมูลวันลาที่มี่ผ่านมา
     public function LastDays()
     {
-
         // return $this->leave_type_id;
         // ลามาแล้ว
         $sumAll = self::find()
@@ -291,25 +315,25 @@ class Leave extends \yii\db\ActiveRecord
                 'leave_type_id' => $this->leave_type_id,
                 'status' => 'Allow'
             ])
-            ->andwhere(['<','date_start',$this->date_start])
+            ->andwhere(['<', 'date_start', $this->date_start])
             ->sum('total_days');
 
-            $data = self::find()
+        $data = self::find()
             ->where([
                 'emp_id' => $this->emp_id,
                 'thai_year' => $this->thai_year,
                 'leave_type_id' => $this->leave_type_id,
-                 'status' => 'Allow'
+                'status' => 'Allow'
             ])
-            ->andwhere(['<','date_start',$this->date_start])
+            ->andwhere(['<', 'date_start', $this->date_start])
             ->one();
 
-    return [
-        'data' => $data,
-        'sum_all' => $sumAll ?? 0
-    ];
+        return [
+            'data' => $data,
+            'sum_all' => $sumAll ?? 0
+        ];
     }
-    
+
     // สรุปการลารายบุคคล
     public function leaveEmpSummary()
     {
@@ -332,8 +356,8 @@ class Leave extends \yii\db\ActiveRecord
             ->db
             ->createCommand($sql)
             ->bindValue(':thai_year', $this->thai_year)
-            ->bindValue(':emp_id',$this->emp_id)
-            ->bindValue(':date_start',$this->date_start)
+            ->bindValue(':emp_id', $this->emp_id)
+            ->bindValue(':date_start', $this->date_start)
             ->queryOne();
     }
 
@@ -362,85 +386,86 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
-
     // แสดงสถานะในรูปแบบสี
     public function viewStatus()
     {
         try {
+            switch ($this->status) {
+                case 'Pending':
+                    $color = 'warning';
+                    $icon = '<i class="bi bi-hourglass-split"></i>';
+                    break;
+                case 'Allow':
+                    $color = 'success';
+                    $icon = '<i class="bi bi-check-circle-fill text-success"></i>';
+                    break;
+                case 'ReqCancel':
+                    $color = 'warning';
+                    $icon = '<i class="bi bi-exclamation-triangle text-danger"></i>';
+                    break;
+                case 'Cancel':
+                    $color = 'secondary';
+                    $icon = '<i class="bi bi-exclamation-circle-fill text-secondary"></i>';
+                    break;
+                case 'Checking':
+                    $color = 'warning';
+                    $icon = '<i class="fa-solid fa-magnifying-glass"></i>';
+                    break;
+                case 'Reject':
+                    $color = 'danger';
+                    $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
+                    break;
 
-        switch ($this->status) {
-            case "Pending":
-             $color = 'warning';
-             $icon = '<i class="bi bi-hourglass-split"></i>';
-              break;
-            case "Allow":
-                $color = 'success';
-                $icon = '<i class="bi bi-check-circle-fill text-success"></i>';
-              break;
-              case "ReqCancel":
-                $color = 'warning';
-                $icon = '<i class="bi bi-exclamation-triangle text-danger"></i>';
-              break;
-              case "Cancel":
-                $color = 'secondary';
-                $icon = '<i class="bi bi-exclamation-circle-fill text-secondary"></i>';
-              break;
-              case "Checking":
-                $color = 'warning';
-                $icon = '<i class="fa-solid fa-magnifying-glass"></i>';
-              break;
-              case "Reject":
-                $color = 'danger';
-                $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
-              break;
-              
-            default:
-            $color = '';
-            $icon = '';
-          }
-          
-          return '<span class="badge rounded-pill badge-soft-'.$color.' text-primary fs-13 ">'.$icon.' '.$this->leaveStatus->title.'</span>';
+                default:
+                    $color = '';
+                    $icon = '';
+            }
+
+            return '<span class="badge rounded-pill badge-soft-' . $color . ' text-primary fs-13 ">' . $icon . ' ' . $this->leaveStatus->title . '</span>';
         } catch (\Throwable $th) {
-           return null;
+            return null;
         }
-          
     }
-    //นับเวลาที่ผ่านมาแล้ว
+
+    // นับเวลาที่ผ่านมาแล้ว
     public function createdDays()
     {
-            return AppHelper::timeDifference($this->created_at);
-    }
-    
-        //แสดงวันที่สร้าง
-        public function viewCreated()
-        {
-            return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
-        }
-        
-    
-    public function viewLeaveType()
-    {
-       return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เนื่องจาก ' . $this->reason;
+        return AppHelper::timeDifference($this->created_at);
     }
 
-    //ผู้ตรวจสอบการลา
+    // แสดงวันที่สร้าง
+    public function viewCreated()
+    {
+        return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
+    }
+
+    public function viewLeaveType()
+    {
+        return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เนื่องจาก ' . $this->reason;
+    }
+
+    // ผู้ตรวจสอบการลา
     public function checkerName($level)
     {
         $check = Approve::find()->where(['from_id' => $this->id, 'level' => $level])->andWhere(['IS NOT', 'emp_id', null])->one();
         if ($check) {
             return [
+                'employee' => $check->employee,
                 'fullname' => $check->employee->fullname,
+                'signature' => $check->employee->signature(),
                 'position' => $check->employee->positionName(),
                 'approve_date' => isset($this->data_json['approve_date']) ? Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long') : '',
             ];
-        }else{
+        } else {
             return [
                 'fullname' => '',
+                'signature' => '',
                 'position' => '',
-                'approve_date'=>''
+                'approve_date' => ''
             ];
         }
     }
+
     //  ภาพทีมผูตรวจสอบ
     public function stackChecker()
     {
@@ -448,33 +473,31 @@ class Leave extends \yii\db\ActiveRecord
         $data = '';
         $data .= '<div class="avatar-stack">';
         foreach (Approve::find()->where(['from_id' => $this->id])->andWhere(['!=', 'status', 'None'])->all() as $key => $item) {
-           try {
-            $data .= Html::a(
-                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up'.($item->status == 'Reject' ? ' border-danger' : null),
-                    'data' => [
-                        'expand' => '-20',
-                        'sizes' => 'auto',
-                        'src' => $item->employee->showAvatar()
-                    ]]),
-                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
-                [
-                    'class' => 'open-modal',
-                    'data' => [
-                        'size' => 'modal-md',
-                        'bs-trigger' => 'hover focus',
-                        'bs-toggle' => 'popover',
-                        'bs-placement' => 'top',
-                        'bs-title' => $item->title,
-                        'bs-html' => 'true',
-                        'bs-content' => $item->employee->fullname . '<br>' . ($item->status == 'Reject' ? '<i class="bi bi-exclamation-circle text-danger"></i> ไม่' : '<i class="bi bi-check-circle-fill text-primary"></i> ').$item->data_json['topic']
+            try {
+                $data .= Html::a(
+                    Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
+                        'data' => [
+                            'expand' => '-20',
+                            'sizes' => 'auto',
+                            'src' => $item->employee->showAvatar()
+                        ]]),
+                    ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                    [
+                        'class' => 'open-modal',
+                        'data' => [
+                            'size' => 'modal-md',
+                            'bs-trigger' => 'hover focus',
+                            'bs-toggle' => 'popover',
+                            'bs-placement' => 'top',
+                            'bs-title' => $item->title,
+                            'bs-html' => 'true',
+                            'bs-content' => $item->employee->fullname . '<br>' . ($item->status == 'Reject' ? '<i class="bi bi-exclamation-circle text-danger"></i> ไม่' : '<i class="bi bi-check-circle-fill text-primary"></i> ') . $item->data_json['topic']
+                        ]
                     ]
-                ]
-            );
-           
+                );
             } catch (\Throwable $th) {
-                //throw $th;
+                // throw $th;
             }
-    
         }
         $data .= '</div>';
         return $data;
@@ -486,18 +509,20 @@ class Leave extends \yii\db\ActiveRecord
     {
         try {
             $model = Employees::find()->where(['id' => $this->data_json['leave_work_send_id']])->one();
-            $msg = 'ผู้ปฏิบัติหน้าที่แทน';
-            return [
-                'fullname' => $model->fullname,
-                'position' => $model->positionName(),
-                'avatar' => $model->getAvatar(false, $msg),
-            ];
+            return $model;
+            // $msg = 'ผู้ปฏิบัติหน้าที่แทน';
+            // return [
+            //     'fullname' => $model->fullname,
+            //     'position' => $model->positionName(),
+            //     'avatar' => $model->getAvatar(false, $msg),
+                
+            // ];
         } catch (\Throwable $th) {
-            return [
-                'fullname' => '',
-                'position' => '',
-                'avatar' => '',
-            ];
+            // return [
+            //     'fullname' => '',
+            //     'position' => '',
+            //     'avatar' => '',
+            // ];
         }
     }
 
@@ -654,7 +679,6 @@ class Leave extends \yii\db\ActiveRecord
                             <div class="progress-bar bg-' . $color . '" role="progressbar" aria-label="Progress" aria-valuenow="' . $this->statusProcess() . '" aria-valuemin="0" aria-valuemax="100" style="width: ' . $this->statusProcess() . '%;">
                             </div>
                         </div>';
-                        
     }
 
     public function listStatusSummary()
@@ -718,14 +742,14 @@ class Leave extends \yii\db\ActiveRecord
         if ($lP) {
             $total = $lP->days;
             $leaveDays = ($lP->days - $this->sumLeaveType('LT4'));
-        }else{
+        } else {
             $total = 0;
         }
-        
-        return[
+
+        return [
             'total' => $total,
-            'sum' =>  $leaveDays
-        ]; 
+            'sum' => $leaveDays
+        ];
     }
 
     // นับจำนวนสถานะ

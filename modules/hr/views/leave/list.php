@@ -26,6 +26,9 @@ use yii\bootstrap5\Html;
             <td class="text-truncate" style="max-width: 230px;">
                 <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
                 <?=$model->getAvatar(false)['avatar']?>
+                <?php
+                 echo Html::img($model->employee->SignatureShow());
+                ?>
                 </a>
             </td>
             <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
@@ -33,9 +36,28 @@ use yii\bootstrap5\Html;
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
             <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
+            
             </td>
-            <td><?php echo $model->leaveWorkSend()['avatar']?></td>
-            <td><?php echo $model->stackChecker()?></td>
+            <td><?php echo $model->leaveWorkSend()->getAvatar(false)?>
+        
+            <?php
+                 // echo Html::img($model->leaveWorkSend()->SignatureShow());
+                ?>
+                </td>
+            <td><?php echo $model->stackChecker()?>
+        <?php
+//      $data1 =  $model->checkerName(1)['signature'];
+//  echo $data1.'</br>';
+        ?>
+
+<?php
+try {
+    $data =  $model->checkerName(1)['employee'];
+    echo Html::img($data->SignatureShow());
+} catch (\Throwable $th) {
+}
+        ?>
+        </td>
             <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $model->showStatus();?></td>
             <td class="fw-center align-middle text-start">
 
@@ -61,14 +83,13 @@ use yii\bootstrap5\Html;
                     <?php if($model->status !== 'Allow'):?>
                             <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
                     <?php endif;?>
-                <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
+                    <?php if($model->status == 'Allow'):?>
+                        <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
                             [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) ?>
+                            <?php endif;?>
                     </div>
                 </div>
-
-               
-           
             </td>
         </tr>
         <?php endforeach;?>

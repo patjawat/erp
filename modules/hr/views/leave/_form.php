@@ -98,31 +98,16 @@ $resultsJs = <<< JS
         <!-- Row -->
         <div class="row">
             <div class="col-6">
-                <?php
-                echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                    'data' => $model->listLeavetype(),
-                    'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                    ],
-                ])->label('ประเภท');
-                ?>
-                <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:118px;'])->label('เหตุผล/เนื่องจาก') ?>
-                
-
-                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:220px;'])->label('ระหว่างลาติดต่อ') ?>
-                <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
-            </div>
-
-            <div class="col-6">
-                <div class="d-flex justify-content-between gap-3">
+           
+               <div class="d-flex justify-content-between gap-3">
                     <div>
-            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
-            <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
-
+                   
+                        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
+                        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
+                    
                     </div>
                     <div>
+                    
                         <?php
                     echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
                         'data' => [
@@ -169,13 +154,43 @@ $resultsJs = <<< JS
                         ])->label('ประเภท');
                         ?>
 
+                   
                     </div>
                 </div>
+     
+               
+                
+                <?php
+                echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+                    'data' => $model->listLeavetype(),
+                    'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label('ประเภท');
+                ?>
+               
+                <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
 
-                <div class="d-flex justify-content-between gap-3">
-                    <div class="flex-fill">
+                <div class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
+<?php echo $model->total_days ?></span></h6>
+<div>
+    <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6>
 
-                    <?php
+    <!-- <ul>
+        <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
+        <li class="day_normal">วันหยุดนักขัตฤกษ์ : <span class="cal-holiday text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
+        <li class="day_off">วัน OFF : <span class="cal-holiday_me text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span>
+    </ul> -->
+    </div>
+</div>
+
+            </div>
+            <div class="col-6">
+            <div class="d-flex justify-content-between gap-3">
+            <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>    
+            <?php
                     echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                     'data' => [
                         'ภายในจังหวัด' => 'ภายในจังหวัด',
@@ -191,36 +206,7 @@ $resultsJs = <<< JS
                     ])->label('สถานที่ไป');
                     ?>
                     </div>
-                    <div class="flex-fill">
-                    
-<div class="mt-4">
-
-    <?php echo $form->field($model, 'on_holidays', [
-        'options' => ['class' => 'mb-0 ms-5']
-        ])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('ไม่รวมวันหยุด'); ?>
-        </div>
-                    </div>
-                </div>
-                
-                <div
-                    class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
-
-                    <?php echo $model->total_days ?></span></h6>
-
-                    <div>
-                                <h6>จำนวนที่ลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">
-
-                            </div>
-                    <?php 
-                    // echo $form->field($model, 'on_holidays', [
-                    //         'options' => ['class' => 'mb-2']
-                    //     ])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->on_holidays == 1 ? true : false)])->label('วันหยุดแบบกำหนดเอง');
-                        
-                        ?>
-
-
-                </div>
-
+            <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:78px;'])->label('ระหว่างลาติดต่อ') ?>
                 <?php
                 try {
                     $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
@@ -259,16 +245,12 @@ $resultsJs = <<< JS
                 ])->label('มอบหมายงานให้')
                 ?>
                 <?php echo $this->render('approve', ['form' => $form, 'model' => $model]) ?>
-
-
-
-
             </div>
-
-
         </div>
     </div>
 </div>
+       
+
 <?php // echo $this->render('summary', ['model' => $model]) ?>
 
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
@@ -361,16 +343,16 @@ $js = <<< JS
             }
         });
         
-        \$("#leave-on_holidays").change(function() {
-            //ไม่รวมวันหยุด Auto
-            if(this.checked) {
-                $(this).val(1)
-                calDays()
-            }else{
-                $(this).val(0)
-                calDays()
-            }
-        });
+        // \$("#leave-on_holidays").change(function() {
+        //     //ไม่รวมวันหยุด Auto
+        //     if(this.checked) {
+        //         $(this).val(1)
+        //         calDays()
+        //     }else{
+        //         $(this).val(0)
+        //         calDays()
+        //     }
+        // });
 
 
     function calDays()
@@ -391,7 +373,15 @@ $js = <<< JS
                     console.log(\$('#leave-data_json-date_start_type').val());
                    \$('.cal-days').html(res.total)
                    \$('#leave-total_days').val(res.total)
-                    
+                   if(res.isDayOff >= 1){
+                    $('.day_normal').hide()
+                    $('.day_off').show()
+                }
+                
+                if(res.isDayOff == 0){
+                    $('.day_off').hide()
+                    $('.day_normal').show()
+                   }
                     
                 }
             });

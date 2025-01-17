@@ -15,44 +15,28 @@ use iamsaint\datetimepicker\Datetimepicker;
 use app\modules\filemanager\components\FileManagerHelper;
 ?>
 
-<!-- <style>
-    .select2-container--krajee-bs5 .select2-selection--single {
-    height: calc(2.25rem + 10px);
-    line-height: 1.5;
-    padding: 0rem 0rem 0rem 0.5rem;
-}
-</style> -->
-<?php
-// echo app\modules\filemanager\components\FileManagerHelper::getImg(1);
-?>
 <div class="employees-form p-3">
     <?php $form = ActiveForm::begin([
         'id' => 'form-employee',
-        // 'type' => ActiveForm::TYPE_FLOATING
         ]); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
-    <?php //  $form->field($model, 'user_id')->hiddenInput(['value' => 0])->label(false) ?>
 
     <div class="row">
-
         <div class="col-12">
-
-
             <div class="row">
                 <div class="col-9">
                     <div class="row">
                         <div class="col-lg-2 col-md-2 col-sm-12">
                             <?php
-            $prefix = AppHelper::prefixName();
-            echo $form->field($model, 'prefix')->widget(Select2::classname(), [
-                'data' =>$model->ListPrefixTh(),
-                'options' => ['placeholder' => 'เลือก ...'],
-                'pluginOptions'=>[
-                    'dropdownParent' => '#main-modal',
-                    'tags' => true,
-                    'maximumInputLength' => 10
-                ],
-            ])->label('คำนำหน้า');?>
+                                echo $form->field($model, 'prefix')->widget(Select2::classname(), [
+                                    'data' =>$model->ListPrefixTh(),
+                                    'options' => ['placeholder' => 'เลือก ...'],
+                                    'pluginOptions'=>[
+                                        'dropdownParent' => '#main-modal',
+                                        'tags' => true,
+                                        'maximumInputLength' => 10
+                                    ],
+                                ])->label('คำนำหน้า');?>
                         </div>
                         <div class="col-lg-5 col-md-5 col-sm-12">
                             <?= $form->field($model, 'fname')->textInput(['autofocus' => true])->label('ชื่อ') ?>
@@ -60,19 +44,17 @@ use app\modules\filemanager\components\FileManagerHelper;
                         <div class="col-lg-5 col-md-5 col-sm-12">
                             <?= $form->field($model, 'lname')->textInput(['autofocus' => true])->label('นามสกุล') ?>
                         </div>
-
                         <div class="col-lg-2 col-md-2 col-sm-12">
                             <?php
-            $prefix = AppHelper::prefixName();
-            echo $form->field($model, 'data_json[prefix_en]')->widget(Select2::classname(), [
-                'data' =>$model->ListPrefixEn(),
-                'options' => ['placeholder' => 'เลือก ...'],
-                'pluginOptions'=>[
-                    'dropdownParent' => '#main-modal',
-                    'tags' => true,
-                    'maximumInputLength' => 10
-                ],
-            ])->label('คำนำหน้า');?>
+                                echo $form->field($model, 'data_json[prefix_en]')->widget(Select2::classname(), [
+                                    'data' =>$model->ListPrefixEn(),
+                                    'options' => ['placeholder' => 'เลือก ...'],
+                                    'pluginOptions'=>[
+                                        'dropdownParent' => '#main-modal',
+                                        'tags' => true,
+                                        'maximumInputLength' => 10
+                                    ],
+                                ])->label('คำนำหน้า');?>
                         </div>
                         <div class="col-lg-5 col-md-5 col-sm-12">
                             <?= $form->field($model, 'fname_en')->textInput(['autofocus' => true])->label('ชื่อ(อังกฤษ)') ?>

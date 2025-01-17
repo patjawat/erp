@@ -96,8 +96,6 @@ class UploadsController extends \yii\web\Controller
     public function actionSingle()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        // $ref = Yii::$app->request->post('ref');
-        // return 'hello'.$ref;
         return  FileManagerHelper::UploadsSingle();
     }
 

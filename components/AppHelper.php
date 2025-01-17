@@ -100,12 +100,14 @@ $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบ�
                             // หาจำนวนวันหยุด
                             $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
                             // ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
-                            //  $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'holiday_me' AND date_start BETWEEN :date_start AND :date_end";
+                             $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND date_start BETWEEN :date_start AND :date_end";
+                             //นับวัน Off
+                             $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND MONTH(date_end) = MONTH(:date_end);";
+                             $countDayOff = Yii::$app->db->createCommand($sqlDayOff)->bindValue(':date_end', $dateEnd)->queryScalar();
                             
                             // นับจำนวนวันทั้งหมด
                             $sqlAllDays = "WITH RECURSIVE date_range AS (SELECT :date_start AS date UNION ALL SELECT DATE_ADD(date, INTERVAL 1 DAY) FROM date_range WHERE date < :date_end ) SELECT count(date) as count_days FROM date_range;"; 
                             $countAllDays = Yii::$app->db->createCommand($sqlAllDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
-                            
         $satsunDays = Yii::$app->db->createCommand($sqlsatsunDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
         // $sunDay = Yii::$app->db->createCommand($sqlSundays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
         $holiday = Yii::$app->db->createCommand($sqlHoliday)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
@@ -113,6 +115,7 @@ $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบ�
         return [
             'allDays' => $countAllDays,
             'satsunDays' => $satsunDays,
+            'dayOff' => $countDayOff,
             // 'sunDay' => $sunDay,
             'holiday' => $holiday,
             //  'holidy_me' =>  $holidayMe

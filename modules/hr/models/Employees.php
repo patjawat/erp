@@ -1183,6 +1183,38 @@ class Employees extends Yii\db\ActiveRecord
             return \Yii::getAlias('@web').'/img/placeholder_cid.png';
         }
     }
+    //file ลายเซ็น
+    public function signature()
+    {
+        try {
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'signature'])->one();
+            if ($model) {
+                $filepath = FileManagerHelper::getUploadPath() . $this->ref . '/' . $model->real_filename;
+                return $filepath;
+            } else {
+                return null;
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return null;
+        }
+    }
+
+    //แสดงรายเซ็น
+    public function SignatureShow()
+    {
+        try {
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'signature'])->one();
+            if ($model) {
+                return FileManagerHelper::getImg($model->id);
+            } else {
+                return null;
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return null;
+        }
+    }
 
     public function fullname()
     {

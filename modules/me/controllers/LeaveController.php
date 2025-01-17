@@ -205,7 +205,7 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
+                'content' => $this->renderAjax('@app/modules/hr/views/leave/create', [
                     'model' => $model,
                 ]),
             ];
@@ -302,12 +302,12 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
+                'content' => $this->renderAjax('@app/modules/hr/views/leave/update', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('update', [
+            return $this->render('@app/modules/hr/views/leave/update', [
                 'model' => $model,
             ]);
         }
