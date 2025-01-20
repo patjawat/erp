@@ -24,7 +24,7 @@ use yii\bootstrap5\Html;
         <?php foreach($dataProvider->getModels() as $model):?>
         <tr class="">
             <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
+                <a href="<?php echo Url::to(['/me/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
                 <?=$model->getAvatar(false)['avatar']?>
                 </a>
             </td>

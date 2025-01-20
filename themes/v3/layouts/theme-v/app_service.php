@@ -29,7 +29,7 @@ $items = [
     [
         'title' => 'ขอลา',
         'icon' => 'fa-solid fa-calendar-day fs-1',
-        'url' => ['/hr/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'],
+        'url' => ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'],
         'modal' => true,
         'size' => 'modal-lg'
     ],

@@ -22,7 +22,7 @@ class NotificationHelper extends Component
     public static function Info()
     {
         return [
-            'total' => (self::Helpdesk()['total']+self::Orders()['total']+self::StockApprove()['total']),
+            'total' => (self::Leave()['total']+self::Helpdesk()['total']+self::Orders()['total']+self::StockApprove()['total']),
             'leave' => self::Leave(),
             'helpdesk' => self::Helpdesk(),
             'stock_approve' => self::StockApprove(),
@@ -35,7 +35,7 @@ class NotificationHelper extends Component
     public static function Leave()
     {
         $me = UserHelper::GetEmployee();
-        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->all();
+        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
         
         return [
             'title' => 'แจ้งซ่อม',

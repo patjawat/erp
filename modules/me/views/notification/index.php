@@ -18,36 +18,38 @@ $this->params['breadcrumbs'][] = $this->title;
 <!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-bell noti-animate"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<div class="row d-flex justify-content-center">
-    <div class="col-lg-6 col-md-6 col-sm-12">
 
-<div class="card">
-    <div class="card-body">
 
-    <div
-        class="table-responsive"
-    >
-        <table
-            class="table table-primary"
-        >
-            <thead>
-                <tr>
-                    <th scope="col">รายการ</th>
-                    <th scope="col">ระยะเวลา</th>
-                </tr>
-            </thead>
-            <tbody>
-              <?php echo $this->render('leave')?>
-              <?php  echo $this->render('helpdesk')?>
-              <?php  echo $this->render('stock_approve')?>
-              <?php  echo $this->render('orders')?>
-               
-            </tbody>
-        </table>
+<div class="row d-flex justify-content-start">
+    <div class="col-lg-8 col-md-8 col-sm-12">
+
+
+        <?php echo $this->render('leave')?>
+
+
+
+        <div class="card">
+            <div class="card-body">
+
+                <div class="table-responsive">
+                    <table class="table table-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">รายการ</th>
+                                <th scope="col">ระยะเวลา</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php  echo $this->render('helpdesk')?>
+                            <?php  echo $this->render('stock_approve')?>
+                            <?php  echo $this->render('orders')?>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
     </div>
-    
-    </div>
-</div>
-        
-</div>
 </div>

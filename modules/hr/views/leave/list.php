@@ -1,4 +1,5 @@
 <?php
+use yii\web\View;
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
 ?>
@@ -26,9 +27,6 @@ use yii\bootstrap5\Html;
             <td class="text-truncate" style="max-width: 230px;">
                 <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
                 <?=$model->getAvatar(false)['avatar']?>
-                <?php
-                 echo Html::img($model->employee->SignatureShow());
-                ?>
                 </a>
             </td>
             <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
@@ -53,7 +51,6 @@ use yii\bootstrap5\Html;
 <?php
 try {
     $data =  $model->checkerName(1)['employee'];
-    echo Html::img($data->SignatureShow());
 } catch (\Throwable $th) {
 }
         ?>
@@ -84,9 +81,11 @@ try {
                             <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
                     <?php endif;?>
                     <?php if($model->status == 'Allow'):?>
-                        <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
+                        <?php echo Html::a('<i class="fa-regular fa-circle-down me-1"></i> ดาน์โหลดเอกสาร', 
                             [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
-                            ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) ?>
+                            ['class' => 'dropdown-item download-leave','data' => [
+                                'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                            ]]) ?>
                             <?php endif;?>
                     </div>
                 </div>
@@ -113,6 +112,49 @@ $js = <<< JS
     backdrop: 'static'
     });
 
+    $("body").on("click", ".download-leave", function (e) {
+    e.preventDefault();
+    var filename = $(this).data('filename');
+    $.ajax({
+        url: $(this).attr('href'), // ตรวจสอบให้แน่ใจว่า URL ตรงกับ controller/action ของคุณ
+        method: 'GET',
+        xhrFields: {
+            responseType: 'blob' // กำหนดให้ตอบกลับเป็น binary data
+        },
+        beforeSend: function() {
+            $("#main-modal").modal("show");
+            $("#main-modal-label").html("กำลังโหลด");
+            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+            $(".modal-dialog").addClass("modal-sm");
+            $("#modal-dialog").removeClass("fade");
+            $(".modal-body").html(
+                '<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>'
+            );
+        },
+        success: function(blob) { // ใช้ 'blob' เป็นชื่อพารามิเตอร์เพื่อหลีกเลี่ยงความสับสน
+            var getFilename = filename+ '.docx'; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
+            const file = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            
+            // สร้างลิงก์ชั่วคราวสำหรับดาวน์โหลดไฟล์
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(file);
+            link.download = getFilename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link); // ลบลิงก์ออกหลังจากใช้งานเสร็จ
+            window.URL.revokeObjectURL(link.href); // ลบ URL Object เพื่อลดการใช้หน่วยความจำ
+
+            $("#main-modal").modal("hide");
+        },
+        error: function() {
+            alert('ไม่สามารถดาวน์โหลดไฟล์ได้');
+        }
+    });
+});
+
+
+        
+
 JS;
-$this->registerJs($js);
+$this->registerJs($js,View::POS_END);
 ?>

@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/hr/leave/approve-validator'],
+    'validationUrl' => ['/me/leave/approve-validator'],
 ])
 ?>
 <div class="row d-flex justify-content-center">

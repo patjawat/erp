@@ -63,6 +63,8 @@ class Leave extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+
+            [['leave_type_id'], 'required'],
             [['leave_time_type', 'total_days'], 'number'],
             [['balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
@@ -167,9 +169,10 @@ class Leave extends \yii\db\ActiveRecord
 
     public function createApprove()
     {
+    // หัวหน้างาน
         $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
-        try {
-            // if (!$leaveStep1) {
+        // try {
+            if (!$leaveStep1Check) {
                 $leaveStep1 = $leaveStep1Check ? $leaveStep1Check : new Approve();
                 $leaveStep1->from_id = $this->id;
                 $leaveStep1->name = 'leave';
@@ -179,14 +182,15 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep1->level = 1;
                 $leaveStep1->status = 'Pending';
                 $leaveStep1->save(false);
-            // }
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
+            }
+        // } catch (\Throwable $th) {
 
-        try {
+        // }
+
+        // try {
+             //หัวหน้ากลุ่มงานเห็นชอบ
             $leaveStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
-            // if (!$leaveStep2) {
+            if (!$leaveStep2Check) {
                 $leaveStep2 = $leaveStep2Check ? $leaveStep2Check : new Approve();
                 $leaveStep2->from_id = $this->id;
                 $leaveStep2->name = 'leave';
@@ -196,35 +200,32 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep2->level = 2;
                 $leaveStep2->status = 'None';
                 $leaveStep2->save(false);
-            // }
-            // code...
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
+            }
+        // } catch (\Throwable $th) {
+        // }
 
         // try {
+            //ผู้ตรวจสอบผู้ดูแลตรวจสอบวันลา
             $leaveStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
-            // if (!$leaveStep3) {
+            if (!$leaveStep3Check) {
                 $leaveStep3 = $leaveStep3Check ? $leaveStep3Check : new Approve();
                 $leaveStep3->from_id = $this->id;
                 $leaveStep3->name = 'leave';
                 $leaveStep3->title = 'ตรวจสอบ';
-                $leaveStep3->emp_id = $this->data_json['approve_3'];
+                // $leaveStep3->emp_id = $this->data_json['approve_3'];
                 $leaveStep3->data_json = ['topic' => 'ผ่าน'];
                 $leaveStep3->level = 3;
                 $leaveStep3->status = 'None';
                $leaveStep3->save(false);
-            //    return  $this->data_json['approve_3'].' = '.$leaveStep3->from_id;
-            // }
-            // code...
+            }
         // } catch (\Throwable $th) {
-        //     // throw $th;
         // }
 
+        //ผู้อำนวยการอนุมัติ
         $director = SiteHelper::viewDirector();
         $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
-        try {
-            // if (!$leaveStep4) {
+        // try {
+            if (!$leaveStep4Check) {
             
                 $leaveStep4 = $leaveStep4Check ? $leaveStep4Check : new Approve();
                 $leaveStep4->from_id = $this->id;
@@ -235,11 +236,10 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep4->level = 4;
                 $leaveStep4->status = 'None';
                 $leaveStep4->save(false);
-            // }
+            }
             // code...
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
+        // } catch (\Throwable $th) {
+        // }
     }
 
     public function listApprove()

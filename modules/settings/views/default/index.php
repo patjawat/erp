@@ -20,7 +20,7 @@ $this->title = "การตั้งค่าระบบ";
 </style>
 <div class="container">
 
-    <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3 mt-5">
+    <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
         <div class="col">
             <a href="<?php echo Url::to(['/settings/company'])?>">
                 <div class="card border-0 shadow-sm hover-card">

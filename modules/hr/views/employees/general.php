@@ -82,71 +82,7 @@ $title = '<i class="fa-regular fa-address-card"></i> ข้อมูลพื้
                     <td>ประเภท/กลุ่มงาน</td>
                     <td><span class="text-pink fw-semibold"><?=$model->positionGroupName();?></span></td>
                 </tr>
-
-                <tr>
-                    <td>ลายเซ็น</td>
-                    <td colspan="3">
-                            <?=Html::img($model->SignatureShow())?>
-                            <br>
-                            <br>
-                            <a href="#" class="select-signature btn btn-primary"><i class="fa-solid fa-arrow-up-from-bracket"></i> อัปโหลดลายเซ็น 150 * 70</a>
-                        </div>
-                    </td>
-                </tr>
-                
             </tbody>
         </table>
     </div>
 </div>
-
-<input type="file" id="my_file_signature" style="display: none;" />
-
-<?php
-$ref = $model->ref;
-$urlUpload = Url::to('/filemanager/uploads/single');
-$js = <<< JS
-
-$(".select-signature").click(function() {
-    $("input[id='my_file_signature']").click();
-});
-
-$('#my_file_signature').change(function (e) { 
-	e.preventDefault();
-	formdata = new FormData();
-    const maxSize = 5 * 150 * 70; // 5MB in bytes
-
-    if($(this).prop('files').length > 0)
-    {
-		file =$(this).prop('files')[0];
-
-         // Validate image size
-         if (file.size > maxSize) {
-            alert("ขนาดภาพใหญ่เกินไป");
-            return;
-        }
-        
-        formdata.append("signature", file);
-        formdata.append("id", 1);
-        formdata.append("ref", '$ref');
-        formdata.append("name", 'signature');
-
-        console.log(file);
-		$.ajax({
-			url: '$urlUpload',
-			type: "POST",
-			data: formdata,
-			processData: false,
-			contentType: false,
-			success: function (res) {
-                console.log(res);
-                location.reload();
-			}
-		});
-    }
- });
-
-
-JS;
-$this->registerJS($js,View::POS_END);
-
-?>

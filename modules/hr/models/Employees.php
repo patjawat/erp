@@ -573,6 +573,13 @@ class Employees extends Yii\db\ActiveRecord
                 'subtitle' => 'ประวัติการแต่งตั้งตำแหน่งบริหาร',
                 'count' => 0,
             ],
+            [
+                'title' => 'ลายเซ็น',
+                'icon' => '<i class="fa-solid fa-file-signature avatar-title text-primary"></i> ',
+                'name' => 'signature',
+                'subtitle' => 'ลายเซ็น',
+                'count' => 0,
+            ]
         ];
     }
 

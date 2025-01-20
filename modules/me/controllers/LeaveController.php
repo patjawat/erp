@@ -4,8 +4,10 @@ namespace app\modules\me\controllers;
 
 use Yii;
 use DateTime;
+use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
+use app\models\Approve;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -163,21 +165,77 @@ class LeaveController extends Controller
      *
      * @return string|Response
      */
+    // public function actionCreate()
+    // {
+    //     $leaveTypeId = $this->request->get('leave_type_id');
+    //     $model = new Leave([
+    //         'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
+    //         'leave_type_id' => $leaveTypeId,
+    //         'thai_year' => AppHelper::YearBudget(),
+    //     ]);
+
+    //     $model->data_json = [
+    //         'title' => $this->request->get('title'),
+    //         'address' => $model->CreateBy()->fulladdress,
+    //         'leader' => $model->Approve()['leader']['id'],
+    //         'leader_group' => $model->Approve()['leaderGroup']['id'],
+    //         'phone' => $model->CreateBy()->phone,
+    //         'director' => \Yii::$app->site::viewDirector()['id'],
+    //         'director_fullname' => \Yii::$app->site::viewDirector()['fullname'],
+    //     ];
+
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post())) {
+    //             \Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //             $model->thai_year = AppHelper::YearBudget();
+    //             $model->date_start = AppHelper::convertToGregorian($model->date_start);
+    //             $model->date_end = AppHelper::convertToGregorian($model->date_end);
+    //             $model->save();
+
+    //             return $this->redirect(['view', 'id' => $model->id]);
+    //             // return [
+    //             //     'status' => 'success',
+    //             //     'container' => '#leave'
+    //             // ];
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
+    //     if ($this->request->isAJax) {
+    //         \Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'content' => $this->renderAjax('@app/modules/hr/views/leave/create', [
+    //                 'model' => $model,
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('create', [
+    //             'model' => $model,
+    //         ]);
+    //     }
+    // }
+
     public function actionCreate()
     {
+        $me = UserHelper::GetEmployee();
         $leaveTypeId = $this->request->get('leave_type_id');
         $model = new Leave([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
             'thai_year' => AppHelper::YearBudget(),
+            'on_holidays' => 0
         ]);
 
         $model->data_json = [
             'title' => $this->request->get('title'),
             'address' => $model->CreateBy()->fulladdress,
-            'leader' => $model->Approve()['leader']['id'],
-            'leader_group' => $model->Approve()['leaderGroup']['id'],
             'phone' => $model->CreateBy()->phone,
+            'approve_1' => $model->Approve()['approve_1']['id'],
+            'approve_2' => $model->Approve()['approve_2']['id'],
+            'leave_contact_phone' => $model->CreateBy()->phone,
             'director' => \Yii::$app->site::viewDirector()['id'],
             'director_fullname' => \Yii::$app->site::viewDirector()['fullname'],
         ];
@@ -185,12 +243,16 @@ class LeaveController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-
+                $model->status = 'Pending';
+                $model->emp_id = $me->id;
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                $model->save();
-
+                
+                if($model->save()){
+                    $model->createApprove();
+                }
+                
                 return $this->redirect(['view', 'id' => $model->id]);
                 // return [
                 //     'status' => 'success',
@@ -210,12 +272,12 @@ class LeaveController extends Controller
                 ]),
             ];
         } else {
-            return $this->render('create', [
+            return $this->render('@app/modules/hr/views/leave/create', [
                 'model' => $model,
             ]);
         }
     }
-
+    
     // ตรวจสอบความถูกต้อง
     public function actionCreateValidator()
     {
@@ -313,69 +375,89 @@ class LeaveController extends Controller
         }
     }
 
-    // การอนุมัติ
     public function actionApprove($id)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = $this->findModel($id);
-        $name = $this->request->get('name');
-        $checker = $this->request->get('checker');
-        $avatar = $model->Avatar($checker)['avatar'];
-        $oldObj = $model->data_json;
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
-
-            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-            $model->save();
-
+        $me = UserHelper::GetEmployee();
+        $model = Approve::findOne(["id" => $id, "emp_id" => $me->id]);
+        $leave = Leave::findOne($model->from_id);
+        if(!$model)
+        {
             return [
-                'status' => 'success',
-                'container' => '#leave',
+                'title' => 'แจ้งเตือน',
+                'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
             ];
         }
-        if ($this->request->isAJax) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
+           
+            
+            $approveDate = ["approve_date" => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
+            if($model->level == 3){
+                $model->emp_id = $me->id;
+            }
+            
+            if($model->save()){
+                $nextApprove = Approve::findOne(["from_id" => $model->from_id,'level' => ($model->level+1)]);
+                if($nextApprove){
+                    $nextApprove->status = 'Pending';
+                    $nextApprove->save();
+                }
+                
+                // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
+                if($model->level == 4){
+                    $leave->status = 'Allow';
+                    $leave->save();
+                }else if($model->status == 'Reject')
+                {
+                    $leave->status = 'Reject';
+                    $leave->save();
+                }else{                    
+                    $leave->status = 'Checking';
+                    $leave->save();
+                }
+                
+                return [
+                    'status' => 'success',
+                    'container' => '#leave',
+                ];
+            }
+        }
 
+            if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $avatar,
-                'content' => $this->renderAjax('form_approve', [
+                'title' => '<i class="bi bi-person-exclamation"></i> '.$this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/hr/views/leave/form_approve', [
                     'model' => $model,
-                    'name' => $name,
                 ]),
             ];
         } else {
-            return $this->render('form_approve', [
+            return $this->render('@app/modules/hr/views/leave/form_approve', [
                 'model' => $model,
-                'name' => $name,
             ]);
         }
     }
 
+    
     // ตรวจสอบความถูกต้อง
     public function actionApproveValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Leave();
+        $model = new Approve();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-            if (isset($model->data_json['leader_approve'])) {
-                $model->data_json['leader_approve'] == '' ? $model->addError('data_json[leader_approve]', $requiredName) : null;
-            }
+                $model->status == '' ? $model->addError('status', $requiredName) : null;
 
-            if (isset($model->data_json['leader_group_approve'])) {
-                $model->data_json['leader_group_approve'] == '' ? $model->addError('data_json[leader_group_approve]', $requiredName) : null;
-            }
-            if (isset($model->data_json['director_approve'])) {
-                $model->data_json['director_approve'] == '' ? $model->addError('data_json[director_approve]', $requiredName) : null;
-            }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
         }
     }
+
 
     /**
      * Deletes an existing Leave model.

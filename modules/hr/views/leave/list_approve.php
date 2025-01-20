@@ -48,7 +48,7 @@ $this->registerCssFile('@web/css/timeline.css');
                                         <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
                                             -
                                             <?php else:?>
-                                        <?php echo Html::a('ดำเนินการ', ['/hr/leave/approve', 'id' => $item->id, 'title' => $item->title], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal']) ?>
+                                        <?php echo Html::a('ดำเนินการ', ['/me/leave/approve', 'id' => $item->id, 'title' => $item->title], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal']) ?>
                                         <?php endif?>
                                     </div>
                                 </div>

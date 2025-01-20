@@ -741,20 +741,21 @@ class LeaveController extends Controller
     public function actionApprove($id)
     {
         $me = UserHelper::GetEmployee();
-        $model = Approve::findOne(["id" => $id, "emp_id" => $me->id]);
+        // $model = Approve::findOne(["id" => $id, "emp_id" => $me->id]);
+        $model = Approve::findOne(["id" => $id]);
         // $model = Approve::findOne(["id" => $id]);
-        $nextApprove = Approve::findOne(["from_id" => $model->from_id,'level' => ($model->level+1)]);
         $leave = Leave::findOne($model->from_id);
         if(!$model)
         {
             return [
                 'title' => 'แจ้งเตือน',
-               'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
+                'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
             ];
         }
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-
+           
+            
             $approveDate = ["approve_date" => date('Y-m-d H:i:s')];
             $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
             if($model->level == 3){
@@ -762,12 +763,13 @@ class LeaveController extends Controller
             }
             
             if($model->save()){
+                $nextApprove = Approve::findOne(["from_id" => $model->from_id,'level' => ($model->level+1)]);
                 if($nextApprove){
                     $nextApprove->status = 'Pending';
                     $nextApprove->save();
                 }
                 
-            // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
+                // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
                 if($model->level == 4){
                     $leave->status = 'Allow';
                     $leave->save();

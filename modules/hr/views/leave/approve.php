@@ -101,13 +101,10 @@ $resultsJs = <<< JS
                             ],
                         ])->label('หัวหน้างาน')
                         ?>
+                    </div>
+                    <div class="col-12">
 
-
-
-</div>
-<div class="col-12">
-
-<?php
+                    <?php
                         try {
                             //code...
                             $initEmployee =  Employees::find()->where(['id' => $model->data_json['approve_2']])->one()->getAvatar(false);

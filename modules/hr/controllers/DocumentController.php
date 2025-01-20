@@ -81,8 +81,16 @@ class DocumentController extends \yii\web\Controller
                 $templateProcessor->setImg('sign3', ['src' => $model->checkerName(1)['employee']->signature(), 'size' => [150,60]]); //ลายมือผู้ตรวจสอบ
                 $templateProcessor->setValue('position3', 'ตำแหน่ง'.$model->checkerName(3)['position']);
                 $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
-                $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-                return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
+                
+                $filePath = Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name;
+                $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+                if (file_exists($filePath)) {
+                    return Yii::$app->response->sendFile($filePath);
+                } else {
+                    throw new \yii\web\NotFoundHttpException('The file does not exist.');
+                }
+                
+                // return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
         // return $this->CreateFile($data);
 
     }
@@ -130,13 +138,15 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('approve3', $model->checkerName(3)['fullname'] == null ? '' : ('(' . $model->checkerName(3)['fullname'] . ')'));
         $templateProcessor->setValue('approveDate3', $model->checkerName(3)['approve_date']);
         $templateProcessor->setValue('position3', $model->checkerName(3)['position']);
-        $templateProcessor->setValue('position4', $model->checkerName(4)['position']);
+        // $templateProcessor->setValue('position4', $model->checkerName(4)['position']);
+        $templateProcessor->setValue('position4', 'ตำแหน่งผู้อำนวยการ'.$this->GetInfo()['company_name']);
         $templateProcessor->setValue('approveDate4', $model->checkerName(4)['approve_date']);
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
         $templateProcessor->setImg('sign', ['src' => $model->employee->signature(), 'size' => [150,60]]); //ลายมือผู้ขอลา
         $templateProcessor->setImg('sign1', ['src' => $model->checkerName(1)['employee']->signature(), 'size' => [150,60]]); //ลายมือผู้บังคับบัญชา
         $templateProcessor->setImg('sign3', ['src' => $model->checkerName(3)['employee']->signature(), 'size' => [150,60]]); //ลายมือผู้บังคับบัญชา
         $templateProcessor->setImg('sign_send', ['src' => $model->leaveWorkSend()->signature(), 'size' => [150,60]]); //ลายมือผู้ปฏิบัตรหน้าที่แทน
+        $templateProcessor->setImg('sign_director', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150,60]]); //ลายมือผู้อำนวยการ
         // $templateProcessor->setImageValue('sign', [
         //     'path' => $tempImagePath,
         //     'width' => 300, // กำหนดความกว้าง (px)
@@ -158,7 +168,14 @@ class DocumentController extends \yii\web\Controller
             //     'height' => 200, // กำหนดความสูง (px)
             // ]);
 
-        $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        $filePath = Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name;
+        $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+        
         return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
         // return $this->Show($result_name);
     }
