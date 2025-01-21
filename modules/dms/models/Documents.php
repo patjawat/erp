@@ -487,18 +487,18 @@ class Documents extends \yii\db\ActiveRecord
         return self::find()
             ->select([
                 'thai_year',
-                'm1' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 1 THEN 1 END)'),
-                'm2' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 2 THEN 1 END)'),
-                'm3' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 3 THEN 1 END)'),
-                'm4' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 4 THEN 1 END)'),
-                'm5' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 5 THEN 1 END)'),
-                'm6' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 6 THEN 1 END)'),
-                'm7' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 7 THEN 1 END)'),
-                'm8' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 8 THEN 1 END)'),
-                'm9' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 9 THEN 1 END)'),
-                'm10' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 10 THEN 1 END)'),
-                'm11' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 11 THEN 1 END)'),
-                'm12' => new Expression('COUNT(CASE WHEN MONTH(doc_date) = 12 THEN 1 END)'),
+                'm1' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 1 THEN 1 END)'),
+                'm2' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 2 THEN 1 END)'),
+                'm3' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 3 THEN 1 END)'),
+                'm4' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 4 THEN 1 END)'),
+                'm5' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 5 THEN 1 END)'),
+                'm6' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 6 THEN 1 END)'),
+                'm7' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 7 THEN 1 END)'),
+                'm8' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 8 THEN 1 END)'),
+                'm9' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 9 THEN 1 END)'),
+                'm10' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 10 THEN 1 END)'),
+                'm11' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 11 THEN 1 END)'),
+                'm12' => new Expression('COUNT(CASE WHEN MONTH(doc_transactions_date) = 12 THEN 1 END)'),
             ])
             ->where(['thai_year' => $this->thai_year, 'document_group' => $name])
             ->groupBy('thai_year')

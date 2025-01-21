@@ -8,6 +8,10 @@ use yii\grid\ActionColumn;
 use app\modules\lm\models\Leave;
 use app\components\NotificationHelper;
 $notifications = NotificationHelper::Info();
+$totalLeave = $notifications['leave']['total'];
+$totalHelpdesk = $notifications['helpdesk']['total'];
+$totalStockApprove = $notifications['stock_approve']['total'];
+
 
 
 $this->title = 'Notification';
@@ -20,36 +24,22 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<div class="row d-flex justify-content-start">
-    <div class="col-lg-8 col-md-8 col-sm-12">
-
-
-        <?php echo $this->render('leave')?>
-
-
-
-        <div class="card">
-            <div class="card-body">
-
-                <div class="table-responsive">
-                    <table class="table table-primary">
-                        <thead>
-                            <tr>
-                                <th scope="col">รายการ</th>
-                                <th scope="col">ระยะเวลา</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php  echo $this->render('helpdesk')?>
-                            <?php  echo $this->render('stock_approve')?>
-                            <?php  echo $this->render('orders')?>
-
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
+<div class="row d-flex justify-content-center">
+    <?php if($totalLeave >=1):?>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <?php echo $this->render('leave')?>
         </div>
-
+        <?php endif;?>
+        
+        <?php if($totalStockApprove >=1):?>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+                    <?php  echo $this->render('stock_approve')?>
+     
+            
+        </div>
+        <?php endif;?>
     </div>
-</div>
+
+        <?php  echo $this->render('orders')?>
+        
+    

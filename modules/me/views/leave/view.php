@@ -15,74 +15,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="bi bi-folder-check"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<div class="row">
-<div class="col-xl-6 col-sm-12">
+                <?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' => $model]) ?>
+
+        <?=$this->render('view_summary',['model' => $model])?>
+<div class="d-flex justify-content-center gap-3">
+    <?php echo Html::a('<i class="fa-solid fa-circle-check"></i> เห็นชอบ',['/'],['class' => 'btn btn-primary shadow rounded-pill'])?>
+    <?php echo Html::a('ไม่เห็นชอบ',['/'],['class' => 'btn btn-secondary shadow rounded-pill'])?>
     
-<div class="card text-start">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <div>
-            <?=$model->CreateBy()->getAvatar(false)?>
-        </div>
-
-    <p>
-    <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
-
-        <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-sm btn-danger rounded-pill shadow',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
-
-    </div>
-</div>
-
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            [
-                'label' => 'เรื่อง',
-                'value' => 'ขอ'.$model->leaveType->title
-            ],
-            [
-                'label' => 'สถานที่ไป',
-                 'value' =>$model->data_json['location'] ?? $model->data_json['location'] ?? '-'
-            ],
-            [
-                'label' => 'เหตุผล',
-                'value' =>$model->data_json['note'] ?? $model->data_json['note'] ?? '-'
-            ],
-            [
-                'label' => 'ตั้งแต่วันที่',
-                'value' => $model->date_start
-            ],
-            [
-                'label' => 'ถึงวันที่',
-                'value' => $model->date_end
-            ],
-            [
-                'label' => 'ระหว่างลาติดต่อ',
-                'value' =>$model->data_json['address'] ?? $model->data_json['address'] ?? '-'
-            ],
-            [
-                'label' => '  มอบหมายงานให้',
-                'format' => 'html',
-                'value' => $model->Delegate()
-            ],
-          
-
-        ],
-    ]) ?>
-
-<?=$this->render('view_summary',['model' => $model])?>
-</div>
-<div class="col-xl-6 col-sm-12">
- 
-<?=$this->render('checker',['model' => $model])?>
-
-
-
-</div>
 </div>

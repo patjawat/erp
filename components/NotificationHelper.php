@@ -35,7 +35,7 @@ class NotificationHelper extends Component
     public static function Leave()
     {
         $me = UserHelper::GetEmployee();
-        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->limit(10)->all();
         
         return [
             'title' => 'แจ้งซ่อม',

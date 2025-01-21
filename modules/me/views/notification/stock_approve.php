@@ -12,6 +12,20 @@ use app\modules\inventory\models\StockEvent;
 $notifications = NotificationHelper::Info()['stock_approve'];
 $msg = $notifications['title'];
 ?>
+<div class="card">
+    <div class="card-body">
+<h6>ขออนุมัติเบิกวัสดุ</h6>
+    <div
+        class="table-responsive"
+    >
+        <table class="table table-primary">
+            <thead>
+                <tr>
+                    <th scope="col">รายการ</th>
+                    <th class="text-center">ดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody>
  <?php foreach ($notifications['datas'] as $item): ?>
                 <tr class="">
                     <td scope="row">
@@ -22,3 +36,9 @@ $msg = $notifications['title'];
                     <td><?php echo $item->viewCreated(); ?></td>
                 </tr>
                 <?php endforeach ?>
+                </table>
+    </div>
+    
+    </div>
+</div>
+       

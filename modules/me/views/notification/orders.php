@@ -10,6 +10,8 @@ use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 
 $notifications = NotificationHelper::Info()['orders']['datas'];
+$data = NotificationHelper::Info()['orders'];
+
 ?>
  <?php foreach ($notifications as $item): ?>
                 <tr class="">

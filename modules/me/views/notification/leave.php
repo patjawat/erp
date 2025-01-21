@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use yii\helpers\Html;
 use app\models\Approve;
 use app\components\NotificationHelper;
 $notifications = NotificationHelper::Info()['leave']['datas'];
@@ -10,14 +11,11 @@ $notifications = NotificationHelper::Info()['leave']['datas'];
     <div
         class="table-responsive"
     >
-        <table
-            class="table table-primary"
-        >
+        <table class="table table-primary">
             <thead>
                 <tr>
                     <th scope="col">รายการ</th>
-                    <th scope="col">form_id</th>
-                    <th scope="col">ระยะเวลา</th>
+                    <!-- <th class="text-center">ดำเนินการ</th> -->
                 </tr>
             </thead>
             <tbody>
@@ -29,13 +27,10 @@ $notifications = NotificationHelper::Info()['leave']['datas'];
     ?>
                 <tr class="">
                     <td scope="row">
-                    <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->from_id, 'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม']); ?>">
-                        <?php // echo $item->getAvatar($msg)['avatar']?>
-                        <?php echo $item->leave->getAvatar($msg)['avatar']?>
- </a>
+                        <?php echo Html::a($item->leave->getAvatar($msg)['avatar'],['/me/leave/approve', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]);?>
                     </td>
-                    <td><?php echo $item->from_id?></td>
-                    <td><?php echo $item->emp_id?></td>
+                    
+                   
                 </tr>
                 <?php endforeach ?>
                 </tbody>

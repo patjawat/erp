@@ -138,9 +138,21 @@ class LeaveController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('@app/modules/hr/views/leave/view', [
-            'model' => $this->findModel($id),
-        ]);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = $this->findModel($id);
+            return [
+                'title' => $model->employee->getAvatar(false),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/hr/views/leave/view', [
+                'model' => $this->findModel($id),
+            ]);
+        }
+       
     }
 
     public function actionTypeSelect()
@@ -427,13 +439,13 @@ class LeaveController extends Controller
             if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="bi bi-person-exclamation"></i> '.$this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave/form_approve', [
+                'title' => $model->leave->employee->getAvatar(false),
+                'content' => $this->renderAjax('form_approve', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave/form_approve', [
+            return $this->render('form_approve', [
                 'model' => $model,
             ]);
         }

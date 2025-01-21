@@ -45,7 +45,6 @@ foreach($orders as $order)
 
             </div>
             <div class="col-6">
-                <?php // echo $this->render('leave_summary'); ?>
                 <?php echo $this->render('leave', ['searchModel' => $searchModel]); ?>
                 
             </div>

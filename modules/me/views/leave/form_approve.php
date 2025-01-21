@@ -1,18 +1,11 @@
 <?php
 
-use app\modules\am\models\Asset;
-use kartik\datecontrol\DateControl;
-use kartik\form\ActiveField;
+use yii\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use kartik\widgets\DatePicker;
-use kartik\widgets\DateTimePicker;
-use unclead\multipleinput\MultipleInput;
-use unclead\multipleinput\MultipleInputColumn;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
 use yii\widgets\DetailView;
-use app\components\SiteHelper;
+use kartik\form\ActiveField;
+use yii\helpers\ArrayHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
@@ -21,36 +14,36 @@ $this->params['breadcrumbs'][] = ['label' => 'Inventories', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-
-<?php $form = ActiveForm::begin([
+<div class="row">
+    <div class="col-8">
+        <?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' =>  $model->leave]) ?>
+    </div>
+    <div class="col-4">
+    <?=$this->render('@app/modules/hr/views/leave/view_summary',['model' => $model->leave])?>
+    
+    <?php $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/lm/leave/approve-validator'],
+    'validationUrl' => ['/me/leave/approve-validator'],
 ])
 ?>
-<div class="row d-flex justify-content-center">
-    <div class="col-6">
-        
-        <?php if($name == 'leader'):?>
-        <?=$form->field($model, 'data_json[leader_approve]')->radioList(['Y' => 'อนุมัติ', 'N' => 'ไม่อนุมัติ'],['custom' => true, 'inline' => true])->label(false)?>
-        <?php endif;?>
-
-        <?php if($name == 'leader_group'):?>
-        <?=$form->field($model, 'data_json[leader_group_approve]')->radioList(['Y' => 'อนุมัติ', 'N' => 'ไม่อนุมัติ'],['custom' => true, 'inline' => true])->label(false)?>
-        <?php endif;?>
-
-        <?php if($name == 'leader_group'):?>
-        <?=$form->field($model, 'data_json[director_approve]')->radioList(['Y' => 'อนุมัติ', 'N' => 'ไม่อนุมัติ'],['custom' => true, 'inline' => true])->label(false)?>
-        <?php endif;?>
-        
+<div class="d-flex justify-content-center flex-column">
+    <div class="d-flex justify-content-center">
+        <?php  echo $form->field($model, 'status')->radioList(['Approve' => $model->data_json['topic'], 'Reject' => 'ไม่'.$model->data_json['topic']],['custom' => true, 'inline' => true])->label(false)?>
     </div>
+    <div class="form-group mt-3 d-flex justify-content-center">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+</div>
 </div>
 
-<div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
-</div>
+
 
 <?php ActiveForm::end(); ?>
+
+
+    </div>
+
+</div>
 
 <?php
 $js = <<< JS
@@ -67,12 +60,13 @@ $js = <<< JS
                         if(response.status == 'success') {
                             closeModal()
                             success()
-                            try {
-                                loadRepairHostory()
-                            } catch (error) {
+                            location.reload()
+                            // try {
+                            //     loadRepairHostory()
+                            // } catch (error) {
                                 
-                            }
-                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                            // }
+                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                         }
                     }
                 });

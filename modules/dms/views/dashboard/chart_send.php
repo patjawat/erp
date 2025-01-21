@@ -33,7 +33,7 @@ use yii\helpers\Json;
  $query = $model->getChartSummary('send');
 
 try {
-  $chartSummary = [$query['m10'], $query['m11'], $query['m12'], $query['m1'], $query['m3'], $query['m3'], $query['m4'], $query['m5'], $query['m6'], $query['m7'], $query['m8'], $query['m9']];
+  $chartSummary = [ $query['m1'], $query['m3'], $query['m3'], $query['m4'], $query['m5'], $query['m6'], $query['m7'], $query['m8'], $query['m9'],$query['m10'], $query['m11'], $query['m12']];
 } catch (\Throwable $th) {
   $chartSummary = [];
 }
@@ -81,7 +81,7 @@ $js = <<< JS
               colors: ['transparent']
             },
             xaxis: {
-              categories: ['ต.ต.','พ.ย.','ธ.ค.','ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.',],
+              categories: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.','ต.ต.','พ.ย.','ธ.ค.',],
               tickPlacement: 'on',
                 labels: { show: true },
                 axisTicks: { show: false },
