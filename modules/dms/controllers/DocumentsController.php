@@ -79,7 +79,7 @@ class DocumentsController extends Controller
      */
     public function actionView($id)
     {
-        // $this->layout = '@app/views/layouts/document';
+        $this->layout = '@app/views/layouts/document';
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -133,7 +133,7 @@ class DocumentsController extends Controller
                 // }
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                 $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
-                if($model->doc_expire !=='__/__/____'){
+                if($model->doc_expire !==''){
                     $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
                 }else{
                     $model->doc_expire = "";
@@ -168,6 +168,7 @@ class DocumentsController extends Controller
         // $model->doc_date = AppHelper::convertToThai($model->doc_date);
         // $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
         $old_json = $model->data_json;
+        $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
         $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
        
@@ -180,7 +181,7 @@ class DocumentsController extends Controller
           
             $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
             $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
-            if($model->doc_expire !=='__/__/____'){
+            if($model->doc_expire !==''){
                 $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
             }else{
                 $model->doc_expire = "";
@@ -254,6 +255,26 @@ class DocumentsController extends Controller
          }
      }
      
+
+      // ตรวจสอบความถูกต้องของ comment
+      public function actionCommentValidator()
+      {
+          \Yii::$app->response->format = Response::FORMAT_JSON;
+          $model = new DocumentsDetail();
+          $requiredName = 'ต้องระบุ';
+          if ($this->request->isPost && $model->load($this->request->post())) {
+             
+              $model->data_json['comment'] == '' ? $model->addError('data_json[comment]', $requiredName) : null;
+          }
+          foreach ($model->getErrors() as $attribute => $errors) {
+              $result[Html::getInputId($model, $attribute)] = $errors;
+          }
+          if (!empty($result)) {
+              return $this->asJson($result);
+          }
+      }
+     
+      
     // แสดง File และแสดงความเห็น
     public function actionComment($id)
     {
@@ -272,10 +293,6 @@ class DocumentsController extends Controller
             if($model->save()){
             // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
             return $this->redirect(['view', 'id' => $model->document_id]);
-                // return [
-                //     'status' => 'success',
-                //     'data' => $model,
-                // ];
             }
         }
         if ($this->request->isAJax) {
@@ -334,7 +351,7 @@ class DocumentsController extends Controller
     public function actionDeleteComment($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = DocumentTags::findOne($id);
+        $model = DocumentsDetail::findOne($id);
         if($model->created_by == Yii::$app->user->id){
 
             $model->delete();

@@ -14,9 +14,7 @@ $this->title = 'ทะเบียนหนังสือ';
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/dms/menu') ?>
-<?php $this->endBlock(); ?>
+
 
 <div class="card">
     <div class="card-body">

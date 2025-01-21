@@ -1,34 +1,22 @@
 <?php
 
-use yii\web\View;
+use app\widgets\Alert;
+use yii\bootstrap5\Nav;
 use app\assets\AppAsset;
 use yii\bootstrap5\Html;
-use app\models\Categorise;
+use yii\bootstrap5\NavBar;
+use yii\bootstrap5\Breadcrumbs;
 use app\assets\BootstapIconAsset;
-use dominus77\sweetalert2\assets\SweetAlert2Asset;
-
-AppAsset::register($this);
-BootstapIconAsset::register($this);
-
-$site = Categorise::findOne(['name' => 'site']);
-$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
-$moduleId = Yii::$app->controller->module->id;
 
 AppAsset::register($this);
 BootstapIconAsset::register($this);
 
 
-
-SweetAlert2Asset::register($this);
-
-$site = Categorise::findOne(['name' => 'site']);
-$color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
-$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
 $style = 2;
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?=Yii::$app->language?>" class="h-100" data-bs-theme="<?=$colorName?>">
+<html lang="<?=Yii::$app->language?>">
 
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
@@ -41,13 +29,21 @@ $style = 2;
     <body>
     <?php $this->beginBody() ?>
 
+    <?php
+    NavBar::begin([
+        'brandLabel' => '',
+        'brandUrl' => Yii::$app->homeUrl,
+        'options' => [
+            'class' => '',
+            'id' => 'header-nav'
+        ],
+    ]);
+    NavBar::end();
+    ?>
     <div class="container-fuild">
         <?= $content?>
     </div>
-
-
     </body>
-
     <?php
 $js = <<< JS
  AOS.init({

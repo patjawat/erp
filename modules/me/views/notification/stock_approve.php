@@ -29,7 +29,8 @@ $msg = $notifications['title'];
  <?php foreach ($notifications['datas'] as $item): ?>
                 <tr class="">
                     <td scope="row">
-                    <a href="<?php echo Url::to(['/inventory/stock-order/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม']); ?>">
+                        <?php echo Html::a($item->CreateBy($msg)['avatar'],['/me/approve/view-stock-out', 'id' => $item->id,'title' => 'ขออนุมัติเบิกวัสดุ'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                    <a href="<?php echo Url::to(['/inventory/stock-order/view', 'id' => $item->id]); ?>">
                         <?php echo $item->CreateBy($msg)['avatar']?>
  </a>
                     </td>

@@ -9,8 +9,7 @@ use yii\helpers\ArrayHelper;
 // use softark\duallistbox\DualListbox;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentTags;
-;
+use app\modules\dms\models\DocumentTags;;
 
 // use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
@@ -28,8 +27,8 @@ use app\modules\dms\models\DocumentTags;
 <?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-comment',
-    // 'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    // 'validationUrl' => ['/dms/documents/validator']
+    'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/dms/documents/comment-validator']
 ]); ?>
 <!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
 <?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
@@ -37,63 +36,77 @@ use app\modules\dms\models\DocumentTags;
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
 <?php
 
-
-
 echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
     'data' => $model->listEmployeeSelectTag(),
     'options' => ['placeholder' => 'เลือกผู้ส่งต่อ ...'],
     'pluginOptions' => [
         'allowClear' => true,
-       'multiple' => true,
+        'multiple' => true,
     ],
 ])->label('ส่งต่อ');
 
-
 ?>
+
 <?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
-<?php if($model->isNewRecord):?>
-<span class="btn btn-primary rounded-pill shadow save-comment"><i class="fa-solid fa-paper-plane"></i> ลงความเห็น</span>
-<?php else:?>
-    <span class="btn btn-warning rounded-pill shadow save-comment"><i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น</span>
-<?php endif;?>
+<?php if ($model->isNewRecord): ?>
+    <div class="d-flex justify-content-center">
+        <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
+    </div>
+    <?php else: ?>
+        <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-warning rounded-pill shadow']) ?>
+<?php endif; ?>
 <?php ActiveForm::end(); ?>
 
 <?php
 $url = Url::to(['/dms/documents/get-items']);
-$js = <<< JS
+$js = <<<JS
 
+    if(\$('#documentsdetail-data_json-comment').val() == '')
+    {
+    \$('.save-comment').hide()    
+    }
 
+    \$('#documentsdetail-data_json-comment').keypress(function (e) { 
+        console.log('press');
+        
+        if(\$(this).val() == '')
+    {
+    \$('.save-comment').hide()    
+    }else{
+        \$('.save-comment').show()    
+        
+    }
+    });
+    \$('.save-comment').click(function (e) { 
+        e.preventDefault();
 
-$('.save-comment').click(function (e) { 
-    e.preventDefault();
-
-    // var form = $('#fullscreen-modal').find("#form-comment");
-    var form = $("#form-comment");
-        $.ajax({
-            url: form.attr('action'),
-            type: 'post',
-            data: form.serialize(),
-            dataType: 'json',
-            success: function (res) {
-                
-                if (res.status === 'success') {
-                   // รีเซ็ตฟอร์ม
-                   form[0].reset();
-                   listComment()
-                   getComment();
-                    // Handle success, such as closing modal or reloading data
+        // var form = \$('#fullscreen-modal').find("#form-comment");
+        var form = \$("#form-comment");
+            \$.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (res) {
+               
+                    if (res.status === 'success') {
+                       // รีเซ็ตฟอร์ม
+                       form[0].reset();
+                       listComment()
+                       getComment();
+                        // Handle success, such as closing modal or reloading data
+                    }
+                },
+                error: function (xhr) {
+                    console.error('AJAX Error:', xhr.responseText);
                 }
-            },
-            error: function (xhr) {
-                console.error('AJAX Error:', xhr.responseText);
-            }
-        });
-        return false;
+            });
+            return false;
 
-});
+    });
 
-          
-JS;
+              
+    JS;
 // $this->registerJS($js);
-$this->registerJS($js,View::POS_LOAD);
+$this->registerJS($js, View::POS_LOAD);
 ?>

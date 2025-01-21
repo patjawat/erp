@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 use app\components\AppHelper
 ?>
-
+ <!-- <h6><i class="fa-regular fa-comments fs-2"></i> การลงความเห็น</h6> -->
 <div class="py-4">
     <?php foreach($model->listComment() as $item):?>
 
@@ -14,13 +14,12 @@ use app\components\AppHelper
              $createdAt = Yii::$app->thaiFormatter->asDate($dateTime, 'medium');
              $time = explode(' ', $dateTime)[1]; // แยกเวลาจากวันที่
             ?>
-
             <?php if($item->created_by == Yii::$app->user->id):?>
                 <?php if(isset($item->data_json['employee_tag']) && $item->data_json['employee_tag'] !==""):?>
             <span class="badge bg-secondary text-white me-1"><i class="fa-solid fa-tag"></i> 
-            <?php echo count($item->data_json['employee_tag']); ?>
-        </span>
-        <?php endif;?>
+                <?php echo count($item->data_json['employee_tag']); ?>
+            </span>
+            <?php endif;?>
             <span class="badge bg-primary text-white me-1"><?php echo $createdAt;?></span>
             <div class="dropdown float-end">
                 <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"

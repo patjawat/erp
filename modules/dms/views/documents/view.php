@@ -15,6 +15,8 @@ $this->params['breadcrumbs'][] = ['label' => 'Documents', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+
+
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -25,48 +27,49 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
-<div class="card">
-    <div class="card-body">
-        <span class="text-primary fw-normal fs-13">
-            <div class="border border-secondary border-opacity-25 p-3 rounded">
-                <!-- Tab panes -->
-                <div class="row">
-                    <div class="col-8">
-                        <div class="d-flex justify-content-between">
-                            <!-- Nav tabs -->
-                            <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
-                                <?php  echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
-                                <!-- <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal"><i class="fa-solid fa-chevron-left"></i> ย้อนกลับ</button> -->
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link active show" data-bs-toggle="pill" href="#home1" role="pill"
-                                        aria-selected="false" tabindex="-1"><i class="fas fa-fw fa-info-circle"></i>
-                                        รายละเอียด</a>
-                                </li>
-                            </ul>
-
-                        </div>
-                        <div class="tab-content p-0">
-                            <div id="home1" class="tab-pane active show" role="tabpanel">
-                            <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true" frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
-                            </div>
-                            <div id="track" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('track',['model' => $model])?>
-                            </div>
-                            <div id="history" class="tab-pane" role="tabpanel">
-                                <?php echo $this->render('history',['model' => $model])?>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-4 py-2">
-                    <h6><i class="fa-regular fa-comments fs-2"></i> การลงความเห็น</h6>
-                       <div class="listComment"></div>
-                       <div class="viewFormComment"></div>
-                        <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
-                    </div>
-                </div>
-            </div>
+<!-- Tab panes -->
+<div class="row">
+    <div class="col-8">
+        <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
+            frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
     </div>
+    <div class="col-4 py-2">
+        <!-- Nav pills -->
+        <ul class="nav nav-pills" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content mt-3">
+            <div id="home" class="container tab-pane active pb-4"><br>
+                <div class="listComment"></div>
+                <div class="viewFormComment"></div>
+            </div>
+            <div id="menu1" class="container tab-pane fade"><br>
+                <?php echo $this->render('history',['model' => $model])?>
+            </div>
+        </div>
+        <div class="mt-3">
+            <?php  echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+        </div>
+    </div>
+
+
+
+    <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
+
+
+    <?php // echo $this->render('track',['model' => $model])?>
+
 </div>
+</div>
+
+
 
 <?php
 $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
@@ -81,12 +84,12 @@ $js = <<< JS
         iframe.style.height = screenHeight - 100 + "px";
 
 
-    iframe.onload = () => {
-    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    if (iframeDocument) {
-        iframeDocument.body.style.zoom = "150%";
-    }
-    };
+    // iframe.onload = () => {
+    // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    // if (iframeDocument) {
+    //     iframeDocument.body.style.zoom = "150%";
+    // }
+    // };
 
     async function getComment()
     {

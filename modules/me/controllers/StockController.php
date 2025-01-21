@@ -2,11 +2,11 @@
 
 namespace app\modules\me\controllers;
 
-use app\modules\inventory\models\Product;
 use Yii;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\helpers\ArrayHelper;
+use yii\web\NotFoundHttpException;
+use app\modules\inventory\models\Product;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -25,6 +25,17 @@ class StockController extends \yii\web\Controller
         ]);
     }
 
+    public function actionApprove($id)
+    {
+        $model = StockEvent::findOne($id);
+        if($this->request->isAjax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('stock_approve',['model' => $model])
+            ];
+        }
+    }
 
     public function actionCreate(){
         $model = new StockEvent;

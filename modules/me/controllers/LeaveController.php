@@ -279,49 +279,57 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave/create', [
+                'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave/create', [
+            return $this->render('/create', [
                 'model' => $model,
             ]);
         }
     }
     
-    // ตรวจสอบความถูกต้อง
-    public function actionCreateValidator()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Leave();
-        $requiredName = 'ต้องระบุ';
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            if (isset($model->date_start)) {
-                preg_replace('/\D/', '', $model->date_start) == '' ? $model->addError('date_start', $requiredName) : null;
-            }
-            if (isset($model->date_end)) {
-                preg_replace('/\D/', '', $model->date_end) == '' ? $model->addError('date_end', $requiredName) : null;
-            }
-
-            $model->data_json['date_start_type'] == '' ? $model->addError('data_json[date_start_type]', $requiredName) : null;
-            $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
-            $model->data_json['note'] == '' ? $model->addError('data_json[note]', $requiredName) : null;
-            $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
-            $model->data_json['location'] == '' ? $model->addError('data_json[location]', $requiredName) : null;
-            $model->data_json['address'] == '' ? $model->addError('data_json[address]', $requiredName) : null;
-            $model->data_json['delegate'] == '' ? $model->addError('data_json[delegate]', $requiredName) : null;
-            $model->data_json['leader'] == '' ? $model->addError('data_json[leader]', $requiredName) : null;
-            $model->data_json['leader_group'] == '' ? $model->addError('data_json[leader_group]', $requiredName) : null;
-            // $model->unit_price == "" ? $model->addError('unit_price', $requiredName) : null;
-        }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-        }
-        if (!empty($result)) {
-            return $this->asJson($result);
-        }
-    }
+     // ตรวจสอบความถูกต้อง
+     public function actionCreateValidator()
+     {
+         \Yii::$app->response->format = Response::FORMAT_JSON;
+         $model = new Leave();
+         $requiredName = 'ต้องระบุ';
+         if ($this->request->isPost && $model->load($this->request->post())) {
+             if (isset($model->date_start)) {
+                 preg_replace('/\D/', '', $model->date_start) == '' ? $model->addError('date_start', $requiredName) : null;
+             }
+             if (isset($model->date_end)) {
+                 preg_replace('/\D/', '', $model->date_end) == '' ? $model->addError('date_end', $requiredName) : null;
+             }
+             $dateStart = preg_replace('/\D/', '', $model->date_start) !== '' ? AppHelper::convertToGregorian($model->date_start) : '';
+             $dateEnd = preg_replace('/\D/', '', $model->date_end) !== '' ? AppHelper::convertToGregorian($model->date_end) : '';
+             
+             if($dateStart > $dateEnd && $dateEnd !=='' ){
+                 $model->addError('date_start', 'มากกว่าวันสุดท้าย');
+                 $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
+             }
+ 
+             $model->data_json['date_start_type'] == '' ? $model->addError('data_json[date_start_type]', $requiredName) : null;
+             $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
+             $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;
+             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
+             $model->data_json['location'] == '' ? $model->addError('data_json[location]', $requiredName) : null;
+             $model->data_json['address'] == '' ? $model->addError('data_json[address]', $requiredName) : null;
+             $model->data_json['leave_work_send_id'] == '' ? $model->addError('data_json[leave_work_send_id]', $requiredName) : null;
+             $model->data_json['approve_1'] == '' ? $model->addError('data_json[approve_1]', $requiredName) : null;
+             $model->data_json['approve_2'] == '' ? $model->addError('data_json[approve_2]', $requiredName) : null;
+             // $model->unit_price == "" ? $model->addError('unit_price', $requiredName) : null;
+         }
+         foreach ($model->getErrors() as $attribute => $errors) {
+             $result[Html::getInputId($model, $attribute)] = $errors;
+         }
+         if (!empty($result)) {
+             return $this->asJson($result);
+         }
+     }
+ 
 
     public function actionCalDays()
     {

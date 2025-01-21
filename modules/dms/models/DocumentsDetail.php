@@ -68,7 +68,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['created_at', 'updated_at', 'deleted_at','thai_year','q','show_reading','tags_employee','tags_department'], 'safe'],
+            [['created_at', 'updated_at', 'deleted_at','thai_year','q','show_reading','tags_employee','tags_department','data_json'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by','doc_read'], 'integer'],
             [['ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type'], 'string', 'max' => 255],
         ];

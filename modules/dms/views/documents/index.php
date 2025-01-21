@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <style>
 
 </style>
-<?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
+<?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
 <div class="documents-index">
 
@@ -190,7 +190,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>
 
 <?php
 $js = <<< JS

@@ -1,9 +1,10 @@
 <?php
 
-use app\components\UserHelper;
-use kartik\form\ActiveForm;
-use yii\helpers\Html;
 use yii\web\View;
+use yii\helpers\Html;
+use kartik\form\ActiveForm;
+use yii\widgets\DetailView;
+use app\components\UserHelper;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $user = UserHelper::GetEmployee();
@@ -15,7 +16,38 @@ $this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 yii\web\YiiAsset::register($this);
 ?>
-<?php // if ($model->checker == $user->id) { ?>
+<div class="row">
+<div class="col-6">
+<?php echo DetailView::widget([
+                    'model' => $model,
+                    'attributes' => [
+                        [
+                            'label' => 'รหัสขอเบิก',
+                            'value' => $model->code,
+                        ],
+                        [
+                            'label' => 'จากคลัง',
+                            'value' => $model->fromWarehouse->warehouse_name ?? '-',
+                        ],
+                        [
+                            'label' => 'วันที่',
+                            'value' => $model->viewCreatedAt(),
+                        ],
+                        [
+                            'label' => 'สถานะคำขอ',
+                            'format' => 'html',
+                            'value' => $model->viewStatus(),
+                        ],
+                        [
+                            'label' => 'มูลค่า',
+                            'format' => 'html',
+                            'value' => number_format($model->getTotalOrderPrice(),2),
+                        ],
+                    ],
+                ]); ?>
+    </div>
+<div class="col-6">
+ 
 <?php $form = ActiveForm::begin([
     'id' => 'form-confirm',
     'enableAjaxValidation' => true, // เปิดการใช้งาน AjaxValidation
@@ -26,17 +58,20 @@ yii\web\YiiAsset::register($this);
         <?php echo $form->field($model, 'data_json[checker_confirm]')->radioList(
             ['Y' => 'เห็นชอบ', 'N' => 'ไม่เห็นชอบ'],
             ['custom' => true, 'inline' => true])->label(false); ?>
-        <?php echo $form->field($model, 'data_json[checker_comment]')->textArea()->label('หมายเหตุ'); ?>
+        <?php echo $form->field($model, 'data_json[checker_comment]')->textArea(['style' => 'height:130px'])->label('หมายเหตุ'); ?>
 
-    <div class="d-flex justify-content-center">
-        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']); ?>
+    <div class="d-flex justify-content-center gap-3">
+        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary  rounded-pill shadow', 'id' => 'summit']); ?>
+        <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal">ยกเลิก</button>
     </div>
 
 
 <?php ActiveForm::end(); ?>
-<?php  // } else { ?>
-<!-- <h6 class="text-center">ไม่อนุญาต</h6> -->
-<?php // }?>
+   
+</div>
+
+</div>
+<?php echo $this->render('@app/modules/inventory/views/stock-order/list_items',['model' => $model])?>
 <?php
 
 $js = <<< JS
@@ -53,7 +88,8 @@ $js = <<< JS
                         if(response.status == 'success') {
                             closeModal()
                             success()
-                              $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                            location.reload()
+                            //   $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                         }
                     }
                 });

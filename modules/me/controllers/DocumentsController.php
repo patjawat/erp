@@ -98,7 +98,7 @@ class DocumentsController extends \yii\web\Controller
                 ])
             ];
         } else {
-            return $this->render('@app/modules/dms/views/documents/view', [
+            return $this->render('view', [
                 'model' => $model,
             ]);
         }
