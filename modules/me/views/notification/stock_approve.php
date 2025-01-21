@@ -30,9 +30,6 @@ $msg = $notifications['title'];
                 <tr class="">
                     <td scope="row">
                         <?php echo Html::a($item->CreateBy($msg)['avatar'],['/me/approve/view-stock-out', 'id' => $item->id,'title' => 'ขออนุมัติเบิกวัสดุ'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                    <a href="<?php echo Url::to(['/inventory/stock-order/view', 'id' => $item->id]); ?>">
-                        <?php echo $item->CreateBy($msg)['avatar']?>
- </a>
                     </td>
                     <td><?php echo $item->viewCreated(); ?></td>
                 </tr>
