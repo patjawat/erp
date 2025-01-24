@@ -88,6 +88,12 @@ $config = [
         //     'class' => 'yii\i18n\Formatter',
         //     'nullDisplay' => '-',
         // ],
+        'line' => [
+            'class' => 'app\components\LineAuthClient',
+            'channelId' => '2006812489',
+            'channelSecret' => '0dd15c7dcb72e4623206c18d2d013eb6',
+            'redirectUri' => 'https://c490-1-0-238-66.ngrok-free.app/line/default/line-login',
+        ],
         'authClientCollection' => [
             'class' => 'yii\authclient\Collection',
             'clients' => [
@@ -96,6 +102,12 @@ $config = [
                     'clientId' => '261870609037-luvd13t9s0nabihs4tdg3d14knf93mk1.apps.googleusercontent.com',
                     'clientSecret' => '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',
                 ],
+              'line' => [
+                'class' => 'app\components\LineAuthClient',
+                'clientId' => '2006812489', // ใส่ Line Channel ID ของคุณ
+                'clientSecret' => '0dd15c7dcb72e4623206c18d2d013eb6', // ใส่ Line Channel Secret ของคุณ
+                'returnUrl' => 'https://c490-1-0-238-66.ngrok-free.app/line/default/auth?authclient=line', // URL สำหรับ Callback
+            ],
             ],
         ],
         'assetManager' => [
@@ -310,7 +322,7 @@ if (YII_ENV_DEV) {
         'class' => 'yii\debug\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
         // 'allowedIPs' => ['127.0.0.1', '::1'],
-        'allowedIPs' => ['*'],
+        // 'allowedIPs' => ['*'],
     ];
     $config['modules']['gii']['class'] = 'yii\gii\Module';
     $config['modules']['gii']['generators'] = [

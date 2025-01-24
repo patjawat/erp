@@ -9,6 +9,7 @@ use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\SiteHelper;
 use ruskid\csvimporter\CSVReader;
 use yii\validators\DateValidator;
@@ -154,6 +155,17 @@ class EmployeesController extends Controller
         ]);
     }
 
+    public function actionSendMsg($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $userId = $model->user->line_id;
+        // return LineNotify::sendPushMessage($lineId,'Hello');
+        
+        
+        $result = Yii::$app->lineNotify->sendLeave($userId);
+        return $result;
+    }
     /**
      * Displays a single Employees model.
      * @param int $id ID

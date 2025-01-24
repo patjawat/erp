@@ -53,6 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th scope="col" class="text-center fw-semibold">วันลาที่ได้</th>
                         <th scope="col" class="text-center fw-semibold">ใช้ไป</th>
                         <th scope="col" class="text-center fw-semibold">คงเหลือ</th>
+                        <th scope="col" class="text-center fw-semibold" style="width: 100px;">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
@@ -64,6 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center fw-semibold"><?php echo $item->days;?></td>
                         <td class="text-center fw-semibold"><?php echo $item->getSummary()['leave_use'];?></td>
                         <td class="text-center fw-semibold"><?php echo $item->getSummary()['leave_total'];?></td>
+                        <td class="text-center"><?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i>',['update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขสิทธิวันลา'],['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?></td>
                     </tr>
                     <?php endforeach;?>
                 </tbody>

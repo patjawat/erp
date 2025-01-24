@@ -1,6 +1,6 @@
 <?php
 use yii\web\View;
-use app\components\SiteHelper;
+use yii\helpers\Url;
 /** @var yii\web\View $this */
 use yii\helpers\Html;
 ?>
@@ -17,9 +17,10 @@ use yii\helpers\Html;
 </div>
 
 <?php
-use yii\helpers\Url;
+use app\components\SiteHelper;
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
+// $liffProfile = SiteHelper::getInfo()['line_liff_dashboard'];
 $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
 
 $js = <<< JS

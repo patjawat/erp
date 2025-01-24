@@ -2,6 +2,9 @@
 
 namespace app\components;
 
+use Yii;
+use yii\helpers\Url;
+use app\models\Approve;
 use yii\base\Component;
 use app\models\Categorise;
 use yii\httpclient\Client;
@@ -44,4 +47,150 @@ class LineNotify extends Component
             // throw $th;
         }
     }
+
+    public static function sendPushMessage($userId, $message)
+    {
+        $channelAccessToken = "tagKzFY1hHd0j7GcGknIy2zqQSgOWhcbh/AGdDSltHDOQ2XE2w5qqZeadToN4+WtilD7dZ2w+A2Lqq2fNnra5YGpceLT0+cf/NPkASnjuL0BZva0ExOOFqCiSCYNaNegDUnlo3Ku9rUJMV+DPt/nvQdB04t89/1O/w1cDnyilFU=";
+        $url = 'https://api.line.me/v2/bot/message/push';
+        $data = [
+            'to' => $userId,
+            'messages' => [
+                [
+                    'type' => 'text',
+                    'text' => $message,
+                ],
+            ],
+        ];
+
+        $client = new Client();
+        $response = $client->createRequest()
+            ->setMethod('POST')
+            ->setUrl($url)
+            ->addHeaders([
+                'Authorization' => 'Bearer ' . $channelAccessToken,
+                'Content-Type' => 'application/json',
+            ])
+            ->setContent(json_encode($data))
+            ->send();
+
+        if (!$response->isOk) {
+            Yii::error('Failed to send LINE message: ' . $response->content, __METHOD__);
+            return false;
+        }
+
+        return true;
+    }
+
+     // ฟังก์ชันส่ง Flex Message
+     public function sendFlexMessage($userId, $altText, $flexContent)
+     {
+        $channelAccessToken = "tagKzFY1hHd0j7GcGknIy2zqQSgOWhcbh/AGdDSltHDOQ2XE2w5qqZeadToN4+WtilD7dZ2w+A2Lqq2fNnra5YGpceLT0+cf/NPkASnjuL0BZva0ExOOFqCiSCYNaNegDUnlo3Ku9rUJMV+DPt/nvQdB04t89/1O/w1cDnyilFU=";
+         $url = 'https://api.line.me/v2/bot/message/push';
+ 
+         $data = [
+             'to' => $userId,
+             'messages' => [
+                 [
+                     'type' => 'flex',
+                     'altText' => $altText,
+                     'contents' => $flexContent,
+                 ],
+             ],
+         ];
+ 
+         $client = new Client();
+         $response = $client->createRequest()
+             ->setMethod('POST')
+             ->setUrl($url)
+             ->addHeaders([
+                 'Authorization' => 'Bearer ' . $channelAccessToken,
+                 'Content-Type' => 'application/json',
+             ])
+             ->setContent(json_encode($data))
+             ->send();
+ 
+         if (!$response->isOk) {
+             Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
+             return false;
+         }
+ 
+         return true;
+     }
+     // ฟังก์ชันส่ง Flex Message
+     public static function sendLeave($approveId,$userId)
+     {
+        $approve = Approve::findOne($approveId);
+        $uri = Url::base(true) . Url::to(['/line/approve/leave', 'id' => $approveId]);
+        $channelAccessToken = "tagKzFY1hHd0j7GcGknIy2zqQSgOWhcbh/AGdDSltHDOQ2XE2w5qqZeadToN4+WtilD7dZ2w+A2Lqq2fNnra5YGpceLT0+cf/NPkASnjuL0BZva0ExOOFqCiSCYNaNegDUnlo3Ku9rUJMV+DPt/nvQdB04t89/1O/w1cDnyilFU=";
+         $url = 'https://api.line.me/v2/bot/message/push';
+ 
+         $altText = 'This is a Flex Message with URI action'; // ข้อความสำรอง
+        $flexContent = [
+            'type' => 'bubble',
+            'body' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'text',
+                        'text' => 'ขออนุมติ'.$approve->leave->leaveType->title,
+                        'weight' => 'bold',
+                        'size' => 'xl',
+                    ],
+                    [
+                        'type' => 'text',
+                        'text' => $approve->leave->employee->fullname,
+                        'size' => 'md',
+                        'wrap' => true,
+                    ],
+                ],
+            ],
+            'footer' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'button',
+                        'style' => 'primary',
+                        'action' => [
+                            'type' => 'uri',
+                            'label' => 'ดำเนินการ',
+                            // 'uri' => Url::base(true).'/line/leave' // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                            'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        
+         $data = [
+             'to' => $userId,
+             'messages' => [
+                 [
+                     'type' => 'flex',
+                     'altText' => $altText,
+                     'contents' => $flexContent,
+                 ],
+             ],
+         ];
+ 
+         $client = new Client();
+         $response = $client->createRequest()
+             ->setMethod('POST')
+             ->setUrl($url)
+             ->addHeaders([
+                 'Authorization' => 'Bearer ' . $channelAccessToken,
+                 'Content-Type' => 'application/json',
+             ])
+             ->setContent(json_encode($data))
+             ->send();
+ 
+         if (!$response->isOk) {
+             Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
+             return false;
+         }
+ 
+         return true;
+     }
+ 
 }

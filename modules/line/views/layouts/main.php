@@ -2,32 +2,26 @@
 
 /** @var yii\web\View $this */
 /** @var string $content */
-use app\assets\AppAsset;
-use app\assets\BootstapIconAsset;
 use app\widgets\Alert;
-use yii\bootstrap5\Breadcrumbs;
-use yii\bootstrap5\Html;
 use yii\bootstrap5\Nav;
+use app\assets\AppAsset;
+use yii\bootstrap5\Html;
+use app\models\Categorise;
 use yii\bootstrap5\NavBar;
 use yii\helpers\ArrayHelper;
-use dominus77\sweetalert2\assets\SweetAlert2Asset;
 use app\components\SiteHelper;
-use app\models\Categorise;
+use yii\bootstrap5\Breadcrumbs;
+use app\assets\BootstapIconAsset;
+use dominus77\sweetalert2\assets\SweetAlert2Asset;
+SweetAlert2Asset::register($this);
 
 AppAsset::register($this);
 BootstapIconAsset::register($this);
 
-
-
-SweetAlert2Asset::register($this);
-$site = Categorise::findOne(['name' => 'site']);
-$color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
-$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
-$style = 2;
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?=Yii::$app->language?>" class="h-100" data-bs-theme="<?=$colorName?>">
+<html lang="<?=Yii::$app->language?>" class="h-100">
 
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
@@ -36,8 +30,7 @@ $style = 2;
 
     <title><?= Html::encode($this->title) ?></title>
 
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
         integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
@@ -49,86 +42,51 @@ $style = 2;
         rel="stylesheet">
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    
+
+    <style>
+        .loader-line {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      position: relative;
+      animation: rotate 1s linear infinite
+    }
+    .loader-line::before {
+      content: "";
+      box-sizing: border-box;
+      position: absolute;
+      inset: 0px;
+      border-radius: 50%;
+      border: 5px solid #FFF;
+      animation: prixClipFix 2s linear infinite ;
+    }
+
+    @keyframes rotate {
+      100%   {transform: rotate(360deg)}
+    }
+
+    @keyframes prixClipFix {
+        0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+        25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+        50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+        75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+        100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+    }
+    </style>
     <?php $this->head() ?>
+    
 </head>
-<style>
-@-webkit-keyframes animateWave {
-    0% {
-        transform: scale(1, 0)
-    }
 
-    100% {
-        transform: scale(1, 1)
-    }
-}
-
-@keyframes animateWave {
-    0% {
-        transform: scale(1, 0)
-    }
-
-    100% {
-        transform: scale(1, 1)
-    }
-}
-
-.wave-bg {
-    display: block;
-    height: 220px;
-    width: 100%;
-    min-width: 600px;
-    transform-origin: top;
-    -webkit-animation: animateWave 2000ms cubic-bezier(.23, 1, .32, 1) forwards;
-    animation: animateWave 2000ms cubic-bezier(.23, 1, .32, 1) forwards;
-    /* background-image: url(../images/wave-bg.svg); */
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-.blank-pagexq {
-    background: #c9e8ef;
-    /* fallback for old browsers */
-    background: -webkit-linear-gradient(to bottom, #c9e8ef 0%, #078da9);
-    /* Chrome 10-25, Safari 5.1-6 */
-    background: linear-gradient(to bottom, #c9e8ef 0%, #078da9);
-    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-}
-
-.blank-pagex {
-    background: rgb(7, 141, 169);
-    background: linear-gradient(0deg, rgba(7, 141, 169, 0.9178046218487395) 0%, rgba(7, 141, 169, 1) 41%, rgba(201, 232, 239, 1) 100%);
-}
-</style>
 
 <body>
     <?php $this->beginBody() ?>
-
-    <?= $this->render('./modal') ?>
-                <?= $this->render('page_title') ?>
-
-        <div class="container mt--45">
-            <?=$content?>
-
-        </div>
+    <?= $this->render('page_title') ?>
+    <div class="container mt--45">
+        <?=$content?>
     </div>
-    
-    <div class="container-fluid">
-
-</div>
-
-
+    </div>
 
 </body>
-<?php
-$js = <<< JS
- AOS.init({
-    
- });
-
-JS;
-$this->registerJS($js);
-?>
 
 <?php $this->endBody() ?>
 </body>

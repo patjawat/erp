@@ -579,6 +579,13 @@ class Employees extends Yii\db\ActiveRecord
                 'name' => 'signature',
                 'subtitle' => 'ลายเซ็น',
                 'count' => 0,
+            ],
+            [
+                'title' => 'Line',
+                'icon' => '<i class="fa-solid fa-file-signature avatar-title text-primary"></i> ',
+                'name' => 'line',
+                'subtitle' => 'Line',
+                'count' => 0,
             ]
         ];
     }
@@ -708,6 +715,12 @@ class Employees extends Yii\db\ActiveRecord
     }
     // End Category list
 
+
+    //ส่ง line
+    public function SendMsg($msg)
+    {
+
+    }
     // คำนวนวันที่เริ่มต้นทำงานจากการแต่งตั้ง
     public function joinDate()
     {
@@ -899,8 +912,7 @@ class Employees extends Yii\db\ActiveRecord
     // section Relationships
     public function getUser()
     {
-        return $this->hasOne(User::class, ['id' => '
-        ']);
+        return $this->hasOne(User::class, ['id' => 'user_id']);
     }
 
     public function getProvincName()

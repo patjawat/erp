@@ -162,7 +162,7 @@ $('#form').on('beforeSubmit', function (e) {
             if(res.status == 'success') {
                 // alert(data.status)
                 console.log(res.container);
-                // $('#main-modal').modal('toggle');
+                $('#main-modal').modal('toggle');
                 success()
                  $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
             }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0e9308ca7a18d41692742443ebd9cce1",
+    "content-hash": "5ecbbc4cff85ccdcc8304957b468bbe5",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -2478,151 +2478,6 @@
                 "source": "https://github.com/Insolita/yii2-adminlte-widgets/tree/3.2.3"
             },
             "time": "2021-08-12T10:31:23+00:00"
-        },
-        {
-            "name": "intervention/gif",
-            "version": "4.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Intervention/gif.git",
-                "reference": "42c131a31b93c440ad49061b599fa218f06f93be"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Intervention/gif/zipball/42c131a31b93c440ad49061b599fa218f06f93be",
-                "reference": "42c131a31b93c440ad49061b599fa218f06f93be",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^8.1"
-            },
-            "require-dev": {
-                "phpstan/phpstan": "^1",
-                "phpunit/phpunit": "^10.0",
-                "slevomat/coding-standard": "~8.0",
-                "squizlabs/php_codesniffer": "^3.8"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Intervention\\Gif\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Oliver Vogel",
-                    "email": "oliver@intervention.io",
-                    "homepage": "https://intervention.io/"
-                }
-            ],
-            "description": "Native PHP GIF Encoder/Decoder",
-            "homepage": "https://github.com/intervention/gif",
-            "keywords": [
-                "animation",
-                "gd",
-                "gif",
-                "image"
-            ],
-            "support": {
-                "issues": "https://github.com/Intervention/gif/issues",
-                "source": "https://github.com/Intervention/gif/tree/4.2.0"
-            },
-            "funding": [
-                {
-                    "url": "https://paypal.me/interventionio",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/Intervention",
-                    "type": "github"
-                },
-                {
-                    "url": "https://ko-fi.com/interventionphp",
-                    "type": "ko_fi"
-                }
-            ],
-            "time": "2024-09-20T13:35:02+00:00"
-        },
-        {
-            "name": "intervention/image",
-            "version": "dev-develop",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Intervention/image.git",
-                "reference": "cde28943a5de2b957523d57ab71c02c393c36e9d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Intervention/image/zipball/cde28943a5de2b957523d57ab71c02c393c36e9d",
-                "reference": "cde28943a5de2b957523d57ab71c02c393c36e9d",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "intervention/gif": "^4.2",
-                "php": "^8.1"
-            },
-            "require-dev": {
-                "mockery/mockery": "^1.6",
-                "phpstan/phpstan": "^2.1",
-                "phpunit/phpunit": "^10.0 || ^11.0",
-                "slevomat/coding-standard": "~8.0",
-                "squizlabs/php_codesniffer": "^3.8"
-            },
-            "suggest": {
-                "ext-exif": "Recommended to be able to read EXIF data properly."
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Intervention\\Image\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Oliver Vogel",
-                    "email": "oliver@intervention.io",
-                    "homepage": "https://intervention.io/"
-                }
-            ],
-            "description": "PHP image manipulation",
-            "homepage": "https://image.intervention.io/",
-            "keywords": [
-                "gd",
-                "image",
-                "imagick",
-                "resize",
-                "thumbnail",
-                "watermark"
-            ],
-            "support": {
-                "issues": "https://github.com/Intervention/image/issues",
-                "source": "https://github.com/Intervention/image/tree/develop"
-            },
-            "funding": [
-                {
-                    "url": "https://paypal.me/interventionio",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/Intervention",
-                    "type": "github"
-                },
-                {
-                    "url": "https://ko-fi.com/interventionphp",
-                    "type": "ko_fi"
-                }
-            ],
-            "time": "2025-01-15T18:08:13+00:00"
         },
         {
             "name": "istvan-ujjmeszaros/bootstrap-duallistbox",
@@ -5766,6 +5621,104 @@
                 "source": "https://github.com/kartik-v/yii2-widgets/tree/master"
             },
             "time": "2018-10-09T17:40:19+00:00"
+        },
+        {
+            "name": "linecorp/line-bot-sdk",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/line/line-bot-sdk-php.git",
+                "reference": "4ef9fb7566436e8887a5bb2313b2f43ad5ae7fbc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/line/line-bot-sdk-php/zipball/4ef9fb7566436e8887a5bb2313b2f43ad5ae7fbc",
+                "reference": "4ef9fb7566436e8887a5bb2313b2f43ad5ae7fbc",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.3",
+                "guzzlehttp/psr7": "^1.7 || ^2.0",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "guzzlehttp/guzzle": "^7.3",
+                "guzzlehttp/psr7": "^1.7 || ^2.0",
+                "orchestra/testbench": "*",
+                "phpmd/phpmd": "2.15.0",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^10.2",
+                "squizlabs/php_codesniffer": "3.11.2"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LINELiffApi": "LINE\\Laravel\\Facades\\LINELiffApi",
+                        "LINEInsightApi": "LINE\\Laravel\\Facades\\LINEInsightApi",
+                        "LINEMessagingApi": "LINE\\Laravel\\Facades\\LINEMessagingApi",
+                        "LINEMessagingBlobApi": "LINE\\Laravel\\Facades\\LINEMessagingBlobApi",
+                        "LINEManageAudienceApi": "LINE\\Laravel\\Facades\\LINEManageAudienceApi",
+                        "LINEChannelAccessTokenApi": "LINE\\Laravel\\Facades\\LINEChannelAccessTokenApi",
+                        "LINEManageAudienceBlobApi": "LINE\\Laravel\\Facades\\LINEManageAudienceBlobApi"
+                    },
+                    "providers": [
+                        "LINE\\Laravel\\LINEBotServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LINE\\Parser\\": "src/parser/lib/",
+                    "LINE\\Laravel\\": "src/laravel/lib/",
+                    "LINE\\Webhook\\": "src/webhook/lib/",
+                    "LINE\\Constants\\": "src/constants/",
+                    "LINE\\Clients\\Liff\\": "src/clients/liff/lib/",
+                    "LINE\\Clients\\Insight\\": "src/clients/insight/lib/",
+                    "LINE\\Clients\\MessagingApi\\": "src/clients/messaging-api/lib/",
+                    "LINE\\Clients\\ManageAudience\\": "src/clients/manage-audience/lib/",
+                    "LINE\\Clients\\ChannelAccessToken\\": "src/clients/channel-access-token/lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "moznion",
+                    "email": "moznion@gmail.com",
+                    "role": "Retired"
+                },
+                {
+                    "name": "Satoru Yoshihara",
+                    "email": "vaduz0@gmail.com",
+                    "role": "Retired"
+                },
+                {
+                    "name": "Satoshi Shibuya",
+                    "email": "satosby@gmail.com",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Shunsuke Mori",
+                    "email": "morimorim7180@gmail.com",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "SDK of the LINE BOT API for PHP",
+            "homepage": "https://github.com/line/line-bot-sdk-php",
+            "keywords": [
+                "bot",
+                "line",
+                "sdk"
+            ],
+            "support": {
+                "issues": "https://github.com/line/line-bot-sdk-php/issues",
+                "source": "https://github.com/line/line-bot-sdk-php/tree/v10.0.3"
+            },
+            "time": "2025-01-23T02:44:10+00:00"
         },
         {
             "name": "maennchen/zipstream-php",

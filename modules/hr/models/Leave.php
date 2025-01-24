@@ -9,6 +9,7 @@ use app\models\Approve;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
@@ -182,6 +183,13 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep1->level = 1;
                 $leaveStep1->status = 'Pending';
                 $leaveStep1->save(false);
+                // try {
+                    // ส่ง msg ให้ Approve
+                    $toUserId = $leaveStep1->employee->user->line_id;
+                    LineNotify::sendLeave($leaveStep1->id, $toUserId);
+                // } catch (\Throwable $th) {
+
+                // }
             }
         // } catch (\Throwable $th) {
 
