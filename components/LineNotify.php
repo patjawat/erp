@@ -84,7 +84,8 @@ class LineNotify extends Component
      // ฟังก์ชันส่ง Flex Message
      public function sendFlexMessage($userId, $altText, $flexContent)
      {
-        $channelAccessToken = "tagKzFY1hHd0j7GcGknIy2zqQSgOWhcbh/AGdDSltHDOQ2XE2w5qqZeadToN4+WtilD7dZ2w+A2Lqq2fNnra5YGpceLT0+cf/NPkASnjuL0BZva0ExOOFqCiSCYNaNegDUnlo3Ku9rUJMV+DPt/nvQdB04t89/1O/w1cDnyilFU=";
+        $token = Categorise::find()->where(['name' => 'site'])->one();
+        $channelAccessToken = $token->data_json['line_channel_token'];
          $url = 'https://api.line.me/v2/bot/message/push';
  
          $data = [
@@ -119,12 +120,14 @@ class LineNotify extends Component
      // ฟังก์ชันส่ง Flex Message
      public static function sendLeave($approveId,$userId)
      {
+
+        $token = Categorise::find()->where(['name' => 'site'])->one();
+        $channelAccessToken = $token->data_json['line_channel_token'];
         $approve = Approve::findOne($approveId);
         $uri = Url::base(true) . Url::to(['/line/approve/leave', 'id' => $approveId]);
-        $channelAccessToken = "tagKzFY1hHd0j7GcGknIy2zqQSgOWhcbh/AGdDSltHDOQ2XE2w5qqZeadToN4+WtilD7dZ2w+A2Lqq2fNnra5YGpceLT0+cf/NPkASnjuL0BZva0ExOOFqCiSCYNaNegDUnlo3Ku9rUJMV+DPt/nvQdB04t89/1O/w1cDnyilFU=";
-         $url = 'https://api.line.me/v2/bot/message/push';
+        $url = 'https://api.line.me/v2/bot/message/push';
  
-         $altText = 'This is a Flex Message with URI action'; // ข้อความสำรอง
+        $altText = 'ขออนุมติ'.$approve->leave->leaveType->title; // ข้อความสำรอง
         $flexContent = [
             'type' => 'bubble',
             'body' => [
@@ -133,7 +136,7 @@ class LineNotify extends Component
                 'contents' => [
                     [
                         'type' => 'text',
-                        'text' => 'ขออนุมติ'.$approve->leave->leaveType->title,
+                        'text' => $altText,
                         'weight' => 'bold',
                         'size' => 'xl',
                     ],

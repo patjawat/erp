@@ -28,7 +28,7 @@ $this->title = 'ตั้งค่าองค์กร';
             <div class="card">
     <div class="card-body">
 
-                <?= $form->field($model, 'data_json[line_token]')->textInput()->label('Channel access token') ?>
+                <?= $form->field($model, 'data_json[line_channel_token]')->textInput()->label('Channel access token') ?>
             </div>
 
             </div>
