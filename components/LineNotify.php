@@ -195,5 +195,85 @@ class LineNotify extends Component
  
          return true;
      }
+
+
+      // ฟังก์ชันส่ง Flex Message
+      public static function sendDocument($model,$userId)
+      {
+ 
+         $token = Categorise::find()->where(['name' => 'site'])->one();
+         $channelAccessToken = $token->data_json['line_channel_token'];
+        //  $uri = Url::base(true) . Url::to(['/line/documents/view', 'id' => $model->id]);
+         $uri = Url::base(true) . Url::to(['/line/documents/show','ref' => $model->document->ref]);
+         $url = 'https://api.line.me/v2/bot/message/push';
+         $altText = "หนังสือ";
+         $flexContent = [
+             'type' => 'bubble',
+             'body' => [
+                 'type' => 'box',
+                 'layout' => 'vertical',
+                 'contents' => [
+                     [
+                         'type' => 'text',
+                         'text' => $altText,
+                         'weight' => 'bold',
+                         'size' => 'xl',
+                     ],
+                     [
+                         'type' => 'text',
+                         'text' => $model->document->topic,
+                         'size' => 'md',
+                         'wrap' => true,
+                     ],
+                 ],
+             ],
+             'footer' => [
+                 'type' => 'box',
+                 'layout' => 'vertical',
+                 'contents' => [
+                     [
+                         'type' => 'button',
+                         'style' => 'primary',
+                         'action' => [
+                             'type' => 'uri',
+                             'label' => 'อ่าน',
+                             // 'uri' => Url::base(true).'/line/leave' // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                             'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                         ],
+                     ],
+                 ],
+             ],
+         ];
+         
+          $data = [
+              'to' => $userId,
+              'messages' => [
+                  [
+                      'type' => 'flex',
+                      'altText' => $altText,
+                      'contents' => $flexContent,
+                  ],
+              ],
+          ];
+  
+          $client = new Client();
+          $response = $client->createRequest()
+              ->setMethod('POST')
+              ->setUrl($url)
+              ->addHeaders([
+                  'Authorization' => 'Bearer ' . $channelAccessToken,
+                  'Content-Type' => 'application/json',
+              ])
+              ->setContent(json_encode($data))
+              ->send();
+  
+          if (!$response->isOk) {
+              Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
+              return false;
+          }
+  
+          return true;
+      }
+      
  
 }

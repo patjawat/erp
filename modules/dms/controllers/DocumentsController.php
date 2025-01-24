@@ -142,6 +142,8 @@ class DocumentsController extends Controller
                 if(!$model->save()){
                     return $model->getErrors();
                 }
+
+                
                 return $this->redirect(['index']);
             }
         } else {
@@ -204,13 +206,7 @@ class DocumentsController extends Controller
             if ($model->save()) {
                 $model->UpdateDocumentTags();
                 
-                try {
-                    
-                    $message = $model->topic;
-                    $model->sendMessage();
-                    } catch (\Throwable $th) {
-                        //throw $th;
-                    }
+                $model->sendMessage();
                 return $this->redirect(['index']);
             }
         }else{

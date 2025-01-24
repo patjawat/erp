@@ -119,6 +119,12 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
+        // บุคลากร
+        public function getEmployee()
+        {
+                return $this->hasOne(Employees::class, ['id' => 'to_id']);
+        }
+    
 
     public function afterFind()
     {

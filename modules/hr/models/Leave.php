@@ -183,13 +183,13 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep1->level = 1;
                 $leaveStep1->status = 'Pending';
                 $leaveStep1->save(false);
-                // try {
+                try {
                     // ส่ง msg ให้ Approve
                     $toUserId = $leaveStep1->employee->user->line_id;
                     LineNotify::sendLeave($leaveStep1->id, $toUserId);
-                // } catch (\Throwable $th) {
+                } catch (\Throwable $th) {
 
-                // }
+                }
             }
         // } catch (\Throwable $th) {
 

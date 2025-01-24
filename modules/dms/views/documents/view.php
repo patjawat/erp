@@ -55,7 +55,8 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="mt-3">
-            <?php  echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+            <?php  // echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+            <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/dms/documents','document_group' => $model->document_group],['class' => 'btn btn-secondary me-2'])?>
         </div>
     </div>
 

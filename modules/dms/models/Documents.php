@@ -17,6 +17,7 @@ use kartik\file\FileInput;
 use yii\httpclient\Client;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
@@ -125,6 +126,9 @@ class Documents extends \yii\db\ActiveRecord
         parent::afterFind();
     }
 
+
+
+
     // สถานะ
     public function getDocumentStatus()
     {
@@ -160,30 +164,19 @@ class Documents extends \yii\db\ActiveRecord
         }
     }
 
-    public function sendMessage($lineId)
+    public function sendMessage()
     {
-        $message = $thi->topic;
-
-        try {
-            $client = new Client();
-            // $token = 'u090Q5IjiP3BOCPbGGdn1Vdj16AZ6mVtz2SV9Bd22ce';
-            $token = $lineId;
-            $response = $client
-                ->createRequest()
-                ->setMethod('POST')
-                ->setUrl('https://notify-api.line.me/api/notify')
-                ->setHeaders(['Authorization' => 'Bearer ' . $token])
-                ->setData(['message' => $message])
-                ->send();
-
-            if ($response->isOk) {
-                return $response->data;
-            } else {
-                throw new Exception('Failed to send message: ' . $response->content);
-            }
-            // code...
-        } catch (\Throwable $th) {
-            // throw $th;
+        $models = DocumentsDetail::find()->where(['name' => 'employee', 'document_id' => $this->id])->all();
+        foreach($models as $model){
+   
+            // try {
+                $line_id = $model->employee->user->line_id;
+                $topic = $this->topic;
+                // ส่ง msg ให้ Approve
+                LineNotify::sendDocument($model,$line_id);
+            // } catch (\Throwable $th) {
+                
+            // }
         }
     }
 
@@ -316,8 +309,8 @@ class Documents extends \yii\db\ActiveRecord
         try {
             $employees = Employees::find()
                 ->select(['id', 'concat(fname, " ", lname) as fullname'])
-                ->andWhere(['status' => '1'])
-                ->andWhere(['<>', 'id', '1'])
+                // ->andWhere(['status' => '1'])
+                // ->andWhere(['<>', 'id', '1'])
                 ->asArray()
                 ->all();
 
