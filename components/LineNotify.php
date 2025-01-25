@@ -213,11 +213,11 @@ class LineNotify extends Component
                  'type' => 'box',
                  'layout' => 'vertical',
                  'contents' => [
-                    // [
-                    //     "type"=> "icon",
-                    //     "size"=> "sm",
-                    //     "url"=> "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
-                    // ],
+                    [
+                        "type"=> "icon",
+                        "size"=> "sm",
+                        "url"=> "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                    ],
                      [
                          'type' => 'text',
                          'text' => $altText.'เรื่อง'.$model->document->topic,
