@@ -64,6 +64,23 @@ services:
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  dbBackup:
+    image: fradelg/mysql-cron-backup
+    depends_on:
+      - mysqlDB
+    restart: always
+    volumes:
+      - ./db-backup:/backup
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASS=docker
+      # - MYSQL_DB='dansai'
+      - CRON_TIME=0 0 1 * *
+      - MYSQL_HOST=mysqlDB
+      - MYSQL_PORT=3306
+      - TIMEOUT=10s
+      - INIT_BACKUP=1
+
   phpmyadmin_mysql:
     image: phpmyadmin
     container_name: ${CONTAINER_NAME}_pma
