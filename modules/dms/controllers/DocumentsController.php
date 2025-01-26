@@ -9,8 +9,9 @@ use app\models\Uploads;
 use yii\web\Controller;
 use yii\bootstrap5\Html;
 use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
@@ -18,7 +19,7 @@ use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
-use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\components\FileManagerHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -304,6 +305,7 @@ class DocumentsController extends Controller
         }
     }
 
+
     public function actionUpdateComment($id)
     {
         $emp = UserHelper::GetEmployee();
@@ -317,7 +319,7 @@ class DocumentsController extends Controller
             if ($model->save()) {
                 $model->UpdateDocumentsDetail();
                 $model->sendMessage();
-                return $this->redirect(['view', 'id' => $model->document_id]);
+                // return $this->redirect(['view', 'id' => $model->document_id]);
                 // return [
                 //     'status' => 'success',
                 //     'data' => $model,

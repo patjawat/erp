@@ -24,6 +24,7 @@ use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use app\modules\hr\models\EmployeesSearch;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use app\modules\dms\models\DocumentsDetail;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -159,12 +160,15 @@ class EmployeesController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        $userId = $model->user->line_id;
-        return LineNotify::sendLeave($lineId);
+        $line_id = $model->user->line_id;
+        $approveId = 11396;
+        // LineNotify::sendLeave($approveId,$line_id);
+        $docModel = DocumentsDetail::findOne(2);
+        LineNotify::sendDocument($docModel,$line_id);
         
         
-        $result = Yii::$app->lineNotify->sendLeave($userId);
-        return $result;
+        // $result = Yii::$app->lineNotify->sendLeave($userId);
+        // return $result;
     }
     /**
      * Displays a single Employees model.

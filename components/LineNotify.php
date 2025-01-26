@@ -205,6 +205,7 @@ class LineNotify extends Component
          $channelAccessToken = $token->data_json['line_channel_token'];
         //  $uri = Url::base(true) . Url::to(['/line/documents/view', 'id' => $model->id]);
          $uri = Url::base(true) . Url::to(['/line/documents/show','ref' => $model->document->ref]);
+         $uriComment = Url::base(true) . Url::to(['/line/documents/comment','id' => $model->id]);
          $url = 'https://api.line.me/v2/bot/message/push';
          $altText = "หนังสือ";
          $flexContent = [
@@ -229,7 +230,8 @@ class LineNotify extends Component
              ],
              'footer' => [
                  'type' => 'box',
-                 'layout' => 'vertical',
+                 'layout' => 'horizontal', // เปลี่ยน layout เป็น horizontal เพื่อให้ปุ่มแสดงในแนวนอน
+                 'spacing' => 'md', // กำหนดช่องว่างระหว่างปุ่ม (xs, sm, md, lg, xl)
                  'contents' => [
                      [
                          'type' => 'button',
@@ -237,10 +239,18 @@ class LineNotify extends Component
                          'action' => [
                              'type' => 'uri',
                              'label' => 'อ่าน',
-                             // 'uri' => Url::base(true).'/line/leave' // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
                              'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
                          ],
                      ],
+                     [
+                        'type' => 'button',
+                        'style' => 'secondary',
+                        'action' => [
+                            'type' => 'uri',
+                            'label' => 'ลงความเห็น',
+                            'uri' =>$uriComment // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                        ],
+                    ],
                  ],
              ],
          ];

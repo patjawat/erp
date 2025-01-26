@@ -37,7 +37,7 @@ class DocumentsController extends \yii\web\Controller
         $dataProviderEmployee->query->joinWith('document');
        
         $dataProviderEmployee->query->andFilterWhere(['to_id' => $emp->id]);
-        $dataProviderEmployee->query->andFilterWhere(['name' => 'employee']);
+        $dataProviderEmployee->query->andFilterWhere(['name' => 'comment']);
         if($searchModel->show_reading == 1){
             $dataProviderEmployee->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }else{
