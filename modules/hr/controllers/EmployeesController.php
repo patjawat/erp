@@ -160,7 +160,7 @@ class EmployeesController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
         $userId = $model->user->line_id;
-        // return LineNotify::sendPushMessage($lineId,'Hello');
+        return LineNotify::sendLeave($lineId);
         
         
         $result = Yii::$app->lineNotify->sendLeave($userId);

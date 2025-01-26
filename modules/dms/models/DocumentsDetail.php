@@ -17,6 +17,7 @@ use kartik\file\FileInput;
 use yii\httpclient\Client;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
@@ -168,7 +169,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
             $employees = Employees::find()
                 ->select(['id', 'concat(fname, " ", lname) as fullname'])
                 ->andWhere(['status' => '1'])
-                ->andWhere(['<>', 'id', '1'])
+                // ->andWhere(['<>', 'id', '1'])
                 ->andWhere(['not in', 'id', $allTag])
                 ->asArray()
                 ->all();
@@ -181,6 +182,23 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         }
     }
 
+//ส่งline
+    public function sendMessage()
+    {
+        $models = self::find()->where(['name' => 'comment', 'document_id' => $this->document_id])->all();
+        foreach($models as $model){
+   
+            try {
+                $line_id = $model->employee->user->line_id;
+                $topic = $this->comment;
+                // ส่ง msg ให้ Approve
+                LineNotify::sendDocument($model,$line_id);
+            } catch (\Throwable $th) {
+                
+            }
+        }
+    }
+    
     
      // บันทึก tag ไปยัง document
      public function UpdateDocumentsDetail()

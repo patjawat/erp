@@ -206,7 +206,7 @@ class DocumentsController extends Controller
             if ($model->save()) {
                 // $model->UpdateDocumentTags();
 
-                $model->sendMessage();
+               
                 return $this->redirect(['index']);
             }
         } else {
@@ -281,6 +281,7 @@ class DocumentsController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->UpdateDocumentsDetail();
+            $model->sendMessage();
 
             if ($model->save()) {
                 // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
@@ -315,6 +316,7 @@ class DocumentsController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->save()) {
                 $model->UpdateDocumentsDetail();
+                $model->sendMessage();
                 return $this->redirect(['view', 'id' => $model->document_id]);
                 // return [
                 //     'status' => 'success',
