@@ -59,7 +59,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 use app\components\SiteHelper;
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
-$liffProfileUrl = 'https://liff.line.me/2005893839-g4J88Xp0';
+$liffProfileUrl = 'https://liff.line.me/'.$liffProfile;
 $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
 
 $js = <<< JS

@@ -35,7 +35,7 @@ $items = [
     [
         'title' => 'สารบรรณ',
         'icon' => 'bi bi-journal-text fs-1',
-        'url' => ['/dms/dashboard'],
+        'url' => ['/dms/documents','document_group' => 'receive'],
         'padding' => 'p-2',
         'show' => Yii::$app->user->can('document') ? true : false,
     ],

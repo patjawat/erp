@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/dms/menu') ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
 <style>

@@ -200,7 +200,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                         </div>
-                        <?= $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
+                      
 
 
                     </div>
@@ -221,21 +221,22 @@ $this->params['breadcrumbs'][] = $this->title;
 
                         <?php
 
-                                        $tags = DocumentsDetail::find()->where(['name' => 'employee','document_id' => $model->id])->all();
-                                        $list = ArrayHelper::map($tags, 'to_id','to_id');
-                                        $model->tags_employee = $list;
-                                        echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
-                                            'data' => $model->listEmployeeSelectTag(),
-                                            'options' => ['placeholder' => 'Select a state ...'],
-                                            'pluginOptions' => [
-                                                'allowClear' => true,
-                                            'multiple' => true,
-                                            ],
-                                        ])->label('ส่งต่อ');
+                                        // $tags = DocumentsDetail::find()->where(['name' => 'comment','document_id' => $model->id])->all();
+                                        // $list = ArrayHelper::map($tags, 'to_id','to_id');
+                                        // $model->tags_employee = $list;
+                                        // echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
+                                        //     'data' => $model->listEmployeeSelectTag(),
+                                        //     'options' => ['placeholder' => 'Select a state ...'],
+                                        //     'pluginOptions' => [
+                                        //         'allowClear' => true,
+                                        //     'multiple' => true,
+                                        //     ],
+                                        // ])->label('ส่งต่อ');
 
                                         ?>
 
 
+<?php //  $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
                     </div>
                     <div class="tab-pane fade" id="pills-clip" role="tabpanel" aria-labelledby="pills-clip-tab"
                         tabindex="0">

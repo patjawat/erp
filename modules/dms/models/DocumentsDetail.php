@@ -222,11 +222,11 @@ class DocumentsDetail extends \yii\db\ActiveRecord
             $clearDEmployeeTag = DocumentsDetail::deleteAll([
                 'and',
                 ['not in', 'to_id', $this->tags_employee],
-                ['document_id' => $this->id, 'name' => 'employee']
+                ['document_id' => $this->id, 'name' => 'comment']
             ]);
 
             foreach ($this->tags_employee as $key => $value):
-                $check = DocumentsDetail::find()->where(['name' => 'employee', 'document_id' => $this->id, 'to_id' => $value])->one();
+                $check = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $this->id, 'to_id' => $value])->one();
                 $new = $check ? $check : new DocumentsDetail();
                 $new->name = 'employee';
                 $new->document_id = $this->id;
@@ -260,6 +260,54 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                 'product_type_name' => ''
             ];
         }
+    }
+    
+
+
+    // แสดงการcommentและส่งต่อรายบุคคล
+    public function StackSendTags()
+    {
+        // try {
+            $querys = $this->tags_employee;
+            $count = count($querys) - 2;
+            $data = '';
+            $data .= '<div class="avatar-stack">';
+            $count > 0 ? $data .= Html::a('+' . $count, ['/dms/documents/list-comment', 'id' => $this->id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'], ['class' => 'open-modal avatar-sm rounded-circle shadow bg-secondary text-white text-center p-2 fs-13', 'data' => [
+                'size' => 'modal-md',
+            ]]) : '';
+            foreach ($querys as $key => $emp_id) {
+                $emp = Employees::findOne(['id' => $emp_id]);
+                if ($key <= 1) {
+                    // $data .= Html::a(
+                         $data .=Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                            'data' => [
+                                'expand' => '-20',
+                                'sizes' => 'auto',
+                                'src' => $emp->showAvatar()
+                            ]]);
+                        // ['/dms/documents/list-comment', 'id' => $emp_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                        // [
+                        //     'class' => 'open-modal',
+                        //     'data' => [
+                        //         'size' => 'modal-md',
+                        //         'bs-trigger' => 'hover focus',
+                        //         'bs-toggle' => 'popover',
+                        //         'bs-placement' => 'top',
+                        //         'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
+                        //         'bs-html' => 'true',
+                        //         'bs-content' => $emp->fullname
+                        //     ]
+                        // ]
+                    // );
+                } else {
+                }
+            }
+
+            $data .= '</div>';
+            return $data;
+        // } catch (\Throwable $th) {
+        //     // return 'เกิดข้อผิดพลาด';
+        // }
     }
     
 

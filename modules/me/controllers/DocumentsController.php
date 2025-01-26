@@ -18,7 +18,9 @@ class DocumentsController extends \yii\web\Controller
     {
         $emp = UserHelper::GetEmployee();
         $department = $emp->department;
-        $searchModel = new DocumentsDetailSearch();
+        $searchModel = new DocumentsDetailSearch([
+            'thai_year' => (date('Y')+543)
+        ]);
         $dataProviderDepartment = $searchModel->search($this->request->queryParams);
         $dataProviderDepartment->query->joinWith('document');
         $dataProviderDepartment->query->andFilterWhere(['to_id' => $emp->department]);
@@ -72,8 +74,8 @@ class DocumentsController extends \yii\web\Controller
         // Yii::$app->response->format = Response::FORMAT_JSON;
         $emp = UserHelper::GetEmployee();
         $docDetail = DocumentsDetail::findOne($id);
-        $docDetail->doc_read = date('Y-m-d H:i:s');
-        $docDetail->save(false);
+        // $docDetail->doc_read = date('Y-m-d H:i:s');
+        // $docDetail->save(false);
 
         $view_count[] = [
             'date_time' => date('Y-m-d H:i:s'),
@@ -81,6 +83,7 @@ class DocumentsController extends \yii\web\Controller
             'fullname' => $emp->fullname,
             'department' => $emp->departmentName(),
         ];
+        
         $model = $this->findModel($docDetail->document_id);
         if ($model->view_json === null) {
             $model->view_json = [];
@@ -103,6 +106,122 @@ class DocumentsController extends \yii\web\Controller
             ]);
         }
     }
+
+
+    // แสดง File และแสดงความเห็น
+    public function actionComment($id)
+    {
+        $emp = UserHelper::GetEmployee();
+        $model = new DocumentsDetail([
+            'document_id' => $id,
+            'to_id' => $emp->id,
+            'name' => 'comment'
+        ]);
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $model->UpdateDocumentsDetail();
+
+            if($model->save()){
+            // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
+            return $this->redirect(['view', 'id' => $model->id]);
+            }
+        }
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' =>$this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/dms/views/documents/_form_comment', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('@app/modules/dms/views/documents/_form_comment', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    public function actionUpdateComment($id)
+    {
+
+        $emp = UserHelper::GetEmployee();
+        $model = DocumentsDetail::findOne($id);
+        
+        $tags = DocumentsDetail::find()->where(['name' => 'comment','document_id' => $model->document_id])->all();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if($model->save()){
+                $model->UpdateDocumentsDetail();
+                return $this->redirect(['view', 'id' => $model->id]);
+                // return [
+                //     'status' => 'success',
+                //     'data' => $model,
+                // ];
+            }
+        }
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => 'xxx',
+                'content' => $this->renderAjax('@app/modules/dms/views/documents/_form_comment', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('@app/modules/dms/views/documents/_form_comment', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+    public function actionDeleteComment($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = DocumentsDetail::findOne($id);
+        if($model->created_by == Yii::$app->user->id){
+
+            $model->delete();
+            return [
+                'status' => 'success',
+                'data' => $model,
+            ];
+        }else{
+            return [
+                'status' => 'error',
+            ];
+        }
+    }
+    
+// แสดง File และแสดงความเห็น
+public function actionListComment($id)
+{
+   
+    $model = $this->findModel($id);
+    
+    if ($this->request->isAJax) {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น',
+            'content' => $this->renderAjax('list_comment', [
+                'model' => $model,
+              
+            ])
+        ];
+    } else {
+        return $this->render('list_comment', [
+            'model' => $model,
+        ]);
+    }
+}
+
+
 
     // แสดง File และแสดงความเห็น
     public function actionFileComment($id)

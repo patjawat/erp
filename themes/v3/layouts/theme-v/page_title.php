@@ -6,7 +6,7 @@ use yii\bootstrap5\Breadcrumbs;
 <div class="page-title-box">
     <div class="container-fluid">
         <div class="row align-items-center">
-            <div class="col-sm-5 col-xl-4">
+            <div class="col-sm-5 col-xl-6">
                 <div class="page-title">
                     <h5 class="mb-1 text-white">
                         <?=isset($this->blocks['page-title']) ? $this->blocks['page-title'] : 'ERP';?> </h5>
@@ -17,7 +17,7 @@ use yii\bootstrap5\Breadcrumbs;
                     </ol>
                 </div>
             </div>
-            <div class="col-sm-7 col-xl-8">
+            <div class="col-sm-7 col-xl-6">
 				<div class="d-flex justify-content-sm-end">
 
 					<?php if(isset($this->blocks['page-action'])):?>

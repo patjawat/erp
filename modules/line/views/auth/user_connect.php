@@ -1,19 +1,20 @@
 <?php
-use app\modules\employees\models\Employees;
-// use app\themes\assets\AppAsset;
-use yii\bootstrap5\Html;
-use kartik\widgets\ActiveForm;
 use yii\web\View;
+// use app\themes\assets\AppAsset;
+use yii\helpers\Url;
 use yii\widgets\Pjax;
+use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\SiteHelper;
+use kartik\widgets\ActiveForm;
 $site = Categorise::findOne(['name' => 'site']);
 $color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
 
 $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
-$this->title = "ระบบลงทะเบียน";
+$this->title = "ระบบยืนยันตัวตน";
+$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 <?php Pjax::begin(['id' => 'sm-container', 'enablePushState' => true, 'timeout' => 5000]); ?>
 
@@ -61,7 +62,7 @@ input::placeholder {
 
 
 <?php
-use yii\helpers\Url;
+use app\modules\employees\models\Employees;
 
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffUserConnect = SiteHelper::getInfo()['line_liff_user_connect'];
@@ -71,7 +72,7 @@ $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_regi
 
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $js = <<< JS
-
+ var vConsole = new window.VConsole();
 $('#blank-form').on('beforeSubmit', function (e) {
 e.preventDefault
     var yiiform = $(this);

@@ -21,7 +21,7 @@ class m241212_150029_create_documents_table extends Migration
             'document_type' => $this->string()->comment('ประเภทหนังสือ'),
             'document_org' => $this->string()->comment('จากหน่วยงาน'),
             'thai_year' => $this->string()->comment('ปี พ.ศ.'),
-            'doc_regis_number' => $this->string()->comment('เลขรับ'),
+            'doc_regis_number' => $this->integer()->comment('เลขรับ'),
             'doc_speed' => $this->string()->comment('ชั้นความเร็ว'),
             'secret' => $this->string()->comment('ชั้นความลับ'),
             'doc_date' => $this->string()->comment('วันที่หนังสือ'),

@@ -156,7 +156,15 @@ class Documents extends \yii\db\ActiveRecord
     // คำนวนเลขรับเข้า
     public function runNumber()
     {
-        $model = self::find()->select('doc_regis_number')->where(['document_group' => $this->document_group,'thai_year' => (date('Y') + 543)])->orderBy(['doc_regis_number' => SORT_DESC])->one();
+        $model = self::find()
+                ->select(['CAST(`doc_regis_number` AS UNSIGNED) AS doc_regis_number'])
+                ->where([
+                    'document_group' =>  $this->document_group,
+                    'thai_year' => date('Y') + 543,
+                ])
+                ->orderBy(['CAST(`doc_regis_number` AS UNSIGNED)' => SORT_DESC])
+                ->limit(1)
+                ->one();
         if ($model) {
             return $model->doc_regis_number + 1;
         } else {
@@ -166,7 +174,7 @@ class Documents extends \yii\db\ActiveRecord
 
     public function sendMessage()
     {
-        $models = DocumentsDetail::find()->where(['name' => 'employee', 'document_id' => $this->id])->all();
+        $models = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $this->id])->all();
         foreach($models as $model){
    
             // try {
@@ -339,6 +347,7 @@ class Documents extends \yii\db\ActiveRecord
                 $check = DocumentsDetail::find()->where(['name' => 'department', 'document_id' => $this->id, 'to_id' => $value])->one();
                 $new = $check ? $check : new DocumentsDetail();
                 $new->name = 'department';
+              
                 $new->document_id = $this->id;
                 $new->to_id = $value;
                 $new->save(false);
@@ -349,30 +358,33 @@ class Documents extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
         }
 
-        try {
-            $dicrector = 0;
-            $clearDEmployeeTag = DocumentsDetail::deleteAll([
-                'and',
-                ['not in', 'to_id', $this->tags_employee],
-                ['document_id' => $this->id, 'name' => 'employee']
-            ]);
+        // try {
+        //     $dicrector = 0;
+        //     $clearDEmployeeTag = DocumentsDetail::deleteAll([
+        //         'and',
+        //         ['not in', 'to_id', $this->tags_employee],
+        //         ['document_id' => $this->id, 'name' => 'comment']
+        //     ]);
 
-            foreach ($this->tags_employee as $key => $value):
-                $check = DocumentsDetail::find()->where(['name' => 'employee', 'document_id' => $this->id, 'to_id' => $value])->one();
-                $new = $check ? $check : new DocumentsDetail();
-                $new->name = 'employee';
-                $new->document_id = $this->id;
-                $new->to_id = $value;
-                $new->save(false);
-            endforeach;
-        } catch (\Throwable $th) {
-        }
+        //     foreach ($this->tags_employee as $key => $value):
+        //         $check = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $this->id, 'to_id' => $value])->one();
+        //         $new = $check ? $check : new DocumentsDetail();
+        //         $new->name = 'comment';
+        //         $new->data_json = ['comment' => $this->data_json['comment']];
+        //         $new->document_id = $this->id;
+        //         $new->to_id = $value;
+        //         $new->save(false);
+        //     endforeach;
+        // } catch (\Throwable $th) {
+        // }
     }
 
     // รายการแสดงความเห็น
     public function listComment()
     {
-        return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'comment'])->all();
+        return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'comment'])->orderBy([
+            'id' => SORT_DESC,
+        ])->all();
     }
 
     // การติดตาม
@@ -433,6 +445,7 @@ class Documents extends \yii\db\ActiveRecord
         }
     }
 
+
     // แสดงข้อมูลผู้รับเข้า
     public function viewCreate()
     {
@@ -473,6 +486,8 @@ class Documents extends \yii\db\ActiveRecord
     {
         return self::find()->where(['thai_year' => $this->thai_year, 'document_group' => $group])->count();
     }
+
+        
 
     // รายงานแยกตามเดือน
     public function getChartSummary($name)

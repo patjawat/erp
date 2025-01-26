@@ -16,15 +16,30 @@ $this->title = $model->topic;
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
+
+<div class="d-flex align-items-center gap-2">
+    <div>
+        <i class="bi bi-journal-text fs-2"></i>
+    </div>
+    <div>
+        <p class="mb-0">
+            <?= $this->title; ?>
+        </p>
+        <span class="fs-13">เลขรับ</span> : <span class="fs-13"><?php echo $model->doc_regis_number?></span>
+    </div>
+
+</div>
+
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
+
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('menu') ?>
+
 <?php $this->endBlock(); ?>
-<?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
+<?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 <!-- Tab panes -->
 <div class="row">
     <div class="col-8">
@@ -34,33 +49,36 @@ $this->title = $model->topic;
     <div class="col-4 py-2">
         <div class="card">
             <div class="card-body">
+                <!-- Nav pills -->
+                <div class="d-flex justify-content-between">
+                    <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/me/documents'],['class' => 'btn btn-secondary me-2'])?>
+                    <ul class="nav nav-pills" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
+                        </li>
+                    </ul>
+                </div>
 
-        <!-- Nav pills -->
-        <ul class="nav nav-pills" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
-            </li>
-        </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div id="home" class="container tab-pane active pb-4"><br>
+                        <div class="viewFormComment"></div>
+                        <div class="listComment"></div>
 
-        <!-- Tab panes -->
-        <div class="tab-content">
-            <div id="home" class="container tab-pane active pb-4"><br>
-                <div class="listComment"></div>
-                <div class="viewFormComment"></div>
+                    </div>
+                    <div id="menu1" class="container tab-pane fade"><br>
+                        <?php echo $this->render('@app/modules/dms/views/documents/history',['model' => $model])?>
+                    </div>
+                </div>
+
             </div>
-            <div id="menu1" class="container tab-pane fade"><br>
-                <?php echo $this->render('@app/modules/dms/views/documents/history',['model' => $model])?>
-            </div>
+
         </div>
-
     </div>
 
-    </div>
-        </div>
-        
 
 
     <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
@@ -74,8 +92,11 @@ $this->title = $model->topic;
 
 
 <?php
-$getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
-$listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
+// $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
+// $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
+
+$getCommentUrl = Url::to(['/me/documents/comment','id' => $model->id]);
+$listCommentUrl = Url::to(['/me/documents/list-comment','id' => $model->id]);
 $js = <<< JS
     getComment();
     listComment()
@@ -161,4 +182,4 @@ $js = <<< JS
 JS;
 $this->registerJS($js);
 ?>
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>

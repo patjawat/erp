@@ -52,9 +52,7 @@ use app\components\UserHelper;
 
             <?=$this->render('app_service')?>
             <?=$this->render('app_manage')?>
-
-
-
+            
             <div class="d-none d-lg-inline-flex">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
