@@ -187,14 +187,14 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     {
         $models = self::find()->where(['name' => 'comment', 'document_id' => $this->document_id])->all();
         foreach($models as $model){
-            // try {
+            try {
                 $line_id = $model->employee->user->line_id;
                 $topic = $this->comment;
                 // ส่ง msg ให้ Approve
                 LineNotify::sendDocument($model,$line_id);
-            // } catch (\Throwable $th) {
+            } catch (\Throwable $th) {
                 
-            // }
+            }
         }
     }
     

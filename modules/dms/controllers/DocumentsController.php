@@ -319,7 +319,7 @@ class DocumentsController extends Controller
             if ($model->save()) {
                 $model->UpdateDocumentsDetail();
                 $model->sendMessage();
-                // return $this->redirect(['view', 'id' => $model->document_id]);
+                return $this->redirect(['view', 'id' => $model->document_id]);
                 // return [
                 //     'status' => 'success',
                 //     'data' => $model,
