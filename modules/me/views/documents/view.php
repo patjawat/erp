@@ -9,177 +9,246 @@ use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
-
-$this->title = $model->topic;
+$this->title = $model->document->topic;
 \yii\web\YiiAsset::register($this);
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
 
-<div class="d-flex align-items-center gap-2">
-    <div>
-        <i class="bi bi-journal-text fs-2"></i>
+<div class="container-fluid">
+    <div class=" d-flex flex-column" style="max-width:1000px">
+        <div>
+            <p class="text-truncate fw-semibold fs-5 mb-0">
+                <?php if ($model->document->doc_speed == 'ด่วนที่สุด'): ?>
+                <span class="badge text-bg-danger fs-13">
+                    <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                </span>
+                <?php endif; ?>
+
+                <?php if ($model->document->secret == 'ลับที่สุด'): ?>
+                <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                    ลับที่สุด
+                </span>
+                <?php endif; ?>
+                <?php echo $model->document->topic ?>
+            </p>
+            <span class="fs-6">เลขรับ</span> : <span
+                class="fw-medium"><?php echo $model->document->doc_regis_number ?></span>
+
+            <span class="fs-6">เลขหนังสือ</span> : <span
+                class="fs-6 fw-medium"><?php echo $model->document->doc_number ?></span>
+            <span class="fs-6">จากหน่วยงาน</span> : <span class="text-primary fw-normal fs-13">
+                <i class="fa-solid fa-inbox"></i>
+                <?php echo $model->documentOrg->title ?? '-'; ?>
+                <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                    <i class="fa-regular fa-eye"></i> <?php echo $model->document->viewCount() ?>
+                </span>
+            </span>
+
+        </div>
+
     </div>
-    <div>
-        <p class="mb-0">
-            <?= $this->title; ?>
-        </p>
-        <span class="fs-13">เลขรับ</span> : <span class="fs-13"><?php echo $model->doc_regis_number?></span>
-    </div>
 
-</div>
+    <?php $this->endBlock(); ?>
+    <?php $this->beginBlock('page-action'); ?>
+    <?php echo $this->render('menu') ?>
+    <?php $this->endBlock(); ?>
 
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+    <div class="row">
+        <div class="col-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-end">
 
-<?php $this->endBlock(); ?>
+                        <div class="dropdown float-end">
+                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis"></i>
+                                <div class="dropdown-menu dropdown-menu-right" style="width:300px;">
+                                    <?php if($model->bookmark == 'N'):?>
+                                    <a class="dropdown-item  d-flex align-items-start bookmark bookmark-n" data-title="บันทึกหนังสือสำเร็จ"
+                                        href="<?php echo Url::to(['/me/documents/bookmark','id' => $model->id])?>">
+                                        <i class="fa-solid fa-bookmark fa-solid fa-bookmark me-2 mt-1 fs-5"></i>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-semibold">บันทึกหนังสือ</span>
+                                            <p class="fw-light"> เพิ่มหนังสือนี้ลงในรายการที่บันทึกไว้ของคุณ</p>
+                                        </div>
+                                    </a>
+                                    <?php endif?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('menu') ?>
+                                    <?php if($model->bookmark == 'Y'):?>
+                                    <a class="dropdown-item  d-flex align-items-start bookmark bookmark-y" data-title="ลบออกจากที่บันทึกหนังสือสำเร็จ"
+                                        href="<?php echo Url::to(['/me/documents/bookmark','id' => $model->id])?>">
+                                        <i class="fa-regular fa-circle-xmark me-2 mt-1 fs-5 text-danger"></i>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-semibold">ลบบันทึกหนังสือนี้</span>
+                                            <p class="fw-light"> หนังสือเรื่องนี้จะถูกลบออกจากที่บันทึกไว้</p>
+                                        </div>
+                                    </a>
+                                    <?php endif?>
 
-<?php $this->endBlock(); ?>
-<?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
-<!-- Tab panes -->
-<div class="row">
-    <div class="col-8">
-        <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
-            frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
-    </div>
-    <div class="col-4 py-2">
-        <div class="card">
-            <div class="card-body">
-                <!-- Nav pills -->
-                <div class="d-flex justify-content-between">
-                    <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/me/documents'],['class' => 'btn btn-secondary me-2'])?>
-                    <ul class="nav nav-pills" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Tab panes -->
-                <div class="tab-content">
-                    <div id="home" class="container tab-pane active pb-4"><br>
-                        <div class="viewFormComment"></div>
-                        <div class="listComment"></div>
+                                </div>
+                        </div>
 
                     </div>
-                    <div id="menu1" class="container tab-pane fade"><br>
-                        <?php echo $this->render('@app/modules/dms/views/documents/history',['model' => $model])?>
-                    </div>
-                </div>
+                    <iframe id="myIframe"
+                        src="<?= Url::to(['/dms/documents/show', 'ref' => $model->document->ref]); ?>&embedded=true"
+                        frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
 
+                </div>
             </div>
 
         </div>
+        <div class="col-4 py-2">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Nav pills -->
+                    <div class="d-flex justify-content-between">
+                        <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['/me/documents'], ['class' => 'btn btn-secondary me-2']) ?>
+                        <ul class="nav nav-pills" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content mt-3">
+                        <div id="home" class="container tab-pane active pb-4">
+                            <div class="viewFormComment"></div>
+                            <div class="listComment"></div>
+                        </div>
+                        <div id="menu1" class="container tab-pane fade"><br>
+                            <?php // echo $this->render('history',['model' => $model]) ?>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <?php // echo $this->render('_form_comment',['model'=> $modelComment]); ?>
+
+
+        <?php // echo $this->render('track',['model' => $model]) ?>
+
     </div>
 
 
 
-    <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
 
-
-    <?php // echo $this->render('track',['model' => $model])?>
-
-</div>
-</div>
-
-
-
-<?php
+    <?php
 // $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
 // $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
 
-$getCommentUrl = Url::to(['/me/documents/comment','id' => $model->id]);
-$listCommentUrl = Url::to(['/me/documents/list-comment','id' => $model->id]);
-$js = <<< JS
-    getComment();
-    listComment()
+$getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
+$listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
+$js = <<<JS
+        getComment();
+        listComment()
 
-    const iframe = document.getElementById("myIframe");
-      // ดึงค่าความสูงของหน้าจอ
-      const screenHeight = window.innerHeight;
-        iframe.style.height = screenHeight - 100 + "px";
+        const iframe = document.getElementById("myIframe");
+          // ดึงค่าความสูงของหน้าจอ
+          const screenHeight = window.innerHeight;
+            iframe.style.height = screenHeight - 100 + "px";
 
 
-    // iframe.onload = () => {
-    // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    // if (iframeDocument) {
-    //     iframeDocument.body.style.zoom = "150%";
-    // }
-    // };
+        // iframe.onload = () => {
+        // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+        // if (iframeDocument) {
+        //     iframeDocument.body.style.zoom = "150%";
+        // }
+        // };
 
-    async function getComment()
-    {
-        await $.ajax({
-            type: "get",
-            url: "$getCommentUrl",
-            dataType: "json",
-            success: async function (res) {
-                $('.viewFormComment').html(res.content)
-            }
-        });
-    }
-
-    async function listComment()
-    {
-     
-        await $.ajax({
-            type: "get",
-            url: "$listCommentUrl",
-            dataType: "json",
-            success: async function (res) {
-                $('.listComment').html(res.content)
-            }
-        });
-    }
-    
-    $("body").on("click", ".update-comment", function (e) {
-        e.preventDefault();
-        console.log('update commetn');
-         $.ajax({
-            type: "get",
-            url: $(this).attr('href'),
-            dataType: "json",
-            success: async function (res) {
-                $('.viewFormComment').html(res.content)       
-            }
-        });
-    });
-
-    $("body").on("click", ".delete-comment", function (e) {
-        e.preventDefault();
-        Swal.fire({
-        title: 'ยืนยัน',
-        text: 'ต้องการลบหรือไม่',
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "ใช่, ยืนยัน!",
-        cancelButtonText: "ยกเลิก",
-    }).then(async (result) => {
-        if(result.value == true)
-            $.ajax({
-                type: "post",
-                url: $(this).attr('href'),
+        async function getComment()
+        {
+            await \$.ajax({
+                type: "get",
+                url: "$getCommentUrl",
                 dataType: "json",
                 success: async function (res) {
-                    if(res.status == 'success'){
-                        listComment()    
-                        }else{
-                            warning()
+                    \$('.viewFormComment').html(res.content)
+                }
+            });
+        }
+
+        async function listComment()
+        {
+         
+            await \$.ajax({
+                type: "get",
+                url: "$listCommentUrl",
+                dataType: "json",
+                success: async function (res) {
+                    \$('.listComment').html(res.content)
+                }
+            });
+        }
+        
+
+                
+        \$("body").on("click", ".bookmark", function (e) {
+            e.preventDefault();
+            var title = $(this).data('title')
+            console.log('update commetn');
+             \$.ajax({
+                type: "get",
+                url: \$(this).attr('href'),
+                dataType: "json",
+                success: async function (res) { 
+                    console.log(res.data);
+                    success(title)  
+                    location.reload();
+                }
+            });
+        });
+        
+        \$("body").on("click", ".update-comment", function (e) {
+            e.preventDefault();
+            console.log('update commetn');
+             \$.ajax({
+                type: "get",
+                url: \$(this).attr('href'),
+                dataType: "json",
+                success: async function (res) {
+                    \$('.viewFormComment').html(res.content)       
+                }
+            });
+        });
+
+        \$("body").on("click", ".delete-comment", function (e) {
+            e.preventDefault();
+            Swal.fire({
+            title: 'ยืนยัน',
+            text: 'ต้องการลบหรือไม่',
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "ใช่, ยืนยัน!",
+            cancelButtonText: "ยกเลิก",
+        }).then(async (result) => {
+            if(result.value == true)
+                \$.ajax({
+                    type: "post",
+                    url: \$(this).attr('href'),
+                    dataType: "json",
+                    success: async function (res) {
+                        if(res.status == 'success'){
+                            listComment()    
+                            }else{
+                                warning()
+                            }
                         }
-                    }
-                });
-            }); 
-    });
-JS;
+                    });
+                }); 
+        });
+    JS;
 $this->registerJS($js);
 ?>
-<?php // Pjax::end(); ?>
+    <?php // Pjax::end(); ?>

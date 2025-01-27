@@ -82,7 +82,8 @@ class DocumentsController extends Controller
      */
     public function actionView($id)
     {
-        $this->layout = '@app/views/layouts/document';
+        // $this->layout = '@app/views/layouts/document';
+        $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
         $model = $this->findModel($id);
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

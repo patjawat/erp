@@ -406,5 +406,7 @@ class UpdateTableController extends Controller
                             WHERE lt.name = 'leave_type' AND l.thai_year IS NOT NULL
                             GROUP BY l.thai_year;")->execute();
         echo "Create leave_summary_year\n";
+
+        
     }
 }

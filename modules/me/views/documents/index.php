@@ -33,8 +33,6 @@ $this->title = 'ทะเบียนหนังสือ';
         <div class="d-flex justify-content-between align-top align-items-center">
             <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
 
-          
-
         </div>
         <?php endif;?>
 
@@ -42,10 +40,13 @@ $this->title = 'ทะเบียนหนังสือ';
         <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" data-bs-toggle="tab" href="#home"><span class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderEmployee->getTotalCount()?></span> ถึงฉัน</a>
+      <a class="nav-link active" data-bs-toggle="tab" href="#home"><span class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderEmployee->getTotalCount()?></span> ถึง<?=UserHelper::GetEmployee()->fullname?></a>
     </li>
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span class="badge rounded-pill text-bg-danger"><?php echo $dataProviderDepartment->getTotalCount()?></span> ถึงหน่วยงาน</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="tab" href="#bookmark"><span class="badge rounded-pill text-bg-danger"><?php echo $dataProviderBookmark->getTotalCount()?></span> บันทึก</a>
     </li>
 
   </ul>
@@ -69,6 +70,15 @@ echo $this->render('list_document',[
         ?>
     </div>
 
+    <div id="bookmark" class="tab-pane fade"><br>
+    <?php 
+    echo $this->render('list_document',[
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProviderBookmark,
+        ])
+        ?>
+    </div>
+    
   </div>
   
 

@@ -23,6 +23,7 @@ class m241216_103744_create_documents_detail_table extends Migration
             'from_id' => $this->string(255)->comment('จากบุคลากรหรือหน่วยงาน ระบุเป็นเลข id ของบุคลากรหรือหน่วยงาน'),
             'from_name' => $this->string()->comment('จากบุคลากรหรือหน่วยงาน ระบุเป็นชื่อของบุคลากรหรือหน่วยงาน'),
             'from_type' => $this->string()->comment('จากบุคลากรหรือหน่วยงาน ระบุเป็นประเภทของบุคลากรหรือหน่วยงาน'),
+            'bookmark' =>  $this->string(1)->defaultValue('N')->notNull()->comment('Y/N flag'),
             'data_json' => $this->json(),
             'tags_department' => $this->json(),
             'tags_employee' => $this->json(),

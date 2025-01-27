@@ -48,6 +48,15 @@ class DocumentsController extends \yii\web\Controller
             // 'thai_year' => SORT_DESC,
         ]]);
 
+
+        $dataProviderBookmark = $searchModel->search($this->request->queryParams);
+        $dataProviderBookmark->query->joinWith('document');
+       
+        $dataProviderBookmark->query->andFilterWhere(['to_id' => $emp->id]);
+        $dataProviderBookmark->query->andFilterWhere(['bookmark' => 'Y']);
+
+        
+
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -57,14 +66,16 @@ class DocumentsController extends \yii\web\Controller
                     'list' => true,
                     'searchModel' => $searchModel,
                     'dataProviderDepartment' => $dataProviderDepartment,
-                    'dataProviderEmployee' => $dataProviderEmployee
+                    'dataProviderEmployee' => $dataProviderEmployee,
+                    'dataProviderBookmark' => $dataProviderBookmark
                 ])
             ];
         } else {
             return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProviderDepartment' => $dataProviderDepartment,
-                'dataProviderEmployee' => $dataProviderEmployee
+                'dataProviderEmployee' => $dataProviderEmployee,
+                'dataProviderBookmark' => $dataProviderBookmark
             ]);
         }
     }
@@ -72,24 +83,30 @@ class DocumentsController extends \yii\web\Controller
     public function actionView($id)
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
+        $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
         $emp = UserHelper::GetEmployee();
-        $docDetail = DocumentsDetail::findOne($id);
+        $model = DocumentsDetail::findOne($id);
+        
+        if($model->doc_read == null){
+             $model->doc_read = date('Y-m-d H:i:s');
+            $model->save(false);
+        }
         // $docDetail->doc_read = date('Y-m-d H:i:s');
         // $docDetail->save(false);
 
-        $view_count[] = [
-            'date_time' => date('Y-m-d H:i:s'),
-            'emp_id' => $emp->id,
-            'fullname' => $emp->fullname,
-            'department' => $emp->departmentName(),
-        ];
+        // $view_count[] = [
+        //     'date_time' => date('Y-m-d H:i:s'),
+        //     'emp_id' => $emp->id,
+        //     'fullname' => $emp->fullname,
+        //     'department' => $emp->departmentName(),
+        // ];
         
-        $model = $this->findModel($docDetail->document_id);
-        if ($model->view_json === null) {
-            $model->view_json = [];
-        }
-        $model->view_json = ArrayHelper::merge($view_count, $model->view_json);
-        $model->save(false);
+        // $model = $this->findModel($docDetail->document_id);
+        // if ($model->view_json === null) {
+        //     $model->view_json = [];
+        // }
+        // $model->view_json = ArrayHelper::merge($view_count, $model->view_json);
+        // $model->save(false);
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -107,6 +124,20 @@ class DocumentsController extends \yii\web\Controller
         }
     }
 
+    public function actionBookmark($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = DocumentsDetail::findOne($id);
+        $model->bookmark = ($model->bookmark == 'Y') ? 'N' : 'Y';
+        if($model->save(false)){
+               return [
+                    'status' => 'success',
+                    'data' => $model,
+                ];
+        }
+        ;
+        
+    }
 
     // แสดง File และแสดงความเห็น
     public function actionComment($id)

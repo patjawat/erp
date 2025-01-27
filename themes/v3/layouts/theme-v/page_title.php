@@ -3,6 +3,29 @@ use yii\bootstrap5\Breadcrumbs;
 // $this->title = 'ทะเบียนประวัติ';
 // $this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php if(isset($size)):?>
+    
+    <div class="page-title-box">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-sm-12 col-xl-12">
+                <div class="page-title">
+                    <h5 class="mb-1 text-white">
+                        <?=isset($this->blocks['page-title']) ? $this->blocks['page-title'] : 'ERP';?> </h5>
+                        <ol class="breadcrumb mb-3 mb-md-0">
+                        <?php if(isset($this->blocks['sub-title'])):?>
+                        <li class="breadcrumb-item mx-4 active"><?=$this->blocks['sub-title']?></li>
+                        <?php endif;?>
+                    </ol>
+                </div>
+            </div>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php else:?>
 <div class="page-title-box">
     <div class="container-fluid">
         <div class="row align-items-center">
@@ -37,3 +60,4 @@ use yii\bootstrap5\Breadcrumbs;
         </div>
     </div>
 </div>
+<?php endif;?>
