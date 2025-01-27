@@ -26,6 +26,7 @@ $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_regi
 
 $js = <<< JS
 
+
       async function checkProfile(){
           const {userId} = await liff.getProfile()
           await $.ajax({
@@ -62,6 +63,21 @@ $js = <<< JS
             liff.login();
           }
         }, err => console.error(err.code, err.message));
+
+        $("body").on("click", ".logout", function (e) {
+            e.preventDefault();
+            $.ajax({
+              type: "get",
+              url: $(this).attr('href'),
+              data: "data",
+              dataType: "json",
+              success: function (response) {
+                // location.replace($liffProfile);
+                
+              }
+            });
+            
+          });
 
 JS;
 $this->registerJs($js,View::POS_END);

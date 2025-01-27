@@ -80,5 +80,5 @@ use app\modules\hr\models\EmployeeDetail;
 <?php endif;?>
 
 <div class="d-flex justify-content-center">
-  <?php echo Html::a('<i class="fa-solid fa-power-off"></i> ออกจากระบบ',['/line/default/logout'],['class' => 'btn btn-danger rounded-pill shadow'])?>
+  <?php echo Html::a('<i class="fa-solid fa-power-off"></i> ออกจากระบบ',['/line/default/logout'],['class' => 'btn btn-danger rounded-pill shadow logout'])?>
 </div>

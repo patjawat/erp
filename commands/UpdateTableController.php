@@ -407,6 +407,8 @@ class UpdateTableController extends Controller
                             GROUP BY l.thai_year;")->execute();
         echo "Create leave_summary_year\n";
 
+        // ALTER TABLE `documents_detail` ADD `bookmark` VARCHAR(1) NOT NULL DEFAULT 'N' AFTER `from_type`;
+
         
     }
 }

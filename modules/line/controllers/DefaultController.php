@@ -3,10 +3,10 @@
 namespace app\modules\line\controllers;
 
 
-use app\modules\hr\models\EmployeesSearch;
-use yii\web\Controller;
-use yii\web\Response;
 use Yii;
+use yii\web\Response;
+use yii\web\Controller;
+use app\modules\hr\models\EmployeesSearch;
 
 /**
  * Default controller for the `line` module
@@ -17,7 +17,20 @@ class DefaultController extends Controller
      * Renders the index view for the module
      * @return string
      */
+
+     public function actionMenu()
+     {
+        return $this->render('menu');
+     }
   
+     public function actionLogout()
+     {
+         \Yii::$app->user->logout();
+ 
+         return true;
+     }
+
+     
      public function actionIndex()
      {
          $searchModel = new EmployeesSearch();
