@@ -35,7 +35,7 @@ class AppAsset extends AssetBundle
         'css/waves.min.css',
         'https://unpkg.com/nprogress@0.2.0/nprogress.css',
         'css/tour.min.css',
-        'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css'
+        'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css',
         // 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'
     ];
 

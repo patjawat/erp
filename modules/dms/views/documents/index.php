@@ -75,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th class="fw-semibold" style="width:1000px;">วันที่รับ</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
-                            <th class="fw-semibold" style="width:150px;">ส่งต่อ</th>
+                            <!-- <th class="fw-semibold" style="width:150px;">ส่งต่อ</th> -->
                         </tr>
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
@@ -162,9 +162,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             </td>
                             <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
                             </td>
-                            <td>
-                                <?php echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
-                            </td>
+                            <!-- <td> -->
+                                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
+                            <!-- </td> -->
                         </tr>
                         <?php endforeach;?>
 

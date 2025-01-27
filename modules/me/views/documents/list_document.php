@@ -15,7 +15,6 @@ use app\modules\dms\models\Documents;
                     <th class="fw-semibold" style="width:150px;">ลงความเห็น</th>
                     <th class="fw-semibold text-center" style="width:150px;">ไฟล์แนบ</th>
                     <th class="fw-semibold" style="width:300px;">วันที่รับ</th>
-                    <th class="fw-semibold text-center" style="width:200px;">สถานะ</th>
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
@@ -54,6 +53,7 @@ use app\modules\dms\models\Documents;
                                     <i class="fa-regular fa-eye"></i> <?php echo $item->document->viewCount()?>
                                 </span>
                             </span>
+                            <?php echo Html::a(($item->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning"></i>' : '<i class="fa-regular fa-star"></i>'),['/me/documents/bookmark', 'id' => $item->id],['class' => 'bookmark','id' => 'bookmark-'.$item->id])?>
                         </a>
                     </td>
                     <td>
@@ -72,15 +72,7 @@ use app\modules\dms\models\Documents;
                             <span class="fw-lighter fs-13"><?php echo isset($item->document->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->document->doc_time : ''?></span> -->
                         </div>
                     </td>
-                    <td class="text-center">
-                        <?php 
-                    try {
-                        echo $item->documentStatus->title;
-                    } catch (\Throwable $th) {
-                        //throw $th;
-                    }
-                    ?>
-                    </td>
+                   
 
                 </tr>
                 <?php //endif;?>
@@ -88,3 +80,41 @@ use app\modules\dms\models\Documents;
 
             </tbody>
         </table>
+
+
+    <?php
+    // $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
+    // $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
+
+
+    $js = <<<JS
+            \$("body").on("click", ".bookmark", function (e) {
+                e.preventDefault();
+                var bookmark = $(this).attr('id');
+                const starIconSolid = $(this).find('i.fa-regular.fa-star');
+                const starIconRegular = $(this).find('i.fa-solid.fa-star');
+                
+                \$.ajax({
+                    type: "get",
+                    url: \$(this).attr('href'),
+                    dataType: "json",
+                    success: async function (res) { 
+                        console.log(res.data);
+                        if(res.data.bookmark == 'Y'){
+                            // $(this).html('<i class="fa-solid fa-star text-warning fs-2"></i>')
+                            starIconSolid.attr('class', 'fa-solid fa-star text-warning');
+                            success('ติดดาว')  
+                        }
+                        
+                        if(res.data.bookmark == 'N'){
+                            // $(this).html('<i class="fa-regular fa-star fs-2"></i>')
+                            starIconRegular.attr('class', 'fa-regular fa-star');
+                            success('ยกเลิกติดดาว')  
+                        }
+                        // location.reload();
+                    }
+                });
+            });
+        JS;
+    $this->registerJS($js);
+    ?>

@@ -58,38 +58,8 @@ $this->title = $model->document->topic;
         <div class="col-8">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-end">
-
-                        <div class="dropdown float-end">
-                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa-solid fa-ellipsis"></i>
-                                <div class="dropdown-menu dropdown-menu-right" style="width:300px;">
-                                    <?php if($model->bookmark == 'N'):?>
-                                    <a class="dropdown-item  d-flex align-items-start bookmark bookmark-n" data-title="บันทึกหนังสือสำเร็จ"
-                                        href="<?php echo Url::to(['/me/documents/bookmark','id' => $model->id])?>">
-                                        <i class="fa-solid fa-bookmark fa-solid fa-bookmark me-2 mt-1 fs-5"></i>
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-semibold">บันทึกหนังสือ</span>
-                                            <p class="fw-light"> เพิ่มหนังสือนี้ลงในรายการที่บันทึกไว้ของคุณ</p>
-                                        </div>
-                                    </a>
-                                    <?php endif?>
-
-                                    <?php if($model->bookmark == 'Y'):?>
-                                    <a class="dropdown-item  d-flex align-items-start bookmark bookmark-y" data-title="ลบออกจากที่บันทึกหนังสือสำเร็จ"
-                                        href="<?php echo Url::to(['/me/documents/bookmark','id' => $model->id])?>">
-                                        <i class="fa-regular fa-circle-xmark me-2 mt-1 fs-5 text-danger"></i>
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-semibold">ลบบันทึกหนังสือนี้</span>
-                                            <p class="fw-light"> หนังสือเรื่องนี้จะถูกลบออกจากที่บันทึกไว้</p>
-                                        </div>
-                                    </a>
-                                    <?php endif?>
-
-                                </div>
-                        </div>
-
+                    <div class="d-flex justify-content-end mb-2">
+                    <?php echo Html::a(($model->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
                     </div>
                     <iframe id="myIframe"
                         src="<?= Url::to(['/dms/documents/show', 'ref' => $model->document->ref]); ?>&embedded=true"
@@ -123,7 +93,7 @@ $this->title = $model->document->topic;
                             <div class="listComment"></div>
                         </div>
                         <div id="menu1" class="container tab-pane fade"><br>
-                            <?php // echo $this->render('history',['model' => $model]) ?>
+                            <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model->document]) ?>
                         </div>
                     </div>
 
@@ -143,112 +113,120 @@ $this->title = $model->document->topic;
 
 
     <?php
-// $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
-// $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
+    // $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
+    // $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
 
-$getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
-$listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
-$js = <<<JS
-        getComment();
-        listComment()
+    $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
+    $listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
+    $js = <<<JS
+            getComment();
+            listComment()
 
-        const iframe = document.getElementById("myIframe");
-          // ดึงค่าความสูงของหน้าจอ
-          const screenHeight = window.innerHeight;
-            iframe.style.height = screenHeight - 100 + "px";
+            const iframe = document.getElementById("myIframe");
+              // ดึงค่าความสูงของหน้าจอ
+              const screenHeight = window.innerHeight;
+                iframe.style.height = screenHeight - 100 + "px";
 
 
-        // iframe.onload = () => {
-        // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-        // if (iframeDocument) {
-        //     iframeDocument.body.style.zoom = "150%";
-        // }
-        // };
+            // iframe.onload = () => {
+            // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+            // if (iframeDocument) {
+            //     iframeDocument.body.style.zoom = "150%";
+            // }
+            // };
 
-        async function getComment()
-        {
-            await \$.ajax({
-                type: "get",
-                url: "$getCommentUrl",
-                dataType: "json",
-                success: async function (res) {
-                    \$('.viewFormComment').html(res.content)
-                }
+            async function getComment()
+            {
+                await \$.ajax({
+                    type: "get",
+                    url: "$getCommentUrl",
+                    dataType: "json",
+                    success: async function (res) {
+                        \$('.viewFormComment').html(res.content)
+                    }
+                });
+            }
+
+            async function listComment()
+            {
+             
+                await \$.ajax({
+                    type: "get",
+                    url: "$listCommentUrl",
+                    dataType: "json",
+                    success: async function (res) {
+                        \$('.listComment').html(res.content)
+                    }
+                });
+            }
+            
+
+                    
+            \$("body").on("click", ".bookmark", function (e) {
+                e.preventDefault();
+                var title = \$(this).data('title')
+                console.log('update commetn');
+                 \$.ajax({
+                    type: "get",
+                    url: \$(this).attr('href'),
+                    dataType: "json",
+                    success: async function (res) { 
+                        console.log(res.data);
+                        if(res.data.bookmark == 'Y'){
+                            $('.bookmark').html('<i class="fa-solid fa-star text-warning fs-2"></i>')
+                            success('ติดดาว')  
+                        }
+                        
+                        if(res.data.bookmark == 'N'){
+                            $('.bookmark').html('<i class="fa-regular fa-star fs-2"></i>')
+                            success('ยกเลิกติดดาว')  
+                        }
+                        // location.reload();
+                    }
+                });
             });
-        }
-
-        async function listComment()
-        {
-         
-            await \$.ajax({
-                type: "get",
-                url: "$listCommentUrl",
-                dataType: "json",
-                success: async function (res) {
-                    \$('.listComment').html(res.content)
-                }
-            });
-        }
-        
-
-                
-        \$("body").on("click", ".bookmark", function (e) {
-            e.preventDefault();
-            var title = $(this).data('title')
-            console.log('update commetn');
-             \$.ajax({
-                type: "get",
-                url: \$(this).attr('href'),
-                dataType: "json",
-                success: async function (res) { 
-                    console.log(res.data);
-                    success(title)  
-                    location.reload();
-                }
-            });
-        });
-        
-        \$("body").on("click", ".update-comment", function (e) {
-            e.preventDefault();
-            console.log('update commetn');
-             \$.ajax({
-                type: "get",
-                url: \$(this).attr('href'),
-                dataType: "json",
-                success: async function (res) {
-                    \$('.viewFormComment').html(res.content)       
-                }
-            });
-        });
-
-        \$("body").on("click", ".delete-comment", function (e) {
-            e.preventDefault();
-            Swal.fire({
-            title: 'ยืนยัน',
-            text: 'ต้องการลบหรือไม่',
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "ใช่, ยืนยัน!",
-            cancelButtonText: "ยกเลิก",
-        }).then(async (result) => {
-            if(result.value == true)
-                \$.ajax({
-                    type: "post",
+            
+            \$("body").on("click", ".update-comment", function (e) {
+                e.preventDefault();
+                console.log('update commetn');
+                 \$.ajax({
+                    type: "get",
                     url: \$(this).attr('href'),
                     dataType: "json",
                     success: async function (res) {
-                        if(res.status == 'success'){
-                            listComment()    
-                            }else{
-                                warning()
+                        \$('.viewFormComment').html(res.content)       
+                    }
+                });
+            });
+
+            \$("body").on("click", ".delete-comment", function (e) {
+                e.preventDefault();
+                Swal.fire({
+                title: 'ยืนยัน',
+                text: 'ต้องการลบหรือไม่',
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "ใช่, ยืนยัน!",
+                cancelButtonText: "ยกเลิก",
+            }).then(async (result) => {
+                if(result.value == true)
+                    \$.ajax({
+                        type: "post",
+                        url: \$(this).attr('href'),
+                        dataType: "json",
+                        success: async function (res) {
+                            if(res.status == 'success'){
+                                listComment()    
+                                }else{
+                                    warning()
+                                }
                             }
-                        }
-                    });
-                }); 
-        });
-    JS;
-$this->registerJS($js);
-?>
+                        });
+                    }); 
+            });
+        JS;
+    $this->registerJS($js);
+    ?>
     <?php // Pjax::end(); ?>

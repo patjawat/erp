@@ -213,6 +213,11 @@ class Documents extends \yii\db\ActiveRecord
             return 0;
         }
     }
+
+    public function viewHistory()
+    {
+        return  DocumentsDetail::find()->where(['document_id' => $this->id])->all();
+    }
     // แสดงปีงบประมานทั้งหมด
 
     public function ListThaiYear()
