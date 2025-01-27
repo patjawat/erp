@@ -22,19 +22,19 @@ $this->title = "เมนู";
 <div class="container">
 
     <div class="row row-cols-2 g-3">
-        <div class="col mt-1">
+        <!-- <div class="col mt-1">
             <a href="<?php echo Url::to(['/settings/company'])?>">
                 <div class="card border-0 shadow-sm hover-card">
                     <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
                         <i class="fa-solid fa-house-medical-flag fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">ข้อมูลองค์กร</h6>
+                        <h6 class="text-center">ลา</h6>
                     </div>
                 </div>
             </a>
-        </div>
-        <div class="col mt-1">
+        </div> -->
+        <!-- <div class="col mt-1">
             <a href="<?php echo Url::to(['/setting'])?>">
                 <div class="card border-0 shadow-sm hover-card">
                     <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
@@ -45,83 +45,8 @@ $this->title = "เมนู";
                     </div>
                 </div>
             </a>
-        </div>
-        <div class="col mt-1">
-            <a href="<?php echo Url::to(['/usermanager'])?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="fa-solid fa-user-gear fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">ผู้ใช้งาน</h6>
-                    </div>
-                </div>
-
-            </a>
-        </div>
-        <div class="col mt-1">
-            <a href="<?php echo Url::to(['/settings/line-group'])?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="fa-brands fa-line fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">LineNotify</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col mt-1">
-            <a href="<?php echo Url::to(['/settings/line-official'])?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="fa-brands fa-line fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">LineOfficial</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col mt-1">
-            <a href="<?php echo Url::to(['/settings/line-messaging'])?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="fa-brands fa-line fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">Messaging API</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col mt-1">
-            <a href="<?php echo Url::to(['/hr/categorise','title'=>'การตั้งค่าบุคลากร'])?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="fa-solid fa-clipboard-user fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center"> บุคลากร</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col mt-1">
-            <a href="<?php echo Url::to(['/am/setting'])?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="bi bi-folder-check fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center"> ทรัพย์สิน</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
+        </div> -->
+       
        
     </div>
 
