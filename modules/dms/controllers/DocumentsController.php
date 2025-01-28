@@ -141,7 +141,10 @@ class DocumentsController extends Controller
                     $model->doc_expire = '';
                 }
 
-                if (!$model->save()) {
+                if ($model->save()) {
+                    $model->UpdateDocumentTags();
+                }else{
+                    
                     return $model->getErrors();
                 }
 
@@ -206,7 +209,7 @@ class DocumentsController extends Controller
             // $model->data_json = ArrayHelper::merge($model->data_json,$tagDepartment,);
             // return $model->data_json;
             if ($model->save()) {
-                // $model->UpdateDocumentTags();
+                $model->UpdateDocumentTags();
 
                
                 return $this->redirect(['index']);

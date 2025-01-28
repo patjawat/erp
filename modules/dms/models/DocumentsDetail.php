@@ -337,5 +337,15 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         }
     }
     
+    //ปักหมุดเอกสาร
+    public function bookmark()
+    {
+
+        $emp = UserHelper::GetEmployee();
+        $model = self::find()->where(['name' => 'bookmark','document_id' => $this->document_id,'to_id' => $emp->id ])->one();
+        if($model){
+            return $model->bookmark;
+        }
+    }
 
 }

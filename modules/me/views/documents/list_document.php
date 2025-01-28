@@ -53,7 +53,7 @@ use app\modules\dms\models\Documents;
                                     <i class="fa-regular fa-eye"></i> <?php echo $item->document->viewCount()?>
                                 </span>
                             </span>
-                            <?php echo Html::a(($item->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning"></i>' : '<i class="fa-regular fa-star"></i>'),['/me/documents/bookmark', 'id' => $item->id],['class' => 'bookmark','id' => 'bookmark-'.$item->id])?>
+                            <?php  echo Html::a(($item->bookmark() == 'Y' ? '<i class="fa-solid fa-star text-warning"></i>' : '<i class="fa-regular fa-star"></i>'),['/me/documents/bookmark', 'id' => $item->id],['class' => 'bookmark','id' => 'bookmark-'.$item->id])?>
                         </a>
                     </td>
                     <td>

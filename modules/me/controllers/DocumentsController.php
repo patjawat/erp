@@ -54,6 +54,7 @@ class DocumentsController extends \yii\web\Controller
        
         $dataProviderBookmark->query->andFilterWhere(['to_id' => $emp->id]);
         $dataProviderBookmark->query->andFilterWhere(['bookmark' => 'Y']);
+        $dataProviderBookmark->query->andFilterWhere(['name' => 'bookmark']);
 
         
 
@@ -127,19 +128,35 @@ class DocumentsController extends \yii\web\Controller
         }
     }
 
+
+    //สร้าง bookmark บันทึกหนังสือ
     public function actionBookmark($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = DocumentsDetail::findOne($id);
-        $model->bookmark = ($model->bookmark == 'Y') ? 'N' : 'Y';
-        if($model->save(false)){
-               return [
-                    'status' => 'success',
-                    'data' => $model,
-                ];
+        $emp = UserHelper::GetEmployee();
+        $document = DocumentsDetail::findOne($id);
+        $bookmark = DocumentsDetail::findOne(['name' => 'bookmark','document_id' => $document->document_id,'to_id' => $emp->id ]);
+        if($bookmark){
+            $bookmark->bookmark = ($bookmark->bookmark == 'Y') ? 'N' : 'Y';
+            $bookmark->save();
+            return [
+                'action' => 'update',
+                'status' => 'success',
+                'data' => $bookmark
+            ];
+        }else{
+            $newBookmark = new DocumentsDetail;
+            $newBookmark->name = 'bookmark';
+            $newBookmark->to_id = $emp->id;
+            $newBookmark->bookmark = 'Y';
+            $newBookmark->document_id = $document->document_id;
+            $newBookmark->save(false);
+            return [
+                'action' => 'create',
+                'status' => 'success',
+                'data' => $newBookmark
+            ];
         }
-        ;
-        
     }
 
     // แสดง File และแสดงความเห็น
