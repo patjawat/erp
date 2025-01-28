@@ -61,10 +61,10 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 
 <?php if ($model->isNewRecord): ?>
     <div class="d-flex justify-content-center">
-        <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
+        <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-lg btn-primary rounded-pill shadow']) ?>
     </div>
     <?php else: ?>
-        <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-warning rounded-pill shadow']) ?>
+        <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-lg btn-warning rounded-pill shadow']) ?>
 <?php endif; ?>
 <?php ActiveForm::end(); ?>
 
