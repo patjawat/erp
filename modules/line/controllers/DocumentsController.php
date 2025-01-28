@@ -102,7 +102,10 @@ class DocumentsController extends Controller
     public function actionShow($ref)
     {
         // $model = $this->findModel($id);
-        if (!Yii::$app->user->isGuest) {
+        if (Yii::$app->user->isGuest)
+        {
+            return $this->redirect(['/line/profile']);
+        }
             $id = Yii::$app->request->get('id');
             $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
@@ -119,9 +122,7 @@ class DocumentsController extends Controller
             $this->setHttpHeaders($type);
             \Yii::$app->response->data = file_get_contents($filepath);
             return \Yii::$app->response;
-        } else {
-            return false;
-        }
+      
     }
 
     protected function setHttpHeaders($type)
