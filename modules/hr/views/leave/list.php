@@ -14,7 +14,7 @@ use yii\bootstrap5\Html;
             <th scope="col">ถึงวันที่</th>
             <th scope="col">ปีงบประมาณ</th>
             <th class="text-start" scope="col">หนวยงาน</th>
-            <th scope="col">มอบหมาย</th>
+            <!-- <th scope="col">มอบหมาย</th> -->
             <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
             <th class="text-start">ความคืบหน้า</th>
             <th class="text-start">สถานะ</th>
@@ -36,7 +36,7 @@ use yii\bootstrap5\Html;
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             
             </td>
-            <td><?php echo $model->leaveWorkSend()->getAvatar(false)?>
+            <!-- <td><?php // echo $model->leaveWorkSend()->getAvatar(false)?> -->
         
             <?php
                  // echo Html::img($model->leaveWorkSend()->SignatureShow());
