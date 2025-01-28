@@ -22,7 +22,7 @@ frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
 <?php
 use app\components\UserHelper;
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
-$liffDocument = SiteHelper::getInfo()['line_liff_document'];
+// $liffDocument = SiteHelper::getInfo()['line_liff_document'];
 $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
 
 $js = <<< JS
