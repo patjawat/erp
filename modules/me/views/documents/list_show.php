@@ -13,7 +13,7 @@ use app\modules\dms\models\Documents;
             <h6>
                 <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ
                 <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format(($dataProviderEmployee->getTotalCount()+$dataProviderDepartment->getTotalCount()), 0) ?></span>
+                    class="badge rounded-pill text-bg-primary"><?php echo number_format(($dataProviderTags->getTotalCount()+$dataProviderDepartment->getTotalCount()), 0) ?></span>
                 รายการ
             </h6>
             <?php if(isset($list)):?>
@@ -39,7 +39,7 @@ use app\modules\dms\models\Documents;
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
-                <?php foreach($dataProviderEmployee->getModels() as $item):?>
+                <?php foreach($dataProviderTags->getModels() as $item):?>
                 <tr class="">
                     <td class="fw-semibold"><?php echo $item->document->doc_regis_number?></td>
                     <td class="fw-light align-middle">
