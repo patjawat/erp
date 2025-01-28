@@ -25,6 +25,21 @@ use app\modules\filemanager\components\FileManagerHelper;  // ค่าที่
  */
 class DocumentsController extends Controller
 {
+
+    public function beforeAction($action) {
+     
+        // $visit_ = TCDSHelper::getVisit();
+        // $hn = $visit_['hn'];
+        $emp = UserHelper::GetEmployee();
+        if (!$emp) {
+            return $this->redirect(['/site/index']);
+        }
+        // if(empty($vn)){
+        //     return $this->redirect(['/nursescreen']);
+        // }
+        // return parent::beforeAction($action);
+    }
+    
     /**
      * @inheritDoc
      */
@@ -43,18 +58,7 @@ class DocumentsController extends Controller
         );
     }
 
-    public function beforeAction($action) {
-     
-        // $visit_ = TCDSHelper::getVisit();
-        // $hn = $visit_['hn'];
-        if (Yii::$app->user->isGuest) {
-            return $this->redirect(['/line/profile']);
-        }
-        // if(empty($vn)){
-        //     return $this->redirect(['/nursescreen']);
-        // }
-        // return parent::beforeAction($action);
-    }
+    
     /**
      * Lists all Documents models.
      *
@@ -149,6 +153,8 @@ class DocumentsController extends Controller
        // แสดง File และแสดงความเห็น
        public function actionComment($id)
        {
+        try {
+      
            $emp = UserHelper::GetEmployee();
            $model = new DocumentsDetail([
                'document_id' => $id,
@@ -182,6 +188,10 @@ class DocumentsController extends Controller
                    'model' => $model,
                ]);
            }
+                 //code...
+        } catch (\Throwable $th) {
+            return $this->redirect(['/line/profile']);
+        }
        }
        
     // แสดง File และแสดงความเห็น
