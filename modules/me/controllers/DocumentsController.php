@@ -110,16 +110,7 @@ class DocumentsController extends \yii\web\Controller
         // $model->view_json = ArrayHelper::merge($view_count, $model->view_json);
         // $model->save(false);
 
-        if (Yii::$app->user->isGuest) 
-        {
-            return $this->render('view', [
-                'model' => $model,
-                'detail' => $detail
-        ]);
-    }else{
-        return $this->redirect(['show', 'id' => $model->id]);
         
-        }
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
