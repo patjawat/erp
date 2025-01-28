@@ -10,22 +10,49 @@ use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;;
-
+$this->title = $model->document->topic;
 // use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php $this->endBlock(); ?>
+<div class="container-fluid text-white">
+    <div class=" d-flex flex-column" style="max-width:1000px">
+        <div class="mt--45">
+            <p class="text-truncate fw-semibold fs-5 mb-0">
+                <?php if ($model->document->doc_speed == 'ด่วนที่สุด'): ?>
+                <span class="badge text-bg-danger fs-13">
+                    <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                </span>
+                <?php endif; ?>
 
+                <?php if ($model->document->secret == 'ลับที่สุด'): ?>
+                <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                    ลับที่สุด
+                </span>
+                <?php endif; ?>
+                <?php echo $model->document->topic ?>
+            </p>
+            <span class="fs-6">เลขรับ</span> : <span
+                class="fw-medium"><?php echo $model->document->doc_regis_number ?></span>
+
+            <span class="fs-6">เลขหนังสือ</span> : <span
+                class="fs-6 fw-medium"><?php echo $model->document->doc_number ?></span>
+            <span class="fs-6">จากหน่วยงาน</span> : <span class="text-primary fw-normal fs-13">
+                <i class="fa-solid fa-inbox"></i>
+                <?php echo $modelOrg->title ?? '-'; ?>
+                <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                    <i class="fa-regular fa-eye"></i> <?php echo $model->document->viewCount() ?>
+                </span>
+            </span>
+
+        </div>
+
+    </div>
 <style>
     .form-control {
     font-size: 1.5rem;
