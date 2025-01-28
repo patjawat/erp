@@ -221,14 +221,14 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                  $model->to_id = $value;
                  $model->save(false);
 
-                //  try {
+                 try {
                     $line_id = $model->employee->user->line_id;
                     $topic = $this->comment;
                     // ส่ง msg ให้ Approve
-                    // LineNotify::sendDocument($model,$line_id);
-                // } catch (\Throwable $th) {
+                    LineNotify::sendDocument($model,$line_id);
+                } catch (\Throwable $th) {
                     
-                // }
+                }
                 
                  // if($new->employee->isDicrector())
                  // {
