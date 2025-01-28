@@ -54,8 +54,6 @@ $moduleId = Yii::$app->controller->module->id;
 
             <div class="">
                 <div class="page-content">
-                    <?php echo $this->render('page_title',['size' => true]); ?>
-                    <div class="page-content-wrapper mt--45">
                         <div  id="page-content">
                             <?php  echo $this->render('content', ['content' => $content]); ?>
                         </div>
@@ -63,8 +61,6 @@ $moduleId = Yii::$app->controller->module->id;
 							<?php echo $this->render('loader'); ?>
 
 						</div>
-                    </div>
-
                 </div>
             </div>
         </div>
