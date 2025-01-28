@@ -94,7 +94,7 @@ $js = <<<JS
                     if (res.status === 'success') {
                        // รีเซ็ตฟอร์ม
                        form[0].reset();
-                       success('ลงความเห็นสำเร็จ')
+                       success('สำเร็จ')
                        listComment()
                        getComment();
                         // Handle success, such as closing modal or reloading data

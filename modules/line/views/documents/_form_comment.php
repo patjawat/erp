@@ -53,6 +53,7 @@ $this->title = $model->document->topic;
         </div>
 
     </div>
+    <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model->document]) ?>
 <style>
     .form-control {
     font-size: 1.5rem;
@@ -103,10 +104,12 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 </div>
 
 
+<div class="listComment"></div>
 <?php
+$listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->document_id]);
 $url = Url::to(['/dms/documents/get-items']);
 $js = <<<JS
-
+    listComment()
     if(\$('#documentsdetail-data_json-comment').val() == '')
     {
     \$('.save-comment').hide()    
@@ -124,21 +127,38 @@ $js = <<<JS
     }
     });
     
-    \$('.save-comment').click(function (e) { 
-        e.preventDefault();
 
+    async function listComment()
+            {
+             
+                await \$.ajax({
+                    type: "get",
+                    url: "$listCommentUrl",
+                    dataType: "json",
+                    success: async function (res) {
+                        \$('.listComment').html(res.content)
+                    }
+                });
+            }
+            
+            
+
+    $('#form-comment').on('beforeSubmit', function (e) {
+        e.preventDefault();
         // var form = \$('#fullscreen-modal').find("#form-comment");
         var form = \$("#form-comment");
-            \$.ajax({
-                url: form.attr('action'),
-                type: 'post',
-                data: form.serialize(),
-                dataType: 'json',
-                success: function (res) {
-               
+        $('#viewFormComment').hide()  
+        \$.ajax({
+            url: form.attr('action'),
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function (res) {
+
                     if (res.status === 'success') {
                        // รีเซ็ตฟอร์ม
                        form[0].reset();
+                       success('ลงความเห็นสำเร็จ')
                        listComment()
                        getComment();
                         // Handle success, such as closing modal or reloading data

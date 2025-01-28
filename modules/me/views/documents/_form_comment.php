@@ -79,21 +79,22 @@ $js = <<<JS
     }
     });
     
-    \$('.save-comment').click(function (e) { 
+    $('#form-comment').on('beforeSubmit', function (e) {
         e.preventDefault();
-
         // var form = \$('#fullscreen-modal').find("#form-comment");
         var form = \$("#form-comment");
-            \$.ajax({
-                url: form.attr('action'),
-                type: 'post',
-                data: form.serialize(),
-                dataType: 'json',
-                success: function (res) {
-               
+        $('#viewFormComment').hide()  
+        \$.ajax({
+            url: form.attr('action'),
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function (res) {
+
                     if (res.status === 'success') {
                        // รีเซ็ตฟอร์ม
                        form[0].reset();
+                       success('ลงความเห็นสำเร็จ')
                        listComment()
                        getComment();
                         // Handle success, such as closing modal or reloading data

@@ -133,8 +133,47 @@ class DocumentsController extends Controller
         }
     }
     
+
+       // แสดง File และแสดงความเห็น
+       public function actionComment($id)
+       {
+           $emp = UserHelper::GetEmployee();
+           $model = new DocumentsDetail([
+               'document_id' => $id,
+               'to_id' => $emp->id,
+               'name' => 'comment'
+           ]);
+           
+           if ($this->request->isPost && $model->load($this->request->post())) {
+               Yii::$app->response->format = Response::FORMAT_JSON;
+   
+               if($model->save()){
+                   $model->UpdateDocumentsDetail();
+                   return[
+                       'status' => 'success'
+                   ];
+               // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
+               // return $this->redirect(['view', 'id' => $model->id]);
+               }
+           }
+           if ($this->request->isAJax) {
+               Yii::$app->response->format = Response::FORMAT_JSON;
+   
+               return [
+                   'title' =>$this->request->get('title'),
+                   'content' => $this->renderAjax('_form_comment', [
+                       'model' => $model,
+                   ])
+               ];
+           } else {
+               return $this->render('_form_comment', [
+                   'model' => $model,
+               ]);
+           }
+       }
+       
     // แสดง File และแสดงความเห็น
-    public function actionComment($id)
+    public function actionCommentxx($id)
     {
         $emp = UserHelper::GetEmployee();
         $model = new DocumentsDetail([
@@ -150,7 +189,7 @@ class DocumentsController extends Controller
 
             if($model->save()){
             // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
-            return $this->redirect(['view', 'id' => $model->id]);
+            // return $this->redirect(['view', 'id' => $model->id]);
             }
         }
         if ($this->request->isAJax) {
