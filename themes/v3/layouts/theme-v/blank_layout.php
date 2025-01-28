@@ -50,13 +50,8 @@ $moduleId = Yii::$app->controller->module->id;
     <?php echo $this->render('../modal-fullscreen'); ?>
     <main role="main">
 
-        <div class="page-wrapper">
-
-            <div class="">
-                <div class="page-content">
-                        <div  id="page-content">
                             <?php  echo $this->render('content', ['content' => $content]); ?>
-                        </div>
+
 						<div id="loader">
 							<?php echo $this->render('loader'); ?>
 
