@@ -281,7 +281,7 @@ class Leave extends \yii\db\ActiveRecord
     public function listHistory()
     {
         $emp = UserHelper::GetEmployee();
-        return self::find()->where(['emp_id' => $emp->id,'thai_year' => AppHelper::YearBudget(),])->all();
+        return self::find()->where(['emp_id' => $this->emp_id,'thai_year' => AppHelper::YearBudget(),])->all();
     }
 
     public function listLeaveType()
