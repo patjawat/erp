@@ -84,7 +84,6 @@ class DocumentsController extends Controller
         {
             return $this->render('view', [
                 'model' => $model,
-                'detail' => $detail
         ]);
     }else{
         return $this->redirect(['show', 'ref' => $model->ref]);
