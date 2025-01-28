@@ -25,8 +25,18 @@ use app\modules\dms\models\DocumentTags;;
 
 <?php $this->beginBlock('page-action'); ?>
 <?php $this->endBlock(); ?>
+
+<style>
+    .form-control {
+    font-size: 2rem;
+    }
+</style>
+<div class="card">
+    <div class="card-body">
+<h4 class="text-center"><i class="fa-regular fa-comments"></i> การลงความเห็น</h4>
 <?php $form = ActiveForm::begin([
     'id' => 'form-comment',
+    'formConfig' => ['deviceSize' => ActiveForm::SIZE_LARGE],
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/dms/documents/comment-validator']
 ]); ?>
@@ -34,6 +44,8 @@ use app\modules\dms\models\DocumentTags;;
 <?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
+<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
+
 <?php
 
 echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
@@ -47,7 +59,6 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 
 ?>
 
-<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
 <?php if ($model->isNewRecord): ?>
     <div class="d-flex justify-content-center">
         <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
@@ -57,6 +68,9 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 <?php endif; ?>
 <?php ActiveForm::end(); ?>
 
+
+</div>
+</div>
 
 
 <?php
