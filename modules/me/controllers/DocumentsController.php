@@ -84,7 +84,8 @@ class DocumentsController extends \yii\web\Controller
     public function actionView($id)
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
-        $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
+        // $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
+        $this->layout = '@app/modules/line/views/layouts/blank';
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
         $model = $this->findModel($detail->document_id);
