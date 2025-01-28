@@ -58,11 +58,12 @@ class LeaveController extends Controller
     public function actionIndex()
     {
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
         $searchModel = new LeaveSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
-            'status' => ['Pending','ReqCancel']
+            'status' =>   $status ? [$status] : ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
@@ -94,8 +95,13 @@ class LeaveController extends Controller
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
-        if (!empty($searchModel->status)) {
-            $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
+        // if (!empty($searchModel->status)) {
+        //     $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
+        // }
+        if($status)
+        {
+            $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
+
         }
         
         // search employee department
@@ -481,9 +487,23 @@ class LeaveController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+
+        $model = $this->findModel($id);
+        
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $model->employee->getAvatar(false),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model
+            ]);
+        }
     }
 
     public function actionTypeSelect()
@@ -698,34 +718,34 @@ class LeaveController extends Controller
 
 
     
-    public function actionViewHistory($emp_id)
-    {
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
-        $searchModel = new LeaveSearch([
-            'emp_id' => $emp_id,
-            'thai_year' => AppHelper::YearBudget(),
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
+    // public function actionViewHistory($emp_id)
+    // {
+    //     $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+    //     $searchModel = new LeaveSearch([
+    //         'emp_id' => $emp_id,
+    //         'thai_year' => AppHelper::YearBudget(),
+    //     ]);
+    //     $dataProvider = $searchModel->search($this->request->queryParams);
+    //     $dataProvider->query->joinWith('employee');
 
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
+    //     if ($this->request->isAJax) {
+    //         \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('history', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]),
-            ];
-        } else {
-            return $this->render('history', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'content' => $this->renderAjax('history', [
+    //                 'searchModel' => $searchModel,
+    //                 'dataProvider' => $dataProvider,
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('history', [
+    //             'searchModel' => $searchModel,
+    //             'dataProvider' => $dataProvider,
+    //         ]);
+    //     }
       
-    }
+    // }
     //แสดงรายการที่รอ Approve
     public function actionDashboardApprove()
     {

@@ -15,31 +15,33 @@ use yii\bootstrap5\Html;
         </tr>
     </thead>
     <tbody class="align-middle table-group-divider">
-        <?php foreach($dataProvider->getModels() as $model):?>
+        <?php foreach($model->listHistory() as $item):?>
         <tr class="">
             <td class="text-truncate" style="max-width: 230px;">
-                <?=$model->getAvatar(false)['avatar']?>
+                <?=$item->getAvatar(false)['avatar']?>
             </td>
-            <td class="text-start"><?php echo $model->data_json['reason']?></td>
-            <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
-            <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
+            <td class="text-start"><?php echo $item->data_json['reason']?></td>
+            <td class="text-center fw-semibold"><?php echo $item->total_days?></td>
+            <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
+            <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
+            <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
             
         </tr>
         <?php endforeach;?>
     </tbody>
 </table>
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-    <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'listOptions' => 'pagination pagination-sm',
-                    'class' => 'pagination-sm',
-                ],
-            ]); ?>
+    <?php
+    //  yii\bootstrap5\LinkPager::widget([
+    //             'pagination' => $dataProvider->pagination,
+    //             'firstPageLabel' => 'หน้าแรก',
+    //             'lastPageLabel' => 'หน้าสุดท้าย',
+    //             'options' => [
+    //                 'listOptions' => 'pagination pagination-sm',
+    //                 'class' => 'pagination-sm',
+    //             ],
+    //         ]); 
+            ?>
 </div>
 <?php
 $js = <<< JS

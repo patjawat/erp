@@ -277,6 +277,13 @@ class Leave extends \yii\db\ActiveRecord
         return LeaveEntitlements::find()->where(['emp_id' => $this->emp_id, 'thai_year' => $this->thai_year])->one();
     }
 
+
+    public function listHistory()
+    {
+        $emp = UserHelper::GetEmployee();
+        return self::find()->where(['emp_id' => $emp->id,'thai_year' => AppHelper::YearBudget(),])->all();
+    }
+
     public function listLeaveType()
     {
         $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
@@ -377,6 +384,7 @@ class Leave extends \yii\db\ActiveRecord
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
+                
                 // 'avatar' => $employee->getAvatar(false,$this->viewLeaveType()),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,

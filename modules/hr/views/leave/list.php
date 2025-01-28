@@ -8,11 +8,11 @@ use yii\bootstrap5\Html;
     <table class="table table-striped table-hover">
         <thead>
         <tr>
+            <th scope="col">ปีงบประมาณ</th>
             <th scope="col">ผู้ขออนุมัติการลา</th>
             <th class="text-center" scope="col">วัน</th>
             <th scope="col">จากวันที่</th>
             <th scope="col">ถึงวันที่</th>
-            <th scope="col">ปีงบประมาณ</th>
             <th class="text-start" scope="col">หนวยงาน</th>
             <!-- <th scope="col">มอบหมาย</th> -->
             <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
@@ -23,7 +23,8 @@ use yii\bootstrap5\Html;
     </thead>
     <tbody class="align-middle table-group-divider">
         <?php foreach($dataProvider->getModels() as $model):?>
-        <tr class="">
+            <tr class="">
+            <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-truncate" style="max-width: 230px;">
                 <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
                 <?=$model->getAvatar(false)['avatar']?>
@@ -32,7 +33,6 @@ use yii\bootstrap5\Html;
             <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
-            <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             
             </td>
@@ -68,8 +68,13 @@ try {
             </td>
 
             <td class="text-center">
+<div class="d-flex gap-2">
 
-                <div class="dropdown">
+    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/hr/leave/view','id' => $model->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+    <?php echo Html::a('<i class="fa-regular fa-pen-to-square text-warning  fa-2x"></i>',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>',['/'])?>
+</div>
+    <!-- <div class="dropdown">
                     <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -88,7 +93,7 @@ try {
                             ]]) ?>
                             <?php endif;?>
                     </div>
-                </div>
+                </div> -->
             </td>
         </tr>
         <?php endforeach;?>

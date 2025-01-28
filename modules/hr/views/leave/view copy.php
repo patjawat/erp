@@ -1,7 +1,6 @@
 <?php
 
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\widgets\DetailView;
@@ -25,42 +24,74 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
+<div class="row">
+    <div class="col-xl-8 col-sm-12">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 rounded-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <?= $model->employee->getAvatar(false) ?>
+                            <div class="d-flex align-items-center gap-3">
+                                <?php echo Html::a('<i class="fa-regular fa-circle-down me-1"></i> ดาน์โหลดเอกสาร', 
+                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'btn btn-light rounded-pill download-leave','data' => [
+                                // 'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                            ]]) ?>
+                                <?php if ($model->status !== 'Cancel'): ?>
+                                <?php if ($model->status == 'Allow'): ?>
+                                <i class="bi bi-person-check fs-3 text-primary"></i> อนุมัติให้ลาได้
+                                <?php else: ?>
 
-<?= $this->render('view_detail', ['model' => $model]) ?>
-<div class="collapse" id="collapseExample">
-        <div id="viewHistory"></div>
-        <?php echo $this->render('history',['model' => $model])?>
+                                <?= ($model->status == 'Pending') ? Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'btn btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
+
+                                <?php if ($model->status == 'ReqCancel'): ?>
+                                <?php echo Html::a('<i class="fa-solid fa-circle-exclamation text-danger"></i> อนุมัติยกเลิกวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow cancel-btn']) ?>
+
+                                <?php else: ?>
+                                <?= ($model->status !== 'Reject' && $model->emp_id == $me->id) ? Html::a('<i class="bi bi-exclamation-circle"></i> ขอยกเลิก', ['/hr/leave/req-cancel', 'id' => $model->id], [
+                        'class' => 'req-cancel-btn btn btn btn-danger rounded-pill shadow',
+                    ]) : '' ?>
+                                <?php endif; ?>
+                                <?php endif; ?>
+                                <?php endif; ?>
+
+
+                            </div>
+                        </div>
+
+
+                        <?= $this->render('view_detail', ['model' => $model]) ?>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <?= $this->render('view_summary', ['model' => $model]) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col-xl-4 col-sm-12">
+
+        <?php echo $this->render('list_approve', ['model' => $model]) ?>
+        <div class="d-flex justify-content-center">
+            <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+        </div>
+
+    </div>
 </div>
-
-<?= $this->render('view_summary', ['model' => $model]) ?>
-<?php echo $this->render('timeline_approve', ['model' => $model]) ?>
-
-<div class="d-flex justify-content-center gap-3">
-    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-warning rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
-    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
-    <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]);?>
-</div>
-
-
 
 <?php Pjax::end(); ?>
 
 <?php
-$urlHistory = Url::to(['/hr/leave/view-history','emp_id' => $model->emp_id,'title' =>'ประวัติการลา']);
 $js = <<< JS
-
-    loadHistory()
-    function loadHistory()
-    {
-        $.ajax({
-            type: "get",
-            url: "$urlHistory",
-            dataType: "json",
-            success: function (res) {
-                $('#viewHistory').html(res.content)
-            }
-        });
-    }
 
     const confirmCancel = (e) => {
         e.preventDefault();

@@ -101,6 +101,7 @@ class Approve extends \yii\db\ActiveRecord
 
             return [
                 'avatar' => $employee->getAvatar(false,$msg),
+                'photo' => $employee->ShowAvatar(),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
@@ -109,6 +110,7 @@ class Approve extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
+                'photo' => '',
                 'department' => '',
                 'fullname' => '',
                 'position_name' => '',
