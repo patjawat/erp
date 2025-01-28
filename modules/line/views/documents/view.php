@@ -27,7 +27,7 @@ $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
 
 $js = <<< JS
-
+    var vConsole = new window.VConsole();
       async function checkProfile(){
           const {userId} = await liff.getProfile()
           await $.ajax({
