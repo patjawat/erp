@@ -85,7 +85,7 @@ class DocumentsController extends \yii\web\Controller
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
         // $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
-        $this->layout = '@app/modules/line/views/layouts/blank';
+        $this->layout = '@app/themes/v3/layouts/theme-v/blank_layout';
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
         $model = $this->findModel($detail->document_id);
