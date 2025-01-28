@@ -40,6 +40,7 @@ $js = <<< JS
               success: function (res) {
                   console.log(res);
                   if(res.status == false){
+                    alert('ไม่ได้ login')
                       location.replace("$liffRegisterUrl");
                   }
                   if(res.status == true){
