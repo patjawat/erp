@@ -90,36 +90,8 @@ use iamsaint\datetimepicker\Datetimepicker;
         ?>
 
 <div class="d-flex justify-content-between gap-2">
-                <?php
-                    echo $form->field($model, 'date_start')>widget(FlatpickrWidget::class, [
-                        'options' => [
-                           'class' => 'form-control',
-                           'placeholder' => 'เลือกวันที่',
-                           'id' => 'leave-date_end',
-                       ],
-                       'clientOptions' => [
-                           // เพิ่ม options ของ flatpickr ตามต้องการ
-                           'allowInput' => false,
-                           'dateFormat' => 'd/m/Y',
-                           'locale' => 'th',
-                       ],
-                   ])->label('ตั้งแต่วันที่');
-                    ?>
-                <?php
-                    echo $form->field($model, 'date_end')>widget(FlatpickrWidget::class, [
-                        'options' => [
-                           'class' => 'form-control',
-                           'placeholder' => 'เลือกวันที่',
-                           'id' => 'leave-date_end',
-                       ],
-                       'clientOptions' => [
-                           // เพิ่ม options ของ flatpickr ตามต้องการ
-                           'allowInput' => false,
-                           'dateFormat' => 'd/m/Y',
-                           'locale' => 'th',
-                       ],
-                   ])->label('ถึงวันที่');
-                    ?>
+<?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
+<?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
             </div>
 
     <div class="d-flex flex-row mb-3 mt-4">
@@ -190,8 +162,8 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 
 $js = <<< JS
-
-    JS;
+   thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+JS;
 $this->registerJS($js, View::POS_END);
 
 ?>

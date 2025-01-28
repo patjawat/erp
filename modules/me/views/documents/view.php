@@ -120,7 +120,6 @@ $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
 $listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
 $js = <<<JS
 
-    var vConsole = new window.VConsole();
             getComment();
             listComment()
 

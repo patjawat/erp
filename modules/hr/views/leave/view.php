@@ -15,7 +15,13 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check"></i> <?= $this->title; ?>
+<i class="fa-solid fa-calendar-day fs-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <div class="row">
@@ -75,6 +81,10 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-xl-4 col-sm-12">
 
         <?php echo $this->render('list_approve', ['model' => $model]) ?>
+        <div class="d-flex justify-content-center">
+            <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['class' => 'btn btn-secondary me-2','onclick' => 'window.history.back()',]);?>
+        </div>
+
     </div>
 </div>
 
