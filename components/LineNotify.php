@@ -204,8 +204,8 @@ class LineNotify extends Component
          $token = Categorise::find()->where(['name' => 'site'])->one();
          $channelAccessToken = $token->data_json['line_channel_token'];
         //  $uri = Url::base(true) . Url::to(['/line/documents/view', 'id' => $model->id]);
-        //  $uri = Url::base(true) . Url::to(['/line/documents/show','ref' => $model->document->ref]);
-         $uri = Url::base(true) . Url::to(['/line/documents/view','id' => $model->id]);
+         $uri = Url::base(true) . Url::to(['/line/documents/show','ref' => $model->document->ref]);
+        //  $uri = Url::base(true) . Url::to(['/line/documents/view','id' => $model->id]);
          $uriComment = Url::base(true) . Url::to(['/line/documents/comment','id' => $model->id]);
          $url = 'https://api.line.me/v2/bot/message/push';
          $altText = "หนังสือ";

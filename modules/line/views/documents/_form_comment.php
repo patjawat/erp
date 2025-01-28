@@ -53,7 +53,6 @@ $this->title = $model->document->topic;
         </div>
 
     </div>
-    <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model->document]) ?>
 <style>
     .form-control {
     font-size: 1.5rem;
