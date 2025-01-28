@@ -80,20 +80,8 @@ class DocumentsController extends Controller
     public function actionView($id)
     {
         $model = $this->findModel($id);
-        if (Yii::$app->user->isGuest) 
-        {
-            return $this->render('view', [
-                'model' => $model,
-        ]);
-    }else{
-        return $this->redirect(['show', 'ref' => $model->ref]);
-        
-        }
-        
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
-         
             return [
                 'title' => $this->renderAjax('view',['model' => $model]),
                 'content' => $this->renderAjax('view', [
