@@ -83,7 +83,7 @@ class DocumentsController extends Controller
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
-            if (!Yii::$app->user->isGuest) 
+            if (Yii::$app->user->isGuest) 
             {
                 return $this->render('view', [
                     'model' => $model,
