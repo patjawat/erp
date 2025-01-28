@@ -84,8 +84,7 @@ class DocumentsController extends \yii\web\Controller
     public function actionView($id)
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
-        // $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
-        $this->layout = '@app/themes/v3/layouts/theme-v/blank_layout';
+        $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
         $model = $this->findModel($detail->document_id);
@@ -110,6 +109,11 @@ class DocumentsController extends \yii\web\Controller
         // }
         // $model->view_json = ArrayHelper::merge($view_count, $model->view_json);
         // $model->save(false);
+
+        if (!Yii::$app->user->isGuest) 
+        {
+             return $this->redirect(['show', 'ref' => $model->ref]);
+        }
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
