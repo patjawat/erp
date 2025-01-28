@@ -26,19 +26,6 @@ use app\modules\filemanager\components\FileManagerHelper;  // ค่าที่
 class DocumentsController extends Controller
 {
 
-    public function beforeAction($action) {
-     
-        // $visit_ = TCDSHelper::getVisit();
-        // $hn = $visit_['hn'];
-        $emp = UserHelper::GetEmployee();
-        if (!$emp) {
-            return $this->redirect(['/site/index']);
-        }
-        // if(empty($vn)){
-        //     return $this->redirect(['/nursescreen']);
-        // }
-        // return parent::beforeAction($action);
-    }
     
     /**
      * @inheritDoc
