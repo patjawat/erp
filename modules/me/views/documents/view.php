@@ -112,13 +112,15 @@ $this->title = $model->topic;
 
 
 
-    <?php
+<?php
     // $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
     // $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
 
-    $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
-    $listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
-    $js = <<<JS
+$getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
+$listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
+$js = <<<JS
+
+    var vConsole = new window.VConsole();
             getComment();
             listComment()
 
@@ -226,7 +228,7 @@ $this->title = $model->topic;
                         });
                     }); 
             });
-        JS;
-    $this->registerJS($js);
-    ?>
+JS;
+$this->registerJS($js);
+?>
     <?php // Pjax::end(); ?>
