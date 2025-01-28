@@ -28,7 +28,7 @@ use app\modules\dms\models\DocumentTags;;
 
 <style>
     .form-control {
-    font-size: 2rem;
+    font-size: 1.5rem;
     }
 </style>
 <div class="card">
@@ -44,7 +44,9 @@ use app\modules\dms\models\DocumentTags;;
 <?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
-<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
+<?= $form->field($model, 'data_json[comment]')->textArea([
+    'style' => 'height: 160px;'
+])->label(false); ?>
 
 <?php
 
@@ -60,9 +62,10 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 ?>
 
 <?php if ($model->isNewRecord): ?>
-    <div class="d-flex justify-content-center">
+        <div class="d-grid gap-2">
         <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-lg btn-primary rounded-pill shadow']) ?>
     </div>
+
     <?php else: ?>
         <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-lg btn-warning rounded-pill shadow']) ?>
 <?php endif; ?>
