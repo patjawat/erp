@@ -272,6 +272,7 @@ class DocumentsController extends Controller
     // แสดง File และแสดงความเห็น
     public function actionComment($id)
     {
+        
         $emp = UserHelper::GetEmployee();
         $model = new DocumentsDetail([
             'document_id' => $id,
@@ -282,12 +283,15 @@ class DocumentsController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $model->UpdateDocumentsDetail();
-            $model->sendMessage();
-
+            
+            
             if ($model->save()) {
+                $model->UpdateDocumentsDetail();
+                return[
+                    'status' => 'success'
+                ];
                 // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
-                return $this->redirect(['view', 'id' => $model->document_id]);
+                // return $this->redirect(['view', 'id' => $model->document_id]);
             }
         }
         if ($this->request->isAJax) {
@@ -319,8 +323,9 @@ class DocumentsController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->save()) {
                 $model->UpdateDocumentsDetail();
-                $model->sendMessage();
-                return $this->redirect(['view', 'id' => $model->document_id]);
+                return[
+                    'status' => 'success'
+                ];
                 // return [
                 //     'status' => 'success',
                 //     'data' => $model,

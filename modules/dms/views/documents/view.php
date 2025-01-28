@@ -181,6 +181,7 @@ $js = <<< JS
                 dataType: "json",
                 success: async function (res) {
                     if(res.status == 'success'){
+                     
                         listComment()    
                         }else{
                             warning()
@@ -190,6 +191,6 @@ $js = <<< JS
             }); 
     });
 JS;
-$this->registerJS($js);
+$this->registerJS($js,View::POS_END);
 ?>
 <?php Pjax::end(); ?>

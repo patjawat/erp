@@ -9,7 +9,7 @@ use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
-$this->title = $model->document->topic;
+$this->title = $model->topic;
 \yii\web\YiiAsset::register($this);
 ?>
 
@@ -19,29 +19,29 @@ $this->title = $model->document->topic;
     <div class=" d-flex flex-column" style="max-width:1000px">
         <div>
             <p class="text-truncate fw-semibold fs-5 mb-0">
-                <?php if ($model->document->doc_speed == 'ด่วนที่สุด'): ?>
+                <?php if ($model->doc_speed == 'ด่วนที่สุด'): ?>
                 <span class="badge text-bg-danger fs-13">
                     <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
                 </span>
                 <?php endif; ?>
 
-                <?php if ($model->document->secret == 'ลับที่สุด'): ?>
+                <?php if ($model->secret == 'ลับที่สุด'): ?>
                 <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
                     ลับที่สุด
                 </span>
                 <?php endif; ?>
-                <?php echo $model->document->topic ?>
+                <?php echo $model->topic ?>
             </p>
             <span class="fs-6">เลขรับ</span> : <span
-                class="fw-medium"><?php echo $model->document->doc_regis_number ?></span>
+                class="fw-medium"><?php echo $model->doc_regis_number ?></span>
 
             <span class="fs-6">เลขหนังสือ</span> : <span
-                class="fs-6 fw-medium"><?php echo $model->document->doc_number ?></span>
+                class="fs-6 fw-medium"><?php echo $model->doc_number ?></span>
             <span class="fs-6">จากหน่วยงาน</span> : <span class="text-primary fw-normal fs-13">
                 <i class="fa-solid fa-inbox"></i>
-                <?php echo $model->documentOrg->title ?? '-'; ?>
+                <?php echo $modelOrg->title ?? '-'; ?>
                 <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
-                    <i class="fa-regular fa-eye"></i> <?php echo $model->document->viewCount() ?>
+                    <i class="fa-regular fa-eye"></i> <?php echo $model->viewCount() ?>
                 </span>
             </span>
 
@@ -59,10 +59,10 @@ $this->title = $model->document->topic;
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-end mb-2">
-                    <?php echo Html::a(($model->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
+                    <?php echo Html::a(($detail->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
                     </div>
                     <iframe id="myIframe"
-                        src="<?= Url::to(['/dms/documents/show', 'ref' => $model->document->ref]); ?>&embedded=true"
+                        src="<?= Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
                         frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
 
                 </div>
@@ -93,7 +93,7 @@ $this->title = $model->document->topic;
                             <div class="listComment"></div>
                         </div>
                         <div id="menu1" class="container tab-pane fade"><br>
-                            <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model->document]) ?>
+                            <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model]) ?>
                         </div>
                     </div>
 

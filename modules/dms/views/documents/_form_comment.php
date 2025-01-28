@@ -33,7 +33,8 @@ use app\modules\dms\models\DocumentTags;;
 <!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
 <?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false); ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
 <?php
 
 echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
@@ -47,7 +48,6 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 
 ?>
 
-<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
 <?php if ($model->isNewRecord): ?>
     <div class="d-flex justify-content-center">
         <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
@@ -78,21 +78,23 @@ $js = <<<JS
     }
     });
     
-    \$('.save-comment').click(function (e) { 
+    $('#form-comment').on('beforeSubmit', function (e) {
         e.preventDefault();
-
+        
         // var form = \$('#fullscreen-modal').find("#form-comment");
         var form = \$("#form-comment");
-            \$.ajax({
-                url: form.attr('action'),
-                type: 'post',
-                data: form.serialize(),
-                dataType: 'json',
-                success: function (res) {
-               
+        $('#viewFormComment').hide()  
+        \$.ajax({
+            url: form.attr('action'),
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function (res) {
+
                     if (res.status === 'success') {
                        // รีเซ็ตฟอร์ม
                        form[0].reset();
+                       success('ลงความเห็นสำเร็จ')
                        listComment()
                        getComment();
                         // Handle success, such as closing modal or reloading data
@@ -109,5 +111,5 @@ $js = <<<JS
               
     JS;
 // $this->registerJS($js);
-$this->registerJS($js, View::POS_LOAD);
+$this->registerJS($js, View::POS_END);
 ?>

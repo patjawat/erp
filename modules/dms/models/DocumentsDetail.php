@@ -205,20 +205,31 @@ class DocumentsDetail extends \yii\db\ActiveRecord
          $me = UserHelper::GetEmployee();
  
          try {
-
-             $clearDEmployeeTag = self::deleteAll([
-                 'and',
-                 ['not in', 'tag_id', $this->tags_employee],
-                 ['document_id' => $this->document_id, 'name' => 'employee','crated_by' => $me->id]
-             ]);
+            if($this->tags_employee){
+                $clearDEmployeeTag = self::deleteAll([
+                    'and',
+                    ['not in', 'to_id', $this->tags_employee],
+                    ['document_id' => $this->document_id, 'name' => 'tags','created_by' => Yii::$app->user->id]
+                ]);
+            }
              // foreach ($this->data_json['employee_tag'] as $key => $value):
              foreach ($this->tags_employee as $key => $value):
-                 $check = DocumentsDetail::find()->where(['name' => 'employee','document_id' => $this->document_id, 'to_id' => $value])->one();
-                 $new = $check ? $check : new DocumentsDetail();
-                 $new->name = 'employee';
-                 $new->document_id = $this->document_id;
-                 $new->to_id = $value;
-                 $new->save(false);
+                 $check = DocumentsDetail::find()->where(['name' => 'tags','document_id' => $this->document_id, 'to_id' => $value])->one();
+                 $model = $check ? $check : new DocumentsDetail();
+                 $model->name = 'tags';
+                 $model->document_id = $this->document_id;
+                 $model->to_id = $value;
+                 $model->save(false);
+
+                //  try {
+                    $line_id = $model->employee->user->line_id;
+                    $topic = $this->comment;
+                    // ส่ง msg ให้ Approve
+                    // LineNotify::sendDocument($model,$line_id);
+                // } catch (\Throwable $th) {
+                    
+                // }
+                
                  // if($new->employee->isDicrector())
                  // {
                  //     $dicrector = 1;
@@ -227,7 +238,6 @@ class DocumentsDetail extends \yii\db\ActiveRecord
              endforeach;
                          //code...
          } catch (\Throwable $th) {
-            //throw $th;
          }
              // return $dicrector;
      }
@@ -284,7 +294,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     // แสดงการcommentและส่งต่อรายบุคคล
     public function StackSendTags()
     {
-        // try {
+        try {
             $querys = $this->tags_employee;
             $count = count($querys) - 2;
             $data = '';
@@ -322,9 +332,9 @@ class DocumentsDetail extends \yii\db\ActiveRecord
 
             $data .= '</div>';
             return $data;
-        // } catch (\Throwable $th) {
-        //     // return 'เกิดข้อผิดพลาด';
-        // }
+        } catch (\Throwable $th) {
+            // return 'เกิดข้อผิดพลาด';
+        }
     }
     
 

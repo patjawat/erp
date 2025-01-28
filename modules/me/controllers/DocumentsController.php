@@ -33,17 +33,17 @@ class DocumentsController extends \yii\web\Controller
 
         }
         
-        $dataProviderEmployee = $searchModel->search($this->request->queryParams);
-        $dataProviderEmployee->query->joinWith('document');
+        $dataProviderTags = $searchModel->search($this->request->queryParams);
+        $dataProviderTags->query->joinWith('document');
        
-        $dataProviderEmployee->query->andFilterWhere(['to_id' => $emp->id]);
-        $dataProviderEmployee->query->andFilterWhere(['name' => 'comment']);
+        $dataProviderTags->query->andFilterWhere(['to_id' => $emp->id]);
+        $dataProviderTags->query->andFilterWhere(['name' => 'tags']);
         if($searchModel->show_reading == 1){
-            $dataProviderEmployee->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+            $dataProviderTags->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }else{
-            $dataProviderEmployee->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+            $dataProviderTags->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }
-        $dataProviderEmployee->setSort(['defaultOrder' => [
+        $dataProviderTags->setSort(['defaultOrder' => [
             // 'doc_regis_number' => SORT_DESC,
             // 'thai_year' => SORT_DESC,
         ]]);
@@ -66,7 +66,7 @@ class DocumentsController extends \yii\web\Controller
                     'list' => true,
                     'searchModel' => $searchModel,
                     'dataProviderDepartment' => $dataProviderDepartment,
-                    'dataProviderEmployee' => $dataProviderEmployee,
+                    'dataProviderTags' => $dataProviderTags,
                     'dataProviderBookmark' => $dataProviderBookmark
                 ])
             ];
@@ -74,7 +74,7 @@ class DocumentsController extends \yii\web\Controller
             return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProviderDepartment' => $dataProviderDepartment,
-                'dataProviderEmployee' => $dataProviderEmployee,
+                'dataProviderTags' => $dataProviderTags,
                 'dataProviderBookmark' => $dataProviderBookmark
             ]);
         }
@@ -85,11 +85,12 @@ class DocumentsController extends \yii\web\Controller
         // Yii::$app->response->format = Response::FORMAT_JSON;
         $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
         $emp = UserHelper::GetEmployee();
-        $model = DocumentsDetail::findOne($id);
+        $detail = DocumentsDetail::findOne($id);
+        $model = $this->findModel($detail->document_id);
         
-        if($model->doc_read == null){
-             $model->doc_read = date('Y-m-d H:i:s');
-            $model->save(false);
+        if($detail->doc_read == null){
+             $detail->doc_read = date('Y-m-d H:i:s');
+            $detail->save(false);
         }
         // $docDetail->doc_read = date('Y-m-d H:i:s');
         // $docDetail->save(false);
@@ -115,11 +116,13 @@ class DocumentsController extends \yii\web\Controller
                 'title' => $this->renderAjax('@app/modules/dms/views/documents/view_title', ['model' => $model]),
                 'content' => $this->renderAjax('@app/modules/dms/views/documents/view', [
                     'model' => $model,
-                ])
-            ];
-        } else {
-            return $this->render('view', [
-                'model' => $model,
+                    'detail' => $detail
+                    ])
+                ];
+            } else {
+                return $this->render('view', [
+                    'model' => $model,
+                    'detail' => $detail
             ]);
         }
     }
@@ -152,11 +155,13 @@ class DocumentsController extends \yii\web\Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $model->UpdateDocumentsDetail();
-
             if($model->save()){
+                $model->UpdateDocumentsDetail();
+                return[
+                    'status' => 'success'
+                ];
             // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
-            return $this->redirect(['view', 'id' => $model->id]);
+            // return $this->redirect(['view', 'id' => $model->id]);
             }
         }
         if ($this->request->isAJax) {
@@ -179,7 +184,8 @@ class DocumentsController extends \yii\web\Controller
     {
 
         $emp = UserHelper::GetEmployee();
-        $model = DocumentsDetail::findOne($id);
+        // $model = DocumentsDetail::findOne($id);
+        $model = $this->findModel($id);
         
         $tags = DocumentsDetail::find()->where(['name' => 'comment','document_id' => $model->document_id])->all();
 

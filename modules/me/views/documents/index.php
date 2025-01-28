@@ -22,7 +22,7 @@ $this->title = 'ทะเบียนหนังสือ';
             <h6>
                 <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ
                 <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProviderEmployee->getTotalCount(), 0) ?></span>
+                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProviderTags->getTotalCount(), 0) ?></span>
                 รายการ
             </h6>
             <?php if(isset($list)):?>
@@ -40,7 +40,7 @@ $this->title = 'ทะเบียนหนังสือ';
         <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" data-bs-toggle="tab" href="#home"><span class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderEmployee->getTotalCount()?></span> ถึง<?=UserHelper::GetEmployee()->fullname?></a>
+      <a class="nav-link active" data-bs-toggle="tab" href="#home"><span class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderTags->getTotalCount()?></span> ถึง<?=UserHelper::GetEmployee()->fullname?></a>
     </li>
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span class="badge rounded-pill text-bg-danger"><?php echo $dataProviderDepartment->getTotalCount()?></span> ถึงหน่วยงาน</a>
@@ -57,7 +57,7 @@ $this->title = 'ทะเบียนหนังสือ';
 <?php
 echo $this->render('list_document',[
             'searchModel' => $searchModel,
-            'dataProvider' => $dataProviderEmployee
+            'dataProvider' => $dataProviderTags
         ])
         ?>
     </div>

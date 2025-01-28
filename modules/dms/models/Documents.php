@@ -216,7 +216,7 @@ class Documents extends \yii\db\ActiveRecord
 
     public function viewHistory()
     {
-        return  DocumentsDetail::find()->where(['document_id' => $this->id])->all();
+        return  DocumentsDetail::find()->where(['document_id' => $this->id,'name' => 'tags'])->all();
     }
     // แสดงปีงบประมานทั้งหมด
 
