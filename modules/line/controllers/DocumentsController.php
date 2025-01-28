@@ -43,6 +43,18 @@ class DocumentsController extends Controller
         );
     }
 
+    public function beforeAction($action) {
+     
+        // $visit_ = TCDSHelper::getVisit();
+        // $hn = $visit_['hn'];
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['/line/profile']);
+        }
+        // if(empty($vn)){
+        //     return $this->redirect(['/nursescreen']);
+        // }
+        // return parent::beforeAction($action);
+    }
     /**
      * Lists all Documents models.
      *
