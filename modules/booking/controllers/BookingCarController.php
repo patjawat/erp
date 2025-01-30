@@ -1,19 +1,19 @@
 <?php
 
-namespace app\modules\me\controllers;
-use yii;
-use yii\web\Response;
+namespace app\modules\booking\controllers;
+
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\BookingCar;
 use app\modules\booking\models\BookingCarSearch;
 
-class BookingCarController extends \yii\web\Controller
+/**
+ * BookingController implements the CRUD actions for BookingCar model.
+ */
+class BookingCarController extends Controller
 {
-    
-
-  /**
+    /**
      * @inheritDoc
      */
     public function behaviors()
@@ -76,20 +76,10 @@ class BookingCarController extends \yii\web\Controller
         } else {
             $model->loadDefaultValues();
         }
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -141,5 +131,4 @@ class BookingCarController extends \yii\web\Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    
 }

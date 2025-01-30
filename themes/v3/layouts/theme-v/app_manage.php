@@ -28,7 +28,7 @@ $items = [
     [
         'title' => 'ระบบลา',
         'icon' => 'fa-solid fa-calendar-day fs-2',
-        'url' => ['/hr/leave'],
+        'url' => ['/hr/leave/index','status' => 'Checking'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('leave') ? true : false,
     ],
@@ -44,7 +44,7 @@ $items = [
         'icon' => 'fa-solid fa-cubes-stacked fs-1',
         'url' => ['/inventory'],
         'padding' => 'p-3',
-        'show' => true
+       'show' => Yii::$app->user->can('stock') ? true : false,
         
     ],
     [
@@ -52,14 +52,14 @@ $items = [
         'icon' => 'bi bi-box fs-1',
         'url' => ['/sm'],
         'padding' => 'p-2',
-        'show' => true
+       'show' => Yii::$app->user->can('sm') ? true : false,
     ],
     [
         'title' => 'บุคลากร',
         'icon' => 'fa-regular fa-circle-user fs-1',
         'url' => ['/hr'],
         'padding' => 'p-3',
-        'show' => true
+        'show' => Yii::$app->user->can('hr') ? true : false,
         
     ],
     [
@@ -67,14 +67,21 @@ $items = [
         'icon' => 'bi bi-folder-check fs-1',
         'url' => ['/am'],
         'padding' => 'p-2',
-       'show' => true
+        'show' => Yii::$app->user->can('am') ? true : false,
     ],
     [
         'title' => 'การเงิน',
         'icon' => 'fa-solid fa-calculator fs-1',
         'url' => ['/finance'],
         'padding' => 'p-3',
-        'show' => true
+        'show' => Yii::$app->user->can('finance') ? true : false,
+    ],
+    [
+        'title' => 'ยานพาหนะ',
+        'icon' => 'fa-solid fa-car fs-1',
+        'url' => ['/booking/booking-car'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('car') ? true : false,
     ]
     
 ];
@@ -91,7 +98,7 @@ $items = [
             <div class="container">
                 <div class="row row-cols-1 row-cols-sm-4 row-cols-md-4 g-3 mt-2">
                     <?php foreach ($items as $item): ?>
-                        <?php // if($item['show']):?>
+                    <?php if($item['show']):?>
                     <div class="col mt-1">
                         <a href="<?php echo Url::to($item['url']) ?>">
                             <div class="card border-0 shadow-sm hover-card bg-light">
@@ -100,19 +107,19 @@ $items = [
                                     <i class="<?php echo $item['icon'] ?> text-white"></i>
                                 </div>
                                 <div class="card-body">
-                    
+
                                     <p class="text-center fw-semibold mb-0"><?php echo $item['title'] ?></p>
                                 </div>
                             </div>
                         </a>
                     </div>
-                    <?php // endif;?>
+                    <?php  endif;?>
                     <?php endforeach; ?>
-                    
+
                 </div>
             </div>
 
-            
+
         </div>
     </div>
 </div>

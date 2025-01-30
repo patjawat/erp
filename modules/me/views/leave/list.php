@@ -1,4 +1,5 @@
 <?php
+use yii\web\View;
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
 ?>
@@ -58,28 +59,18 @@ use yii\bootstrap5\Html;
         <?php else:?>
             <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
     <?php endif?>
-    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>',['/'])?>
+    <?php if($model->status == 'Allow'):?>
+                        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'download-leave','data' => [
+                                'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                            ]]) ?>
+                            <?php else:?>
+                                <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
+                            <?php endif;?>
 </div>
 
-                <!-- <div class="dropdown">
-                    <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right" style="">
 
-                    <?=Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด',['/me/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modalx','data' => ['size' => 'modal-lg']]) ?>
-                    <?php if($model->status !== 'Allow'):?>
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) ?>
-                    <?php endif;?>
-                <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', 
-                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
-                            ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) ?>
-                    </div>
-                </div> -->
-
-               
-           
             </td>
         </tr>
         <?php endforeach;?>
@@ -98,11 +89,49 @@ use yii\bootstrap5\Html;
 </div>
 <?php
 $js = <<< JS
-    var offcanvasElement = document.getElementById('offcanvasExample');
-    var offcanvas = new bootstrap.Offcanvas(offcanvasElement, {
-    backdrop: 'static'
+
+    $("body").on("click", ".download-leave", function (e) {
+        e.preventDefault();
+        var filename = $(this).data('filename');
+        $.ajax({
+            url: $(this).attr('href'), // ตรวจสอบให้แน่ใจว่า URL ตรงกับ controller/action ของคุณ
+            method: 'GET',
+            xhrFields: {
+                responseType: 'blob' // กำหนดให้ตอบกลับเป็น binary data
+            },
+            beforeSend: function() {
+                $("#main-modal").modal("show");
+                $("#main-modal-label").html("กำลังโหลด");
+                $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                $(".modal-dialog").addClass("modal-sm");
+                $("#modal-dialog").removeClass("fade");
+                $(".modal-body").html(
+                    '<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>'
+                );
+            },
+            success: function(blob) { // ใช้ 'blob' เป็นชื่อพารามิเตอร์เพื่อหลีกเลี่ยงความสับสน
+                var getFilename = filename+ '.docx'; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
+                const file = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                
+                // สร้างลิงก์ชั่วคราวสำหรับดาวน์โหลดไฟล์
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(file);
+                link.download = getFilename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link); // ลบลิงก์ออกหลังจากใช้งานเสร็จ
+                window.URL.revokeObjectURL(link.href); // ลบ URL Object เพื่อลดการใช้หน่วยความจำ
+
+                $("#main-modal").modal("hide");
+            },
+            error: function() {
+                alert('ไม่สามารถดาวน์โหลดไฟล์ได้');
+                $("#main-modal").modal("hide");
+            }
+        });
     });
 
+
 JS;
-$this->registerJs($js);
+$this->registerJs($js,View::POS_END);
 ?>

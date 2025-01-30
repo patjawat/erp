@@ -95,11 +95,6 @@ $moduleId = Yii::$app->controller->module->id;
             <ul id="side-menu" class="metismenu list-unstyled">
                 <li class="side-nav-title side-nav-item menu-title fs-6">
                     <i class="bi bi-ui-checks fs-5"></i>
-                    ขออนุมัติ
-                </li>
-
-                <li class="side-nav-title side-nav-item menu-title fs-6">
-                    <i class="bi bi-ui-checks fs-5"></i>
                     Menu
                 </li>
                 

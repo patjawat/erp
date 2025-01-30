@@ -1,19 +1,19 @@
 <?php
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use app\components\AppHelper;
-use kartik\select2\Select2;
-use iamsaint\datetimepicker\Datetimepicker;
-use app\components\CategoriseHelper;
-use app\modules\hr\models\Organization;
+use yii\web\JsExpression;
 use app\models\Categorise;
+use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use yii\widgets\MaskedInput;
-use unclead\multipleinput\MultipleInput;
-use yii\web\JsExpression;
-use app\modules\hr\models\Employees;
+use app\components\AppHelper;
+use yii\bootstrap5\ActiveForm;
+use app\components\CategoriseHelper;
 use app\modules\am\models\AssetItem;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
+use unclead\multipleinput\MultipleInput;
+use iamsaint\datetimepicker\Datetimepicker;
 
 ?>
 
@@ -99,9 +99,11 @@ use app\modules\am\models\AssetItem;
                         </div>
 
 
-                        <div class="col-12">
+                        <div class="col-6">
                             <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
-
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[license_plate]')->textInput()->label('เลขทะเบียน') ?>
                         </div>
 
 

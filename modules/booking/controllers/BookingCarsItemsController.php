@@ -1,19 +1,21 @@
 <?php
 
-namespace app\modules\me\controllers;
-use yii;
+namespace app\modules\booking\controllers;
+
+use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
-use app\modules\booking\models\BookingCar;
-use app\modules\booking\models\BookingCarSearch;
+use app\modules\booking\models\BookingCarsItems;
+use app\modules\booking\models\BookingCarsItemsSearch;
 
-class BookingCarController extends \yii\web\Controller
+/**
+ * BookingCarsItemsController implements the CRUD actions for BookingCarsItems model.
+ */
+class BookingCarsItemsController extends Controller
 {
-    
-
-  /**
+    /**
      * @inheritDoc
      */
     public function behaviors()
@@ -32,13 +34,13 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Lists all BookingCar models.
+     * Lists all BookingCarsItems models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new BookingCarSearch();
+        $searchModel = new BookingCarsItemsSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
@@ -48,7 +50,7 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Displays a single BookingCar model.
+     * Displays a single BookingCarsItems model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -61,13 +63,13 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Creates a new BookingCar model.
+     * Creates a new BookingCarsItems model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new BookingCar();
+        $model = new BookingCarsItems();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -76,6 +78,7 @@ class BookingCarController extends \yii\web\Controller
         } else {
             $model->loadDefaultValues();
         }
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -93,7 +96,7 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Updates an existing BookingCar model.
+     * Updates an existing BookingCarsItems model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -113,7 +116,7 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Deletes an existing BookingCar model.
+     * Deletes an existing BookingCarsItems model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -127,19 +130,18 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Finds the BookingCar model based on its primary key value.
+     * Finds the BookingCarsItems model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return BookingCar the loaded model
+     * @return BookingCarsItems the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = BookingCar::findOne(['id' => $id])) !== null) {
+        if (($model = BookingCarsItems::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    
 }

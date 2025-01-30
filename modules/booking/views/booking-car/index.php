@@ -3,22 +3,22 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-$this->title = 'อนุมัติการลา ';
-$msg = 'ขอ';
+$this->title = 'จองรถยนต์ ';
 ?>
 <?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
-<i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
+<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/views/approve/menu') ?>
+<?php  echo $this->render('@app/modules/booking/menu') ?>
 <?php $this->endBlock(); ?>
-<?php if($dataProvider->getTotalCount() > 0):?>
+
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <h6><i class="bi bi-ui-checks"></i> ทะเบียนการ<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
 
 
         </div>
@@ -67,7 +67,7 @@ $msg = 'ขอ';
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 
-                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/approve/leave', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x"></i>',['/me/approve/leave', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                         </div>
 
                     </td>
@@ -89,7 +89,3 @@ $msg = 'ขอ';
 
     </div>
 </div>
-<?php else:?>
-    <h5 class="text-center">ไม่มีรายการ</h5>
-<?php endif?>
-<?php // Pjax::end(); ?>
