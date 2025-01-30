@@ -8,9 +8,19 @@ use app\modules\purchase\models\Order;
 
 $this->title = 'My DashBoard';
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-clipboard-user fs-1"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/dms/menu') ?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php // Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
 <style>
 #pr-order>.card {
@@ -35,6 +45,8 @@ foreach($orders as $order)
     echo $order->id;
 }
 ?>
+
+
 
 <div class="row">
     <div class="col-8">

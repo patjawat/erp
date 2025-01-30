@@ -240,6 +240,8 @@ $config = [
             'dms/*',
             'finance/*',
             'debug/*',
+            'hr/leave/cal-days',
+            'hr/leave/create-validator',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',

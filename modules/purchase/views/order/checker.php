@@ -2,6 +2,43 @@
 use yii\helpers\Html;
 use app\components\SiteHelper;
 ?>
+<?php foreach($model->listApprove() as $item):?>
+
+    <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <h6 class="mb-0"><span class="badge bg-primary rounded-pill text-white"><?php echo $item->level?></span> <?php echo $item->title;?></h6>
+        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#Director"
+            aria-expanded="true" aria-controls="collapseCard">
+            <i class="bi bi-chevron-down"></i>
+        </button>
+    </div>
+
+    <div class="card-body collapse <?=$model->data_json['pr_director_confirm'] == '' ? 'show' : null?>" id="Director">
+        <!-- Start Flex Contriler -->
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="text-truncate">
+            <?php
+try {
+    echo $item->employee->getAvatar(false);
+} catch (\Throwable $th) {
+    //throw $th;
+}
+?>
+            </div>
+        </div>
+        <!-- End Flex Contriler -->
+    </div>
+
+    <div class="card-footer d-flex justify-content-between">
+        <h6>การอนุมัติ</h6>
+        <div>
+          
+        </div>
+    </div>
+
+</div>
+
+<?php endforeach;?>
 <!-- ผู้อำนวยการอนุมัติ -->
 <?php if($model->data_json['pr_officer_checker'] == 'Y'):?>
 <div class="card">

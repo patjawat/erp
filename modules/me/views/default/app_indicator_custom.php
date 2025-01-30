@@ -34,22 +34,20 @@ $items = [
 
  <!-- App Service -->
  <div class="container">
-                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-4 g-3 mt-2">
+ <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 g-3">
                     <?php foreach($items as $item):?>
-                    <div class="col mt-1">
-                        <a href="<?php echo Url::to($item['url'])?>">
-                            <div class="card border-0 shadow-sm hover-card bg-light">
-                                <div
-                                    class="d-flex justify-content-center align-items-center bg-primary opacity-75 p-3 rounded-top">
-                                    <i class="<?php echo $item['icon']?> text-white"></i>
-                                </div>
-                                <div class="card-body p-1">
-                    
-                                    <p class="text-center fw-semibold mb-0"><?php echo $item['title']?></p>
-                                </div>
-                            </div>
-                        </a>
+                        <div class="col">
+            <a href="/settings/company">
+                <div class="card border-0 shadow-sm hover-card">
+                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
+                        <i class="fa-solid fa-house-medical-flag fs-1 text-white"></i>
                     </div>
+                    <div class="card-body">
+                        <h6 class="text-center">ข้อมูลองค์กร</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
                     <?php endforeach;?>
                     
                 </div>

@@ -1,8 +1,9 @@
 <?php
 use yii\helpers\Html;
+use app\components\UserHelper;
 
 $this->registerCssFile('@web/css/timeline.css');
-
+$me = UserHelper::GetEmployee();
 ?>
 
 
@@ -12,13 +13,13 @@ $this->registerCssFile('@web/css/timeline.css');
     justify-content: space-between;
     align-items: center;
     position: relative;
-    margin: 50px 0;
+    margin: 10px 0;
 }
 
 .timeline::before {
     content: '';
     position: absolute;
-    top: 25%;
+    top: 20%;
     left: 0;
     right: 0;
     height: 2px;
@@ -63,19 +64,14 @@ $this->registerCssFile('@web/css/timeline.css');
 }
 </style>
 
-<div class="container">
-    <div class="row text-center justify-content-center mb-5">
-        <div class="col-xl-6 col-lg-8">
-            <h5 class="font-weight-bold">การอนุมัติเห็นชอบ</h5>
-            <!-- <p class="text-muted">We’re very proud of the path we’ve taken. Explore the history that made us the
-                        company we are today.</p> -->
-        </div>
-    </div>
 
-</div>
+            <div class="alert alert-primary" role="alert">
+                <h5 class="font-weight-bold text-center">การอนุมัติเห็นชอบ</h5>
+            </div>
 
 
-<div class="container">
+
+<div class="container mb-5">
     <div class="timeline">
 
         <?php foreach ($model->listApprove() as $item): ?>
@@ -87,10 +83,12 @@ $this->registerCssFile('@web/css/timeline.css');
             <div class="year">
                 <?php
                                                 $approveDate = $item->viewApproveDate();
-                                                if ($item->status == 'Pending') {
+                                                if ($item->status == 'None') {
+                                                    echo '<i class="fa-solid fa-clock-rotate-left"></i> รอดำเนินการ';
+                                                }else if ($item->status == 'Pending') {
                                                     echo '<i class="bi bi-hourglass-bottom  fw-semibold text-warning"></i> รอ' . ($item->level == 3 ? $item->title : $item->data_json['topic']);
                                                 } else if ($item->status == 'Approve') {
-                                                    echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . $item->data_json['topic'] . '  <i class="bi bi-clock-history"></i> ' . $approveDate;
+                                                    echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . $item->data_json['topic'];
                                                 } else if ($item->status == 'Reject') {
                                                     echo '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่' . $item->data_json['topic'] . ' <i class="bi bi-clock-history"></i> ' . $approveDate;
                                                 } else if ($item->status == 'Cancel') {
@@ -98,10 +96,42 @@ $this->registerCssFile('@web/css/timeline.css');
                                                 ?>
             </div>
             <div class="description"><?php echo $item->getAvatar()['fullname']?></div>
+            <?php if($item->status == 'Approve'):?>
+            <i class="bi bi-clock-history"></i> <?php echo $approveDate?>
+            <?php endif;?>
+
             <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
             -
             <?php else:?>
-            <?php echo Html::a('ดำเนินการ', ['/me/leave/approve', 'id' => $item->id, 'title' => $item->title], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal mt-2']) ?>
+
+            <?php if($item->level == 3 && $item->status == 'Pending'):?>
+            <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
+                data-topic="ตรวจ<?php echo $item->data_json['topic']?>" data-id="<?php echo $item->id?>"
+                data-status="Approve">
+                <i class="fa-solid fa-circle-check"></i> <?php echo $item->data_json['topic']?>
+            </button>
+            <button type="button" class="btn btn-sm btn-danger rounded-pill shadow approve"
+                data-topic="ตรวจสอบไม่<?php echo $item->data_json['topic']?>" data-id="<?php echo $item->id?>"
+                data-status="Reject">
+                <i class="fa-solid fa-circle-xmark"></i> ไม่<?php echo $item->data_json['topic']?>
+            </button>
+
+            <?php //  echo  Html::a('ดำเนินการ', ['/hr/leave/approve', 'id' => $item->id, 'title' => $item->title], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal mt-2'])?>
+            <?php else:?>
+            <?php if($item->emp_id == $me->id && $item->status =="Pending"):?>
+            <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
+                data-topic="<?php echo $item->data_json['topic']?>" data-status="Approve"
+                data-id="<?php echo $item->id?>">
+                <i class="fa-solid fa-circle-check"></i> <?php echo $item->data_json['topic']?>
+            </button>
+            <button type="button" class="btn btn-sm btn-danger rounded-pill shadow approve"
+                data-topic="ไม่<?php echo $item->data_json['topic']?>" data-status="Reject"
+                data-id="<?php echo $item->id?>">
+                <i class="fa-solid fa-circle-xmark"></i> ไม่<?php echo $item->data_json['topic']?>
+            </button>
+            <?php endif;?>
+
+            <?php endif?>
             <?php endif?>
         </div>
         <?php endforeach ?>

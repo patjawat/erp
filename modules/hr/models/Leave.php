@@ -488,29 +488,15 @@ class Leave extends \yii\db\ActiveRecord
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (Approve::find()->where(['from_id' => $this->id])->andWhere(['!=', 'status', 'None'])->all() as $key => $item) {
+        foreach (Approve::find()->where(['from_id' => $this->id])->andWhere(['not in', 'status', ['None','Pending']])->all() as $key => $item) {
             try {
-                $data .= Html::a(
-                    Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
+                $data .=Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
                         'data' => [
                             'expand' => '-20',
                             'sizes' => 'auto',
                             'src' => $item->employee->showAvatar()
-                        ]]),
-                    ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
-                    [
-                        'class' => 'open-modal',
-                        'data' => [
-                            'size' => 'modal-md',
-                            'bs-trigger' => 'hover focus',
-                            'bs-toggle' => 'popover',
-                            'bs-placement' => 'top',
-                            'bs-title' => $item->title,
-                            'bs-html' => 'true',
-                            'bs-content' => $item->employee->fullname . '<br>' . ($item->status == 'Reject' ? '<i class="bi bi-exclamation-circle text-danger"></i> ไม่' : '<i class="bi bi-check-circle-fill text-primary"></i> ') . $item->data_json['topic']
-                        ]
-                    ]
-                );
+                        ]]);
+                   
             } catch (\Throwable $th) {
                 // throw $th;
             }

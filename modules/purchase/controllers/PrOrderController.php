@@ -125,7 +125,7 @@ class PrOrderController extends Controller
 
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 $model->save(false);
-
+               
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
@@ -497,6 +497,7 @@ class PrOrderController extends Controller
             $model->status = 1;
             $model->approve = 'Y';
             if ($model->save()) {
+                $model->createApprove();
                 return [
                     'status' => 'success',
                     'container' => '#purchase-container',

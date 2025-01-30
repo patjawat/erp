@@ -2,178 +2,311 @@
 
 namespace app\modules\me\controllers;
 
-use app\components\UserHelper;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockEventSearch;
-use app\modules\purchase\models\OrderSearch;
-use Yii;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
 use yii\web\Response;
+use app\models\Approve;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\models\ApproveSearch;
+use app\components\UserHelper;
+use app\modules\hr\models\Leave;
+use yii\web\NotFoundHttpException;
 
-class ApproveController extends Yii\web\Controller
+/**
+ * ApproveController implements the CRUD actions for Approve model.
+ */
+class ApproveController extends Controller
 {
-    public function actionIndex()
+    /**
+     * @inheritDoc
+     */
+    public function behaviors()
     {
-        return $this->render('index');
+        return array_merge(
+            parent::behaviors(),
+            [
+                'verbs' => [
+                    'class' => VerbFilter::className(),
+                    'actions' => [
+                        'delete' => ['POST'],
+                    ],
+                ],
+            ]
+        );
     }
 
-    // รายการขอเบิกวัสดุที่ต้องอนุมัติ
-    public function actionStockOut()
+    /**
+     * Lists all Approve models.
+     *
+     * @return string
+     */
+    public function actionIndex()
     {
-        $emp = UserHelper::GetEmployee();
-        $searchModel = new StockEventSearch();
+        $name = $this->request->get('name');
+        $me = UserHelper::GetEmployee();
+        $searchModel = new ApproveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'order', 'checker' => $emp->id]);
-        $dataProvider->query->andWhere(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"));
-        if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
+        $dataProvider->query->andFilterWhere(['name' => $name,'emp_id' => $me->id,'status' => 'Pending']);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        
+        return $this->render(($name ? $name.'/index' : 'index'), [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionLeaveApprove()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) 
+        {
+            $data = $this->request->post();
+            $approve = Approve::findOne($data['id']);
+            $leave = Leave::findOne($approve->from_id);
+
+            //ถ้ามีข้อมุลอยู่จริง
+            if($approve){
+                
+                $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+                $approve->data_json = ArrayHelper::merge($approve->data_json, $approveDate);
+
+                $approve->status = $data['status'];
+            
+            //ถ้าหัวหน้ากลุ่ม Approve
+            if($approve->level == 2){
+                $leave->status = 'Checking';
+              $leave->save();
+            }
+
+            // ผุ้ตรวจสอบวันลาก่อนส่งให้ ผอ.
+            if ($approve->level == 3) {
+                $me = UserHelper::GetEmployee();
+                $approve->emp_id = $me->id;
+            }
+           
+
+            if ($approve->save()) {
+                
+                $nextApprove = Approve::findOne(['from_id' => $approve->from_id, 'level' => ($approve->level + 1)]);
+                if ($nextApprove) {
+                    $nextApprove->status = 'Pending';
+                    $nextApprove->save();
+                    // ส่ง line
+                    try {
+                        $toUserId = $nextApprove->employee->user->line_id;
+                        LineNotify::sendLeave($nextApprove->id, $toUserId);
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                }
+             
+                // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
+                if ($approve->level == 4) {
+                    $leave->status = 'Allow';
+                    $leave->save();
+                    try {
+                        $toUserId = $leave->employee->user->line_id;
+                        $flexContent = 'วันลาขอคุณได้รับการอนุมัติแล้ว';
+                        LineNotify::sendFlexMessage($toUserId, $altText, $flexContent);
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                } else if ($approve->status == 'Reject') {
+                    $leave->status = 'Reject';
+                    $leave->save();
+                } else {
+                  
+                }
+             
+            }
 
             return [
-                'title' => $this->request->get('title'),
-                'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('list_stock_out', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
+                'status' => 'success',
+                'container' => '#leave',
+            ];
+                
+            }
+            // return $this->request->post();
+        }
+    }
+    
+    public function actionLeave($id)
+    {
+        $me = UserHelper::GetEmployee();
+        //ข้อมูลการ Approve
+        $approve = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
+        // ข้อมูลการลา
+        $leave = Leave::findOne($approve->from_id);
+        
+        if (!$approve) {
+            return [
+                'title' => 'แจ้งเตือน',
+                'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
+            ];
+        }
+        if ($this->request->isPost && $approve->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $approve->data_json = ArrayHelper::merge($approve->data_json, $approveDate);
+            
+            //ถ้าหัวหน้ากลุ่ม Approve
+            if($approve->level == 2){
+                $leave->status = 'Checking';
+              $leave->save();
+          }
+
+            // ผุ้ตรวจสอบวันลาก่อนส่งให้ ผอ.
+            if ($approve->level == 3) {
+                $approve->emp_id = $me->id;
+            }
+           
+
+            if ($approve->save()) {
+                
+                $nextApprove = Approve::findOne(['from_id' => $approve->from_id, 'level' => ($approve->level + 1)]);
+                if ($nextApprove) {
+                    $nextApprove->status = 'Pending';
+                    $nextApprove->save();
+                }
+             
+                
+                // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
+                if ($approve->level == 4) {
+                    $leave->status = 'Allow';
+                    $leave->save();
+                } else if ($approve->status == 'Reject') {
+                    $leave->status = 'Reject';
+                    $leave->save();
+                } else {
+                  
+                }
+             
+              
+                
+                return [
+                    'status' => 'success',
+                    'container' => '#approve',
+                ];
+            }
+        }
+        
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $approve->leave->getAvatar('ขอ')['avatar'],
+                'content' => $this->renderAjax('@app/modules/hr/views/leave/view', [
+                    'model' => $approve->leave,
                 ]),
             ];
         } else {
-            return $this->render('list_stock_out', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
+            return $this->render('leave/form_approve', [
+                'model' => $approve,
             ]);
         }
     }
 
-    // แสดงรายละเอียดและรายการขอเบิกและบันทึก
-    public function actionViewStockOut($id)
+    public function actionPurchase($id)
     {
-        $model = StockEvent::findOne($id);
+        
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $model->leave->getAvatar('ขอ')['avatar'],
+                'content' => $this->renderAjax('leave/form_approve', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('leave/form_approve', [
+                'model' => $model,
+            ]);
+        }
+        
+    }
 
-        $oldObj = $model->data_json;
+    /**
+     * Displays a single Approve model.
+     * @param int $id ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionView($id)
+    {
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
+    /**
+     * Creates a new Approve model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return string|\yii\web\Response
+     */
+    public function actionCreate()
+    {
+        $model = new Approve();
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-                $checkData = $model->getAvatar($model->checker);
-                $checkerData = [
-                    'checker_confirm_date' => date('Y-m-d H:i:s'),
-                    'checker_name' => $checkData['fullname'],
-                    'checker_position' => $checkData['position_name'],
-                ];
-                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $checkerData);
-                if ($model->data_json['checker_confirm'] == 'Y') {
-                    $model->order_status = 'pending';
-                } else {
-                    $model->order_status = 'cancel';
-                }
-                $model->save(false);
-
-                StockEvent::updateAll(['order_status' => $model->order_status], ['code' => $model->code]);
-
-                return [
-                    'status' => 'success',
-                    'container' => '#inventory-container',
-                ];
-            } else {
-                return false;
+            if ($model->load($this->request->post()) && $model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $model->viewChecker('หัวหน้าตรวจสอบ')['avatar'],
-                'content' => $this->renderAjax('view_stock_out', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('view_stock_out', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
-    private function UpdateStock($model)
+    /**
+     * Updates an existing Approve model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id ID
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionUpdate($id)
     {
-        // update Stock
-        foreach ($model->getItems() as $item) {
-            $item->order_status = 'success';
-            $item->save(false);
-            \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
 
-            // ตัด stock และทำการ update
-            $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $item->warehouse_id]);
-            $checkStock->qty = $checkStock->qty - $item->qty;
-            $checkStock->save(false);
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
         }
-        // End update Stock{
+
+        return $this->render('update', [
+            'model' => $model,
+        ]);
     }
 
-    // ตรวจสอบความถูกต้อง
-    public function actionStockConfirmValidator()
+    /**
+     * Deletes an existing Approve model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param int $id ID
+     * @return \yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionDelete($id)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new StockEvent();
-        $requiredName = 'ต้องระบุ';
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            if (isset($model->data_json['checker_confirm'])) {
-                $model->data_json['checker_confirm'] == '' ? $model->addError('data_json[checker_confirm]', $requiredName) : null;
-            }
-        }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Html::getInputId($model, $attribute)] = $errors;
-        }
-        if (!empty($result)) {
-            return $this->asJson($result);
-        }
+        $this->findModel($id)->delete();
+
+        return $this->redirect(['index']);
     }
 
-    public function actionPurchase()
+    /**
+     * Finds the Approve model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param int $id ID
+     * @return Approve the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findModel($id)
     {
-        $searchModel = new OrderSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andwhere(['is not', 'pr_number', null]);
-        $dataProvider->query->andwhere(['status' => 1]);
-        $dataProvider->query->andFilterwhere(['name' => 'order']);
-        // ถ้าเป็นผู้อำนวยการ
-        if (\Yii::$app->user->can('director')) {
-            $dataProvider->query->andwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), '']);
-            $dataProvider->query->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_officer_checker')"), 'Y']);
-            $dataProvider->query->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y']);
-        } else {
-            // $dataProvider->query->where(['=', new Expression("JSON_EXTRACT(data_json, '$.leader1')"),  (string) Yii::$app->user->id]);
+        if (($model = Approve::findOne(['id' => $id])) !== null) {
+            return $model;
         }
 
-        $dataProvider->pagination->pageSize = 8;
-
-        if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => 'รายการขอซื้อ/ขอจ้าง',
-                'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('purchase', [
-                    // 'content' => $this->renderAjax('purchase', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                    'container' => 'pr-order',
-                    'title' => 'รายการขอซื้อ/ขอจ้าง',
-                ]),
-            ];
-        } else {
-            return $this->render('purchase', [
-                // return $this->render('purchase', [
-                'title' => 'รายการขอซื้อ/ขอจ้าง',
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                'container' => 'pr-order',
-            ]);
-        }
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
-<?php // Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>
+<?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
 <style>
 .hover-card-under {
@@ -141,7 +141,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="d-flex justify-content-between  align-top align-items-center mt-2">
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?= Html::a('<i class="fa-solid fa-plus"></i> สร้างใหม่', ['/hr/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-plus"></i> สร้างใหม่', ['/hr/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
 
         <?php
@@ -170,4 +170,4 @@ $js = <<< JS
     JS;
 $this->registerJs($js);
 ?>
-<?php // Pjax::end(); ?>
+<?php  Pjax::end(); ?>

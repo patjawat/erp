@@ -26,7 +26,7 @@ use yii\bootstrap5\Html;
             <tr class="">
             <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
+                <a href="<?php echo Url::to(['/hr/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
                 <?=$model->getAvatar(false)['avatar']?>
                 </a>
             </td>
@@ -36,18 +36,8 @@ use yii\bootstrap5\Html;
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             
             </td>
-            <!-- <td><?php // echo $model->leaveWorkSend()->getAvatar(false)?> -->
-        
-            <?php
-                 // echo Html::img($model->leaveWorkSend()->SignatureShow());
-                ?>
                 </td>
             <td><?php echo $model->stackChecker()?>
-        <?php
-//      $data1 =  $model->checkerName(1)['signature'];
-//  echo $data1.'</br>';
-        ?>
-
 <?php
 try {
     $data =  $model->checkerName(1)['employee'];
@@ -68,11 +58,18 @@ try {
             </td>
 
             <td class="text-center">
-<div class="d-flex gap-2">
+<div class="d-flex gap-2 justify-content-center">
 
     <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/hr/leave/view','id' => $model->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-    <?php echo Html::a('<i class="fa-regular fa-pen-to-square text-warning  fa-2x"></i>',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
-    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>',['/'])?>
+    <?php // echo Html::a('<i class="fa-regular fa-pen-to-square text-warning  fa-2x"></i>',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+    <?php if($model->status == 'Allow'):?>
+                        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'download-leave','data' => [
+                                'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                            ]]) ?>
+                            <?php endif;?>
+                            
 </div>
     <!-- <div class="dropdown">
                     <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"

@@ -2,26 +2,27 @@
 
 namespace app\modules\purchase\models;
 
-use app\components\SiteHelper;
-use app\components\AppHelper;
-use app\components\CategoriseHelper;
-use app\components\UserHelper;
-use app\models\Categorise;
-use app\modules\am\models\AssetItem;
-use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\filemanager\models\Uploads;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\Organization;
-use app\modules\inventory\models\Stock;
-use app\modules\sm\models\Product;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
-use yii\helpers\ArrayHelper;
+use Yii;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use Yii;
+use yii\db\Expression;
+use app\models\Approve;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\SiteHelper;
+use app\components\UserHelper;
+use app\modules\sm\models\Product;
+use app\components\CategoriseHelper;
+use app\modules\am\models\AssetItem;
+use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\hr\models\Organization;
+use app\modules\inventory\models\Stock;
+use app\modules\helpdesk\models\Helpdesk;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "order".
@@ -42,7 +43,6 @@ use Yii;
  */
 class Order extends \yii\db\ActiveRecord
 {
-
     public $q;
     public $vatType;
     public $action;
@@ -55,8 +55,8 @@ class Order extends \yii\db\ActiveRecord
     public $vendor_tax;
     public $account_name;
     public $account_number;
-    public $set_date; // set ค่าลงวันที่
-    public $date_between; // ประเภทวันที่ค้นหา
+    public $set_date;  // set ค่าลงวันที่
+    public $date_between;  // ประเภทวันที่ค้นหา
     public $date_start;
     public $date_end;
 
@@ -147,7 +147,6 @@ class Order extends \yii\db\ActiveRecord
         ];
     }
 
-
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
@@ -160,11 +159,8 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
-
-
     public function afterFind()
     {
-
         // try {
 
         $this->vatType = isset($this->data_json['vat']) ? $this->data_json['vat'] : '-';
@@ -173,8 +169,8 @@ class Order extends \yii\db\ActiveRecord
         $this->vendor_name = isset($this->data_json['vendor_name']) ? $this->data_json['vendor_name'] : '-';
         $this->vendor_address = isset($this->data_json['vendor_address']) ? $this->data_json['vendor_address'] : '-';
         $this->vendor_phone = isset($this->data_json['vendor_phone']) ? $this->data_json['vendor_phone'] : '-';
-        $this->account_name = isset($this->data_json['account_name']) ? $this->data_json['account_name']  : '-';
-        $this->account_number = isset($this->data_json['account_number']) ? $this->data_json['account_number']  : '-';
+        $this->account_name = isset($this->data_json['account_name']) ? $this->data_json['account_name'] : '-';
+        $this->account_number = isset($this->data_json['account_number']) ? $this->data_json['account_number'] : '-';
 
         // } catch (\Throwable $th) {
         // }
@@ -182,21 +178,21 @@ class Order extends \yii\db\ActiveRecord
         parent::afterFind();
     }
 
-
     // relation
 
-    //เชื่อมกับ ผู้จำหน่าย
+    // เชื่อมกับ ผู้จำหน่าย
     public function getVendor()
     {
         return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])->andOnCondition(['name' => 'vendor']);
     }
 
-    //เชื่อมกับ รับเข้า Stock
+    // เชื่อมกับ รับเข้า Stock
     public function getReceive()
     {
         return $this->hasOne(Stock::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'receive']);
     }
-    //เชื่อมกับ รับเข้า Stock Item
+
+    // เชื่อมกับ รับเข้า Stock Item
     public function getReceiveItem()
     {
         return $this->hasOne(Stock::class, ['po_number' => 'po_number'])->andOnCondition(['name' => 'receive_item']);
@@ -206,6 +202,7 @@ class Order extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'product_type']);
     }
+
     public function getAssetGroup()
     {
         return $this->hasOne(Categorise::class, ['code' => 'group_id'])->andOnCondition(['name' => 'asset_type']);
@@ -227,11 +224,61 @@ class Order extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
-    //คำนวนเวลารับประหัน
+    // กำหนดคนอนุมัติ
+    public function createApprove()
+    {
+        $listApprove = [
+            [
+                'level' => 1,
+                'name' => 'purchase',
+                'emp_id' => $this->data_json['leader1'],
+                'title' => 'หัวหน้าลงความเห็นชอบ',
+                'status' => 'Pending',
+                'label' => 'เห็นชอบ'
+            ],
+            [
+                'level' => 2,
+                'name' => 'purchase',
+                'emp_id' => '',
+                'title' => 'จนท.พัสดุตรวจสอบ',
+                'status' => 'None',
+                'label' => 'ผ่าน'
+            ],
+            [
+                'level' => 3,
+                'name' => 'purchase',
+                'emp_id' => SiteHelper::getInfo()['director_name'],
+                'title' => 'ผู้อำนวยการอนุมัติ',
+                'status' => 'None',
+                'label' => 'อนุมัติ'
+            ]
+        ];
+
+        foreach ($listApprove as $item) {
+            $newItem = new Approve([
+                'from_id' => $this->id,
+                'level' => $item['level'],
+                'name' => 'purchase',
+                'emp_id' => $item['emp_id'],
+                'title' => $item['title'],
+                'status' => $item['status'],
+                'data_json' => [
+                    'label' => $item['label']
+                ]
+            ]);
+            $newItem->save(false);
+        }
+    }
+
+    // แสดงรายการผู้อนุมัติ
+    public function listApprove()
+    {
+        return  Approve::find()->where(['from_id' => $this->id,'name' => 'purchase'])->all();
+    }
+
+    // คำนวนเวลารับประหัน
     public function deliveryDay()
     {
-
-
         $sql = "SELECT 
             CASE
                 WHEN TIMESTAMPDIFF(YEAR, :dateStart, :dateEnd) >= 1 THEN CONCAT(TIMESTAMPDIFF(YEAR, :dateStart, :dateEnd), ' ปี')
@@ -244,13 +291,15 @@ class Order extends \yii\db\ActiveRecord
         $delivery_date = $this->data_json['delivery_date'];
         $warranty_date = $this->data_json['warranty_date'];
 
-        return Yii::$app->db->createCommand($sql)
+        return Yii::$app
+            ->db
+            ->createCommand($sql)
             ->bindValue(':dateStart', $delivery_date)
             ->bindValue(':dateEnd', $warranty_date)
             ->queryScalar();
     }
 
-    //แสดงข้อมูลผู่ตรวจสอบ
+    // แสดงข้อมูลผู่ตรวจสอบ
     public function showChecker()
     {
         return [
@@ -288,7 +337,7 @@ class Order extends \yii\db\ActiveRecord
                 $userId = $this->data_json['pr_officer_checker_id'];
                 $text = '<i class="fa-regular fa-circle-check text-success"></i> ตรวจสอบผ่าน | <i class="fa-regular fa-clock text-warning"></i> รออนุมัติ';
             } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == 'Y') {
-                return  '<i class="fa-regular fa-circle-check text-success"></i> อนุมัติ';
+                return '<i class="fa-regular fa-circle-check text-success"></i> อนุมัติ';
             }
 
             $employee = Employees::find()->where(['id' => $userId])->one();
@@ -301,27 +350,24 @@ class Order extends \yii\db\ActiveRecord
 
     public function getCheckerOfficer()
     {
-
         try {
             $userId = $this->data_json['pr_officer_checker_id'];
             $employee = Employees::find()->where(['user_id' => $userId])->one();
-            if ($this->data_json['pr_officer_checker']  == 'Y') {
+            if ($this->data_json['pr_officer_checker'] == 'Y') {
                 $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
             } else {
                 $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
             }
 
             return $employee->getAvatar(false, $text);
-            //code...
+            // code...
         } catch (\Throwable $th) {
             return null;
         }
     }
 
-
     public function getEmp($userId)
     {
-
         $employee = Employees::find()->where(['id' => $userId])->one();
         $img = Html::img($employee->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white']);
         return [
@@ -338,8 +384,6 @@ class Order extends \yii\db\ActiveRecord
         //         'fullname' => '',
         //     ];
         // }
-
-
     }
 
     public function orderAvatar()
@@ -349,12 +393,13 @@ class Order extends \yii\db\ActiveRecord
     }
 
     // Avatar ของฉัน
-    public  function getMe($msg = null)
+    public function getMe($msg = null)
     {
         return UserHelper::getMe($msg);
     }
+
     // ผู้ขอ
-    public function getUserReq($msg =null)
+    public function getUserReq($msg = null)
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
@@ -367,7 +412,7 @@ class Order extends \yii\db\ActiveRecord
                 'avatar' => $employee->getAvatar(false, $text),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->data_json['position_name_text'].$employee->data_json['position_level_text'],
+                'position_name' => $employee->data_json['position_name_text'] . $employee->data_json['position_level_text'],
                 'product_type_name' => $this->data_json['product_type_name']
             ];
         } catch (\Throwable $th) {
@@ -392,7 +437,7 @@ class Order extends \yii\db\ActiveRecord
                 'avatar' => $employee->getAvatar(false),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->data_json['position_name_text'].$employee->data_json['position_level_text']
+                'position_name' => $employee->data_json['position_name_text'] . $employee->data_json['position_level_text']
             ];
         } catch (\Throwable $th) {
             return [
@@ -404,7 +449,7 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
-    //แสดงรายการกรรมการ
+    // แสดงรายการกรรมการ
     public function ListCommittee()
     {
         return self::find()
@@ -442,7 +487,6 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
-
     //  ภาพทีมคณะกรรมการ
     public function StackComittee()
     {
@@ -453,23 +497,22 @@ class Order extends \yii\db\ActiveRecord
             $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
             $data .= Html::a(
                 Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
-        'data' => [
-            'expand' => '-20',
-            'sizes' => 'auto',
-            'src' =>$emp->showAvatar()
-            ]
-    ]),
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $emp->showAvatar()
+                    ]]),
                 ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
                 [
                     'class' => 'open-modal',
                     'data' => [
                         'size' => 'modal-md',
-                        "bs-trigger" => "hover focus",
-                        "bs-toggle" => "popover",
-                        "bs-placement" => "top",
-                        "bs-title" => $item->data_json['committee_name'],
-                        "bs-html" => "true",
-                        "bs-content" => $emp->fullname . "<br>" . $emp->positionName()
+                        'bs-trigger' => 'hover focus',
+                        'bs-toggle' => 'popover',
+                        'bs-placement' => 'top',
+                        'bs-title' => $item->data_json['committee_name'],
+                        'bs-html' => 'true',
+                        'bs-content' => $emp->fullname . '<br>' . $emp->positionName()
                     ]
                 ]
             );
@@ -479,7 +522,6 @@ class Order extends \yii\db\ActiveRecord
         // } catch (\Throwable $th) {
         // }
     }
-
 
     //  ภาพทีมคณะกรรมการกำหนดรายละเอียด
     public function StackComitteeDetail()
@@ -496,12 +538,12 @@ class Order extends \yii\db\ActiveRecord
                         'class' => 'open-modal',
                         'data' => [
                             'size' => 'modal-md',
-                            "bs-trigger" => "hover focus",
-                            "bs-toggle" => "popover",
-                            "bs-placement" => "top",
-                            "bs-title" => $item->data_json['committee_name'],
-                            "bs-html" => "true",
-                            "bs-content" => $emp->fullname . "<br>" . $emp->positionName()
+                            'bs-trigger' => 'hover focus',
+                            'bs-toggle' => 'popover',
+                            'bs-placement' => 'top',
+                            'bs-title' => $item->data_json['committee_name'],
+                            'bs-html' => 'true',
+                            'bs-content' => $emp->fullname . '<br>' . $emp->positionName()
                         ]
                     ]
                 );
@@ -544,7 +586,8 @@ class Order extends \yii\db\ActiveRecord
             return 10;
         }
     }
-    //นับจำนวนทั้งหมด
+
+    // นับจำนวนทั้งหมด
     public function SumQty()
     {
         try {
@@ -563,45 +606,41 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
-
-
     function Vat()
     {
-
         $priceWithoutVAT = $this->SumPo();
-        $vatRate = 7; // 7%
+        $vatRate = 7;  // 7%
 
         $vatAmount = $priceWithoutVAT * ($vatRate / 100);
         $priceWithVAT = $priceWithoutVAT + $vatAmount;
         return [
-            'price' =>  number_format($priceWithoutVAT, 2), //ราคาก่อน VAT
-            'price2' =>  number_format($vatAmount, 2), //จำนวนเงิน VAT
-            'price3' =>  number_format($priceWithVAT, 2), //ราคาหลังรวม VAT
+            'price' => number_format($priceWithoutVAT, 2),  // ราคาก่อน VAT
+            'price2' => number_format($vatAmount, 2),  // จำนวนเงิน VAT
+            'price3' => number_format($priceWithVAT, 2),  // ราคาหลังรวม VAT
         ];
     }
 
-    //แสดงชื่อ  vat
+    // แสดงชื่อ  vat
     public function vatName()
     {
         switch ($this->vatType) {
             case 'NONE':
-                $name =  'ไม่มี';
+                $name = 'ไม่มี';
                 break;
             case 'IN':
-                $name =  'Vat ใน';
+                $name = 'Vat ใน';
                 break;
             case 'EX':
-                $name =  'Vat นอก';
+                $name = 'Vat นอก';
                 break;
             default:
-                $name =  'ไม่ระบุ';
+                $name = 'ไม่ระบุ';
                 break;
         }
         return $name;
     }
 
-
-    // คำนวน vat 
+    // คำนวน vat
     function calculateVAT()
     {
         $price = $this->SumPo();
@@ -652,15 +691,13 @@ class Order extends \yii\db\ActiveRecord
 
     public function getVat()
     {
-
         $priceWithVAT = ($this->SumPo() - $this->discount_price);
-        $vatRate = 7; // 7%
+        $vatRate = 7;  // 7%
         $vatAmount = $priceWithVAT * ($vatRate / (100 + $vatRate));
         $priceWithoutVAT = $priceWithVAT - $vatAmount;
 
-        $vat  = isset($this->data_json['vat'])  ? $this->data_json['vat'] : false;
+        $vat = isset($this->data_json['vat']) ? $this->data_json['vat'] : false;
         if ($vat == 'IN') {
-
             return [
                 'price' => $this->SumPo(),
                 'vat' => number_format($vatAmount, 2),
@@ -668,7 +705,7 @@ class Order extends \yii\db\ActiveRecord
             ];
         } else if ($vat == 'EX') {
             $EX_vatAmount = $priceWithoutVAT * ($vatRate / 100);
-            $EX_priceWithVAT =  $priceWithVAT + $vatAmount;
+            $EX_priceWithVAT = $priceWithVAT + $vatAmount;
             return [
                 'price' => $this->SumPo(),
                 'vat' => number_format($EX_vatAmount, 2),
@@ -677,19 +714,16 @@ class Order extends \yii\db\ActiveRecord
         } else {
             return [
                 'price' => $this->SumPo(),
-                'vat' =>  '-',
+                'vat' => '-',
                 'total' => $priceWithVAT
             ];
         }
     }
 
-
     public function listPrOrder()
     {
-
         return self::find()->where(['name' => 'pr_item', 'pr_number' => $this->pr_number])->all();
     }
-
 
     public function ListStatus()
     {
@@ -703,17 +737,17 @@ class Order extends \yii\db\ActiveRecord
             ->all();
     }
 
-
-    //แสดงปีงบประมานทั้งหมดใน order
+    // แสดงปีงบประมานทั้งหมดใน order
     public function ListGroupYear()
     {
         $model = self::find()
-        ->select('thai_year')
-        ->where(['name' => 'order'])
-        ->groupBy('thai_year')
-        ->all();
-        return ArrayHelper::map($model,'thai_year','thai_year');
+            ->select('thai_year')
+            ->where(['name' => 'order'])
+            ->groupBy('thai_year')
+            ->all();
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
+
     // แสดงชื่อคณะกรรมการ
     // public function getBoard()
     // {
@@ -749,8 +783,6 @@ class Order extends \yii\db\ActiveRecord
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_group'])->all(), 'code', 'title');
     }
-
-
 
     // ประเภท
     public function ListBudgetdetail()
@@ -791,19 +823,18 @@ class Order extends \yii\db\ActiveRecord
     {
         $arr = [];
         try {
-
-        $variable =  self::find()->where(['name' => 'order'])->all();
-        foreach ($variable as $model) {
-            $arr[] = ['id' => $model->data_json['order_type_name'],'name' => $model->data_json['order_type_name']];
+            $variable = self::find()->where(['name' => 'order'])->all();
+            foreach ($variable as $model) {
+                $arr[] = ['id' => $model->data_json['order_type_name'], 'name' => $model->data_json['order_type_name']];
+            }
+            return $arr;
+            // code...
+        } catch (\Throwable $th) {
+            return $arr;
         }
-        return $arr;
-                    //code...
-                } catch (\Throwable $th) {
-                    return $arr;
-                }
     }
 
-    //ร้อยละดำเนินการ
+    // ร้อยละดำเนินการ
     function OrderProgress()
     {
         $total = Categorise::find()->where(['name' => 'order_status'])->count('id');
@@ -824,14 +855,14 @@ class Order extends \yii\db\ActiveRecord
         return AppHelper::timeDifference($this->updated_at);
     }
 
-    //แสดงสถานะ
+    // แสดงสถานะ
     public function viewStatus()
     {
         $status = Categorise::find()->where(['name' => 'order_status', 'code' => $this->status])->one();
         return [
             'status_name' => isset($status->title) ? $status->title : 'รอดำเนินการ',
             'progress' => $this->OrderProgress(),
-            'color' =>  isset($status->data_json['color']) ? $status->data_json['color'] : '',
+            'color' => isset($status->data_json['color']) ? $status->data_json['color'] : '',
         ];
     }
 
@@ -849,36 +880,37 @@ class Order extends \yii\db\ActiveRecord
     //         ->sum('price');
     // }
 
-// 
+    //
     // รวมเงินทั้งหมด
-   public function SummaryTotal()
-   {
-    return self::find()
-    ->alias('o')
-    ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
-    ->select(new Expression('FORMAT(IFNULL(SUM(i.price * i.qty), 0), 2) AS total'))
-    ->andFilterWhere(['o.thai_year' => $this->thai_year])
-    ->andFilterWhere(['o.status' => $this->status])
-    ->andFilterWhere(['=', new Expression("JSON_EXTRACT(o.data_json, '$.order_type_name')"), $this->order_type_name])
-    ->scalar();
-   } 
-// ผลรวมตามประเภทเงิน
-   public function SummaryBudgetType()
-   {
 
-    // $sql = "SELECT b.code, b.title, IFNULL(SUM(i.price * i.qty), 0) AS total
-    //     FROM categorise bf
-    //     LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
-    //     LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
-    //     WHERE 
-    //         b.`name` LIKE 'budget_type'
-    //         AND b.code <> 8
-    //         AND o.thai_year = :thai_year  -- Added condition here
-    //     GROUP BY 
-    //         b.code";
-    $sql = "SELECT b.code,b.title,IFNULL(sum(i.price * i.qty),0) AS total
+    public function SummaryTotal()
+    {
+        return self::find()
+            ->alias('o')
+            ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+            ->select(new Expression('FORMAT(IFNULL(SUM(i.price * i.qty), 0), 2) AS total'))
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->andFilterWhere(['o.status' => $this->status])
+            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(o.data_json, '\$.order_type_name')"), $this->order_type_name])
+            ->scalar();
+    }
+
+    // ผลรวมตามประเภทเงิน
+    public function SummaryBudgetType()
+    {
+        // $sql = "SELECT b.code, b.title, IFNULL(SUM(i.price * i.qty), 0) AS total
+        //     FROM categorise bf
+        //     LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code
+        //     LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'
+        //     WHERE
+        //         b.`name` LIKE 'budget_type'
+        //         AND b.code <> 8
+        //         AND o.thai_year = :thai_year  -- Added condition here
+        //     GROUP BY
+        //         b.code";
+        $sql = "SELECT b.code,b.title,IFNULL(sum(i.price * i.qty),0) AS total
         FROM categorise b
-        LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code  
+        LEFT JOIN orders o ON JSON_UNQUOTE(o.data_json->'\$.pq_budget_type') = b.code  
         LEFT JOIN orders as i ON i.category_id = o.id AND i.name = 'order_item'         
         WHERE b.`name` LIKE 'budget_type'
         AND b.code <> 8
@@ -887,35 +919,37 @@ class Order extends \yii\db\ActiveRecord
              
              b.code";
 
-return  Yii::$app->db->createCommand($sql)
-// ->bindValue(':thai_year',$this->thai_year)
+        return Yii::$app
+            ->db
+            ->createCommand($sql)
+            // ->bindValue(':thai_year',$this->thai_year)
+            ->queryAll();
+        // $model =   Categorise::find()
+        // ->select(['b.code', new Expression('IFNULL(SUM(i.price * i.qty), 0) AS total')])
+        // ->alias('b')
+        // ->leftJoin('orders o', new Expression("JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code"))
+        // ->leftJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+        // ->where(['b.name' => 'budget_type'])
+        // ->andWhere(['<>', 'b.code', 8])
+        // ->andFilterWhere(['o.thai_year' => $this->thai_year])
+        // ->groupBy('b.code');
+        // ->all();
+        // return $model;
 
-->queryAll();
-    // $model =   Categorise::find()
-    // ->select(['b.code', new Expression('IFNULL(SUM(i.price * i.qty), 0) AS total')])
-    // ->alias('b')
-    // ->leftJoin('orders o', new Expression("JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code"))
-    // ->leftJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
-    // ->where(['b.name' => 'budget_type'])
-    // ->andWhere(['<>', 'b.code', 8])
-    // ->andFilterWhere(['o.thai_year' => $this->thai_year])
-    // ->groupBy('b.code');
-    // ->all();
-    // return $model;
+        // $totalQuery = (new \yii\db\Query())
+        // ->select(['b.code', 'b.title', 'IFNULL(SUM(i.price * i.qty), 0) AS total'])
+        // ->from(['b' => Categorise::tableName()])
+        // ->leftJoin('orders o', "JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code")
+        // ->leftJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+        // ->where(['like', 'b.name', 'budget_type'])
+        // ->andWhere(['<>', 'b.code', 8])
+        // ->andFilterWhere(['o.thai_year' => $this->thai_year])
+        // ->groupBy('b.code');
 
-    // $totalQuery = (new \yii\db\Query())
-    // ->select(['b.code', 'b.title', 'IFNULL(SUM(i.price * i.qty), 0) AS total'])
-    // ->from(['b' => Categorise::tableName()])
-    // ->leftJoin('orders o', "JSON_UNQUOTE(o.data_json->'$.pq_budget_type') = b.code")
-    // ->leftJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
-    // ->where(['like', 'b.name', 'budget_type'])
-    // ->andWhere(['<>', 'b.code', 8])
-    // ->andFilterWhere(['o.thai_year' => $this->thai_year])
-    // ->groupBy('b.code');
+        // return $totalQuery->all();
+    }
 
-    // return $totalQuery->all();
-   }
-    //ผลรวมวัสดุ
+    // ผลรวมวัสดุ
     public function SummaryMaterial($month)
     {
         $model = self::find()
@@ -926,26 +960,27 @@ return  Yii::$app->db->createCommand($sql)
             ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
             ->andFilterWhere(['o.thai_year' => $this->thai_year])
             ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
-        return  $model;
+        return $model;
     }
 
-        //ผลรวมวัสดุ
-        public function SummaryAsset($month)
-        {
-            $model = self::find()
-                ->alias('o')
-                ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
-                ->innerJoin('categorise item', 'item.code = i.asset_item AND item.name = "asset_item"')
-                ->where(['o.group_id' => 3])
-                ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
-                ->andFilterWhere(['o.thai_year' => $this->thai_year])
-                ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
-            return  $model;
-        }
-        //ผลรวมจ้างเหมา
-        public function SummaryOutsource($month)
-        {
-            $model = self::find()
+    // ผลรวมวัสดุ
+    public function SummaryAsset($month)
+    {
+        $model = self::find()
+            ->alias('o')
+            ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
+            ->innerJoin('categorise item', 'item.code = i.asset_item AND item.name = "asset_item"')
+            ->where(['o.group_id' => 3])
+            ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
+        return $model;
+    }
+
+    // ผลรวมจ้างเหมา
+    public function SummaryOutsource($month)
+    {
+        $model = self::find()
             ->alias('o')
             ->innerJoin('orders i', 'i.category_id = o.id AND i.name = "order_item"')
             ->innerJoin('categorise item', 'item.code = i.asset_item AND item.name = "asset_item"')
@@ -953,96 +988,96 @@ return  Yii::$app->db->createCommand($sql)
             ->andWhere(new Expression('MONTH(i.created_at) = :month', [':month' => $month]))
             ->andFilterWhere(['o.thai_year' => $this->thai_year])
             ->sum(new Expression('IFNULL(i.price * i.qty, 0)'));
-            return  $model;
-        }
+        return $model;
+    }
 
-        
-    //นับจำนวนใบขอซื้อ
+    // นับจำนวนใบขอซื้อ
     public function prSummery()
     {
         // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 1")->queryScalar();
-        $total =  static::find()
-        ->where(['name' => 'order', 'status' => 1])
-        ->andFilterWhere(['thai_year' => $this->thai_year])
-        ->count();
+        $total = static::find()
+            ->where(['name' => 'order', 'status' => 1])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->count();
         $price = self::find()
-                    ->alias('o')
-                    ->innerJoin('orders i', 'o.id = i.category_id')
-                    ->where(['i.name' => 'order_item', 'o.status' => 1])
-                    ->andFilterWhere(['o.thai_year' => $this->thai_year])
-                    ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
+            ->alias('o')
+            ->innerJoin('orders i', 'o.id = i.category_id')
+            ->where(['i.name' => 'order_item', 'o.status' => 1])
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
         return [
             'total' => $total,
             'price' => isset($price) ? $price : 0
         ];
     }
 
-    //นับจำนวนทะเบียนคุม
-    public  function pqSummery()
+    // นับจำนวนทะเบียนคุม
+    public function pqSummery()
     {
-        $total =  $total =  static::find()->where(['name' => 'order', 'status' => 2])
-        ->andFilterWhere(['thai_year' => $this->thai_year])
-        ->count();
+        $total = $total = static::find()
+            ->where(['name' => 'order', 'status' => 2])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->count();
         // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 2")->queryScalar();
         $price = self::find()
-        ->alias('o')
-        ->innerJoin('orders i', 'o.id = i.category_id')
-        ->where(['i.name' => 'order_item', 'o.status' => 1])
-        ->andFilterWhere(['o.thai_year' => $this->thai_year])
-        ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
+            ->alias('o')
+            ->innerJoin('orders i', 'o.id = i.category_id')
+            ->where(['i.name' => 'order_item', 'o.status' => 1])
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
         return [
             'total' => $total,
             'price' => isset($price) ? $price : 0
         ];
     }
 
-    //นับจำนวนใบสั่งซื้อ
-    public  function poSummery()
+    // นับจำนวนใบสั่งซื้อ
+    public function poSummery()
     {
-        $total =  static::find()
-        ->where(['name' => 'order', 'status' => 3])
-        ->andFilterWhere(['thai_year' => $this->thai_year])
-        ->count();
+        $total = static::find()
+            ->where(['name' => 'order', 'status' => 3])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->count();
         // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
         $price = self::find()
-        ->alias('o')
-        ->innerJoin('orders i', 'o.id = i.category_id')
-        ->where(['i.name' => 'order_item', 'o.status' => 3])
-        ->andFilterWhere(['o.thai_year' => $this->thai_year])
-        ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
+            ->alias('o')
+            ->innerJoin('orders i', 'o.id = i.category_id')
+            ->where(['i.name' => 'order_item', 'o.status' => 3])
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
         return [
             'total' => $total,
             'price' => isset($price) ? $price : 0
         ];
     }
 
-        //ตรวจรับแล้ว
-        public  function orderAccep()
-        {
-            $total =  static::find()
+    // ตรวจรับแล้ว
+    public function orderAccep()
+    {
+        $total = static::find()
             ->where(['name' => 'order'])
             ->andWhere(['>=', 'status', 4])
-            ->andFilterWhere(['thai_year' => $this->thai_year])->count();
-            // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
-            // $price = self::find()
-            // ->alias('o')
-            // ->innerJoin('orders i', 'o.id = i.category_id')
-            // ->andWhere(['i.name' => 'order_item'])
-            // ->andWhere(['>=','o.status',4])
-            // ->andFilterWhere(['o.thai_year' => $this->thai_year])
-            // ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
-            $price = self::find()
-    ->select(['total' => new \yii\db\Expression('IFNULL(SUM(i.qty * i.price), 0)')])
-    ->from('orders i')
-    ->innerJoin('orders o', 'o.id = i.category_id')
-    ->where(['i.name' => 'order_item'])
-    ->andWhere(['>=', 'o.status', 4])
-    ->andFilterWhere(['o.thai_year' => $this->thai_year])
-    ->scalar();
-            return [
-                'total' => $total,
-                'price' => isset($price) ? $price : 0
-            ];
-        }
-
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->count();
+        // $price = Yii::$app->db->createCommand("SELECT IFNULL(SUM(i.qty * i.price),0) as total FROM `orders`  i INNER JOIN orders o ON o.id = i.category_id WHERE i.name = 'order_item' AND o.status = 3")->queryScalar();
+        // $price = self::find()
+        // ->alias('o')
+        // ->innerJoin('orders i', 'o.id = i.category_id')
+        // ->andWhere(['i.name' => 'order_item'])
+        // ->andWhere(['>=','o.status',4])
+        // ->andFilterWhere(['o.thai_year' => $this->thai_year])
+        // ->sum(new Expression('IFNULL(i.qty * i.price, 0)'));
+        $price = self::find()
+            ->select(['total' => new \yii\db\Expression('IFNULL(SUM(i.qty * i.price), 0)')])
+            ->from('orders i')
+            ->innerJoin('orders o', 'o.id = i.category_id')
+            ->where(['i.name' => 'order_item'])
+            ->andWhere(['>=', 'o.status', 4])
+            ->andFilterWhere(['o.thai_year' => $this->thai_year])
+            ->scalar();
+        return [
+            'total' => $total,
+            'price' => isset($price) ? $price : 0
+        ];
+    }
 }

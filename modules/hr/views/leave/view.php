@@ -25,18 +25,35 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
+<div class="row">
+<div class="col-8">
+    <?= $this->render('view_detail', ['model' => $model]) ?>
+</div>
+<div class="col-4">
+    <?= $this->render('view_summary', ['model' => $model]) ?>
+    <div class="d-flex justify-content-center">
 
-<?= $this->render('view_detail', ['model' => $model]) ?>
+        <button class="btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            <i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม
+        </button>  
+    </div>
+</div>
+</div>
 <div class="collapse" id="collapseExample">
         <div id="viewHistory"></div>
         <?php echo $this->render('history',['model' => $model])?>
 </div>
 
-<?= $this->render('view_summary', ['model' => $model]) ?>
 <?php echo $this->render('timeline_approve', ['model' => $model]) ?>
 
 <div class="d-flex justify-content-center gap-3">
-    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-warning rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+    <?php  echo ($model->status =='ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา',['/hr/leave/cancel','id' => $model->id],['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn','data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : ''?>
+    <?php if($me->user_id == $model->created_by):?>
+        <?= $model->status !=='ReqCancel' ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
+            'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow','data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
+        ]) : '' ?>
+    <?php  echo ($model->status !=='Allow' && $model->status !=='ReqCancel') ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-warning rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) : ''?>
+    <?php endif;?>
     <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
     <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]);?>
 </div>
@@ -47,6 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $urlHistory = Url::to(['/hr/leave/view-history','emp_id' => $model->emp_id,'title' =>'ประวัติการลา']);
+$urlApprove = Url::to(['/me/approve/leave-approve']);
 $js = <<< JS
 
     loadHistory()
@@ -62,36 +80,14 @@ $js = <<< JS
         });
     }
 
-    const confirmCancel = (e) => {
-        e.preventDefault();
-        const url = e.target.href;
-        Swal.fire({
-            title: 'ยืนยัน?',
-            text: "อนุมัติให้ยกเลิกวันลาใช่หรือไม!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'ใช้',
-            cancelButtonText: 'ยกเลิก'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
-            }
-        })
-    }
 
-    const cancelButtons = document.querySelectorAll('.cancel-btn');
-    cancelButtons.forEach(button => {
-        button.addEventListener('click', confirmCancel);
-    });
-
-    const confirmReqCancel = (e) => {
-        e.preventDefault();
-        const url = e.target.href;
-        Swal.fire({
+        // ขอยกเลิกวันลา
+        $("body").on("click", ".req-cancel-btn", function (e) {
+            e.preventDefault();
+            var title = $(this).data('title')
+            Swal.fire({
             title: 'ยืนยัน?',
-            text: "คุณต้องการขอยกเลิกใช่หรือไม!",
+            text: title+"!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -99,17 +95,20 @@ $js = <<< JS
             confirmButtonText: 'ใช่',
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
-            }
-        })
-    }
-    const reqCancelButtons = document.querySelectorAll('.req-cancel-btn');
-    reqCancelButtons.forEach(button => {
-        button.addEventListener('click', confirmReqCancel);
-    });
-
-
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "post",
+                        url: $(this).attr('href'),
+                        dataType: "json",
+                        success: function (res) {
+                            console.log(res);
+                            
+                        }
+                    });
+                }
+            })
+        });
+        
 
         $("body").on("click", ".download-leave", function (e) {
         e.preventDefault();
@@ -151,6 +150,48 @@ $js = <<< JS
         });
     });
 
-    JS;
+    //การอนุมัติ
+    $("body").on("click", ".approve", function (e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+        var topic = $(this).data('topic');
+        var status = $(this).data('status');
+        console.log(topic);
+        
+        Swal.fire({
+            title: 'ยืนยัน?',
+            text: topic+"ใช่หรือไม!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ใช่',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "post",
+                    url: "$urlApprove",
+                    data: {
+                        id:id,
+                        status:status
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        closeModal()
+                        setTimeout(function() {
+                            location.reload()
+                        }, 1000); // หน่วงเวลา 3 วินาทีแล้ว!
+                        // $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});  
+                        
+                    }
+                });
+            }
+        })
+       
+        
+    });
+
+JS;
 $this->registerJS($js, View::POS_END);
 ?>

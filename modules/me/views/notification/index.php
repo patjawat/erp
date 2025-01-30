@@ -11,7 +11,7 @@ $notifications = NotificationHelper::Info();
 $totalLeave = $notifications['leave']['total'];
 $totalHelpdesk = $notifications['helpdesk']['total'];
 $totalStockApprove = $notifications['stock_approve']['total'];
-
+$totalPurchase = $notifications['purchase']['total'];
 
 
 $this->title = 'Notification';
@@ -22,24 +22,26 @@ $this->params['breadcrumbs'][] = $this->title;
 <!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-bell noti-animate"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/me/views//default/menu') ?>
+<?php $this->endBlock(); ?>
 
 <div class="row d-flex justify-content-center">
     <?php if($totalLeave >=1):?>
-        <div class="col-lg-4 col-md-4 col-sm-12">
-            <?php echo $this->render('leave')?>
-        </div>
-        <?php endif;?>
-        
-        <?php if($totalStockApprove >=1):?>
-        <div class="col-lg-4 col-md-4 col-sm-12">
-                    <?php  echo $this->render('stock_approve')?>
-     
-            
-        </div>
-        <?php endif;?>
+    <div class="col-lg-4 col-md-4 col-sm-12">
+        <?php echo $this->render('leave')?>
     </div>
+    <?php endif;?>
 
-        <?php  echo $this->render('orders')?>
-        
-    
+    <?php if($totalStockApprove >=1):?>
+    <div class="col-lg-4 col-md-4 col-sm-12">
+        <?php  echo $this->render('stock_approve')?>
+
+    </div>
+    <?php endif;?>
+    <?php if($totalPurchase >=1):?>
+    <div class="col-lg-4 col-md-4 col-sm-12">
+        <?php  echo $this->render('purchase')?>
+    </div>
+    <?php endif;?>
+</div>

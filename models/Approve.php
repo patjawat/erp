@@ -3,8 +3,10 @@
 namespace app\models;
 
 use Yii;
+use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
+use app\modules\purchase\models\Order;
 
 /**
  * This is the model class for table "approve".
@@ -82,6 +84,10 @@ class Approve extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Leave::class, ['id' => 'from_id']);
     }
+    public function getPurchase()
+    {
+        return $this->hasOne(Order::class, ['id' => 'from_id'])->andOnCondition(['name' => 'order']);
+    }
 
 
     
@@ -94,17 +100,25 @@ class Approve extends \yii\db\ActiveRecord
         return null;
     }    
     }
+
+    
     public function getAvatar($msg =null)
     {
         try {
-            $employee = Employees::find()->where(['id' => $this->emp_id])->one();
 
+            if($this->level == 3 && $this->status == 'Pending'){
+                $employee = UserHelper::GetEmployee();
+                
+            }else{
+                $employee = Employees::find()->where(['id' => $this->emp_id])->one();
+            }
+            
             return [
                 'avatar' => $employee->getAvatar(false,$msg),
                 'photo' => $employee->ShowAvatar(),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->positionName(),
+                'position_name' => $employee->positionName()
                 // 'product_type_name' => $this->data_json['product_type_name']
             ];
         } catch (\Throwable $th) {

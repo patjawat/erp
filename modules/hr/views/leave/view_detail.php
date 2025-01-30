@@ -61,9 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                 <td>ประวัติการลา : </td>
                 <td>
-                <button class="btn btn-sm btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                <i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม
-  </button>    
+    
                 <?php // echo Html::a('<i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม', ['/hr/leave/view-history','emp_id' => $model->emp_id,'title' =>'ประวัติการลา'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']]) ?>
             </td>
                 <td>วันลาพักผ่อนสม : </td>

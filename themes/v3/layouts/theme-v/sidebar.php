@@ -95,11 +95,17 @@ $moduleId = Yii::$app->controller->module->id;
             <ul id="side-menu" class="metismenu list-unstyled">
                 <li class="side-nav-title side-nav-item menu-title fs-6">
                     <i class="bi bi-ui-checks fs-5"></i>
+                    ขออนุมัติ
+                </li>
+
+                <li class="side-nav-title side-nav-item menu-title fs-6">
+                    <i class="bi bi-ui-checks fs-5"></i>
                     Menu
                 </li>
+                
                 <li class="">
                     <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
-                        <i class="fa-solid fa-gauge-high"></i> <span>&nbsp;Main Dashboard</span>
+                        <i class="fa-solid fa-gauge-high"></i> <span>Main Dashboard</span>
                         <!-- <span class="menu-arrow"></span> -->
                     </a>
                     

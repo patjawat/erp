@@ -82,7 +82,7 @@ class LeaveController extends Controller
         if (!empty($searchModel->status)) {
             $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
         }
-        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -90,6 +90,19 @@ class LeaveController extends Controller
         ]);
     }
 
+//ขอยกเลิกวันลา
+    public function actionReqCancel($id)
+    {
+        $me = UserHelper::GetEmployee();
+        $model = $this->findModel($id);
+        if ($this->request->isPost && $me->user_id == $model->created_by){
+            $model->status = "ReqCancel";
+            $model->save();            
+            return $this->redirect(['/me/leave']);
+        }
+    }
+
+    
     public function actionCalendar()
     {
         if ($this->request->isAJax) {
@@ -134,7 +147,7 @@ class LeaveController extends Controller
             $model = $this->findModel($id);
             return [
                 'title' => $model->employee->getAvatar(false),
-                'content' => $this->renderAjax('view', [
+                'content' => $this->renderAjax('@app/modules/hr/views/leave/view', [
                     'model' => $model,
                 ]),
             ];
@@ -247,7 +260,7 @@ class LeaveController extends Controller
                     $model->createApprove();
                 }
 
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['/me/leave']);
                 // return [
                 //     'status' => 'success',
                 //     'container' => '#leave'
@@ -261,74 +274,17 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave/create', [
+                'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave/create', [
+            return $this->render('create', [
                 'model' => $model,
             ]);
         }
     }
 
-    // ตรวจสอบความถูกต้อง
-    public function actionCreateValidator()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Leave();
-        $requiredName = 'ต้องระบุ';
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            if (isset($model->date_start)) {
-                preg_replace('/\D/', '', $model->date_start) == '' ? $model->addError('date_start', $requiredName) : null;
-            }
-            if (isset($model->date_end)) {
-                preg_replace('/\D/', '', $model->date_end) == '' ? $model->addError('date_end', $requiredName) : null;
-            }
-            $dateStart = preg_replace('/\D/', '', $model->date_start) !== '' ? AppHelper::convertToGregorian($model->date_start) : '';
-            $dateEnd = preg_replace('/\D/', '', $model->date_end) !== '' ? AppHelper::convertToGregorian($model->date_end) : '';
-
-            if ($dateStart > $dateEnd && $dateEnd !== '') {
-                $model->addError('date_start', 'มากกว่าวันสุดท้าย');
-                $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
-            }
-
-            $model->data_json['date_start_type'] == '' ? $model->addError('data_json[date_start_type]', $requiredName) : null;
-            $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
-            $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;
-            $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
-            $model->data_json['location'] == '' ? $model->addError('data_json[location]', $requiredName) : null;
-            $model->data_json['address'] == '' ? $model->addError('data_json[address]', $requiredName) : null;
-            $model->data_json['leave_work_send_id'] == '' ? $model->addError('data_json[leave_work_send_id]', $requiredName) : null;
-            $model->data_json['approve_1'] == '' ? $model->addError('data_json[approve_1]', $requiredName) : null;
-            $model->data_json['approve_2'] == '' ? $model->addError('data_json[approve_2]', $requiredName) : null;
-            // $model->unit_price == "" ? $model->addError('unit_price', $requiredName) : null;
-        }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Html::getInputId($model, $attribute)] = $errors;
-        }
-        if (!empty($result)) {
-            return $this->asJson($result);
-        }
-    }
-
-    public function actionCalDays()
-    {
-        $date_start = preg_replace('/\D/', '', $this->request->get('date_start'));
-        $date_end = preg_replace('/\D/', '', $this->request->get('date_end'));
-        $dateStart = $date_start == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_start'));
-        $dateEnd = $date_end == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_end'));
-        // return $dateStart.' '.$dateEnd;
-        $model = AppHelper::CalDay($dateStart, $dateEnd);
-
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-
-        return [
-            $model,
-            'start' => $dateStart,
-            'end' => $dateEnd,
-        ];
-    }
 
     /**
      * Updates an existing Leave model.

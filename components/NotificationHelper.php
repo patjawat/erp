@@ -22,11 +22,11 @@ class NotificationHelper extends Component
     public static function Info()
     {
         return [
-            'total' => (self::Leave()['total']+self::Helpdesk()['total']+self::Orders()['total']+self::StockApprove()['total']),
+            'total' => (self::Leave()['total']+self::Helpdesk()['total']+self::Purchase()['total']+self::StockApprove()['total']),
             'leave' => self::Leave(),
             'helpdesk' => self::Helpdesk(),
             'stock_approve' => self::StockApprove(),
-            'orders' => self::Orders(),
+            'purchase' => self::Purchase(),
             
         ];
     }
@@ -55,33 +55,47 @@ class NotificationHelper extends Component
         ];
     }
 
-    //แจ้งเตือนขอซื้อขอจ้าง
-    public static function Orders()
-    {
-        if (Yii::$app->user->can('director')) {
-            $datas = Order::find()
-                ->andwhere(['is not', 'pr_number', null])
-                ->andwhere(['status' => 1])
-                ->andFilterwhere(['name' => 'order'])
-                ->andwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), ''])
-                ->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_officer_checker')"), 'Y'])
-                ->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y'])
-                ->all();
-            }else{
-                $datas = Order::find()->andwhere(['is not', 'pr_number', null])
-                ->andwhere(['status' => 1])
-                ->andFilterwhere(['name' => 'order'])
-                ->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y'])
-                ->all();
-            }
+    //แจ้งเตือนขอซื้อขอจ้าง ole
+    // public static function Purchase()
+    // {
+    //     if (Yii::$app->user->can('director')) {
+    //         $datas = Order::find()
+    //             ->andwhere(['is not', 'pr_number', null])
+    //             ->andwhere(['status' => 1])
+    //             ->andFilterwhere(['name' => 'order'])
+    //             ->andwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), ''])
+    //             ->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_officer_checker')"), 'Y'])
+    //             ->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y'])
+    //             ->all();
+    //         }else{
+    //             $datas = Order::find()->andwhere(['is not', 'pr_number', null])
+    //             ->andwhere(['status' => 1])
+    //             ->andFilterwhere(['name' => 'order'])
+    //             ->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y'])
+    //             ->all();
+    //         }
             
+    //     return [
+    //         'title' => 'ขอซื้อขอจ้าง',
+    //         'total' => isset($datas) ? count($datas) : 0,
+    //         'datas' => $datas
+    //     ];
+    // }
+
+    //รายการที่ต้องอนุมัติจัดซื้อ
+    public static function Purchase()
+    {
+        $me = UserHelper::GetEmployee();
+        $datas = Approve::find()->where(['name' => 'purchase','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+        
         return [
-            'title' => 'ขอซื้อขอจ้าง',
+            'title' => 'อนุมัติขอซื้อขอจ้าง',
             'total' => isset($datas) ? count($datas) : 0,
-            'datas' => $datas
+            'datas' => $datas,
+            'emp_id' => $me->id
         ];
     }
-
+    
     public static function StockApprove()
     {
         $emp = UserHelper::GetEmployee();

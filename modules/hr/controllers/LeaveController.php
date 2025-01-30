@@ -132,7 +132,7 @@ class LeaveController extends Controller
          }
        
         
-        $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+        // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -628,8 +628,6 @@ class LeaveController extends Controller
 
     public function actionCalDays()
     {
-        // $date_start_type = (Float) ($this->request->get('date_start_type') == "1" ? 0 : 0.5);
-        // $date_end_type = (Float) ($this->request->get('date_end_type') == "1" ? 0 : 0.5);
         $date_start_type = (Float) ($this->request->get('date_start_type'));
         $date_end_type = (Float) ($this->request->get('date_end_type'));
         $on_holidays = $this->request->get('on_holidays');
@@ -650,6 +648,7 @@ class LeaveController extends Controller
             $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
         }else{
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
+           
         }
 
         return [
@@ -868,18 +867,10 @@ class LeaveController extends Controller
         $model->data_json = ArrayHelper::merge($model->data_json, $checkerCancel);
         $model->save();
 
-        return $this->redirect(['view', 'id' => $model->id]);
+        return $this->redirect(['/hr/leave','status'=>'ReqCancel']);
     }
 
-    public function actionReqCancel($id)
-    {
-        $model = $this->findModel($id);
-        $model->status = "ReqCancel";
-        $model->save();
-
-        return $this->redirect(['view', 'id' => $model->id]);
-    }
-
+  
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();

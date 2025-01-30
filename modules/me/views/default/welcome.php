@@ -21,7 +21,7 @@ $totalNotification = NotificationHelper::Info()['total'];
             </div>
             <div class="welcome-btn d-flex justify-content-between align-items-center align-self-center">
               <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> โปรไฟล์',['/profile'],['class' => 'btn btn-primary shadow rounded-pill'])?>
-              <a href="<?php echo Url::to(['/me/notification'])?>" class="text-white mt-3" style="z-index: 100;">
+              <a href="<?php echo Url::to(['/me/approve'])?>" class="text-white mt-3" style="z-index: 100;">
                คุณมี <span class="badge rounded-pill text-bg-danger"><?php echo $totalNotification?></span> กิจกรรมที่ต้องทำ
               </a>
         </div>

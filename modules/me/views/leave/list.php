@@ -24,7 +24,7 @@ use yii\bootstrap5\Html;
         <?php foreach($dataProvider->getModels() as $model):?>
         <tr class="">
             <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/me/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>">
+                <a href="<?php echo Url::to(['/me/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
                 <?=$model->getAvatar(false)['avatar']?>
                 </a>
             </td>
@@ -50,7 +50,18 @@ use yii\bootstrap5\Html;
 
             <td class="text-center">
 
-                <div class="dropdown">
+            <div class="d-flex gap-2 justify-content-center">
+
+    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $model->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+    <?php if($model->status == 'Allow'):?>
+        <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
+        <?php else:?>
+            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+    <?php endif?>
+    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>',['/'])?>
+</div>
+
+                <!-- <div class="dropdown">
                     <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -65,7 +76,7 @@ use yii\bootstrap5\Html;
                             [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'dropdown-item', 'target' => '_blank','data-pjax' => '0','disable']) ?>
                     </div>
-                </div>
+                </div> -->
 
                
            
