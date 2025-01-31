@@ -16,12 +16,30 @@ $list =  ArrayHelper::map($documents, 'id',function($model){
 /** @var app\modules\booking\models\BookingCar $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+<div class="row">
+    <div class="col-8">
 
-<div class="booking-car-form">
+        <div class="card">
+            <div class="card-body">
 
-    <?php $form = ActiveForm::begin(); ?>
+                <?php $form = ActiveForm::begin(); ?>
+                <div class="row">
+<div class="col-6">
+    <div class="row">
+        <div class="col-8"><?= $form->field($model, 'date_start')->textInput()->label('ต้องการใช้รถตั้งแต่วันที่') ?></div>
+        <div class="col-4"><?= $form->field($model, 'time_start')->textInput(['maxlength' => true]) ?></div>
+    </div>
+    </div>
+    <div class="col-6">
+    <div class="row">
+        <div class="col-8"><?= $form->field($model, 'date_end')->textInput()->label('ถึงวันที่') ?></div>
+        <div class="col-4"><?= $form->field($model, 'time_end')->textInput(['maxlength' => true]) ?></div>
+    </div>
 
-    <?php
+</div>
+                </div>
+
+                <?php
                 echo $form->field($model, 'document_id')->widget(Select2::classname(), [
                     'data' => $list,
                     'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
@@ -31,47 +49,42 @@ $list =  ArrayHelper::map($documents, 'id',function($model){
                     ],
                 ])->label('หนังสืออ้างอิง');
                 ?>
-    <?= $form->field($model, 'booking_type')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'booking_type')->textInput(['maxlength' => true]) ?>
 
 
-    <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'asset_item_id')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'asset_item_id')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'location')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'location')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'data_json')->textInput() ?>
+                <?= $form->field($model, 'data_json')->textInput() ?>
 
-    <?= $form->field($model, 'status')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'status')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'date_start')->textInput() ?>
+               
+                <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'time_start')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'date_end')->textInput() ?>
+                <div class="form-group">
+                    <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+                </div>
 
-    <?= $form->field($model, 'time_end')->textInput(['maxlength' => true]) ?>
+                <?php ActiveForm::end(); ?>
 
-    <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
+            </div>
+        </div>
 
-    <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'created_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
-
-    <?= $form->field($model, 'created_by')->textInput() ?>
-
-    <?= $form->field($model, 'updated_by')->textInput() ?>
-
-    <?= $form->field($model, 'deleted_at')->textInput() ?>
-
-    <?= $form->field($model, 'deleted_by')->textInput() ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body">
 
-    <?php ActiveForm::end(); ?>
+                lisCaritems
+            </div>
+        </div>
 
+    </div>
 </div>

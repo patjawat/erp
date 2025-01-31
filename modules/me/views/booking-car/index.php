@@ -22,7 +22,10 @@ $this->title = 'จองรถ';
     <div class="card-body">
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-    <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
+    <p>
+        <?php echo html::a('<i class="fa-solid fa-car-side"></i> ขอใช้รถยนต์ทั่วไป',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
+        <?php echo html::a('<i class="fa-solid fa-truck-medical"></i> ขอใช้รถพยาบาล',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-danger rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
+    </p>
 
         </div>
         <table class="table table-striped table-hover">

@@ -88,7 +88,7 @@ class BookingCarsItems extends \yii\db\ActiveRecord
     public function AvatarXl()
     {
         // return Html::img($this->asset->showImg(),['class' => 'lazyautosizes ls-is-cached lazyloaded','style' => 'max-width:300px;max-height:300px']);
-        return Html::img($this->asset->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle','style' => 'max-width:300px;max-height:300px']);
+        return Html::img($this->asset->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle','style' => 'max-width:250px;max-height:250px']);
     }
     public function Avatar()
     {

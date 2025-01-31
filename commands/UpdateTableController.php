@@ -78,6 +78,7 @@ class UpdateTableController extends Controller
             ['name' => 'sm', 'type' => 1, 'description' => 'บริหารพัสดุ'],
             ['name' => 'leave', 'type' => 1, 'description' => 'ระบบลา'],
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
+            ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
             
 
@@ -135,6 +136,8 @@ class UpdateTableController extends Controller
             ['name' => '/inventory/warehouse/view', 'type' => 2,'description' =>''],
             ['name' => '/me/*', 'type' => 2,'description' =>''],
             ['name' => '/profile/*', 'type' => 2,'description' =>''],
+            
+            //ขัดซื้อ
             ['name' => '/purchase/document/download-file', 'type' => 2,'description' =>''],
             ['name' => '/purchase/gr-order/update', 'type' => 2,'description' =>''],
             ['name' => '/purchase/order-item/committee', 'type' => 2,'description' =>''],
@@ -160,6 +163,7 @@ class UpdateTableController extends Controller
             ['name' => '/purchase/pr-order/update', 'type' => 2,'description' =>''],
             ['name' => '/settings/*', 'type' => 2,'description' =>''],
             ['name' => '/site/*', 'type' => 2,'description' =>''],
+            
             ['name' => '/sm/default/accept-pr-order', 'type' => 2,'description' =>''],
             ['name' => '/sm/default/budget-chart', 'type' => 2,'description' =>''],
             ['name' => '/sm/default/chart', 'type' => 2,'description' =>''],

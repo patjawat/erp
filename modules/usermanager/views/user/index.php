@@ -9,28 +9,32 @@ $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
+<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?=$this->title;?>  
+<!-- <i class="bi bi-ui-checks"></i>-->
+<i class="fa-solid fa-user-shield fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<div class="card">
-  <div class="card-body d-flex justify-content-between align-items-center">
-    <?=$this->render('../default/navlink')?>
-      <?=$this->render('_search', ['model' =>$searchModel])?>
-  </div>
-</div>
+<?php $this->beginBlock('page-action'); ?>
+<?=$this->render('../default/navlink')?>
+<?php $this->endBlock(); ?>
+
+
 
 <style>
-#user-grid table thead {
+  #user-grid table thead {
     background-color: #fff;
-}
-
-#user-grid-container {
+  }
+  
+  #user-grid-container {
     height: 480px;
-}
+  }
 </style>
 
 
+<div class="card">
+  <div class="card-body">
 
+<?=$this->render('_search', ['model' =>$searchModel])?>
 <?php
 $layout = <<< HTML
 <div class="clearfix"></div>
@@ -115,3 +119,5 @@ HTML;
     ],
   ],
 ]); ?>
+  </div>
+</div>

@@ -1,9 +1,9 @@
 <?php
 use yii;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 use yii\widgets\DetailView;
 use yii\base\ErrorException;
-use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Asset $model */
@@ -40,9 +40,7 @@ $group = Yii::$app->request->get('group');
     <?php endif?>
 
     <?php if($model->asset_group == 3):?>
-    <?=$this->render('@app/modules/am/views/asset/asset_detail_group_3',['model' => $model
-   
-    ])?>
+    <?=$this->render('@app/modules/am/views/asset/asset_detail_group_3',['model' => $model])?>
 
     <?= $model->asset_group == 3 ? $this->render('./asset_detail',['model' => $model,'searchModel' => $searchModel,
     'dataProvider' => $dataProvider]) :  ''?>

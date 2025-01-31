@@ -237,7 +237,7 @@ $config = [
             // 'me/*',
             // 'line-group/*',
             'summary/*',
-            'dms/*',
+            // 'dms/*',
             'finance/*',
             'debug/*',
             'hr/leave/cal-days',
