@@ -3,7 +3,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-$this->title = 'รถยนต์ ';
+$this->title = 'ยานพาหนะ ';
 ?>
 <?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -13,61 +13,48 @@ $this->title = 'รถยนต์ ';
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/booking/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'booking', 'timeout' => 500000]); ?>
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/booking/booking-cars-items/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลรถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+            <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/booking/booking-cars-items/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลรถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
 
 
         </div>
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">ปีงบประมาณ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">วัน</th>
-                    <th scope="col">จากวันที่</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
-                    <!-- <th scope="col">มอบหมาย</th> -->
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+                    <th scope="col">เลขทะเบียน</th>
+                    <th scope="col">ยี่ห้อ</th>
+                    <th scope="col">รายละเอียด</th>
+                    <th scope="col">เชื้อเพลิง</th>
+                    <th class="text-start" scope="col">ซ่อมครั้งล่าสุด</th>
+                    <th scope="col">พรบ.หมดอายุ</th>
+                    <th scope="col">ต่อภาษี</th>
+                    <th class="text-center">กรมธรรม์หมดอายุ</th>
+                    <th class="text-center">ผู้รับผิดชอบ</th>
+                    <th class="text-center">เปิดใช้งาน</th>
                     <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr class="">
-                    <td class="text-center fw-semibold"><?php echo $item->leave->thai_year?></td>
-                    <td class="text-truncate" style="max-width: 230px;">
-                        <a href="<?php echo Url::to(['/hr/leave/view','id' => $item->leave->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
-                            class="open-modal" data-size="modal-xl">
-                            <?=$item->leave->getAvatar(false)['avatar']?>
-                        </a>
-                    </td>
-                    <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_start, 'medium')?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_end, 'medium')?></td>
-                    <td class="text-start text-truncate" style="max-width:150px;">
-                        <?=$item->leave->getAvatar(false)['department']?>
-
-                    </td>
-                    </td>
-                    <td><?php echo $item->leave->stackChecker()?>
-                        <?php
-                    try {
-                        $data =  $item->leave->checkerName(1)['employee'];
-                    } catch (\Throwable $th) {
-                    }
-            ?>
-                    </td>
-
-
+                    <td><?php echo $item->Avatar()?></td>
+                    <td class="text-truncate"></td>
+                    <td class="text-center fw-semibold"></td>
+                    <td></td>
+                    <td class="text-start text-truncate" style="max-width:150px;"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
-
-                            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x"></i>',['/me/approve/leave', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/booking-cars-items/view', 'id' => $item->id])?>
+                            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/booking/booking-cars-items/update', 'id' => $item->id,'title' => '<i class="fa-solid fa-pencil"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                         </div>
 
                     </td>
@@ -89,3 +76,4 @@ $this->title = 'รถยนต์ ';
 
     </div>
 </div>
+<?php  Pjax::end(); ?>

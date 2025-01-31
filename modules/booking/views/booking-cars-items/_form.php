@@ -1,5 +1,6 @@
 <?php
-
+use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
@@ -11,22 +12,8 @@ use kartik\select2\Select2;
 
 <div class="booking-cars-items-form">
 
-    <?php $form = ActiveForm::begin(); ?>
-
+    <?php $form = ActiveForm::begin(['id' =>'form']); ?>
     <?php
-                echo $form->field($model, 'car_type')->widget(Select2::classname(), [
-                    'data' => [
-                        'general' => 'รถใช้งานทั่วไป',
-                        'ambulance' => 'รถพยาบาล'
-                    ],
-                    'options' => ['placeholder' => 'เลือกรถยนต์ ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                    ],
-                ])->label('ประรถยนต์');
-                ?>
-                    <?php
                 echo $form->field($model, 'asset_item_id')->widget(Select2::classname(), [
                     'data' => $model->listCars(),
                     'options' => ['placeholder' => 'เลือกรถยนต์ ...'],
@@ -34,33 +21,99 @@ use kartik\select2\Select2;
                         'allowClear' => true,
                         'dropdownParent' => '#main-modal',
                     ],
-                ])->label('รถยนต์');
+                    'pluginEvents' => [
+                        "select2:unselect" => "function() { 
+                            $('#asset-code').val('')
+                        }",
+                        "select2:select" => "function() {
+                            // console.log($(this).val());
+                            $.ajax({
+                                type: 'get',
+                                url: '".Url::to(['/booking/booking-cars-items/get-img'])."',
+                                data: {id: $(this).val()},
+                                dataType: 'json',
+                                success: function (res) {
+                                    console.log(res)
+                                    $('#showImg').html(res);
+                                    
+                                }
+                            });
+                    }",],
+                ])->label('รถยนต์');?>
+
+    <div class="row">
+        <div class="col-8">
+            <?=$form->field($model, 'car_type')->widget(Select2::classname(), [
+                    'data' => [
+                        'general' => 'รถใช้งานทั่วไป',
+                        'ambulance' => 'รถพยาบาล'
+                    ],
+                    'options' => ['placeholder' => 'เลือกรถยนต์ ...'],
+                   
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label('ประรถยนต์');
                 ?>
+            <?= $form->field($model, 'license_plate')->textInput(['maxlength' => true]) ?>
+            
+            <div class="form-group mt-3 d-flex justify-content-center gap-3">
+                <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+                <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"> <i class="fa-regular fa-circle-xmark"></i> ปิด</button>
+            </div>
 
-    <?= $form->field($model, 'asset_item_id')->textInput() ?>
-
-    <?= $form->field($model, 'license_plate')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'active')->textInput() ?>
-
-    <?= $form->field($model, 'data_json')->textInput() ?>
-
-    <?= $form->field($model, 'created_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
-
-    <?= $form->field($model, 'created_by')->textInput() ?>
-
-    <?= $form->field($model, 'updated_by')->textInput() ?>
-
-    <?= $form->field($model, 'deleted_at')->textInput() ?>
-
-    <?= $form->field($model, 'deleted_by')->textInput() ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        </div>
+        <div class="col-4">
+            <div id="showImg">
+                <?=!$model->isNewRecord ? Html::img($model->asset->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']) : ''?>
+            </div>
+        </div>
     </div>
+
+
 
     <?php ActiveForm::end(); ?>
 
 </div>
+
+
+<?php
+$js = <<< JS
+      $('#form').on('beforeSubmit', function (e) {
+        var form = \$(this);
+        Swal.fire({
+        title: "ยืนยัน?",
+        text: "บันทึกข้อมูล!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก!",
+        confirmButtonText: "ใช่, ยืนยัน!"
+        }).then((result) => {
+        if (result.isConfirmed) {
+            
+            \$.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: async function (response) {
+                    form.yiiActiveForm('updateMessages', response, true);
+                    if(response.status == 'success') {
+                        closeModal()
+                        // success()
+                        await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                    }
+                }
+            });
+
+        }
+        });
+        return false;
+    });
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>

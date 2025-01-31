@@ -3,8 +3,10 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use app\modules\am\models\Asset;
+
 /**
  * This is the model class for table "booking_cars_items".
  *
@@ -64,15 +66,38 @@ class BookingCarsItems extends \yii\db\ActiveRecord
         ];
     }
 
+    // section Relationships
+    public function getAsset()
+    {
+        return $this->hasOne(Asset::class, ['id' => 'asset_item_id']);
+    }
+
     public function listCars()
     {
-        $list  = Asset::find()->where(['asset_group' => 3])->all();
-        return ArrayHelper::map($list,'asset_item',function($model){
-            try {
-                return $model->assetItem->title;
-            } catch (\Throwable $th) {
-                return '';
-            }
-        });
+        $sql = "SELECT a.id, t.code as asset_type, a.code,concat(t.title,' (',a.code,')') as title
+        FROM `asset` a
+        LEFT JOIN `categorise` t ON t.code = a.asset_item 
+        WHERE a.asset_group = '3' AND t.category_id = '4'
+        ORDER BY `code` DESC, `receive_date`";
+
+        $querys = Yii::$app->db->createCommand($sql)->queryAll();
+
+        return ArrayHelper::map($querys, 'id', 'title');
+    }
+
+    public function AvatarXl()
+    {
+        // return Html::img($this->asset->showImg(),['class' => 'lazyautosizes ls-is-cached lazyloaded','style' => 'max-width:300px;max-height:300px']);
+        return Html::img($this->asset->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle','style' => 'max-width:300px;max-height:300px']);
+    }
+    public function Avatar()
+    {
+        return '<div class="d-flex">
+        '.Html::img($this->asset->showImg(),['class' => 'avatar avatar-sm bg-primary text-white lazyautosizes ls-is-cached lazyloaded']).'
+        <div class="avatar-detail">
+            <h6 class="fs-13">'.$this->asset->AssetitemName().'</h6>
+            <p class="text-muted mb-0 fs-13">เลขทะเบียน <span class="badge rounded-pill badge-soft-danger text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ลากิจ</span></p>
+        </div>
+    </div>';
     }
 }

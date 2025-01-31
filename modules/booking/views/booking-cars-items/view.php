@@ -12,10 +12,14 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 <div class="booking-cars-items-view">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
+<div class="row">
+    <div class="col-2">
+        <?php echo $model->AvatarXl()?>
+    </div>
+    <div class="col-10">
+        <div class="card">
+            <div class="card-body">
+            <p>
         <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
@@ -25,23 +29,24 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ]) ?>
     </p>
-
-    <?= DetailView::widget([
+            <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
             'car_type',
             'asset_item_id',
             'license_plate',
             'active',
-            'data_json',
-            'created_at',
-            'updated_at',
-            'created_by',
-            'updated_by',
-            'deleted_at',
-            'deleted_by',
         ],
     ]) ?>
+            
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+
+   
 
 </div>

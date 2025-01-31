@@ -1,11 +1,12 @@
 <?php
 
 namespace app\modules\booking\controllers;
-
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use yii\bootstrap5\Html;
 use yii\filters\VerbFilter;
+use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\BookingCarsItems;
 use app\modules\booking\models\BookingCarsItemsSearch;
@@ -73,7 +74,11 @@ class BookingCarsItemsController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                        'status' => 'success',
+                        'container' => '#booking'
+                    ];
             }
         } else {
             $model->loadDefaultValues();
@@ -107,12 +112,27 @@ class BookingCarsItemsController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                    'status' => 'success',
+                    'container' => '#booking'
+                ];
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -143,5 +163,12 @@ class BookingCarsItemsController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionGetImg($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = Asset::findOne($id);
+        return Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']);
     }
 }
