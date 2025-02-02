@@ -91,7 +91,7 @@ $items = [
         'icon' => 'fa-solid fa-car fs-1',
         'url' => ['/booking/booking-car'],
         'padding' => 'p-3',
-        'show' => Yii::$app->user->can('car') ? true : false,
+        'show' => Yii::$app->user->can('booking-car') ? true : false,
         // 'show' => true
     ]
     

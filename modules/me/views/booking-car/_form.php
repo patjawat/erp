@@ -20,9 +20,6 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
 <div class="row">
     <div class="col-8">
 
-        <div class="card">
-            <div class="card-body">
-
                 <?php $form = ActiveForm::begin(); ?>
                 <div class="row">
                     <div class="col-6">
@@ -52,8 +49,8 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
                                             }',
                         ]
                     ]) ?>
-                    <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
-  
+                        <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
+
 
 
 
@@ -75,14 +72,14 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
                         ],
                     ])->label('หนังสืออ้างอิง');
                     ?>
-<div class="row">
-<div class="col-6">
-<?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
-</div>
-<div class="col-6">
-    <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
-</div>
-</div>
+                <div class="row">
+                    <div class="col-6">
+                        <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
+                    </div>
+                    <div class="col-6">
+                        <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
+                    </div>
+                </div>
                 <?= $form->field($model, 'booking_type')->hiddenInput(['maxlength' => true])->label(false) ?>
 
                 <div class="form-group mt-3 d-flex justify-content-center gap-3">
@@ -93,16 +90,13 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
 
                 <?php ActiveForm::end(); ?>
 
-            </div>
-        </div>
 
 
     </div>
     <div class="col-4">
         <div class="card">
             <div class="card-body">
-
-                lisCaritems
+                <div id="viewCars">ทะเบียนยานพาหนะ</div>
             </div>
         </div>
 
@@ -175,7 +169,7 @@ $js = <<<JS
             },
             dataType: "json",
             success: function (res) {
-                console.log(res);
+                $('#viewCars').html(res.content)
                 
             }
         });

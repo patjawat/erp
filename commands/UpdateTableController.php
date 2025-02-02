@@ -79,10 +79,16 @@ class UpdateTableController extends Controller
             ['name' => 'leave', 'type' => 1, 'description' => 'ระบบลา'],
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
+            ['name' => 'booking-car', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
+            ['name' => 'booking-conference', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
             
 
-            
+            // ยานพาหนะ
+            ['name' => '/booking/booking-car/*', 'type' => 2,'description' =>''],
+            // ห้องประชุม
+            ['name' => '/booking/booking-conference/*', 'type' => 2,'description' =>''],
+
             ['name' => '/dms/*', 'type' => 2,'description' =>''],
             ['name' => '/dms/dashboard', 'type' => 2,'description' =>'Dashboard'],
             ['name' => '/dms/documents', 'type' => 2,'description' =>'หนังสือรับ'],
@@ -183,6 +189,11 @@ class UpdateTableController extends Controller
         return [
             ['child' => '/*', 'parent' => 'admin'],
 
+            // ยานพาหนะ
+            ['child' => '/booking/booking-car/*', 'parent' => 'booking-car'],
+            // ระบบห้องประชุม
+            ['child' => '/booking/booking-conference/*', 'parent' => 'booking-conference'],
+            
             // ระบบสารบรรณ
             ['child' => '/dms/*', 'parent' => 'document'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],

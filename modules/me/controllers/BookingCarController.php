@@ -1,13 +1,15 @@
 <?php
 
 namespace app\modules\me\controllers;
-use yii;
+use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\BookingCar;
 use app\modules\booking\models\BookingCarSearch;
+use app\modules\booking\models\BookingCarsItems;
+use app\modules\booking\models\BookingCarsItemsSearch;
 
 class BookingCarController extends \yii\web\Controller
 {
@@ -63,7 +65,33 @@ class BookingCarController extends \yii\web\Controller
             }
         }
     
-        
+      
+                //เลือกประเภทของการใช้งานรถ
+                public function actionListCars()
+                {
+                    
+                    $searchModel = new BookingCarsItemsSearch();
+                    $dataProvider = $searchModel->search($this->request->queryParams);
+
+                    if ($this->request->isAJax) {
+                        \Yii::$app->response->format = Response::FORMAT_JSON;
+            
+                        return [
+                            'title' => $this->request->get('title'),
+                            'content' => $this->renderAjax('list_cars',[
+                                'searchModel' => $searchModel,
+                                'dataProvider' => $dataProvider,
+                            ]),
+                        ];
+                    } else {
+                        return $this->render('list_cars',[
+                            'searchModel' => $searchModel,
+                            'dataProvider' => $dataProvider,
+                        ]);
+                    }
+                }
+    
+                
 
     /**
      * Displays a single BookingCar model.

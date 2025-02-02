@@ -96,7 +96,7 @@ class BookingCarsItems extends \yii\db\ActiveRecord
         '.Html::img($this->asset->showImg(),['class' => 'avatar avatar-sm bg-primary text-white lazyautosizes ls-is-cached lazyloaded']).'
         <div class="avatar-detail">
             <h6 class="fs-13">'.$this->asset->AssetitemName().'</h6>
-            <p class="text-muted mb-0 fs-13">เลขทะเบียน <span class="badge rounded-pill badge-soft-danger text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ลากิจ</span></p>
+            <p class="text-muted mb-0 fs-13"><span class="badge rounded-pill badge-soft-danger text-success fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ว่าง</span></p>
         </div>
     </div>';
     }
