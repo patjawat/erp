@@ -24,21 +24,25 @@ $this->registerJs($this->render('_script.js'));
 $animateIcon = ' <i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>';
 ?>
 
-<div class="d-flex justify-content-between align-items-center">
-<p style="margin-bottom: 0px;">
-            <?= Html::a('<i class="far fa-edit"></i> แก้ไข', ['update', 'id' => $model->name], ['class' => 'btn btn-primary']); ?>
-            <?= Html::a('<i class="fas fa-trash"></i> ลบทิ้ง', ['delete', 'id' => $model->name], [
+<div class="card">
+    <div class="card-body">
+
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p style="margin-bottom: 0px;">
+        <?= Html::a('<i class="far fa-edit"></i> แก้ไข', ['update', 'id' => $model->name], ['class' => 'btn btn-primary']); ?>
+        <?= Html::a('<i class="fas fa-trash"></i> ลบทิ้ง', ['delete', 'id' => $model->name], [
                 'class' => 'btn btn-danger',
                 'data-confirm' => Yii::t('rbac-admin', 'Are you sure to delete this item?'),
                 'data-method' => 'post',
             ]); ?>
-            <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-success']); ?>
-        </p>
-<?=$this->render('../default/navlink')?>
+        <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-success']); ?>
+    </p>
+    <?=$this->render('../default/navlink')?>
 </div>
 
 
-        <?=
+<?=
             DetailView::widget([
                 'model' => $model,
                 'attributes' => [
@@ -51,16 +55,19 @@ $animateIcon = ' <i class="glyphicon glyphicon-refresh glyphicon-refresh-animate
             ]);
         ?>
 
+</div>
+</div>
 <div class="auth-item-view">
     <div class="row">
         <div class="col-md-5">
 
             <div class="card shadow">
                 <div class="card-header">
-                   ตัวเลือก
+                    ตัวเลือก
                 </div>
                 <div class="card-body">
-                    <input class="form-control search" data-target="available" placeholder="<?= Yii::t('rbac-admin', 'Search for available'); ?>">
+                    <input class="form-control search" data-target="available"
+                        placeholder="<?= Yii::t('rbac-admin', 'Search for available'); ?>">
                     <select multiple size="20" class="form-control list" data-target="available"></select>
                 </div>
             </div>
@@ -81,13 +88,15 @@ $animateIcon = ' <i class="glyphicon glyphicon-refresh glyphicon-refresh-animate
         <div class="col-md-5">
             <div class="card shadow">
                 <div class="card-header">
-                   เลือก
+                    เลือก
                 </div>
                 <div class="card-body">
-                    <input class="form-control search" data-target="assigned" placeholder="<?= Yii::t('rbac-admin', 'Search for assigned'); ?>">
+                    <input class="form-control search" data-target="assigned"
+                        placeholder="<?= Yii::t('rbac-admin', 'Search for assigned'); ?>">
                     <select multiple size="20" class="form-control list" data-target="assigned"></select>
                 </div>
             </div>
 
         </div>
     </div>
+</div>

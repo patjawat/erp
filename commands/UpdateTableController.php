@@ -188,6 +188,26 @@ class UpdateTableController extends Controller
     {
         return [
             ['child' => '/*', 'parent' => 'admin'],
+            ['child' => 'document', 'parent' => 'admin'],
+            ['child' => 'computer', 'parent' => 'admin'],
+            ['child' => 'computer_ma', 'parent' => 'admin'],
+            ['child' => 'director', 'parent' => 'admin'],
+            ['child' => 'hr', 'parent' => 'admin'],
+            ['child' => 'medical', 'parent' => 'admin'],
+            ['child' => 'medical_ma', 'parent'  => 'admin'],
+            ['child' => 'purchase', 'parent' => 'admin'],
+            ['child' => 'technician', 'parent'  => 'admin'],
+            ['child' => 'technician_ma', 'parent' => 'admin'],
+            ['child' => 'user', 'parent' => 'admin'],
+            ['child' => 'warehouse', 'parent'  => 'admin'],
+            ['child' => 'branch', 'parent'  => 'admin'],
+            ['child' => 'inventory', 'parent'  => 'admin'],
+            ['child' => 'sm', 'parent'  => 'admin'],
+            ['child' => 'leave', 'parent'  => 'admin'],
+            ['child' => 'document', 'parent' => 'admin'],
+            ['child' => 'asset', 'parent'  => 'admin'],
+            ['child' => 'booking-car', 'parent'  => 'admin'],
+            ['child' => 'booking-conference', 'parent'  => 'admin'],
 
             // ยานพาหนะ
             ['child' => '/booking/booking-car/*', 'parent' => 'booking-car'],
