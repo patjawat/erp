@@ -34,7 +34,8 @@ class NotificationHelper extends Component
 //ระบบการแจ้งเตือนการอนุมัติ
     public static function Leave()
     {
-        $me = UserHelper::GetEmployee();
+        try {
+            $me = UserHelper::GetEmployee();
         $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->limit(10)->all();
         
         return [
@@ -42,6 +43,14 @@ class NotificationHelper extends Component
             'total' => isset($datas) ? count($datas) : 0,
             'datas' => $datas
         ];
+        } catch (\Throwable $th) {
+            return [
+                'title' => 'แจ้งซ่อม',
+                'total' => 0,
+                'datas' => []
+            ];
+        }
+       
     }
     
 //แจ้งเตือนสะานนะการแจ้งซ่อม
@@ -85,15 +94,24 @@ class NotificationHelper extends Component
     //รายการที่ต้องอนุมัติจัดซื้อ
     public static function Purchase()
     {
-        $me = UserHelper::GetEmployee();
-        $datas = Approve::find()->where(['name' => 'purchase','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
-        
-        return [
-            'title' => 'อนุมัติขอซื้อขอจ้าง',
-            'total' => isset($datas) ? count($datas) : 0,
-            'datas' => $datas,
-            'emp_id' => $me->id
-        ];
+        try {
+            $me = UserHelper::GetEmployee();
+            $datas = Approve::find()->where(['name' => 'purchase','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+            
+            return [
+                'title' => 'อนุมัติขอซื้อขอจ้าง',
+                'total' => isset($datas) ? count($datas) : 0,
+                'datas' => $datas,
+                'emp_id' => $me->id
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'title' => 'อนุมัติขอซื้อขอจ้าง',
+                'total' =>  0,
+                'datas' => [],
+            ];
+      
+    }
     }
     
     public static function StockApprove()
