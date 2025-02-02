@@ -47,6 +47,7 @@ class BookingCarController extends Controller
         ]);
     }
 
+        
     /**
      * Displays a single BookingCar model.
      * @param int $id ID

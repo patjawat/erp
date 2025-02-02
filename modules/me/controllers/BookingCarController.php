@@ -47,6 +47,24 @@ class BookingCarController extends \yii\web\Controller
         ]);
     }
 
+
+        //เลือกประเภทของการใช้งานรถ
+        public function actionSelectType()
+        {
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+    
+                return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('select_type'),
+                ];
+            } else {
+                return $this->render('select_type');
+            }
+        }
+    
+        
+
     /**
      * Displays a single BookingCar model.
      * @param int $id ID
@@ -67,7 +85,9 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionCreate()
     {
-        $model = new BookingCar();
+        $model = new BookingCar([
+            'booking_type' => $this->request->get('type')
+        ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {

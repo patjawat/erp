@@ -232,7 +232,7 @@ $config = [
     'as access' => [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
-            // '*',
+            '*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

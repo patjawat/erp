@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\bootstrap4\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 ?>
 
 <style>
@@ -102,6 +102,7 @@ use yii\bootstrap4\ActiveForm;
             </div>
             <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
                 <?= $form->field($model, 'roles')->checkboxList($model->getAllRoles()) ?>
+               
             </div>
         </div>
 

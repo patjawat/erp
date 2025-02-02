@@ -3,11 +3,16 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
+use app\modules\dms\models\DocumentTags;
 
 /**
  * This is the model class for table "booking_cars".
  *
  * @property int $id
+ * @property string|null $ref
+ * @property int|null $thai_year ปีงบประมาณ
  * @property string|null $booking_type ประเภทของรถ general หรือ ambulance
  * @property int|null $document_id ตามหนังสือ
  * @property string|null $urgent ตามหนังสือ
@@ -28,7 +33,7 @@ use Yii;
  * @property string|null $deleted_at วันที่ลบ
  * @property int|null $deleted_by ผู้ลบ
  */
-class BookingCars extends \yii\db\ActiveRecord
+class BookingCar extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
@@ -44,9 +49,9 @@ class BookingCars extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['booking_type', 'urgent', 'asset_item_id', 'location', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
+            [['ref', 'booking_type', 'urgent', 'asset_item_id', 'location', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -57,6 +62,8 @@ class BookingCars extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'ref' => 'Ref',
+            'thai_year' => 'ปีงบประมาณ',
             'booking_type' => 'ประเภทของรถ general หรือ ambulance',
             'document_id' => 'ตามหนังสือ',
             'urgent' => 'ตามหนังสือ',
@@ -77,5 +84,15 @@ class BookingCars extends \yii\db\ActiveRecord
             'deleted_at' => 'วันที่ลบ',
             'deleted_by' => 'ผู้ลบ',
         ];
+    }
+
+    public function listDocument()
+    {
+        $me = UserHelper::GetEmployee();
+        $document = DocumentTags::find()->where(['tag_id' => 1,'name' => 'comment'])->all();
+        return ArrayHelper::map($document, 'id',function($model){
+            return $model->document->topic;
+        });
+        
     }
 }

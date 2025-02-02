@@ -3,6 +3,7 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\DocumentTags;
@@ -49,6 +50,7 @@ class BookingCar extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['booking_type','date_start','date_end'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['ref', 'booking_type', 'urgent', 'asset_item_id', 'location', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
@@ -66,7 +68,7 @@ class BookingCar extends \yii\db\ActiveRecord
             'thai_year' => 'ปีงบประมาณ',
             'booking_type' => 'ประเภทของรถ general หรือ ambulance',
             'document_id' => 'ตามหนังสือ',
-            'urgent' => 'ตามหนังสือ',
+            'urgent' => 'ความเร่งด่วน',
             'asset_item_id' => 'ยานพาหนะ',
             'location' => 'สถานที่ไป',
             'data_json' => 'ยานพาหนะ',
@@ -86,6 +88,16 @@ class BookingCar extends \yii\db\ActiveRecord
         ];
     }
 
+        // แสดงหน่วยงานภานนอก
+        public function ListOrg()
+        {
+            $model = Categorise::find()
+                ->where(['name' => 'document_org'])
+                ->asArray()
+                ->all();
+            return ArrayHelper::map($model, 'code', 'title');
+        }
+        
     public function listDocument()
     {
         $me = UserHelper::GetEmployee();

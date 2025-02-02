@@ -18,7 +18,7 @@ class m250130_112214_create_booking_cars_table extends Migration
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'booking_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),
             'document_id' => $this->integer()->comment('ตามหนังสือ'),
-            'urgent' => $this->string()->comment('ตามหนังสือ'),
+            'urgent' => $this->string()->comment('ความเร่งด่วน'),
             'asset_item_id' => $this->string()->comment('ยานพาหนะ'),
             'location' => $this->string()->comment('สถานที่ไป'),
             'status' => $this->string()->comment('ความเห็น Y ผ่าน N ไม่ผ่าน'),

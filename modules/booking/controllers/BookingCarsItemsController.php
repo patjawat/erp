@@ -50,6 +50,8 @@ class BookingCarsItemsController extends Controller
         ]);
     }
 
+
+
     /**
      * Displays a single BookingCarsItems model.
      * @param int $id ID
