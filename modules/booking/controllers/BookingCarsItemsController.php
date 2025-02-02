@@ -7,6 +7,7 @@ use yii\web\Controller;
 use yii\bootstrap5\Html;
 use yii\filters\VerbFilter;
 use app\modules\am\models\Asset;
+use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\BookingCarsItems;
 use app\modules\booking\models\BookingCarsItemsSearch;
@@ -50,6 +51,39 @@ class BookingCarsItemsController extends Controller
         ]);
     }
 
+                    //เลือกประเภทของการใช้งานรถ
+                    public function actionListCars()
+                    {
+                        
+                        $dataProvider = Asset::find()->leftJoin('categorise', 'categorise.code = asset.asset_item')
+                        ->where([
+                            'asset.asset_group' => '3',
+                            'categorise.category_id' => '4'
+                        ])
+                        ->orderBy([
+                            'asset.code' => SORT_DESC,
+                            'asset.receive_date' => SORT_ASC
+                        ])
+                        ->all();
+
+    
+                        if ($this->request->isAJax) {
+                            \Yii::$app->response->format = Response::FORMAT_JSON;
+                
+                            return [
+                                'title' => $this->request->get('title'),
+                                'content' => $this->renderAjax('list_cars',[
+                                    'dataProvider' => $dataProvider,
+                                ]),
+                            ];
+                        } else {
+                            return $this->render('list_cars',[
+                                'dataProvider' => $dataProvider,
+                            ]);
+                        }
+                    }
+    
+                    
 
 
     /**

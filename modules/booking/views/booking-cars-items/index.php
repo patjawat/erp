@@ -18,9 +18,7 @@ $this->title = 'ยานพาหนะ ';
     <div class="card-body">
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/booking/booking-cars-items/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลรถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
-
-
+            <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/booking/booking-cars-items/list-cars','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลรถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
         </div>
         <table class="table table-striped table-hover">
             <thead>
