@@ -94,12 +94,8 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
 
     </div>
     <div class="col-4">
-        <div class="card">
-            <div class="card-body">
                 <div id="viewCars">ทะเบียนยานพาหนะ</div>
-            </div>
-        </div>
-
+ 
     </div>
 </div>
 
