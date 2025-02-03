@@ -47,6 +47,7 @@ $this->title = 'ห้องประชุม';
                 <td class="text-center">
                 <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/room/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                 <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/booking/room/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                <?php echo Html::a('<i class="fa-regular fa-trash-can fa-2x text-danger"></i>',['/booking/room/delete','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'delete-item','data' => ['size' => 'modal-lg']])?>
                 </td>
                </tr>
                 <?php endforeach;?>
