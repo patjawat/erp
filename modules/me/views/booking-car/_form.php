@@ -17,11 +17,12 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
 /** @var app\modules\booking\models\BookingCar $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<div class="row">
-    <div class="col-7">
-        <?php $form = ActiveForm::begin([
+   <?php $form = ActiveForm::begin([
             'id' => 'booking-form'
         ]); ?>
+<div class="row">
+    <div class="col-7">
+     
         <div class="row">
             <div class="col-6">
                 <div class="row">
@@ -72,7 +73,7 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
                 <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
             </div>
         </div>
-        <?= $form->field($model, 'car_type')->textInput(['maxlength' => true])->label(false) ?>
+        <?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
         
         <?= $form->field($model, 'license_plate')->textInput(['maxlength' => true]) ?>
         <?php
@@ -92,22 +93,23 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
         //                 ]
         //             ])
                      ?>
-                    
-        <div class="form-group mt-3 d-flex justify-content-center gap-3">
-            <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-            <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
-                    class="fa-regular fa-circle-xmark"></i> ปิด</button>
-        </div>
-        <?php ActiveForm::end(); ?>
+
+       
 
         
     </div>
     <div class="col-5">
         <div id="viewCars">ทะเบียนยานพาหนะ</div>
-    </div>
+    </div>    
+  
 </div>
 
-
+<div class="form-group mt-3 d-flex justify-content-center gap-3">
+            <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+            <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+                    class="fa-regular fa-circle-xmark"></i> ปิด</button>
+        </div>
+        <?php ActiveForm::end(); ?>
 <?php
 $listCarsUrl = Url::to(['/me/booking-car/list-cars']);
 $js = <<<JS
