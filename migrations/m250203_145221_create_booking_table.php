@@ -3,25 +3,28 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%booking_cars}}`.
+ * Handles the creation of table `{{%booking}}`.
  */
-class m250130_112214_create_booking_cars_table extends Migration
+class m250203_145221_create_booking_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('{{%booking_cars}}', [
+        $this->createTable('{{%booking}}', [
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
+            'name' => $this->string(255)->comment('ชื่อกาารเก็บข้อมูล (car,conference)'),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
-            'booking_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),
+            'car_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),
             'document_id' => $this->integer()->comment('ตามหนังสือ'),
             'urgent' => $this->string()->comment('ความเร่งด่วน'),
-            'asset_item_id' => $this->string()->comment('ยานพาหนะ'),
+            'license_plate' => $this->string()->comment('ทะเบียนยานพาหนะ'),
+            'conference_room_id' => $this->string()->comment('ห้องประชุม'),
             'location' => $this->string()->comment('สถานที่ไป'),
-            'status' => $this->string()->comment('ความเห็น Y ผ่าน N ไม่ผ่าน'),
+            'reason' => $this->string()->comment('เหตุผล'),
+            'status' => $this->string()->comment('สถานะ'),
             'date_start' => $this->date()->comment('เริ่มวันที่'),
             'time_start' => $this->string()->comment('เริ่มเวลา'),
             'date_end' => $this->date()->comment('ถึงวันที่'),
@@ -43,6 +46,6 @@ class m250130_112214_create_booking_cars_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%booking_cars}}');
+        $this->dropTable('{{%booking}}');
     }
 }

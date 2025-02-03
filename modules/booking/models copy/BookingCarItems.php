@@ -8,10 +8,11 @@ use yii\helpers\ArrayHelper;
 use app\modules\am\models\Asset;
 
 /**
- * This is the model class for table "booking_cars_items".
+ * This is the model class for table "booking_car_items".
  *
  * @property int $id
- * @property string|null $car_type ประเภทของรถตามการใช้งาน
+ * @property string|null $name ชื่อการเก็บข้อมุล,ผู้ร่วมเดินทาง,บุคคลอื่นร่วมเดินทาง,งานมอบหมาย
+ * @property string|null $car_type ประเภทของรถตามการใช้งาน (หากเก็บข้อมูลรถยนต์)
  * @property int|null $asset_item_id รายการทรัพย์สิน
  * @property string|null $license_plate เลขทะเบียน
  * @property int|null $active
@@ -23,14 +24,14 @@ use app\modules\am\models\Asset;
  * @property string|null $deleted_at วันที่ลบ
  * @property int|null $deleted_by ผู้ลบ
  */
-class BookingCarsItems extends \yii\db\ActiveRecord
+class BookingCarItems extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'booking_cars_items';
+        return 'booking_car_items';
     }
 
     /**
@@ -39,9 +40,10 @@ class BookingCarsItems extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['asset_item_id','car_type','license_plate'], 'required'],
             [['asset_item_id', 'active', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['car_type', 'license_plate'], 'string', 'max' => 255],
+            [['name', 'car_type', 'license_plate'], 'string', 'max' => 255],
         ];
     }
 
@@ -52,7 +54,8 @@ class BookingCarsItems extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'car_type' => 'ประเภทของรถตามการใช้งาน',
+            'name' => 'ชื่อการเก็บข้อมุล,ผู้ร่วมเดินทาง,บุคคลอื่นร่วมเดินทาง,งานมอบหมาย',
+            'car_type' => 'ประเภทของรถตามการใช้งาน (หากเก็บข้อมูลรถยนต์)',
             'asset_item_id' => 'รายการทรัพย์สิน',
             'license_plate' => 'เลขทะเบียน',
             'active' => 'Active',
@@ -65,6 +68,7 @@ class BookingCarsItems extends \yii\db\ActiveRecord
             'deleted_by' => 'ผู้ลบ',
         ];
     }
+
 
     // section Relationships
     public function getAsset()
@@ -100,4 +104,5 @@ class BookingCarsItems extends \yii\db\ActiveRecord
         </div>
     </div>';
     }
+
 }

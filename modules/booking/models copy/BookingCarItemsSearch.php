@@ -4,12 +4,12 @@ namespace app\modules\booking\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\booking\models\BookingCarsItems;
+use app\modules\booking\models\BookingCarItems;
 
 /**
- * BookingCarsItemsSearch represents the model behind the search form of `app\modules\booking\models\BookingCarsItems`.
+ * BookingCarItemsSearch represents the model behind the search form of `app\modules\booking\models\BookingCarItems`.
  */
-class BookingCarsItemsSearch extends BookingCarsItems
+class BookingCarItemsSearch extends BookingCarItems
 {
     /**
      * {@inheritdoc}
@@ -18,7 +18,7 @@ class BookingCarsItemsSearch extends BookingCarsItems
     {
         return [
             [['id', 'asset_item_id', 'active', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['car_type', 'license_plate', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['name', 'car_type', 'license_plate', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];
     }
 
@@ -40,7 +40,7 @@ class BookingCarsItemsSearch extends BookingCarsItems
      */
     public function search($params)
     {
-        $query = BookingCarsItems::find();
+        $query = BookingCarItems::find();
 
         // add conditions that should always apply here
 
@@ -69,7 +69,8 @@ class BookingCarsItemsSearch extends BookingCarsItems
             'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'car_type', $this->car_type])
+        $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'car_type', $this->car_type])
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 

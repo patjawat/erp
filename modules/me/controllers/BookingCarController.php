@@ -1,15 +1,17 @@
 <?php
 
 namespace app\modules\me\controllers;
+use Yii;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\booking\models\BookingCar;
-use app\modules\booking\models\BookingCarSearch;
-use app\modules\booking\models\BookingCarsItems;
-use app\modules\booking\models\BookingCarsItemsSearch;
+use app\modules\am\models\AssetSearch;
+use app\modules\booking\models\Booking;
+use app\modules\booking\models\BookingSearch;
 
 class BookingCarController extends \yii\web\Controller
 {
@@ -40,8 +42,11 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionIndex()
     {
+        $me = UserHelper::GetEmployee();
+        $userId = Yii::$app->user->id;
         $searchModel = new BookingCarSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['created_by' => $userId]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -69,9 +74,12 @@ class BookingCarController extends \yii\web\Controller
                 //เลือกประเภทของการใช้งานรถ
                 public function actionListCars()
                 {
+                    $carType = $this->request->get('car_type');
                     
-                    $searchModel = new BookingCarsItemsSearch();
+                    $searchModel = new AssetSearch();
                     $dataProvider = $searchModel->search($this->request->queryParams);
+                    $dataProvider->query->andFilterWhere(['not','license_plate',null]);
+                    $dataProvider->query->andFilterWhere(['car_type' => $carType]);
 
                     if ($this->request->isAJax) {
                         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -113,13 +121,18 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionCreate()
     {
-        $model = new BookingCar([
-            'booking_type' => $this->request->get('type')
+        $model = new Booking([
+            'car_type' => $this->request->get('type')
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post())) {
+                $model->thai_year = AppHelper::YearBudget();
+                $model->date_start = AppHelper::convertToGregorian($model->date_start);
+                $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                if($model->save()){
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
             }
         } else {
             $model->loadDefaultValues();
@@ -150,14 +163,27 @@ class BookingCarController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

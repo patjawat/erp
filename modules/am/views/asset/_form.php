@@ -1,11 +1,11 @@
 <?php
-use app\components\AppHelper;
-use app\modules\am\models\Asset;
+use yii\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use unclead\multipleinput\MultipleInput;
 use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
+use app\components\AppHelper;
+use app\modules\am\models\Asset;
+use unclead\multipleinput\MultipleInput;
 
 $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
@@ -92,6 +92,34 @@ $group = Yii::$app->request->get('group');
         <div class="alert alert-primary" role="alert">
             <strong>*</strong> รายละเอียดครุภัณฑ์
         </div>
+        <div class="row">
+            <div class="col-3">
+            <?=$form->field($model, 'car_type')->widget(Select2::classname(), [
+                    'data' => [
+                        'general' => 'รถใช้งานทั่วไป',
+                        'ambulance' => 'รถพยาบาล'
+                    ],
+                    'options' => ['placeholder' => 'เลือกรถยนต์ ...'],
+                   
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label('ประการใช้งานรถยนต์');
+                ?>
+            </div>
+            <div class="col-2">
+            <?=$form->field($model, 'license_plate')->textInput()->label('หมายเลขทะเบียน');?>
+        </div>
+            <div class="col-2">
+                <?=$form->field($model, 'data_json[color]')->textInput()->label('สี');?>
+            </div>
+            <div class="col-2">
+                <?=$form->field($model, 'data_json[fuel_type]')->textInput()->label('ชนิดของเชื้อเพลิง');?>
+            </div>
+            <div class="col-2">
+                    <?=$form->field($model, 'data_json[seat_size]')->textInput()->label('จำนวนที่นั่ง');?>
+            </div>
+        </div>
         <?=$form->field($model, 'data_json[asset_option]')->textArea(['rows' => 5])->label(false);?>
     </div>
     <div class="tab-pane fade bg-white p-3" id="uploadFile" role="tabpanel" aria-labelledby="uploadFile-tab">
@@ -168,6 +196,17 @@ echo $form->field($model, 'device_items')->widget(MultipleInput::className(), [
 $js = <<< JS
 $('#form-asset').on('beforeSubmit', function (e) {
     var form = $(this);
+    Swal.fire({
+        title: "ยืนยัน?",
+        text: "บันทึกขอมูลทรัพย์สิน!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก!",
+        confirmButtonText: "ใช่, ยืนยัน!"
+        }).then((result) => {
+        if (result.isConfirmed) {
     $.ajax({
         url: form.attr('action'),
         type: 'post',
@@ -188,10 +227,12 @@ $('#form-asset').on('beforeSubmit', function (e) {
                  $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
             }
         }
-    });
-    return false;
-});
+            });
 
+        }
+        });
+        return false;
+    });
 
 // เลือก upload รูปภาพ
 

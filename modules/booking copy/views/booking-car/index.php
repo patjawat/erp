@@ -18,6 +18,7 @@ $this->title = 'จองรถยนต์ ';
     <div class="card-body">
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนการ<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <?php echo html::a('<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
 
 
         </div>
@@ -61,7 +62,7 @@ $this->title = 'จองรถยนต์ ';
                 <td><?php echo $item->leader_id?></td>
                 <td></td>
                 <td class="text-center">
-                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/booking-car/view','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-xl']])?>
+                <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/booking-car/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                 </td>
                </tr>
                 <?php endforeach;?>

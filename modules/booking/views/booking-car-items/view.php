@@ -4,14 +4,14 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var app\modules\booking\models\BookingCar $model */
+/** @var app\modules\booking\models\BookingCarItems $model */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Booking Cars', 'url' => ['index']];
+$this->title = $model->name;
+$this->params['breadcrumbs'][] = ['label' => 'Booking Car Items', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="booking-car-view">
+<div class="booking-car-items-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -25,21 +25,24 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ]) ?>
     </p>
+
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'reason',
-            'document_id',
-            'urgent',
-            'location',
-            'date_start',
-            'time_start',
-            'date_end',
-            'time_end',
-            'driver_id',
-            'leader_id',
+            'id',
+            'name',
+            'car_type',
+            'asset_item_id',
+            'license_plate',
+            'active',
+            'data_json',
+            'created_at',
+            'updated_at',
+            'created_by',
+            'updated_by',
+            'deleted_at',
+            'deleted_by',
         ],
     ]) ?>
-
 
 </div>

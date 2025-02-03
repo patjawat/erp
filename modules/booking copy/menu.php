@@ -9,6 +9,6 @@ $path = Yii::$app->request->getPathInfo();
 ?>
 <div class="d-flex gap-2">
         <?php echo  Html::a('<i class="fa-solid fa-file"></i> ทะเบียนขอใช้ยานพาหนะ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">0</span>',['/booking/booking-car'],['class' => $path == 'booking/booking-car' ? 'btn btn-light' : 'btn btn-outline-light'])?>
-        <?php echo  Html::a('<i class="fa-solid fa-car"></i> ข้อมูลยานพาหนะ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">0</span>',['/booking/booking-cars-items'],['class' => $path == 'booking/booking-cars-items' ? 'btn btn-light' : 'btn btn-outline-light'])?>
+        <?php echo  Html::a('<i class="fa-solid fa-car"></i> ข้อมูลยานพาหนะ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">0</span>',['/booking/booking-car-items'],['class' => $path == 'booking/booking-car-items' ? 'btn btn-light' : 'btn btn-outline-light'])?>
 
 </div>

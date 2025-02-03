@@ -3,8 +3,8 @@
 namespace app\modules\am\models;
 
 use yii\base\Model;
-use yii\data\ActiveDataProvider;
 use app\modules\am\models\Asset;
+use yii\data\ActiveDataProvider;
 
 /**
  * AssetSearch represents the model behind the search form of `app\modules\am\models\Asset`.
@@ -61,6 +61,7 @@ class AssetSearch extends Asset
         $query->andFilterWhere([
             'id' => $this->id,
             'asset_group' => $this->asset_group,
+            'license_plate' => $this->license_plate,
             'receive_date' => $this->receive_date,
             'price' => $this->price,
             'life' => $this->life,

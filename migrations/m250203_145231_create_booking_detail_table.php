@@ -3,21 +3,20 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%booking_cars_item}}`.
+ * Handles the creation of table `{{%booking_detail}}`.
  */
-class m250130_133432_create_booking_cars_items_table extends Migration
+class m250203_145231_create_booking_detail_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('{{%booking_cars_items}}', [
+        $this->createTable('{{%booking_detail}}', [
             'id' => $this->primaryKey(),
-            'car_type' => $this->string()->comment('ประเภทของรถตามการใช้งาน'),
-            'asset_item_id' => $this->integer()->comment('รายการทรัพย์สิน'),
-            'license_plate' => $this->string()->comment('เลขทะเบียน'),
-            'active' => $this->boolean()->defaultValue(true),
+            'ref' => $this->string(255),
+            'bookig_id' => $this->string()->comment('เชื่อมกับตารางหลัก'),
+            'name' => $this->string()->comment('ชื่อการเก็บข้อมุล,ผู้ร่วมเดินทาง,บุคคลอื่นร่วมเดินทาง,งานมอบหมาย'),
             'data_json' => $this->json()->comment('ยานพาหนะ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
@@ -33,6 +32,6 @@ class m250130_133432_create_booking_cars_items_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%booking_cars_items}}');
+        $this->dropTable('{{%booking_detail}}');
     }
 }

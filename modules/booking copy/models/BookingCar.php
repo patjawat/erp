@@ -10,7 +10,7 @@ use app\components\UserHelper;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\DocumentTags;
-use app\modules\booking\models\BookingCarItems;
+use app\modules\booking\models\BookingCarsItems;
 
 /**
  * This is the model class for table "booking_cars".
@@ -71,7 +71,6 @@ class BookingCar extends \yii\db\ActiveRecord
             'thai_year' => 'ปีงบประมาณ',
             'booking_type' => 'ประเภทของรถ general หรือ ambulance',
             'document_id' => 'ตามหนังสือ',
-            'reason' => 'เหตุผลขอใช้รถ',
             'urgent' => 'ความเร่งด่วน',
             'location' => 'สถานที่ไป',
             'data_json' => 'ยานพาหนะ',
@@ -112,7 +111,7 @@ class BookingCar extends \yii\db\ActiveRecord
         // section Relationships
         public function getCar()
         {
-            return $this->hasOne(BookingCarItems::class, ['license_plate' => 'license_plate']);
+            return $this->hasOne(BookingCarsItems::class, ['license_plate' => 'license_plate']);
         }
         
     
@@ -138,7 +137,7 @@ class BookingCar extends \yii\db\ActiveRecord
     //แสดงรายการทะยานพาหนะ
     public function ListCarItems()
     {
-            $items = BookingCarItems::find()->all();
+            $items = BookingCarsItems::find()->all();
             return ArrayHelper::map($items, 'license_plate','license_plate');
     }
 }

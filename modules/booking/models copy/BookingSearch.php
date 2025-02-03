@@ -4,12 +4,12 @@ namespace app\modules\booking\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\booking\models\BookingCar;
+use app\modules\booking\models\Booking;
 
 /**
- * BookingCarSearch represents the model behind the search form of `app\modules\booking\models\BookingCar`.
+ * BookingSearch represents the model behind the search form of `app\modules\booking\models\Booking`.
  */
-class BookingCarSearch extends BookingCar
+class BookingSearch extends Booking
 {
     /**
      * {@inheritdoc}
@@ -17,8 +17,8 @@ class BookingCarSearch extends BookingCar
     public function rules()
     {
         return [
-            [['id', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['booking_type', 'urgent','location', 'data_json', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['id', 'thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'conference_room_id', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];
     }
 
@@ -40,7 +40,7 @@ class BookingCarSearch extends BookingCar
      */
     public function search($params)
     {
-        $query = BookingCar::find();
+        $query = Booking::find();
 
         // add conditions that should always apply here
 
@@ -59,8 +59,8 @@ class BookingCarSearch extends BookingCar
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'thai_year' => $this->thai_year,
             'document_id' => $this->document_id,
-            'license_plate' => $this->license_plate,
             'date_start' => $this->date_start,
             'date_end' => $this->date_end,
             'created_at' => $this->created_at,
@@ -71,15 +71,20 @@ class BookingCarSearch extends BookingCar
             'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'booking_type', $this->booking_type])
+        $query->andFilterWhere(['like', 'ref', $this->ref])
+            ->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'car_type', $this->car_type])
             ->andFilterWhere(['like', 'urgent', $this->urgent])
+            ->andFilterWhere(['like', 'license_plate', $this->license_plate])
+            ->andFilterWhere(['like', 'conference_room_id', $this->conference_room_id])
             ->andFilterWhere(['like', 'location', $this->location])
-            ->andFilterWhere(['like', 'data_json', $this->data_json])
+            ->andFilterWhere(['like', 'reason', $this->reason])
             ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])
-            ->andFilterWhere(['like', 'leader_id', $this->leader_id]);
+            ->andFilterWhere(['like', 'leader_id', $this->leader_id])
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

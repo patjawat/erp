@@ -31,20 +31,33 @@ $this->title = 'จองรถ';
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">ปีงบประมาณ</th>
+                    <th scope="col">รายการ</th>
                     <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">วัน</th>
-                    <th scope="col">จากวันที่</th>
+                    <th scope="col">วันที่ไป</th>
+                    <th scope="col">เวลาไป</th>
                     <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
-                    <!-- <th scope="col">มอบหมาย</th> -->
+                    <th scope="col">เวลากลับ</th>
                     <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+                    <th scope="col">สถานะ</th>
                     <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
-               
+               <tr>
+                <td><?php echo $item->reason;?></td>
+                <td><?php echo $item->car->Avatar();?></td>
+                <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
+                <td><?php echo $item->time_start?></td>
+                <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
+                <td><?php echo $item->time_end?></td>
+                <td><?php echo $item->leader_id?></td>
+                <td></td>
+                <td class="text-center">
+                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-car/view','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-xl']])?>
+                <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/booking-car/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                </td>
+               </tr>
                 <?php endforeach;?>
             </tbody>
         </table>

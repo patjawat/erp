@@ -4,10 +4,36 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use app\modules\am\models\Asset;
+use app\modules\booking\models\BookingCarsItems;
 
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\BookingCarsItems $model */
 /** @var yii\widgets\ActiveForm $form */
+
+$array = BookingCarsItems::find()->all();
+$notIn = ArrayHelper::getColumn($array,'asset_item_id');
+// \Yii::$app->response->format = Response::FORMAT_JSON;
+
+
+$asset = Asset::find()
+    ->leftJoin('categorise', 'categorise.code = asset.asset_item')
+    ->where([
+        'asset.asset_group' => '3',
+        'categorise.category_id' => '4'
+    ])
+    ->andWhere(['not in','asset.id',$notIn])
+    ->orderBy([
+        'asset.code' => SORT_DESC,
+        'asset.receive_date' => SORT_ASC
+    ])
+    ->all();
+
+    $listCars = ArrayHelper::map($asset,'id',function($model){
+        return $model->assetItem->title;
+    })
+    
 ?>
 
 <div class="booking-cars-items-form">
@@ -15,7 +41,7 @@ use kartik\select2\Select2;
     <?php $form = ActiveForm::begin(['id' =>'form']); ?>
     <?php
                 echo $form->field($model, 'asset_item_id')->widget(Select2::classname(), [
-                    'data' => $model->listCars(),
+                    'data' => $listCars,
                     'options' => ['placeholder' => 'เลือกรถยนต์ ...'],
                     'pluginOptions' => [
                         'allowClear' => true,

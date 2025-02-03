@@ -1,21 +1,23 @@
 <?php
 
 namespace app\modules\booking\controllers;
+
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\bootstrap5\Html;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\modules\am\models\Asset;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
-use app\modules\booking\models\BookingCarsItems;
-use app\modules\booking\models\BookingCarsItemsSearch;
+use app\modules\booking\models\BookingCarItems;
+use app\modules\booking\models\BookingCarItemsSearch;
 
 /**
- * BookingCarsItemsController implements the CRUD actions for BookingCarsItems model.
+ * BookingCarItemsController implements the CRUD actions for BookingCarItems model.
  */
-class BookingCarsItemsController extends Controller
+class BookingCarItemController extends Controller
 {
     /**
      * @inheritDoc
@@ -36,58 +38,60 @@ class BookingCarsItemsController extends Controller
     }
 
     /**
-     * Lists all BookingCarsItems models.
+     * Lists all BookingCarItems models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new BookingCarsItemsSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        // $searchModel = new BookingCarItemsSearch();
+        // $dataProvider = $searchModel->search($this->request->queryParams);
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        // return $this->render('index', [
+        //     'searchModel' => $searchModel,
+        //     'dataProvider' => $dataProvider,
+        // ]);
     }
 
-                    //เลือกประเภทของการใช้งานรถ
-                    public function actionListCars()
-                    {
-                        
-                        $dataProvider = Asset::find()->leftJoin('categorise', 'categorise.code = asset.asset_item')
-                        ->where([
-                            'asset.asset_group' => '3',
-                            'categorise.category_id' => '4'
-                        ])
-                        ->orderBy([
-                            'asset.code' => SORT_DESC,
-                            'asset.receive_date' => SORT_ASC
-                        ])
-                        ->all();
+    // เลือกประเภทของการใช้งานรถ
+    public function actionListCars()
+    {
+        $array = BookingCarItems::find()->all();
+        $notIn = ArrayHelper::getColumn($array,'asset_item_id');
+        // \Yii::$app->response->format = Response::FORMAT_JSON;
+      
+        
+        $dataProvider = Asset::find()
+            ->leftJoin('categorise', 'categorise.code = asset.asset_item')
+            ->where([
+                'asset.asset_group' => '3',
+                'categorise.category_id' => '4'
+            ])
+            ->andWhere(['not in','asset.id',$notIn])
+            ->orderBy([
+                'asset.code' => SORT_DESC,
+                'asset.receive_date' => SORT_ASC
+            ])
+            ->all();
 
-    
-                        if ($this->request->isAJax) {
-                            \Yii::$app->response->format = Response::FORMAT_JSON;
-                
-                            return [
-                                'title' => $this->request->get('title'),
-                                'content' => $this->renderAjax('list_cars',[
-                                    'dataProvider' => $dataProvider,
-                                ]),
-                            ];
-                        } else {
-                            return $this->render('list_cars',[
-                                'dataProvider' => $dataProvider,
-                            ]);
-                        }
-                    }
-    
-                    
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
 
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_cars', [
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('list_cars', [
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
 
     /**
-     * Displays a single BookingCarsItems model.
+     * Displays a single BookingCarItems model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -100,21 +104,21 @@ class BookingCarsItemsController extends Controller
     }
 
     /**
-     * Creates a new BookingCarsItems model.
+     * Creates a new BookingCarItems model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new BookingCarsItems();
+        $model = new BookingCarItems();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
-                        'status' => 'success',
-                        'container' => '#booking'
-                    ];
+                    'status' => 'success',
+                    'container' => '#booking'
+                ];
             }
         } else {
             $model->loadDefaultValues();
@@ -137,7 +141,7 @@ class BookingCarsItemsController extends Controller
     }
 
     /**
-     * Updates an existing BookingCarsItems model.
+     * Updates an existing BookingCarItems model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -150,9 +154,9 @@ class BookingCarsItemsController extends Controller
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                    'status' => 'success',
-                    'container' => '#booking'
-                ];
+                'status' => 'success',
+                'container' => '#booking'
+            ];
         }
 
         if ($this->request->isAJax) {
@@ -172,7 +176,7 @@ class BookingCarsItemsController extends Controller
     }
 
     /**
-     * Deletes an existing BookingCarsItems model.
+     * Deletes an existing BookingCarItems model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -186,15 +190,15 @@ class BookingCarsItemsController extends Controller
     }
 
     /**
-     * Finds the BookingCarsItems model based on its primary key value.
+     * Finds the BookingCarItems model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return BookingCarsItems the loaded model
+     * @return BookingCarItems the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = BookingCarsItems::findOne(['id' => $id])) !== null) {
+        if (($model = BookingCarItems::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
@@ -205,6 +209,6 @@ class BookingCarsItemsController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = Asset::findOne($id);
-        return Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']);
+        return Html::img($model->showImg(), ['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']);
     }
 }

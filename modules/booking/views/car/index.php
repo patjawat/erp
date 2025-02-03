@@ -11,7 +11,7 @@ $this->title = 'จองรถยนต์ ';
 <i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/booking/menu') ?>
+<?php  echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">

@@ -3,15 +3,15 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-$this->title = 'จองรถยนต์ ';
+$this->title = 'ระบบจองห้องประชุม ';
 ?>
 <?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
-<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<i class="fa-brands fa-meetup fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/booking/menu') ?>
+<?php  echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">

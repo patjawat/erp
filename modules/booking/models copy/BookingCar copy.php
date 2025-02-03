@@ -3,14 +3,9 @@
 namespace app\modules\booking\models;
 
 use Yii;
-use yii\db\Expression;
-use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\DocumentTags;
-use app\modules\booking\models\BookingCarItems;
 
 /**
  * This is the model class for table "booking_cars".
@@ -21,6 +16,7 @@ use app\modules\booking\models\BookingCarItems;
  * @property string|null $booking_type ประเภทของรถ general หรือ ambulance
  * @property int|null $document_id ตามหนังสือ
  * @property string|null $urgent ตามหนังสือ
+ * @property string|null $asset_item_id ยานพาหนะ
  * @property string|null $location สถานที่ไป
  * @property string|null $data_json ยานพาหนะ
  * @property string|null $status ความเห็น Y ผ่าน N ไม่ผ่าน
@@ -53,10 +49,9 @@ class BookingCar extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['booking_type','date_start','time_start','date_end','time_end','leader_id','reason','location','license_plate','urgent'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['ref', 'booking_type', 'urgent','location', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
+            [['ref', 'booking_type', 'urgent', 'asset_item_id', 'location', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -71,8 +66,8 @@ class BookingCar extends \yii\db\ActiveRecord
             'thai_year' => 'ปีงบประมาณ',
             'booking_type' => 'ประเภทของรถ general หรือ ambulance',
             'document_id' => 'ตามหนังสือ',
-            'reason' => 'เหตุผลขอใช้รถ',
-            'urgent' => 'ความเร่งด่วน',
+            'urgent' => 'ตามหนังสือ',
+            'asset_item_id' => 'ยานพาหนะ',
             'location' => 'สถานที่ไป',
             'data_json' => 'ยานพาหนะ',
             'status' => 'ความเห็น Y ผ่าน N ไม่ผ่าน',
@@ -91,41 +86,6 @@ class BookingCar extends \yii\db\ActiveRecord
         ];
     }
 
-
-    public function behaviors()
-    {
-        return [
-            [
-                'class' => BlameableBehavior::className(),
-                'createdByAttribute' => 'created_by',
-                'updatedByAttribute' => 'updated_by',
-            ],
-            [
-                'class' => TimestampBehavior::className(),
-                'createdAtAttribute' => 'created_at',
-                'updatedAtAttribute' => ['updated_at'],
-                'value' => new Expression('NOW()'),
-            ],
-        ];
-    }
-
-        // section Relationships
-        public function getCar()
-        {
-            return $this->hasOne(BookingCarItems::class, ['license_plate' => 'license_plate']);
-        }
-        
-    
-        // แสดงหน่วยงานภานนอก
-        public function ListOrg()
-        {
-            $model = Categorise::find()
-                ->where(['name' => 'document_org'])
-                ->asArray()
-                ->all();
-            return ArrayHelper::map($model, 'code', 'title');
-        }
-        
     public function listDocument()
     {
         $me = UserHelper::GetEmployee();
@@ -133,12 +93,6 @@ class BookingCar extends \yii\db\ActiveRecord
         return ArrayHelper::map($document, 'id',function($model){
             return $model->document->topic;
         });
-    }
-
-    //แสดงรายการทะยานพาหนะ
-    public function ListCarItems()
-    {
-            $items = BookingCarItems::find()->all();
-            return ArrayHelper::map($items, 'license_plate','license_plate');
+        
     }
 }

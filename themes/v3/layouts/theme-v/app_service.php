@@ -35,7 +35,7 @@ $items = [
     ],
     [
         'title' => 'จองรถ',
-        'icon' => 'fa-solid fa-route fs-1',
+        'icon' => 'fa-solid fa-car-side fs-1',
         'url' => ['/me/booking-car/select-type','title' => '<i class="bi bi-ui-checks-grid"></i> เลือกประเภทรถที่ต้องการใช้งาน'],
         'modal' => true,
         'size' => 'modal-md'
