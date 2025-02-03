@@ -13,7 +13,7 @@ $this->title = 'ห้องประชุม';
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('../conference/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'booking', 'timeout' => 500000]); ?>
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
@@ -24,6 +24,7 @@ $this->title = 'ห้องประชุม';
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
+                    <th scope="col">รูปภาพ</th>
                     <th scope="col">ชื่อห้องประชุม</th>
                     <th scope="col">จองล่วงหน้า/วัน</th>
                     <th scope="col">สถานที่ตั้ง</th>
@@ -36,7 +37,8 @@ $this->title = 'ห้องประชุม';
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
-               <tr>
+                    <tr>
+                <td><?php echo Html::img($item->showImg(),['class' => 'rounded-3','style' => 'max-width:200px']);?></td>
                 <td><?php echo $item->title?></td>
                 <td><?php echo $item->data_json['advance_booking'] ?? '-'?></td>
                 <td><?php echo $item->data_json['location'] ?? '-'?></td>
@@ -67,3 +69,4 @@ $this->title = 'ห้องประชุม';
 
     </div>
 </div>
+<?php Pjax::end(); ?>

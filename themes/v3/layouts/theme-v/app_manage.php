@@ -96,8 +96,8 @@ $items = [
     ],
     [
         'title' => 'ห้องประชุม',
-        'icon' => 'fa-brands fa-meetup fs-1',
-        'url' => ['/booking/conference-room'],
+        'icon' => 'fa-solid fa-person-chalkboard fs-1',
+        'url' => ['/booking/conference'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('booking-conference') ? true : false,
         // 'show' => true

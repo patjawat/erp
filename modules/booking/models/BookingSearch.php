@@ -41,6 +41,7 @@ class BookingSearch extends Booking
     public function search($params)
     {
         $query = Booking::find();
+       
 
         // add conditions that should always apply here
 

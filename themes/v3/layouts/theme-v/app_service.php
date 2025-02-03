@@ -43,9 +43,9 @@ $items = [
     [
         'title' => 'จองห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-       'url' => ['/me/booking-room'],
-        'modal' => false,
-        'size' => 'modal-lg'
+       'url' => ['/me/booking-room/list-room','title' => 'เลือกห้องประชุม'],
+        'modal' => true,
+        'size' => 'modal-xl'
     ],
 
    

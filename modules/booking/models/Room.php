@@ -3,6 +3,7 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use app\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -74,4 +75,27 @@ class Room extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
+
+    //แสดงภาพของห้อง
+    public function showImg($class = null)
+    {
+        try {
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'conference_room'])->one();
+
+            // return $this->ref;
+            // return FileManagerHelper::getImg($model->id);
+            if ($model) {
+                // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
+                return FileManagerHelper::getImg($model->id);
+            } else {
+                return \Yii::getAlias('@web').'/img/placeholder_cid.png';
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return \Yii::getAlias('@web').'/img/placeholder_cid.png';
+        }
+    }
+
+
+    
 }
