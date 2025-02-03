@@ -106,19 +106,21 @@ $group = Yii::$app->request->get('group');
                     ],
                 ])->label('ประการใช้งานรถยนต์');
                 ?>
+            <?=$form->field($model, 'data_json[engine_size]')->textInput()->label('ขนาดของเครื่องยนต์');?>
             </div>
-            <div class="col-2">
+            <div class="col-3">
             <?=$form->field($model, 'license_plate')->textInput()->label('หมายเลขทะเบียน');?>
+            <?=$form->field($model, 'data_json[fuel_type]')->textInput()->label('ชนิดของเชื้อเพลิง');?>
         </div>
-            <div class="col-2">
-                <?=$form->field($model, 'data_json[color]')->textInput()->label('สี');?>
-            </div>
-            <div class="col-2">
-                <?=$form->field($model, 'data_json[fuel_type]')->textInput()->label('ชนิดของเชื้อเพลิง');?>
-            </div>
-            <div class="col-2">
-                    <?=$form->field($model, 'data_json[seat_size]')->textInput()->label('จำนวนที่นั่ง');?>
-            </div>
+        <div class="col-3">
+            <?=$form->field($model, 'data_json[brand]')->textInput()->label('ยี่ห้อ');?>
+            <?=$form->field($model, 'data_json[color]')->textInput()->label('สี');?>
+        </div>
+        <div class="col-3">
+            <?=$form->field($model, 'data_json[model]')->textInput()->label('รุ่น');?>
+            <?=$form->field($model, 'data_json[seat_size]')->textInput()->label('จำนวนที่นั่ง');?>
+        </div>
+
         </div>
         <?=$form->field($model, 'data_json[asset_option]')->textArea(['rows' => 5])->label(false);?>
     </div>
