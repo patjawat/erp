@@ -8,7 +8,8 @@ $this->title = 'ระบบจองห้องประชุม ';
 <?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
-<i class="fa-brands fa-meetup fs-1"></i> <?= $this->title; ?>
+ 
+<i class="fa-solid fa-person-chalkboard fs-1"></i><?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('menu') ?>
@@ -24,31 +25,17 @@ $this->title = 'ระบบจองห้องประชุม ';
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">ปีงบประมาณ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">วัน</th>
+                    <th scope="col">ห้องประชุม</th>
+                    <th class="text-center" scope="col">เรื่อง</th>
                     <th scope="col">จากวันที่</th>
+                    <th scope="col">เวลา</th>
                     <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
-                    <!-- <th scope="col">มอบหมาย</th> -->
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+                    <th scope="col">เวลา</th>
+                    <th class="text-start" scope="col">ผู้จอง</th>
                     <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
-            <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th scope="col">รายการ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th scope="col">วันที่ไป</th>
-                    <th scope="col">เวลาไป</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th scope="col">เวลากลับ</th>
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-                    <th scope="col">สถานะ</th>
-                    <th class="text-center">ดำเนินการ</th>
-                </tr>
-            </thead>
+            
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                <tr>

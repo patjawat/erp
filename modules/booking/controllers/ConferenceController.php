@@ -48,6 +48,11 @@ class ConferenceController extends Controller
         ]);
     }
 
+    public function actionDashboard()
+    {
+        return $this->render('dashboard');
+    }
+    
     /**
      * Displays a single Booking model.
      * @param int $id ID
