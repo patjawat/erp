@@ -18,7 +18,7 @@ class SiteHelper extends Component
                 $model = Categorise::findOne(['name' => 'site']);
                 $siteUrl = isset($model->data_json['website']) ? $model->data_json['website'] : '-';
                 $siteName = isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
-                $director =  Employees::find()->where(['id' => $model->data_json['director_name']])->one();
+                $director =  Employees::find()->where(['id' => $model->data_json['director_name'] ?? 0])->one();
 
                 try {
                         $leader = Employees::findOne($model->data_json['leader']);

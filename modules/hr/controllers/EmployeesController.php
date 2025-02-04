@@ -474,8 +474,13 @@ class EmployeesController extends Controller
                         [
                             'attribute' => 'zipcode',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
-                                return $data[9];
+                                try {
+                                    $data = explode(',', $data[0]);
+                                    return (int) $data[9];
+                                } catch (\Throwable $th) {
+                                  return 0;
+                                }
+                                
                             },
                         ],
                         [
