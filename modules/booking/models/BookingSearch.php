@@ -18,7 +18,7 @@ class BookingSearch extends Booking
     {
         return [
             [['id', 'thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'conference_room_id', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];
     }
 
@@ -77,7 +77,7 @@ class BookingSearch extends Booking
             ->andFilterWhere(['like', 'car_type', $this->car_type])
             ->andFilterWhere(['like', 'urgent', $this->urgent])
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
-            ->andFilterWhere(['like', 'conference_room_id', $this->conference_room_id])
+            ->andFilterWhere(['like', 'room_id', $this->room_id])
             ->andFilterWhere(['like', 'location', $this->location])
             ->andFilterWhere(['like', 'reason', $this->reason])
             ->andFilterWhere(['like', 'status', $this->status])

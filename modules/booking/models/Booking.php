@@ -3,12 +3,15 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use DateTime;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
+use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\usermanager\models\User;
 
 /**
  * This is the model class for table "booking".
@@ -21,7 +24,7 @@ use yii\behaviors\TimestampBehavior;
  * @property int|null $document_id ตามหนังสือ
  * @property string|null $urgent ความเร่งด่วน
  * @property string|null $license_plate ทะเบียนยานพาหนะ
- * @property string|null $conference_room_id ห้องประชุม
+ * @property string|null $room_id ห้องประชุม
  * @property string|null $location สถานที่ไป
  * @property string|null $reason เหตุผล
  * @property string|null $status สถานะ
@@ -55,10 +58,10 @@ class Booking extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['booking_type','date_start','time_start','date_end','time_end','reason'], 'required'],
+            [['name','date_start','time_start','date_end','time_end','reason'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'conference_room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','emp_id'], 'safe'],
+            [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -76,7 +79,7 @@ class Booking extends \yii\db\ActiveRecord
             'document_id' => 'ตามหนังสือ',
             'urgent' => 'ความเร่งด่วน',
             'license_plate' => 'ทะเบียนยานพาหนะ',
-            'conference_room_id' => 'ห้องประชุม',
+            'room_id' => 'ห้องประชุม',
             'location' => 'สถานที่ไป',
             'reason' => 'เหตุผล',
             'status' => 'สถานะ',
@@ -119,7 +122,44 @@ class Booking extends \yii\db\ActiveRecord
         {
             return $this->hasOne(BookingCarItems::class, ['license_plate' => 'license_plate']);
         }
+        //ห้องประชุม
+        public function getRoom()
+        {
+            return $this->hasOne(Room::class, ['code' => 'room_id'])->andOnCondition(['name' => 'meeting_room']);
+        }
         
+        public function getUser()
+        {
+            return $this->hasOne(User::class, ['id' => 'created_by']);
+        }
+        
+        public function getEmployee()
+        {
+            return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+        }
+        
+        
+        
+
+        public function showStartTime()
+        {
+            $time = $this->time_start;
+            $formattedTime = (new DateTime($time))->format("H:i");
+               return  $formattedTime;
+        }
+
+         public function showEndTime()
+        {
+            $time = $this->time_end;
+            $formattedTime = (new DateTime($time))->format("H:i");
+             return  $formattedTime;
+        }
+
+        //แสดงชื่อของผู้ขอ
+        public function showCreateBy()
+        {
+            
+        }
     
         // แสดงหน่วยงานภานนอก
         public function ListOrg()

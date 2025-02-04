@@ -26,7 +26,7 @@ $items = [
     [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/me/booking-room'],
+        'url' => ['/me/booking-meeting'],
     ]
    
 ];

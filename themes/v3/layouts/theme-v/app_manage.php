@@ -89,17 +89,17 @@ $items = [
     [
         'title' => 'ยานพาหนะ',
         'icon' => 'fa-solid fa-car-side fs-1',
-        'url' => ['/booking/car'],
+        'url' => ['/booking/driver/dashboard'],
         'padding' => 'p-3',
-        'show' => Yii::$app->user->can('booking-car') ? true : false,
+        'show' => Yii::$app->user->can('driver') ? true : false,
         // 'show' => true
     ],
     [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/booking/conference'],
+        'url' => ['/booking/meeting/dashboard'],
         'padding' => 'p-3',
-        'show' => Yii::$app->user->can('booking-conference') ? true : false,
+        'show' => Yii::$app->user->can('meeting') ? true : false,
         // 'show' => true
     ]
     

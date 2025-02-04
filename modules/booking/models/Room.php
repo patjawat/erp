@@ -41,8 +41,8 @@ class Room extends \yii\db\ActiveRecord
         return [
             [['name','code','title'], 'required'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items'], 'safe'],
-            [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+            [['data_json', 'ma_items', 'code'], 'safe'],
+            [['ref', 'group_id', 'category_id', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }
 
@@ -71,7 +71,7 @@ class Room extends \yii\db\ActiveRecord
     public function Upload()
     {
         $ref = $this->ref;
-        $name = 'conference_room';
+        $name = 'meeting_room';
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
@@ -80,7 +80,7 @@ class Room extends \yii\db\ActiveRecord
     public function showImg($class = null)
     {
         try {
-            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'conference_room'])->one();
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'meeting_room'])->one();
 
             // return $this->ref;
             // return FileManagerHelper::getImg($model->id);
@@ -88,11 +88,11 @@ class Room extends \yii\db\ActiveRecord
                 // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
                 return FileManagerHelper::getImg($model->id);
             } else {
-                return \Yii::getAlias('@web').'/img/placeholder_cid.png';
+                return \Yii::getAlias('@web').'/img/placeholder-img.jpg';
             }
         } catch (\Throwable $th) {
             // throw $th;
-            return \Yii::getAlias('@web').'/img/placeholder_cid.png';
+            return \Yii::getAlias('@web').'/img/placeholder-img.jpg';
         }
     }
 

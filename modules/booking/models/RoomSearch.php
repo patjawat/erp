@@ -41,7 +41,7 @@ class RoomSearch extends Room
     public function search($params)
     {
         $query = Room::find();
-        $query->where(['name' => 'conference_room']);
+        $query->where(['name' => 'meeting_room']);
 
         // add conditions that should always apply here
 

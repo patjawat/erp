@@ -79,15 +79,15 @@ class UpdateTableController extends Controller
             ['name' => 'leave', 'type' => 1, 'description' => 'ระบบลา'],
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
-            ['name' => 'booking-car', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
-            ['name' => 'booking-conference', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
+            ['name' => 'driver', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
+            ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
             
 
             // ยานพาหนะ
-            ['name' => '/booking/booking-car/*', 'type' => 2,'description' =>''],
+            ['name' => '/booking/driver/*', 'type' => 2,'description' =>''],
             // ห้องประชุม
-            ['name' => '/booking/booking-conference/*', 'type' => 2,'description' =>''],
+            ['name' => '/booking/meeting/*', 'type' => 2,'description' =>''],
 
             ['name' => '/dms/*', 'type' => 2,'description' =>''],
             ['name' => '/dms/dashboard', 'type' => 2,'description' =>'Dashboard'],
@@ -206,13 +206,13 @@ class UpdateTableController extends Controller
             ['child' => 'leave', 'parent'  => 'admin'],
             ['child' => 'document', 'parent' => 'admin'],
             ['child' => 'asset', 'parent'  => 'admin'],
-            ['child' => 'booking-car', 'parent'  => 'admin'],
-            ['child' => 'booking-conference', 'parent'  => 'admin'],
+            ['child' => 'driver', 'parent'  => 'admin'],
+            ['child' => 'meeting', 'parent'  => 'admin'],
 
             // ยานพาหนะ
-            ['child' => '/booking/booking-car/*', 'parent' => 'booking-car'],
+            ['child' => '/booking/driver/*', 'parent' => 'driver'],
             // ระบบห้องประชุม
-            ['child' => '/booking/booking-conference/*', 'parent' => 'booking-conference'],
+            ['child' => '/booking/meeting/*', 'parent' => 'meeting'],
             
             // ระบบสารบรรณ
             ['child' => '/dms/*', 'parent' => 'document'],

@@ -44,7 +44,7 @@ class BookingCarController extends \yii\web\Controller
     {
         $me = UserHelper::GetEmployee();
         $userId = Yii::$app->user->id;
-        $searchModel = new BookingCarSearch();
+        $searchModel = new BookingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['created_by' => $userId]);
 
