@@ -97,7 +97,7 @@ $me = UserHelper::GetEmployee();
             </div>
             <div class="description"><?php echo $item->getAvatar()['fullname']?></div>
             <?php if($item->status == 'Approve'):?>
-            <i class="bi bi-clock-history"></i> <?php echo $approveDate .' ID '.$item->id?>
+            <i class="bi bi-clock-history"></i> <?php echo $approveDate?>
             <?php endif;?>
 
             <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
