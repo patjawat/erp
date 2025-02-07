@@ -27,16 +27,19 @@ $this->title = 'ตั้งค่าองค์กร';
             <div class="col-4">
             <div class="card">
     <div class="card-body">
-
-                <?= $form->field($model, 'data_json[line_channel_token]')->textInput()->label('Channel access token') ?>
-            </div>
-
-            </div>
+        
+        <?= $form->field($model, 'data_json[line_channel_token]')->textInput()->label('Channel access token') ?>
     </div>
-                   </div>
+    
+</div>
+</div>
+</div>
 
-        <div class="form-group d-flex justify-content-center">
-            <?= AppHelper::BtnSave() ?>
+<div class="form-group d-flex justify-content-center gap-3">
+    <?= AppHelper::BtnSave() ?>
+    <a href="https://developers.line.biz/console" target="_blank" class="btn btn-primary">Line Developers</a>
+    <?php echo Html::a('<i class="fa-solid fa-book"></i> คู่มือ',['//settings/line-messaging/document'],['class' => 'btn btn-warning'])?>
         </div>
 
         <?php ActiveForm::end(); ?>
+

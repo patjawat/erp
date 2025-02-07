@@ -12,7 +12,7 @@ use yii\widgets\ActiveForm;
 <div class="product-type-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['dashbroad'],
+        'action' => ['dashboard'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1

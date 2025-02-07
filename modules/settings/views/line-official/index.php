@@ -28,6 +28,7 @@ $this->title = 'ตั้งค่าองค์กร';
             <div class="col-4">
             <div class="card">
     <div class="card-body">
+    
 
         <?= $form->field($model, 'data_json[line_liff_register]')->textInput()->label('การลงทะเบียน '.$domain.'/line/auth/register') ?>
         <?= $form->field($model, 'data_json[line_liff_login]')->textInput()->label('เข้าสู่ระบบ '.$domain.'/line/auth/login') ?>
