@@ -284,7 +284,8 @@ class ImportLeaveHosController extends Controller
     {
         $querys = Yii::$app->db2->createCommand('SELECT l.*,pt.HR_PERSON_TYPE_NAME FROM `leave_over` l LEFT JOIN hr_person_type pt ON pt.HR_PERSON_TYPE_ID = l.HR_PERSON_TYPE_ID;')->queryAll();
         foreach ($querys as $key => $item) {
-            
+            try {
+             
             $emp = $this->Person($item['PERSON_ID']);
             $positionType = Categorise::find()->where(['name' => 'position_type', 'title' => $item['HR_PERSON_TYPE_NAME']])->one();
             $check = LeaveEntitlements::find()->where(['thai_year' => $item['OVER_YEAR_ID'], 'emp_id' => $emp->id])->one();
@@ -310,6 +311,10 @@ class ImportLeaveHosController extends Controller
             } else {
                 echo 'ผิดพลาด : ' . $model->emp_id . " \n";
                 return ExitCode::OK;
+            }
+               //code...
+            } catch (\Throwable $th) {
+                //throw $th;
             }
         }
 
