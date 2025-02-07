@@ -467,9 +467,9 @@ class Leave extends \yii\db\ActiveRecord
         if ($check) {
             return [
                 'employee' => $check->employee,
-                'fullname' => $check->employee->fullname,
-                'signature' => $check->employee->signature(),
-                'position' => $check->employee->positionName(),
+                'fullname' => $check->employee ? $check->employee->fullname : 'ไม่ระบุชื่อ',
+                'signature' =>   $check->employee ? $check->employee->signature() : 'ไม่ระบุตำแหน่ง',
+                'position' => $check->employee ? $check->employee->positionName() : 'ไม่ระบุตำแหน่ง',
                 'approve_date' => isset($this->data_json['approve_date']) ? Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long') : '',
             ];
         } else {

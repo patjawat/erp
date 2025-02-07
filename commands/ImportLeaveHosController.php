@@ -49,9 +49,11 @@ class ImportLeaveHosController extends Controller
         $querys = Yii::$app->db2->createCommand('SELECT 
         leave_register.*,
                 approve1.LEADER_HR_ID as approve_1_emp_id,
+                approve1.LEADER_HR_NAME as approve_1_fullname,
                 approve1.DATE_TIME_SAVE as approve_1_date,
                 approve1.LEADER_ANS as approve_1_status,
                 approve2.LEADER_HR_ID as approve_2_emp_id,
+                approve2.LEADER_HR_NAME as approve_2_fullname,
                 approve2.DATE_TIME_SAVE as approve_2_date,
                 approve2.LEADER_ANS as approve_2_status,
                 USER_CONFIRM_CHECK as approve_3_fullname,
@@ -174,8 +176,10 @@ class ImportLeaveHosController extends Controller
                 'leave_work_send_id' => isset($sendwork) ? $sendwork->id : 0,
                 'approve_1' => isset($leaderId) ? (string) $leaderId->id : 0,
                 'approve_1_date' => $item['approve_1_date'],
+                'approve_1_fullname' => $item['approve_1_fullname'],
                 'approve_1_status' => $item['approve_1_status'],
                 'approve_2' => isset($leaderWorkGroupId) ? (string) $leaderWorkGroupId->id : 0,
+                'approve_2_fullname' => $item['approve_2_fullname'],
                 'approve_2_date' => $item['approve_2_date'],
                 'approve_2_status' => $item['approve_2_status'],
                 'approve_3' => isset($userCheckId) ? (string) $userCheckId->id : 0,
@@ -204,7 +208,8 @@ class ImportLeaveHosController extends Controller
             $newApprove1 = new Approve();
             $newApprove1->data_json = [
                 'topic' => 'เห็นชอบ',
-                'approve_date' => $leave->data_json['approve_1_date']
+                'approve_date' => $leave->data_json['approve_1_date'],
+                'approve_fullname' => $leave->data_json['approve_1_fullname']
             ];
 
             $newApprove1->level = 1;
@@ -226,7 +231,8 @@ class ImportLeaveHosController extends Controller
             $newApprove2->from_id = $leave->id;
             $newApprove2->data_json = [
                 'topic' => 'เห็นชอบ',
-                'approve_date' => $leave->data_json['approve_2_date']
+                'approve_date' => $leave->data_json['approve_2_date'],
+                'approve_fullname' => $leave->data_json['approve_2_fullname']
             ];
             $newApprove2->emp_id = $leave->data_json['approve_2'];
             $newApprove2->status = ($leave->data_json['approve_2_status'] == 'YES' ? 'Approve' : 'Reject');
@@ -253,6 +259,25 @@ class ImportLeaveHosController extends Controller
         ];
         $newApprove3->status = ($leave->data_json['approve_3_date'] !== '' ? 'Approve' : 'Reject');
         $newApprove3->save(false);
+
+         // ผู้อำนวนการอนุมัติ (ให้หัวหน้าอนุมัติแทน) 
+         $approve4 = Approve::find()->where(['name' => 'leave', 'from_id' => $leave->id, 'emp_id' => $leave->data_json['approve_3'], 'level' => 4])->one();
+         if (!$approve4) {
+             $newApprove4 = new Approve();
+             $newApprove4->level = 4;
+             $newApprove4->name = 'leave';
+             $newApprove4->title = 'อนุมัติ';
+             $newApprove4->from_id = $leave->id;
+             $newApprove4->emp_id = $leave->data_json['approve_2'];
+             $newApprove4->data_json = [
+                 'topic' => 'อนุมัติ',
+                 'approve_date' => $leave->data_json['approve_2_date'],
+                 'approve_fullname' => $leave->data_json['approve_2_fullname'],
+                ];
+                $newApprove4->status = ($leave->data_json['approve_2_date'] !== '' ? 'Approve' : 'Reject');
+                $newApprove4->save(false);
+            }
+         
     }
 
     public function actionEtitlements()

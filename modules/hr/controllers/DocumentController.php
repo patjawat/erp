@@ -105,10 +105,11 @@ class DocumentController extends \yii\web\Controller
         $title = 'LT4';
         $result_name = $title . '-' . $model->id . '.docx';
         $word_name = 'LT4-ใบลาพักผ่อน.docx';
-
+        
         @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
-
+        
+        // return $model->checkerName(1)['employee']->signature();
         $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
         $createDate = new DateTime($model->created_at);
