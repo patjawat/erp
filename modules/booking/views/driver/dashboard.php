@@ -74,6 +74,7 @@ $this->title = "Dashboard"
 </div>
 
 <h5 class="text-center"><i class="fa-solid fa-chart-simple"></i> ข้อมูลแผนภูมิข้อมูลการใช้ยานพาหนะ</h5>
+<?php echo $this->render('_search_year',['model' => $searchModel])?>
 <div class="row">
     <div class="col-6">
         <div class="card">
@@ -86,7 +87,7 @@ $this->title = "Dashboard"
         <div class="card">
             <div class="card-body">
                 <h6><i class="fa-solid fa-calendar-day"></i> การขอใช้งานรถทั่วไปของหน่วยงานต่าง ๆ 10 อันดับ </h6>
-
+                <?php echo $this->render('chart_general_topten',['model' => $searchModel])?>
             </div>
         </div>
 

@@ -1047,9 +1047,10 @@ class Employees extends Yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'emp_status']);
     }
 
+//เชื่อมกับแผนก/กลุ่มงาน
     public function getEmpDepartment()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'department'])->andOnCondition(['name' => 'department']);
+        return $this->hasOne(Organization::class, ['id' => 'department']);
     }
 
     // public function getWorkGroup(){
@@ -1088,6 +1089,7 @@ class Employees extends Yii\db\ActiveRecord
     {
         return $this->hasMany(Categorise::class, ['emp_id' => 'id']);
     }
+
 
     // detail Items
 

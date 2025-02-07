@@ -152,6 +152,18 @@ class Booking extends \yii\db\ActiveRecord
         return $formattedTime;
     }
 
+    //thai_year
+    public function groupYear()
+    {
+        $year = self::find()
+            ->andWhere(['IS NOT', 'thai_year', null])
+            ->groupBy(['thai_year'])
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->all();
+            return ArrayHelper::map($year,'thai_year','thai_year');
+    }
+    
+
     // แสดงหน่วยงานภานนอก
     public function ListOrg()
     {
@@ -277,4 +289,45 @@ class Booking extends \yii\db\ActiveRecord
             ->one();
     }
     
+//การขอใช้งานรถทั่วไปของหน่วยงานต่าง ๆ 10 อันดับ
+    public function TopTenDriverService()
+    {
+
+        $querys = self::find()
+            ->select([
+                'b.id',
+                'b.thai_year',
+                'b.car_type',
+                'b.reason',
+                'b.emp_id',
+                'fullname' => new Expression("CONCAT(e.fname, ' ', e.lname)"),
+                'd.name',
+                'total' => new Expression('COUNT(b.id)')
+            ])
+            ->from('booking b')
+            ->leftJoin('employees e', 'b.emp_id = e.id')
+            ->leftJoin('tree d', 'e.department = d.id')
+            ->where([
+                'b.name' => 'driver_service',
+                'b.car_type' => 'general'
+            ])
+            ->groupBy('e.department')
+            ->orderBy(['total' => SORT_DESC])
+            ->asArray()
+            ->limit(10)
+            ->all();
+
+        $total = [];
+        $categories = [];
+        foreach($querys as $query){
+            $total[] = $query['total'];
+            $categories[] = $query['name'];
+        }
+        
+        return [
+            'categorise' => $categories,
+            'total' => $total
+        ];
+
+    }
 }
