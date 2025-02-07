@@ -43,8 +43,8 @@ class ImportBookingController extends Controller
     public function actionIndex()
     {
         echo "นำเข้า \n";
-        // $this->Room();
-        // $this->MeetingService();
+        $this->Room();
+        $this->MeetingService();
         $this->DriverService();
         $this->DriverReferService();
     }
