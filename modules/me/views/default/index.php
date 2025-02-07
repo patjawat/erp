@@ -19,35 +19,12 @@ $this->title = 'My DashBoard';
 <?php  echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
 
-
-
 <?php // Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
 <style>
 #pr-order>.card {
     height: 291px;
 }
 </style>
-<?php
-$orders = Order::find()
-->andwhere(['is not', 'pr_number', null])
-->andwhere(['status' => 1])
-->andFilterwhere(['name' => 'order'])
-// ถ้าเป็นผู้อำนวยการ
-// if (Yii::$app->user->can('director')) {
-//     $orders->andwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_director_confirm')"), '']);
-//     $orders->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_officer_checker')"), 'Y']);
-//     $orders->andFilterwhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pr_leader_confirm')"), 'Y']);
-// }
-->all();
-
-foreach($orders as $order)
-{
-    echo $order->id;
-}
-?>
-
-
-
 <div class="row">
     <div class="col-8">
         <div class="row">
