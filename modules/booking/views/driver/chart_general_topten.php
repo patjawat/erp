@@ -22,6 +22,7 @@ echo "<pre>";
 print_r($chartData);
 print_r($chartCategorise);
 echo "</pre>";
+
 $js = <<<JS
 
   var orderOptions = {
@@ -82,25 +83,11 @@ $js = <<<JS
                 return val.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) // Format y-axis labels to 2 decimal places
             }
               },
-              
-              
               title: {
-                // text: '\$ (thousands)'
+                text: '\$ (thousands)'
               }
             },
-            // fill: {
-            //     type: 'gradient',
-            //     gradient: {
-            //       shade: 'dark',
-            //       type: 'vertical',
-            //       shadeIntensity: 0.5,
-            //       gradientToColors: ['#0866ad', '#08a1ad', '#084cad'], // ไล่สีตามเฉดที่เลือก
-            //       inverseColors: false,
-            //       opacityFrom: 1,
-            //       opacityTo: 0.8,
-            //       stops: [0, 100]
-            //     }
-            //   },
+
             tooltip: {
               y: {
             formatter: function (val) {
