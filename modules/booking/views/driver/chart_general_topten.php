@@ -17,6 +17,11 @@ $categorise = $model->TopTenDriverService()['categorise'];
 
 $chartData = Json::encode($data);
 $chartCategorise = Json::encode($categorise);
+
+echo "<pre>";
+print_r($chartData);
+print_r($chartCategorise);
+echo "</pre>";
 $js = <<<JS
 
   var orderOptions = {
