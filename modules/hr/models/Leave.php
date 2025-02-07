@@ -202,7 +202,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep2 = $leaveStep2Check ? $leaveStep2Check : new Approve();
                 $leaveStep2->from_id = $this->id;
                 $leaveStep2->name = 'leave';
-                $leaveStep2->emp_id = $this->data_json['approve_2'];
+                $leaveStep2->emp_id = $this->data_json['approve_2'] ?? 0;
                 $leaveStep2->title = 'เห็นชอบ';
                 $leaveStep2->data_json = ['topic' => 'เห็นชอบ'];
                 $leaveStep2->level = 2;

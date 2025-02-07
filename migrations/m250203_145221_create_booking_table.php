@@ -15,8 +15,11 @@ class m250203_145221_create_booking_table extends Migration
         $this->createTable('{{%booking}}', [
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
-            'name' => $this->string(255)->comment('ชื่อกาารเก็บข้อมูล (car,conference)'),
+            'name' => $this->string(255)->comment('ชื่อกาารเก็บข้อมูล (meeting_service,driver_service)'),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
+            'ambulance_type' => $this->string(255)->comment('ประเภทของการรับส่งสำหรับรถพยาบาล'),
+            'mileage_start' => $this->double(255)->comment('เลขไมล์รถก่อนออกเดินทาง'),
+            'mileage_end' => $this->double(255)->comment('เลขไมล์รถหลังออกเดินทาง'),
             'car_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),
             'document_id' => $this->integer()->comment('ตามหนังสือ'),
             'urgent' => $this->string()->comment('ความเร่งด่วน'),

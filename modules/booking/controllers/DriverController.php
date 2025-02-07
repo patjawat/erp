@@ -40,7 +40,7 @@ class DriverController extends Controller
     {
         $searchModel = new BookingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'car']);
+        $dataProvider->query->andFilterWhere(['name' => 'driver_service']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -50,7 +50,14 @@ class DriverController extends Controller
 
     public function actionDashboard()
     {
-        return $this->render('dashboard');
+        $searchModel = new BookingSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'driver_service']);
+
+        return $this->render('dashboard', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
     
 

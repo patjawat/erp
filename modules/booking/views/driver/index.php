@@ -24,40 +24,30 @@ $this->title = 'จองรถยนต์ ';
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">ปีงบประมาณ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">วัน</th>
-                    <th scope="col">จากวันที่</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
-                    <!-- <th scope="col">มอบหมาย</th> -->
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-                    <th class="text-center">ดำเนินการ</th>
-                </tr>
-            </thead>
-            <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th scope="col">รายการ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th scope="col">วันที่ไป</th>
-                    <th scope="col">เวลาไป</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th scope="col">เวลากลับ</th>
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+                    <th scope="col">ลำดับ</th>
                     <th scope="col">สถานะ</th>
+                    <th scope="col">ความเร่งด่วน</th>
+                    <th scope="col">ความพึงพอใจ</th>
+                    <th scope="col">ทะเบียน</th>
+                    <th class="text-start" scope="col">วัน/เวลา</th>
+                    <th class="text-start" scope="col">สถานที่ไป</th>
+                    <th scope="col">เหตุผลการขอรถ</th>
+                    <th scope="col">ผู้ร้องขอ</th>
+                    <th scope="col">พขร.ที่จัดสรร</th>
                     <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-                <?php foreach($dataProvider->getModels() as $item):?>
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
                <tr>
+                <td><?php echo $key+1;?></td>
+                <td><?php echo $item->status;?></td>
                 <td><?php echo $item->reason;?></td>
-                <td><?php echo $item->car->Avatar();?></td>
+                <td><?php // echo $item->car->Avatar();?></td>
                 <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
-                <td><?php echo $item->time_start?></td>
+                <td><?php echo $item->showStartTime()?></td>
                 <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
-                <td><?php echo $item->time_end?></td>
+                <td><?php echo $item->showEndTime()?></td>
                 <td><?php echo $item->leader_id?></td>
                 <td></td>
                 <td class="text-center">

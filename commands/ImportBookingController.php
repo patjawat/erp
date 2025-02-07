@@ -43,8 +43,10 @@ class ImportBookingController extends Controller
     public function actionIndex()
     {
         echo "นำเข้า \n";
-        $this->Room();
-        $this->MeetingService();
+        // $this->Room();
+        // $this->MeetingService();
+        $this->DriverService();
+        $this->DriverReferService();
     }
 
     public function actionMeeting()
@@ -86,14 +88,11 @@ class ImportBookingController extends Controller
 
             // Save the model
             if ($model->save()) {
-                echo "นำเข้า ".$model->title." สำเร็จ \n";
+                echo "นำเข้าห้องประชุม ".$model->title." สำเร็จ \n";
             } else {
                 
                 $errors = $model->getErrors();
-                echo "นำเข้า ".$model->title." ไม่สำเร็จ \n";
-                echo "<pre>";
-                print_r($errors);
-                echo "</pre>";
+                echo "นำเข้าห้องประชุม ".$model->title." ไม่สำเร็จ \n";
             }
         }
     }
@@ -133,18 +132,120 @@ class ImportBookingController extends Controller
          $model->emp_id = $this->Person($item['PERSON_REQUEST_ID'])->id ?? 0;
           // Save the model
           if ($model->save()) {
-            echo "นำเข้า ".$model->reason." สำเร็จ \n";
+            echo "ทะเบียนข้อมูลบริการห้องประชุม ".$model->reason." สำเร็จ \n";
         } else {
             
             $errors = $model->getErrors();
-            echo "นำเข้า ".$model->reason." ไม่สำเร็จ \n";
-            echo "<pre>";
-            print_r($errors);
-            echo "</pre>";
+            echo "ทะเบียนข้อมูลบริการห้องประชุม ".$model->reason." ไม่สำเร็จ \n";
+        }
+        }
+    }
+
+    // ทะเบียนข้อมูลบริการรถยนต์ทั่วไป
+    public function DriverService()
+    {
+        $queryDriverServices = Yii::$app->db2->createCommand("SELECT * FROM `vehicle_car_reserve`")->queryAll();
+        foreach($queryDriverServices as $item){
+
+        $model = Booking::findOne([
+            'name' => 'driver_service',
+            'car_type' => 'general',
+            'reason' => $item['RESERVE_NAME'],
+            'date_start' => $item['RESERVE_BEGIN_DATE'],
+            'time_start' => $item['RESERVE_BEGIN_TIME'],
+            'date_end'=> $item['RESERVE_END_DATE'],
+            'time_end'=> $item['RESERVE_END_TIME']
+        ]);
+        // ถ้าหากไม่มีให้สร้างหม่
+        if ($model === null) {
+            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            $model = new Booking();
+            $model->ref = $ref;
+        }
+         // ถ้ามีของเดิมอยู่แล้วให้ update
+         $model->name = 'driver_service';
+         $model->car_type = 'general';
+         $model->reason = $item['RESERVE_NAME'];
+         $model->date_start = $item['RESERVE_BEGIN_DATE']; 
+         $model->time_start = $item['RESERVE_BEGIN_TIME'];
+         $model->date_end= $item['RESERVE_END_DATE'];
+         $model->time_end= $item['RESERVE_END_TIME'];
+         $model->emp_id = $this->Person($item['RESERVE_PERSON_ID'])->id ?? 0;
+          // Save the model
+          if ($model->save()) {
+            echo "ทะเบียนข้อมูลบริการรถยนต์ทั่วไป ".$model->reason." สำเร็จ \n";
+        } else {
+            
+            $errors = $model->getErrors();
+            echo "ทะเบียนข้อมูลบริการรถยนต์ทั่วไป ".$model->reason." ไม่สำเร็จ \n";
         }
         
         }
     }
+
+    // ทะเบียนข้อมูลบริการรถพยาบาล
+    public function DriverReferService()
+    {
+        $queryDriverServices = Yii::$app->db2->createCommand("SELECT * FROM `vehicle_car_refer`")->queryAll();
+        foreach($queryDriverServices as $item){
+            switch ($item['REFER_TYPE_ID']) {
+                case 1:
+                    $ambulance_type = 'REFER';
+                    break;
+                    case 2:
+                        $ambulance_type = 'EMS';
+                        break;
+                        case 3:
+                            $ambulance_type = 'NORMAL';
+                            break;
+                            default:
+                            $ambulance_type = '';
+                            
+                break;
+        }
+
+        $model = Booking::findOne([
+            'name' => 'driver_service',
+            'car_type' => 'ambulance',
+            'ambulance_type' =>  $ambulance_type ,
+            'date_start' => ($item['OUT_DATE'] == '0000-00-00' ? NULL : $item['OUT_DATE']),
+            'time_start' => ($item['OUT_TIME'] == '00:00:00' ? NULL : $item['OUT_TIME']),
+            'date_end'=> ($item['BACK_DATE'] == '0000-00-00' ? NULL : $item['BACK_DATE']),
+            'time_end'=> ($item['BACK_TIME'] == '00:00:00' ? NULL : $item['BACK_TIME']),
+            'mileage_start'=> $item['CAR_GO_MILE'],
+            'mileage_end'=> $item['CAR_BACK_MILE']
+        ]);
+        // ถ้าหากไม่มีให้สร้างหม่
+        if ($model === null) {
+            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            $model = new Booking();
+            $model->ref = $ref;
+        }
+        // ถ้ามีของเดิมอยู่แล้วให้ update
+        $model->name = 'driver_service';
+        $model->car_type  = 'ambulance';
+        $model->ambulance_type =  $ambulance_type;
+        $model->date_start = ($item['OUT_DATE'] == '0000-00-00' ? NULL : $item['OUT_DATE']);
+        $model->time_start = ($item['OUT_TIME'] == '00:00:00' ? NULL : $item['OUT_TIME']);
+        $model->date_end = ($item['BACK_DATE'] == '0000-00-00' ? NULL : $item['BACK_DATE']);
+        $model->time_end = ($item['BACK_TIME'] == '00:00:00' ? NULL : $item['BACK_TIME']);
+         $model->mileage_start = $item['CAR_GO_MILE'];
+         $model->mileage_end = $item['CAR_BACK_MILE'];
+        //  $model->emp_id = $this->Person($item['RESERVE_PERSON_ID'])->id ?? 0;
+          // Save the model
+          if ($model->save(false)) {
+            echo "ทะเบียนข้อมูลบริการรถพยาบาล ".$model->id." สำเร็จ \n";
+        } else {
+            
+            $errors = $model->getErrors();
+            echo "ทะเบียนข้อมูลบริการรถพยาบาล ".$model->id." ไม่สำเร็จ \n";
+        }
+        
+        }
+    }
+    
+    
+    
     
     public static function Person($id)
     {
