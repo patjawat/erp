@@ -7,24 +7,27 @@ $listCars = Asset::find()
 ->all();
 ?>
 
+<div id="car-container">
 
-<div class="row row-cols-1 row-cols-sm-3 row-cols-md-2 g-3 mt-1" id="car-container">
+
 <?php foreach($listCars as $item):?>
-    <div class="col mt-1">
         <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">
-            <div class="card  position-relative shadow-sm bg-light">
-                <div class="d-flex justify-content-center align-items-center opacity-75 p-3 rounded-top">
-                    <?php  echo  Html::img($item->showImg(),['class' => 'rounded-3','style' => 'max-width: 130px;max-height: 104px;min-width: 130px;min-height: 104px;'])?>
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-3">
+                        <?php  echo  Html::img($item->showImg(),['class' => 'img-fluid rounded','style' => 'max-width: 130px;max-height: 104px;min-width: 130px;min-height: 104px;'])?>
                 </div>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill checked">
-                    <!-- <i class="fa-solid fa-circle-check text-success fs-4"></i> -->
-                </span>
-                <div class="card-body p-1">
-
-                    <p class="text-center fw-semibold mb-0"><?php  echo $item->license_plate?></p>
+                <div class="col-md-9">
+                <div class="card-body">
+                    <h5 class="card-title"><?php  echo $item->license_plate?></h5>
+                    <p class="card-text"><small class="text-muted">จำนวนที่นั่ง <?php echo $item->data_json['seat_size'] ?? '-'?></small></p>
+                </div>
                 </div>
             </div>
+            </div>
         </a>
-    </div>
     <?php endforeach;?>
-</div>
+
+    </div>
+
+    

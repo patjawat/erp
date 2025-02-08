@@ -134,8 +134,12 @@ class BookingCarController extends \yii\web\Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                if($model->save()){
-                    return $this->redirect(['view', 'id' => $model->id]);
+                if($model->save(false)){
+                    \Yii::$app->response->format = Response::FORMAT_JSON;
+                    // return $this->redirect(['view', 'id' => $model->id]);
+                    return [
+                        'status' => 'success'
+                    ];
                 }
             }
         } else {

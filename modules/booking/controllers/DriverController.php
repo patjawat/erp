@@ -41,7 +41,10 @@ class DriverController extends Controller
         $searchModel = new BookingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'driver_service']);
-
+        $dataProvider->query->orderBy([
+            'id' => SORT_DESC,
+            // 'id' => SORT_ASC,
+        ]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
