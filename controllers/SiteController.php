@@ -93,7 +93,7 @@ class SiteController extends Controller
      */
     public function actionLogin()
     {
-        $this->layout = 'blank';
+        $this->layout = 'login';
         if (!\Yii::$app->user->isGuest) {
             return $this->goHome();
             // return $this->redirect(['/me']);
@@ -121,7 +121,7 @@ class SiteController extends Controller
 
         $model->password = '';
 
-        return $this->render('login', [
+        return $this->render('login2', [
             'model' => $model,
         ]);
     }
@@ -140,7 +140,7 @@ class SiteController extends Controller
 
     public function actionSignUp()
     {
-        $this->layout = 'blank';
+        $this->layout = 'login';
         $model = new SignupForm();
 
         if (\Yii::$app->request->isAjax) {

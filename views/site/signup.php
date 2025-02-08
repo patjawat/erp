@@ -1,22 +1,39 @@
 <?php
-use app\modules\employees\models\Employees;
+use yii\web\View;
 // use app\themes\assets\AppAsset;
 use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
-use yii\web\View;
 use yii\widgets\MaskedInput;
+use yii\bootstrap5\ActiveForm;
+use app\modules\employees\models\Employees;
 // $assets = AppAsset::register($this);
 $this->title = "ระบบลงทะเบียน";
 ?>
 
+<style>
+input,
+input::placeholder {
+    font-weight: 200;
+}
+.form-control {
+    background-color:#eee;
+}
+.form-control:focus {
+    background-color:#eee;
+}
+
+.was-validated .form-control:invalid:focus, .form-control.is-invalid:focus {
+    border-color: var(--bs-form-invalid-border-color);
+    box-shadow: 0 0 0 0.1rem rgba(var(--bs-primary-rgb), 0.25);
+}
+</style>
+
     <div id="success-container"></div>
 
-    <div id="signup-container" class="row justify-content-center mt-2">
-        <div class="sign-in-from">
-            <h4 class="text-center mb-3 text-primary"><?=$this->title?></h4>
+    <div id="signup-container" class="row justify-content-center">
+            <h3 class=""><?=$this->title?></h3>
             <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
             <div class="row justify-content-center">
-                <div class="col-lg-4 col-md-12 col-sm-12">
+                <div class="col-lg-12 col-md-12 col-sm-12">
                     <?= $form->field($model, 'cid')->textInput(['placeholder' => 'ระบุเลขบัตรประชาชน','autofocus' => true,'class' => 'form-control form-control-lg rounded-pill border-0'])->label('เลขบัตรประชาชน') ?>
                     <?= $form->field($model, 'email')->textInput(['placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
                     <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
@@ -56,7 +73,6 @@ $this->title = "ระบบลงทะเบียน";
 
             <?php ActiveForm::end(); ?>
 
-        </div>
     </div>
 
 

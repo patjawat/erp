@@ -13,5 +13,9 @@ docker exec -it pcrh  yii update-table &&
 docker exec -it banphue  yii update-table
 
 
+
+DROP TABLE `document_tags`;
+DELETE FROM `migration` WHERE `migration`.`version` = 'm241216_103744_create_document_tags_table';
+
 ALTER TABLE asset ADD COLUMN license_plate VARCHAR(20) DEFAULT NULL;
 ALTER TABLE asset ADD COLUMN car_type VARCHAR(20) DEFAULT NULL;
