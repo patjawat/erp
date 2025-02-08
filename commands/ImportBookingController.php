@@ -43,10 +43,10 @@ class ImportBookingController extends Controller
     public function actionIndex()
     {
         echo "นำเข้า \n";
-        $this->Room();
-        $this->MeetingService();
+        // $this->Room();
+        // $this->MeetingService();
         $this->DriverService();
-        $this->DriverReferService();
+        // $this->DriverReferService();
     }
 
     public function actionMeeting()
@@ -144,12 +144,21 @@ class ImportBookingController extends Controller
     // ทะเบียนข้อมูลบริการรถยนต์ทั่วไป
     public function DriverService()
     {
-        $queryDriverServices = Yii::$app->db2->createCommand("SELECT * FROM `vehicle_car_reserve`")->queryAll();
+        $queryDriverServices = Yii::$app->db2->createCommand("SELECT 
+                IF(MONTH(r.RESERVE_BEGIN_DATE)>9,YEAR(r.RESERVE_BEGIN_DATE )+1,YEAR(r.RESERVE_BEGIN_DATE )) + 543 AS thai_year,
+                car_req.CAR_REG as req_car,
+                car_set.CAR_REG as set_car,
+                r.*
+                FROM `vehicle_car_reserve` r
+                LEFT JOIN vehicle_car_index car_req ON car_req.CAR_ID = r.CAR_REQUEST_ID
+                LEFT JOIN vehicle_car_index car_set ON car_set.CAR_ID = r.CAR_SET_ID;")->queryAll();
         foreach($queryDriverServices as $item){
 
         $model = Booking::findOne([
             'name' => 'driver_service',
             'car_type' => 'general',
+            'thai_year' => $item['thai_year'],
+            'license_plate' => $item['set_car'],
             'reason' => $item['RESERVE_NAME'],
             'date_start' => $item['RESERVE_BEGIN_DATE'],
             'time_start' => $item['RESERVE_BEGIN_TIME'],
@@ -164,6 +173,8 @@ class ImportBookingController extends Controller
         }
          // ถ้ามีของเดิมอยู่แล้วให้ update
          $model->name = 'driver_service';
+         $model->thai_year = $item['thai_year'];
+         $model->license_plate = $item['set_car'];
          $model->car_type = 'general';
          $model->reason = $item['RESERVE_NAME'];
          $model->date_start = $item['RESERVE_BEGIN_DATE']; 
@@ -172,7 +183,7 @@ class ImportBookingController extends Controller
          $model->time_end= $item['RESERVE_END_TIME'];
          $model->emp_id = $this->Person($item['RESERVE_PERSON_ID'])->id ?? 0;
           // Save the model
-          if ($model->save()) {
+          if ($model->save(false)) {
             echo "ทะเบียนข้อมูลบริการรถยนต์ทั่วไป ".$model->reason." สำเร็จ \n";
         } else {
             
@@ -223,6 +234,7 @@ class ImportBookingController extends Controller
         }
         // ถ้ามีของเดิมอยู่แล้วให้ update
         $model->name = 'driver_service';
+        $model->thai_year = AppHelper::YearBudget($item['OUT_DATE']);
         $model->car_type  = 'ambulance';
         $model->ambulance_type =  $ambulance_type;
         $model->date_start = ($item['OUT_DATE'] == '0000-00-00' ? NULL : $item['OUT_DATE']);

@@ -4,8 +4,7 @@
 // @import "./_calenda";
 @import "../node_modules/bootstrap/scss/bootstrap";
 @import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@100;200;300;400;500;600;700&family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Krub:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Mitr:wght@200;300;400;500;600;700&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;1,100;1,200;1,300;1,400&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,800;1,900&display=swap');
-
-
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 
 .modal-fullscreen .modal-dialog {
@@ -250,6 +249,7 @@
 
 :root {
   --bs-body-font-family: 'prompt', sans-serif;
+  // --bs-body-font-family: "Noto Sans Thai", serif;
   --bs-body-font-size: 15px;
 }
 
@@ -407,15 +407,11 @@ a:hover {
 }
 
 
-.hover-card {
-  border: 1px solid transparent !important;
-  transition: border-color 0.3s ease, transform 0.3s ease;
-}
-
 .hover-card:hover {
   border-color: #007bff !important;
   transform: scale(1.04);
 }
+
 
 
 
@@ -827,6 +823,7 @@ h5,
 h6 {
   color: #4b4b5a;
   font-family: "Prompt", sans-serif;
+  // font-family: "Noto Sans Thai", serif;
   font-weight: 400;
 }
 

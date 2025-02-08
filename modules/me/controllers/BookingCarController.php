@@ -121,8 +121,12 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionCreate()
     {
+
+        $carType = $this->request->get('type');
+       
+        
         $model = new Booking([
-            'car_type' => $this->request->get('type')
+            'car_type' => $carType
         ]);
 
         if ($this->request->isPost) {
@@ -143,12 +147,12 @@ class BookingCarController extends \yii\web\Controller
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
-                    'model' => $model,
+                    'model' => $model
                 ]),
             ];
         } else {
             return $this->render('create', [
-                'model' => $model,
+                'model' => $model
             ]);
         }
     }

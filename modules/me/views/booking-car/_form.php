@@ -100,6 +100,7 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
     </div>
     <div class="col-5">
         <div id="viewCars">ทะเบียนยานพาหนะ</div>
+        <?php echo $this->render('list_cars',['model' => $model])?>
     </div>    
   
 </div>
@@ -180,10 +181,22 @@ $js = <<<JS
         });
     }
 
-    $("body").on("click", ".license_plate", function (e) {
+    $("body").on("click", ".select-car", function (e) {
         e.preventDefault();
         let licensePlate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
         $('#booking-license_plate').val(licensePlate)
+        // ลบ class border-2 border-primary ออกจากทุก .card ใน #car-container
+        $("#car-container .card").removeClass("border-2 border-primary");
+        $("#car-container .checked").html('')
+        
+        // เพิ่ม class border-2 border-primary ให้กับ .card ที่อยู่ภายใน <a> ที่ถูกคลิก
+        $(this).find(".card").addClass("border-2 border-primary");
+        $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
+
+
+        
+
+
         
     });
 

@@ -1,25 +1,30 @@
 <?php
 use yii\helpers\Html;
+use app\modules\am\models\Asset;
+$listCars = Asset::find()
+->andWhere(['IS NOT', 'license_plate', null])
+->andWhere(['car_type' => $model->car_type])
+->all();
 ?>
-    <?php foreach($dataProvider->getModels() as $item):?>
 
-        <div class="card">
-            <div class="card-body">
-            <div class="d-flex">
 
-            <?php echo Html::img($item->showImg(),['class' => 'rounded-3','style' => 'max-width: 80px;max-height: 80px;'])?>
-            <div class="avatar-detail">
-                        <h6 class="fs-13">รถยนต์บรรทุก(ดีเซล)ขนาด 1 ตัน แบบขับเคลื่อน 2 ล้อ(บย4986)</h6>
-                        <div class="d-flex justify-content-between">
-                            <p class="text-muted mb-0 fs-13"><span class="badge rounded-pill badge-soft-danger text-success fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ว่าง</span></p>
-                            <button type="button" class="btn btn-sm btn-primary license_plate" data-license_plate="<?php echo $item->license_plate?>">
-                                เลือก
-                            </button>
-                            
-                        </div>
-                    </div>
-                    </div>  
+<div class="row row-cols-1 row-cols-sm-3 row-cols-md-2 g-3 mt-1" id="car-container">
+<?php foreach($listCars as $item):?>
+    <div class="col mt-1">
+        <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">
+            <div class="card  position-relative shadow-sm bg-light">
+                <div class="d-flex justify-content-center align-items-center opacity-75 p-3 rounded-top">
+                    <?php  echo  Html::img($item->showImg(),['class' => 'rounded-3','style' => 'max-width: 130px;max-height: 130px;'])?>
+                </div>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill checked">
+                    <!-- <i class="fa-solid fa-circle-check text-success fs-4"></i> -->
+                </span>
+                <div class="card-body p-1">
+
+                    <p class="text-center fw-semibold mb-0"><?php  echo $item->license_plate?></p>
+                </div>
             </div>
-        </div>
-        
-        <?php endforeach;?>
+        </a>
+    </div>
+    <?php endforeach;?>
+</div>
