@@ -14,7 +14,7 @@ $listCars = Asset::find()
         <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">
             <div class="card  position-relative shadow-sm bg-light">
                 <div class="d-flex justify-content-center align-items-center opacity-75 p-3 rounded-top">
-                    <?php  echo  Html::img($item->showImg(),['class' => 'rounded-3','style' => 'max-width: 130px;max-height: 130px;'])?>
+                    <?php  echo  Html::img($item->showImg(),['class' => 'rounded-3','style' => 'max-width: 130px;max-height: 104px;min-width: 130px;min-height: 104px;'])?>
                 </div>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill checked">
                     <!-- <i class="fa-solid fa-circle-check text-success fs-4"></i> -->
