@@ -1052,7 +1052,12 @@ class Employees extends Yii\db\ActiveRecord
     {
         return $this->hasOne(Organization::class, ['id' => 'department']);
     }
-
+//สิทการใช้งาน
+    public function getAuthAssignment()
+    {
+        return $this->hasOne(AuthAssignment::className(), ['user_id' => 'user_id']);
+    }
+    
     // public function getWorkGroup(){
     //         return $this->hasOne(Categorise::class, ['code' => 'department'])
     //         ->andOnCondition(['name' => 'department'])

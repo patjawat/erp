@@ -115,7 +115,23 @@ $resultsJs = <<< JS
                 <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
             </div>
         </div>
-        <?= $form->field($model, 'reason')->textArea(['rows' => 5])->label('เหตุผล') ?>
+        <?= $form->field($model, 'reason')->textArea(['rows' => 3])->label('เหตุผล') ?>
+        <div class="row">
+            <div class="col-6">
+                <?= $form->field($model, 'data_json[total_person_count]')->textInput(['type' => 'number'])->label('จำนวนผู้ร่วมเดินทาง') ?>
+            </div>
+            <div class="col-6">
+            <div class="mb-3 highlight-addon field-booking-data_json-req_license_plate">
+<label class="form-label has-star" for="booking-data_json-req_license_plate">เลขทะเบียน</label>
+
+<input type="text" id="req_license_plate" class="form-control" disabled="true">
+
+<div class="invalid-feedback"></div>
+
+</div>
+               
+            </div>
+        </div>
         <?php
                     echo $form->field($model, 'document_id')->widget(Select2::classname(), [
                         'data' => $list,
@@ -127,10 +143,7 @@ $resultsJs = <<< JS
                     ])->label('หนังสืออ้างอิง');
                     ?>
         <div class="row">
-            <div class="col-6">
-                <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
-            </div>
-            <div class="col-6">
+            <div class="col-12">
 
                 <?php
                         try {
@@ -184,13 +197,61 @@ $resultsJs = <<< JS
         </div>
         <?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
         <?= $form->field($model, 'name')->hiddenInput(['value' => 'driver_service'])->label(false) ?>
+        <?= $form->field($model, 'data_json[req_license_plate]')->hiddenInput(['maxlength' => true])->label(false) ?>
 
-        <?= $form->field($model, 'license_plate')->textInput(['maxlength' => true]) ?>
 
 
 
     </div>
     <div class="col-5">
+        <?php
+                        try {
+                            //code...
+                            if($model->isNewRecord){
+                                $initEmployee =  Employees::find()->where(['id' => $model->data_json['req_driver_id']])->one()->getAvatar(false);    
+                            }else{
+                                $initEmployee =  Employees::find()->where(['id' => $model->data_json['req_driver_id']])->one()->getAvatar(false);    
+                            }
+                            // $initEmployee =  Employees::find()->where(['id' => $model->Approve()['leader']['id']])->one()->getAvatar(false);
+                        } catch (\Throwable $th) {
+                            $initEmployee = '';
+                        }
+
+                        echo $form->field($model, 'data_json[req_driver_id]')->widget(Select2::classname(), [
+                            'initValueText' => $initEmployee,
+                            // 'initValueText' => $model->Approve()['leader']['avatar'],
+                            'options' => ['placeholder' => 'เลือกรายการ...'],
+                            'size' => Select2::LARGE,
+                            'pluginEvents' => [
+                                'select2:unselect' => 'function() {
+                                    $("#order-data_json-board_fullname").val("")
+                                    }',
+                                'select2:select' => 'function() {
+                                            var fullname = $(this).select2("data")[0].fullname;
+                                            // var position_name = $(this).select2("data")[0].position_name;
+                                            // $("#order-data_json-board_fullname").val(fullname)
+                                            // $("#order-data_json-position_name").val(position_name)
+                                        
+                                    }',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                                'minimumInputLength' => 1,
+                                'ajax' => [
+                                    'url' => Url::to(['/depdrop/driver']),
+                                    'dataType' => 'json',
+                                    'delay' => 250,
+                                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                                    'processResults' => new JsExpression($resultsJs),
+                                    'cache' => true,
+                                ],
+                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                                'templateResult' => new JsExpression('formatRepo'),
+                            ],
+                        ])->label('เลือกคนขับ')
+                        ?>
         <h6>ทะเบียนยานพาหนะ</h6>
         <?php echo $this->render('list_cars',['model' => $model])?>
     </div>
@@ -279,7 +340,8 @@ $js = <<<JS
     $("body").on("click", ".select-car", function (e) {
         e.preventDefault();
         let licensePlate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
-        $('#booking-license_plate').val(licensePlate)
+        $('#req_license_plate').val(licensePlate)
+        $('#booking-data_json-req_license_plate').val(licensePlate)
         // ลบ class border-2 border-primary ออกจากทุก .card ใน #car-container
         $("#car-container .card").removeClass("border-2 border-primary");
         $("#car-container .checked").html('')

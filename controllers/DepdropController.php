@@ -134,6 +134,36 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
+    //พนักงานขอบรถ
+    public function actionDriver()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $models = Employees::find()
+        ->from('employees e')
+        ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+        ->where(['a.item_name' => 'driver'])->all();
+        $data = [['id' => '', 'text' => '']];
+        foreach ($models as $model) {
+            $data[] = [
+                'id' => $model->id,
+                'text' => $model->getAvatar(false),
+                'fullname' => $model->fullname,
+                'position_type_id' => $model->position_type,
+                'position_name' => $model->positionName(),
+                'month_of_service' => $model->workLife()['month'],
+                'years_of_service' => $model->workLife()['year'],
+                'position_name_text' => $model->data_json['position_name_text'],
+                // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
+                'avatar' => $model->getAvatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $model
+        ];
+    
+    
+    }
     // บุคลากร
     public function actionEmployeeById($q = null, $id = null)
     {

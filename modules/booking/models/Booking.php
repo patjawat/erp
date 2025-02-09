@@ -330,4 +330,86 @@ class Booking extends \yii\db\ActiveRecord
         ];
 
     }
+
+    public function Approve()
+    {
+        $emp = UserHelper::GetEmployee();
+        $department_id = $emp->department;
+        $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
+                    t1.id,
+                    t1.name as t1name,
+
+                    t1.data_json->>'\$.leader1' as t1_leader,
+                    t1.data_json->>'\$.leader1_fullname' as t1_leader_fullname,
+                    t2.id,t2.name as t2name,
+
+                    t2.data_json->>'\$.leader1' as t2_leader,
+                    t2.data_json->>'\$.leader1_fullname' as t2_leader_fullname,
+                    t3.id,t3.name as t3name,
+                    t3.data_json->>'\$.leader1' as t3_leader,
+                    t3.data_json->>'\$.leader1_fullname' as t3_leader_fullname
+                    FROM tree t1
+                    JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+                    JOIN tree t3 ON t2.lft BETWEEN t3.lft AND t3.rgt AND t2.lvl = t3.lvl + 1
+                    WHERE t1.id  = :id";
+        $query = Yii::$app
+            ->db
+            ->createCommand($sql)
+            ->bindValue('id', $department_id)
+            ->queryOne();
+        if ($query) {
+            $leader = Employees::find()->where(['id' => $query['t1_leader']])->one();
+            $leaderGroup = Employees::find()->where(['id' => $query['t2_leader']])->one();
+            $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
+
+            return [
+                'approve_1' => isset($query['t1_leader']) ? [
+                    'id' => $query['t1_leader'],
+                    'avatar' => $leader->getAvatar(false),
+                    'fullname' => $leader->fullname,
+                    'position' => $leader->positionName(),
+                    'title' => 'หัวหน้างาน'
+                ] : [],
+                'approve_2' => [
+                    'id' => $query['t2_leader'],
+                    'avatar' => $leader->getAvatar(false),
+                    'fullname' => $leaderGroup->fullname,
+                    'position' => $leaderGroup->positionName(),
+                    'title' => 'หัวหน้ากลุ่มงาน'
+                ],
+                'approve_3' => [
+                    'id' => $query['t3_leader'],
+                    'avatar' => $director->getAvatar(false),
+                    'fullname' => $director->fullname,
+                    'position' => $director->positionName(),
+                    'title' => 'ผู้อำนวยการ'
+                ]
+            ];
+        } else {
+            // ถ้าเป็นหัวหน้าลาเอง
+            $leader = Employees::find()->where(['id' => $emp->id])->one();
+            return [
+                'approve_1' => [
+                    'id' => $leader->id,
+                    'avatar' => $leader->getAvatar(false),
+                    'fullname' => $leader->fullname,
+                    'position' => $leader->positionName(),
+                    'title' => 'หัวหน้างาน'
+                ],
+                'approve_2' => [
+                    'id' => $leader->id,
+                    'fullname' => $leader->fullname,
+                    'position' => $leader->positionName(),
+                    'title' => 'หัวหน้ากลุ่มงาน'
+                ],
+                'approve_3' => [
+                    'id' => $leader->id,
+                    'fullname' => $leader->fullname,
+                    'position' => $leader->positionName(),
+                    'title' => 'ผู้อำนวยการ'
+                ]
+            ];
+        }
+    }
+    
 }

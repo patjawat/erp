@@ -128,6 +128,7 @@ class BookingCarController extends \yii\web\Controller
         $model = new Booking([
             'car_type' => $carType
         ]);
+        $model->leader_id = $model->Approve()['approve_1']['id'];
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -217,7 +218,7 @@ class BookingCarController extends \yii\web\Controller
      */
     protected function findModel($id)
     {
-        if (($model = BookingCar::findOne(['id' => $id])) !== null) {
+        if (($model = Booking::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

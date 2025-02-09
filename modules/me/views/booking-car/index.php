@@ -46,7 +46,7 @@ $this->title = 'จองรถ';
                 <?php foreach($dataProvider->getModels() as $item):?>
                <tr>
                 <td><?php echo $item->reason;?></td>
-                <td><?php echo $item->car->Avatar();?></td>
+                <td><?php // echo $item->car->Avatar();?></td>
                 <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
                 <td><?php echo $item->time_start?></td>
                 <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
