@@ -140,19 +140,27 @@ class Booking extends \yii\db\ActiveRecord
 
     public function showStartTime()
     {
-        $time = $this->time_start;
-        $formattedTime = (new DateTime($time))->format('H:i');
-        return $formattedTime;
+        try {
+            $time = $this->time_start;
+            $formattedTime = (new DateTime($time))->format('H:i');
+            return $formattedTime;
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 
     public function showEndTime()
     {
-        $time = $this->time_end;
-        $formattedTime = (new DateTime($time))->format('H:i');
-        return $formattedTime;
+        try {
+            $time = $this->time_end;
+            $formattedTime = (new DateTime($time))->format('H:i');
+            return $formattedTime;
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 
-    //thai_year
+    // thai_year
     public function groupYear()
     {
         $year = self::find()
@@ -160,9 +168,8 @@ class Booking extends \yii\db\ActiveRecord
             ->groupBy(['thai_year'])
             ->orderBy(['thai_year' => SORT_DESC])
             ->all();
-            return ArrayHelper::map($year,'thai_year','thai_year');
+        return ArrayHelper::map($year, 'thai_year', 'thai_year');
     }
-    
 
     // แสดงหน่วยงานภานนอก
     public function ListOrg()
@@ -288,11 +295,10 @@ class Booking extends \yii\db\ActiveRecord
             ->asArray()
             ->one();
     }
-    
-//การขอใช้งานรถทั่วไปของหน่วยงานต่าง ๆ 10 อันดับ
+
+    // การขอใช้งานรถทั่วไปของหน่วยงานต่าง ๆ 10 อันดับ
     public function TopTenDriverService()
     {
-
         $querys = self::find()
             ->select([
                 'b.id',
@@ -319,16 +325,15 @@ class Booking extends \yii\db\ActiveRecord
 
         $total = [];
         $categories = [];
-        foreach($querys as $query){
+        foreach ($querys as $query) {
             $total[] = $query['total'];
             $categories[] = $query['name'];
         }
-        
+
         return [
             'categorise' => $categories,
             'total' => $total
         ];
-
     }
 
     public function Approve()
@@ -411,5 +416,4 @@ class Booking extends \yii\db\ActiveRecord
             ];
         }
     }
-    
 }
