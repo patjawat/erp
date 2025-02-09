@@ -160,6 +160,16 @@ class Booking extends \yii\db\ActiveRecord
         }
     }
 
+    //พนักงานขับที่ร้องขอ
+    public function reqDriver()
+    {
+        try {
+            return Employees::findOne( $this->data_json['req_driver_id']);
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+
     // thai_year
     public function groupYear()
     {

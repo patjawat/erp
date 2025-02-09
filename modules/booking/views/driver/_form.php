@@ -9,7 +9,7 @@ use yii\widgets\DetailView;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<?= DetailView::widget([
+<?php DetailView::widget([
         'model' => $model,
         'attributes' => [
             'location',
@@ -24,25 +24,63 @@ use yii\widgets\DetailView;
            
         ],
     ]) ?>
-    
+
+
+<table class="table border-0 table-striped-columns mt-3">
+    <tbody>
+        <tr>
+            <td class="text-dark fw-semibold">เรื่อง </td>
+            <td><?php echo $model->reason?></td>
+
+            <td class="text-dark fw-semibold">สถานที่ไป : </td>
+            <td><?php echo $model->location?></span></td>
+        </tr>
+        <tr>
+            <td class="text-dark fw-semibold">วันออกเดินทาง : </td>
+            <td>13 ก.ย. 2528 12:00</td>
+
+            <td class="text-dark fw-semibold">วันกลับ : </td>
+            <td>13 ก.ย. 2528 16:00</td>
+        </tr>
+
+        <tr>
+            <td class="text-dark fw-semibold">ขอใช้รถทะเบียน : </td>
+            <td><?php echo $model->data_json['req_license_plate'] ?? '-'?></td>
+
+            <td class="text-dark fw-semibold">พนักงานขับที่ร้องขอ : </td>
+            <td><?php echo $model->reqDriver()->getAvatar(false)?>
+            </td>
+        </tr>
+        <tr>
+            <td class="text-dark fw-semibold">ผู้ร่วมเดินทาง : </td>
+            <td><?php echo $model->data_json['total_person_count'] ?? '-'?></td>
+
+            <td class="text-dark fw-semibold">พนักงานขับที่ร้องขอ : </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="text-dark fw-semibold">หนังสืออ้างอืง : </td>
+            <td colspan="4"></td>
+        </tr>
+
+    </tbody>
+</table>
+
 <div class="booking-form">
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'ref')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'license_plate')->textInput() ?>
 
-    <?= $form->field($model, 'thai_year')->textInput() ?>
+    <?= $form->field($model, 'status')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'car_type')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'document_id')->textInput() ?>
 
-   
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <div class="form-group mt-3 d-flex justify-content-center gap-3">
+        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+        <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
     </div>
 
     <?php ActiveForm::end(); ?>
