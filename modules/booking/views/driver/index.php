@@ -51,7 +51,7 @@ $this->title = 'จองรถยนต์ ';
                 <td><?php echo $item->leader_id?></td>
                 <td></td>
                 <td class="text-center">
-                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/booking-car/view','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-xl']])?>
+                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/update','id' => $item->id,'title' => 'จัดสสรร'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                 </td>
                </tr>
                 <?php endforeach;?>

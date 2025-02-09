@@ -2,12 +2,29 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\Booking $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
+<?= DetailView::widget([
+        'model' => $model,
+        'attributes' => [
+            'location',
+            'reason',
+            'date_start',
+            'time_start',
+            'date_end',
+            'time_end',
+            'driver_id',
+            'leader_id',
+            'status',
+           
+        ],
+    ]) ?>
+    
 <div class="booking-form">
 
     <?php $form = ActiveForm::begin(); ?>
@@ -22,43 +39,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'document_id')->textInput() ?>
 
-    <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'license_plate')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'room_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'location')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'reason')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'status')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'date_start')->textInput() ?>
-
-    <?= $form->field($model, 'time_start')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'date_end')->textInput() ?>
-
-    <?= $form->field($model, 'time_end')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'data_json')->textInput() ?>
-
-    <?= $form->field($model, 'created_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
-
-    <?= $form->field($model, 'created_by')->textInput() ?>
-
-    <?= $form->field($model, 'updated_by')->textInput() ?>
-
-    <?= $form->field($model, 'deleted_at')->textInput() ?>
-
-    <?= $form->field($model, 'deleted_by')->textInput() ?>
+   
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>

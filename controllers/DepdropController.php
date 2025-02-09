@@ -138,10 +138,15 @@ class DepdropController extends \yii\web\Controller
     public function actionDriver()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        $q = Yii::$app->request->get('q');
         $models = Employees::find()
         ->from('employees e')
         ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
-        ->where(['a.item_name' => 'driver'])->all();
+        ->where(['a.item_name' => 'driver'])
+        ->andWhere(['or', 
+        ['LIKE', 'fname', $q],
+        ['LIKE', 'lname', $q],
+        ])->all();
         $data = [['id' => '', 'text' => '']];
         foreach ($models as $model) {
             $data[] = [
