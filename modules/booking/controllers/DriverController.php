@@ -40,9 +40,16 @@ class DriverController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new BookingSearch();
+        $carType = $this->request->get('car_type');
+        $status = $this->request->get('status');
+        $searchModel = new BookingSearch([
+            'car_type' => $carType,
+            'status' => $status
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'driver_service']);
+        // $dataProvider->query->andFilterWhere(['car_type' => $carType]);
+        // $dataProvider->query->andFilterWhere(['status' => $status]);
         $dataProvider->query->orderBy([
             'id' => SORT_DESC,
             // 'id' => SORT_ASC,

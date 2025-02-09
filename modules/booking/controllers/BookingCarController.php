@@ -38,8 +38,10 @@ class BookingCarController extends Controller
      */
     public function actionIndex()
     {
+        $carType = $this->request->post('car_type');
         $searchModel = new BookingCarSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilerWhere(['car_type' => $carType]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

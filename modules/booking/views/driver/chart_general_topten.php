@@ -18,14 +18,14 @@ $categorise = $model->TopTenDriverService()['categorise'];
 $chartData = Json::encode($data);
 $chartCategorise = Json::encode($categorise);
 
-echo "<pre>";
-print_r($chartData);
-print_r($chartCategorise);
-echo "</pre>";
+// echo "<pre>";
+// print_r($chartData);
+// print_r($chartCategorise);
+// echo "</pre>";
 
 $js = <<<JS
 
-  var orderOptions = {
+  var topTenOptions = {
     series: [
             { name: "ใช้งาน", data: $chartData },
           ],
@@ -84,7 +84,7 @@ $js = <<<JS
             }
               },
               title: {
-                text: '\$ (thousands)'
+                // text: '\$ (thousands)'
               }
             },
 
@@ -97,7 +97,7 @@ $js = <<<JS
             }
             };
 
-            var chart = new ApexCharts(document.querySelector("#GeneralChartsTopten"), orderOptions);
+            var chart = new ApexCharts(document.querySelector("#GeneralChartsTopten"), topTenOptions);
             chart.render();
       
    

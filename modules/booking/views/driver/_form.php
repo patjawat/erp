@@ -48,7 +48,13 @@ use yii\widgets\DetailView;
             <td><?php echo $model->data_json['req_license_plate'] ?? '-'?></td>
 
             <td class="text-dark fw-semibold">พนักงานขับที่ร้องขอ : </td>
-            <td><?php echo $model->reqDriver()->getAvatar(false)?>
+            <td><?php 
+            try {
+                echo $model->reqDriver()->getAvatar(false);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+            ?>
             </td>
         </tr>
         <tr>

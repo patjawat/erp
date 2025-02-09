@@ -1,10 +1,20 @@
 <?php
-$this->title = "Dashboard"
+$this->title = "ระบบยานาหนะ"
 ?>
+<?php $this->beginBlock('icon'); ?>
+<i class="fa-solid fa-chart-pie fs-1"></i>
+<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
-<i class="fa-solid fa-chart-pie fs-1"></i> <?= $this->title; ?>
+ <?= $this->title; ?>
 <?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('sub-title'); ?>
+Dashboard
+<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
@@ -72,9 +82,16 @@ $this->title = "Dashboard"
         </div>
     </div>
 </div>
+<div
+    class="alert alert-primary p-2"role="alert"
+>
 
-<h5 class="text-center"><i class="fa-solid fa-chart-simple"></i> ข้อมูลแผนภูมิข้อมูลการใช้ยานพาหนะ</h5>
-<?php echo $this->render('_search_year',['model' => $searchModel])?>
+<div class="d-flex justify-content-between align-items-center gap-3">
+    
+    <h5 class="text-center text-primary"><i class="fa-solid fa-chart-simple fs-2"></i> ข้อมูลแผนภูมิข้อมูลการใช้ยานพาหนะ</h5>
+    <?php echo $this->render('_search_year',['model' => $searchModel])?>
+</div>
+</div>
 <div class="row">
     <div class="col-6">
         <div class="card">
@@ -90,6 +107,11 @@ $this->title = "Dashboard"
                 <?php echo $this->render('chart_general_topten',['model' => $searchModel])?>
             </div>
         </div>
+<div class="card">
+            <div class="card-body">
+                <h6><i class="fa-regular fa-calendar-plus"></i> ค่าใช้จ่ายยานพาหนะแยกรายเดือน </h6>
+            </div>
+        </div>
 
 
 
@@ -102,17 +124,13 @@ $this->title = "Dashboard"
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-body">
+        <!-- <div class="card">
+            <div class="card-body"> -->
                 <h6><i class="fa-regular fa-calendar-plus"></i> รถที่มีการใช้งานบ่อย </h6>
-            </div>
-        </div>
+                <?php echo $this->render('list_car_items',['model' => $searchModel])?>
+            <!-- </div>
+        </div> -->
 
     </div>
 </div>
 
-<div class="card">
-            <div class="card-body">
-                <h6><i class="fa-regular fa-calendar-plus"></i> ค่าใช้จ่ายยานพาหนะแยกรายเดือน </h6>
-            </div>
-        </div>

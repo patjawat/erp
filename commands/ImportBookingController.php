@@ -173,6 +173,7 @@ class ImportBookingController extends Controller
         }
          // ถ้ามีของเดิมอยู่แล้วให้ update
          $model->name = 'driver_service';
+         $model->status = $item['STATUS'];
          $model->thai_year = $item['thai_year'];
          $model->license_plate = $item['set_car'];
          $model->car_type = 'general';

@@ -26,7 +26,6 @@ $this->title = 'จองรถ';
         <?php echo html::a('<i class="fa-solid fa-car-side"></i> ขอใช้รถยนต์ทั่วไป',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
         <?php echo html::a('<i class="fa-solid fa-truck-medical"></i> ขอใช้รถพยาบาล',['/me/booking-car/create','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-danger rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
     </p>
-
         </div>
         <table class="table table-striped table-hover">
             <thead>
