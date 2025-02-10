@@ -8,15 +8,7 @@ $this->title = "การตั้งค่าระบบ";
 <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <style>
-.hover-card {
-    border: 2px solid transparent !important;
-    transition: border-color 0.3s ease, transform 0.3s ease;
-}
 
-.hover-card:hover {
-    border-color: #007bff !important;
-    transform: scale(1.04);
-}
 </style>
 <div class="container">
 

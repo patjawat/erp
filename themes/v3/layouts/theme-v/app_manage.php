@@ -111,7 +111,7 @@ $items = [
         <i class="fa-solid fa-bars-progress"></i>
     </button>
     <div aria-labelledby="page-header-app-dropdown" class="dropdown-menu-lg dropdown-menu-right dropdown-menu"
-        style="width: 600px;">
+        style="width: 650px;">
         <div class="px-lg-2">
             <h5 class="text-center mt-3"><i class="fa-solid fa-bars-progress"></i> ระบบงาน</h5>
             <div class="container">

@@ -82,25 +82,25 @@ class DepdropController extends \yii\web\Controller
         return $obj;
     }
 
-
-    public function actionAssetType() {
+    public function actionAssetType()
+    {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $out = [];
         if (isset($_POST['depdrop_parents'])) {
             $parents = $_POST['depdrop_parents'];
             if ($parents != null) {
                 $cat_id = $parents[0];
-                $out = self::getAssetType($cat_id); 
+                $out = self::getAssetType($cat_id);
                 // the getSubCatList function will query the database based on the
                 // cat_id and return an array like below:
                 // [
                 //    ['id'=>'<sub-cat-id-1>', 'name'=>'<sub-cat-name1>'],
                 //    ['id'=>'<sub-cat_id_2>', 'name'=>'<sub-cat-name2>']
                 // ]
-                return ['output'=>$out, 'selected'=>''];
+                return ['output' => $out, 'selected' => ''];
             }
         }
-        return ['output'=>'', 'selected'=>''];
+        return ['output' => '', 'selected' => ''];
     }
 
     protected function getAssetType($id)
@@ -134,21 +134,33 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
-    //พนักงานขอบรถ
+    // พนักงานขอบรถ
     public function actionDriver()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $q = Yii::$app->request->get('q');
-        $models = Employees::find()
-        ->from('employees e')
-        ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
-        ->where(['a.item_name' => 'driver'])
-        ->andWhere(['or', 
-        ['LIKE', 'fname', $q],
-        ['LIKE', 'lname', $q],
-        ])->all();
+
+        if ($q == '') {
+            $querys = Employees::find()
+                ->from('employees e')
+                ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+                ->where(['a.item_name' => 'driver'])
+                ->all();
+        } else {
+            $querys = Employees::find()
+                ->from('employees e')
+                ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+                ->where(['a.item_name' => 'driver'])
+                ->andWhere([
+                    'or',
+                    ['LIKE', 'fname', $q],
+                    ['LIKE', 'lname', $q],
+                ])
+                ->all();
+        }
+
         $data = [['id' => '', 'text' => '']];
-        foreach ($models as $model) {
+        foreach ($querys as $model) {
             $data[] = [
                 'id' => $model->id,
                 'text' => $model->getAvatar(false),
@@ -164,18 +176,17 @@ class DepdropController extends \yii\web\Controller
         }
         return [
             'results' => $data,
-            'items' => $model
+            'items' => $querys
         ];
-    
-    
     }
+
     // บุคลากร
     public function actionEmployeeById($q = null, $id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Employees::find()
             ->Where(['or', ['LIKE', 'fname', $q]])
-            ->andWhere(['<>','user_id','0'])
+            ->andWhere(['<>', 'user_id', '0'])
             ->limit(10)
             ->all();
         $data = [['id' => '', 'text' => '']];
@@ -202,7 +213,8 @@ class DepdropController extends \yii\web\Controller
     public function actionEmployeeByUserId($q = null, $id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $models = Employees::find()->where(['is not', 'user_id', null])
+        $models = Employees::find()
+            ->where(['is not', 'user_id', null])
             ->andWhere(['or', ['LIKE', 'fname', $q]])
             // ->andWhere(['name' => 'position_group'])
             ->limit(10)
@@ -224,12 +236,12 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
-
     public function actionProduct($q = null, $id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $models = Product::find()->where(['name' => 'asset_item','group_id' => 4])
-            ->andWhere(['or', ['LIKE', 'title',$q]])
+        $models = Product::find()
+            ->where(['name' => 'asset_item', 'group_id' => 4])
+            ->andWhere(['or', ['LIKE', 'title', $q]])
             ->limit(10)
             ->all();
         $data = [['id' => '', 'text' => '']];
@@ -246,8 +258,6 @@ class DepdropController extends \yii\web\Controller
             'items' => $model
         ];
     }
-
-
 
     // ตำแหน่งกลุ่มบุคลากร
     public function actionPositionGroupList($q = null, $id = null)
@@ -277,7 +287,7 @@ class DepdropController extends \yii\web\Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Categorise::find()
-        ->where(['name' => 'position_name'])
+            ->where(['name' => 'position_name'])
             ->andWhere(['or', ['LIKE', 'title', $q]])
             ->limit(10)
             ->all();
@@ -295,13 +305,12 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
-    
     public function actionGetVendor()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
-        $model = Categorise::findOne(['code' => $id,'name' => 'vendor']);
-            return $model;
+        $model = Categorise::findOne(['code' => $id, 'name' => 'vendor']);
+        return $model;
     }
 
     public function actionCategoriseByCode()

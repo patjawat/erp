@@ -45,7 +45,8 @@ class ImportBookingController extends Controller
         echo "นำเข้า \n";
         // $this->Room();
         // $this->MeetingService();
-        $this->DriverService();
+        // $this->DriverService();
+        $this->Status();
         // $this->DriverReferService();
     }
 
@@ -258,7 +259,26 @@ class ImportBookingController extends Controller
     }
     
     
-    
+    public function Status()
+    {
+        $sql = "SELECT * FROM `vehicle_car_request_status`";
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $sqlUrgent = Yii::$app->db->createCommand("select * from categorise where name = 'driver_service_status'")->queryAll();
+        if(count($sqlUrgent) < 1){
+            foreach($querys as $item)
+            {
+                $status = Categorise::findOne(['name' => 'driver_service_status','code' => $item['STATUS_ID'],'title' => $item['STATUS_NAME']]);
+                if(!$status){
+                    $newStatus = new Categorise;
+                    $newStatus->name = 'driver_service_status';
+                    $newStatus->code = $item['STATUS_ID'];
+                    $newStatus->title = $item['STATUS_NAME'];
+                    $newStatus->save();
+                }
+            }
+            
+        }
+    }
     
     public static function Person($id)
     {

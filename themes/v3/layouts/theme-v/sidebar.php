@@ -116,6 +116,30 @@ $moduleId = Yii::$app->controller->module->id;
                     </a>
                 </li>
                 <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/repair']) ?>">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                        <span> ทะเบียนแจ้งซ่อม</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/purchase']) ?>">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                        <span>ขอซื้อขอจ้าง</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/inventory']) ?>">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                        <span>เบิกวัสดุ</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/booking-car']) ?>">
+                    <i class="fa-solid fa-car"></i>
+                        <span>จองรถ</span>
+                    </a>
+                </li>
+                <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me/time']) ?>">
                     <i class="fa-solid fa-business-time"></i>
                         <span> เวลาเข้า-ออก</span>

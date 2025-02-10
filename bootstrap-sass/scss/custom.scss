@@ -407,16 +407,15 @@ a:hover {
 }
 
 
+.hover-card {
+  border: 2px solid transparent !important;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
 .hover-card:hover {
   border-color: #007bff !important;
   transform: scale(1.04);
 }
-
-
-
-
-
-
 
 .table {
   --bs-table-color: var(--bs-body-color);

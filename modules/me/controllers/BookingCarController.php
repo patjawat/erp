@@ -42,9 +42,15 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionIndex()
     {
+        $carType = $this->request->get('car_type');
+        $status = $this->request->get('status');
+        
         $me = UserHelper::GetEmployee();
         $userId = Yii::$app->user->id;
-        $searchModel = new BookingSearch();
+        $searchModel = new BookingSearch([
+            'car_type' => $carType,
+            'status' => $status
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['created_by' => $userId]);
 
@@ -109,9 +115,20 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+            $model = $this->findModel($id);
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model
+            ]);
+        }
     }
 
     /**
@@ -137,7 +154,7 @@ class BookingCarController extends \yii\web\Controller
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 if($model->save(false)){
                     \Yii::$app->response->format = Response::FORMAT_JSON;
-                    // return $this->redirect(['view', 'id' => $model->id]);
+                    return $this->redirect(['/me/booking-car']);
                     return [
                         'status' => 'success'
                     ];

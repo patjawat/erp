@@ -25,6 +25,8 @@ $this->title = 'My DashBoard';
     height: 291px;
 }
 </style>
+
+
 <div class="row">
     <div class="col-8">
         <div class="row">

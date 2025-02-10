@@ -8,6 +8,7 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
+use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -119,7 +120,12 @@ class Booking extends \yii\db\ActiveRecord
     // section Relationships
     public function getCar()
     {
-        return $this->hasOne(BookingCarItems::class, ['license_plate' => 'license_plate']);
+        return $this->hasOne(Asset::class, ['license_plate' => 'license_plate']);
+    }
+
+    public function getDriver()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'driver_id']);
     }
 
     // ห้องประชุม
@@ -186,6 +192,16 @@ class Booking extends \yii\db\ActiveRecord
     {
         $model = Categorise::find()
             ->where(['name' => 'document_org'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+//แสดงรายการาถานะ
+    public function ListStatus()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'driver_service_status'])
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
@@ -346,6 +362,20 @@ class Booking extends \yii\db\ActiveRecord
         ];
     }
 
+
+    public function showDriver()
+    {
+        try {
+            $id = $this->driver_id;
+        $emp = Employees::findOne($id);
+        return $emp->getAvatar(false);
+        } catch (\Throwable $th) {
+          return false;
+        }
+       
+    }
+    
+    
     public function Approve()
     {
         $emp = UserHelper::GetEmployee();

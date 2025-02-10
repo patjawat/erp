@@ -2083,7 +2083,7 @@ progress {
 }
 .form-label {
   margin-bottom: 0.2rem;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .col-form-label {
@@ -2091,7 +2091,7 @@ progress {
   padding-bottom: calc(0.375rem + var(--bs-border-width));
   margin-bottom: 0;
   font-size: inherit;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.5;
 }
 
@@ -12210,6 +12210,11 @@ a:hover {
   flex: 1 1 auto;
   padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
   color: var(--bs-card-color);
+}
+
+.hover-card {
+  border: 2px solid transparent !important;
+  transition: border-color 0.3s ease, transform 0.3s ease;
 }
 
 .hover-card:hover {

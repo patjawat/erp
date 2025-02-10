@@ -20,7 +20,7 @@ $items = [
     ],
     [
         'title' => 'จองรถ',
-        'icon' => 'fa-solid fa-route fs-1',
+        'icon' => 'fa-solid fa-car fs-1',
         'url' => ['/me/booking-car'],
     ],
     [
@@ -34,7 +34,7 @@ $items = [
 
  <!-- App Service -->
  <div class="container">
-                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-4 g-3 mt-2">
+                <div class="row row-cols-1 row-cols-sm- row-cols-md-2 g-3 mt-2">
                     <?php foreach($items as $item):?>
                     <div class="col mt-1">
                         <a href="<?php echo Url::to($item['url'])?>">

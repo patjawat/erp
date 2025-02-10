@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
 use yii\widgets\DetailView;
 
@@ -71,22 +72,48 @@ use yii\widgets\DetailView;
 
     </tbody>
 </table>
-
 <div class="booking-form">
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
+    <div class="row">
+        <div class="col-6">
+            <?= $form->field($model, 'license_plate')->textInput() ?>
+        </div>
+        <div class="col-6">
+            <button class="mt-3 btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                <i class="fa-solid fa-circle-plus"></i> เลือกรถเพื่อจัดสรร
+            </button>
+        </div>
+        <div class="col-6">
+            <?= $form->field($model, 'driver_id')->textInput(['maxlength' => true]) ?>
+        </div>
+        <div class="col-6">
+            <?php echo $form->field($model, 'status')->widget(Select2::classname(), [
+                    'data' => $model->listStatus(),
+                    'options' => ['placeholder' => 'เลือกสถานะ ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label('สถานะ');
+                ?>
+        </div>
 
-    <?= $form->field($model, 'license_plate')->textInput() ?>
+    </div>
 
-    <?= $form->field($model, 'status')->textInput(['maxlength' => true]) ?>
+
+    <div class="collapse" id="collapseExample">
+        <?php echo $this->render('ready_car_list',['model' => $model])?>
+    </div>
 
 
 
     <div class="form-group mt-3 d-flex justify-content-center gap-3">
         <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-        <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
+        <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+                class="fa-regular fa-circle-xmark"></i> ปิด</button>
     </div>
 
     <?php ActiveForm::end(); ?>

@@ -39,7 +39,7 @@ class="open-modal" data-size="modal-xl">
 </a>
 
 <a href="<?php echo Url::to(['/me/booking-car/create','type' => 'ambulance','title' => '<i class="fa-solid fa-truck-medical text-danger"></i> ขอใช้รถพยาบาล'])?>"
-        class="open-modal" data-size="modal-xl">
+        class="open-modal" data-size="modal-lg">
 <div class="card mb-3 hover-card-active">
   <div class="row g-0">
     <div class="col-md-2">
