@@ -11,7 +11,7 @@ $listCars = Asset::find()
 <div id="car-container">
 <?php foreach($listCars as $item):?>
         <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">
-        <div class="card mb-3">
+        <div class="card mb-3 hover-card">
             <div class="row g-0">
                 <div class="col-md-3">
                         <?php  echo  Html::img($item->showImg(),['class' => 'img-fluid rounded'])?>
