@@ -12,7 +12,7 @@ $listDrivers = Employees::find()
     <?php foreach($listDrivers as $item):?>
     <a href="#" data-driver_id="<?php  echo $item->id?>" data-driver_fullname="<?php echo $item->fullname;?>"
         class="select-driver">
-        <div class="card">
+        <div class="card mb-1">
             <div class="card-body">
                 <div class="d-flex">
                     <?php echo Html::img($item->ShowAvatar(),['class' => 'avatar'])?>
