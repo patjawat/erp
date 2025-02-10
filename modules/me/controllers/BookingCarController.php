@@ -131,6 +131,27 @@ class BookingCarController extends \yii\web\Controller
         }
     }
 
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Booking();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->reason == '' ? $model->addError('reason', $requiredName) : null;
+            $model->location == '' ? $model->addError('location', $requiredName) : null;
+            $model->urgent == '' ? $model->addError('urgent', $requiredName) : null;
+            $model->data_json['total_person_count'] == '' ? $model->addError('data_json[total_person_count]', $requiredName) : null;
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+    
     /**
      * Creates a new BookingCar model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -152,6 +173,7 @@ class BookingCarController extends \yii\web\Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                $model->status = 'RECERVE';
                 if($model->save(false)){
                     \Yii::$app->response->format = Response::FORMAT_JSON;
                     return $this->redirect(['/me/booking-car']);

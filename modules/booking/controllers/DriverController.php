@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Booking;
 use app\modules\booking\models\BookingSearch;
@@ -62,7 +63,9 @@ class DriverController extends Controller
 
     public function actionDashboard()
     {
-        $searchModel = new BookingSearch();
+        $searchModel = new BookingSearch([
+            'thai_year' => AppHelper::YearBudget()
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'driver_service']);
 
@@ -120,7 +123,7 @@ class DriverController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $this->redirect(['/booking/driver','car_type' => $model->car_type,'status' => $model->status]);
         }
 
         if ($this->request->isAJax) {

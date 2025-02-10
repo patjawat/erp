@@ -79,30 +79,32 @@ $resultsJs = <<< JS
 }
 </style>
 <?php $form = ActiveForm::begin([
-            'id' => 'booking-form'
+            'id' => 'booking-form',
+            'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
+            'validationUrl' => ['/me/booking-car/validator']
         ]); ?>
 
-        
-        
+
+
 <div class="row">
     <div class="col-7">
- 
+
         <div class="row">
             <div class="col-8">
-                        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('ต้องการใช้รถตั้งแต่วันที่') ?>
-                        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
-                      
-                </div>
-                <div class="col-4">
-                    <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99']) ?>
+                <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('ต้องการใช้รถตั้งแต่วันที่') ?>
+                <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
+
+            </div>
+            <div class="col-4">
+                <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99']) ?>
                 <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99']) ?>
             </div>
-            
+
         </div>
         <?= $form->field($model, 'reason')->textArea(['rows' => 3])->label('เหตุผล') ?>
 
         <div class="row">
-        <div class="col-6">
+            <div class="col-6">
                 <?= $form->field($model, 'location')->widget(Select2::classname(), [
                         'data' => $model->ListOrg(),
                         'options' => ['placeholder' => 'เลือกหน่วยงาน'],
@@ -120,8 +122,22 @@ $resultsJs = <<< JS
                     ]) ?>
             </div>
             <div class="col-6">
-                <?= $form->field($model, 'urgent')->textInput(['maxlength' => true]) ?>
-        </div>
+                <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
+                        'data' => $model->ListUrgent(),
+                        'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            // 'width' => '370px',
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => 'function(result) { 
+                                            }',
+                            'select2:unselecting' => 'function() {
+
+                                            }',
+                        ]
+                    ]) ?>
+            </div>
         </div>
         <div class="row">
             <div class="col-4">
@@ -131,75 +147,32 @@ $resultsJs = <<< JS
                 <div class="mb-3 highlight-addon field-booking-data_json-req_license_plate">
                     <label class="form-label has-star"
                         for="booking-data_json-req_license_plate">หมายเลขทะเบียนรถที่เลือก</label>
-                    <input type="text" id="req_license_plate" class="form-control" disabled="true" value="<?php echo $model->license_plate?>">
+                    <input type="text" id="req_license_plate" class="form-control" disabled="true"
+                        value="<?php echo $model->license_plate?>">
                     <div class="invalid-feedback"></div>
                 </div>
             </div>
         </div>
-      
+        <?php if($model->car_type == 'ambulance'):?>
+            <div class="row">
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
+                    <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
+                    <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
+                    <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
+                    <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
+                </div>
+            </div>
+    <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
+    <?php endif;?>
 
 
 
     </div>
     <div class="col-5">
-
-        <!-- <h6>สรุปการเดินทาง</h6> -->
-
-
-
-        <!-- <div class="d-grid gap-2 col-6 mx-auto">
-            <button class="btn btn-primary" type="button">เลิอก</button>
-        </div> -->
-
-
-        <?php
-                        // try {
-                        //     //code...
-                        //     if($model->isNewRecord){
-                        //         $initEmployee =  Employees::find()->where(['id' => $model->data_json['req_driver_id']])->one()->getAvatar(false);    
-                        //     }else{
-                        //         $initEmployee =  Employees::find()->where(['id' => $model->data_json['req_driver_id']])->one()->getAvatar(false);    
-                        //     }
-                        //     // $initEmployee =  Employees::find()->where(['id' => $model->Approve()['leader']['id']])->one()->getAvatar(false);
-                        // } catch (\Throwable $th) {
-                        //     $initEmployee = '';
-                        // }
-
-                        // echo $form->field($model, 'data_json[req_driver_id]')->widget(Select2::classname(), [
-                        //     'initValueText' => $initEmployee,
-                        //     // 'initValueText' => $model->Approve()['leader']['avatar'],
-                        //     'options' => ['placeholder' => 'เลือกรายการ...'],
-                        //     'size' => Select2::LARGE,
-                        //     'pluginEvents' => [
-                        //         'select2:unselect' => 'function() {
-                        //             $("#order-data_json-board_fullname").val("")
-                        //             }',
-                        //         'select2:select' => 'function() {
-                        //                     var fullname = $(this).select2("data")[0].fullname;
-                        //                     // var position_name = $(this).select2("data")[0].position_name;
-                        //                     // $("#order-data_json-board_fullname").val(fullname)
-                        //                     // $("#order-data_json-position_name").val(position_name)
-                                        
-                        //             }',
-                        //     ],
-                        //     'pluginOptions' => [
-                        //         'allowClear' => true,
-                        //         'dropdownParent' => '#main-modal',
-                        //         'minimumInputLength' => 0,
-                        //         'ajax' => [
-                        //             'url' => Url::to(['/depdrop/driver']),
-                        //             'dataType' => 'json',
-                        //             'delay' => 250,
-                        //             'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                        //             'processResults' => new JsExpression($resultsJs),
-                        //             'cache' => true,
-                        //         ],
-                        //         'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                        //         'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                        //         'templateResult' => new JsExpression('formatRepo'),
-                        //     ],
-                        // ])->label('เลือกคนขับ')
-                        ?>
 
         <div class="d-flex flex-column gap-1 mt-1">
 
@@ -208,24 +181,26 @@ $resultsJs = <<< JS
                 <div id="showSelectDriver">
                     <?php if($model->showDriver()):?>
 
-                        <a href="#" data-driver_id="<?php  echo $model->id?>" data-driver_fullname="<?php echo $model->data_json['req_driver_fullname'];?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
+                    <a href="#" data-driver_id="<?php  echo $model->id?>"
+                        data-driver_fullname="<?php echo $model->data_json['req_driver_fullname'];?>"
+                        data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
                         aria-controls="offcanvasRightDriver">
-                            <div class="card mb-2 border-2 border-primary">
-                                <div class="card-body">
-                                    <div class="d-flex">
-                                        <?php echo Html::img($model->driver->ShowAvatar(),['class' => 'avatar'])?>
-                                        <div class="avatar-detail">
-                                            <h6 class="mb-1 fs-15"><?php echo $model->driver->fullname?>
-                                            </h6>
-                                            <p class="text-muted mb-0 fs-13"><?php echo $model->driver->positionName()?></p>
-                                        </div>
+                        <div class="card mb-2 border-2 border-primary">
+                            <div class="card-body">
+                                <div class="d-flex">
+                                    <?php echo Html::img($model->driver->ShowAvatar(),['class' => 'avatar'])?>
+                                    <div class="avatar-detail">
+                                        <h6 class="mb-1 fs-15"><?php echo $model->driver->fullname?>
+                                        </h6>
+                                        <p class="text-muted mb-0 fs-13"><?php echo $model->driver->positionName()?></p>
                                     </div>
-
                                 </div>
-                            </div>
 
-                        </a>
-                        <?php else:?>
+                            </div>
+                        </div>
+
+                    </a>
+                    <?php else:?>
                     <div class="card mb-3 border-2 border-primary">
                         <div class="card-body p-2 d-flex justify-content-center">
                             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
@@ -242,23 +217,24 @@ $resultsJs = <<< JS
                 <div id="selectCar">
                     <?php if(isset($model->car->id)):?>
 
-                        <a href="#" data-license_plate="<?php  echo $model->license_plate?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-                        aria-controls="offcanvasRight">
-        <div class="card border-2 border-primary">
-            <div class="row g-0">
-                <div class="col-md-3">
-                        <?php  echo  Html::img($model->car->showImg(),['class' => 'img-fluid rounded'])?>
-                </div>
-                <div class="col-md-9">
-                <div class="card-body">
-                    <h5 class="card-title"><?php  echo $model->license_plate?></h5>
-                    <p class="card-text"><small class="text-muted">จำนวนที่นั่ง <?php echo $model->car->data_json['seat_size'] ?? '-'?></small></p>
-                </div>
-                </div>
-            </div>
-            </div>
-        </a>
-                        <?php else:?>
+                    <a href="#" data-license_plate="<?php  echo $model->license_plate?>" data-bs-toggle="offcanvas"
+                        data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
+                        <div class="card border-2 border-primary">
+                            <div class="row g-0">
+                                <div class="col-md-3">
+                                    <?php  echo  Html::img($model->car->showImg(),['class' => 'img-fluid rounded'])?>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><?php  echo $model->license_plate?></h5>
+                                        <p class="card-text"><small class="text-muted">จำนวนที่นั่ง
+                                                <?php echo $model->car->data_json['seat_size'] ?? '-'?></small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <?php else:?>
                     <div class="card mb-3 border-2 border-primary">
                         <div class="card-body p-2 d-flex justify-content-center">
                             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
@@ -319,11 +295,11 @@ $resultsJs = <<< JS
                             ],
                         ])->label('หัวหน้างาน')
                         ?>
-                        
+
     </div>
 </div>
 
-
+<?php if($model->car_type == 'general'):?>
 <?php
                     echo $form->field($model, 'document_id')->widget(Select2::classname(), [
                         'data' => $list,
@@ -334,6 +310,8 @@ $resultsJs = <<< JS
                         ],
                     ])->label('หนังสืออ้างอิง');
                     ?>
+<?php endif;?>
+
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
@@ -343,12 +321,12 @@ $resultsJs = <<< JS
 
 
 <?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
-        <?= $form->field($model, 'license_plate')->hiddenInput(['maxlength' => true])->label(false) ?>
-        <?= $form->field($model, 'name')->hiddenInput(['value' => 'driver_service'])->label(false) ?>
-        <?= $form->field($model, 'data_json[req_license_plate]')->hiddenInput(['maxlength' => true])->label(false) ?>
-        <?= $form->field($model, 'data_json[req_driver_id]')->hiddenInput(['maxlength' => true])->label(false) ?>
-        <?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
-        <?= $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'license_plate')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput(['value' => 'driver_service'])->label(false) ?>
+<?= $form->field($model, 'data_json[req_license_plate]')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'data_json[req_driver_id]')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
 <?php ActiveForm::end(); ?>
@@ -366,7 +344,8 @@ $resultsJs = <<< JS
 </div>
 
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightDriver" aria-labelledby="offcanvasRightLabelDriver">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightDriver"
+    aria-labelledby="offcanvasRightLabelDriver">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasRightLabeDriver">พนักงานขับ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -378,7 +357,7 @@ $resultsJs = <<< JS
 
 
 <?php
-$listCarsUrl = Url::to(['/me/booking-car/list-cars']);
+
 $js = <<<JS
 
 
@@ -429,27 +408,6 @@ $js = <<<JS
         });
         return false;
     });
-
-    function listCars()
-    {
-        var dateStart = $('#booking-date_start').val();
-        var dateEnd = $('#booking-date_end').val();
-        var carType = $('#booking-car_type').val();
-        \$.ajax({
-            type: "get",
-            url: "$listCarsUrl",
-            data: {
-                date_start:dateStart,
-                date_end:dateEnd,
-                car_type:carType
-            },
-            dataType: "json",
-            success: function (res) {
-                $('#viewCars').html(res.content)
-                
-            }
-        });
-    }
 
     $("body").on("click", ".select-car", function (e) {
         e.preventDefault();

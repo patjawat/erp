@@ -71,7 +71,7 @@ if($searchModel->car_type == 'ambulance'){
                 <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
                 <td><?php echo $item->time_end?></td>
                 <td><?php echo $item->leader_id?></td>
-                <td></td>
+                <td><?php echo $item->bookingStatus->title ?? '-'?></td>
                 <td class="text-center">
                 <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-car/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                 <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/booking-car/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>

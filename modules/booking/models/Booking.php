@@ -144,6 +144,12 @@ class Booking extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
+    public function getBookingStatus()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);
+    }
+
+
     public function showStartTime()
     {
         try {
@@ -202,6 +208,15 @@ class Booking extends \yii\db\ActiveRecord
     {
         $model = Categorise::find()
             ->where(['name' => 'driver_service_status'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+    public function ListUrgent()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'urgent'])
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
@@ -369,6 +384,16 @@ class Booking extends \yii\db\ActiveRecord
             $id = $this->driver_id;
         $emp = Employees::findOne($id);
         return $emp->getAvatar(false);
+        } catch (\Throwable $th) {
+          return false;
+        }
+       
+    }
+    
+    public function showStatus()
+    {
+        try {
+        return $this->bookignStatus->title;
         } catch (\Throwable $th) {
           return false;
         }
