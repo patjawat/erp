@@ -210,7 +210,7 @@ $resultsJs = <<< JS
 
                         <a href="#" data-driver_id="<?php  echo $model->id?>" data-driver_fullname="<?php echo $model->data_json['req_driver_fullname'];?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
                         aria-controls="offcanvasRightDriver">
-                            <div class="card border-2 border-primary">
+                            <div class="card mb-2 border-2 border-primary">
                                 <div class="card-body">
                                     <div class="d-flex">
                                         <?php echo Html::img($model->driver->ShowAvatar(),['class' => 'avatar'])?>
@@ -458,8 +458,8 @@ $js = <<<JS
         $('#booking-license_plate').val(licensePlate)
         $('#booking-data_json-req_license_plate').val(licensePlate)
         
-        $("#car-container .card").removeClass("border-2 border-primary");
-        $("#car-container .checked").html('')
+        // $("#car-container .card").removeClass("border-2 border-primary");
+
     
         $(this).find(".card").addClass("border-2 border-primary");
         $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
@@ -468,7 +468,8 @@ $js = <<<JS
 
         let cloned = $(this).clone(); // Clone ตัวเอง
         // ลบคลาส select-car
-        cloned.removeClass("select-car");
+        cloned.removeClass("select-car hover-card");
+        cloned.addClass("border-2 border-primary");
 
         // เพิ่ม attributes ที่ต้องการ
         cloned.attr({
@@ -491,16 +492,15 @@ $js = <<<JS
         
         $("#offcanvasRightDriver").offcanvas("hide"); // ปิด Offcanvas
         success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
-        $("#car-container .card").removeClass("border-2 border-primary");
-        $("#car-container .checked").html('')
+
         
         // เพิ่ม class border-2 border-primary ให้กับ .card ที่อยู่ภายใน <a> ที่ถูกคลิก
         $(this).find(".card").addClass("border-2 border-primary");
         $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
         let cloned = $(this).clone(); // Clone ตัวเอง
         // ลบคลาส select-car
-        cloned.removeClass("select-driver");
-
+        cloned.removeClass("select-driver hover-card");
+        cloned.addClass("border-2 border-primary");
         // เพิ่ม attributes ที่ต้องการ
         cloned.attr({
             "data-bs-toggle": "offcanvas",
