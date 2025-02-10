@@ -204,7 +204,7 @@ $resultsJs = <<< JS
         <div class="d-flex flex-column gap-1 mt-1">
 
             <div>
-                <h6 class="mb-0">เลือกคนขับ</h6>
+                <h6 class="mb-0"><i class="fa-solid fa-circle-info text-primary"></i> เลือกคนขับ</h6>
                 <div id="showSelectDriver">
                     <?php if($model->showDriver()):?>
 
@@ -238,7 +238,7 @@ $resultsJs = <<< JS
             </div>
 
             <div>
-                <h6 class="mb-0">เลือกรถยนต์</h6>
+                <h6 class="mb-0"><i class="fa-solid fa-circle-info text-primary"></i> เลือกรถยนต์</h6>
                 <div id="selectCar">
                     <?php if(isset($model->car->id)):?>
 
