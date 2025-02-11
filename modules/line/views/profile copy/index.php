@@ -26,7 +26,7 @@ $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_regi
 
 $js = <<< JS
 
-  runApp()
+
       async function checkProfile(){
           const {userId} = await liff.getProfile()
           await $.ajax({
