@@ -16,6 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->title = "ระบบยืนยันตัวตน";
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
+<?php Pjax::begin(['id' => 'sm-container', 'enablePushState' => true, 'timeout' => 5000]); ?>
 
 <style>
 input,
@@ -29,7 +30,7 @@ input::placeholder {
 </div>
 <div id="signup-container" class="row justify-content-center">
 
-        <?php $form = ActiveForm::begin(['id' => 'blank-form']); ?>
+        <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
         <div class="container row justify-content-center" data-aos="fade-up" data-aos-duration="4000">
             <div class="col-lg-4 col-md-12 col-sm-12">
                 <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
@@ -74,40 +75,38 @@ $js = <<< JS
  var vConsole = new window.VConsole();
  
   
+// $('#blank-form').on('beforeSubmit', function (e) {
+// e.preventDefault
+//     var yiiform = $(this);
+//     $('#btnAwait').show();
+//     $('#btn-login').hide();
 
-$('#blank-form').on('beforeSubmit', function (e) {
-e.preventDefault
-    var yiiform = $(this);
-    $('#btnAwait').show();
-    $('#btn-login').hide();
-
-    $.ajax({
-        type: yiiform.attr('method'),
-            url: yiiform.attr('action'),
-            data: yiiform.serializeArray(),
-        dataType: "json",
-        success: function (data) {
-            if(data.success) {
-                // data is saved
-                $('#success-container').html(data.content);
-                $('#signup-container').hide();
-                success()
-                location.replace("$liffProfileUrl");
+//     $.ajax({
+//         type: yiiform.attr('method'),
+//             url: yiiform.attr('action'),
+//             data: yiiform.serializeArray(),
+//         dataType: "json",
+//         success: function (data) {
+//             if(data.success) {
+//                 // data is saved
+//                 $('#success-container').html(data.content);
+//                 $('#signup-container').hide();
+//                 success()
+//                 location.replace("$liffProfileUrl");
                 
-            } else if (data.validation) {
-                // server validation failed
-                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
-                $('#btnAwait').hide();
-                $('#btn-login').show();
+//             } else if (data.validation) {
+//                 // server validation failed
+//                 yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
+//                 $('#btnAwait').hide();
+//                 $('#btn-login').show();
             
-            } else {
-                // incorrect server response
-            }
-        }
-    });
-        return false;
-})
-
+//             } else {
+//                 // incorrect server response
+//             }
+//         }
+//     });
+//         return false;
+// })
 
 
 
@@ -133,5 +132,6 @@ async function main(){
   main();
   
 JS;
-$this->registerJs($js);
+$this->registerJs($js,View::POS_END);
 ?>
+<?php Pjax::end() ?>

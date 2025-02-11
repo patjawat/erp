@@ -2,18 +2,18 @@
 
 namespace app\controllers;
 
-use app\components\UserHelper;
-use app\models\Amphure;
-use app\models\District;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\EmployeeDetail;
-use app\modules\usermanager\models\User;
 use Yii;
-use yii\bootstrap5\ActiveForm;
-use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
-use yii\helpers\Url;
+use app\models\Amphure;
+use app\models\District;
+use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
+use yii\bootstrap5\ActiveForm;
+use app\modules\hr\models\Employees;
+use app\modules\usermanager\models\User;
+use app\modules\hr\models\EmployeeDetail;
 
 class ProfileController extends \yii\web\Controller
 
@@ -21,6 +21,25 @@ class ProfileController extends \yii\web\Controller
 
         //เชื่อม line กับ user ที่ลงทะเบียนไว้แล้ว
         public function actionLineConnect(){
+
+            if (Yii::$app->request->post()) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $lineID =  Yii::$app->request->post('line_id');
+                $user = User::findOne(Yii::$app->user->id);
+                if(!$user){
+                    return [
+                        'status' => 'error'
+                    ];
+                }
+                if($user){
+                    $user->line_id = $lineID;
+                    $user->save(false);
+                    return [
+                        'status' => 'success'
+                    ];
+                }
+                
+            }
             if ($this->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [

@@ -6,19 +6,19 @@ $('#loader').hide()
 window.onbeforeunload = function () {
   $('#page-content').hide()
   $('#loader').show()
-  NProgress.start();
+  // NProgress.start();
 
 };
 
 jQuery(document).on("pjax:start", function () {
-  NProgress.start();
+  // NProgress.start();
   $('#page-content').hide()
   $('#loader').show()
   
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
-  NProgress.done();
+  // NProgress.done();
   $('#page-content').show()
 $('#loader').hide()
 });

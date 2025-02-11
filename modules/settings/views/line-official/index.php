@@ -25,21 +25,63 @@ $this->title = 'ตั้งค่าองค์กร';
 
 <?php $form = ActiveForm::begin(['id' => 'form-company']); ?>
 <div class="row d-flex justify-content-center">
+    <div class="col-7">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/home'?></span>
+                    <p>หน้าหลัก</p>
+                </div>
+                <?= $form->field($model, 'data_json[line_liff_home]')->textInput()->label(false) ?>
+            </div>
+            <div class="card-footer">
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/profile'?></span>
+                    <p>โปรไฟล์</p>
+                </div>
+                <?= $form->field($model, 'data_json[line_liff_profile]')->textInput()->label(false) ?>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/auth/login'?></span>
+                    <p>เข้าสู่ระบบ</p>
+                </div>
+                <?= $form->field($model, 'data_json[line_liff_login]')->textInput()->label(false) ?>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+            <div class="d-flex justify-content-between">
+                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/profile/line-connec'?></span>
+                    <p>เชื่อม Line-Connect</p>
+                </div>
+                <?= $form->field($model, 'data_json[line_liff_user_connect]')->textInput()->label(false) ?>
+            </div>
+        </div>
+
+
+    </div>
     <div class="col-4">
         <div class="card">
             <div class="card-body">
-                <?= $form->field($model, 'data_json[line_liff_home]')->textInput()->label('หน้าหลัก '.$domain.'/line/home') ?>
-                <?= $form->field($model, 'data_json[line_liff_profile]')->textInput()->label('โปรไฟล์ '.$domain.'/line/profile') ?>
-                <?= $form->field($model, 'data_json[line_liff_login]')->textInput()->label('เข้าสู่ระบบ '.$domain.'/line/auth/login') ?>
-                <?= $form->field($model, 'data_json[line_liff_register]')->textInput()->label('การลงทะเบียน '.$domain.'/line/auth/register') ?>
-                <?= $form->field($model, 'data_json[line_liff_user_connect]')->textInput()->label('เชื่อมLineกับระบบ UserConnect') ?>
+                <?= $form->field($model, 'data_json[line_qrcode]')->textInput()->label('Line QR-code') ?>
+                <?php if(isset($model->data_json['line_qrcode'])):?>
+                <img src="<?php echo $model->data_json['line_qrcode']?>" alt="">
+                <?php endif;?>
 
-                <?php //  $form->field($model, 'data_json[line_liff_about]')->textInput()->label('ERP About') ?>
             </div>
-
         </div>
-    </div>
-    <div class="col-4">
+
         <div class="card">
             <div class="card-body">
                 <?= $form->field($model, 'data_json[line_channel_token]')->textArea(['rows' => 5])->label('Channel access token') ?>
@@ -48,10 +90,12 @@ $this->title = 'ตั้งค่าองค์กร';
                 <a href="https://docs.google.com/document/d/1UQM2Z9feJCIbOg3MfznXX9T420XZ2lYZuZf9ALdsHpY/edit?usp=sharing"
                     target="_blank" class="btn btn-warning"><i class="fa-solid fa-book"></i> คู่มือ</a>
 
+
+
+                <?php //  $form->field($model, 'data_json[line_liff_about]')->textInput()->label('ERP About') ?>
             </div>
+
         </div>
-
-
     </div>
 </div>
 

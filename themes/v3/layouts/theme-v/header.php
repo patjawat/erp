@@ -82,6 +82,9 @@ use app\components\UserHelper;
                     <a href="<?=Url::to('/profile/setting')?>" class="dropdown-item">
                         <i class="fa-solid fa-user-gear fs-4 me-3"></i> ตั้งค่า
                     </a>
+                    <a href="<?=Url::to('/profile/line-connect')?>" class="dropdown-item">
+                        <i class="fa-brands fa-line fs-4 me-3 text-success"></i> เชื่อม LineID
+                    </a>
                     <div class="dropdown-divider"></div>
                     <?php if(!Yii::$app->user->isGuest):?>
                     <?php

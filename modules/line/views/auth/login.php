@@ -1,124 +1,154 @@
 <?php
-use app\modules\employees\models\Employees;
-// use app\themes\assets\AppAsset;
-use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
 use yii\web\View;
-use yii\widgets\MaskedInput;
-// $assets = AppAsset::register($this);
-$this->title = "Authentication";
+// use app\themes\assets\AppAsset;
+use yii\helpers\Url;
+use yii\widgets\Pjax;
+use yii\bootstrap5\Html;
+use app\models\Categorise;
+use app\components\SiteHelper;
+use kartik\widgets\ActiveForm;
+use app\modules\employees\models\Employees;
+$site = Categorise::findOne(['name' => 'site']);
+$color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
+$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
+
+$this->title = 'กรุณายืนยันตัวตน';
+$this->params['breadcrumbs'][] = $this->title;
+$this->title = "ระบบยืนยันตัวตน";
+$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
 <style>
-    #displayName{
-        font-family: 'Prompt';
-    }
+input,
+input::placeholder {
+    font-weight: 200;
+}
 </style>
-<div class="card border">
-    <div class="card-body">
 
-<div id="signup-container" class="row justify-content-center mt-5">
-    <div class="sign-in-from">
-        <h4 class="text-center mb-3 text-primary" id="title"><?=$this->title?></h4>
-        <div class="line-profile">
-    <div class="d-flex justify-content-center align-items-center">
-        <div class="round-image">
-            <img id="pictureUrl" class="rounded-circle" width="200">
-        </div>
-    </div>
-    <div class="text-center">
-        <h4 class="mt-3" id="displayName"></h4>
-    </div>
-</div>
-    <p id="debug"></p>
 
-        <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
-        <div class="row justify-content-center">
-            <div class="col-lg-4 col-md-12 col-sm-12">
-                <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
-                <div class="d-inline-block w-100">
-                    <div class="d-grid gap-2 mt-3">
-                        <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-regster" type="submit">
-                            <i class="fa-solid fa-circle-check"></i> ลงทะเบียน</button>
-
-                        <button class="btn btn-lg btn-primary account-btn rounded-pill d-none" id="btn-loading"
-                            type="button" disabled="">
-                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            Loading...
-                        </button>
-                    </div>
+<div class="page-title-box">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-sm-5 col-xl-4">
+                <div class="page-title">
+                    <h5 class="mb-1 text-white">ยืนยันตัวตน</h5>
                 </div>
+            </div>
+            <div class="col-sm-7 col-xl-8">
+                <div class="d-flex justify-content-sm-end">
 
+                </div>
             </div>
         </div>
-
-        <?php ActiveForm::end(); ?>
-
     </div>
 </div>
 
 
 
-</div>
-</div>
+<div class="card">
+    <div class="card-body">
+้<h1 class="text-center">เข้าสู่ระบบ</h1>
+        <div class="d-flex justify-content-center mb-1" style="margin-top:15%">
+            <img id="pictureUrl" width="25%" class="avatar avatar-xxl border border-primary-subtl card-img-top  shadow">
+        </div>
+
+        <div id="signup-container" class="row justify-content-center">
+
+            <?php $form = ActiveForm::begin(['id' => 'blank-form']); ?>
+            <div class="ยข/">
+                    <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
+                    <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
+                    <div class="d-inline-block w-100">
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-login"
+                                type="submit">
+                                <i class="fa-solid fa-fingerprint"></i> เข้าสู่ระบบ
+                            </button>
+                        </div>
+                    </div>
+
+            </div>
+
+            <?php ActiveForm::end(); ?>
 
 
-<img id="pictureUrl" width="25%">
-  <p id="userId"></p>
-  <p id="displayName"></p>
-  <p id="statusMessage"></p>
-  <p id="getDecodedIDToken"></p>
+        </div>
+
+    </div>
+</div>
 
 
 
 <?php
-use yii\helpers\Url;
+
+
+$liffLogin = SiteHelper::getInfo()['line_liff_login'];
+$urlCheckProfile = Url::to(['/line/auth/check-profile']);
+$liffProfile = SiteHelper::getInfo()['line_liff_profile'];
+$liffProfileUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_profile'];
+$liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
+
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $js = <<< JS
 
+$('#blank-form').on('beforeSubmit', function (e) {
+e.preventDefault
+    var yiiform = $(this);
+    $('#btnAwait').show();
+    $('#btn-login').hide();
 
-async function checkProfile(){
-    const {userId} = await liff.getProfile()
-    await $.ajax({
-        type: "post",
-        url: "$urlCheckProfile",
-        data:{
-            line_id:userId
-        },
+    $.ajax({
+        type: yiiform.attr('method'),
+            url: yiiform.attr('action'),
+            data: yiiform.serializeArray(),
         dataType: "json",
-        success: function (res) {
-            console.log(res);
-            if(res.status == false){
-                location.replace("https://liff.line.me/2005893839-9qRwwMWG");
-            }
-            if(res.status == true){
-                location.replace("https://liff.line.me/2005893839-1vEqqXoQ");
+        success: function (data) {
+            if(data.success) {
+                // data is saved
+                $('#success-container').html(data.content);
+                $('#signup-container').hide();
+                success()
+                location.replace("$liffProfileUrl");
+                
+            } else if (data.validation) {
+                // server validation failed
+                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
+                $('#btnAwait').hide();
+                $('#btn-login').show();
+            
+            } else {
+                // incorrect server response
             }
         }
     });
-    console.log('check profile');
+        return false;
+})
+
+
+
+
+function logout(){
+    if (liff.isLoggedIn()) {
+  liff.logout();
+//   $("#main-modal").modal("toggle");
+}
 }
 
-function runApp() {
-      liff.getProfile().then(profile => {
-        document.getElementById("pictureUrl").src = profile.pictureUrl;
-        document.getElementById("userId").innerHTML = '<b>UserId:</b> ' + profile.userId;
-        document.getElementById("displayName").innerHTML = '<b>DisplayName:</b> ' + profile.displayName;
-        document.getElementById("statusMessage").innerHTML = '<b>StatusMessage:</b> ' + profile.statusMessage;
-        document.getElementById("getDecodedIDToken").innerHTML = '<b>Email:</b> ' + liff.getDecodedIDToken().email;
-
-        checkProfile()
-      }).catch(err => console.error(err));
-    }
-    liff.init({ liffId: "2005893839-1vEqqXoQ" }, () => {
-      if (liff.isLoggedIn()) {
-        runApp()
-      } else {
-        liff.login();
-      }
-    }, err => console.error(err.code, error.message));
-
+async function main(){
+  await liff.init({ liffId: "$liffLogin",withLoginOnExternalBrowser:true});
+  if (liff.isLoggedIn()) {
+            const profile = await liff.getProfile();
+            $('#loginform-line_id').val(profile.userId)
+            document.getElementById("pictureUrl").src = profile.pictureUrl;
+        
+        //   await checkProfile()
+        } else {
+          liff.login();
+        }
+  }
+  main();
+  
 JS;
-$this->registerJs($js,View::POS_END);
+$this->registerJs($js);
 ?>
-

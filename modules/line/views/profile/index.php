@@ -6,6 +6,38 @@ use yii\helpers\Html;
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
+<style>
+    /* HTML: <div class="loader"></div> */
+.loader {
+  width: 100px;
+  height: 40px;
+  --g: radial-gradient(farthest-side,#0000 calc(95% - 3px),#fff calc(100% - 3px) 98%,#0000 101%) no-repeat;
+  background: var(--g), var(--g), var(--g);
+  background-size: 30px 30px;
+  animation: l9 1s infinite alternate;
+}
+@keyframes l9 {
+  0% {
+    background-position: 0 50%, 50% 50%, 100% 50%;
+  }
+  20% {
+    background-position: 0 0, 50% 50%, 100% 50%;
+  }
+  40% {
+    background-position: 0 100%, 50% 0, 100% 50%;
+  }
+  60% {
+    background-position: 0 50%, 50% 100%, 100% 0;
+  }
+  80% {
+    background-position: 0 50%, 50% 50%, 100% 100%;
+  }
+  100% {
+    background-position: 0 50%, 50% 50%, 100% 50%;
+  }
+}
+</style>
+
 <div class="page-title-box">
     <div class="container-fluid">
         <div class="row align-items-center">
@@ -28,10 +60,11 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 
 
 <div id="avatar"></div>
-<div class="card" id="loading">
-    <div class="card-body">
-        <div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>
-    </div>
+
+<div  style="margin-top:40%" id="loading">
+        <div class="d-flex justify-content-center">
+            <div class="loader"></div>
+        </div>
 </div>
 
 
@@ -39,7 +72,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 use app\components\SiteHelper;
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
-$liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
+$liffLofinUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_login'];
 
 $js = <<< JS
 
@@ -56,10 +89,8 @@ async function checkProfile(){
               },
               dataType: "json",
               success: function (res) {
-                  console.log('CheckProfile');
-                  console.log(res);
                   if(res.status == false){
-                      location.replace("$liffRegisterUrl");
+                      location.replace("$liffLofinUrl");
                   }
                   if(res.status == true){
                       $('#avatar').html(res.avatar)
@@ -70,19 +101,28 @@ async function checkProfile(){
       }
 
       
-async function main(){
-  await liff.init({ liffId: "$liffProfile",withLoginOnExternalBrowser:true});
-  if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          await checkProfile()
-        } else {
-          liff.login();
-        }
-  }
-  main();
 
+async function main() {
+  await liff.init({ liffId:"$liffProfile", withLoginOnExternalBrowser: true });
+
+  if (liff.isLoggedIn()) {
+    try {
+      var profile = await liff.getProfile();
       
-    
+      $('#loginform-line_id').val(profile.userId);
+      $("#pictureUrl").attr("src", profile.pictureUrl);
+      console.log(profile);
+      await checkProfile()
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  } else {
+    liff.login();
+  }
+}
+
+main();
+
 
 JS;
 $this->registerJs($js,View::POS_END);

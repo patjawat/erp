@@ -13,14 +13,43 @@ $me = UserHelper::GetEmployee();
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
-<!-- <div id="avatar"></div> -->
-<div class="card" style="margin-top:40%" id="loading">
-    <div class="card-body">
+
+<style>
+    /* HTML: <div class="loader"></div> */
+.loader {
+  width: 100px;
+  height: 40px;
+  --g: radial-gradient(farthest-side,#0000 calc(95% - 3px),#fff calc(100% - 3px) 98%,#0000 101%) no-repeat;
+  background: var(--g), var(--g), var(--g);
+  background-size: 30px 30px;
+  animation: l9 1s infinite alternate;
+}
+@keyframes l9 {
+  0% {
+    background-position: 0 50%, 50% 50%, 100% 50%;
+  }
+  20% {
+    background-position: 0 0, 50% 50%, 100% 50%;
+  }
+  40% {
+    background-position: 0 100%, 50% 0, 100% 50%;
+  }
+  60% {
+    background-position: 0 50%, 50% 100%, 100% 0;
+  }
+  80% {
+    background-position: 0 50%, 50% 50%, 100% 100%;
+  }
+  100% {
+    background-position: 0 50%, 50% 50%, 100% 50%;
+  }
+}
+</style>
+
+<div  style="margin-top:40%" id="loading">
         <div class="d-flex justify-content-center">
-            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div>
+            <div class="loader"></div>
         </div>
-        <h6 class="text-center mt-3">Loading...</h6>
-    </div>
 </div>
 
 <div id="wraperContainer" style="display:none">
@@ -64,10 +93,6 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 
         </div>
     </div>
-
-
-
-
 
     <div class="p-2 mb-3">
         <h6 class="text-white">App Menu</h6>
@@ -140,7 +165,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 <?php
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_home'];
-$liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
+$liffLoginUrl= 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_login'];
 
 $js = <<< JS
 
@@ -157,10 +182,8 @@ async function checkProfile(){
               },
               dataType: "json",
               success: function (res) {
-                  console.log('CheckProfile');
-                  console.log(res);
                   if(res.status == false){
-                      location.replace("$liffRegisterUrl");
+                      location.replace("$liffLoginUrl");
                   }
                   if(res.status == true){
                       $('#avatar').html(res.avatar)

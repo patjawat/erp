@@ -2,20 +2,20 @@
 
 namespace app\modules\line\controllers;
 
-use yii\helpers\Html;
-use app\components\SiteHelper;
-use app\models\SignupForm;
-use app\modules\hr\models\Employees;
-use app\models\PasswordResetRequestForm;
-use app\modules\usermanager\models\User;
 use Yii;
 use yii\filters\Cors;
-use yii\filters\AccessControl;
-use yii\web\Controller;
+use yii\helpers\Html;
 use yii\web\Response;
-use yii\filters\VerbFilter;
-use app\modules\line\models\LoginForm;
+use yii\web\Controller;
+use app\models\SignupForm;
 use app\models\ContactForm;
+use yii\filters\VerbFilter;
+use app\components\SiteHelper;
+use yii\filters\AccessControl;
+use app\modules\hr\models\Employees;
+use app\modules\line\models\LoginForm;
+use app\models\PasswordResetRequestForm;
+use app\modules\usermanager\models\User;
 
 class AuthController extends \yii\web\Controller
 {
@@ -59,14 +59,41 @@ class AuthController extends \yii\web\Controller
     }
     public function actionLogin()
     {
-        $model = new SignupForm([
-            'cid' => '112233',
-            'email' => 'admin@local.com',
-            'password' => '112233',
-        ]);
-        return $this->render('login', [
-            'model' => $model,
-        ]);
+        // $this->layout = 'blank';
+        $model = new LoginForm();
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            // if ($model->load(Yii::$app->request->post())) {
+                $user = User::findOne(['username' => $model->username]);
+                if($user->line_id == ''){
+                    $user->line_id = $model->line_id;
+                    $user->save(false);
+                }
+
+                return $this->asJson([
+                    'success' => true,
+                    'model' => $model,
+                ]);
+            }
+            $result = [];
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[Html::getInputId($model, $attribute)] = $errors;
+            }
+
+            return $this->asJson(['validation' => $result]);
+           
+        }
+        return $this->render('login',['model' => $model]);
+        
+        // $model = new SignupForm([
+        //     'cid' => '112233',
+        //     'email' => 'admin@local.com',
+        //     'password' => '112233',
+        // ]);
+        // return $this->render('login', [
+        //     'model' => $model,
+        // ]);
     }
 
     public function actionCheckProfile()
@@ -103,38 +130,6 @@ class AuthController extends \yii\web\Controller
             }
         }
     }
-
-    //เชื่อม line กับ user ที่ลงทะเบียนไว้แล้ว
-    public function actionUserConnect()
-    {
-        $this->layout = 'blank';
-        $model = new LoginForm();
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            // if ($model->load(Yii::$app->request->post())) {
-                $user = User::findOne(['username' => $model->username]);
-                if($user->line_id == ''){
-                    $user->line_id = $model->line_id;
-                    $user->save(false);
-                }
-
-                return $this->asJson([
-                    'success' => true,
-                    'model' => $model,
-                ]);
-            }
-            $result = [];
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[Html::getInputId($model, $attribute)] = $errors;
-            }
-
-            return $this->asJson(['validation' => $result]);
-           
-        }
-        return $this->render('user_connect',['model' => $model]);
-    }
-    
 
     public function actionWelcome()
     {
