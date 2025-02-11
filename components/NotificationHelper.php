@@ -116,13 +116,22 @@ class NotificationHelper extends Component
     
     public static function StockApprove()
     {
-        $emp = UserHelper::GetEmployee();
+        try {
+            $emp = UserHelper::GetEmployee();
         $datas = isset($emp->id) ? StockEvent::find()->andFilterWhere(['name' => 'order', 'checker' => $emp->id])->andWhere(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"))->all() : 0;
         return [
             'title' => 'ขออนุมัติเบิกวัสดุ',
             'total' => isset($datas) ? count($datas) : 0,
             'datas' => $datas
         ];
+        } catch (\Throwable $th) {
+            return [
+                'title' => 'ขออนุมัติเบิกวัสดุ',
+                'total' =>  0,
+                'datas' => []
+            ];
+        }
+       
     }
     
     

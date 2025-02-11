@@ -40,13 +40,10 @@ class SiteHelper extends Component
                         'province' => isset($model->data_json['province']) ? $model->data_json['province'] : null,
                         'phone' => isset($model->data_json['phone']) ? $model->data_json['phone'] : null,
                         'website' => Html::a($siteName, $siteUrl),
-                        'line_liff_dashboard' => isset($model->data_json['line_liff_dashboard']) ? $model->data_json['line_liff_dashboard'] : null,
-                        'line_liff_register' => isset($model->data_json['line_liff_register']) ? $model->data_json['line_liff_register'] : null,
+                        'line_liff_home' => isset($model->data_json['line_liff_home']) ? $model->data_json['line_liff_home'] : null,
                         'line_liff_profile' => isset($model->data_json['line_liff_profile']) ? $model->data_json['line_liff_profile'] : null,
-                        'line_liff_app' => isset($model->data_json['line_liff_app']) ? $model->data_json['line_liff_app'] : null,
-                        'line_liff_service' => isset($model->data_json['line_liff_service']) ? $model->data_json['line_liff_service'] : null,
-                        'line_liff_about' => isset($model->data_json['line_liff_about']) ? $model->data_json['line_liff_about'] : null,
                         'line_liff_login' => isset($model->data_json['line_liff_login']) ? $model->data_json['line_liff_login'] : null,
+                        'line_liff_register' => isset($model->data_json['line_liff_register']) ? $model->data_json['line_liff_register'] : null,
                         'line_liff_user_connect' => isset($model->data_json['line_liff_user_connect']) ? $model->data_json['line_liff_user_connect'] : null,
                 ];
 

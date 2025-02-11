@@ -96,6 +96,7 @@ input::placeholder {
               </div>
             </div>
 
+            
 <?php
 $js = <<< JS
  $('#btnAwait').hide();
