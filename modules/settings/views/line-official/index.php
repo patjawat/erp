@@ -74,7 +74,7 @@ $this->title = 'ตั้งค่าองค์กร';
     <div class="col-4">
         <div class="card">
             <div class="card-body">
-                <?= $form->field($model, 'data_json[line_qrcode]')->textInput()->label('Line QR-code') ?>
+                <?= $form->field($model, 'data_json[line_qrcode]')->textInput()->label('Line QR-code URL') ?>
                 <?php if(isset($model->data_json['line_qrcode'])):?>
                 <img src="<?php echo $model->data_json['line_qrcode']?>" alt="">
                 <?php endif;?>
