@@ -25,60 +25,75 @@ input::placeholder {
 }
 </style>
 
-
-<div class="page-title-box">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-sm-5 col-xl-4">
-                <div class="page-title">
-                    <h5 class="mb-1 text-white">ยืนยันตัวตน</h5>
-                </div>
-            </div>
-            <div class="col-sm-7 col-xl-8">
-                <div class="d-flex justify-content-sm-end">
-
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<div class="card">
-    <div class="card-body">
-้<h1 class="text-center">เข้าสู่ระบบ</h1>
-        <div class="d-flex justify-content-center mb-1" style="margin-top:15%">
-            <img id="pictureUrl" width="25%" class="avatar avatar-xxl border border-primary-subtl card-img-top  shadow">
-        </div>
-
-        <div id="signup-container" class="row justify-content-center">
-
-            <?php $form = ActiveForm::begin(['id' => 'blank-form']); ?>
-            <div class="ยข/">
-                    <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
-                    <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
-                    <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
-                    <div class="d-inline-block w-100">
-                        <div class="d-grid gap-2 mt-3">
-                            <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-login"
-                                type="submit">
-                                <i class="fa-solid fa-fingerprint"></i> เข้าสู่ระบบ
-                            </button>
+<!-- Login 9 - Bootstrap Brain Component -->
+<section class="bg-primary py-3 py-md-5 py-xl-8 h-screen-100  mt-5">
+    <div class="container">
+        <div class="row gy-4 align-items-center">
+            <div class="col-12 col-md-6 col-xl-7">
+                <div class="d-flex justify-content-center text-bg-primary">
+                    <div class="col-12 col-xl-9">
+                        <h1 class="text-white text-center">
+                            <i class="bi bi-box"></i> ERP Hospital
+                        </h1>
+                        <hr class="border-primary-subtle">
+                        <div class="d-flex justify-content-center mb-4 mt-0 fs-3 gap-2">
+                            <?=SiteHelper::getInfo()['company_name'] !='' ?  (SiteHelper::getInfo()['company_name']) : ''?>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-5">
+                <div class="card border-0 rounded-4">
+                    <div class="card-body p-3 p-md-4 p-xl-5">
+                        <h3 class="text-center">กรุณายืนยันตัวตน</h3>
+                        <div class="d-flex justify-content-center mt-1" >
+                            <img id="pictureUrl" class="avatar avatar-xl border border-3 border-primary shadow">
+                        </div>
+                        <div id="signup-container" class="row justify-content-center">
+                            <?php $form = ActiveForm::begin(['id' => 'blank-form']); ?>
+                            <div class="ยข/">
+                                <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
+                                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
+                                <div class="d-inline-block w-100">
+                                    <div class="d-grid gap-2 mt-3">
+                                        <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-login"
+                                            type="submit">
+                                            <i class="fa-solid fa-fingerprint"></i> เข้าสู่ระบบ
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php ActiveForm::end(); ?>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="mb-4">
+                                        <p>ยังไม่มีบัญชี ?
+                                            <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน',['/line/auth/register'],['class' => 'text-primary'])?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+
+                    </div>
+                </div>
             </div>
 
-            <?php ActiveForm::end(); ?>
+            <div class="text-end mt-0">
+                <p class="text-center text-white">ผู้ให้การสนับสนุน</p>
+                <div class="d-flex justify-content-center gap-5">
+                    <?=Html::img('@web/banner/banner2.png',['style'=> 'width:60px;height:60px'])?>
+                    <?=Html::img('@web/banner/banner1.png',['style'=> 'width:130px;height:70px'])?>
+                    <?=Html::img('@web/banner/banner3.png',['style'=> 'width:80px;height:70px'])?>
 
-
+                </div>
+            </div>
         </div>
 
     </div>
-</div>
-
-
+</section>
 
 <?php
 
@@ -141,6 +156,8 @@ async function main(){
             const profile = await liff.getProfile();
             $('#loginform-line_id').val(profile.userId)
             document.getElementById("pictureUrl").src = profile.pictureUrl;
+            $('#content').show()
+            $('#loading').hide()
         
         //   await checkProfile()
         } else {

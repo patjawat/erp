@@ -61,6 +61,16 @@ $this->title = 'ตั้งค่าองค์กร';
 
         <div class="card">
             <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/auth/register'?></span>
+                    <p>ลงทะเบียน</p>
+                </div>
+                <?= $form->field($model, 'data_json[line_liff_register]')->textInput()->label(false) ?>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
             <div class="d-flex justify-content-between">
                     <span class="text-danger fw-semibold"><?php echo $domain.'/line/profile/line-connec'?></span>
                     <p>เชื่อม Line-Connect</p>
@@ -89,9 +99,6 @@ $this->title = 'ตั้งค่าองค์กร';
                     Developers</a>
                 <a href="https://docs.google.com/document/d/1UQM2Z9feJCIbOg3MfznXX9T420XZ2lYZuZf9ALdsHpY/edit?usp=sharing"
                     target="_blank" class="btn btn-warning"><i class="fa-solid fa-book"></i> คู่มือ</a>
-
-
-
                 <?php //  $form->field($model, 'data_json[line_liff_about]')->textInput()->label('ERP About') ?>
             </div>
 
