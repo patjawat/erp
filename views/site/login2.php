@@ -30,14 +30,16 @@ input::placeholder {
 }
 </style>
 
-          <div class="row">
-              <div class="col-12">
-                <div class="mb-4">
-                  <h3>กรุณายืนยันตัวตน</h3>
-                  <p>ยังไม่มีบัญชี ? <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน',['/site/sign-up'],['class' => 'text-primary'])?></p>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div>
+                    <h3>กรุณายืนยันตัวตน</h3>
+                    <p>ยังไม่มีบัญชี ? <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน',['/site/sign-up'],['class' => 'text-primary'])?></p>
+                  </div>
+                  <div>
+                  <?php echo Html::img($site->logo(),['class' => 'object-fit-cover rounded mt-0','style' =>'margin-top: 25px;max-width: 110px;max-height: 110px;    width: 100%;height: 100%;']) ?>
+                  </div>
                 </div>
-              </div>
-            </div>
+  
             
             
           <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>

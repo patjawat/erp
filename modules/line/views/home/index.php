@@ -52,13 +52,11 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         </div>
 </div>
 
+<?php if($me):?>
 <div id="wraperContainer" style="display:none">
-
     <div class="page-title-box-line mb-5">
         <div class="d-flex justify-content-between align-items-center mt-5">
             <div class="page-title-line">
-
-                <?php if($me):?>
 
                 <div class="d-flex gap-2">
                     <?=Html::img('@web/banner/banner2.png', ['class' => 'avatar avatar-md me-0 mt-2'])?>
@@ -68,7 +66,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
                         <p class="text-white mb-0 fs-13">ERP Hospital</p>
                     </div>
                 </div>
-                <?php endif;?>
+              
             </div>
             <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop"
                 aria-controls="staticBackdrop">
@@ -136,18 +134,10 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
     <h6 class="text-white">หนังสือ/ประกาศ/ประชาสัมพันธ์</h6>
     <div class="card rounded-4">
         <div class="card-body rounded-4" style="background:rgba(241, 238, 240, 0.98); min-height:200px">
-
-
-
-
         </div>
     </div>
-
-
-
 </div>
-
-
+<?php endif;?>
 
 <div class="offcanvas offcanvas-start" data-bs-backdrop="static" tabindex="-1" id="staticBackdrop"
     aria-labelledby="staticBackdropLabel">
@@ -205,10 +195,6 @@ async function main(){
         }
   }
   main();
-
-      
-    
-
 JS;
 $this->registerJs($js,View::POS_END);
 ?>

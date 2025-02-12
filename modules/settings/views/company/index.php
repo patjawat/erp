@@ -1,18 +1,18 @@
 <?php
 
-use app\components\AppHelper;
-use app\components\SiteHelper;
-use app\modules\filemanager\components\FileManagerHelper;
-use iamsaint\datetimepicker\Datetimepicker;
+use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\web\JsExpression;
 use kartik\form\ActiveForm;
 use kartik\widgets\Select2;
-use kartik\widgets\Typeahead;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\web\JsExpression;
-use yii\web\View;
 use yii\widgets\MaskedInput;
+use app\components\AppHelper;
+use kartik\widgets\Typeahead;
+use app\components\SiteHelper;
 use app\modules\hr\models\Employees;
+use iamsaint\datetimepicker\Datetimepicker;
+use app\modules\filemanager\components\FileManagerHelper;
 
 $this->title = 'ตั้งค่าองค์กร';
 
@@ -78,24 +78,27 @@ $resultsJs = <<< JS
     <div class="card-body">
 
         <h4 class="card-title"><i class="bi bi-building-fill-check fs-1"></i> ข้อมูลองค์กร</h4>
-        <input type="file" id="my_file" style="display: none;" />
-
-        <a href="#" class="select-photo">
-            <?php if ($model->isNewRecord): ?>
-                <?= Html::img('@web/img/placeholder_cid.png', ['class' => 'avatar-profile object-fit-cover rounded shadow', 'style' => 'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;']) ?>
-            <?php else: ?>
-
-                <?php // Html::img($model->showAvatar(),['class' => 'avatar-profile object-fit-cover rounded shadow','style' =>'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;']) 
+        
+        <div class="d-flex justify-content-center">
+            
+            <input type="file" id="my_file" style="display: none;" />
+            <a href="#" class="select-photo">
+                <?php if ($model->isNewRecord): ?>
+                    <?= Html::img('@web/img/placeholder-img.jpg', ['class' => 'object-fit-cover rounded shadow', 'style' => 'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;']) ?>
+                    <?php else: ?>
+                        
+                        <?php echo Html::img($model->logo(),['class' => 'object-fit-cover rounded','style' =>'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;']) 
                 ?>
             <?php endif ?>
         </a>
+    </div>
 
         <?php $form = ActiveForm::begin(['id' => 'form-company']); ?>
         <?= $form->field($model, 'data_json[leader_fullname]')->hiddenInput()->label(false) ?>
         <?= $form->field($model, 'data_json[leader_position]')->hiddenInput()->label(false) ?>
         <?= $form->field($model, 'data_json[director_position]')->hiddenInput()->label(false) ?>
 
-        <div class="row d-flex justify-content-center">
+        <div class="row d-flex justify-content-center mt-5">
             <div class="col-4">
                 <div class="d-flex justify-content-between gap-3">
                     <div class="w-50">
@@ -222,7 +225,6 @@ $resultsJs = <<< JS
 
             <div class="col-8">
                 <?= $form->field($model, 'data_json[address]')->textArea(['style' => 'height:100px'])->label('ที่อยู่') ?>
-                <?= $model->upload($model->ref, 'company_logo') ?>
             </div>
 
         </div>
@@ -235,3 +237,46 @@ $resultsJs = <<< JS
 
     </div>
 </div>
+
+
+<?php
+$ref = $model->ref;
+$urlUpload = Url::to('/filemanager/uploads/single');
+$js = <<< JS
+
+                \$(".select-photo").click(function() {
+                    \$("input[id='my_file']").click();
+                });
+
+
+                \$('#my_file').change(function (e) { 
+                    e.preventDefault();
+                    formdata = new FormData();
+                    if(\$(this).prop('files').length > 0)
+                    {
+                        file =\$(this).prop('files')[0];
+                        formdata.append("logo", file);
+                        formdata.append("id", 1);
+                        formdata.append("ref", '$ref');
+                        formdata.append("name",'logo');
+
+                        console.log(file);
+                        \$.ajax({
+                            url: '$urlUpload',
+                            type: "POST",
+                            data: formdata,
+                            processData: false,
+                            contentType: false,
+                            success: function (res) {
+                                console.log(res);
+                                \$('.avatar-profile').attr('src', res.img)
+                                window.location.reload(true);
+                                // success('แก้ไขภาพ')
+                            }
+                        });
+                    }
+                });
+                
+    JS;
+$this->registerJS($js)
+?>

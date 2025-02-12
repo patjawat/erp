@@ -2,11 +2,11 @@
 
 namespace app\models;
 
-use app\components\CategoriseHelper;
-use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\hr\models\Employees;
-use yii\helpers\ArrayHelper;
 use Yii;
+use yii\helpers\ArrayHelper;
+use app\components\CategoriseHelper;
+use app\modules\hr\models\Employees;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "categorise".
@@ -83,6 +83,26 @@ class Categorise extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
+
+    public function logo($class = null)
+    {
+        try {
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'logo'])->one();
+
+            // return $this->ref;
+            // return FileManagerHelper::getImg($model->id);
+            if ($model) {
+                // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
+                return FileManagerHelper::getImg($model->id);
+            } else {
+                return \Yii::getAlias('@web').'/img/placeholder-img.jpg';
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return \Yii::getAlias('@web').'/img/placeholder-img.jpg';
+        }
+    }
+    
     public function getEmpPosition()
     {
         return $this->hasMany(Employees::className(), ['id' => 'emp_id']);
