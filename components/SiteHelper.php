@@ -29,6 +29,7 @@ class SiteHelper extends Component
 
                 return [
                         'director' => $director,
+                        'logo' => $model->logo() ?? null,
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
                         'doc_number' => isset($model->data_json['doc_number']) ? $model->data_json['doc_number'] : null, //เลขที่หนังสือ
                         'director_name' => isset($model->data_json['director_name']) ? $model->data_json['director_name'] : null,

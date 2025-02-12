@@ -59,7 +59,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
             <div class="page-title-line">
 
                 <div class="d-flex gap-2">
-                    <?=Html::img('@web/banner/banner2.png', ['class' => 'avatar avatar-md me-0 mt-2'])?>
+                    <?=Html::img($site['logo'], ['class' => 'avatar avatar-md me-0 mt-2'])?>
 
                     <div class="avatar-detail">
                         <h5 class="mb-0 text-white text-truncate mt-3"><?php echo $site['company_name']?></h5>
