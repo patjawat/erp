@@ -75,6 +75,7 @@ $moduleId = Yii::$app->controller->module->id;
 <body>
     <?php $this->beginBody(); ?>
     <?php echo $this->render('../modal'); ?>
+    <?php echo $this->render('../sub_modal'); ?>
     <?php echo $this->render('../modal-fullscreen'); ?>
     <main role="main">
 

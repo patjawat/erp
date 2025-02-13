@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Booking;
+use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\BookingSearch;
 
 /**
@@ -84,9 +85,22 @@ class DriverController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+
+        $model = $this->findModel($id);
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -170,5 +184,115 @@ class DriverController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionListCar()
+    {
+        $id = $this->request->get('id');
+        $model = BookingDetail::findOne($id);
+        
+        if ($this->request->isAJax && $this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $id = $this->request->post('id');
+            $license_plate = $this->request->post('license_plate');
+            $model = BookingDetail::findOne($id);
+            if($model){
+                $model->license_plate = $license_plate;
+                if($model->save(false)){
+                    return [
+                        'status' => 'success',
+                    ];
+                }else{
+                    return [
+                     'status' => 'error',
+                    ];
+                }
+            }
+          
+        }
+        
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_cars',[
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('list_cars',[
+                'model' => $model
+            ]);
+        }
+    }
+
+    public function actionListDetailItems($id)
+    {
+        $model = BookingDetail::findOne($id);
+        $type = $this->request->get('type');
+        if ($this->request->isAJax && $this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+           
+            $booking_id = $this->request->post('booking_id');
+            $license_plate = $this->request->post('license_plate');
+            $driver_id = $this->request->post('driver_id');
+            $model = BookingDetail::findOne($id);
+            if($model){
+                $model->license_plate = $license_plate;
+                $model->driver_id = $driver_id;
+                if($model->save(false)){
+                    return [
+                        'status' => 'success',
+                        'data' => $model
+                    ];
+                }else{
+                    return [
+                     'status' => 'error',
+                    ];
+                }
+            }
+          
+        }
+        
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_detail_items',[
+                    'model' => $model,
+                    'type' => $type
+                ]),
+            ];
+        } else {
+            return $this->render('list_detail_items',[
+                'model' => $model,
+                'type' => $type
+            ]);
+        }
+    }
+    
+    public function actionUpdateDetail()
+    {
+        if ($this->request->isAJax && $this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $id = $this->request->post('id');
+            $license_plate = $this->request->post('license_plate');
+            $model = BookingDetail::findOne($id);
+            if($model){
+                $model->license_plate = $license_plate;
+                if($model->save(false)){
+                    return [
+                        'status' => 'success',
+                    ];
+                }else{
+                    return [
+                     'status' => 'error',
+                    ];
+                }
+            }
+          
+        }
     }
 }

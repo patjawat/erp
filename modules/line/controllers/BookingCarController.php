@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\me\controllers;
+namespace app\modules\line\controllers;
 use Yii;
 use DateTime;
 use DatePeriod;
@@ -15,7 +15,6 @@ use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\booking\models\Booking;
-use app\modules\hr\models\EmployeesSearch;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\BookingSearch;
 
@@ -66,44 +65,6 @@ class BookingCarController extends \yii\web\Controller
         ]);
     }
 
-      //เลือกแพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้
-      public function actionListEmployee()
-      {
-        $searchModel = new EmployeesSearch([
-            'branch' => 'MAIN'
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['status' => 1]);
-  
-
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'cid', $searchModel->q],
-            ['like', 'email', $searchModel->q],
-            ['like', 'fname', $searchModel->q],
-            ['like', 'lname', $searchModel->q],
-        ]);
-
-        $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
-        
-          if ($this->request->isAJax) {
-              \Yii::$app->response->format = Response::FORMAT_JSON;
-  
-              return [
-                  'title' => $this->request->get('title'),
-                  'content' => $this->renderAjax('list_employee',[
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                  ]),
-              ];
-          } else {
-              return $this->render('list_employee',[
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-              ]);
-          }
-      }
-      
 
         //เลือกประเภทของการใช้งานรถ
         public function actionSelectType()

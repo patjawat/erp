@@ -18,6 +18,8 @@ class m250203_145231_create_booking_detail_table extends Migration
             'name' => $this->string(255),
             'booking_id' => $this->string()->comment('เชื่อมกับตารางหลัก'),
             'ambulance_type' => $this->string(255)->comment('ประเภทของการรับส่งสำหรับรถพยาบาล'),
+            'license_plate' => $this->string()->comment('ทะเบียนยานพาหนะ'),
+            'driver_id' => $this->string()->comment('พนักงานขับรถ'),
             'date_start' => $this->date()->comment('เริ่มวันที่'),
             'time_start' => $this->string()->comment('เริ่มเวลา'),
             'date_end' => $this->date()->comment('ถึงวันที่'),

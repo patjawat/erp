@@ -1,7 +1,8 @@
 <?php
-
 use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 use kartik\select2\Select2;
 use yii\widgets\DetailView;
 use kartik\widgets\ActiveForm;
@@ -11,13 +12,17 @@ use kartik\widgets\ActiveForm;
 /** @var app\modules\booking\models\Booking $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-
+<style>
+    .list-items > .card{
+        border-style: dashed;   
+    }
+</style>
 <?php $form = ActiveForm::begin([
         'id' => 'booking-form'
     ]); ?>
 
 <div class="row">
-    <div class="col-7">
+    <div class="col-12">
 
 
         <table class="table border-0 table-striped-columns mt-3">
@@ -75,88 +80,8 @@ use kartik\widgets\ActiveForm;
 
 
     </div>
-    <div class="col-5">
-
-        <div class="d-flex flex-column gap-1 mt-1">
-
-            <div>
-                <h6 class="mb-0"><i class="fa-solid fa-circle-info text-primary"></i> เลือกคนขับ</h6>
-                <div id="showSelectDriver">
-                    <?php if($model->showDriver()):?>
-
-                    <a href="#" data-driver_id="<?php  echo $model->id?>"
-                        data-driver_fullname="<?php echo $model->data_json['req_driver_fullname'];?>"
-                        data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
-                        aria-controls="offcanvasRightDriver">
-                        <div class="card mb-2 border-2 border-primary">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <?php echo Html::img($model->driver->ShowAvatar(),['class' => 'avatar'])?>
-                                    <div class="avatar-detail">
-                                        <h6 class="mb-1 fs-15"><?php echo $model->driver->fullname?>
-                                        </h6>
-                                        <p class="text-muted mb-0 fs-13"><?php echo $model->driver->positionName()?></p>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </a>
-                    <?php else:?>
-                    <div class="card mb-3 border-2 border-primary">
-                        <div class="card-body p-2 d-flex justify-content-center">
-                            <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
-                                aria-controls="offcanvasRightDriver"> <i
-                                    class="bi bi-plus-circle fs-1 text-primary"></i></a>
-                        </div>
-                    </div>
-                    <?php endif;?>
-                </div>
-            </div>
-
-            <div>
-                <h6 class="mb-0"><i class="fa-solid fa-circle-info text-primary"></i> เลือกรถยนต์</h6>
-                <div id="selectCar-x">
-                    <?php if(isset($model->car->id)):?>
-
-                    <a href="#" data-license_plate="<?php  echo $model->license_plate?>" data-bs-toggle="offcanvas"
-                        data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
-                        <div class="card border-2 border-primary">
-                            <div class="row g-0">
-                                <div class="col-md-3">
-                                    <?php  echo  Html::img($model->car->showImg(),['class' => 'img-fluid rounded'])?>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="card-body">
-                                        <h5 class="card-title"><?php  echo $model->license_plate?></h5>
-                                        <p class="card-text"><small class="text-muted">จำนวนที่นั่ง
-                                                <?php echo $model->car->data_json['seat_size'] ?? '-'?></small></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                    <?php else:?>
-                    <div class="card mb-3 border-2 border-primary">
-                        <div class="card-body p-2 d-flex justify-content-center">
-                            <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-                                aria-controls="offcanvasRight"> <i class="bi bi-plus-circle fs-1 text-primary"></i></a>
-                        </div>
-                    </div>
-                    <?php endif;?>
-                </div>
-            </div>
-
-        </div>
-
-
-
-
-
-    </div>
 </div>
-
+<?php Pjax::begin(['id' => 'detailContainer','timeout' => 50000 ]); ?>
 <div class="table-responsive">
     <table class="table table-primary align-middle">
         <thead>
@@ -170,33 +95,45 @@ use kartik\widgets\ActiveForm;
             <?php foreach($model->listDriverDetails() as $item):?>
             <tr class="">
                 <td scope="row"><?php echo Yii::$app->thaiFormatter->asDate($item->date_start, 'medium');?> </td>
-                <td id="selectCar<?php echo $item->id?>">
-
-                    <div class="card mb-0 border-1 border-primary" data-id="<?php echo $item->id?>" >
+                <td id="driver-<?php echo $item->id?>">
+                <a href="<?php echo Url::to(['/booking/driver/list-detail-items','id' => $item->id,'booking_id' => $model->id,'type' => 'driver'])?>" class="list-items" data-bs-toggle="offcanvas" data-title="เลือกพนักงานขับ" data-bs-target="#offcanvasRightDriver" aria-controls="offcanvasRightDriver"> 
+                    <?php if(isset($item->driver)):?>
+                        <?php  echo $item->driver->getAvatar(false);?>
+               
+                <?php else:?>
+                <div class="card mb-0 border-1 border-primary" data-id="<?php echo $item->id?>" >
                         <div class="card-body p-2 d-flex justify-content-center">
-                            <a href="#" class="show-car" data-id="<?php echo $item->id?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight"> <i class="bi bi-plus-circle text-primary"></i></a>
+                            <i class="bi bi-plus-circle text-primary"></i>
                         </div>
                     </div>
+                    <?php endif?>
+                </a>
                 </td>
-                <td id="showSelectDriver<?php echo $item->id?>"><div class="card mb-0 border-1 border-primary">
+                <td id="car-<?php echo $item->id?>">
+                    <a href="<?php echo Url::to(['/booking/driver/list-detail-items','id' => $item->id,'booking_id' => $model->id,'type' => 'car'])?>" class="list-items" data-title="เลือรถยนต์" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver" aria-controls="offcanvasRightDriver"> 
+                    <?php if(isset($item->car)):?>
+                        <?php  echo Html::img($item->car->showImg(),['class' => 'avatar avatar-xl'])?>
+                <?php else:?>
+                    <div class="card mb-0 border-1 border-primary">
                 <div class="card-body p-2 d-flex justify-content-center">
-                    <a href="#" class="show-driver" data-id="<?php echo $item->id?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
-                        aria-controls="offcanvasRightDriver"> <i
-                            class="bi bi-plus-circle text-primary"></i></a>
-                </div>
-            </div></td>
+                        <i class="bi bi-plus-circle text-primary"></i>
+                        </div>
+                    </div>
+                    <?php endif?>
+                </a>
+        </td>
             </tr>
             <?php endforeach;?>
         </tbody>
     </table>
 </div>
 
-
+<?php Pjax::end(); ?>
 
 
 
 <div class="collapse" id="collapseExample">
-    <?php echo $this->render('ready_car_list',['model' => $model])?>
+    <?php // echo $this->render('ready_car_list',['model' => $model])?>
 </div>
 
 <?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
@@ -211,11 +148,10 @@ use kartik\widgets\ActiveForm;
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">ทะเบียนยานพาหนะ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvasDriver" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <?PHP echo $this->render('list_cars',['model' => $model])?>
+       
     </div>
 </div>
 
@@ -223,11 +159,12 @@ use kartik\widgets\ActiveForm;
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightDriver"
     aria-labelledby="offcanvasRightLabelDriver">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabeDriver">พนักงานขับ</h5>
+        <h5 class="offcanvas-title" id="offcanvasRightLabeDriver"></h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <?PHP echo $this->render('list_drivers',['model' => $model])?>
+    <div id="showListItem"></div>
+        <?PHP //  echo $this->render('list_drivers',['model' => $model])?>
     </div>
 </div>
 
@@ -243,10 +180,64 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<<JS
-        let id = '';
         
       thaiDatepicker('#booking-date_start,#booking-date_end')
 
+
+    $("body").on("click", ".list-items", function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: "get",
+            url: $(this).attr('href'),
+            dataType: "json",
+            success: function (res) {
+             console.log(res);
+             $('#showListItem').html(res.content)
+             $('#offcanvasRightLabeDriver').text($(this).data("title"))
+             console.log($(this).data("title"));
+             
+            }
+        });
+    });
+
+
+    $("body").on("click", ".select-item", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id"); // ดึงค่าจาก data-booking_id
+        let booking_id = $(this).data("booking_id"); // ดึงค่าจาก data-booking_id
+        let license_plate = $(this).data("license_plate"); // ดึงค่าจาก data-booking_id
+        let driver_id = $(this).data("driver_id"); // ดึงค่าจาก data-booking_id
+        let cloned = $(this).clone(); // Clone ตัวเอง
+        let cloneSrc = $(this).data("type")
+        $.ajax({
+            type: "post",
+            url: $(this).attr('href'),
+            dataType: "json",
+            data:{
+                id:id,
+                booking_id:booking_id,
+                license_plate:license_plate,
+                driver_id:driver_id
+            },
+            success: function (res) {
+
+                 cloned.attr({
+                    "data-bs-toggle": "offcanvas",
+                    "data-bs-target": "#offcanvasRight",
+                    "aria-controls": "offcanvasRight",
+                    "data-id":id,
+                });
+                $("#"+cloneSrc).html(cloned); // ใส่ใน container
+             
+            }
+        });
+    });
+        
+    $("body").on("click", ".show-driver", function (e) {
+        id = $(this).data('id');
+    });
+
+    
       \$('#booking-date_start').on('change', function() {
             var dateStart = \$('#booking-date_start').val();
             var dateEnd = \$('#booking-date_end').val();
@@ -293,48 +284,47 @@ $js = <<<JS
         return false;
     });
 
-
-    $("body").on("click", ".show-car", function (e) {
-        id = $(this).data('id');
-    });
-
-       $("body").on("click", ".show-driver", function (e) {
-        id = $(this).data('id');
-    });
-
-
-    
-    $("body").on("click", ".select-car", function (e) {
-        e.preventDefault();
-        let licensePlate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
-        console.log(id);
-        
-        $('#req_license_plate').val(licensePlate)
-        $('#booking-license_plate').val(licensePlate)
-        
-        // $("#car-container .card").removeClass("border-2 border-primary");
-
-    
-        // $(this).find(".card").addClass("border-2 border-primary");
-        // $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
-        $("#offcanvasRight").offcanvas("hide"); // ปิด Offcanvas
-        success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
-
-        let cloned = $(this).clone(); // Clone ตัวเอง
-        // ลบคลาส select-car
-        cloned.removeClass("select-car hover-card");
-        cloned.addClass("border-2 border-primary show-car");
-
-        // เพิ่ม attributes ที่ต้องการ
-        cloned.attr({
-            "data-bs-toggle": "offcanvas",
-            "data-bs-target": "#offcanvasRight",
-            "aria-controls": "offcanvasRight",
-            "data-id":id,
+    //โหลดรายการที่เลือก
+    function loadDetailItems()
+    {
+        $.ajax({
+            type: "get",
+            url: "/booking/driver/list",
+            data: "data",
+            dataType: "dataType",
+            success: function (response) {
+                
+            }
         });
-        $("#selectCar"+id).html(cloned); // ใส่ใน container
+    }
 
-    });
+        
+        // $('#req_license_plate').val(licensePlate)
+        // $('#booking-license_plate').val(licensePlate)
+        
+        // // $("#car-container .card").removeClass("border-2 border-primary");
+
+    
+        // // $(this).find(".card").addClass("border-2 border-primary");
+        // // $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
+        // $("#offcanvasRight").offcanvas("hide"); // ปิด Offcanvas
+        // success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
+
+        // let cloned = $(this).clone(); // Clone ตัวเอง
+        // // ลบคลาส select-car
+        // cloned.removeClass("select-car hover-card");
+        // cloned.addClass("border-2 border-primary show-car");
+
+        // // เพิ่ม attributes ที่ต้องการ
+        // cloned.attr({
+        //     "data-bs-toggle": "offcanvas",
+        //     "data-bs-target": "#offcanvasRight",
+        //     "aria-controls": "offcanvasRight",
+        //     "data-id":id,
+        // });
+        // $("#selectCar"+id).html(cloned); // ใส่ใน container
+
+    // });
 
 
     $("body").on("click", ".select-driver", function (e) {

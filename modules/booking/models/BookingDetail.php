@@ -3,6 +3,8 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use app\modules\am\models\Asset;
+use app\modules\hr\models\Employees;
 
 /**
  * This is the model class for table "booking_detail".
@@ -45,7 +47,7 @@ class BookingDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','driver_id'], 'safe'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
             [['created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['ref', 'name', 'booking_id', 'ambulance_type', 'time_start', 'time_end'], 'string', 'max' => 255],
@@ -81,4 +83,16 @@ class BookingDetail extends \yii\db\ActiveRecord
             'deleted_by' => 'ผู้ลบ',
         ];
     }
+
+    public function getCar()
+    {
+        return $this->hasOne(Asset::class, ['license_plate' => 'license_plate']);
+    }
+
+    public function getDriver()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'driver_id']);
+    }
+
+    
 }

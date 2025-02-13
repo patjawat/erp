@@ -84,6 +84,25 @@ $resultsJs = <<< JS
             'validationUrl' => ['/me/booking-car/validator']
         ]); ?>
 
+
+
+<?php
+$start = new DateTime('2024-01-01');
+$end = new DateTime('2024-01-03');
+$end->modify('+1 day'); // เพิ่ม 1 วัน เพื่อให้รวมวันที่สิ้นสุด
+
+$interval = new DateInterval('P1D'); // ระยะห่าง 1 วัน
+$period = new DatePeriod($start, $interval, $end);
+
+$dates = [];
+foreach ($period as $date) {
+    $dates[] = $date->format('Y-m-d');
+}
+
+print_r($dates);
+?>
+
+
 <div class="row">
     <div class="col-7">
 
@@ -298,26 +317,6 @@ $resultsJs = <<< JS
                         ?>
 
 
-<?php if($model->car_type == 'ambulance'):?>
-
-    <div class="card border border-1">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-person-circle"></i> แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h6>
-
-                </div>
-                <div class="avatar-stack"></div>            </div>
-            <div class="card-footer d-flex justify-content-between">
-                <?php echo Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม',['/me/booking-car/list-employee'], [
-        'class' => 'btn btn-sm btn-primary rounded-pill',
-        'id' => 'listEmployee',
-        'data-bs-toggle' => 'offcanvas',
-        'data-bs-target' => '#offcanvasRightEmployee',
-        'aria-controls' => 'offcanvasRightEmployee'
-    ])?>            </div>
-        </div>
-<?php endif;?>
-
     </div>
 </div>
 
@@ -367,7 +366,6 @@ $resultsJs = <<< JS
 </div>
 
 
-
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightDriver"
     aria-labelledby="offcanvasRightLabelDriver">
     <div class="offcanvas-header">
@@ -380,17 +378,6 @@ $resultsJs = <<< JS
 </div>
 
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightEmployee"
-    aria-labelledby="offcanvasRightLabelEmployee">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabeEmployee"><i class="bi bi-person-circle"></i> แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-       <div id="showListEmployee"></div>
-    </div>
-</div>
-
 <?php
 
 $js = <<<JS
@@ -398,19 +385,6 @@ $js = <<<JS
 
       thaiDatepicker('#booking-date_start,#booking-date_end')
 
-
-      $('#listEmployee').click(function (e) { 
-        e.preventDefault();
-        $.ajax({
-            type: "get",
-            url: $(this).attr('href'),
-            dataType: "json",
-            success: function (res) {
-                $('#showListEmployee').html(res.content)
-            }
-        });
-        
-      });
       \$('#booking-date_start').on('change', function() {
             var dateStart = \$('#booking-date_start').val();
             var dateEnd = \$('#booking-date_end').val();
@@ -517,18 +491,6 @@ $js = <<<JS
 
     });
     
-
-    function loadEmployee()
-    {
-        $.ajax({
-            type: "get",
-            url: "/me/booking-car/list-employee",
-            dataType: "dataType",
-            success: function (response) {
-                
-            }
-        });
-    }
     
     JS;
 $this->registerJS($js, View::POS_END);

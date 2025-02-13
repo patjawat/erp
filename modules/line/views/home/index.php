@@ -92,44 +92,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         </div>
     </div>
 
-    <div class="p-2 mb-3">
-        <h6 class="text-white">App Menu</h6>
-        <div class="overflow-scroll d-flex flex-row borde-0 gap-4 mt-4"
-            style="white-space: nowrap; max-width: 100%; height: 100px;">
-            <div class="d-flex flex-column gap-2 border-0 text-white">
-                <div class=" bg-secondary rounded-pill p-3 shadow border border-white">
-                    <i class="fa-solid fa-screwdriver-wrench fs-1"></i>
-                </div>
-                <p class="text-center">แจ้งซ่อม</p>
-            </div>
-            <div class="d-flex flex-column gap-2 border-0 text-white">
-                <div class=" bg-secondary rounded-pill p-3 shadow border border-white">
-                    <i class="fa-solid fa-calendar-day fs-1"></i>
-                </div>
-                <p class="text-center">ขอลา</p>
-            </div>
-            <div class="d-flex flex-column gap-2 border-0 text-white">
-                <div class=" bg-secondary rounded-pill p-3 shadow border border-white">
-                    <i class="fa-solid fa-car-side fs-1"></i>
-                </div>
-                <p class="text-center">จองรถ</p>
-            </div>
-            <div class="d-flex flex-column gap-2 border-0 text-white">
-                <div class=" bg-secondary rounded-pill p-3 shadow border border-white">
-                    <i class="fa-solid fa-person-chalkboard fs-1"></i>
-                </div>
-                <p class="text-center">ห้องประชุม</p>
-            </div>
-
-            <div class="d-flex flex-column gap-2 border-0 text-white">
-                <div class=" bg-secondary rounded-pill p-3 shadow border border-white">
-                    <i class="fa-solid fa-triangle-exclamation fs-1 ms-1"></i>
-                </div>
-                <p class="text-center">ความเสี่ยง</p>
-            </div>
-
-        </div>
-    </div>
+    <?php echo $this->render('app_menu')?>
 
     <h6 class="text-white">หนังสือ/ประกาศ/ประชาสัมพันธ์</h6>
     <div class="card rounded-4">
@@ -162,27 +125,58 @@ $js = <<< JS
 let userId = "";
 
 // ตรวจสอบสิทธิในระบบและยืนยันตัวตน
-async function checkProfile(){
-          const {userId} = await liff.getProfile()
-          await $.ajax({
-              type: "post",
-              url: "$urlCheckProfile",
-              data:{
-                  line_id:userId
-              },
-              dataType: "json",
-              success: function (res) {
-                  if(res.status == false){
-                      location.replace("$liffLoginUrl");
-                  }
-                  if(res.status == true){
-                      $('#avatar').html(res.avatar)
-                      $('#loading').hide()
-                      $('#wraperContainer').show()
-                  }
-              }
-          });
-      }
+// async function checkProfile(){
+//           const {userId} = await liff.getProfile()
+//           await $.ajax({
+//               type: "post",
+//               url: "$urlCheckProfile",
+//               data:{
+//                   line_id:userId
+//               },
+//               dataType: "json",
+//               success: function (res) {
+//                 alert(res)
+//                   if(res.status == false){
+//                     //   location.replace("$liffLoginUrl");
+//                   }
+//                   if(res.status == true){
+//                       $('#avatar').html(res.avatar)
+//                       $('#loading').hide()
+//                       $('#wraperContainer').show()
+//                   }
+//               }
+//           });
+//       }
+
+async function checkProfile() {
+    try {
+        const { userId } = await liff.getProfile();
+        console.log("UserID:", userId);
+
+        await $.ajax({
+            type: "POST",
+            url: "$urlCheckProfile",
+            data: { line_id: userId },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === false) {
+                    location.replace("$liffLoginUrl");
+                } else if (res.status === true) {
+                    $('#loading').hide();
+                    $('#wraperContainer').show();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", status, error);
+                alert('Error:'+status+' - '+ error);
+            }
+        });
+    } catch (error) {
+        console.error("LIFF Error:", error);
+        alert('LIFF Error:' +error.message);
+    }
+}
+
 
       
 async function main(){

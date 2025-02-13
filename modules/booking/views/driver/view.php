@@ -76,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php foreach($model->listDriverDetails() as $item):?>
             <tr class="">
                 <td scope="row"><?php echo Yii::$app->thaiFormatter->asDate($item->date_start, 'medium');?> </td>
-                <td id="selectCar<?php echo $item->id?>">
+                <td>
 
                     <div class="card mb-0 border-1 border-primary" data-id="<?php echo $item->id?>" >
                         <div class="card-body p-2 d-flex justify-content-center">
@@ -84,7 +84,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                     </div>
                 </td>
-                <td id="showSelectDriver<?php echo $item->id?>"><div class="card mb-0 border-1 border-primary">
+                <td>
+                    <div class="card mb-0 border-1 border-primary">
                 <div class="card-body p-2 d-flex justify-content-center">
                     <a href="#" class="show-driver" data-id="<?php echo $item->id?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
                         aria-controls="offcanvasRightDriver"> <i

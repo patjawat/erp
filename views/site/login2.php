@@ -12,24 +12,6 @@ $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<style>
-input,
-input::placeholder {
-    font-weight: 200;
-}
-.form-control {
-    background-color:#eee;
-}
-.form-control:focus {
-    background-color:#eee;
-}
-
-.was-validated .form-control:invalid:focus, .form-control.is-invalid:focus {
-    border-color: var(--bs-form-invalid-border-color);
-    box-shadow: 0 0 0 0.1rem rgba(var(--bs-primary-rgb), 0.25);
-}
-</style>
-
                 <div class="d-flex justify-content-between align-items-center mb-4">
                   <div>
                     <h3>กรุณายืนยันตัวตน</h3>
@@ -44,8 +26,8 @@ input::placeholder {
             
           <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
             <div class="col-lg-12 col-md-12 col-sm-12">
-                <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
-                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
+                <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label('อีเมล') ?>
+                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10'])->label('รหัสผ่าน') ?>
                 <div class="d-inline-block w-100">
 
                    

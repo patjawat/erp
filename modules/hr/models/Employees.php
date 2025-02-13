@@ -273,11 +273,7 @@ class Employees extends Yii\db\ActiveRecord
             <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
-                .Html::a(
-                    $this->fullname,
-                    ['/hr/employees/view', 'id' => $this->id],
-                    ['class' => '']
-                ).'
+                .$this->fullname.'
             </h6>
             <p class="text-muted mb-0 fs-13">'.$this->positionName().' <code>('.$this->positionTypeName().')</code></p>
             '.($showAge ? '<p class="text-muted mb-0 fs-13">อายุ '.$this->age.'</p>' : '').'

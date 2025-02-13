@@ -105,7 +105,6 @@ class AuthController extends \yii\web\Controller
             // if (Yii::$app->user->isGuest) {
             $line_id =  $this->request->post('line_id');
             $user = User::findOne(['line_id' => $line_id]);
-
             if ($user) {
                 $emp = Employees::findOne(['user_id' => $user->id]);
                 $user_  = User::findByUsername($user->username);

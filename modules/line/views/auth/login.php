@@ -23,6 +23,7 @@ input,
 input::placeholder {
     font-weight: 200;
 }
+
 </style>
 
 <!-- Login 9 - Bootstrap Brain Component -->
@@ -53,8 +54,8 @@ input::placeholder {
                             <?php $form = ActiveForm::begin(['id' => 'blank-form']); ?>
                             <div class="ยข/">
                                 <?= $form->field($model, 'line_id')->hiddenInput()->label(false) ?>
-                                <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0'])->label('อีเมล') ?>
-                                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0'])->label('รหัสผ่าน') ?>
+                                <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label('อีเมล') ?>
+                                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label('รหัสผ่าน') ?>
                                 <div class="d-inline-block w-100">
                                     <div class="d-grid gap-2 mt-3">
                                         <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-login"
