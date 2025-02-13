@@ -9,8 +9,18 @@ use Yii;
  *
  * @property int $id
  * @property string|null $ref
- * @property string|null $bookig_id เชื่อมกับตารางหลัก
  * @property string|null $name ชื่อการเก็บข้อมุล,ผู้ร่วมเดินทาง,บุคคลอื่นร่วมเดินทาง,งานมอบหมาย
+ * @property string|null $booking_id เชื่อมกับตารางหลัก
+ * @property string|null $ambulance_type ประเภทของการรับส่งสำหรับรถพยาบาล
+ * @property string|null $date_start เริ่มวันที่
+ * @property string|null $time_start เริ่มเวลา
+ * @property string|null $date_end ถึงวันที่
+ * @property string|null $time_end ถึงเวลา
+ * @property float|null $mileage_start เลขไมล์รถก่อนออกเดินทาง
+ * @property float|null $mileage_end เลขไมล์หลังเดินทาง
+ * @property float|null $distance_km นะยะทาง กม.
+ * @property float|null $oil_price น้ำมันที่เติม
+ * @property float|null $oil_liter ปริมาณน้ำมัน
  * @property string|null $data_json ยานพาหนะ
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
@@ -35,9 +45,10 @@ class BookingDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
             [['created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'bookig_id', 'name'], 'string', 'max' => 255],
+            [['ref', 'name', 'booking_id', 'ambulance_type', 'time_start', 'time_end'], 'string', 'max' => 255],
         ];
     }
 
@@ -49,8 +60,18 @@ class BookingDetail extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'ref' => 'Ref',
-            'bookig_id' => 'เชื่อมกับตารางหลัก',
             'name' => 'ชื่อการเก็บข้อมุล,ผู้ร่วมเดินทาง,บุคคลอื่นร่วมเดินทาง,งานมอบหมาย',
+            'booking_id' => 'เชื่อมกับตารางหลัก',
+            'ambulance_type' => 'ประเภทของการรับส่งสำหรับรถพยาบาล',
+            'date_start' => 'เริ่มวันที่',
+            'time_start' => 'เริ่มเวลา',
+            'date_end' => 'ถึงวันที่',
+            'time_end' => 'ถึงเวลา',
+            'mileage_start' => 'เลขไมล์รถก่อนออกเดินทาง',
+            'mileage_end' => 'เลขไมล์หลังเดินทาง',
+            'distance_km' => 'นะยะทาง กม.',
+            'oil_price' => 'น้ำมันที่เติม',
+            'oil_liter' => 'ปริมาณน้ำมัน',
             'data_json' => 'ยานพาหนะ',
             'created_at' => 'วันที่สร้าง',
             'updated_at' => 'วันที่แก้ไข',

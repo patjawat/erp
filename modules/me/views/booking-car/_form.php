@@ -86,6 +86,23 @@ $resultsJs = <<< JS
 
 
 
+<?php
+$start = new DateTime('2024-01-01');
+$end = new DateTime('2024-01-03');
+$end->modify('+1 day'); // เพิ่ม 1 วัน เพื่อให้รวมวันที่สิ้นสุด
+
+$interval = new DateInterval('P1D'); // ระยะห่าง 1 วัน
+$period = new DatePeriod($start, $interval, $end);
+
+$dates = [];
+foreach ($period as $date) {
+    $dates[] = $date->format('Y-m-d');
+}
+
+print_r($dates);
+?>
+
+
 <div class="row">
     <div class="col-7">
 
@@ -101,7 +118,8 @@ $resultsJs = <<< JS
             </div>
 
         </div>
-        <?= $form->field($model, 'reason')->textArea(['rows' => 3])->label('เหตุผล') ?>
+        <?= $form->field($model, 'reason')->textInput(['rows' => 3])->label('เหตุผล') ?>
+       
 
         <div class="row">
             <div class="col-6">
@@ -109,8 +127,9 @@ $resultsJs = <<< JS
                         'data' => $model->ListOrg(),
                         'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                         'pluginOptions' => [
+                            'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                             'allowClear' => true,
-                            // 'width' => '370px',
+                            'dropdownParent' => '#main-modal',
                         ],
                         'pluginEvents' => [
                             'select2:select' => 'function(result) { 
@@ -118,13 +137,14 @@ $resultsJs = <<< JS
                             'select2:unselecting' => 'function() {
 
                                             }',
-                        ]
+                        ],
+                
                     ]) ?>
             </div>
             <div class="col-6">
                 <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
                         'data' => $model->ListUrgent(),
-                        'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                        'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
                         'pluginOptions' => [
                             'allowClear' => true,
                             // 'width' => '370px',
@@ -296,6 +316,7 @@ $resultsJs = <<< JS
                         ])->label('หัวหน้างาน')
                         ?>
 
+
     </div>
 </div>
 
@@ -312,6 +333,7 @@ $resultsJs = <<< JS
                     ?>
 <?php endif;?>
 
+<?= $form->field($model, 'data_json[note]')->textArea(['rows' => 6])->label('หมายเหตุเพิ่มเติม...') ?>
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>

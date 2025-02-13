@@ -2,15 +2,20 @@
 
 namespace app\modules\me\controllers;
 use Yii;
+use DateTime;
+use DatePeriod;
+use DateInterval;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\booking\models\Booking;
+use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\BookingSearch;
 
 class BookingCarController extends \yii\web\Controller
@@ -159,10 +164,7 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionCreate()
     {
-
-        $carType = $this->request->get('type');
-       
-        
+        $carType = $this->request->get('type'); 
         $model = new Booking([
             'car_type' => $carType
         ]);
@@ -175,6 +177,9 @@ class BookingCarController extends \yii\web\Controller
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'RECERVE';
                 if($model->save(false)){
+                    $this->checkLocation($model);
+                    $this->createDetail($model);
+                    
                     \Yii::$app->response->format = Response::FORMAT_JSON;
                     return $this->redirect(['/me/booking-car']);
                     return [
@@ -199,6 +204,46 @@ class BookingCarController extends \yii\web\Controller
                 'model' => $model
             ]);
         }
+    }
+
+    protected function createDetail($model)
+    {
+        $startDate = new DateTime($model->date_start);
+        $endDate = new DateTime($model->date_end);
+        $endDate->modify('+1 day'); // เพิ่ม 1 วัน เพื่อให้รวมวันที่สิ้นสุด
+
+        $interval = new DateInterval('P1D'); // ระยะห่าง 1 วัน
+        $period = new DatePeriod($startDate, $interval, $endDate);
+
+        $dates = [];
+        foreach ($period as $date) {
+            
+            $dates[] = $date->format('Y-m-d');
+            $newDetail = new BookingDetail;
+            $newDetail->name = 'driver_detail';
+            $newDetail->booking_id = $model->id;
+            $newDetail->date_start = $date->format('Y-m-d');
+            $newDetail->date_end = $date->format('Y-m-d');
+            $newDetail->save(false);
+        }
+        
+
+    }
+
+    protected function checkLocation($model)
+    {
+     $location = Categorise::findOne($model->location);  
+     if(!$location){
+        $maxCode = Categorise::find()
+    ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
+    ->where(['like', 'name', 'document_org'])
+    ->scalar();
+        $newLocation = new Categorise;
+        $newLocation->code = ($maxCode+1);
+        $newLocation->title = $model->location;
+        $newLocation->name = 'document_org';
+        $newLocation->save(false);
+     } 
     }
 
     /**
@@ -269,5 +314,4 @@ class BookingCarController extends \yii\web\Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    
 }

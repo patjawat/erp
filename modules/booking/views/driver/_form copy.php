@@ -19,50 +19,19 @@ use kartik\widgets\ActiveForm;
 <div class="row">
     <div class="col-7">
 
+    <?= $form->field($model, 'mileage_start')->textInput(['type' => 'number','step' => '0.01'])->label() ?>
+    <?= $form->field($model, 'mileage_end')->textInput(['type' => 'number','step' => '0.01'])->label() ?>
+    
+    <div class="row">
+        <div class="col-6">
+            <?= $form->field($model, 'oil_liter')->textInput(['type' => 'number','step' => '0.01'])->label() ?>
+        </div>
+        <div class="col-6">
+            <?= $form->field($model, 'oil_price')->textInput(['type' => 'number','step' => '0.01'])->label() ?>
+</div>
+    </div>
+        
 
-        <table class="table border-0 table-striped-columns mt-3">
-            <tbody>
-                <tr>
-                    <td class="text-dark fw-semibold">เรื่อง </td>
-                    <td colspan="3"><?php echo $model->reason?></td>
-                </tr>
-                <tr>
-                    <td class="text-dark fw-semibold">วันออกเดินทาง : </td>
-                    <td><?php echo Yii::$app->thaiFormatter->asDate($model->date_start, 'medium');?> เวลา
-                        <?php echo $model->time_start?></td>
-
-                    <td class="text-dark fw-semibold">วันกลับ : </td>
-                    <td><?php echo Yii::$app->thaiFormatter->asDate($model->date_end, 'medium');?> เวลา
-                        <?php echo $model->time_end?></td>
-                </tr>
-                <tr>
-                    <td class="text-dark fw-semibold">สถานที่ไป : </td>
-                    <td><?php echo $model->location?></span></td>
-                    <td class="text-dark fw-semibold">ผู้ร่วมเดินทาง : </td>
-                    <td><?php echo $model->data_json['total_person_count'] ?? '-'?></td>
-                </tr>
-                <!-- <tr>
-                    <td class="text-dark fw-semibold">รถที่ร้องขอ : </td>
-                    <td colspan="3"><?php echo $model->data_json['req_license_plate'] ?? '-'?></td>
-                </tr>
-                <tr>
-                    <td class="text-dark fw-semibold">พนักงานขับที่ร้องขอ : </td>
-                    <td colspan="3">
-                        <?php 
-                                try {
-                                    echo $model->reqDriver()->getAvatar(false);
-                                } catch (\Throwable $th) {
-                                    //throw $th;
-                                }
-                                ?>
-                </tr> -->
-                <tr>
-                    <td class="text-dark fw-semibold">หนังสืออ้างอืง : </td>
-                    <td colspan="4"></td>
-                </tr>
-
-            </tbody>
-        </table>
         <?php echo $form->field($model, 'status')->widget(Select2::classname(), [
                     'data' => $model->listStatus(),
                     'options' => ['placeholder' => 'เลือกสถานะ ...'],
@@ -117,7 +86,7 @@ use kartik\widgets\ActiveForm;
 
             <div>
                 <h6 class="mb-0"><i class="fa-solid fa-circle-info text-primary"></i> เลือกรถยนต์</h6>
-                <div id="selectCar-x">
+                <div id="selectCar">
                     <?php if(isset($model->car->id)):?>
 
                     <a href="#" data-license_plate="<?php  echo $model->license_plate?>" data-bs-toggle="offcanvas"
@@ -152,60 +121,67 @@ use kartik\widgets\ActiveForm;
 
 
 
-
-
+       
+        
     </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-primary align-middle">
-        <thead>
-            <tr>
-                <th scope="col" style="width:120px;">วันที่</th>
-                <th scope="col" style="width: 400px;">พนักงานขับ</th>
-                <th scope="col" style="width: 400px;">รถยนต์</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach($model->listDriverDetails() as $item):?>
-            <tr class="">
-                <td scope="row"><?php echo Yii::$app->thaiFormatter->asDate($item->date_start, 'medium');?> </td>
-                <td id="selectCar<?php echo $item->id?>">
-
-                    <div class="card mb-0 border-1 border-primary" data-id="<?php echo $item->id?>" >
-                        <div class="card-body p-2 d-flex justify-content-center">
-                            <a href="#" class="show-car" data-id="<?php echo $item->id?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight"> <i class="bi bi-plus-circle text-primary"></i></a>
-                        </div>
-                    </div>
-                </td>
-                <td id="showSelectDriver<?php echo $item->id?>"><div class="card mb-0 border-1 border-primary">
-                <div class="card-body p-2 d-flex justify-content-center">
-                    <a href="#" class="show-driver" data-id="<?php echo $item->id?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
-                        aria-controls="offcanvasRightDriver"> <i
-                            class="bi bi-plus-circle text-primary"></i></a>
-                </div>
-            </div></td>
-            </tr>
-            <?php endforeach;?>
-        </tbody>
-    </table>
-</div>
 
 
+<table class="table border-0 table-striped-columns mt-3">
+            <tbody>
+                <tr>
+                    <td class="text-dark fw-semibold">เรื่อง </td>
+                    <td colspan="3"><?php echo $model->reason?></td>
+                </tr>
+                <tr>
+                    <td class="text-dark fw-semibold">วันออกเดินทาง : </td>
+                    <td>13 ก.ย. 2528 12:00</td>
 
+                    <td class="text-dark fw-semibold">วันกลับ : </td>
+                    <td>13 ก.ย. 2528 16:00</td>
+                </tr>
+                <tr>
+                    <td class="text-dark fw-semibold">สถานที่ไป : </td>
+                    <td><?php echo $model->location?></span></td>
+                    <td class="text-dark fw-semibold">ผู้ร่วมเดินทาง : </td>
+                    <td><?php echo $model->data_json['total_person_count'] ?? '-'?></td>
+                </tr>
+                <!-- <tr>
+                    <td class="text-dark fw-semibold">รถที่ร้องขอ : </td>
+                    <td colspan="3"><?php echo $model->data_json['req_license_plate'] ?? '-'?></td>
+                </tr>
+                <tr>
+                    <td class="text-dark fw-semibold">พนักงานขับที่ร้องขอ : </td>
+                    <td colspan="3">
+                        <?php 
+                                try {
+                                    echo $model->reqDriver()->getAvatar(false);
+                                } catch (\Throwable $th) {
+                                    //throw $th;
+                                }
+                                ?>
+                </tr> -->
+                <tr>
+                    <td class="text-dark fw-semibold">หนังสืออ้างอืง : </td>
+                    <td colspan="4"></td>
+                </tr>
 
+            </tbody>
+        </table>
+        
 
-<div class="collapse" id="collapseExample">
-    <?php echo $this->render('ready_car_list',['model' => $model])?>
-</div>
+    <div class="collapse" id="collapseExample">
+        <?php echo $this->render('ready_car_list',['model' => $model])?>
+    </div>
 
-<?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'license_plate')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'name')->hiddenInput(['value' => 'driver_service'])->label(false) ?>
-<?= $form->field($model, 'data_json[req_license_plate]')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'data_json[req_driver_id]')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'license_plate')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'name')->hiddenInput(['value' => 'driver_service'])->label(false) ?>
+    <?= $form->field($model, 'data_json[req_license_plate]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[req_driver_id]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
 
@@ -232,19 +208,18 @@ use kartik\widgets\ActiveForm;
 </div>
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
-    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
-            class="fa-regular fa-circle-xmark"></i> ปิด</button>
-</div>
-<?php ActiveForm::end(); ?>
+        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+        <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+                class="fa-regular fa-circle-xmark"></i> ปิด</button>
+    </div>
+    <?php ActiveForm::end(); ?>
 
 
 
 
 <?php
 $js = <<<JS
-        let id = '';
-        
+
       thaiDatepicker('#booking-date_start,#booking-date_end')
 
       \$('#booking-date_start').on('change', function() {
@@ -294,45 +269,32 @@ $js = <<<JS
     });
 
 
-    $("body").on("click", ".show-car", function (e) {
-        id = $(this).data('id');
-    });
-
-       $("body").on("click", ".show-driver", function (e) {
-        id = $(this).data('id');
-    });
-
-
-    
     $("body").on("click", ".select-car", function (e) {
         e.preventDefault();
         let licensePlate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
-        console.log(id);
-        
         $('#req_license_plate').val(licensePlate)
         $('#booking-license_plate').val(licensePlate)
         
         // $("#car-container .card").removeClass("border-2 border-primary");
 
     
-        // $(this).find(".card").addClass("border-2 border-primary");
-        // $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
+        $(this).find(".card").addClass("border-2 border-primary");
+        $(this).find(".checked").html('<i class="fa-solid fa-circle-check text-success fs-4"></i>')
         $("#offcanvasRight").offcanvas("hide"); // ปิด Offcanvas
         success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
 
         let cloned = $(this).clone(); // Clone ตัวเอง
         // ลบคลาส select-car
         cloned.removeClass("select-car hover-card");
-        cloned.addClass("border-2 border-primary show-car");
+        cloned.addClass("border-2 border-primary");
 
         // เพิ่ม attributes ที่ต้องการ
         cloned.attr({
             "data-bs-toggle": "offcanvas",
             "data-bs-target": "#offcanvasRight",
-            "aria-controls": "offcanvasRight",
-            "data-id":id,
+            "aria-controls": "offcanvasRight"
         });
-        $("#selectCar"+id).html(cloned); // ใส่ใน container
+        $("#selectCar").html(cloned); // ใส่ใน container
 
     });
 
@@ -359,10 +321,9 @@ $js = <<<JS
         cloned.attr({
             "data-bs-toggle": "offcanvas",
             "data-bs-target": "#offcanvasRightDriver",
-            "aria-controls": "offcanvasRight",
-             "data-id":id,
+            "aria-controls": "offcanvasRight"
         });
-        $("#showSelectDriver"+id).html(cloned); // ใส่ใน container
+        $("#showSelectDriver").html(cloned); // ใส่ใน container
 
     });
     

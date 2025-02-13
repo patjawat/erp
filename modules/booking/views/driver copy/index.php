@@ -140,8 +140,7 @@ if($searchModel->car_type == 'ambulance'){
                 <td><?php echo $item->leader_id?></td>
                 <td></td>
                 <td class="text-center">
-                <?php // echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/update','id' => $item->id,'title' => '<i class="fa-solid fa-briefcase"></i> จัดสรร'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/view','id' => $item->id,'title' => '<i class="fa-solid fa-briefcase"></i> จัดสรร'],['class' => 'open-modalss','data' => ['size' => 'modal-xl']])?>
+                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/update','id' => $item->id,'title' => '<i class="fa-solid fa-briefcase"></i> จัดสรร'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                 </td>
                </tr>
                 <?php endforeach;?>

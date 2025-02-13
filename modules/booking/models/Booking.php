@@ -61,7 +61,7 @@ class Booking extends \yii\db\ActiveRecord
         return [
             [['name', 'date_start', 'time_start', 'date_end', 'time_end'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price'], 'safe'],
             [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
         ];
     }
@@ -90,6 +90,10 @@ class Booking extends \yii\db\ActiveRecord
             'time_end' => 'ถึงเวลา',
             'driver_id' => 'พนักงานขับ',
             'leader_id' => 'หัวหน้างานรับรอง',
+            'mileage_start' => 'เลขไมล์รถก่อนออกเดินทาง',
+            'mileage_end' => 'เลขไมล์หลังเดินทาง',
+            'oil_liter' => 'จำนวนลิตร',
+            'oil_price' => 'ราคาที่เติม',
             'data_json' => 'ยานพาหนะ',
             'created_at' => 'วันที่สร้าง',
             'updated_at' => 'วันที่แก้ไข',
@@ -149,6 +153,11 @@ class Booking extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);
     }
 
+
+    public function listDriverDetails()
+    {
+    return BookingDetail::find()->where(['name' => 'driver_detail','booking_id' => $this->id])->all();
+    }
 
     public function showStartTime()
     {
