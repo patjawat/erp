@@ -20,7 +20,7 @@ $me = UserHelper::GetEmployee();
             // 'validationUrl' => ['/me/booking-car/validator']
         ]); ?>
                 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'room_id')->textInput()->label(false) ?>
+                <?= $form->field($model, 'room_id')->hiddenInput()->label(false) ?>
 <div class="row">
     <div class="col-12">
         <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>
