@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('../meeting/menu') ?>
 <?php $this->endBlock(); ?>
 
-<div class="card">
+<div class="card shadow-none">
     <div class="card-body">
 
 <?php Pjax::begin(['id' => 'booking', 'timeout' => 500000]); ?>
@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
     <div class="col-lg-2 col-md-4 col-sm-3">
         <div class="card shadow-lg border rounded">
-            <div class="bg-primary rounded-top" style="background-image:url(<?php echo $item->showImg()?>); height: 200px; object-fit: cover;"></div>
+            <div class="bg-primary rounded-top" style="background-image:url(<?php echo $item->showImg()?>); height: 160px; object-fit: cover;"></div>
             <div class="card-body bg-white text-dark">
                 <h1 class="d-inline-flex align-items-center fs-5 fw-semibold">
                     <?php echo $item->title?> &nbsp;
@@ -49,18 +49,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         <polyline points="7 7 17 7 17 17"></polyline>
                     </svg>
                 </h1>
-                <p class="mt-3 text-muted small">
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi,
-                    debitis?
-                </p>
+                <p class="text-muted small">ที่นั้ง : <?php echo $item->data_json['seat_capacity'] ?? '-'?></p>
                 <div class="mt-4">
                     <span class="badge bg-light text-dark fw-semibold me-2">#Macbook</span>
-                    <span class="badge bg-light text-dark fw-semibold me-2">#Apple</span>
-                    <span class="badge bg-light text-dark fw-semibold">#Laptop</span>
                 </div>
                 <div class="d-flex justify-content-between gap-3">
-                    <?php echo Html::a('แก้ไข',['/booking/room/update','id' => $item->id,'title' => 'แก้ไข'],['class' => 'btn btn-warning w-75 mt-4 open-modal','data' => ['size' => 'modal-lg']])?>
-                    <?php echo Html::a('ลบ',['/booking/room/delete','id' => $item->id],['class' => 'btn btn-danger w-25 mt-4'])?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/booking/room/update','id' => $item->id,'title' => 'แก้ไข'],['class' => 'btn btn-warning w-50 mt-4 open-modal rounded-pill','data' => ['size' => 'modal-lg']])?>
+                    <?php echo Html::a('<i class="fa-solid fa-trash"></i> ลบ',['/booking/room/delete','id' => $item->id],['class' => 'btn btn-danger w-50 mt-4 delete-item  rounded-pill'])?>
                 </div>
             </div>
         </div>

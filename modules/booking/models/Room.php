@@ -116,7 +116,7 @@ class Room extends \yii\db\ActiveRecord
                     ->where(['name' => 'room_accessory'])
                     ->asArray()
                     ->all();
-                return ArrayHelper::map($model, 'code', 'title');
+                return ArrayHelper::map($model, 'title', 'title');
             }
         
 }

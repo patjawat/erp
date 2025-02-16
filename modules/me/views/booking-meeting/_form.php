@@ -11,10 +11,7 @@ use app\modules\hr\models\Employees;
 use app\modules\dms\models\DocumentsDetail;
 
 $me = UserHelper::GetEmployee();
-$documents = DocumentsDetail::find()->where(['name' => 'comment', 'to_id' => $me->id])->all();
-$list = ArrayHelper::map($documents, 'id', function ($model) {
-    return $model->document->topic;
-});
+
 
 ?>
 <?php $form = ActiveForm::begin([
@@ -22,6 +19,8 @@ $list = ArrayHelper::map($documents, 'id', function ($model) {
             // 'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
             // 'validationUrl' => ['/me/booking-car/validator']
         ]); ?>
+                <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'room_id')->textInput()->label(false) ?>
 <div class="row">
     <div class="col-12">
         <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>

@@ -6,11 +6,32 @@ use app\components\UserHelper;
 $this->title = 'จองห้องประชุม';
 $this->params['breadcrumbs'][] = $this->title;
 $me = UserHelper::getEmployee();
+
+$dateLast = new DateTime($searchModel->date_start ? $searchModel->date_start : date('Y-m-d'));
+$dateNext = new DateTime($searchModel->date_start ? $searchModel->date_start : date('Y-m-d'));
+$dateLast->modify('-1 day');
+$dateNext->modify('+1 day');
+
 ?>
+
 
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-title'); ?>
+ระบบขอใช้ยานพาหนะ
+<?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('sub-title'); ?>
+<?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('menu') ?>
+<?php $this->endBlock(); ?>
+
 <style>
 .fc .fc-toolbar>*> :first-child {
     margin-left: 0;
@@ -24,99 +45,18 @@ $me = UserHelper::getEmployee();
 
 <div class="row">
     <div class="col-5">
-
-    <?php echo $this->render('list_room')?>
-
-        <!-- <div class="card" style="height: 340px;">
+        <div class="card mb-2">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <?php echo Html::a('วันก่อน',['/me/booking-metting'])?>
+                    <?php echo Html::a('วันก่อน',['/me/booking-meeting/index','date_start' => $dateLast->format('Y-m-d')])?>
                     <h6><i class="fa-regular fa-calendar-plus"></i>
-                        <?php $time = time(); echo Yii::$app->thaiFormatter->asDate($time, 'full')."<br>";?>
+                        <?php $time = time(); echo Yii::$app->thaiFormatter->asDate($searchModel->date_start, 'full')."<br>";?>
                     </h6>
-                    <?php echo Html::a('วันถัดไป',['/me/booking-metting'])?>
+                    <?php echo Html::a('วันถัดไป',['/me/booking-meeting/index','date_start' => $dateNext->format('Y-m-d')])?>
                 </div>
-                <table class="table table-striped table-bordered">
-                    <tbody class="align-middle table-group-divider">
-                        <tr class="text-center" style="background:#dcdcdc;">
-                            <th class="text-start">สถานที่</th>
-                            <th width="150px">วันที่ และเวลา</th>
-                            <th>หัวข้อการใช้ห้องปรุชุม</th>
-                            <th width="80px">จำนวน</th>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                                14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-
-                            <td class="text-center"><span class="badge badge-success">10</span></td>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                                14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-
-                            <td class="text-center"><span class="badge badge-success">8</span></td>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                                14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-
-                            <td class="text-center"><span class="badge badge-success">13</span></td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
-
-        <div class="card mt-2" style="height: 340px;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6><i class="fa-regular fa-calendar-plus"></i> รายการของ<?php echo $me->fullname?></h6>
-                    <?php // echo Html::a('จองห้องประชุม',['/me/booking-meeting/list-room'],['class' => 'btn btn-primary rounded-pill shadow open-canvas'])?>
-                </div>
-                <table class="table table-striped table-bordered">
-                    <tbody class="align-middle table-group-divider">
-                        <tr class="text-center" style="background:#dcdcdc;">
-                            <th class="text-start">สถานที่</th>
-                            <th width="150px">วันที่ และเวลา</th>
-                            <th>หัวข้อการใช้ห้องปรุชุม</th>
-                            <th width="80px">จำนวน</th>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                                14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-
-                            <td class="text-center"><span class="badge badge-success">10</span></td>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                                14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-
-                            <td class="text-center"><span class="badge badge-success">8</span></td>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                                14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-
-                            <td class="text-center"><span class="badge badge-success">13</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-            </div>
-        </div> -->
-
+        <?php echo $this->render('list_room',['model' => $searchModel])?>
     </div>
     <div class="col-7">
         <div class="card">
@@ -190,7 +130,7 @@ $me = UserHelper::getEmployee();
                                     }
                                 "),
                                 ],
-                                'events'        => Url::to(['/me/holidays/events']),
+                                'events'        => Url::to(['/me/booking-meeting/events']),
                             ]);
                         ?>
 
@@ -205,7 +145,7 @@ $me = UserHelper::getEmployee();
 </div>
 
 
-<?php  echo $this->render('grid_room')?>
+<?php // echo $this->render('grid_room')?>
 
 <?php
 $js = <<< JS

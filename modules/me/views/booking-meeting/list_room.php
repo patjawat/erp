@@ -2,8 +2,8 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\modules\booking\models\Room;
-
 ?>
+
 <div class="overflow-auto p-2" style="max-height: 640px;">
     <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
     <div class="card hover-card mb-2">
@@ -31,7 +31,7 @@ use app\modules\booking\models\Room;
         </div>
             <div class="card-footer d-flex align-items-center justify-content-between">
             <?php  echo $item->showOwner();?>
-           <?php echo Html::a('<i class="fa-solid fa-thumbtack"></i> จอง',['/me/booking-meeting/create','date_start' => date('Y-m-d'),'room_id' => $item->code,'title' => 'ขอให้'.$item->title],['class' => 'btn btn-sm btn-primary shadow rounded-pill float-end open-modal','data' => ['size' => 'modal-lg']])?>
+           <?php echo Html::a('<i class="fa-solid fa-thumbtack"></i> จอง',['/me/booking-meeting/create','date_start' => $model->date_start,'room_id' => $item->code,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้'.$item->title],['class' => 'btn btn-sm btn-primary shadow rounded-pill float-end open-modal','data' => ['size' => 'modal-lg']])?>
             </div>
     </div>
     <?php endforeach;?>
