@@ -66,43 +66,82 @@ class BookingCarController extends \yii\web\Controller
         ]);
     }
 
+    // public function actionAddPassenger($booking_id)
+    // {
+    //     $model = new BookingDetail([
+    //         'booking_id' => $booking_id,
+    //         'name' => 'passenger'
+    //     ]);
+
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post())) {
+               
+    //             if($model->save(false)){
+                   
+                    
+    //                 \Yii::$app->response->format = Response::FORMAT_JSON;
+    //                 return [
+    //                     'status' => 'success'
+    //                 ];
+    //             }
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
+    //     if ($this->request->isAJax) {
+    //         \Yii::$app->response->format = Response::FORMAT_JSON;
+
+    //         return [
+    //             'title' => $this->request->get('title'),
+    //             'content' => $this->renderAjax('_form_passenger', [
+    //                 'model' => $model
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('_form_passenger', [
+    //             'model' => $model
+    //         ]);
+    //     }
+
+    // }
+
       //เลือกแพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้
-      public function actionListEmployee()
-      {
-        $searchModel = new EmployeesSearch([
-            'branch' => 'MAIN'
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['status' => 1]);
+    //   public function actionListEmployee()
+    //   {
+    //     $searchModel = new EmployeesSearch([
+    //         'branch' => 'MAIN'
+    //     ]);
+    //     $dataProvider = $searchModel->search($this->request->queryParams);
+    //     $dataProvider->query->andWhere(['status' => 1]);
   
 
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'cid', $searchModel->q],
-            ['like', 'email', $searchModel->q],
-            ['like', 'fname', $searchModel->q],
-            ['like', 'lname', $searchModel->q],
-        ]);
+    //     $dataProvider->query->andFilterWhere([
+    //         'or',
+    //         ['like', 'cid', $searchModel->q],
+    //         ['like', 'email', $searchModel->q],
+    //         ['like', 'fname', $searchModel->q],
+    //         ['like', 'lname', $searchModel->q],
+    //     ]);
 
-        $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
+    //     $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
         
-          if ($this->request->isAJax) {
-              \Yii::$app->response->format = Response::FORMAT_JSON;
+    //       if ($this->request->isAJax) {
+    //           \Yii::$app->response->format = Response::FORMAT_JSON;
   
-              return [
-                  'title' => $this->request->get('title'),
-                  'content' => $this->renderAjax('list_employee',[
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                  ]),
-              ];
-          } else {
-              return $this->render('list_employee',[
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-              ]);
-          }
-      }
+    //           return [
+    //               'title' => $this->request->get('title'),
+    //               'content' => $this->renderAjax('list_employee',[
+    //                 'searchModel' => $searchModel,
+    //                 'dataProvider' => $dataProvider,
+    //               ]),
+    //           ];
+    //       } else {
+    //           return $this->render('list_employee',[
+    //             'searchModel' => $searchModel,
+    //             'dataProvider' => $dataProvider,
+    //           ]);
+    //       }
+    //   }
       
 
         //เลือกประเภทของการใช้งานรถ
@@ -205,7 +244,9 @@ class BookingCarController extends \yii\web\Controller
     {
         $carType = $this->request->get('type'); 
         $model = new Booking([
-            'car_type' => $carType
+            'car_type' => $carType,
+            'time_start' => '08:00',
+            'time_end' => '16:30',
         ]);
         $model->leader_id = $model->Approve()['approve_1']['id'];
 

@@ -77,6 +77,7 @@ $moduleId = Yii::$app->controller->module->id;
     <?php echo $this->render('../modal'); ?>
     <?php echo $this->render('../sub_modal'); ?>
     <?php echo $this->render('../modal-fullscreen'); ?>
+    <?php echo $this->render('offcanvas'); ?>
     <main role="main">
 
         <div class="page-wrapper">

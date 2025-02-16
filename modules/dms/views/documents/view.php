@@ -53,7 +53,7 @@ $this->title = $model->topic;
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
+<?php  // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 <!-- Tab panes -->
 
 
@@ -82,8 +82,8 @@ $this->title = $model->topic;
         <!-- Tab panes -->
         <div class="tab-content mt-3">
             <div id="home" class="container tab-pane active pb-4">
-                <div class="viewFormComment"></div>
                 <div class="listComment"></div>
+                <div class="viewFormComment"></div>
             </div>
             <div id="menu1" class="container tab-pane fade"><br>
                 <?php echo $this->render('history',['model' => $model])?>
@@ -193,4 +193,4 @@ $js = <<< JS
 JS;
 $this->registerJS($js,View::POS_END);
 ?>
-<?php Pjax::end(); ?>
+<?php //  Pjax::end(); ?>

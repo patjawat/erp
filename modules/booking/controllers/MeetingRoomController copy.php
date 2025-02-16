@@ -92,8 +92,9 @@ class MeetingRoomController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                // return $this->redirect(['view', 'id' => $model->id]);
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-                // return $this->CheckRoomAccessory($model);
+                return $this->CheckRoomAccessory($model);
                 
                 return [
                     'status' => 'success',

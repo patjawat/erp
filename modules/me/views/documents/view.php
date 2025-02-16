@@ -89,8 +89,8 @@ $this->title = $model->topic;
                     <!-- Tab panes -->
                     <div class="tab-content mt-3">
                         <div id="home" class="container tab-pane active pb-4">
-                            <div class="viewFormComment"></div>
                             <div class="listComment"></div>
+                            <div class="viewFormComment"></div>
                         </div>
                         <div id="menu1" class="container tab-pane fade"><br>
                             <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model]) ?>
@@ -228,6 +228,6 @@ $js = <<<JS
                     }); 
             });
 JS;
-$this->registerJS($js);
+$this->registerJS($js,View::POS_END);
 ?>
     <?php // Pjax::end(); ?>

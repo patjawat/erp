@@ -47,7 +47,6 @@ class RoomSearch extends Room
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            
         ]);
 
         $this->load($params);

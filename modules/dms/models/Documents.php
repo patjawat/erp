@@ -388,7 +388,7 @@ class Documents extends \yii\db\ActiveRecord
     public function listComment()
     {
         return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'comment'])->orderBy([
-            'id' => SORT_DESC,
+            'id' => SORT_ASC,
         ])->all();
     }
 

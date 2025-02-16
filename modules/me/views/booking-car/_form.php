@@ -141,10 +141,10 @@ $resultsJs = <<< JS
             </div>
         </div>
         <div class="row">
-            <div class="col-4">
+            <div class="col-6">
                 <?= $form->field($model, 'data_json[total_person_count]')->textInput(['type' => 'number'])->label('จำนวนผู้ร่วมเดินทาง') ?>
             </div>
-            <div class="col-8">
+            <div class="col-6">
                 <div class="mb-3 highlight-addon field-booking-data_json-req_license_plate">
                     <label class="form-label has-star"
                         for="booking-data_json-req_license_plate">หมายเลขทะเบียนรถที่เลือก</label>
@@ -154,27 +154,14 @@ $resultsJs = <<< JS
                 </div>
             </div>
         </div>
-        <?php if($model->car_type == 'ambulance'):?>
-            <div class="row">
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
-                    <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
-                    <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
-                </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
-                    <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
-                    <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
-                </div>
-            </div>
-    <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
-    <?php endif;?>
+        
 
 
 
     </div>
     <div class="col-5">
 
+    <?= $form->field($model, 'data_json[go_type]')->radioList(['1' => 'ไปกลับ','2' => 'ค้างคืน'],['custom' => true,'inline' => true])->label('ประเภทการไป') ?>
         <div class="d-flex flex-column gap-1 mt-1">
 
             <div>
@@ -202,7 +189,7 @@ $resultsJs = <<< JS
 
                     </a>
                     <?php else:?>
-                    <div class="card mb-3 border-2 border-primary">
+                    <div class="card mb-2 border-2 border-primary">
                         <div class="card-body p-2 d-flex justify-content-center">
                             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"
                                 aria-controls="offcanvasRightDriver"> <i
@@ -236,7 +223,7 @@ $resultsJs = <<< JS
                         </div>
                     </a>
                     <?php else:?>
-                    <div class="card mb-3 border-2 border-primary">
+                    <div class="card mb-2 border-2 border-primary">
                         <div class="card-body p-2 d-flex justify-content-center">
                             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
                                 aria-controls="offcanvasRight"> <i class="bi bi-plus-circle fs-1 text-primary"></i></a>
@@ -300,7 +287,8 @@ $resultsJs = <<< JS
 
 <?php if($model->car_type == 'ambulance'):?>
 
-    <div class="card border border-1">
+  
+    <!-- <div class="card border border-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-person-circle"></i> แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h6>
@@ -308,18 +296,41 @@ $resultsJs = <<< JS
                 </div>
                 <div class="avatar-stack"></div>            </div>
             <div class="card-footer d-flex justify-content-between">
-                <?php echo Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม',['/me/booking-car/list-employee'], [
+                <?php echo Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม',['/me/booking-car/add-passenger','booking_id' => $model->id], [
         'class' => 'btn btn-sm btn-primary rounded-pill',
         'id' => 'listEmployee',
         'data-bs-toggle' => 'offcanvas',
         'data-bs-target' => '#offcanvasRightEmployee',
         'aria-controls' => 'offcanvasRightEmployee'
     ])?>            </div>
-        </div>
-<?php endif;?>
+        </div> -->
+<?php endif;?> 
 
     </div>
 </div>
+
+<?php if($model->car_type == 'ambulance'):?>
+    <div class="card mb-2 border-2 border-primary" style="border-style:dashed">
+                        <div class="card-body">
+
+            <div class="row">
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
+                    <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
+                    <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
+                    <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
+                    <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
+                    
+                </div>
+            </div>
+            <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
+                         
+            </div>
+                    </div>
+    <?php endif;?>
 
 <?php if($model->car_type == 'general'):?>
 <?php

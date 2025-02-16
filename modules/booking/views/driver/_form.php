@@ -21,6 +21,9 @@ use kartik\widgets\ActiveForm;
         'id' => 'booking-form'
     ]); ?>
 
+<div class="card">
+    <div class="card-body">
+
 <div class="row">
     <div class="col-12">
 
@@ -175,6 +178,9 @@ use kartik\widgets\ActiveForm;
 </div>
 <?php ActiveForm::end(); ?>
 
+        
+</div>
+</div>
 
 
 

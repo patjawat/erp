@@ -14,7 +14,7 @@ use app\modules\booking\models\RoomSearch;
 /**
  * RoomController implements the CRUD actions for Room model.
  */
-class MeetingRoomController extends Controller
+class RoomController extends Controller
 {
     /**
      * @inheritDoc
@@ -43,7 +43,6 @@ class MeetingRoomController extends Controller
     {
         $searchModel = new RoomSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andFilterWhere(['name' => 'meeting_room']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -59,22 +58,9 @@ class MeetingRoomController extends Controller
      */
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('view', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('view', [
-                'model' => $model,
-            ]);
-        }
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
     }
 
     /**
@@ -91,10 +77,10 @@ class MeetingRoomController extends Controller
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                // return $this->redirect(['view', 'id' => $model->id]);
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-                // return $this->CheckRoomAccessory($model);
-                
+
                 return [
                     'status' => 'success',
                     'container' => '#booking',
@@ -120,42 +106,6 @@ class MeetingRoomController extends Controller
         }
     }
 
-
-    //ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
-    protected function CheckRoomAccessory($model)
-    {
-
-        $data = $model->data_json['room_accessory'];
-
-foreach ($data as $item) {
-    if (!Categorise::findOne(['name' => 'room_accessory','title' => $item])) { // เช็คว่ามีข้อมูลหรือยัง
-               $maxCode = Categorise::find()
-                ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
-                ->where(['like', 'name', 'room_accessory'])
-                ->scalar();
-                    $model = new Categorise();
-                    $model->name = 'room_accessory';
-                    $model->code = ($maxCode+1);
-                    $model->title = $item;
-                    $model->save(false);
-                }
-            }
-
-    //     return $model->data_json['room_accessory'];
-    //  $location = Categorise::findOne($model->location);  
-    //  if(!$location){
-    //     $maxCode = Categorise::find()
-    // ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
-    // ->where(['like', 'name', 'document_org'])
-    // ->scalar();
-    //     $newLocation = new Categorise;
-    //     $newLocation->code = ($maxCode+1);
-    //     $newLocation->title = $model->location;
-    //     $newLocation->name = 'document_org';
-    //     $newLocation->save(false);
-    //  } 
-    }
-    
     /**
      * Updates an existing Room model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -167,30 +117,54 @@ foreach ($data as $item) {
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post() && $model->save(false))) {
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             // return $this->redirect(['view', 'id' => $model->id]);
+            $this->CheckRoomAccessory($model);
             \Yii::$app->response->format = Response::FORMAT_JSON;
-            // return $model;
-            // $this->CheckRoomAccessory($model);
+            // return $model->data_json;
+
             return [
                 'status' => 'success',
                 'container' => '#booking',
             ];
         }
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            // return [
-            //     'title' => $this->request->get('title'),
-            //     'content' => $this->renderAjax('update', [
-            //     'model' => $model,
-            //     ]),
-            // ];
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
         } else {
             return $this->render('update', [
                 'model' => $model,
             ]);
+        }
+    }
+
+    // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
+    protected function CheckRoomAccessory($model)
+    {
+        try {
+            $data = $model->data_json['room_accessory'];
+
+            foreach ($data as $item) {
+                if (!Categorise::findOne(['name' => 'room_accessory', 'title' => $item])) {  // เช็คว่ามีข้อมูลหรือยัง
+                    $maxCode = Categorise::find()
+                        ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
+                        ->where(['like', 'name', 'room_accessory'])
+                        ->scalar();
+                    $model = new Categorise();
+                    $model->name = 'room_accessory';
+                    $model->code = ($maxCode + 1);
+                    $model->title = $item;
+                    $model->save(false);
+                }
+            }
+        } catch (\Throwable $th) {
         }
     }
 

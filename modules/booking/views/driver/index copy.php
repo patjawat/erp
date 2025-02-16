@@ -105,6 +105,123 @@ if($searchModel->car_type == 'ambulance'){
 
 
 
+<div class="row">
+<div class="col-7">
+<div class="card">
+            <div class="card-body">
+                <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6>
+                <?= edofre\fullcalendar\Fullcalendar::widget([
+                        'options'       => [
+                                    'id'       => 'calendar',
+                                    'language' => 'th',
+                                ],
+                                'clientOptions' => [
+                                    'weekNumbers' => true,
+                                    'selectable'  => true,
+                                    'droppable' => true,
+                                    'defaultView' => 'month',
+                                    'eventResize' => new  \yii\web\JsExpression("
+                                        function(event, delta, revertFunc, jsEvent, ui, view) {
+                                            console.log(event);
+                                        }
+                                    "),
+                                
+                                    'droppable' => true,
+                                    'drop'              => new \yii\web\JsExpression("
+                                        function(date, jsEvent, ui, resourceId) {
+                                        console.log('drop', date.format(), resourceId);
+                        
+                                        if ($('#drop-remove').is(':checked')) {
+                                            // if so, remove the element from the \"Draggable Events\" list
+                                            // $(this).remove();
+                                        }
+                                    }
+                                "),
+                                'eventReceive'      => new \yii\web\JsExpression("
+                                    function(event) { // called when a proper external event is dropped
+                                        console.log('eventReceive', event);
+                                        }
+                                        "),
+                                        'eventDrop'         => new \yii\web\JsExpression("
+                                        function(event, delta, revertFunc, jsEvent, ui, view,info) {
+                                            var id =  event.id;
+                                            var start = event.start.format();
+                                            var end = event.end ? event.end.format() : null;
+                                            // console.log('eventDrop',start);
+                                            updateEvent(id,start,end)
+                                    
+                                }
+                                "),
+                                'select'=> new \yii\web\JsExpression("function(start, end, jsEvent, view) {
+                                            addEvent(moment(start).format(),moment(end).format())
+                                                // กำหนดปฏิทิน
+                                            var calendar = $('#calendar').fullCalendar('getCalendar');
+                                    
+                                    // เพิ่ม Event แบบ dynamic
+                            
+
+                                }"),
+                                'eventClick' => new \yii\web\JsExpression("
+                                    function(calEvent, jsEvent, view) {
+                                    var id =  calEvent.id;
+                                    viewEvent(id)
+
+                                }
+                                "),
+                                    
+                                    'eventRender' => new \yii\web\JsExpression("
+                                    function(event, element) {
+                                        if (event.imageUrl) {
+                                            element.find('.fc-title').before('<img src=\"' + event.imageUrl + '\" style=\"width:20px;height:20px;margin-right:5px;\">');
+                                        }
+                                            
+                                    }
+                                "),
+                                ],
+                                'events'        => Url::to(['/me/holidays/events']),
+                            ]);
+                        ?>
+
+
+            </div>
+        </div>
+</div>
+<div class="col-5">
+
+
+<div class="overflow-auto p-2" style="max-height: 700px;">
+    <?php foreach(Booking::find()->where(['name' => 'driver_service'])->all() as $item):?>
+    <div class="card hover-card mb-2">
+        <div class="card-body p-1">
+            <div class="d-flex">
+                <div class="flex-shrink-0 rounded p-5" style="background-image:url(<?php // echo $item->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;">
+
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="d-flex flex-column">
+                            <span><?php //  echo $item->title;?></span>
+                            <span>ที่นั่ง <?php // echo $item->data_json['seat_capacity'] ?? 0?> </span>
+
+                        </div>
+
+                        <span class="text-black bg-success-subtle badge rounded-pill fw-ligh fs-13 me-3 mt-2">ว่าง</span>
+                        
+                    </div>
+                    
+                    
+                
+                </div>
+            </div>
+        </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+            <?php // echo $item->showOwner();?>
+           <?php // echo Html::a('<i class="fa-solid fa-thumbtack"></i> จอง',['/me/booking-meeting/create','room_id' => $item->code,'title' => 'ขอให้'.$item->title],['class' => 'btn btn-sm btn-primary shadow rounded-pill float-end open-modal','data' => ['size' => 'modal-lg']])?>
+            </div>
+    </div>
+    <?php endforeach;?>
+</div>
+
 
 
 </div>
@@ -150,7 +267,7 @@ if($searchModel->car_type == 'ambulance'){
                 <td></td>
                 <td class="text-center">
                 <?php // echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/update','id' => $item->id,'title' => '<i class="fa-solid fa-briefcase"></i> จัดสรร'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/update','id' => $item->id,'title' => '<i class="fa-solid fa-briefcase"></i> จัดสรร'],['class' => 'open-modal-x','data' => ['size' => 'modal-xl']])?>
+                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/driver/update','id' => $item->id,'title' => '<i class="fa-solid fa-briefcase"></i> จัดสรร'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                 </td>
                </tr>
                 <?php endforeach;?>
