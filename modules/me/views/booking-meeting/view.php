@@ -43,5 +43,16 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
+<div class="d-flex justify-content-center align-items-center gap-3">
+    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning shadow rounded-pill']) ?>
+    <?= Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['delete', 'id' => $model->id], [
+        'class' => 'btn btn-danger shadow rounded-pill',
+        'data' => [
+            'confirm' => 'คุณต้องการลบรายการนี้ใช่หรือไม่?',
+            'method' => 'post',
+        ],
+    ]) ?>
+
+</div>
 
 

@@ -3,7 +3,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\UserHelper;
-$this->title = 'จองห้องประชุม';
+$this->title = 'ระบบขอใช้ห้องประชุม';
 $this->params['breadcrumbs'][] = $this->title;
 $me = UserHelper::getEmployee();
 
@@ -20,7 +20,7 @@ $dateNext->modify('+1 day');
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-title'); ?>
-ระบบขอใช้ยานพาหนะ
+ระบบห้องประชุม
 <?php $this->endBlock(); ?>
 
 

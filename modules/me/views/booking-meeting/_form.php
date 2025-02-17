@@ -21,10 +21,15 @@ $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
             // 'validationUrl' => ['/me/booking-car/validator']
         ]); ?>
 
-<div class="flex-shrink-0 rounded p-5" style="background-image:url(<?php echo $room->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:300px;">
+<div class="flex-shrink-0 rounded p-5 mb-4"
+    style="background-image:url(<?php echo $room->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:300px;">
 
 </div>
-                
+<div class="p-3 border border-1 border-primary rounded-3 mb-3">
+    <h6 class="text-center"><i class="fa-solid fa-circle-info"></i> ระบุบรายละเอียดการขอใช้ห้องประชุม</h6>
+</div>
+
+
 <div class="row">
     <div class="col-12">
         <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>
@@ -33,16 +38,16 @@ $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
         <?= $form->field($model, 'data_json[employee_point]')->textInput(['class' => ''])->label('กลุ่มบุคคลเป้าหมาย') ?>
     </div>
 
-    <div class="col-4"> 
+    <div class="col-4">
         <?= $form->field($model, 'data_json[employee_total]')->textInput(['type' => 'number','class' => ''])->label('จำนวน') ?>
     </div>
-    
+
     <div class="col-6">
-    <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ','class' => ''])->label('เบอร์ติดต่อ') ?>
-</div>
-<div class="col-6">
-    
-<?php
+        <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ','class' => ''])->label('เบอร์ติดต่อ') ?>
+    </div>
+    <div class="col-6">
+
+        <?php
                         echo $form->field($model, 'data_json[period_time]')->widget(Select2::classname(), [
                             'data' => [
                                 'full' => 'เต็มวัน',
@@ -68,21 +73,21 @@ $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
                             ],
                         ])->label('ช่วงเวลา');
                         ?>
-</div>
+    </div>
 
     <div class="col-4">
         <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม','class' => ''])->label('ตั้งแต่วันที่') ?>
-</div>
-<div class="col-4">
+    </div>
+    <div class="col-4">
         <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'ประชุมเสร็จถึงวันที่','class' => ''])->label('ถึงวันที่') ?>
-</div>
-<div class="col-2">
-<?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', [
+    </div>
+    <div class="col-2">
+        <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', [
     'mask' => '99:99'])->label('เวลาเริ่ม') ?>
-</div>
-<div class="col-2">
-<?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('ถึงเวลา') ?>
-</div>
+    </div>
+    <div class="col-2">
+        <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('ถึงเวลา') ?>
+    </div>
 
 </div>
 
