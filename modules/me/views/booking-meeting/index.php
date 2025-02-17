@@ -44,7 +44,7 @@ $dateNext->modify('+1 day');
 </div>
 
 <div class="row">
-    <div class="col-5">
+    <div class="col-6">
         <div class="card mb-2">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -57,8 +57,9 @@ $dateNext->modify('+1 day');
             </div>
         </div>
         <?php echo $this->render('list_room',['model' => $searchModel])?>
+        <?php // echo $this->render('grid_room',['model' => $searchModel])?>
     </div>
-    <div class="col-7">
+    <div class="col-6">
         <div class="card">
             <div class="card-body">
                 <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6>
@@ -165,6 +166,24 @@ $(".open-canvas").click(function(e){
             $('.offcanvas-title').text('ssss');
         });
         
+
+        function viewEvent(id)
+                {
+                    $.ajax({
+                                type: "get",
+                                url: "/me/booking-meeting/view",
+                                data:{id:id,title:'<i class="fa-regular fa-calendar-check"></i> รายละเอียดการขอใช้ห้องประชุม'},
+                                dataType: "json",
+                                success: function (res) {
+                                    $("#main-modal").modal("show");
+                                    $("#main-modal-label").html(res.title);
+                                    $(".modal-body").html(res.content);
+                                    $(".modal-footer").html(res.footer);
+                                    $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                    $(".modal-dialog").addClass("modal-md");
+                                }
+                            });
+                }
 
 JS;
 $this->registerJS($js,View::POS_END);

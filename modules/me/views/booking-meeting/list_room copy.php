@@ -5,13 +5,8 @@ use app\modules\booking\models\Room;
 ?>
 
 <div class="overflow-auto p-2" style="max-height: 640px;">
-    <div class="row">
-        
-
     <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
-        <div class="col-6">
         <?php $checkRoom = $item->checkRoom($model->date_start)?>
-        
     <div class="card hover-card mb-2">
         <div class="card-body p-1">
             <div class="d-flex">
@@ -44,8 +39,6 @@ use app\modules\booking\models\Room;
            <?php echo Html::a('<i class="fa-solid fa-thumbtack"></i> จอง',['/me/booking-meeting/create','date_start' => $model->date_start,'room_id' => $item->code,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้'.$item->title],['class' => 'btn btn-sm btn-primary shadow rounded-pill float-end open-modal','data' => ['size' => 'modal-lg']])?>
             </div>
     </div>
-</div>
     <?php endforeach;?>
-    </div>
 </div>
 

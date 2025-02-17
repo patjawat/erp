@@ -118,5 +118,10 @@ class Room extends \yii\db\ActiveRecord
                     ->all();
                 return ArrayHelper::map($model, 'title', 'title');
             }
+
+            public function checkRoom($date)
+            {
+                 return Booking::find()->where(['name' => 'meeting','date_start' => $date,'room_id' => $this->code])->one();
+            }
         
 }

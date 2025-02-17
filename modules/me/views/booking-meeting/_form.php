@@ -7,11 +7,12 @@ use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
+use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\DocumentsDetail;
 
 $me = UserHelper::GetEmployee();
-
+$room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
 
 ?>
 <?php $form = ActiveForm::begin([
@@ -19,8 +20,11 @@ $me = UserHelper::GetEmployee();
             // 'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
             // 'validationUrl' => ['/me/booking-car/validator']
         ]); ?>
-                <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'room_id')->hiddenInput()->label(false) ?>
+
+<div class="flex-shrink-0 rounded p-5" style="background-image:url(<?php echo $room->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:300px;">
+
+</div>
+                
 <div class="row">
     <div class="col-12">
         <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>
@@ -29,7 +33,7 @@ $me = UserHelper::GetEmployee();
         <?= $form->field($model, 'data_json[employee_point]')->textInput(['class' => ''])->label('กลุ่มบุคคลเป้าหมาย') ?>
     </div>
 
-    <div class="col-4">
+    <div class="col-4"> 
         <?= $form->field($model, 'data_json[employee_total]')->textInput(['type' => 'number','class' => ''])->label('จำนวน') ?>
     </div>
     
@@ -82,7 +86,8 @@ $me = UserHelper::GetEmployee();
 
 </div>
 
-
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'room_id')->hiddenInput()->label(false) ?>
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>

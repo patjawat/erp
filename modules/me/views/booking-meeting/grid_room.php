@@ -8,16 +8,10 @@ use app\modules\booking\models\Room;
 <div class="row">
         <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
             <!-- <a href="<?php echo Url::to(['/booking/meeting-room/view','id' => 1])?>" class="open-modal" data-size="modal-lg"> -->
-           <div class="col-3">
+           <div class="col-6">
           
-            <div class="card shadow-lg border rounded">
-    <!-- <img
-      src="https://images.unsplash.com/photo-1522199755839-a2bacb67c546?ixlib=rb-4.0.3&amp;ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTF8fGJsb2d8ZW58MHx8MHx8&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60"
-      alt="Laptop"
-      class="card-img-top"
-      style="height: 200px; object-fit: cover;"
-    /> -->
-    <div class="bg-primary rounded-top"style="background-image:url(<?php echo $item->showImg()?>); height: 200px; object-fit: cover;" >
+            <div class="card shadow-lg border rounded p-3">
+    <div class="bg-primary rounded-4 shadow"style="background-image:url(<?php echo $item->showImg()?>); height: 170px; object-fit: cover;" >
         <?php  // echo Html::img($item->showImg(),['class' => '']);?>
         
     </div>
@@ -31,14 +25,13 @@ use app\modules\booking\models\Room;
             </svg>
         </h1>
         <p class="mt-3 text-muted small">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi,
-            debitis?
+            Lorem ipsum 
         </p>
-        <div class="mt-4">
+        <!-- <div class="mt-4">
             <span class="badge bg-light text-dark fw-semibold me-2">#Macbook</span>
             <span class="badge bg-light text-dark fw-semibold me-2">#Apple</span>
             <span class="badge bg-light text-dark fw-semibold">#Laptop</span>
-        </div>
+        </div> -->
         <button
         type="button"
         class="btn btn-dark w-100 mt-4"
