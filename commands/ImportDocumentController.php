@@ -22,6 +22,7 @@ use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
 use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -343,5 +344,32 @@ class ImportDocumentController extends Controller
             }
         }
         return;
+    }
+
+    public function actionDeleteFile()
+    {
+        if (BaseConsole::confirm('ยืนยันการลบไฟล์ ??')) {
+        $docFiles = Documents::find()->all();
+        $num = 1;
+        $total = count($docFiles);
+        foreach($docFiles as $docFile){
+            $ref = $docFile->ref;
+            $upload = Uploads::findOne(['ref' => $ref]);
+            $percentage = (($num++) / $total) * 100;
+            if($upload){
+                $upload->delete();
+                // try {
+                    FileManagerHelper::removeUploadDir($ref);
+                    echo "ลบ".$ref. number_format($percentage, 2) . '%'."\n";
+                // } catch (\Throwable $th) {
+                //     echo "ผิดพลาด ! ".$ref. number_format($percentage, 2) . '%'."\n";
+                //     //throw $th;
+                // }
+            }else{
+                echo "ไม่พบ uploads". number_format($percentage, 2) . '%'."\n";
+            }
+            
+        }
+    }
     }
 }
