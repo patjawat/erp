@@ -49,14 +49,37 @@ class DocumentsController extends Controller
      *
      * @return string
      */
-    public function actionIndex()
+    public function actionReceive()
     {
-        $group = $this->request->get('document_group');
         $searchModel = new DocumentSearch([
-            'document_group' => $group,
             'thai_year' => (Date('Y') + 543),
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['document_group' => 'receive']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
+            ['like', 'doc_number', $searchModel->q],
+        ]);
+        
+        $dataProvider->setSort(['defaultOrder' => [
+            'doc_regis_number' => SORT_DESC,
+            'thai_year' => SORT_DESC,
+            ]]);
+            return $this->render('list_receive', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+        
+        public function actionSend()
+        {
+            $searchModel = new DocumentSearch([
+                'thai_year' => (Date('Y') + 543),
+            ]);
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->andFilterWhere(['document_group' => 'send']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
@@ -68,12 +91,12 @@ class DocumentsController extends Controller
             'doc_regis_number' => SORT_DESC,
             'thai_year' => SORT_DESC,
         ]]);
-        return $this->render('list_'.$group, [
+        return $this->render('list_send', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
-
+    
     /**
      * Displays a single Documents model.
      * @param int $id ID
@@ -123,6 +146,12 @@ class DocumentsController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                $eventDate = [
+                    'event_date' => AppHelper::DateToDb($model->data_json['event_date']),
+                ];
+                $model->data_json = ArrayHelper::merge($model->data_json, $eventDate);
+                
 
                 // if($model->req_approve == 1){
                 //     $model->status = 'DS3';
@@ -179,9 +208,23 @@ class DocumentsController extends Controller
         $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
         $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
+        try {
+            $eventDate = [
+                'event_date' => AppHelper::DateFormDb($model->data_json['event_date']),
+            ];
+            $model->data_json = ArrayHelper::merge($model->data_json, $eventDate);
+    
+        } catch (\Throwable $th) {
+
+        }
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
+            $eventDate = [
+                'event_date' => AppHelper::DateToDb($model->data_json['event_date']),
+            ];
+            $model->data_json = ArrayHelper::merge($model->data_json, $eventDate);
+            
             // return $model->data_json['send_line'];
 
             // $result = '[' . $model->data_json['tags_department'] . ']'; // เพิ่ม [ และ ] รอบสตริง

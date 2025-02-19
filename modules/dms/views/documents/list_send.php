@@ -11,14 +11,8 @@ use app\modules\dms\models\Documents;
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-if($searchModel->document_group == 'receive'){
-    $this->title = 'รับ';
-}
-if($searchModel->document_group == 'send')
-{
-    $this->title = 'ส่ง';
-    
-}
+    $this->title = 'หนังสือส่ง';
+
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -36,10 +30,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
-<?php $querys = Yii::$app->db->createCommand("SELECT * FROM(SELECT doc_regis_number,doc_number,COUNT(doc_number) as total  FROM `documents` 
-WHERE `document_group` LIKE 'receive' 
-AND `thai_year` LIKE '2568' GROUP BY doc_number) as x
-WHERE total >=2;")->queryAll();?>
 <?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
 <div class="documents-index">
@@ -58,50 +48,11 @@ WHERE total >=2;")->queryAll();?>
             <div class="d-flex justify-content-between align-top align-items-center">
 
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
-                <div>
-                <button class="btn btn-danger rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">หนังสือซ้ำ <?php echo count($querys)?></button>
                     <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
-                </div>
             </div>
 
 
-                <?php if($querys):?>
-
-                    <div class="collapse" id="collapseExample">
-  <div class="card card-body">
-   
-
-            <div class="p-2 bg-danger bg-opacity-10 mt-3">
-                    <div
-                        class="table-responsive"
-                    >
-                        <table
-                            class="table table-primary"
-                        >
-                            <thead>
-                                <tr>
-                                <th style="width:50px;" class="fw-semibold">เลขรับ</th>
-                                <th style="width:800px;" class="fw-semibold">เลขหนังสือ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach($querys as $query):?>
-                                <tr class="">
-                                    <td scope="row"><?php echo $query['doc_regis_number']?></td>
-                                    <td scope="row"><?php echo $query['doc_number']?></td>
-                                </tr>
-                                <?php endforeach?>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    
-                </div>
-
-                </div>
-</div>
-
-                <?php endif?>
+                
             <div class="table-responsive">
 
                 <table class="table table-striped table-fixed">

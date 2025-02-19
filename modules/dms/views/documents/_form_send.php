@@ -188,8 +188,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันที่'])->label('วันหมดอายุ') ?>
                         </div>
 
+                        <div class="col-6">
+                    <?php echo $form->field($model, 'data_json[event_date]')->textInput(['placeholder' => 'เลือกวันที่'.($model->document_group ==  'send' ? 'ส่ง' : 'รับ')])->label('วันที่'.($model->document_group ==  'send' ? 'ส่ง' : 'รับ')) ?>
+                        </div>
+                        <div class="col-6">
+                        <?php echo $form->field($model, 'data_json[event_time]')->widget('yii\widgets\MaskedInput', [
+                        'mask' => '99:99'])->label('เวลา'.($model->document_group ==  'send' ? 'ส่ง' : 'รับ')) ?>
+                        </div>
+                        
                     <div class="col-12">
-                        <?= $form->field($model, 'topic')->textArea(['rows' => 2]) ?>
+                        <?= $form->field($model, 'topic')->textArea(['rows' => 4]) ?>
                     </div>
 
                 </div>
@@ -232,7 +240,7 @@ $this->params['breadcrumbs'][] = $this->title;
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
+      <h1 class="modal-title fs-5" id="staticBackdropLabel">ไฟล์เอกสาร</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -285,10 +293,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 ?>
 
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Understood</button>
-      </div>
     </div>
   </div>
 </div>
@@ -300,7 +304,7 @@ $url = Url::to(['/dms/documents/get-items']);
 $showPdfUrl = Url::to(['/dms/documents/show?ref='.$model->ref]);
 $js = <<< JS
     loadPdf()
-    thaiDatepicker('#documents-doc_transactions_date,#documents-doc_date,#leave-date_end,#documents-doc_expire')
+    thaiDatepicker('#documents-doc_transactions_date,#documents-doc_date,#leave-date_end,#documents-doc_expire,#documents-data_json-event_date')
     \$('#form-document').on('beforeSubmit', function (e) {
             var form = \$(this);
             console.log('Submit');

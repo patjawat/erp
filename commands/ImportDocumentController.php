@@ -40,7 +40,7 @@ class ImportDocumentController extends Controller
      */
     public function actionIndex()
     {
-        //$this->Receive();
+        $this->Receive();
         $this->Send();
     }
 
@@ -59,14 +59,15 @@ class ImportDocumentController extends Controller
                             BOOK_TYPE_ID,
                             BOOK_FILE_NAME,
                             BOOK_SECRET_NAME,
-                            RECORD_ORG_NAME
+                            RECORD_ORG_NAME, gbook_index.`DATE_SAVE`,
+                            gbook_index.`TIME_SAVE`
                         FROM gbook_index
                         LEFT JOIN grecord_org ON gbook_index.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
                         LEFT JOIN hrd_person ON gbook_index.PERSON_SAVE_ID = hrd_person.ID
                         LEFT JOIN hrd_prefix ON hrd_person.HR_PREFIX_ID = hrd_prefix.HR_PREFIX_ID
                         LEFT JOIN gbook_index_send_leader ON gbook_index.BOOK_ID = gbook_index_send_leader.BOOK_LD_ID
                         LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index.BOOK_SECRET_ID
-                        WHERE gbook_index.BOOK_USE = 'true' AND gbook_index.BOOK_YEAR_ID = 2568
+                        WHERE gbook_index.BOOK_USE = 'true'
                         ORDER BY gbook_index.BOOK_NUM_IN DESC")->queryAll();
 
         $num = 1;
@@ -129,7 +130,7 @@ class ImportDocumentController extends Controller
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
             $model->secret = $item['BOOK_SECRET_NAME'] ?? '-';
-            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+            $model->data_json = ['filename' => $item['BOOK_FILE_NAME'],'event_date' => $item['DATE_SAVE'],'event_time' => $item['TIME_SAVE']];
             
 
             try {
@@ -173,14 +174,16 @@ class ImportDocumentController extends Controller
                             BOOK_TYPE_ID,
                             BOOK_FILE_NAME,
                             RECORD_ORG_NAME,
-                            gbook_secret.`BOOK_SECRET_NAME`
+                            gbook_secret.`BOOK_SECRET_NAME`,
+                             gbook_index_inside.`DATE_SAVE`,
+                            gbook_index_inside.`TIME_SAVE`
                         FROM gbook_index_inside
                         LEFT JOIN grecord_org ON gbook_index_inside.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
                         LEFT JOIN hrd_person ON gbook_index_inside.PERSON_SAVE_ID = hrd_person.ID
                         LEFT JOIN hrd_prefix ON hrd_person.HR_PREFIX_ID = hrd_prefix.HR_PREFIX_ID
                         LEFT JOIN gbook_send_inside_leader ON gbook_index_inside.BOOK_ID = gbook_send_inside_leader.BOOK_LD_ID
                         LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index_inside.BOOK_SECRET_ID
-                        WHERE gbook_index_inside.BOOK_USE = 'true' AND gbook_index_inside.BOOK_YEAR_ID = 2568
+                        WHERE gbook_index_inside.BOOK_USE = 'true'
                         ORDER BY gbook_index_inside.BOOK_ID DESC")->queryAll();
 
         $num = 1;
@@ -238,7 +241,7 @@ class ImportDocumentController extends Controller
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
-            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+            $model->data_json = ['filename' => $item['BOOK_FILE_NAME'],'event_date' => $item['DATE_SAVE'],'event_time' => $item['TIME_SAVE']];
             // $mdoel->secret = $item['BOOK_SECRET_NAME'] ?? '-';
             $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
             // self::UploadFile($fileName,$item['BOOK_ID']);

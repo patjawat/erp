@@ -11,7 +11,7 @@ use yii\widgets\ActiveForm;
 
 
 <?php $form = ActiveForm::begin([
-    'action' => ['index'],
+    'action' => [$model->document_group],
     'method' => 'get',
     'options' => [
         'data-pjax' => 1
