@@ -40,7 +40,7 @@ class ImportDocumentController extends Controller
      */
     public function actionIndex()
     {
-        // $this->Receive();
+        $this->Receive();
         $this->Send();
     }
 
