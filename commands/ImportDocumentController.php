@@ -40,7 +40,7 @@ class ImportDocumentController extends Controller
      */
     public function actionIndex()
     {
-        $this->Receive();
+        //$this->Receive();
         $this->Send();
     }
 
@@ -205,7 +205,7 @@ class ImportDocumentController extends Controller
             } else {
                 $model = new Documents();
 
-                echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
+                echo 'นำเข้าเอกสารส่ง : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
             }
 
             switch ($item['BOOK_URGENT_ID']) {
@@ -228,7 +228,7 @@ class ImportDocumentController extends Controller
             
             $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             $model->ref = $ref;
-            $model->document_group = 'inside';
+            $model->document_group = 'send';
             $model->doc_speed =  $docSpeed;
             $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
             $model->doc_number = $item['BOOK_NUMBER'];
@@ -244,8 +244,8 @@ class ImportDocumentController extends Controller
             // self::UploadFile($fileName,$item['BOOK_ID']);
             try {
                 // กำหนดพาธของไดเรกทอรี
-
                 $model->save(false);
+
             } catch (\Throwable $th) {
                 echo 'นำเข้าใหม่ => ' . $item['BOOK_NUM_IN'] . ' => ' . $th . "\n";
             }

@@ -12,21 +12,21 @@ use app\modules\dms\models\Documents;
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 if($searchModel->document_group == 'receive'){
-    $this->title = 'หนังสือรับ';
+    $this->title = 'รับ';
 }
 if($searchModel->document_group == 'send')
 {
-    $this->title = 'หนังสือส่ง';
+    $this->title = 'ส่ง';
     
 }
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <?php if($searchModel->document_group == 'receive'):?>
-<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
+<i class="fa-solid fa-download"></i></i> หนังสือ<?= $this->title; ?>
 <?php endif; ?>
 <?php if($searchModel->document_group == 'send'):?>
-<i class="fa-solid fa-paper-plane text-danger"></i></i> <?= $this->title; ?>
+<i class="fa-solid fa-paper-plane text-danger"></i></i> หนังสือ<?= $this->title; ?>
 <?php endif; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
@@ -107,11 +107,10 @@ WHERE total >=2;")->queryAll();?>
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
-                            <th style="width:250px;" class="fw-semibold">เลขรับ</th>
-                            <th style="width:280px;" class="fw-semibold">เลขหนังสือ</th>
+                            <th style="width:150px;" class="fw-semibold">เลขส่ง</th>
                             <th class="fw-semibold">เรื่อง</th>
                             <th class="fw-semibold" style="width:650px;">ลงความเห็น</th>
-                            <th class="fw-semibold" style="width:1000px;">วันที่รับ</th>
+                            <th class="fw-semibold" style="width:1000px;">วันที่ส่ง</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
                             <!-- <th class="fw-semibold" style="width:150px;">ส่งต่อ</th> -->
@@ -121,10 +120,7 @@ WHERE total >=2;")->queryAll();?>
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr class="" style="max-width:200px">
                             <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
-                            <td class="fw-semibold">
-                            <p class="text-primary fw-semibold fs-6 mb-0">
-                            <?php echo $item->doc_number?></td>
-                        </p>
+
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
                                     class="text-dark open-modal-fullscree-xn">

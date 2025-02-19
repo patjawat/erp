@@ -68,7 +68,7 @@ class DocumentsController extends Controller
             'doc_regis_number' => SORT_DESC,
             'thai_year' => SORT_DESC,
         ]]);
-        return $this->render('index', [
+        return $this->render('list_'.$group, [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
