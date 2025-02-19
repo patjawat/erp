@@ -40,26 +40,38 @@ class ImportDocumentController extends Controller
      */
     public function actionIndex()
     {
-        $this->Receive();
+        // $this->Receive();
         $this->Send();
     }
 
     // หนังสือับ
     public static function Receive()
     {
-        $querys = Yii::$app->db2->createCommand("SELECT *
+        $querys = Yii::$app->db2->createCommand("SELECT 
+                            BOOK_NAME,
+                            BOOK_NUM_IN,
+                            BOOK_NUMBER,
+                            BOOK_YEAR_ID,
+                            BOOK_DATE,
+                            DATE_SAVE,
+                            RECORD_ORG_ID,
+                            BOOK_URGENT_ID,
+                            BOOK_TYPE_ID,
+                            BOOK_FILE_NAME,
+                            BOOK_SECRET_NAME,
+                            RECORD_ORG_NAME
                         FROM gbook_index
                         LEFT JOIN grecord_org ON gbook_index.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
                         LEFT JOIN hrd_person ON gbook_index.PERSON_SAVE_ID = hrd_person.ID
                         LEFT JOIN hrd_prefix ON hrd_person.HR_PREFIX_ID = hrd_prefix.HR_PREFIX_ID
                         LEFT JOIN gbook_index_send_leader ON gbook_index.BOOK_ID = gbook_index_send_leader.BOOK_LD_ID
                         LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index.BOOK_SECRET_ID
-                        WHERE gbook_index.BOOK_USE = 'true'
-                        -- AND gbook_index.DATE_SAVE BETWEEN '2024-01-01'  AND '2024-01-31'
+                        WHERE gbook_index.BOOK_USE = 'true' AND gbook_index.BOOK_YEAR_ID = 2568
                         ORDER BY gbook_index.BOOK_NUM_IN DESC")->queryAll();
 
         $num = 1;
         $total = count($querys);
+         echo 'นำเข้า : ';
         if (BaseConsole::confirm('เอกสาร '.count($querys).' รายการ ยืนยัน ??')) {
         foreach ($querys as $key => $item) {
             $checkDoc = Documents::findOne([
@@ -149,16 +161,27 @@ class ImportDocumentController extends Controller
 
     public static function send()
     {
-        $querys = Yii::$app->db2->createCommand("SELECT *
+        $querys = Yii::$app->db2->createCommand("SELECT 
+         BOOK_NAME,
+                            BOOK_NUM_IN,
+                            BOOK_NUMBER,
+                            BOOK_YEAR_ID,
+                            BOOK_DATE,
+                            DATE_SAVE,
+                            RECORD_ORG_ID,
+                            BOOK_URGENT_ID,
+                            BOOK_TYPE_ID,
+                            BOOK_FILE_NAME,
+                            RECORD_ORG_NAME,
+                            gbook_secret.`BOOK_SECRET_NAME`
                         FROM gbook_index_inside
                         LEFT JOIN grecord_org ON gbook_index_inside.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
                         LEFT JOIN hrd_person ON gbook_index_inside.PERSON_SAVE_ID = hrd_person.ID
                         LEFT JOIN hrd_prefix ON hrd_person.HR_PREFIX_ID = hrd_prefix.HR_PREFIX_ID
                         LEFT JOIN gbook_send_inside_leader ON gbook_index_inside.BOOK_ID = gbook_send_inside_leader.BOOK_LD_ID
-                        LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index.BOOK_SECRET_ID
-                        WHERE gbook_index_inside.BOOK_USE = 'true'
-                        --   AND gbook_index_inside.DATE_SAVE BETWEEN '2024-01-01'  AND '2024-01-31'
-                        ORDER BY gbook_index_inside.BOOK_ID DESC;")->queryAll();
+                        LEFT JOIN gbook_secret ON gbook_secret.BOOK_SECRET_ID = gbook_index_inside.BOOK_SECRET_ID
+                        WHERE gbook_index_inside.BOOK_USE = 'true' AND gbook_index_inside.BOOK_YEAR_ID = 2568
+                        ORDER BY gbook_index_inside.BOOK_ID DESC")->queryAll();
 
         $num = 1;
         $total = count($querys);
@@ -216,7 +239,7 @@ class ImportDocumentController extends Controller
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
             $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
-            $mdoel->secret = $item['BOOK_SECRET_NAME'];
+            // $mdoel->secret = $item['BOOK_SECRET_NAME'] ?? '-';
             $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
             // self::UploadFile($fileName,$item['BOOK_ID']);
             try {
@@ -250,6 +273,8 @@ class ImportDocumentController extends Controller
 
     public function actionUploadFile()
     {
+        if (BaseConsole::confirm('ยืนยันการนำเข้าไฟล์ ??')) {
+      
         $directory = Yii::getAlias('@app/bookpdf/');
 
         foreach (Documents::find()->all() as $document) {
@@ -282,6 +307,7 @@ class ImportDocumentController extends Controller
                 }
             }
         }
+    }
         // $filePath = $directory . $fileName;
 
         // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
