@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
-<?php $querys = Yii::$app->db->createCommand("SELECT * FROM(SELECT doc_regis_number,doc_number,COUNT(doc_number) as total  FROM `documents` 
+<?php $querys = Yii::$app->db->createCommand("SELECT * FROM(SELECT doc_regis_number,doc_number,COUNT(doc_regis_number) as total  FROM `documents` 
 WHERE `document_group` LIKE 'receive' 
 AND `thai_year` LIKE '2568' GROUP BY doc_number) as x
 WHERE total >=2;")->queryAll();?>
