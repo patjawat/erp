@@ -14,6 +14,13 @@ use app\modules\dms\models\DocumentsDetail;
 $me = UserHelper::GetEmployee();
 $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
 
+$mappedDataAccessory = ArrayHelper::map(
+    array_map(fn($v) => ['name' => $v], $room->data_json['room_accessory']), 
+    'name', 
+    'name'
+);
+
+
 ?>
 <?php $form = ActiveForm::begin([
             'id' => 'booking-form',
@@ -22,15 +29,29 @@ $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
         ]); ?>
 
 <div class="flex-shrink-0 rounded p-5 mb-4"
-    style="background-image:url(<?php echo $room->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:300px;">
+    style="background-image:url(<?php echo $room->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:200px;">
 
 </div>
-<div class="p-3 border border-1 border-primary rounded-3 mb-3">
-    <h6 class="text-center"><i class="fa-solid fa-circle-info"></i> ระบุบรายละเอียดการขอใช้ห้องประชุม</h6>
-</div>
 
+<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">ระบุบรายละเอียดการขอใช้ห้องประชุม</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-tags-tab" data-bs-toggle="pill" data-bs-target="#pills-tags" type="button" role="tab" aria-controls="pills-tags" aria-selected="false">การเชิญผู้เข้าประชุม</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-accessory-tab" data-bs-toggle="pill" data-bs-target="#pills-accessory" type="button" role="tab" aria-controls="pills-accessory" aria-selected="false">รายการอุปกรณ์</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-layout_room-tab" data-bs-toggle="pill" data-bs-target="#pills-layout_room" type="button" role="tab" aria-controls="pills-layout_room" aria-selected="false">รูปแบบการจัดโต๊ะ</button>
+  </li>
+</ul>
+<div class="tab-content" id="pills-tabContent">
+  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
+    
 
-<div class="row">
+  <div class="row">
     <div class="col-12">
         <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>
     </div>
@@ -93,6 +114,22 @@ $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
 
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'room_id')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
+
+
+
+
+  </div>
+  <div class="tab-pane fade" id="pills-tags" role="tabpanel" aria-labelledby="pills-tags-tab" tabindex="0">
+    การเชิญ
+  </div>
+  <div class="tab-pane fade" id="pills-accessory" role="tabpanel" aria-labelledby="pills-accessory-tab" tabindex="0">
+
+  <?= $form->field($model, 'data_json[accessory]')->checkboxList($mappedDataAccessory)->label('รายการอุปกรณ์ที่ต้องการ') ?>
+  </div>
+  <div class="tab-pane fade" id="pills-layout_room" role="tabpanel" aria-labelledby="pills-layout_room-tab" tabindex="0">...</div>
+</div>
+
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>

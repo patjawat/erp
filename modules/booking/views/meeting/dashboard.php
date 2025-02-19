@@ -121,7 +121,6 @@ $this->title = "Dashboard"
                         </tr>
                     </tbody>
                 </table>
- 
             </div>
         </div>
     </div>

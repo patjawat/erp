@@ -45,6 +45,7 @@ class AppAsset extends AssetBundle
         'js/waves.js',
         'js/thai.datepicker.js',
         'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js',
+        'js/fullcalendar.min.js',
         // 'js/erp-app.js',
         // 'js/vendor-app.min.js',
         'sweetalert2/dist/sweetalert2.all.min.js',

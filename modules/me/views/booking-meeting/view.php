@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<div class="flex-shrink-0 rounded p-5 mb-3" style="background-image:url(<?php echo $model->room->showImg()?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:300px;">
+<div class="flex-shrink-0 rounded p-5 mb-3" style="background-image:url(<?php echo $model->room ? $model->room->showImg() :  ''?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:300px;">
 
 </div>
 
@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 
 <div class="d-flex justify-content-center align-items-center gap-3">
-    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning shadow rounded-pill']) ?>
+    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขการขอใช้ห้องประชุม'], ['class' => 'btn btn-warning shadow rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
     <?= Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['delete', 'id' => $model->id], [
         'class' => 'btn btn-danger shadow rounded-pill',
         'data' => [

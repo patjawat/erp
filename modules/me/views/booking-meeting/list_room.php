@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use app\modules\booking\models\Room;
 ?>
 
-<div class="overflow-auto p-2" style="max-height: 640px;">
+<div class="overflow-auto p-2" style="max-height: 690px;">
     <div class="row">
         
 
@@ -21,15 +21,11 @@ use app\modules\booking\models\Room;
                 <div class="flex-grow-1 ms-3">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="d-flex flex-column">
-                        <?php echo $checkRoom ? 'วันเวล : '.$checkRoom->reason :  '<span></span>'?>
+                            <p class=""> <?php echo $checkRoom ? $checkRoom->reason :  '<span class="text-black bg-success-subtle badge rounded-pill fw-ligh fs-13 me-3 mt-2">ว่าง</span>'?></p>
                             <span>ที่นั่ง <?php echo $item->data_json['seat_capacity'] ?? 0?> </span>
                         </div>
                             </h1>
-                        <?php if($checkRoom):?>
-                        <span class="text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13 me-3 mt-2">ไม่ว่าง</span>
-                        <?php else:?>
-                            <span class="text-black bg-success-subtle badge rounded-pill fw-ligh fs-13 me-3 mt-2">ว่าง</span>
-                        <?php endif;?>
+                       
                     </div>
                     <?php echo $checkRoom ? 'เรื่อง : '.$checkRoom->reason :  '<span></span>'?>
                     

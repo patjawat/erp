@@ -2,6 +2,8 @@
 
 namespace app\modules\booking\controllers;
 
+use Yii;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
@@ -42,7 +44,7 @@ class MeetingController extends Controller
     {
         $searchModel = new BookingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'meeting_service']);
+        $dataProvider->query->andFilterWhere(['name' => 'meeting']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -69,9 +71,23 @@ class MeetingController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+            $model = $this->findModel($id);
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
+        
     }
 
     /**

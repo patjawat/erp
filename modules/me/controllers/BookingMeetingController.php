@@ -5,7 +5,9 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Booking;
 use app\modules\booking\models\RoomSearch;
@@ -46,11 +48,14 @@ class BookingMeetingController extends \yii\web\Controller
     
     public function actionCreate($room_id)
     {
+
+        $me = UserHelper::GetEmployee();
         $carType = $this->request->get('type'); 
         $dateStart = $this->request->get('date_start'); 
         $room_id = $this->request->get('room_id'); 
         $model = new Booking([
             'name' => 'meeting',
+            'emp_id' => $me->id,
             'room_id' => $room_id,
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'date_end' => $dateStart ? AppHelper::convertToThai($dateStart) : ''
@@ -64,7 +69,7 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 // $model->status = 'RECERVE';
                 if($model->save(false)){
-                    return $this->redirect(['view','id' => $model->id]);
+                    return $this->redirect(['index']);
 
                 }
             }
@@ -86,6 +91,52 @@ class BookingMeetingController extends \yii\web\Controller
             ]);
         }
     }
+    
+
+    public function actionUpdate($id)
+    {
+        $carType = $this->request->get('type'); 
+        $dateStart = $this->request->get('date_start'); 
+        $room_id = $this->request->get('room_id'); 
+        $model = $this->findModel($id);
+        
+       $model->date_start =  AppHelper::convertToThai($model->date_start);
+       $model->date_end =  AppHelper::convertToThai($model->date_end);
+       $old_data_json = $model->data_json;
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                $model->thai_year = AppHelper::YearBudget();
+                $model->date_start = AppHelper::convertToGregorian($model->date_start);
+                $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                // $model->data_json = ArrayHelper::merge($old_data_json['accessory'], $model->data_json['accessory']);
+                // return $model->data_json;
+                // $model->status = 'RECERVE';
+                if($model->save(false)){
+                    return $this->redirect(['index']);
+                }
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model
+            ]);
+        }
+    }
+    
     
 
     public function actionListRoom()
@@ -113,15 +164,17 @@ class BookingMeetingController extends \yii\web\Controller
     }
 
     // public function actionEvents($id, $start, $end)
-    public function actionEvents($start, $end)
+    public function actionEvents()
 	{
+        $start = $this->request->get('start');
+        $end = $this->request->get('end');
         
 		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
 
             $bookings = Booking::find()
                 ->where(['name' => 'meeting'])
-                ->andWhere(['between', 'date_start', $start, $end])
+                // ->andWhere(['between', 'date_start', $start, $end])
                 ->all();
                 $data = [];
 
@@ -131,61 +184,23 @@ class BookingMeetingController extends \yii\web\Controller
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$item->time_end), "php:Y-m-d\TH:i:s");
                     $data[] = [
                         'id'               => $item->id,
+                        'topic' => 'เวลาเริ่ม '.$item->time_start.' สิ้นสุดเวลา '.$item->time_end,  
                         'title'            => $item->reason,
                         'start'            => $dateStart,
-                        'end'              => $dateEnd,
-                        'editable'         => true,
-                        'startEditable'    => true,
-                        'durationEditable' => true,
+                        'end'            => $dateEnd,
+                        'data' => $item,
+                        'view' => $this->renderAjax('view', ['model' => $item]),
+                        'description' => 'description for All Day Event',
+                        // 'eventDisplay' => '',
+                        'color' => 'yellow',   // an option!
+                        'textColor' => 'black', // an option!
                     ];
                 }
 
-                
-
-return  $data;
-        // $models = Booking::find()->where()->all();
-        
-		return [
-			[
-				'id'               => uniqid(),
-				'title'            => 'Appointment #' . rand(1, 999),
-				'start'            => '2025-02-17T12:30:00',
-				'end'              => '2025-02-17T13:30:00',
-				'editable'         => true,
-				'startEditable'    => true,
-				'durationEditable' => true,
-			],
-			// No overlap
-			[
-				'id'               => uniqid(),
-				'title'            => 'Appointment #' . rand(1, 999),
-				'start'            => '2025-02-17T15:30:00',
-				'end'              => '2025-02-17T19:30:00',
-				'overlap'          => false, // Overlap is default true
-				'editable'         => true,
-				'startEditable'    => true,
-				'durationEditable' => true,
-			],
-			// Only duration editable
-			[
-				'id'               => uniqid(),
-				'title'            => 'Appointment #' . rand(1, 999),
-				'start'            => '2025-02-16T11:00:00',
-				'end'              => '2025-02-16T11:30:00',
-				'startEditable'    => false,
-				'durationEditable' => true,
-			],
-			// Only start editable
-			[
-				'id'               => uniqid(),
-				'title'            => 'Appointment #' . rand(1, 999),
-				'start'            => '2025-02-15T14:00:00',
-				'end'              => '2025-02-15T15:30:00',
-				'startEditable'    => true,
-				'durationEditable' => false,
-			],
-		];
+            return  $data;
+       
 	}
+    
     
     protected function findModel($id)
     {

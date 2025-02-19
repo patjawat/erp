@@ -113,7 +113,7 @@ class Room extends \yii\db\ActiveRecord
             public function ListAccessory()
             {
                 $model = Categorise::find()
-                    ->where(['name' => 'room_accessory'])
+                    ->where(['name' => 'room_accessory','category_id' => $this->code])
                     ->asArray()
                     ->all();
                 return ArrayHelper::map($model, 'title', 'title');

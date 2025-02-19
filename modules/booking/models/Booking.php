@@ -61,7 +61,7 @@ class Booking extends \yii\db\ActiveRecord
         return [
             [['name', 'date_start', 'time_start', 'date_end', 'time_end'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id'], 'safe'],
             [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
         ];
     }
@@ -81,6 +81,7 @@ class Booking extends \yii\db\ActiveRecord
             'urgent' => 'ความเร่งด่วน',
             'license_plate' => 'ทะเบียนยานพาหนะ',
             'room_id' => 'ห้องประชุม',
+            'owner_id' => 'ผู้ดูแลห้องประชุม',
             'location' => 'สถานที่ไป',
             'reason' => 'เหตุผล',
             'status' => 'สถานะ',
@@ -148,6 +149,13 @@ class Booking extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
+    public function getOwner()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'owner_id']);
+    }
+
+
+    
     public function getBookingStatus()
     {
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);

@@ -152,7 +152,7 @@ class RoomController extends Controller
             $data = $model->data_json['room_accessory'];
 
             foreach ($data as $item) {
-                if (!Categorise::findOne(['name' => 'room_accessory', 'title' => $item])) {  // เช็คว่ามีข้อมูลหรือยัง
+                if (!Categorise::findOne(['category_id' => $model->code,'name' => 'room_accessory', 'title' => $item])) {  // เช็คว่ามีข้อมูลหรือยัง
                     $maxCode = Categorise::find()
                         ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
                         ->where(['like', 'name', 'room_accessory'])

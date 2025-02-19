@@ -25,6 +25,7 @@ class m250203_145221_create_booking_table extends Migration
             'oil_liter' => $this->double(255)->comment('ปริมาณน้ำมัน'),
             'car_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),
             'document_id' => $this->integer()->comment('ตามหนังสือ'),
+            'owner_id' => $this->integer()->comment('ผู้ดูแลห้องประชุม'),
             'urgent' => $this->string()->comment('ความเร่งด่วน'),
             'license_plate' => $this->string()->comment('ทะเบียนยานพาหนะ'),
             'room_id' => $this->string()->comment('ห้องประชุม'),
