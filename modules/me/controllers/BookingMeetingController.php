@@ -2,6 +2,7 @@
 
 namespace app\modules\me\controllers;
 use Yii;
+use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -58,7 +59,10 @@ class BookingMeetingController extends \yii\web\Controller
             'emp_id' => $me->id,
             'room_id' => $room_id,
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
-            'date_end' => $dateStart ? AppHelper::convertToThai($dateStart) : ''
+            'date_end' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
+            'data_json' => [
+                'phone' => $me->phone,
+            ]
         ]);
 
 
@@ -139,6 +143,31 @@ class BookingMeetingController extends \yii\web\Controller
     
     
 
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Booking();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->reason == '' ? $model->addError('reason', $requiredName) : null;
+            // $model->location == '' ? $model->addError('location', $requiredName) : null;
+            // $model->urgent == '' ? $model->addError('urgent', $requiredName) : null;
+            $model->data_json['employee_point'] == '' ? $model->addError('data_json[employee_point]', $requiredName) : null;
+            $model->data_json['employee_total'] == '' ? $model->addError('data_json[employee_total]', $requiredName) : null;
+            $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
+            $model->data_json['period_time'] == '' ? $model->addError('data_json[period_time]', $requiredName) : null;
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+    
+
     public function actionListRoom()
     {
         $searchModel = new RoomSearch();
@@ -184,7 +213,6 @@ class BookingMeetingController extends \yii\web\Controller
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$item->time_end), "php:Y-m-d\TH:i:s");
                     $data[] = [
                         'id'               => $item->id,
-                        'topic' => 'เวลาเริ่ม '.$item->time_start.' สิ้นสุดเวลา '.$item->time_end,  
                         'title'            => $item->reason,
                         'start'            => $dateStart,
                         'end'            => $dateEnd,

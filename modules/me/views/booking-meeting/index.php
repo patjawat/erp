@@ -157,7 +157,7 @@ $js = <<<JS
                 // change the border color just for fun
                 info.el.style.borderColor = 'red';
                 $("#main-modal").modal("show");
-                $("#main-modal-label").html(topic);
+                $("#main-modal-label").html('แสดงรายละเอียดการขอใช้ห้องประชุม');
                 $(".modal-body").html(view);
                 // $(".modal-footer").html(response.footer);
                 $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");

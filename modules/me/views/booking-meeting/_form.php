@@ -24,8 +24,8 @@ $mappedDataAccessory = ArrayHelper::map(
 ?>
 <?php $form = ActiveForm::begin([
             'id' => 'booking-form',
-            // 'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-            // 'validationUrl' => ['/me/booking-car/validator']
+            'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
+            'validationUrl' => ['/me/booking-meeting/validator']
         ]); ?>
 
 <div class="flex-shrink-0 rounded p-5 mb-4"
@@ -71,9 +71,9 @@ $mappedDataAccessory = ArrayHelper::map(
         <?php
                         echo $form->field($model, 'data_json[period_time]')->widget(Select2::classname(), [
                             'data' => [
-                                'full' => 'เต็มวัน',
-                                'start' => 'ครึงวันเช้า',
-                                'end' => 'ครึงวันบ่าย',
+                                'เต็มวัน' => 'เต็มวัน',
+                                'ครึ่งวันเช้า' => 'ครึ่งวันเช้า',
+                                'ครึ่งวันบ่าย' => 'ครึ่งวันบ่าย',
                             ],
                             'options' => [
                                     'class' => 'bg-danger', // เพิ่ม class ตรงนี้
@@ -86,10 +86,10 @@ $mappedDataAccessory = ArrayHelper::map(
                             ],
                             'pluginEvents' => [
                                 'select2:unselect' => 'function() {
-                                    calDays();
+                                    setTime();
                                     }',
                                 'select2:select' => 'function() {
-                                        calDays();
+                                        setTime();
                                     }',
                             ],
                         ])->label('ช่วงเวลา');
@@ -235,6 +235,22 @@ $js = <<<JS
 
     });
 
+    function setTime()
+    {
+        var period_time = $('#booking-data_json-period_time').val();
+        var dateStart = $('#booking-date_start').val();
+        var dateEnd = $('#booking-date_end').val();
+        if(period_time == 'เต็มวัน'){
+            $('#booking-time_start').val('08:00')
+            $('#booking-time_end').val('16:00')
+        }else if(period_time == 'ครึ่งวันเช้า'){
+            $('#booking-time_start').val('08:00')
+            $('#booking-time_end').val('12:00')
+        }else if(period_time == 'ครึ่งวันบ่าย'){
+            $('#booking-time_start').val('13:30')
+            $('#booking-time_end').val('16:00')
+        }
+    }
 
     
     JS;

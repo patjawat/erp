@@ -60,6 +60,7 @@ class ImportDocumentController extends Controller
 
         $num = 1;
         $total = count($querys);
+        if (BaseConsole::confirm('เอกสาร '.count($querys).' รายการ ยืนยัน ??')) {
         foreach ($querys as $key => $item) {
             $checkDoc = Documents::findOne([
                 'document_group' => 'receive',
@@ -142,6 +143,7 @@ class ImportDocumentController extends Controller
 
             // End หน่วงานที่รับส่งหนังสือ
         }
+    }
         return ExitCode::OK;
     }
 
@@ -160,6 +162,7 @@ class ImportDocumentController extends Controller
 
         $num = 1;
         $total = count($querys);
+        if (BaseConsole::confirm('เอกสารส่ง '.count($querys).' รายการ ยืนยัน ??')) {
         foreach ($querys as $key => $item) {
             $checkDoc = Documents::findOne([
                 // 'ref' => $ref,
@@ -240,6 +243,7 @@ class ImportDocumentController extends Controller
             $org->save(false);
 
             // End หน่วงานที่รับส่งหนังสือ
+            }
         }
         return ExitCode::OK;
     }
