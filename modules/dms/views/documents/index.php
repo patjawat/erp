@@ -36,19 +36,17 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
-<style>
-
-</style>
+<?php $querys = Yii::$app->db->createCommand("SELECT * FROM(SELECT doc_regis_number,doc_number,COUNT(doc_number) as total  FROM `documents` 
+WHERE `document_group` LIKE 'receive' 
+AND `thai_year` LIKE '2568' GROUP BY doc_number) as x
+WHERE total >=2;")->queryAll();?>
 <?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
 <div class="documents-index">
 
     <div class="card">
         <div class="card-body">
-            <?php
-            $ayy = ["14,15,3"];
-          
-            ?>
+
             <div class="d-flex justify-content-between align-top align-items-center">
                 <h6>
                     <i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?>
@@ -60,18 +58,59 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex justify-content-between align-top align-items-center">
 
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
-                <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+                <div>
+                <button class="btn btn-danger rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">หนังสือซ้ำ <?php echo count($querys)?></button>
+                    <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+                </div>
             </div>
 
+
+                <?php if($querys):?>
+
+                    <div class="collapse" id="collapseExample">
+  <div class="card card-body">
+   
+
+            <div class="p-2 bg-danger bg-opacity-10 mt-3">
+                    <div
+                        class="table-responsive"
+                    >
+                        <table
+                            class="table table-primary"
+                        >
+                            <thead>
+                                <tr>
+                                <th style="width:50px;" class="fw-semibold">เลขรับ</th>
+                                <th style="width:800px;" class="fw-semibold">เลขหนังสือ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach($querys as $query):?>
+                                <tr class="">
+                                    <td scope="row"><?php echo $query['doc_regis_number']?></td>
+                                    <td scope="row"><?php echo $query['doc_number']?></td>
+                                </tr>
+                                <?php endforeach?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    
+                </div>
+
+                </div>
+</div>
+
+                <?php endif?>
             <div class="table-responsive">
 
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
                             <th style="width:250px;" class="fw-semibold">เลขรับ</th>
+                            <th style="width:280px;" class="fw-semibold">เลขหนังสือ</th>
                             <th class="fw-semibold">เรื่อง</th>
                             <th class="fw-semibold" style="width:650px;">ลงความเห็น</th>
-                            <th class="fw-semibold text-center" style="width:300px;">ไฟล์แนบ</th>
                             <th class="fw-semibold" style="width:1000px;">วันที่รับ</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
@@ -82,6 +121,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr class="" style="max-width:200px">
                             <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
+                            <td class="fw-semibold">
+                            <p class="text-primary fw-semibold fs-6 mb-0">
+                            <?php echo $item->doc_number?></td>
+                        </p>
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
                                     class="text-dark open-modal-fullscree-xn">
@@ -99,7 +142,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 ลับที่สุด
                                             </span>
                                             <?php endif;?>
-                                                <?php echo $item->topic?>
+                                                <?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
                                             </p>
 
                                         </div>
@@ -137,10 +180,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             </td>
                             <td>
                                 <?php echo $item->StackDocumentTags('comment')?>
-                            </td>
-                            <td class="text-center">
-                                <?php // echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/clip-file','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
-                                <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
                             </td>
                             <td class="fw-light align-middle">
                                 <div class=" d-flex flex-column">
