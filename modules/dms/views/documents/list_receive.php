@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th style="min-width:90px;" class="fw-semibold">เลขหนังสือ</th>
                             <th class="fw-semibold">เรื่อง</th>
                             <th class="fw-semibold" style="min-width: 120px;">ลงความเห็น</th>
-                            <th class="fw-semibold" style="min-width: 90px;">วันที่รับ</th>
+                            <th class="fw-semibold" style="min-width: 202px;">วันที่รับ</th>
                             <th class="fw-semibold text-center" style="min-width: 90px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
                             <!-- <th class="fw-semibold" style="width:150px;">ส่งต่อ</th> -->
