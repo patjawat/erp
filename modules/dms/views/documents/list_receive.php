@@ -53,49 +53,55 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
 
-
             <div class="table-responsive">
+
+
 
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
-                            <th style="width:250px;" class="fw-semibold">เลขรับ</th>
-                            <th style="width:280px;" class="fw-semibold">เลขหนังสือ</th>
+                            <!-- <th style="width:250px;" class="fw-semibold">เลขรับ</th> -->
+                            <th style="min-width:90px;" class="fw-semibold">เลขหนังสือ</th>
                             <th class="fw-semibold">เรื่อง</th>
-                            <th class="fw-semibold" style="width:650px;">ลงความเห็น</th>
-                            <th class="fw-semibold" style="width:1000px;">วันที่รับ</th>
-                            <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
+                            <th class="fw-semibold" style="min-width: 120px;">ลงความเห็น</th>
+                            <th class="fw-semibold" style="min-width: 90px;">วันที่รับ</th>
+                            <th class="fw-semibold text-center" style="min-width: 90px;">สถานะ</th>
                             <th class="fw-semibold">แก้ไข</th>
                             <!-- <th class="fw-semibold" style="width:150px;">ส่งต่อ</th> -->
                         </tr>
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
                         <?php foreach($dataProvider->getModels() as $item):?>
-                        <tr class="" style="max-width:200px">
+                        <tr>
                             <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
-                            <td class="fw-semibold">
-                            <p class="text-primary fw-semibold fs-6 mb-0">
-                            <?php echo $item->doc_number?></td>
-                        </p>
+                            <!-- <td class="fw-semibold">
+                           
+                            </td> -->
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
                                     class="text-dark open-modal-fullscree-xn">
-                                    <div class=" d-flex flex-column" style="max-width:1000px">
+                                    <div class=" d-flex flex-column">
                                         <div>
+                                        <p class="text-primary fw-semibold fs-13 mb-0">
+                                        <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                                    <span class="badge text-bg-danger fs-13">
+                                                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                                                    </span>
+                                                    <?php endif;?>
+                                                    
+                                                    <?php if($item->secret == 'ลับที่สุด'):?>
+                                                        <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                                        ลับที่สุด
+                                                    </span>
+                                                    <?php endif;?>
+                                            <?php echo $item->doc_number?>
+                                        
+                                        </p>
                                             <p class="text-truncate fw-semibold fs-6 mb-0">
-                                            <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
-                                            <span class="badge text-bg-danger fs-13">
-                                                <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
-                                            </span>
-                                            <?php endif;?>
-
-                                            <?php if($item->secret == 'ลับที่สุด'):?>
-                                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
-                                                ลับที่สุด
-                                            </span>
-                                            <?php endif;?>
-                                                <?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
-                                            </p>
+                                                
+                                                   <?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
+                                                </p>
+                                                
 
                                         </div>
                                     </div>
@@ -107,6 +113,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                         </span>
                                     </span>
+                                   
                                                 <?php if($item->countStackDocumentTags() >= 1):?>
                                                     <?php
                                                         echo Html::a('<i class="fa-solid fa-tags"></i> '.$item->countStackDocumentTags(),
@@ -127,7 +134,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                         ?>
                                 
                                         <?php endif?>
-                                   
+                                     
                               
                             </td>
                             <td>
@@ -161,8 +168,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     </tbody>
                 </table>
+                </div>
 
-            </div>
         </div>
     </div>
 
