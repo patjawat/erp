@@ -80,7 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="fw-light align-middle">
                                 <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
                                     class="text-dark open-modal-fullscree-xn">
-                                    <div class=" d-flex flex-column">
+                                    <div class=" d-flex flex-column w-75">
                                         <div>
                                         <p class="text-primary fw-semibold fs-13 mb-0">
                                         <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
