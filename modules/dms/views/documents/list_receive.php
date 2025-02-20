@@ -94,6 +94,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                         ลับที่สุด
                                                     </span>
                                                     <?php endif;?>
+                                                    <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                                             <?php echo $item->doc_number?>
                                         
                                         </p>
