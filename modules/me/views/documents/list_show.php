@@ -80,7 +80,7 @@ use app\modules\dms\models\Documents;
                     <td class="fw-semibold"><?php  echo $item->document->doc_regis_number?></td>
                     <td class="fw-light align-middle">
                         
-                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => 'me'])?>" class="text-dark open-modal-fullscreen">
+                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => 'me'])?>" class="text-dark open-modal-fullscreen-x">
                             <div class=" d-flex flex-column">
 
                                 <span class="fw-semibold fs-6">
