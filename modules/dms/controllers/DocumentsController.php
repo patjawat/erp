@@ -237,7 +237,7 @@ class DocumentsController extends Controller
                 $model->UpdateDocumentTags();
 
                
-                return $this->redirect(['index']);
+                return $this->redirect([$model->document_group]);
             }
         } else {
             $model->loadDefaultValues();
