@@ -145,13 +145,7 @@ class DocumentsController extends Controller
         $model->doc_regis_number = $model->runNumber();
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-
-                $eventDate = [
-                    'event_date' => AppHelper::DateToDb($model->data_json['event_date']),
-                ];
-                $model->data_json = ArrayHelper::merge($model->data_json, $eventDate);
-                
+                \Yii::$app->response->format = Response::FORMAT_JSON;    
 
                 // if($model->req_approve == 1){
                 //     $model->status = 'DS3';
@@ -208,23 +202,11 @@ class DocumentsController extends Controller
         $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
         $model->doc_date = AppHelper::convertToThai($model->doc_date);
         $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
-        try {
-            $eventDate = [
-                'event_date' => AppHelper::DateFormDb($model->data_json['event_date']),
-            ];
-            $model->data_json = ArrayHelper::merge($model->data_json, $eventDate);
-    
-        } catch (\Throwable $th) {
 
-        }
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-            $eventDate = [
-                'event_date' => AppHelper::DateToDb($model->data_json['event_date']),
-            ];
-            $model->data_json = ArrayHelper::merge($model->data_json, $eventDate);
-            
+
             // return $model->data_json['send_line'];
 
             // $result = '[' . $model->data_json['tags_department'] . ']'; // เพิ่ม [ และ ] รอบสตริง

@@ -194,13 +194,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="col-3">
                                 <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันหมดอายุ'])->label('วันหมดอายุ') ?>
                             </div>
-                            <div class="col-6">
-                    <?php echo $form->field($model, 'data_json[event_date]')->textInput(['placeholder' => 'เลือกวันที่'.($model->document_group ==  'send' ? 'ส่ง' : 'รับ')])->label('วันที่'.($model->document_group ==  'send' ? 'ส่ง' : 'รับ')) ?>
-                        </div>
-                        <div class="col-6">
-                        <?php echo $form->field($model, 'data_json[event_time]')->widget('yii\widgets\MaskedInput', [
-                        'mask' => '99:99'])->label('เวลา'.($model->document_group ==  'send' ? 'ส่ง' : 'รับ')) ?>
-                        </div>
+
 
                             <div class="col-12">
                                 <?= $form->field($model, 'topic')->textArea(['rows' => 4]) ?>

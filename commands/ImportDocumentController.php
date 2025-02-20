@@ -127,11 +127,12 @@ class ImportDocumentController extends Controller
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
             $model->topic = $item['BOOK_NAME'];
             $model->doc_transactions_date = $item['DATE_SAVE'];
+            $model->doc_time = $item['TIME_SAVE'];
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
             $model->secret = $item['BOOK_SECRET_NAME'] ?? '-';
-            $model->data_json = ['filename' => $item['BOOK_FILE_NAME'],'event_date' => $item['DATE_SAVE'],'event_time' => $item['TIME_SAVE']];
+            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
             
 
             try {
@@ -239,10 +240,11 @@ class ImportDocumentController extends Controller
             $model->doc_regis_number = $item['BOOK_NUM_IN'];
             $model->topic = $item['BOOK_NAME'];
             $model->doc_transactions_date = $item['DATE_SAVE'];
+            $model->doc_time = $item['TIME_SAVE'];
             $model->doc_date = $item['BOOK_DATE'];
             $model->thai_year = $item['BOOK_YEAR_ID'];
             $model->document_org = $item['RECORD_ORG_ID'];
-            $model->data_json = ['filename' => $item['BOOK_FILE_NAME'],'event_date' => $item['DATE_SAVE'],'event_time' => $item['TIME_SAVE']];
+            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
             // $mdoel->secret = $item['BOOK_SECRET_NAME'] ?? '-';
             $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
             // self::UploadFile($fileName,$item['BOOK_ID']);
