@@ -121,7 +121,7 @@ $resultsJs = <<< JS
 </div>
 
 
-<?= $form->field($model, 'days')->textInput() ?>
+<?= $form->field($model, 'days')->textInput(['type' => 'number', 'step' => '0.5', 'min' => '0.5']) ?>
 
 <?= $form->field($model, 'month_of_service')->hiddenInput(['value' => 0])->label(false) ?>
     <?= $form->field($model, 'position_type_id')->hiddenInput(['maxlength' => true])->label(false) ?>
@@ -139,7 +139,19 @@ $resultsJs = <<< JS
 <?php
 $js = <<< JS
 $('#form').on('beforeSubmit', function (e) {
-    var form = $(this);
+    Swal.fire({
+        title: "ยืนยัน?",
+        text: "บันทึกสิทธิวันลา!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก!",
+        confirmButtonText: "ใช่, ยืนยัน!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            
+            var form = $(this);
     $.ajax({
         url: form.attr('action'),
         type: 'post',
@@ -165,11 +177,14 @@ $('#form').on('beforeSubmit', function (e) {
                 $('#main-modal').modal('toggle');
                 success()
                  $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
-            }
+                }
+                }
+            });
+
         }
+        });
+        return false;
     });
-    return false;
-});
 
 JS;
 $this->registerJs($js);

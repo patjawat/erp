@@ -7,7 +7,7 @@ $this->title = "อนุมัติจัดซื้อจัดจ้าง"
 <i class="fa-solid fa-bag-shopping"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/views/approve/menu') ?>
+<?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">

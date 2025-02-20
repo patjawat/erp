@@ -16,12 +16,7 @@ use app\modules\dms\models\Documents;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<?php if($searchModel->document_group == 'receive'):?>
-<i class="fa-solid fa-download"></i></i> หนังสือ<?= $this->title; ?>
-<?php endif; ?>
-<?php if($searchModel->document_group == 'send'):?>
-<i class="fa-solid fa-paper-plane text-danger"></i></i> หนังสือ<?= $this->title; ?>
-<?php endif; ?>
+<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -48,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex justify-content-between align-top align-items-center">
 
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
-                    <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
             </div>
 
 

@@ -12,7 +12,7 @@ $msg = 'ขอ';
 <i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/views/approve/menu') ?>
+<?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 <?php if($dataProvider->getTotalCount() > 0):?>
 <div class="card">

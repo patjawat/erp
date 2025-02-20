@@ -97,7 +97,7 @@ use iamsaint\datetimepicker\Datetimepicker;
             </div>
 
     <div class="d-flex flex-row mb-3 mt-4">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-primary']) ?>
     </div>
 
 

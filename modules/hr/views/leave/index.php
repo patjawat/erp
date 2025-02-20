@@ -141,7 +141,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="d-flex justify-content-between  align-top align-items-center mt-2">
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?= Html::a('<i class="fa-solid fa-plus"></i> สร้างใหม่', ['/hr/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+            <?php //  Html::a('<i class="fa-solid fa-plus"></i> สร้างใหม่', ['/hr/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
 
         <?php

@@ -16,7 +16,7 @@ $this->title = 'My DashBoard';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/dms/menu') ?>
+<?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php // Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
@@ -124,7 +124,8 @@ $js = <<< JS
             url: "$documentUrl",
             dataType: "json",
             data:{
-                list:true 
+                list:true,
+                callback:'me'
             },
             success: function (res) {
                     $('#viewDocument').html(res.content);

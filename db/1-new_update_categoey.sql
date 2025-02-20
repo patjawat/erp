@@ -43,3 +43,6 @@ LEFT JOIN categorise t ON t.code  = a.category_id AND t.name = 'asset_type'
 SET a.group_id = t.category_id
 WHERE a.name = 'asset_item'
 
+
+เปลี่ยน datatype วันลา
+ALTER TABLE `leave_entitlements` CHANGE `days` `days` FLOAT NOT NULL COMMENT 'วันที่ลาได้';

@@ -46,7 +46,7 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
         return [
             ['thai_year', 'compare', 'compareValue' => AppHelper::YearBudget(), 'operator' => '<=', 'message' => 'มากกว่าปีงบประมาณได้'],
             [['emp_id','month_of_service', 'year_of_service', 'days','thai_year'], 'required'],
-            [['month_of_service', 'year_of_service', 'days', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['month_of_service', 'year_of_service','thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
             [['emp_id', 'position_type_id', 'leave_type_id'], 'string', 'max' => 255],
         ];

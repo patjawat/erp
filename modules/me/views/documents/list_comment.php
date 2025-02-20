@@ -31,8 +31,8 @@ use app\components\AppHelper
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
 
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i>แก้ไข', ['/me/documents/update-comment', 'document_id' => $item->document_id], ['class' => 'dropdown-item update-comment', 'data' => ['size' => 'modal-md']]) ?>
-                            <?php echo Html::a('<i class="fa-classic fa-regular fa-trash-can me-2"></i> ลบ', ['/me/documents/delete-comment', 'id' => $item->document_id], ['class' => 'dropdown-item delete-comment', 'data' => ['size' => 'modal-md']]) ?>
+                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i>แก้ไข', ['/me/documents/update-comment', 'id' => $item->id], ['class' => 'dropdown-item update-comment', 'data' => ['size' => 'modal-md']]) ?>
+                            <?php echo Html::a('<i class="fa-classic fa-regular fa-trash-can me-2"></i> ลบ', ['/me/documents/delete-comment', 'id' => $item->id], ['class' => 'dropdown-item delete-comment', 'data' => ['size' => 'modal-md']]) ?>
 
                         </div>
                     </div>

@@ -13,13 +13,14 @@ use kartik\date\DatePicker;
 use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
 use kartik\sortable\Sortable;
-use kartik\widgets\ActiveForm;
+use app\components\SiteHelper;
 // use karatae99\datepicker\DatePicker;
+use kartik\widgets\ActiveForm;
 use app\widgets\FlatpickrWidget;
 use app\modules\hr\models\Employees;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\widgets\Flatpickr\FlatpickrBuddhistWidget;
-
+$director = SiteHelper::viewDirector();
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
@@ -79,11 +80,6 @@ $resultsJs = <<< JS
     color: #000;
 }
 </style>
-<!-- <div class="row d-flex justify-content-center">
-<div class="col-8">
-<div class="card">
-    <div class="card-body"> -->
-
 
 
 <?php $form = ActiveForm::begin([
@@ -98,16 +94,16 @@ $resultsJs = <<< JS
         <!-- Row -->
         <div class="row">
             <div class="col-6">
-           
-               <div class="d-flex justify-content-between gap-3">
+
+                <div class="d-flex justify-content-between gap-3">
                     <div>
-                   
+
                         <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
                         <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
-                    
+
                     </div>
                     <div>
-                    
+
                         <?php
                     echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
                         'data' => [
@@ -154,12 +150,12 @@ $resultsJs = <<< JS
                         ])->label('ประเภท');
                         ?>
 
-                   
+
                     </div>
                 </div>
-     
-               
-                
+
+
+
                 <?php
                 echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
                     'data' => $model->listLeavetype(),
@@ -170,27 +166,29 @@ $resultsJs = <<< JS
                     ],
                 ])->label('ประเภท');
                 ?>
-               
+
                 <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
 
-                <div class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
-<?php echo $model->total_days ?></span></h6>
-<div>
-    <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6>
+                <div
+                    class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
+                    <?php echo $model->total_days ?></span></h6>
+                    <div>
+                        <h6>สรุปวันลา : <span
+                                class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6>
 
-    <!-- <ul>
+                        <!-- <ul>
         <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
         <li class="day_normal">วันหยุดนักขัตฤกษ์ : <span class="cal-holiday text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
         <li class="day_off">วัน OFF : <span class="cal-holiday_me text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span>
     </ul> -->
-    </div>
-</div>
+                    </div>
+                </div>
 
             </div>
             <div class="col-6">
-            <div class="d-flex justify-content-between gap-3">
-            <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>    
-            <?php
+                <div class="d-flex justify-content-between gap-3">
+                    <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
+                    <?php
                     echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                     'data' => [
                         'ภายในจังหวัด' => 'ภายในจังหวัด',
@@ -205,8 +203,8 @@ $resultsJs = <<< JS
                     ],
                     ])->label('สถานที่ไป');
                     ?>
-                    </div>
-            <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:78px;'])->label('ระหว่างลาติดต่อ') ?>
+                </div>
+                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:78px;'])->label('ระหว่างลาติดต่อ') ?>
                 <?php
                 try {
                     $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
@@ -249,7 +247,7 @@ $resultsJs = <<< JS
         </div>
     </div>
 </div>
-       
+
 
 <?php // echo $this->render('summary', ['model' => $model]) ?>
 
@@ -263,20 +261,13 @@ $resultsJs = <<< JS
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
+    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+            class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>
 </div>
 </div>
-
-
 
 <?php ActiveForm::end(); ?>
-
-<!-- </div>
-</div>
-</div>
-</div> -->
-
 <?php
 $calDaysUrl = Url::to(['/hr/leave/cal-days']);
 $js = <<< JS
@@ -406,4 +397,3 @@ $js = <<< JS
 $this->registerJS($js, View::POS_END);
 
 ?>
-

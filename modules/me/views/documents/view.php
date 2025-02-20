@@ -75,7 +75,7 @@ $this->title = $model->topic;
 
                     <!-- Nav pills -->
                     <div class="d-flex justify-content-between">
-                        <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', ['/me/documents'], ['class' => 'btn btn-secondary me-2']) ?>
+                        <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [isset($callback) ? '/'.$callback : '/me/documents'], ['class' => 'btn btn-secondary me-2']) ?>
                         <ul class="nav nav-pills" role="tablist">
                             <li class="nav-item">
                                 <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>

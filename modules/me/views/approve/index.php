@@ -11,7 +11,7 @@ $totalPurchase = $notify['purchase']['total'];
 <i class="fa-solid fa-bell noti-animate"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/views/approve/menu') ?>
+<?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
 

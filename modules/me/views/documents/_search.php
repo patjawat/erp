@@ -40,7 +40,7 @@ use kartik\widgets\ActiveForm;
     ])->label('ปี พ.ศ.');
     ?>
 
-    <div class="dropdown mt-2">
+    <!-- <div class="dropdown mt-2">
         <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i
                 class="fa-solid fa-filter"></i> เพิ่มเติม
         </button>
@@ -53,9 +53,9 @@ use kartik\widgets\ActiveForm;
             </div>
 
         </div>
-    </div>
+    </div> -->
 
-    <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-2']) ?>
+    <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-3']) ?>
 </div>
 
 <?php ActiveForm::end(); ?>

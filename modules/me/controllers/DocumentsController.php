@@ -18,6 +18,7 @@ class DocumentsController extends \yii\web\Controller
     {
         $emp = UserHelper::GetEmployee();
         $department = $emp->department;
+        
         $searchModel = new DocumentsDetailSearch([
             'thai_year' => (date('Y')+543)
         ]);
@@ -25,24 +26,24 @@ class DocumentsController extends \yii\web\Controller
         $dataProviderDepartment->query->joinWith('document');
         $dataProviderDepartment->query->andFilterWhere(['to_id' => $emp->department]);
         $dataProviderDepartment->query->andFilterWhere(['name' => 'department']);
-        if($searchModel->show_reading == 1){
-            $dataProviderDepartment->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+        // if($searchModel->show_reading == 1){
+        //     $dataProviderDepartment->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
             
-        }else{
-            $dataProviderDepartment->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+        // }else{
+        //     $dataProviderDepartment->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
 
-        }
+        // }
         
         $dataProviderTags = $searchModel->search($this->request->queryParams);
         $dataProviderTags->query->joinWith('document');
        
         $dataProviderTags->query->andFilterWhere(['to_id' => $emp->id]);
         $dataProviderTags->query->andFilterWhere(['name' => 'tags']);
-        if($searchModel->show_reading == 1){
-            $dataProviderTags->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        }else{
-            $dataProviderTags->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        }
+        // if($searchModel->show_reading == 1){
+        //     $dataProviderTags->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+        // }else{
+        //     $dataProviderTags->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+        // }
         $dataProviderTags->setSort(['defaultOrder' => [
             // 'doc_regis_number' => SORT_DESC,
             // 'thai_year' => SORT_DESC,
@@ -69,11 +70,11 @@ class DocumentsController extends \yii\web\Controller
                     'dataProviderDepartment' => $dataProviderDepartment,
                     'dataProviderTags' => $dataProviderTags,
                     'dataProviderBookmark' => $dataProviderBookmark
-                ])
-            ];
-        } else {
-            return $this->render('index', [
-                'searchModel' => $searchModel,
+                    ])
+                ];
+            } else {
+                return $this->render('index', [
+                    'searchModel' => $searchModel,
                 'dataProviderDepartment' => $dataProviderDepartment,
                 'dataProviderTags' => $dataProviderTags,
                 'dataProviderBookmark' => $dataProviderBookmark
@@ -87,30 +88,13 @@ class DocumentsController extends \yii\web\Controller
         $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
+        $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
         
         if($detail->doc_read == null){
              $detail->doc_read = date('Y-m-d H:i:s');
             $detail->save(false);
         }
-        // $docDetail->doc_read = date('Y-m-d H:i:s');
-        // $docDetail->save(false);
-
-        // $view_count[] = [
-        //     'date_time' => date('Y-m-d H:i:s'),
-        //     'emp_id' => $emp->id,
-        //     'fullname' => $emp->fullname,
-        //     'department' => $emp->departmentName(),
-        // ];
-        
-        // $model = $this->findModel($docDetail->document_id);
-        // if ($model->view_json === null) {
-        //     $model->view_json = [];
-        // }
-        // $model->view_json = ArrayHelper::merge($view_count, $model->view_json);
-        // $model->save(false);
-
-        
 
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -125,7 +109,8 @@ class DocumentsController extends \yii\web\Controller
             } else {
                 return $this->render('view', [
                     'model' => $model,
-                    'detail' => $detail
+                    'detail' => $detail,
+                    'callback' => $callback
             ]);
         }
     }
@@ -199,20 +184,41 @@ class DocumentsController extends \yii\web\Controller
         }
     }
 
+    // public function actionUpdateComment($id)
+    // {
+
+    //     $emp = UserHelper::GetEmployee();
+    //     // $model = DocumentsDetail::findOne($id);
+    //     $model = $this->findModel($id);
+        
+    //     $tags = DocumentsDetail::find()->where(['name' => 'comment','document_id' => $model->document_id])->all();
+
+    //     if ($this->request->isPost && $model->load($this->request->post())) {
+    //         Yii::$app->response->format = Response::FORMAT_JSON;
+    //         if($model->save()){
+    //             $model->UpdateDocumentsDetail();
+    //             return $this->redirect(['view', 'id' => $model->id]);
+    //             // return [
+    //             //     'status' => 'success',
+    //             //     'data' => $model,
+    //             // ];
+    //         }
+    //     }
     public function actionUpdateComment($id)
     {
-
         $emp = UserHelper::GetEmployee();
-        // $model = DocumentsDetail::findOne($id);
-        $model = $this->findModel($id);
-        
-        $tags = DocumentsDetail::find()->where(['name' => 'comment','document_id' => $model->document_id])->all();
+        $model = DocumentsDetail::findOne($id);
+
+        $tags = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $model->document_id])->all();
+        $list = ArrayHelper::map($tags, 'tag_id', 'tag_id');
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            if($model->save()){
+            if ($model->save()) {
                 $model->UpdateDocumentsDetail();
-                return $this->redirect(['view', 'id' => $model->id]);
+                return[
+                    'status' => 'success'
+                ];
                 // return [
                 //     'status' => 'success',
                 //     'data' => $model,

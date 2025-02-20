@@ -60,16 +60,11 @@ use app\modules\dms\models\Documents;
                         <?php echo $item->document->StackDocumentTags('comment')?>
                     </td>
                     <td class="text-center">
-                        <?php // echo $item->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/clip-file','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
                         <?php echo $item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
                     </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <?php
-                             echo $item->document->viewCreate()['avatar'];
-                            ?>
-                            <!-- <span class="fw-normal fs-6"><?php echo $item->document->viewReceiveDate()?></span>
-                            <span class="fw-lighter fs-13"><?php echo isset($item->document->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->document->doc_time : ''?></span> -->
+                            <?php echo $item->document->viewCreate()['avatar'];?>
                         </div>
                     </td>
                    

@@ -31,9 +31,7 @@ use app\modules\dms\models\Documents;
         <table class="table table-striped table-fixed">
             <thead>
                 <tr>
-                    <th scope="col" style="width:55px;">เลขรับ</th>
                     <th scope="col">เรื่อง</th>
-                    <th scope="col" class="text-center" style="width:105px;">ไฟล์แนบ</th>
                     <th scope="col" style="width:130px;">วันที่หนังสือ</th>
                     <!-- <th scope="col" style="width:60px;">ส่งต่อ</th> -->
                 </tr>
@@ -41,9 +39,8 @@ use app\modules\dms\models\Documents;
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach($dataProviderTags->getModels() as $item):?>
                 <tr class="">
-                    <td class="fw-semibold"><?php echo $item->document->doc_regis_number?></td>
                     <td class="fw-light align-middle">
-                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>" class="text-dark" data-pjax="false">
+                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => 'me'])?>" class="text-dark" data-pjax="false">
                             <div class=" d-flex flex-column">
 
                                 <span class="fw-semibold fs-6">
@@ -82,7 +79,8 @@ use app\modules\dms\models\Documents;
                 <tr class="">
                     <td class="fw-semibold"><?php  echo $item->document->doc_regis_number?></td>
                     <td class="fw-light align-middle">
-                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>" class="text-dark open-modal-fullscreen">
+                        
+                        <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => 'me'])?>" class="text-dark open-modal-fullscreen">
                             <div class=" d-flex flex-column">
 
                                 <span class="fw-semibold fs-6">
@@ -103,9 +101,6 @@ use app\modules\dms\models\Documents;
                                 <i class="fa-solid fa-inbox"></i> <?php  echo $item->documentOrg->title ?? '-';?>
                             </span>
                         </a>
-                    </td>
-                    <td class="text-center">
-                        <?php echo $item->document->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
                     </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">

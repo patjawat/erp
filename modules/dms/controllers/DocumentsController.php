@@ -53,6 +53,7 @@ class DocumentsController extends Controller
     {
         $searchModel = new DocumentSearch([
             'thai_year' => (Date('Y') + 543),
+            'document_group' => 'receive',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['document_group' => 'receive']);
@@ -77,6 +78,7 @@ class DocumentsController extends Controller
         {
             $searchModel = new DocumentSearch([
                 'thai_year' => (Date('Y') + 543),
+                'document_group' => 'send',
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['document_group' => 'send']);
