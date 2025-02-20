@@ -19,8 +19,6 @@ $msg = 'ขอ';
     <div class="card-body">
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-
-
         </div>
         <table class="table table-striped table-hover">
             <thead>
