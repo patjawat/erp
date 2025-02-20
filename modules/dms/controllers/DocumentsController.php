@@ -288,7 +288,7 @@ class DocumentsController extends Controller
                 preg_replace('/\D/', '', $model->doc_transactions_date) == '' ? $model->addError('doc_transactions_date', $requiredName) : null;
             }
             
-            $docRegisNumber = Documents::find()->where(['doc_regis_number' => $model->doc_regis_number,'thai_year' => $model->thai_year])->one();
+            $docRegisNumber = Documents::find()->where(['document_group' => $model->document_group,'doc_regis_number' => $model->doc_regis_number,'thai_year' => $model->thai_year])->one();
             if($docRegisNumber){
                 if($docRegisNumber->id !== $model->id){
                     $model->addError('doc_regis_number', 'เลขทะเบียนซ้ำ');
@@ -296,7 +296,7 @@ class DocumentsController extends Controller
                 
             }
             
-            $docNumber = Documents::find()->where(['doc_number' => $model->doc_number,'thai_year' => $model->thai_year])->one();
+            $docNumber = Documents::find()->where(['document_group' => $model->document_group,'doc_number' => $model->doc_number,'thai_year' => $model->thai_year])->one();
             if($docNumber){
                 $model->addError('doc_number', 'เลขทะเบียนซ้ำ');
             }
