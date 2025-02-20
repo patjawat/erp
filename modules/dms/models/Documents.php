@@ -72,7 +72,7 @@ class Documents extends \yii\db\ActiveRecord
             [['thai_year', 'topic', 'doc_number', 'secret', 'doc_speed', 'document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_time'], 'required'],
             [['topic'], 'string'],
             [['reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref'], 'safe'],
-            [['doc_number', 'document_type', 'document_org', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
+            [['doc_number', 'document_type','thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
 

@@ -129,46 +129,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="col-3">
                                 <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
                             </div>
-
                             <div class="col-6">
-                                <div class="d-flex gap-2">
-                                    <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกลงรับวันที่'])->label('ลงรับวันที่') ?>
-                                    <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
-                                                    'mask' => '99:99',
-                                                ]) ?>
-
-                                </div>
+                                <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
                             </div>
-
                             <div class="col-6">
                                 <?php
-                                        echo $form->field($model, 'document_org')->widget(Select2::classname(), [
-                                            'data' => $model->ListDocumentOrg(),
-                                            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-                                            'pluginOptions' => [
-                                                'allowClear' => true,
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('จากหน่วยงาน');
-                                        ?>
-                            </div>
-
-                            <div class="col-6">
-                                <?php
-                                        echo $form->field($model, 'secret')->widget(Select2::classname(), [
-                                            'data' => $model->DocSecret(),
-                                            'options' => ['placeholder' => 'เลือกชั้นความลับ'],
-                                            'pluginOptions' => [
-                                                'allowClear' => true,
-                                            ],
-                                        ])->label('ชั้นความลับ');
+                                        echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
                                         ?>
                             </div>
                             <div class="col-6">
@@ -183,27 +149,60 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ?>
                             </div>
                             <div class="col-6">
-                                <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
-                            </div>
-                            <div class="col-3">
                                 <?php
-                                        echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
+                                        echo $form->field($model, 'secret')->widget(Select2::classname(), [
+                                            'data' => $model->DocSecret(),
+                                            'options' => ['placeholder' => 'เลือกชั้นความลับ'],
+                                            'pluginOptions' => [
+                                                'allowClear' => true,
+                                            ],
+                                        ])->label('ชั้นความลับ');
                                         ?>
                             </div>
 
-                            <div class="col-3">
+                            <div class="col-6">
+                                <div class="d-flex gap-2">
+                                    <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกลงรับวันที่'])->label('ลงรับวันที่') ?>
+                                    <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
+                                                    'mask' => '99:99',
+                                                ]) ?>
+
+                                </div>
+                            </div>
+
+
+                            <div class="col-6">
                                 <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันหมดอายุ'])->label('วันหมดอายุ') ?>
                             </div>
 
+
+
+                            <div class="col-12">
+                                <?php
+                                        echo $form->field($model, 'document_org')->widget(Select2::classname(), [
+                                            'data' => $model->ListDocumentOrg(),
+                                            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                                            'pluginOptions' => [
+                                                'allowClear' => true,
+                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                                // 'width' => '370px',
+                                            ],
+                                            'pluginEvents' => [
+                                                'select2:select' => 'function(result) { 
+                                                            }',
+                                                'select2:unselecting' => 'function() {
+
+                                                            }',
+                                            ]
+                                        ])->label('จากหน่วยงาน');
+                                        ?>
+                            </div>
 
                             <div class="col-12">
                                 <?= $form->field($model, 'topic')->textArea(['rows' => 4]) ?>
                             </div>
 
                         </div>
-                      
-
-
                     </div>
                     <div class="tab-pane fade" id="pills-send" role="tabpanel" aria-labelledby="pills-send-tab"
                         tabindex="0">
@@ -237,7 +236,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ?>
 
 
-<?php //  $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
+                        <?php //  $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
                     </div>
                     <div class="tab-pane fade" id="pills-clip" role="tabpanel" aria-labelledby="pills-clip-tab"
                         tabindex="0">
@@ -329,7 +328,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ?>
 
             </div>
-        
+
         </div>
     </div>
 </div>

@@ -8,6 +8,7 @@ use yii\web\Response;
 use app\models\Uploads;
 use yii\web\Controller;
 use yii\bootstrap5\Html;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -149,15 +150,7 @@ class DocumentsController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;    
 
-                // if($model->req_approve == 1){
-                //     $model->status = 'DS3';
-                // }
-
-                // if($model->data_json['department_tag'] == ""){
-                //     $model->status = 'DS1';
-                // }else{
-                //     $model->status = 'DS2';
-                // }
+                
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                 $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
                 if ($model->doc_expire !== '') {
@@ -165,6 +158,11 @@ class DocumentsController extends Controller
                 } else {
                     $model->doc_expire = '';
                 }
+
+
+            if(!is_numeric($model->document_org)){
+                $model->document_org = $this->UpdateDocOrg($model);
+            }
 
                 if ($model->save()) {
                     $model->UpdateDocumentTags();
@@ -188,6 +186,9 @@ class DocumentsController extends Controller
         ]);
     }
 
+
+
+    
     /**
      * Updates an existing Documents model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -221,25 +222,16 @@ class DocumentsController extends Controller
                 $model->doc_expire = '';
             }
 
-            // if($model->status !== 'DS4'){
-
-            //     if($model->data_json['department_tag'] == ""){
-            //         $model->status = 'DS1';
-            //     }else{
-            //         $model->status = 'DS2';
-            //     }
-            // }
-
-            // $tagDepartment = [
-            //     'tags_department' =>  explode(',', $model->data_json['tags_department'])
-            // ];
-            // $model->data_json = ArrayHelper::merge($model->data_json,$tagDepartment,);
-            // return $model->data_json;
+          
+            if(!is_numeric($model->document_org)){
+                $model->document_org = $this->UpdateDocOrg($model);
+            }
+            
             if ($model->save()) {
                 $model->UpdateDocumentTags();
-
-               
                 return $this->redirect([$model->document_group]);
+            }else{
+                return $model->getErrors();
             }
         } else {
             $model->loadDefaultValues();
@@ -256,6 +248,28 @@ class DocumentsController extends Controller
         //     // return $model;
         //     $model->save();
         //     return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+
+    // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
+    protected function UpdateDocOrg($model)
+    {
+        // try {
+            $title = $model->document_org;
+            $check = Categorise::find()->where(['name' => 'document_org','title' => $title])->one();
+            if(!$check){
+                $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
+                $newModel = new Categorise();
+                $newModel->code = ($maxCode+1);
+                $newModel->name = 'document_org';
+                $newModel->title = $title;
+                $newModel->save(false);
+                return $newModel->code;
+
+            }
+
+        // } catch (\Throwable $th) {
+        // }
     }
 
     // ตรวจสอบความถูกต้อง
