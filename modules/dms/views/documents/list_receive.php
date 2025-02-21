@@ -54,14 +54,11 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
 
             <div class="table-responsive">
-
-
-
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
                             <!-- <th style="width:250px;" class="fw-semibold">เลขรับ</th> -->
-                            <th style="min-width:90px;" class="fw-semibold">เลขหนังสือ</th>
+                            <th style="min-width:90px;" class="text-center fw-semibold">เลขที่รับ</th>
                             <th class="fw-semibold">เรื่อง</th>
                             <th class="fw-semibold" style="min-width: 120px;">ลงความเห็น</th>
                             <th class="fw-semibold" style="min-width: 202px;">วันที่รับ</th>
@@ -73,14 +70,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tbody class="align-middle  table-group-divider table-hover">
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr>
-                            <td class="fw-semibold"><?php echo $item->doc_regis_number?></td>
+                            <td class="text-center fw-semibold"><?php echo $item->doc_regis_number?></td>
                             <!-- <td class="fw-semibold">
                            
                             </td> -->
                             <td class="fw-light align-middle">
-                                <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
-                                    class="text-dark open-modal-fullscree-xn">
-                                    <div class=" d-flex flex-column w-75">
+                                <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"class="text-dark open-modal-fullscree-xn">
                                         <div>
                                         <p class="text-primary fw-semibold fs-13 mb-0">
                                         <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
@@ -96,16 +91,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     <?php endif;?>
                                                     <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                                             <?php echo $item->doc_number?>
-                                        
                                         </p>
-                                            <p class="text-truncate fw-semibold fs-6 mb-0">
-                                                
-                                                   <?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
-                                                </p>
-                                                
-
+                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
                                         </div>
-                                    </div>
                                     </a>
                                     <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>
