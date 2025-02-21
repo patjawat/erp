@@ -101,13 +101,13 @@ $me = UserHelper::GetEmployee();
                                                     <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                                             <?php echo $item->document->doc_number?>
                                         </p>
-                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
+                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->document->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
                                         </div>
                                         <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>
                                             <?php  echo $item->documentOrg->title ?? '-';?>
                                         <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
-                                            <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
+                                            <i class="fa-regular fa-eye"></i> <?php echo $item->document->viewCount()?>
                                         </span>
                                     </span>
                                     <span><i class="bi bi-tags"></i> หน่วยงาน</span>
