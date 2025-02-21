@@ -39,6 +39,9 @@ class DocumentsController extends \yii\web\Controller
        
         $dataProviderTags->query->andFilterWhere(['to_id' => $emp->id]);
         $dataProviderTags->query->andFilterWhere(['name' => 'tags']);
+        if ($this->request->isAJax) {
+            $dataProviderTags->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+        }
         // if($searchModel->show_reading == 1){
         //     $dataProviderTags->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         // }else{

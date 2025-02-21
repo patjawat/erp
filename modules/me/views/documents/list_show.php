@@ -6,6 +6,7 @@ use app\modules\dms\models;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
+$me = UserHelper::GetEmployee();
 ?>
 <div class="card">
     <div class="card-body">
@@ -32,8 +33,6 @@ use app\modules\dms\models\Documents;
             <thead>
                 <tr>
                     <th scope="col">เรื่อง</th>
-                    <th scope="col" style="width:130px;">วันที่หนังสือ</th>
-                    <!-- <th scope="col" style="width:60px;">ส่งต่อ</th> -->
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
@@ -41,37 +40,42 @@ use app\modules\dms\models\Documents;
                 <tr class="">
                     <td class="fw-light align-middle">
                         <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => 'me'])?>" class="text-dark" data-pjax="false">
-                            <div class=" d-flex flex-column">
+                        <div>
+                                        <p class="text-primary fw-semibold fs-13 mb-0">
+                                            <?php if($item->document->doc_speed == 'ด่วนที่สุด'):?>
+                                                    <span class="badge text-bg-danger fs-13">
+                                                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                                                    </span>
+                                                    <?php endif;?>
+                                                    
+                                                    <?php if($item->document->secret == 'ลับที่สุด'):?>
+                                                        <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                                        ลับที่สุด
+                                                    </span>
+                                                    <?php endif;?>
 
-                                <span class="fw-semibold fs-6">
-                                    <?php if($item->document->doc_speed == 'ด่วนที่สุด'):?>
-                                    <span class="badge text-bg-danger fs-13"><i
-                                            class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
-                                    <?php endif;?>
-
-                                    <?php if($item->document->doc_speed == 'ด่วน'):?>
-                                    <span class="badge text-bg-waring fs-13"><i
-                                            class="fa-solid fa-circle-exclamation"></i> ด่วน</span>
-                                    <?php endif;?>
-                                    <?php echo $item->document->topic?>
-
-                            </div>
-                            <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
-                            <span class="text-primary fw-normal fs-13">
-                                <i class="fa-solid fa-inbox"></i> <?php  echo $item->documentOrg->title ?? '-';?>
-                            </span>
+                                                    <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
+                                            <?php echo $item->document->doc_number?> |
+                                            <span class="fw-normal fs-6"><?php echo $item->document->viewDocDate()?></span>
+                                            ( <i class="bi bi-clock-history"></i> <span class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->document->doc_date)?>)</span>
+                                            
+                                        </p>
+                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->document->topic?> <?php echo $item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
+                                        </div>
+                                        <span class="text-primary fw-normal fs-13">
+                                        <i class="fa-solid fa-inbox"></i>
+                                            <?php  echo $item->documentOrg->title ?? '-';?>
+                                        <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                                            <i class="fa-regular fa-eye"></i> <?php echo $item->document->viewCount()?>
+                                        </span>
+                                    </span>
+                                    <span> | <i class="fa-solid fa-user-tag"></i> <?php echo $me->fullname ?> </span>
                         </a>
                     </td>
                     <td class="text-center">
                         <?php echo $item->document->isFile() ? Html::a('<i class="fas fa-paperclip"></i>',['/dms/documents/file-comment','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
                     </td>
-                    <td class="fw-light align-middle">
-                        <div class=" d-flex flex-column">
-                            <span class="fw-normal fs-6"><?php echo $item->document->viewDocDate()?></span>
-                            <span
-                                class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->document->doc_date)?></span>
-                        </div>
-                    </td>
+
                 </tr>
                 <?php endforeach;?>
 
@@ -80,25 +84,33 @@ use app\modules\dms\models\Documents;
                     <td class="fw-light align-middle">
                         
                         <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => 'me'])?>" class="text-dark open-modal-fullscreen-x">
-                            <div class=" d-flex flex-column">
+                        <div>
+                                        <p class="text-primary fw-semibold fs-13 mb-0">
+                                        <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                                    <span class="badge text-bg-danger fs-13">
+                                                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                                                    </span>
+                                                    <?php endif;?>
+                                                    
+                                                    <?php if($item->secret == 'ลับที่สุด'):?>
+                                                        <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                                        ลับที่สุด
+                                                    </span>
+                                                    <?php endif;?>
 
-                                <span class="fw-semibold fs-6">
-                                    <?php if($item->document->doc_speed == 'ด่วนที่สุด'):?>
-                                    <span class="badge text-bg-danger fs-13"><i
-                                            class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
-                                    <?php endif;?>
-
-                                    <?php if($item->document->doc_speed == 'ด่วน'):?>
-                                    <span class="badge text-bg-waring fs-13"><i
-                                            class="fa-solid fa-circle-exclamation"></i> ด่วน</span>
-                                    <?php endif;?>
-                                    <?php echo $item->document->topic?>
-
-                            </div>
-                            <!-- <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13"> -->
-                            <span class="text-primary fw-normal fs-13">
-                                <i class="fa-solid fa-inbox"></i> <?php  echo $item->documentOrg->title ?? '-';?>
-                            </span>
+                                                    <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
+                                            <?php echo $item->doc_number?>
+                                        </p>
+                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
+                                        </div>
+                                        <span class="text-primary fw-normal fs-13">
+                                        <i class="fa-solid fa-inbox"></i>
+                                            <?php  echo $item->documentOrg->title ?? '-';?>
+                                        <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                                            <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
+                                        </span>
+                                    </span>
+                                    <span><i class="bi bi-tags"></i> หน่วยงาน</span>
                         </a>
                     </td>
                     <td class="fw-light align-middle">
