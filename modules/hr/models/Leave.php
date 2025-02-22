@@ -582,16 +582,16 @@ class Leave extends \yii\db\ActiveRecord
             return [
                 'approve_1' => isset($query['t1_leader']) ? [
                     'id' => $query['t1_leader'],
-                    'avatar' => $leader->getAvatar(false),
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
+                    'avatar' => isset($leader) ? $leader->getAvatar(false) : '',
+                    'fullname' => isset($leader) ? $leader->fullname : '',
+                    'position' => isset($leader) ? $leader->positionName() : '',
                     'title' => 'หัวหน้างาน'
                 ] : [],
                 'approve_2' => [
                     'id' => $query['t2_leader'],
-                    'avatar' => $leader->getAvatar(false),
-                    'fullname' => $leaderGroup->fullname,
-                    'position' => $leaderGroup->positionName(),
+                    'avatar' => isset($leaderGroup) ? $leaderGroup->getAvatar(false)  : '',
+                    'fullname' => isset($leaderGroup) ?  $leaderGroup->fullname  : '',
+                    'position' => isset($leaderGroup) ?  $leaderGroup->positionName() : '',
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ],
                 'approve_3' => [

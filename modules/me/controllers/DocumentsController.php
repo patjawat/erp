@@ -24,18 +24,12 @@ class DocumentsController extends \yii\web\Controller
         ]);
         $dataProviderDepartment = $searchModel->search($this->request->queryParams);
         $dataProviderDepartment->query->joinWith('document');
-        $dataProviderDepartment->query->andFilterWhere(['to_id' => $emp->department]);
+        $dataProviderDepartment->query->andWhere(['to_id' => $emp->department]);
         $dataProviderDepartment->query->andFilterWhere(['name' => 'department']);
         if ($this->request->isAJax) {
             $dataProviderDepartment->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }
-        // if($searchModel->show_reading == 1){
-        //     $dataProviderDepartment->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-            
-        // }else{
-        //     $dataProviderDepartment->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
 
-        // }
         
         $dataProviderTags = $searchModel->search($this->request->queryParams);
         $dataProviderTags->query->joinWith('document');

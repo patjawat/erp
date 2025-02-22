@@ -2,7 +2,8 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use app\modules\purchase\models\Order;
+
+use app\components\UserHelper;
 // $this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [yii\web\JqueryAsset::className()]]);
 // $this->registerCssFile('@web/owl/owl.carousel.min.css');
 
