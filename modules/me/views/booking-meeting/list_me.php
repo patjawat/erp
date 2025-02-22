@@ -3,29 +3,12 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-/** @var yii\web\View $this */
-$this->title = 'ระบบจองห้องประชุม ';
 ?>
-<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
-<?php $this->beginBlock('page-title'); ?>
-<!-- <i class="bi bi-ui-checks"></i>-->
-
-<i class="fa-solid fa-person-chalkboard fs-1"></i><?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('menu') ?>
-<?php $this->endBlock(); ?>
 
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียนการ<?php echo $this->title?> <span
-                    class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
 
-
-        </div>
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-        <table class="table table-striped table-hover">
+<table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th scope="col">ลำดับ</th>
@@ -44,10 +27,10 @@ $this->title = 'ระบบจองห้องประชุม ';
                     <td><?php echo $key+1?></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <?php echo Html::img($item->employee->showAvatar(),['class' => 'avatar avatar-sm']);?>
+                            <?php  echo Html::img($item->employee->showAvatar(),['class' => 'avatar avatar-sm']);?>
                             <div class="avatar-detail">
                                 <div>
-                                    <?php echo $item->reason;?>
+                                    <?php  echo $item->reason;?>
                                 </div>
                                 <div>
                                
@@ -63,9 +46,9 @@ $this->title = 'ระบบจองห้องประชุม ';
                     <?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?> เวลา
                     <?php echo $item->time_end.' - '. $item->time_end?> 
                     </td>
-                    <td class="text-center"><?=$item->viewStatus()?></td>
+                    <td class="text-center"><?=$item->status?></td>
                     <td class="text-center">
-                        <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/meeting/view','id' => $item->id,'title' => 'รายละเอียดขอใช้ห้องประชุม'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                        <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-meeting/view','id' => $item->id,'title' => 'รายละเอียดขอใช้ห้องประชุม'],['class' => 'open-modal-x','data' => ['size' => 'modal-xl']])?>
                     </td>
                 </tr>
                 <?php endforeach;?>
@@ -83,25 +66,6 @@ $this->title = 'ระบบจองห้องประชุม ';
             ]); ?>
         </div>
 
+
     </div>
 </div>
-
-<?php
-
-$js = <<< JS
-
-    thaiDatepicker('#bookingsearch-date_start,#bookingsearch-date_end')
-    $("#leavesearch-date_start").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-
-
-    JS;
-$this->registerJS($js, View::POS_END);
-
-?>

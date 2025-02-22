@@ -2,6 +2,7 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 use app\components\UserHelper;
 
 $this->title = 'ระบบขอใช้ห้องประชุม';
@@ -44,12 +45,10 @@ $dateNext->modify('+1 day');
 }
 </style>
 <?php // echo $this->render('list_room') ?>
-<div class="alert alert-primary" role="alert">
-    <strong>Alert Heading</strong> Some Word
-</div>
 
 <div class="row">
     <div class="col-6">
+
         <div class="card mb-2">
             <div class="card-body">
                 <div class="d-flex justify-content-between">

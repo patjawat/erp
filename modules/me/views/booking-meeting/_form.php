@@ -9,6 +9,7 @@ use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
 
 $me = UserHelper::GetEmployee();
@@ -42,9 +43,7 @@ try {
   <li class="nav-item" role="presentation">
     <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">ระบุบรายละเอียดการขอใช้ห้องประชุม</button>
   </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-tags-tab" data-bs-toggle="pill" data-bs-target="#pills-tags" type="button" role="tab" aria-controls="pills-tags" aria-selected="false">การเชิญผู้เข้าประชุม</button>
-  </li>
+
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-accessory-tab" data-bs-toggle="pill" data-bs-target="#pills-accessory" type="button" role="tab" aria-controls="pills-accessory" aria-selected="false">รายการอุปกรณ์</button>
   </li>
@@ -57,19 +56,10 @@ try {
     
 
   <div class="row">
-    <div class="col-12">
-        <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>
-    </div>
-    <div class="col-8">
-        <?= $form->field($model, 'data_json[employee_point]')->textInput(['class' => ''])->label('กลุ่มบุคคลเป้าหมาย') ?>
-    </div>
 
-    <div class="col-4">
-        <?= $form->field($model, 'data_json[employee_total]')->textInput(['type' => 'number','class' => ''])->label('จำนวน') ?>
-    </div>
 
-    <div class="col-6">
-        <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ','class' => ''])->label('เบอร์ติดต่อ') ?>
+  <div class="col-4">
+        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม','class' => ''])->label('ตั้งแต่วันที่') ?>
     </div>
     <div class="col-6">
 
@@ -101,11 +91,20 @@ try {
                         ?>
     </div>
 
-    <div class="col-4">
-        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม','class' => ''])->label('ตั้งแต่วันที่') ?>
+    
+    <div class="col-12">
+        <?= $form->field($model, 'reason')->textInput(['class' => ''])->label('เรื่องการประชุม') ?>
     </div>
+    <div class="col-8">
+        <?= $form->field($model, 'data_json[employee_point]')->textInput(['class' => ''])->label('กลุ่มบุคคลเป้าหมาย') ?>
+    </div>
+
     <div class="col-4">
-        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'ประชุมเสร็จถึงวันที่','class' => ''])->label('ถึงวันที่') ?>
+        <?= $form->field($model, 'data_json[employee_total]')->textInput(['type' => 'number','class' => ''])->label('จำนวน') ?>
+    </div>
+
+    <div class="col-6">
+        <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ','class' => ''])->label('เบอร์ติดต่อ') ?>
     </div>
     <div class="col-2">
         <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', [
@@ -114,6 +113,7 @@ try {
     <div class="col-2">
         <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('ถึงเวลา') ?>
     </div>
+
 
 </div>
 
@@ -125,9 +125,7 @@ try {
 
 
   </div>
-  <div class="tab-pane fade" id="pills-tags" role="tabpanel" aria-labelledby="pills-tags-tab" tabindex="0">
-    การเชิญ
-  </div>
+
   <div class="tab-pane fade" id="pills-accessory" role="tabpanel" aria-labelledby="pills-accessory-tab" tabindex="0">
 
   <?= $form->field($model, 'data_json[accessory]')->checkboxList($mappedDataAccessory)->label('รายการอุปกรณ์ที่ต้องการ') ?>

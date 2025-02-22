@@ -1,78 +1,79 @@
 <?php
-
+use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use yii\web\JsExpression;
+use kartik\widgets\Select2;
+use kartik\widgets\ActiveForm;
+use app\widgets\FlatpickrWidget;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
+use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
-/** @var app\modules\booking\models\BookingSearch $model */
+/** @var app\modules\lm\models\LeaveSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+<style>
+.offcanvas-footer {
+    padding: 1rem 1rem;
+    border-top: 1px solid #dee2e6;
+}
+</style>
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
 
-<div class="booking-search">
+<div class="d-flex gap-2">
+<div class="d-flex justify-content-between gap-2">
+                <?php echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');?>
+                <?php echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');?>
+                <?php
+                    echo $form->field($model, 'status')->widget(Select2::classname(), [
+                        'data' => [
+                            'pending' => 'ร้องขอ',
+                            'approve' => 'จัดสรร',
+                            'allow' => 'อนุมัติ',
+                            'cancel' => 'ยกเลิก',
+                        ],
+                        // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'width' => '250px',
+                        ],
+                        'pluginEvents' => [
+                            'select2:unselect' => 'function() {
+                                    $(this).submit();
+                                    }',
+                                    'select2:select' => 'function() {
+                                        $(this).submit();
+                                    }',
+                        ],
+                    ])->label('ประเภท');
+                    ?>
+            </div>
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
-
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'ref') ?>
-
-    <?= $form->field($model, 'name') ?>
-
-    <?= $form->field($model, 'thai_year') ?>
-
-    <?= $form->field($model, 'car_type') ?>
-
-    <?php // echo $form->field($model, 'document_id') ?>
-
-    <?php // echo $form->field($model, 'urgent') ?>
-
-    <?php // echo $form->field($model, 'license_plate') ?>
-
-    <?php // echo $form->field($model, 'room_id') ?>
-
-    <?php // echo $form->field($model, 'location') ?>
-
-    <?php // echo $form->field($model, 'reason') ?>
-
-    <?php // echo $form->field($model, 'status') ?>
-
-    <?php // echo $form->field($model, 'date_start') ?>
-
-    <?php // echo $form->field($model, 'time_start') ?>
-
-    <?php // echo $form->field($model, 'date_end') ?>
-
-    <?php // echo $form->field($model, 'time_end') ?>
-
-    <?php // echo $form->field($model, 'driver_id') ?>
-
-    <?php // echo $form->field($model, 'leader_id') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <?php // echo $form->field($model, 'deleted_at') ?>
-
-    <?php // echo $form->field($model, 'deleted_by') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+    <div class="d-flex flex-row mb-3 mt-4">
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-primary']) ?>
     </div>
 
-    <?php ActiveForm::end(); ?>
-
 </div>
+
+<?php ActiveForm::end(); ?>
+
+
+<?php
+
+$js = <<< JS
+
+    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+
+
+    JS;
+$this->registerJS($js, View::POS_END);
+
+?>

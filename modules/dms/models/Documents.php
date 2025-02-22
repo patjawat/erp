@@ -61,6 +61,7 @@ class Documents extends \yii\db\ActiveRecord
      */
     public $q;
 
+
     // public $tags_employee;
     public $reading;
     public $show_reading;

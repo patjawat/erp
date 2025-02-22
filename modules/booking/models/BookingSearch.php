@@ -63,6 +63,7 @@ class BookingSearch extends Booking
             'thai_year' => $this->thai_year,
             'document_id' => $this->document_id,
             'date_start' => $this->date_start,
+            'status' => $this->status,
             'date_end' => $this->date_end,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
@@ -80,7 +81,6 @@ class BookingSearch extends Booking
             ->andFilterWhere(['like', 'room_id', $this->room_id])
             ->andFilterWhere(['like', 'location', $this->location])
             ->andFilterWhere(['like', 'reason', $this->reason])
-            ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])

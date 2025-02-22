@@ -10,12 +10,30 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
+use app\modules\hr\models\Employees;
 use app\modules\booking\models\Booking;
 use app\modules\booking\models\RoomSearch;
+use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\BookingSearch;
 
 class BookingMeetingController extends \yii\web\Controller
 {
+
+    public function behaviors()
+    {
+        return array_merge(
+            parent::behaviors(),
+            [
+                'verbs' => [
+                    'class' => VerbFilter::className(),
+                    'actions' => [
+                        'delete' => ['POST'],
+                    ],
+                ],
+            ]
+        );
+    }
+    
     public function actionIndex()
     { 
         $searchModel = new BookingSearch([
@@ -28,6 +46,22 @@ class BookingMeetingController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+    public function actionListMe()
+    { 
+        $searchModel = new BookingSearch([
+            'created_by' => Yii::$app->user->id
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'meeting']);
+        $dataProvider->query->andWhere(['<>', 'status', 'cancel']);
+
+        return $this->render('list_me', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
 
     public function actionView($id)
     {
@@ -46,6 +80,115 @@ class BookingMeetingController extends \yii\web\Controller
             ]);
         }
     }
+
+    public function actionSelectFormDepartment($id)
+    {
+            $model = $this->findModel($id);
+
+            if ($this->request->isPost) {
+                if ($model->load($this->request->post())) {
+                    \Yii::$app->response->format = Response::FORMAT_JSON;
+
+
+
+                    $listEmployees = Employees::find()
+                    ->where(['department' => $model->tags_department])
+                    ->all();
+                    $data = [];
+                    foreach($listEmployees as $item)
+                    {
+                        $newModel = new BookingDetail();
+                        $newModel->name = 'meeting_menber';
+                        $newModel->emp_id = $item->id;
+                        $newModel->booking_id = $model->id;
+                        $newModel->save(false);
+
+                    }
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+            } else {
+                $model->loadDefaultValues();
+            }
+            
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_department', [
+                    'model' => $model
+                ]),
+            ];
+        } 
+    }
+
+    public function actionFormMember($id)
+    {
+            $model = $this->findModel($id);
+
+            if ($this->request->isPost) {
+                if ($model->load($this->request->post())) {
+                    \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                        $newModel = new BookingDetail();
+                        $newModel->name = 'meeting_menber';
+                        $newModel->emp_id = $model->data_json['emp_id'];
+                        $newModel->booking_id = $model->id;
+                        $newModel->save(false);
+
+                    
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+            } else {
+                $model->loadDefaultValues();
+            }
+            
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_member', [
+                    'model' => $model
+                ]),
+            ];
+        } 
+    }
+    
+
+    public function actionDeleteMenber($id)
+    {
+        $model = BookingDetail::findOne($id);
+        $model->delete();
+        return $this->redirect(['view', 'id' => $model->booking_id]);
+    }
+
+    public function actionCancelOrder($id)
+    {
+            $model = $this->findModel($id);
+            $old = $model->data_json;
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                $model->status = 'cancel';
+                $model->data_json = ArrayHelper::merge($old, $model->data_json);
+                if($model->save(false)){
+                    return [
+                        'status' => 'success'
+                    ];
+                }
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('_form_cancel', [
+                'model' => $model
+            ]),
+        ];
+    }
+    }
     
     public function actionCreate($room_id)
     {
@@ -59,7 +202,7 @@ class BookingMeetingController extends \yii\web\Controller
             'emp_id' => $me->id,
             'room_id' => $room_id,
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
-            'date_end' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
+            // 'date_end' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'data_json' => [
                 'phone' => $me->phone,
             ]
@@ -70,10 +213,11 @@ class BookingMeetingController extends \yii\web\Controller
             if ($model->load($this->request->post())) {
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                // $model->status = 'RECERVE';
+                // $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                $model->status = 'pending';
                 if($model->save(false)){
-                    return $this->redirect(['index']);
+                    return $this->redirect(['view', 'id' => $model->id]);
+                    // return $this->redirect(['index']);
 
                 }
             }
@@ -105,7 +249,7 @@ class BookingMeetingController extends \yii\web\Controller
         $model = $this->findModel($id);
         
        $model->date_start =  AppHelper::convertToThai($model->date_start);
-       $model->date_end =  AppHelper::convertToThai($model->date_end);
+
        $old_data_json = $model->data_json;
 
         if ($this->request->isPost) {
@@ -114,12 +258,8 @@ class BookingMeetingController extends \yii\web\Controller
 
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                // $model->data_json = ArrayHelper::merge($old_data_json['accessory'], $model->data_json['accessory']);
-                // return $model->data_json;
-                // $model->status = 'RECERVE';
                 if($model->save(false)){
-                    return $this->redirect(['index']);
+                    return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
         } else {
@@ -168,6 +308,26 @@ class BookingMeetingController extends \yii\web\Controller
     }
     
 
+
+    // ตรวจสอบความถูกต้องยกเลิก
+    public function actionValidatorCancel()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Booking();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->reason == '' ? $model->addError('reason', $requiredName) : null;
+            $model->data_json['cancel_note'] == '' ? $model->addError('data_json[cancel_note]', $requiredName) : null;
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+    
+
     public function actionListRoom()
     {
         $searchModel = new RoomSearch();
@@ -203,7 +363,7 @@ class BookingMeetingController extends \yii\web\Controller
 
             $bookings = Booking::find()
                 ->where(['name' => 'meeting'])
-                // ->andWhere(['between', 'date_start', $start, $end])
+                ->andWhere(['<>', 'status', 'cancel'])
                 ->all();
                 $data = [];
 
@@ -220,8 +380,10 @@ class BookingMeetingController extends \yii\web\Controller
                         'view' => $this->renderAjax('view', ['model' => $item]),
                         'description' => 'description for All Day Event',
                         // 'eventDisplay' => '',
-                        'color' => 'yellow',   // an option!
+                        'color' => 'danger',   // an option!
                         'textColor' => 'black', // an option!
+                         'rendering' => 'background',
+        'color'=> '#ff9f89'
                     ];
                 }
 

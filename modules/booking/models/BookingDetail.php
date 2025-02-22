@@ -47,7 +47,7 @@ class BookingDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','driver_id'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','driver_id','emp_id'], 'safe'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
             [['created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['ref', 'name', 'booking_id', 'ambulance_type', 'time_start', 'time_end'], 'string', 'max' => 255],
@@ -87,6 +87,11 @@ class BookingDetail extends \yii\db\ActiveRecord
     public function getCar()
     {
         return $this->hasOne(Asset::class, ['license_plate' => 'license_plate']);
+    }
+
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
     public function getDriver()

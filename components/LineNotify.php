@@ -50,7 +50,8 @@ class LineNotify extends Component
 
     public static function sendPushMessage($userId, $message)
     {
-        $channelAccessToken = "tagKzFY1hHd0j7GcGknIy2zqQSgOWhcbh/AGdDSltHDOQ2XE2w5qqZeadToN4+WtilD7dZ2w+A2Lqq2fNnra5YGpceLT0+cf/NPkASnjuL0BZva0ExOOFqCiSCYNaNegDUnlo3Ku9rUJMV+DPt/nvQdB04t89/1O/w1cDnyilFU=";
+        $token = Categorise::find()->where(['name' => 'site'])->one();
+        $channelAccessToken = $token->data_json['line_channel_token'];
         $url = 'https://api.line.me/v2/bot/message/push';
         $data = [
             'to' => $userId,

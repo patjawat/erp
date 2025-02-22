@@ -36,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="row">
     <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
-    <div class="col-lg-2 col-md-4 col-sm-3">
+    <div class="col-lg-3 col-md-3 col-sm-3">
         <div class="card shadow-lg border rounded">
             <div class="bg-primary rounded-top" style="background-image:url(<?php echo $item->showImg()?>); height: 160px; object-fit: cover;"></div>
             <div class="card-body bg-white text-dark">
@@ -50,9 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </svg>
                 </h1>
                 <p class="text-muted small">ที่นั้ง : <?php echo $item->data_json['seat_capacity'] ?? '-'?></p>
-                <div class="mt-4">
-                    <span class="badge bg-light text-dark fw-semibold me-2">#Macbook</span>
-                </div>
+
                 <div class="d-flex justify-content-between gap-3">
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/booking/room/update','id' => $item->id,'title' => 'แก้ไข'],['class' => 'btn btn-warning w-50 mt-4 open-modal rounded-pill','data' => ['size' => 'modal-lg']])?>
                     <?php echo Html::a('<i class="fa-solid fa-trash"></i> ลบ',['/booking/room/delete','id' => $item->id],['class' => 'btn btn-danger w-50 mt-4 delete-item  rounded-pill'])?>

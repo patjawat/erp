@@ -42,7 +42,9 @@ class MeetingController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new BookingSearch();
+        $searchModel = new BookingSearch([
+            'status' => 'pending'
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'meeting']);
 
@@ -77,7 +79,7 @@ class MeetingController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $this->request->get('title'),
+                'title' => 'ขอใช้'.$model->room->title,
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                 ]),
@@ -146,6 +148,26 @@ class MeetingController extends Controller
         return $this->redirect(['index']);
     }
 
+
+    public function actionRoomStatus()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = Yii::$app->request->post('id');
+        $status = Yii::$app->request->post('status');
+        $model = $this->findModel($id);
+        $model->status = $status;
+        $model->save(false);
+        if($model->status == 'approve'){
+            $model->SendMsg('ขอเชิญเข้าร่วมประชุม');
+        }
+
+        if($model->status == 'cancel'){
+            $model->SendMsg('ยกเลิกประชุม');
+        }
+       return [
+        'status' => 'success'
+       ];
+    }
     /**
      * Finds the Booking model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

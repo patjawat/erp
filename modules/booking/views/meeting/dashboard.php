@@ -125,14 +125,7 @@ $this->title = "Dashboard"
         </div>
     </div>
 </div>
-<div class="card">
-    <div class="card-body">
-        <?php echo $this->render('list_room',[
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ])?>
-    </div>
-</div>
+
 
 <h6 class="text-center">ข้อมูลแผนภูมิภาพการใช้บริการห้องประชุม</h6>
 <div class="row">

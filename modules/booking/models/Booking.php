@@ -7,6 +7,7 @@ use DateTime;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\components\LineNotify;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
@@ -48,6 +49,7 @@ class Booking extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $tags_department;
     public static function tableName()
     {
         return 'booking';
@@ -61,7 +63,7 @@ class Booking extends \yii\db\ActiveRecord
         return [
             [['name', 'date_start', 'time_start', 'date_end', 'time_end'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id','tags_department'], 'safe'],
             [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
         ];
     }
@@ -161,12 +163,31 @@ class Booking extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);
     }
 
+    //สมาชิกที่จะเข้าร่วมประชุม
+    public function getlistMembers()
+    {
+        return $this->hasMany(BookingDetail::class, ['booking_id' => 'id'])->andOnCondition(['name' => 'meeting_menber']);
+    }
 
     public function listDriverDetails()
     {
     return BookingDetail::find()->where(['name' => 'driver_detail','booking_id' => $this->id])->all();
     }
 
+
+    public function SendMsg($msg)
+    {
+        $message = $msg.$this->reason. 'วันเวลา '.Yii::$app->thaiFormatter->asDate($this->date_start, 'medium').' เวลา' .$this->time_end.' - '. $this->time_end;
+       $data =[];
+        foreach($this->listMembers as $item){
+            if(isset($item->employee->user->line_id)){
+                $lineId = $item->employee->user->line_id;
+                    LineNotify::sendPushMessage($lineId, $message);
+            }
+        }
+        return $data;
+    }
+    
     public function showStartTime()
     {
         try {
@@ -499,5 +520,57 @@ class Booking extends \yii\db\ActiveRecord
                 ]
             ];
         }
+    }
+
+    public function listAccessoryUse()
+    {
+        try {
+            $datas = $this->data_json['accessory'];
+            $item = '<ul>';
+            foreach($datas as $data){
+                $item .= '<li>'.$data.'</li>';
+                
+            }
+            $item .= '</ul>';
+            return $item;
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+
+    public function statusColor()
+    {
+        switch ($this->status) {
+            case 'pending':
+                return 'warning';
+                break;
+            case 'approve':
+                return 'success';
+                break;
+            case 'cancel':
+                return 'danger';
+                break;
+            default:
+                return 'secondary';
+                break;
+        }
+    }
+
+    public function viewStatus()
+    {
+      switch ($this->status) {
+        case 'pending':
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">รออนุมัติ</span>';
+          break;
+        case 'approve':
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">อนุมัติ</span>';
+          break;
+        case 'cancel':
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">ยกเลิก</span>';
+          break;
+        default:
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">ไม่ระบุ</span>';
+          break;
+      }
     }
 }
