@@ -405,6 +405,7 @@ $('.select-image').click(function (e) {
                 data: formData,
                 processData: false,
                 contentType: false,
+                dataType: 'json',
                 success: function (res) {
                     $('.avatar-profile').attr('src', res.img)
                     // await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
