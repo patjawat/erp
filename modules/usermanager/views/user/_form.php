@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
+
 ?>
 
 <style>
@@ -71,15 +72,12 @@ use yii\bootstrap5\ActiveForm;
 
         <div class="card">
             <div class="card-body">
-
-
                 <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'confirm_password')->passwordInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'fullname')->textInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'status')->inline()->radioList($model->getItemStatus()) ?>
-
 
                 <div class="form-group row field-user-email">
                     <label class="col-lg-4 col-md-4 col-sm-4" for="user-email"></label>
@@ -95,9 +93,10 @@ use yii\bootstrap5\ActiveForm;
 
                     </div>
                 </div>
-
                 </div>
-    </div>
+
+                
+            </div>
     
             </div>
             <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">

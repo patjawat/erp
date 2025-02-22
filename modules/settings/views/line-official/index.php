@@ -72,7 +72,7 @@ $this->title = 'ตั้งค่าองค์กร';
         <div class="card">
             <div class="card-body">
             <div class="d-flex justify-content-between">
-                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/profile/line-connec'?></span>
+                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/profile/line-connet'?></span>
                     <p>เชื่อม Line-Connect</p>
                 </div>
                 <?= $form->field($model, 'data_json[line_liff_user_connect]')->textInput()->label(false) ?>
