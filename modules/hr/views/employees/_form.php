@@ -65,16 +65,21 @@ use app\modules\filemanager\components\FileManagerHelper;
                     </div>
                 </div>
                 <div class="col-3 text-center">
+                <input type="file" id="file" accept="image/*" hidden>
+                
                     <input type="file" id="my_file" style="display: none;" />
 
-                    <a href="#" class="select-photo">
+                    <!-- <a href="#" class="select-photo-emp"> -->
                         <?php if($model->isNewRecord):?>
                         <?=Html::img('@web/img/placeholder_cid.png',['class' => 'avatar-profile object-fit-cover rounded shadow','style' =>'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;'])?>
                         <?php else:?>
 
                         <?=Html::img($model->showAvatar(),['class' => 'avatar-profile object-fit-cover rounded shadow','style' =>'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;'])?>
                         <?php endif?>
-                    </a>
+                    <!-- </a>     -->
+                    <span class="select-image btn btn-primary shadow rounded-pill w-50 mt-2"><i
+                        class="fa-solid fa-cloud-arrow-up"></i></span>
+
                     <?=$form->field($model, 'province')->hiddenInput(['maxlength' => true])->label(false) ?>
                     <?=$form->field($model, 'amphure')->hiddenInput(['maxlength' => true])->label(false)  ?>
                     <?=$form->field($model, 'district')->hiddenInput(['maxlength' => true])->label(false)  ?>
@@ -345,10 +350,6 @@ use app\modules\filemanager\components\FileManagerHelper;
 
 
     </div>
-
-
-    
-
     <?php
     $ref = $model->ref;
     $urlUpload = Url::to('/filemanager/uploads/single');
@@ -369,7 +370,55 @@ function getAvatar(){
 });
 
 }
-$(".select-photo").click(function() {
+
+
+
+$('.select-image').click(function (e) { 
+        $('#file').click();
+        
+    });
+    $('#file').on('change', function (e) {
+    const image = this.files[0];
+
+    if (image.size < 2000000) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const imgArea = $('.img-area');
+            imgArea.find('img').remove();
+
+            const imgUrl = reader.result;
+            const img = $('<img>').attr('src', imgUrl);
+            imgArea.append(img).addClass('active').data('img', image.name);
+
+            const file = $('#file').prop('files')[0];
+            const formData = new FormData();
+            formData.append("avatar", file);
+            formData.append("id", 1);
+            formData.append("ref", '$ref');
+            formData.append("name", 'avatar');
+
+            console.log(file);
+
+            $.ajax({
+                url: '$urlUpload',
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    $('.avatar-profile').attr('src', res.img)
+                    // await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
+                }
+            });
+        };
+        reader.readAsDataURL(image);
+    } else {
+        alert("Image size more than 2MB");
+    }
+});
+
+
+$(".select-photo-emp").click(function() {
     $("input[id='my_file']").click();
 });
 

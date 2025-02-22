@@ -56,7 +56,7 @@ class AppAsset extends AssetBundle
         'https://code.highcharts.com/highcharts.js',
         'https://code.highcharts.com/modules/exporting.js',
         'https://unpkg.com/nprogress@0.2.0/nprogress.js',
-        'js/tour.js'
+        // 'js/tour.js'
         // 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
     ];
 

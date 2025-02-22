@@ -55,7 +55,7 @@ $this->title = 'ระบบจองห้องประชุม ';
                     <td><?php echo $item->room->title;?></td>
                     <td class="text-center"><?=$item->status?></td>
                     <td class="text-center">
-                        <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/meeting/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                        <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/meeting/view','id' => $item->id,'title' => 'รายละเอียดขอใช้ห้องประชุม'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                     </td>
                 </tr>
                 <?php endforeach;?>

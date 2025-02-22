@@ -108,10 +108,6 @@ $moduleId = Yii::$app->controller->module->id;
 <?php
 $js = <<< JS
 
-// const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-// const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
-// $('[data-toggle="popover"]').popover({container: 'body' });
-
 const metisMenu = $('.employee-welcome');
 console.log(metisMenu);
 			var scrollBarCont, isfullscreen = false, ddSliderIns;
@@ -158,11 +154,7 @@ console.log(metisMenu);
 						isfullscreen = exitFullScreen(isfullscreen);
 					}
 				});
-
-
-			/**
-			  * Enter into full screen
-			  */
+				
 			function fullScreen(isfullscreen) {
 				var docBrowserElem = document.documentElement
 				if (docBrowserElem.requestFullscreen) {
@@ -178,9 +170,6 @@ console.log(metisMenu);
 				return isfullscreen
 			}
 
-			/**
-			* Exit from full screen
-			*/
 			function exitFullScreen(isfullscreen) {
 				if (document.exitFullscreen) {
 					document.exitFullscreen();
@@ -201,7 +190,6 @@ console.log(metisMenu);
 			    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 			    return new bootstrap.Tooltip(tooltipTriggerEl);
 			    });
-
 
 JS;
 $this->registerJS($js, View::POS_END);
