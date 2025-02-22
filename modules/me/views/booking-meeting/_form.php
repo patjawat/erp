@@ -14,11 +14,16 @@ use app\modules\dms\models\DocumentsDetail;
 $me = UserHelper::GetEmployee();
 $room = Room::findOne(['name' => 'meeting_room','code' => $model->room_id]);
 
-$mappedDataAccessory = ArrayHelper::map(
-    array_map(fn($v) => ['name' => $v], $room->data_json['room_accessory']), 
-    'name', 
-    'name'
-);
+try {
+    $mappedDataAccessory = ArrayHelper::map(
+        array_map(fn($v) => ['name' => $v], $room->data_json['room_accessory']), 
+        'name', 
+        'name'
+    );
+    
+} catch (\Throwable $th) {
+    $mappedDataAccessory = [];
+}
 
 
 ?>
