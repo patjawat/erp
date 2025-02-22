@@ -22,7 +22,13 @@ use app\modules\hr\models\EmployeeDetail;
                     <?php else:?>    
                 <i class="bi bi-check-circle-fill text-primary fs-4"></i>
         <?php endif?>
-            </div>6>
+            </div>
+                <!-- <span class="contact-status offline"></span> -->
+            </div>
+            <div class="flex-grow-1 w-50">
+                <div class="row">
+                    <div class="col-lg-9 col-md-12 col-sm-12 fw-semibold mb-1 d-inline-block text-truncate">
+                        <h6>
                             <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id]) ?>"
                                 class="text-dark"><?= $model->fullname ?> (<code><?= $model->age_y ?></code> ปี)</a>
                         </h6>
@@ -61,7 +67,7 @@ use app\modules\hr\models\EmployeeDetail;
                         <?php if ($model->joinDate()): ?>
                             <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
                                 <code>
-                                        <?php 
+                                <?php 
                                         try {
                                             echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium');
                                         } catch (\Throwable $th) {
