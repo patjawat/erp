@@ -194,7 +194,7 @@ class ApproveController extends Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $approve->leave->getAvatar('ขอ')['avatar'],
+                'title' => isset($approve->leave) ? $approve->leave->getAvatar('ขอ')['avatar'] : '',
                 'content' => $this->renderAjax('@app/modules/hr/views/leave/view', [
                     'model' => $approve->leave,
                 ]),
@@ -212,7 +212,7 @@ class ApproveController extends Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $model->leave->getAvatar('ขอ')['avatar'],
+                'title' => isset($approve->leave) ? $model->leave->getAvatar('ขอ')['avatar'] : '',
                 'content' => $this->renderAjax('leave/form_approve', [
                     'model' => $model,
                 ]),

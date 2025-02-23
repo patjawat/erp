@@ -30,7 +30,7 @@ $moduleId = Yii::$app->controller->module->id;
 }
 
 .welcome-img {
-    z-index: 20;
+    z-index: 2;
 }
 
 @keyframes fadeInLeft {
