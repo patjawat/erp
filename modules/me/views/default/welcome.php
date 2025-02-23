@@ -26,7 +26,7 @@ $totalNotification = NotificationHelper::Info()['total'];
                คุณมี <span class="badge rounded-pill text-bg-danger"><?php echo $totalNotification?></span> กิจกรรมที่ต้องทำ
               </a>
               <?php else:?>
-                <p class="text-white mt-3" style="z-index: 100;">
+                <p class="text-white mt-3" style="z-index: 1;">
                   คุณมี <span class="badge rounded-pill text-bg-danger"><?php echo $totalNotification?></span> กิจกรรมที่ต้องทำ
                 </p>
                   <?php endif;?>

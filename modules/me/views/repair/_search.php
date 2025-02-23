@@ -1,40 +1,54 @@
 <?php
 
+use yii\web\View;
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use kartik\widgets\Select2;
+use kartik\widgets\ActiveForm;
+use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
-/** @var app\modules\sm\models\OrderSearch $model */
+/** @var app\modules\lm\models\LeaveSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="order-search">
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
+<div>
 
-    <?= $form->field($model, 'id')->label(false) ?>
 
-    <?php // echo $form->field($model, 'data_json') ?>
+    <div class="d-flex gap-2">
 
-    <?php // echo $form->field($model, 'updated_at') ?>
 
-    <?php // echo $form->field($model, 'created_at') ?>
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+        
+       <!-- <div class="d-flex justify-content-between gap-2" style="width:250px">
+       <?php echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');?>
+       <?php echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');?>
+      
+            </div> -->
+        <div class="d-flex flex-row mb-3 mt-4">
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
+        </div>
+       
+        
+    
 
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <!-- <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
-    </div> -->
-
-    <?php ActiveForm::end(); ?>
-
+    </div>
 </div>
+<?php ActiveForm::end(); ?>
+
+
+<?php
+
+$js = <<< JS
+    thaiDatepicker('#helpdesksearch-date_start,#helpdesksearch-date_end')
+JS;
+$this->registerJS($js, View::POS_END);
+
+?>

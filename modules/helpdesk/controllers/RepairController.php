@@ -374,7 +374,8 @@ class RepairController extends Controller
 
                 $message = 'แจ้งงานซ่อมจาก ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->data_json['title'] . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
                 try {
-                    $response = Yii::$app->lineNotify->sendMessage($message, $model->repair_group);
+                    //$response = Yii::$app->lineNotify->sendMessage($message, $model->repair_group);
+                    return $this->redirect(['/me/repair']);
                     return [
                         'status' => 'success',
                         'container' => '#helpdesk-container',

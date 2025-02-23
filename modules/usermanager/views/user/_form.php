@@ -3,6 +3,9 @@
 use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
 
+$sql = "SELECT * FROM `auth_item` WHERE `type` = 1 ORDER BY `type` ASC";
+$querys = Yii::$app->db->createCommand($sql)->queryAll();
+
 ?>
 
 <style>
@@ -67,10 +70,7 @@ use yii\bootstrap5\ActiveForm;
     'layout' => 'horizontal',
 ]); ?>
 
-<div class="row" class="shadow">
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-
-        <div class="card">
+<div class="card">
             <div class="card-body">
                 <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
@@ -93,21 +93,48 @@ use yii\bootstrap5\ActiveForm;
 
                     </div>
                 </div>
-                </div>
-
-                
-            </div>
-    
-            </div>
-            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                <?= $form->field($model, 'roles')->checkboxList($model->getAllRoles()) ?>
-               
             </div>
         </div>
+<div class="row">
+<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+        <?= $form->field($model, 'roles')->checkboxList($model->getAllRoles())->label(false) ?>
 
-
-        <!-- /.card-footer -->
     </div>
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+
+        
+
+        <div
+            class="table-responsive"
+        >
+            <table
+                class="table table-primary"
+            >
+                <thead>
+                    <tr>
+                        <th scope="col">ชื่อของสิทธิ</th>
+                        <th scope="col">คำอธิบานเกี่ยวกับสิทธิ</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($querys as $item):?>
+                    <tr class="">
+                        <td scope="row"><?php echo $item['name']?></td>
+                        <td><?php echo $item['description']?></td>
+                    </tr>
+                    <?php endforeach;?>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+</div>
+
+
+<!-- /.card-footer -->
+</div>
 </div>
 
 <?php ActiveForm::end(); ?>
