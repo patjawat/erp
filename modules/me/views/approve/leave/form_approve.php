@@ -26,7 +26,8 @@ $this->params['breadcrumbs'][] = $this->title;
             ?>
 <div class="d-flex justify-content-center flex-column">
     <div class="d-flex justify-content-center">
-        <?php  echo $form->field($model, 'status')->radioList(['Approve' => $model->data_json['topic'], 'Reject' => 'ไม่'.$model->data_json['topic']],['custom' => true, 'inline' => true])->label(false)?>
+        <?php  // echo $form->field($model, 'status')->radioList(['Approve' => $model->data_json['topic'], 'Reject' => 'ไม่'.$model->data_json['topic']],['custom' => true, 'inline' => true])->label(false)?>
+        <?php  echo $form->field($model, 'status')->radioList(['Approve' => 'อนุมัติ', 'Reject' => 'ไม่อนุมัติ'],['custom' => true, 'inline' => true])->label(false)?>
     </div>
     <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
