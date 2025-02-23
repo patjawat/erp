@@ -91,7 +91,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="d-flex justify-content-between align-items-center gap-3">
     
-    <h6 class="text-center text-primary"><i class="fa-solid fa-circle-exclamation text-warning fs-/"></i> ผู้เข้าร่วมประชุมจะได้รับการแจ้งเตือนข้อความหลังจากที่ห้องประชุม</h6>
+    <h6 class="text-center text-primary"><i class="fa-solid fa-circle-exclamation text-warning fs-/"></i> ผู้เข้าร่วมประชุมจะได้รับการแจ้งเตือนข้อความหลังจากที่ห้องประชุมได้รับการจัดสสร</h6>
 
 </div>
 </div>

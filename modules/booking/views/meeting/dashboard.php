@@ -87,13 +87,13 @@ $this->title = "Dashboard"
                             <th width="150px">วันที่ และเวลา</th>
                             <th width="80px">สถานะ</th>
                         </tr>
-                        <tr>
+                        <!-- <tr>
                             <td>ห้องหน่อไม้หวาน</td>
                             <td>ประชุม กกบ.รพร.</td>
                             <td class="text-center p-1">4 ก.พ. 2568 <br>
                                 14:00-14:00 น.</td>
                             <td class="text-center"><span class="badge badge-success">อนุมัติ</span></td>
-                        </tr>
+                        </tr> -->
                     </tbody>
                 </table>
             </div>
@@ -112,13 +112,13 @@ $this->title = "Dashboard"
                             <th width="150px">วันที่ และเวลา</th>
                             <th width="80px">สถานะ</th>
                         </tr>
-                        <tr>
+                        <!-- <tr>
                             <td>ห้องหน่อไม้หวาน</td>
                             <td>ประชุม กกบ.รพร.</td>
                             <td class="text-center p-1">4 ก.พ. 2568 <br>
                                 14:00-14:00 น.</td>
                             <td class="text-center"><span class="badge badge-success">อนุมัติ</span></td>
-                        </tr>
+                        </tr> -->
                     </tbody>
                 </table>
             </div>
