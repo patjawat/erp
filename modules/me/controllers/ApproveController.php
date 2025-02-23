@@ -153,7 +153,7 @@ class ApproveController extends Controller
             //ถ้าหัวหน้ากลุ่ม Approve
             if($approve->level == 2){
                 $leave->status = 'Checking';
-              $leave->save();
+                $leave->save();
           }
 
             // ผุ้ตรวจสอบวันลาก่อนส่งให้ ผอ.
