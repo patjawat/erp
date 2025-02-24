@@ -61,11 +61,8 @@ $products = $cart->getItems();
                         
                         <div class="d-flex justify-content-between">
                             <div class="fw-semibold text-danger">
-                                <i class="fa-solid fa-dollar-sign"></i>
                             <?php echo number_format($model->unit_price,2); ?>
                             </div>
-
-
                                 <?php
                                                 try {
                                                     echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
