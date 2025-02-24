@@ -21,7 +21,7 @@ $this->title ="อยู่ระหว่างรอผู้อำนวน�
 
 <div class="card">
     <div class="card-body">
-<h6>รายการขออนุมติ</h6>
+<h6>รายการขออนุมัติ</h6>
 
     <table
         class="table table-bordered table-sm table-responsive"
@@ -31,7 +31,7 @@ $this->title ="อยู่ระหว่างรอผู้อำนวน�
     
             <tr>
             <th class="text-center"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                <th scope="col" class="text-center">รายการขออนุมติ</th>
+                <th scope="col" class="text-center">รายการขออนุมัติ</th>
                 <th scope="col" class="text-center">หน่วยงาน</th>
                 <?php for ($i=1; $i < 32 ; $i++):?>
                     <th scope="col" class="text-center" style="width: 35px;"><?php echo $i;?></th>

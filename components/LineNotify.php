@@ -128,7 +128,7 @@ class LineNotify extends Component
         $uri = Url::base(true) . Url::to(['/line/approve/leave', 'id' => $approveId]);
         $url = 'https://api.line.me/v2/bot/message/push';
  
-        $altText = 'ขออนุมติ'.$approve->leave->leaveType->title; // ข้อความสำรอง
+        $altText = 'ขออนุมัติ'.$approve->leave->leaveType->title; // ข้อความสำรอง
         $flexContent = [
             'type' => 'bubble',
             'body' => [

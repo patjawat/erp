@@ -120,8 +120,9 @@ class DocumentsController extends Controller
             }
 
             $this->setHttpHeaders($type);
-            \Yii::$app->response->data = file_get_contents($filepath);
-            return \Yii::$app->response;
+            return Yii::$app->response->sendFile($filepath, $filename, ['mimeType' => 'application/pdf', 'inline' => true]);
+            // \Yii::$app->response->data = file_get_contents($filepath);
+            // return \Yii::$app->response;
       
     }
 
