@@ -1023,8 +1023,16 @@ class Employees extends Yii\db\ActiveRecord
 
     public function departmentName()
     {
+     
         try {
-            return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : '';
+            $model = Organization::findOne($this->department);
+            if($model){
+                return $model->name;
+            }else{
+                return 'ไม่ระบุ';
+            }
+            
+            // return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : '';
             // code...
         } catch (\Throwable $th) {
             // throw $th;
