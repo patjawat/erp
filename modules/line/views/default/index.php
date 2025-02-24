@@ -15,66 +15,6 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 
 
 
-<style>
-/* .employee-welcome-card {
-    margin-bottom: 24px;
-    position: relative;
-    background: linear-gradient(90.31deg, #d2ebff -1.02%, #0866ad 99.59%);
-    transition: border-color 0.3s ease, transform 0.3s ease;
-}
-
-.employee-welcome-card::before {
-    z-index: 1;
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 20px;
-    border-radius: 0px 0px 10px 0px;
-    width: 100px;
-    height: 100%;
-    transform: skew(10deg);
-    background: linear-gradient(90.31deg, #5ca1d4 -1.02%, #0866ad 132.59%);
-    animation: fadeIn 1s ease-in-out;
-}
-
-.welcome-img {
-    z-index: 20;
-}
-
-@keyframes fadeInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-50px);
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeInRight {
-    from {
-        opacity: 50;
-        transform: translateX(100px);
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeIn {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-} */
-
-</style>
-
 <!-- <div id="avatar"></div> -->
 <div class="card" style="margin-top:40%" id="loading">
     <div class="card-body">
@@ -86,13 +26,13 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 </div>
 
 <div id="wraperContainer" style="display:none">
+<?php if($me):?>
 
     <div class="page-title-box-line mb-5">
         <div class="d-flex justify-content-between align-items-center mt-5">
             <div class="page-title-line">
 
-                <?php if($me):?>
-
+               
                 <div class="d-flex gap-2">
                     <?=Html::img('@web/banner/banner2.png', ['class' => 'avatar avatar-md me-0 mt-2'])?>
 
@@ -101,7 +41,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
                         <p class="text-white mb-0 fs-13">ERP Hospital</p>
                     </div>
                 </div>
-                <?php endif;?>
+               
             </div>
             <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop"
                 aria-controls="staticBackdrop">
@@ -126,8 +66,9 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 
         </div>
     </div>
+    <?php endif;?>
 
-
+    
 
 
 
