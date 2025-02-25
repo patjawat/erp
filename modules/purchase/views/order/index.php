@@ -72,11 +72,10 @@ if($searchModel->date_between == 'pr_create_date'){
             <thead>
                 <tr>
                     <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
-                    <th class="fw-semibold" style="width:200px">ผู้ขอ/วันเวลา</th>
+                    <th class="fw-semibold" style="width:300px">ผู้ขอ/วันเวลา</th>
                     <th class="fw-semibold" style="width:180px">ประเภท</th>
                     <th class="fw-semibold">เลขที่สั่งซื้อ/ผู้ขาย</th>
-                    <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
-                    <th class="fw-semibold" style="width: 180px;">ผู้เห็นชอบ</th>
+                    <th class="fw-semibold" style="width: 180px;">การตรวจสอบ</th>
                     <th class="fw-semibold text-end" style="width:150px">มูลค่า/ประเภทเงิน</th>
                     <th class="fw-semibold" style="width: 230px;">ความคืบหน้า</th>
                     <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
@@ -96,8 +95,10 @@ if($searchModel->date_between == 'pr_create_date'){
                             <?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?>
                         </div>
                     </td>
-                    <td class="fw-light align-middle"><?= $model->StackComittee() ?></td>
-                    <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
+                    <td class="fw-light align-middle">
+                        <?php // $model->showChecker()['leader']?>
+                        <?php echo $model->StackApprove()?>
+                    </td>
                     <td class="fw-light align-middle text-end">
                         <div class="d-felx flex-column">
                             <div class="fw-semibold ">
@@ -143,11 +144,12 @@ if($searchModel->date_between == 'pr_create_date'){
                         <div class="btn-group">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
                             <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                <i class="bi bi-caret-down-fill"></i>
-                            </button>
+                            data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                            <i class="bi bi-caret-down-fill"></i>
+                        </button>
+                        
+                        <?php if($model->status !== 7):?>
                             <ul class="dropdown-menu">
-
                                 <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                              
 
@@ -166,6 +168,7 @@ if($searchModel->date_between == 'pr_create_date'){
                                 <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                 </li>
                             </ul>
+                            <?php endif;?>
                         </div>
 
                     </td>

@@ -104,13 +104,15 @@ class ApproveController extends Controller
                 if ($approve->level == 4) {
                     $leave->status = 'Allow';
                     $leave->save();
-                    try {
+                    // try {
                         $toUserId = $leave->employee->user->line_id;
-                        $flexContent = 'วันลาขอคุณได้รับการอนุมัติแล้ว';
-                        LineNotify::sendFlexMessage($toUserId, $altText, $flexContent);
-                    } catch (\Throwable $th) {
-                        //throw $th;
-                    }
+                        $message = 'วันลาขอคุณได้รับการอนุมัติแล้ว';
+                        LineNotify::sendPushMessage(toUserId, $message);
+                          // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
+                
+                    // } catch (\Throwable $th) {
+                    //     //throw $th;
+                    // }
                 } else if ($approve->status == 'Reject') {
                     $leave->status = 'Reject';
                     $leave->save();

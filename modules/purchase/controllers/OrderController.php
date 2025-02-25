@@ -2,23 +2,24 @@
 
 namespace app\modules\purchase\controllers;
 
-use app\models\Categorise;
-use app\modules\am\models\Asset;
-use app\modules\am\models\AssetSearch;
-use app\modules\am\models\AssetItem;
-use app\modules\hr\models\Employees;
-use app\modules\purchase\models\Order;
-use app\modules\purchase\models\OrderSearch;
-use app\modules\sm\models\Product;
-use app\modules\sm\models\ProductSearch;
-use app\components\AppHelper;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
+use Yii;
 use yii\web\Response;
 use yii\db\Expression;
-use Yii;
+use yii\web\Controller;
+use app\models\Categorise;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\am\models\Asset;
+use app\modules\sm\models\Product;
+use yii\web\NotFoundHttpException;
+use app\modules\am\models\AssetItem;
+use app\modules\hr\models\Employees;
+use app\modules\am\models\AssetSearch;
+use app\modules\purchase\models\Order;
+use app\modules\sm\models\ProductSearch;
+use app\modules\purchase\models\OrderSearch;
 
 /**
  * OrderController implements the CRUD actions for Order model.
@@ -52,6 +53,9 @@ class OrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        if(!Yii::$app->user->can('purchase')){
+            $dataProvider->query->andFilterWhere(['created_by' => Yii::$app->user->id]);
+        }
         $dataProvider->query->andFilterWhere(['name' => 'order']);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -93,12 +97,26 @@ class OrderController extends Controller
      */
     public function actionView($id)
     {
+        
+        $me = UserHelper::GetEmployee();
         $model =  $this->findModel($id);
         \Yii::$app->session->set('order', $model);
 
+        //ถ้าเป็นเจ้าหน้าที่จัดซื้อ
+        if(Yii::$app->user->can('purchase')){
         return $this->render('view', [
             'model' => $model,
         ]);
+        }else{
+            // ถ้าเป็น user ทั่วไป
+            if(($model->created_by == Yii::$app->user->id)){
+                return $this->render('view', [
+                    'model' => $model,
+                ]);
+            }
+        }
+       
+
     }
 
     /**

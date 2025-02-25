@@ -197,6 +197,31 @@ class EmployeesController extends Controller
         ]);
     }
 
+
+    // ตรวจสอบความถูกต้อง
+    public function actionCreateValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Employees();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $requiredName = 'ต้องระบุ';
+            return str_split(str_replace('-', '', $model->cid));
+            $checkCid = Employees::findOne(['cid' => str_split(str_replace('-', '', $model->cid))]);
+            return $checkCid;
+
+            // $checkCid  ? $model->addError('cid', 'เลขบัตรประชาขนซ้ำ...') : null;
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
+    
     /**
      * Creates a new Employees model.
      * If creation is successful, the browser will be redirected to the 'view' page.

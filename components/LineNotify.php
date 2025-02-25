@@ -22,6 +22,35 @@ class LineNotify extends Component
         // }
     }
 
+
+    //ส่ง ข้อความ
+    public static function PushMsg($data)
+    {
+
+       $getData = Categorise::find()->where(['name' => 'site'])->one();
+       $channelAccessToken = $getData->data_json['line_channel_token'];
+       $url = 'https://api.line.me/v2/bot/message/push';
+
+
+        $client = new Client();
+        $response = $client->createRequest()
+            ->setMethod('POST')
+            ->setUrl($url)
+            ->addHeaders([
+                'Authorization' => 'Bearer ' . $channelAccessToken,
+                'Content-Type' => 'application/json',
+            ])
+            ->setContent(json_encode($data))
+            ->send();
+
+        if (!$response->isOk) {
+            Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
+            return false;
+        }
+
+        return true;
+    }
+    
     public function sendMessage($message, $groupId)
     {
         try {
@@ -50,9 +79,7 @@ class LineNotify extends Component
 
     public static function sendPushMessage($userId, $message)
     {
-        $token = Categorise::find()->where(['name' => 'site'])->one();
-        $channelAccessToken = $token->data_json['line_channel_token'];
-        $url = 'https://api.line.me/v2/bot/message/push';
+      
         $data = [
             'to' => $userId,
             'messages' => [
@@ -63,22 +90,8 @@ class LineNotify extends Component
             ],
         ];
 
-        $client = new Client();
-        $response = $client->createRequest()
-            ->setMethod('POST')
-            ->setUrl($url)
-            ->addHeaders([
-                'Authorization' => 'Bearer ' . $channelAccessToken,
-                'Content-Type' => 'application/json',
-            ])
-            ->setContent(json_encode($data))
-            ->send();
-
-        if (!$response->isOk) {
-            Yii::error('Failed to send LINE message: ' . $response->content, __METHOD__);
-            return false;
-        }
-
+        //ส่งข้อความ
+        self::PushMsg($data);
         return true;
     }
 
@@ -118,16 +131,78 @@ class LineNotify extends Component
  
          return true;
      }
+
+     //ส่งข้อความขอนุมัติจัดซื้อจัดจ้าง
+     public static function sendPurchase($approveId,$userId)
+     {
+        $approve = Approve::findOne($approveId);
+        $uri = Url::base(true) . Url::to(['/line/purchase/approve', 'id' => $approveId]);
+
+        try {
+            $orderTypeName =  $approve->purchase->data_json['order_type_name'];
+        } catch (\Throwable $th) {
+            $orderTypeName = '';
+        }
+        
+        $altText = 'ขออนุมัติจัดซื้อจัดจ้าง'; // ข้อความสำรอง
+        $flexContent = [
+            'type' => 'bubble',
+            'body' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'text',
+                        'text' => $altText,
+                        'weight' => 'bold',
+                        'size' => 'xl',
+                    ],
+                    [
+                        'type' => 'text',
+                        'text' => $orderTypeName,
+                        'size' => 'md',
+                        'wrap' => true,
+                    ],
+                ],
+            ],
+            'footer' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'button',
+                        'style' => 'primary',
+                        'action' => [
+                            'type' => 'uri',
+                            'label' => 'ดำเนินการ',
+                            'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        
+         $data = [
+             'to' => $userId,
+             'messages' => [
+                 [
+                     'type' => 'flex',
+                     'altText' => $altText,
+                     'contents' => $flexContent,
+                 ],
+             ],
+         ];
+        //ส่งข้อความ
+         self::PushMsg($data);
+         return true;
+     }
+     
      // ฟังก์ชันส่ง Flex Message
      public static function sendLeave($approveId,$userId)
      {
-
-        $token = Categorise::find()->where(['name' => 'site'])->one();
-        $channelAccessToken = $token->data_json['line_channel_token'];
         $approve = Approve::findOne($approveId);
         $uri = Url::base(true) . Url::to(['/line/approve/leave', 'id' => $approveId]);
-        $url = 'https://api.line.me/v2/bot/message/push';
- 
+
         $altText = 'ขออนุมัติ'.$approve->leave->leaveType->title; // ข้อความสำรอง
         $flexContent = [
             'type' => 'bubble',
@@ -159,7 +234,6 @@ class LineNotify extends Component
                         'action' => [
                             'type' => 'uri',
                             'label' => 'ดำเนินการ',
-                            // 'uri' => Url::base(true).'/line/leave' // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
                             'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
                         ],
                     ],
@@ -177,23 +251,8 @@ class LineNotify extends Component
                  ],
              ],
          ];
- 
-         $client = new Client();
-         $response = $client->createRequest()
-             ->setMethod('POST')
-             ->setUrl($url)
-             ->addHeaders([
-                 'Authorization' => 'Bearer ' . $channelAccessToken,
-                 'Content-Type' => 'application/json',
-             ])
-             ->setContent(json_encode($data))
-             ->send();
- 
-         if (!$response->isOk) {
-             Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
-             return false;
-         }
- 
+        //ส่งข้อความ
+         self::PushMsg($data);
          return true;
      }
 

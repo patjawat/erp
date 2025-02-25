@@ -10,6 +10,7 @@ use app\models\Approve;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\sm\models\Product;
@@ -227,13 +228,16 @@ class Order extends \yii\db\ActiveRecord
     // กำหนดคนอนุมัติ
     public function createApprove()
     {
+        $emp = Employees::find()->where(['user_id' => $this->created_by])->one();
+        $Approve1 = ($emp->id == $this->data_json['leader1']) ? 'Approve' : $item['status'];
+
         $listApprove = [
             [
                 'level' => 1,
                 'name' => 'purchase',
                 'emp_id' => $this->data_json['leader1'],
                 'title' => 'หัวหน้าลงความเห็นชอบ',
-                'status' => 'Pending',
+                'status' =>  ($Approve1 ? 'Approve' : 'Pending'),
                 'label' => 'เห็นชอบ'
             ],
             [
@@ -241,8 +245,8 @@ class Order extends \yii\db\ActiveRecord
                 'name' => 'purchase',
                 'emp_id' => '',
                 'title' => 'จนท.พัสดุตรวจสอบ',
-                'status' => 'None',
-                'label' => 'ผ่าน'
+                'status' => ($Approve1 ? 'Pending' : 'None'),
+                'label' => 'ตรวจสอบ'
             ],
             [
                 'level' => 3,
@@ -254,19 +258,33 @@ class Order extends \yii\db\ActiveRecord
             ]
         ];
 
+
         foreach ($listApprove as $item) {
-            $newItem = new Approve([
-                'from_id' => $this->id,
-                'level' => $item['level'],
-                'name' => 'purchase',
-                'emp_id' => $item['emp_id'],
-                'title' => $item['title'],
-                'status' => $item['status'],
-                'data_json' => [
-                    'label' => $item['label']
-                ]
-            ]);
-            $newItem->save(false);
+           
+
+            //ถ้าหากผู้ขอซื้อกับผู้เห็นชอบ เป็น คนเดียวกันให้สถานะเป็น เห็นชอบได้เลย
+            $status = ($emp->id == $item['emp_id']) ? 'Approve' : $item['status'];
+            
+           
+
+                $newItem = new Approve([
+                    'from_id' => $this->id,
+                    'level' => $item['level'],
+                    'name' => 'purchase',
+                    'emp_id' => $item['emp_id'],
+                    'title' => $item['title'],
+                    'status' => $item['status'],
+                    'data_json' => [
+                        'label' => $item['label'],
+                        ]
+                    ]);
+                    $newItem->save(false);
+                      //ส่งข้อความและผุ้อนุมัติไม่ใช่ตัวเอง
+                      if($item['level'] == 1){
+                        $employeeLeader = Employees::find()->where(['user_id' => $item['emp_id']])->one();
+                        LineNotify::sendPurchase($newItem->id, $employeeLeader->user->line_id);
+                    }
+                    
         }
     }
 
@@ -275,6 +293,14 @@ class Order extends \yii\db\ActiveRecord
     {
         return  Approve::find()->where(['from_id' => $this->id,'name' => 'purchase'])->all();
     }
+
+    //แสดงขั้นตอนการ approve
+    public function getApprove()
+    {
+        return  Approve::find()->where(['from_id' => $this->id,'name' => 'purchase','status' => 'Pending'])->one();
+    }
+
+    
 
     // คำนวนเวลารับประหัน
     public function deliveryDay()
@@ -487,6 +513,48 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
+
+
+    //list avatar การตรวจสอบ
+    public function StackApprove()
+    {
+        // try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (Approve::find()->where(['name' => 'purchase', 'from_id' => $this->id])->andWhere(['IN','status',['Approve','Reject']])->all() as $key => $item) {
+            $emp = Employees::findOne(['id' => $item->emp_id]);
+            $status = ($item->status == 'Approve') ? $item->data_json['label'] : 'ไม่' . $item->data_json['label'];
+            
+            $data .= Html::a(
+                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $emp ? $emp->showAvatar() : null
+                    ]]),
+                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                [
+                    'class' => 'open-modal popover-hover',
+                    'data' => [
+                        'size' => 'modal-md',
+                        'bs-trigger' => 'hover focus',
+                        'bs-toggle' => 'popover',
+                        'bs-custom-class' => "custom-popover",
+                        'bs-placement' => 'top',
+                        'bs-title' => $status,
+                        'bs-html' => 'true',
+                        'bs-content' => $emp ? ($emp->fullname . '<br>' . $emp->positionName().$item->status) : ''
+                    ]
+                ]
+            );
+        }
+        $data .= '</div>';
+        return $data;
+        // } catch (\Throwable $th) {
+        // }
+    }
+
+    
     //  ภาพทีมคณะกรรมการ
     public function StackComittee()
     {

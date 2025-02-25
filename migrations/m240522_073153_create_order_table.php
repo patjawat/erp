@@ -76,6 +76,7 @@ class m240522_073153_create_order_table extends Migration
             $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'order_status', 'title' => 'ตรวจรับวัสดุ', 'active' => 1,'data_json' => ['color' => 'info']]);
             $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'order_status', 'title' => 'วัสดุเข้าคลัง', 'active' => 1,'data_json' => ['color' => 'info']]);
             $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'order_status', 'title' => 'ส่งบัญชี', 'active' => 1,'data_json' => ['color' => 'success']]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '7', 'name' => 'order_status', 'title' => 'ยกเลิก', 'active' => 1,'data_json' => ['color' => 'secondary']]);
         }
 
     }

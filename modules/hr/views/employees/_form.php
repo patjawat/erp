@@ -18,6 +18,8 @@ use app\modules\filemanager\components\FileManagerHelper;
 <div class="employees-form p-3">
     <?php $form = ActiveForm::begin([
         'id' => 'form-employee',
+        'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+        'validationUrl' => ['/hr/employees/create-validator'],
         ]); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 

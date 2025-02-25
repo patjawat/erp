@@ -54,9 +54,9 @@ $items = [
         
     ],
     [
-        'title' => 'พัสดุ',
+        'title' => 'พัสดุ/จัดซื้อ',
         'icon' => 'bi bi-box fs-1',
-        'url' => ['/sm'],
+        'url' => ['/purchase/order'],
         'padding' => 'p-2',
         'show' => Yii::$app->user->can('purchase') ? true : false,
         // 'show' => true

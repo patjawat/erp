@@ -20,41 +20,31 @@ use yii\web\NotFoundHttpException;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\hr\models\LeavePermission;
 
-class ApproveController extends \yii\web\Controller
+class PurchaseController extends \yii\web\Controller
 {
-    public function beforeAction($action)
-    {
-        if (Yii::$app->user->isGuest) {
-            return $this->redirect(['/line/profile']);
-        }
+    // public function beforeAction($action)
+    // {
+    //     if (Yii::$app->user->isGuest) {
+    //         return $this->redirect(['/line/profile']);
+    //     }
 
-        return parent::beforeAction($action);
-    }
+    //     return parent::beforeAction($action);
+    // }
 
     public function actionIndex()
     {
         return $this->render('index');
     }
 
-    public function actionSaveApprove()
+    public function actionApprove($id)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-    }
 
-    public function actionLeave()
-    {
         $id = $this->request->get('id');
         $me = UserHelper::GetEmployee();
         // $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
         $model = Approve::findOne(['id' => $id]);
+        $order = Leave::findOne($model->from_id);
 
-        $leave = Leave::findOne($model->from_id);
-        if (!$model) {
-            return [
-                'title' => 'แจ้งเตือน',
-                'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
-            ];
-        }
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -72,25 +62,12 @@ class ApproveController extends \yii\web\Controller
                     try {
                         // ส่ง msg ให้คนถัดไป 
                         $toUserId = $nextApprove->employee->user->line_id;
-                        LineNotify::sendLeave($nextApprove->id, $toUserId);
+                        LineNotify::sendPurchase($nextApprove->id, $toUserId);
                     } catch (\Throwable $th) {
                         $toUserId = '';
-
                     }
                 }
-
-                // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
-                if ($model->level == 4) {
-                    $leave->status = 'Allow';
-                    $leave->save();
-                } else if ($model->status == 'Reject') {
-                    $leave->status = 'Reject';
-                    $leave->save();
-                } else {
-                    $leave->status = 'Checking';
-                    $leave->save();
-                }
-
+                return $this->redirect(['/line/purchase/approve','id' => $model->id]);
                 return [
                     'status' => 'success',
                     'container' => '#leave',
@@ -99,6 +76,30 @@ class ApproveController extends \yii\web\Controller
                 ];
             }
         }
+        
+        
+        // \Yii::$app->response->format = Response::FORMAT_JSON;
+        return $this->render('_form_approve',[
+            'model' => $model
+        ]);
+    }
+
+    public function actionLeave()
+    {
+        $id = $this->request->get('id');
+        $me = UserHelper::GetEmployee();
+        // $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
+        $model = Approve::findOne(['id' => $id]);
+
+       
+        
+        if (!$model) {
+            return [
+                'title' => 'แจ้งเตือน',
+                'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
+            ];
+        }
+        
         return $this->render('leave/form_approve', [
             'model' => $model,
         ]);

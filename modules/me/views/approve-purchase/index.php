@@ -58,7 +58,7 @@ $this->title = "อนุมัติจัดซื้อจัดจ้าง"
                     
                     <td class="fw-light">
                     <div class="d-flex gap-2 justify-content-center">
-                            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x"></i>',['/me/approve-purchase/view', 'id' => $item->purchase->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x"></i>',['/me/approve-purchase/view', 'id' => $item->id,'title' => 'ขออนุมัติซื้อ'. (isset( $item->purchase->data_json['order_type_name']) ? $item->purchase->data_json['order_type_name'] : '')],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                             </div>
                     </td>
                 </tr>

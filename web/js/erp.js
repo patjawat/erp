@@ -1,26 +1,23 @@
-
-
-$('#page-content').show()
-$('#loader').hide()
+$("#page-content").show();
+$("#loader").hide();
 
 window.onbeforeunload = function () {
-  $('#page-content').hide()
-  $('#loader').show()
+  $("#page-content").hide();
+  $("#loader").show();
   // NProgress.start();
-
 };
 
 jQuery(document).on("pjax:start", function () {
   // NProgress.start();
-  $('#page-content').hide()
-  $('#loader').show()
-  
+  $("#page-content").hide();
+  $("#loader").show();
+
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   // NProgress.done();
-  $('#page-content').show()
-$('#loader').hide()
+  $("#page-content").show();
+  $("#loader").hide();
 });
 
 // focus เวลาเปิก select2
@@ -29,7 +26,6 @@ $(document).on("select2:open", () => {
     .querySelector(".select2-container--open .select2-search__field")
     .focus();
 });
-
 
 $(".link-loading").click(function (e) {
   $(".loading-page").show();
@@ -95,11 +91,9 @@ function warning($msg = "") {
   });
 }
 
-
-function confirm(text)
-{
-   Swal.fire({
-    title: 'ยืนยัน',
+function confirm(text) {
+  Swal.fire({
+    title: "ยืนยัน",
     text: text,
     icon: "warning",
     showCancelButton: true,
@@ -112,20 +106,18 @@ function confirm(text)
   });
 }
 $("body").on("click", ".setview", function (e) {
-  var url = $(this).attr('href');
-          e.preventDefault();
-          $.ajax({
-              type: "get",
-              url: url,
-              dataType: "json",
-              success: function (res) {
-                  console.log(res);
-                  location.reload();
-                  
-              }
-          });
-      });
-      
+  var url = $(this).attr("href");
+  e.preventDefault();
+  $.ajax({
+    type: "get",
+    url: url,
+    dataType: "json",
+    success: function (res) {
+      console.log(res);
+      location.reload();
+    },
+  });
+});
 
 $("body").on("click", ".open-modal", function (e) {
   e.preventDefault();
@@ -147,13 +139,13 @@ $("body").on("click", ".open-modal", function (e) {
       $(".modal-content").addClass("card-outline card-primary");
     },
     error: function (xhr) {
-
-      $("#main-modal-label").html('เกิดข้อผิดพลาด');
-      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
+      $("#main-modal-label").html("เกิดข้อผิดพลาด");
+      $(".modal-body").html(
+        '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
+      );
       $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
       $(".modal-dialog").addClass("modal-md");
       console.log(xhr);
-      
 
       // if error occured
       // alert("Error occured.please try again");
@@ -177,8 +169,6 @@ $("body").on("click", ".open-modal", function (e) {
   });
 });
 
-
-
 $("body").on("click", ".open-sub-modal", function (e) {
   e.preventDefault();
   var url = $(this).attr("href");
@@ -199,7 +189,6 @@ $("body").on("click", ".open-sub-modal", function (e) {
       // $(".modal-content").addClass("card-outline card-primary");
     },
     error: function (xhr) {
-
       // $("#sub-modal-label").html('เกิดข้อผิดพลาด');
       // $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
       // $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
@@ -207,7 +196,6 @@ $("body").on("click", ".open-sub-modal", function (e) {
     },
   });
 });
-
 
 $("body").on("click", ".open-modal-fullscreen", function (e) {
   e.preventDefault();
@@ -228,50 +216,46 @@ $("body").on("click", ".open-modal-fullscreen", function (e) {
       $(".modal-content").addClass("card-outline card-primary");
     },
     error: function (xhr) {
-      $("#fullscreen-modal-label").html('เกิดข้อผิดพลาด');
-      $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
+      $("#fullscreen-modal-label").html("เกิดข้อผิดพลาด");
+      $(".modal-body").html(
+        '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
+      );
       $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
       $(".modal-dialog").addClass("modal-md");
     },
   });
 });
 
-
-
 $("body").on("click", ".confirm-order", async function (e) {
   e.preventDefault();
-  var title = $(this).data('title');
-  var text = $(this).data('text');
-await Swal.fire({
-  title: title,
-  text: text,
-  icon: "warning",
-  showCancelButton: true,
-  confirmButtonColor: "#3085d6",
-  cancelButtonColor: "#d33",
-  confirmButtonText: "ใช่, ยืนยัน!",
-  cancelButtonText: "ยกเลิก",
-}).then(async (result) => {
-  if (result.value == true) {
-    await $.ajax({
-      type: "post",
-      url: $(this).attr('href'),
-      dataType: "json",
-      success: async function (response) {
-        if (response.status == "success") {
-          location.reload();
-          // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-          success(text+"บัำเร็จ!.");
-        }
-      },
-      
-    });
-  }
+  var title = $(this).data("title");
+  var text = $(this).data("text");
+  await Swal.fire({
+    title: title,
+    text: text,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ยืนยัน!",
+    cancelButtonText: "ยกเลิก",
+  }).then(async (result) => {
+    if (result.value == true) {
+      await $.ajax({
+        type: "post",
+        url: $(this).attr("href"),
+        dataType: "json",
+        success: async function (response) {
+          if (response.status == "success") {
+            location.reload();
+            // await  $.pjax.reload({container:response.container, history:false,url:response.url});
+            success(text + "บัำเร็จ!.");
+          }
+        },
+      });
+    }
+  });
 });
-
-});
-
-
 
 $("body").on("click", ".delete-item", async function (e) {
   e.preventDefault();
@@ -295,17 +279,17 @@ $("body").on("click", ".delete-item", async function (e) {
         type: "post",
         url: url,
         dataType: "json",
-        success:  function (response) {
+        success: function (response) {
           if (response.status == "success") {
             // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-             $.pjax.reload({
+            $.pjax.reload({
               container: response.container,
               history: false,
               url: response.url,
             });
             success("ดำเนินการลบสำเร็จ!.");
             if (response.close) {
-               $("#main-modal").modal("hide");
+              $("#main-modal").modal("hide");
             }
           }
         },
@@ -368,8 +352,6 @@ $("body").on("click", ".select-employee", function (e) {
     }
   });
 });
-
-
 
 $(".show-setting").on("click", function () {
   $(".right-setting").addClass("show");

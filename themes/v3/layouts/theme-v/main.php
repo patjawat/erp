@@ -70,6 +70,8 @@ $moduleId = Yii::$app->controller->module->id;
 .tooltip.bs-tooltip-top .tooltip-arrow::before {
     border-top-color: #2f4fff !important;
 }
+
+
 </style>
 
 <body>
@@ -79,12 +81,10 @@ $moduleId = Yii::$app->controller->module->id;
     <?php echo $this->render('../modal-fullscreen'); ?>
     <?php echo $this->render('offcanvas'); ?>
     <main role="main">
-
+	<?php if(!Yii::$app->user->isGuest):?>
         <div class="page-wrapper">
             <?php echo $this->render('header'); ?>
-			
             <?php echo $this->render('sidebar'); ?>
-
             <div class="main-content">
                 <div class="page-content">
                     <?php echo $this->render('page_title'); ?>
@@ -103,11 +103,27 @@ $moduleId = Yii::$app->controller->module->id;
             <?php echo $this->render('footer'); ?>
 			<?php echo $this->render('right_setting'); ?>
         </div>
+		<?php endif;?>
     </main>
 
 <?php
 $js = <<< JS
 
+
+
+let popover = new bootstrap.Popover($(".popover-hover"), {
+  trigger: "manual",
+});
+
+$(".popover-hover")
+  .on("mouseenter", function () {
+    popover.show();
+  })
+  .on("mouseleave", function () {
+    popover.hide();
+  });
+
+  
 const metisMenu = $('.employee-welcome');
 console.log(metisMenu);
 			var scrollBarCont, isfullscreen = false, ddSliderIns;

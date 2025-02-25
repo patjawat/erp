@@ -22,6 +22,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'purchase-container']); ?>
+
+
 <div class="row">
     <div class="col-8">
 

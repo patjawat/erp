@@ -19,7 +19,7 @@ $totalPurchase = $notify['purchase']['total'];
 
     <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
         <div class="col">
-            <a href="<?php echo Url::to(['/me/approve?name=leave'])?>">
+            <a href="<?php echo Url::to(['/me/approve-leave'])?>">
                 <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalLeave >=1):?>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalLeave?></span>
@@ -35,7 +35,7 @@ $totalPurchase = $notify['purchase']['total'];
         </div>
 
         <div class="col">
-            <a href="<?php echo Url::to(['/me/approve?name=purchase'])?>">
+            <a href="<?php echo Url::to(['/me/approve-purchase'])?>">
             <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalPurchase >=1):?>
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalPurchase?></span>

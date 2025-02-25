@@ -225,29 +225,40 @@ try {
 
     thaiDatepicker('#order-data_json-pr_create_date,#order-data_json-due_date')
     $('#form-order').on('beforeSubmit', function (e) {
-                var form = \$(this);
-                \$.ajax({
-                    url: form.attr('action'),
-                    type: 'post',
-                    data: form.serialize(),
-                    dataType: 'json',
-                    success: async function (response) {
-                        console.log(response)
-                        form.yiiActiveForm('updateMessages', response, true);
-                        if(response.status == 'success') {
-                            // closeModal()
-                            // success()
-                            try {
-                                // loadRepairHostory()
-                            } catch (error) {
-                                
-                            }
-                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                        }
+        var form = \$(this);
+        Swal.fire({
+        title: "ยืนยัน?",
+        text: "บันทึกขออนุมัติจัดซื้อจัดจ้าง!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก!",
+        confirmButtonText: "ใช่, ยืนยัน!"
+        }).then((result) => {
+        if (result.isConfirmed) {
+            beforLoadModal()
+            \$.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: async function (response) {
+                    form.yiiActiveForm('updateMessages', response, true);
+                    if(response.status == 'success') {
+                        // closeModal()
+                        success()
+                        await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                     }
-                });
+                }
+            });
+
+        }
+        });
                 return false;
             });
+
+            
 
 
 

@@ -24,37 +24,38 @@ $this->params['breadcrumbs'][] = $this->title;
                     'validationUrl' => ['/me/leave/approve-validator'],
                 ])
             ?>
-<div class="d-flex justify-content-center flex-column">
-    <div class="d-flex justify-content-center">
-        <?php  // echo $form->field($model, 'status')->radioList(['Approve' => $model->data_json['topic'], 'Reject' => 'ไม่'.$model->data_json['topic']],['custom' => true, 'inline' => true])->label(false)?>
-        <?php  echo $form->field($model, 'status')->radioList(['Approve' => 'อนุมัติ', 'Reject' => 'ไม่อนุมัติ'],['custom' => true, 'inline' => true])->label(false)?>
-    </div>
-    <div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-</div>
-</div>
+        <div class="d-flex justify-content-center flex-column">
+            <div class="d-flex justify-content-center">
+                <?php  // echo $form->field($model, 'status')->radioList(['Approve' => $model->data_json['topic'], 'Reject' => 'ไม่'.$model->data_json['topic']],['custom' => true, 'inline' => true])->label(false)?>
+                <?php  echo $form->field($model, 'status')->radioList(['Approve' => 'อนุมัติ', 'Reject' => 'ไม่อนุมัติ'],['custom' => true, 'inline' => true])->label(false)?>
+            </div>
+            <div class="form-group mt-3 d-flex justify-content-center">
+                <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+            </div>
+        </div>
 
 
 
-<?php ActiveForm::end(); ?>
+        <?php ActiveForm::end(); ?>
     </div>
     <div class="col-4">
-    <?php echo $this->render('@app/modules/hr/views/leave/view_summary',['model' => $model->leave])?>
-    <div class="d-flex justify-content-center">
+        <?php echo $this->render('@app/modules/hr/views/leave/view_summary',['model' => $model->leave])?>
+        <div class="d-flex justify-content-center">
 
-        <button class="btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-            <i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม
-        </button>  
-    </div>
-    
+            <button class="btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                <i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม
+            </button>
+        </div>
+
 
 
     </div>
 
 </div>
 <div class="collapse" id="collapseExample">
-        <div id="viewHistory"></div>
-        <?php echo $this->render('@app/modules/hr/views/leave/history',['model' => $model->leave])?>
+    <div id="viewHistory"></div>
+    <?php echo $this->render('@app/modules/hr/views/leave/history',['model' => $model->leave])?>
 </div>
 
 

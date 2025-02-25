@@ -2,12 +2,12 @@
 
 namespace app\modules\sm\models;
 
+use Yii;
 use yii\helpers\Html;
 use app\models\Categorise;
-use app\modules\filemanager\components\FileManagerHelper;
 use yii\helpers\ArrayHelper;
 use app\modules\filemanager\models\Uploads;
-use Yii;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "asset".
@@ -133,6 +133,20 @@ class Product extends \yii\db\ActiveRecord
                                 </div>
                             </div>';
     }
+
+    //แสดงสำหรับ line
+    public function AvatarLine($msg = null){
+        return '<div class="d-flex">
+        '.Html::img($this->ShowImg(),['class' => 'avatar']).'
+                                <div class="avatar-detail">
+                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        '.$this->title.'
+                                    </h6>
+                                    <span class="text-primary fw-semibold">'. $msg.'</span>
+                                </div>
+                            </div>';
+    }
+
 
 
     //แสดงรูปแบบประเภท

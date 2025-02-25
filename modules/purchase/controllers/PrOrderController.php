@@ -6,6 +6,7 @@ use Yii;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
+use app\models\Approve;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -113,6 +114,7 @@ class PrOrderController extends Controller
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $oldObj = $model->data_json;
                 $vendor = $model->vendor;
+                
                 $model->data_json = [
                     'pr_create_date' => AppHelper::convertToGregorian($model->data_json['pr_create_date']),
                     'due_date' => AppHelper::convertToGregorian($model->data_json['due_date']),
@@ -366,14 +368,23 @@ class PrOrderController extends Controller
     // จนท.พัสดุตรวจสอบ
     public function actionCheckerConfirm($id)
     {
-        $model = $this->findModel($id);
+        // $model = $this->findModel($id);
+        $model = Approve::findOne($id);
+        $me = UserHelper::GetEmployee();
 
         $oldObj = $model->data_json;
         if ($model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-
+            $model->emp_id = $me->id;
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             $model->save(false);
+            
+            //ส่งให้ผู้อำนวยการอนุมัติ
+            $approve = Approve::findOne(['from_id' => $model->purchase->id,'name' => 'purchase','level' => 3]);
+            if($approve){
+                 $approve->status = 'Pending';
+                $approve->save(false);
+            }
 
             return [
                 'status' => 'success',
@@ -388,7 +399,7 @@ class PrOrderController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $model->getMe()['avatar'],
+                'title' => $me['avatar'],
                 'content' => $this->renderAjax('_checker_confirm', [
                     'model' => $model,
                 ]),
@@ -480,7 +491,6 @@ class PrOrderController extends Controller
     public function actionPrConfirm($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        try {
             $thaiYear = substr(AppHelper::YearBudget(), 2);
             $model = $this->findModel($id);
             $user = UserHelper::GetEmployee();
@@ -496,8 +506,11 @@ class PrOrderController extends Controller
             $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
             $model->status = 1;
             $model->approve = 'Y';
+             $model->createApprove();
             if ($model->save()) {
-                $model->createApprove();
+                //ส่งขออนุมัติ
+             
+                return $this->redirect(['/purchase/order']);
                 return [
                     'status' => 'success',
                     'container' => '#purchase-container',
@@ -508,12 +521,7 @@ class PrOrderController extends Controller
                     'container' => '#purchase-container',
                 ];
             }
-        } catch (\Throwable $th) {
-            return [
-                'status' => 'error',
-                'container' => '#purchase-container',
-            ];
-        }
+      
     }
 
     // อนุมัติตาม status
