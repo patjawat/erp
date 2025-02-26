@@ -49,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <polyline points="7 7 17 7 17 17"></polyline>
                     </svg>
                 </h1>
-                <p class="text-muted small">ที่นั้ง : <?php echo $item->data_json['seat_capacity'] ?? '-'?></p>
+                <p class="text-muted small">ที่นั่ง : <?php echo $item->data_json['seat_capacity'] ?? '-'?></p>
 
                 <div class="d-flex justify-content-between gap-3">
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/booking/room/update','id' => $item->id,'title' => 'แก้ไข'],['class' => 'btn btn-warning w-50 mt-4 open-modal rounded-pill','data' => ['size' => 'modal-lg']])?>

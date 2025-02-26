@@ -71,7 +71,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                     <?php  echo  $content; ?>
                 </div>
                 <div id="loader">
-                    <?php // echo $this->render('loader'); ?>
+                    <?php  echo $this->render('loader'); ?>
 
                 </div>
             </div>
