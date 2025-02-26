@@ -216,6 +216,7 @@ class BookingMeetingController extends \yii\web\Controller
                 // $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'pending';
                 if($model->save(false)){
+                    // return $model->room->showOwner()['line_id'] ?? 'ไม่ระบุ';
                     return $this->redirect(['view', 'id' => $model->id]);
                     // return $this->redirect(['index']);
 

@@ -98,14 +98,22 @@ class Room extends \yii\db\ActiveRecord
         }
     }
 
-    // ผู้ดูแล
+    // ผู้ดูแลห้องประชุม
     public function showOwner()
     {
         try {
+            
             $emp = Employees::findOne($this->data_json['owner']);
-            return $emp->getAvatar(false,'ผู้ดูแล');
+            return[
+                'avatar' => $emp->getAvatar(false,'ผู้ดูแล') ?? null,
+                'line_id' => $emp->user->line_id ?? null
+            ];
+            
         } catch (\Throwable $th) {
-            return '<span></span>';
+           return [
+            'avatar' => null,
+            'line_id' => null
+           ];
         }
     }
 

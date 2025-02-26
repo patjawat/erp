@@ -44,7 +44,7 @@ $this->title = 'ห้องประชุม';
                 
                 </td>
                 <td><?php echo $item->title?>
-                <?php echo $item->showOwner();?>
+                <?php echo $item->showOwner()['avatar'];?>
             </td>
                 <td><?php echo $item->data_json['advance_booking'] ?? '-'?></td>
                 <td><?php echo $item->data_json['location'] ?? '-'?></td>
