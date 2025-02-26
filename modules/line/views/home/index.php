@@ -58,26 +58,16 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         <div class="d-flex justify-content-between align-items-center">
             <div class="page-title-line">
 
-                <div class="d-flex gap-2">
-                    <?=Html::img($site['logo'], ['class' => 'avatar avatar-md me-0'])?>
-
-                    <div class="avatar-detail">
-                        <h5 class="mb-0 text-white text-truncate"><?php echo $site['company_name']?></h5>
-                        <p class="text-white mb-0 fs-13">ERP Hospital</p>
-                    </div>
-                </div>
+                
               
             </div>
-            <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop"
-                aria-controls="staticBackdrop">
-                <i class="fa-solid fa-bars fs-3"></i>
-            </button>
+         
 
         </div>
     </div>
 
 
-    <div class="card employee-welcome-card flex-fill shadow">
+    <div class="card employee-welcome-card flex-fill shadow mb-2">
         <div class="card-body">
             <div class="d-flex justify-content-between">
                 <div class="welcome-content">

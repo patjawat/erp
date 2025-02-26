@@ -12,8 +12,9 @@ use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
 use yii\bootstrap5\Breadcrumbs;
 use app\assets\BootstapIconAsset;
+$siteInfo = SiteHelper::getInfo();
+use app\components\NotificationHelper;
 use dominus77\sweetalert2\assets\SweetAlert2Asset;
-
 AppAsset::register($this);
 BootstapIconAsset::register($this);
 
@@ -41,16 +42,40 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
 
 <body>
 
-<style>
+    <style>
     body {
         background-color: rgba(var(--bs-primary-rgb)) !important;
     }
-</style>
+    </style>
     <?php $this->beginBody() ?>
     <?=$this->render('@app/themes/v3/layouts/modal')?>
-    <div class="row d-flex justify-content-center pt-3">
-        <div class="col-11">
-        <?=$content?>
+    <div class="container mt-3">
+        <div class="d-flex justify-content-between">
+            <div class="d-flex gap-1">
+                <?=Html::img($siteInfo['logo'], ['class' => 'avatar avatar-md me-0'])?>
+
+                <div class="avatar-detail">
+                    <h5 class="mb-0 text-white text-truncate"><?php echo $siteInfo  ['company_name']?></h5>
+                    <p class="text-white mb-0 fs-13">ERP Hospital</p>
+                </div>
+            </div>
+            <!-- <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop"
+                    aria-controls="staticBackdrop">
+                    <i class="fa-solid fa-bars fs-3"></i>
+                </button> -->
+        </div>
+
+        <div class="page-content mt-3">
+            <div class="page-content-wrapper mt--45">
+                <div id="page-content">
+                    <?php  echo  $content; ?>
+                </div>
+                <div id="loader">
+                    <?php // echo $this->render('loader'); ?>
+
+                </div>
+            </div>
+
         </div>
     </div>
     <?php $this->endBody() ?>
