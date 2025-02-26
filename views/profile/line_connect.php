@@ -21,13 +21,15 @@ $this->title = "ระบบลงทะเบียน";
 <?php if($user->line_id):?>
   <div class="row d-flex justify-content-center align-items-center">
   <div class="col-2">
-    <div class="card">
+    <div class="card p-3">
+    <h4 class="text-center">เชื่อม LineID สำเร็จ!</h4>
     <?php if(isset($siteInfo['line_qrcode'])):?>
                 <img src="<?php  echo $siteInfo['line_qrcode']?>" alt="">
                 <?php endif;?>
       <div class="card-body text-center">
-        <h4 class="card-title">เชื่อม LineID สำเร็จ!</h4>
-        <button class="btn btn-danger" id="lineConnect">เชื่อม LineID</button>
+      
+        <p>Scan QR-Code เพื่อใช้งาน <i class="fa-brands fa-line fs-3 text-success"></i></p>
+
       </div>
     </div>
 
@@ -39,12 +41,13 @@ $this->title = "ระบบลงทะเบียน";
     
 
 <div class="row d-flex justify-content-center align-items-center">
-  <div class="col-2">
+  <div class="col-3">
     <div class="card">
       <img id="pictureUrl" class="card-img-top">
       <div class="card-body text-center">
         <h4 class="card-title" id="displayName">xxx</h4>
-        <button class="btn btn-danger" id="lineConnect">เชื่อม LineID</button>
+        <button class="btn btn-success" id="lineConnect"><i class="fa-brands fa-line"></i> เชื่อมต่อไลน์</button>
+        <button class="btn btn-danger" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
       </div>
     </div>
 
@@ -182,6 +185,10 @@ async function main() {
 
 main();
 
+$("#logoutBtn").click(function () {
+          liff.logout();
+          location.reload(true);
+        });
 
 JS;
 $this->registerJs($js,View::POS_END);

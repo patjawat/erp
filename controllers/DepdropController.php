@@ -184,13 +184,18 @@ class DepdropController extends \yii\web\Controller
     public function actionEmployeeById($q = null, $id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $models = Employees::find()
-            ->Where(['or', ['LIKE', 'fname', $q]])
+
+        $querys = Employees::find()
+            ->Where(['or', 
+            ['LIKE', 'fname', $q],
+            ['LIKE', 'lname', $q],
+            ])
             ->andWhere(['<>', 'user_id', '0'])
             ->limit(10)
             ->all();
+
         $data = [['id' => '', 'text' => '']];
-        foreach ($models as $model) {
+        foreach ($querys as $model) {
             $data[] = [
                 'id' => $model->id,
                 'text' => $model->getAvatar(false),
@@ -199,14 +204,14 @@ class DepdropController extends \yii\web\Controller
                 'position_name' => $model->positionName(),
                 'month_of_service' => $model->workLife()['month'],
                 'years_of_service' => $model->workLife()['year'],
-                'position_name_text' => $model->data_json['position_name_text'],
+                'position_name_text' => $model->data_json['position_name_text'] ?? '-',
                 // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
                 'avatar' => $model->getAvatar(false)
             ];
         }
         return [
             'results' => $data,
-            'items' => $model
+            'items' => $model ?? []
         ];
     }
 
@@ -232,7 +237,7 @@ class DepdropController extends \yii\web\Controller
         }
         return [
             'results' => $data,
-            'items' => $model
+            'items' => $model ?? []
         ];
     }
 
