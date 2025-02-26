@@ -82,7 +82,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
             <div class="d-flex justify-content-between">
                 <div class="welcome-content">
                     <h6>สวัสดี, <?=$me->fullname?></h6>
-                    <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> โปรไฟล์',['#'],['class' => 'btn btn-primary shadow rounded-pill'])?>
+                    <?=Html::a('<i class="fa-solid fa-clipboard-user"></i> โปรไฟล์',['/line/profile'],['class' => 'btn btn-primary shadow rounded-pill'])?>
                 </div>
                 <div class="welcome-img">
                     <?=Html::img($me->ShowAvatar(), ['class' => 'avatar avatar-lg border border-white'])?>
