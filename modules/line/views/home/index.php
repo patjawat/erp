@@ -93,13 +93,9 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
     </div>
 
     <?php echo $this->render('app_menu')?>
+    <?php echo $this->render('document')?>
 
-    <h6 class="text-white">หนังสือ/ประกาศ/ประชาสัมพันธ์</h6>
-    <div class="card rounded-4">
-        <div class="card-body rounded-4" style="background:rgba(241, 238, 240, 0.98); min-height:200px">
-        </div>
-    </div>
-</div>
+
 <?php endif;?>
 
 <div class="offcanvas offcanvas-start" data-bs-backdrop="static" tabindex="-1" id="staticBackdrop"

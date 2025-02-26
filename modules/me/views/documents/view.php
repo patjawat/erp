@@ -32,11 +32,9 @@ $this->title = $model->topic;
                 <?php endif; ?>
                 <?php echo $model->topic ?>
             </p>
-            <span class="fs-6">เลขรับ</span> : <span
-                class="fw-medium"><?php echo $model->doc_regis_number ?></span>
+            <span class="fs-6">เลขรับ</span> : <span class="fw-medium"><?php echo $model->doc_regis_number ?></span>
 
-            <span class="fs-6">เลขหนังสือ</span> : <span
-                class="fs-6 fw-medium"><?php echo $model->doc_number ?></span>
+            <span class="fs-6">เลขหนังสือ</span> : <span class="fs-6 fw-medium"><?php echo $model->doc_number ?></span>
             <span class="fs-6">จากหน่วยงาน</span> : <span class="text-primary fw-normal fs-13">
                 <i class="fa-solid fa-inbox"></i>
                 <?php echo $modelOrg->title ?? '-'; ?>
@@ -55,11 +53,11 @@ $this->title = $model->topic;
     <?php $this->endBlock(); ?>
 
     <div class="row">
-        <div class="col-8">
+        <div class="col-xl-8 col-lg-8 col-md-8 col-sm-12 col-sx-12">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-end mb-2">
-                    <?php echo Html::a(($detail->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
+                        <?php echo Html::a(($detail->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
                     </div>
                     <iframe id="myIframe"
                         src="<?= Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
@@ -69,7 +67,7 @@ $this->title = $model->topic;
             </div>
 
         </div>
-        <div class="col-4 py-2">
+        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-sx-12 py-2">
             <div class="card">
                 <div class="card-body">
 
@@ -112,7 +110,7 @@ $this->title = $model->topic;
 
 
 
-<?php
+    <?php
     // $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
     // $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
 
