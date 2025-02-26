@@ -46,7 +46,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 }
 </style>
 
-<div  style="margin-top:40%" id="loading">
+<div id="loading">
         <div class="d-flex justify-content-center">
             <div class="loader"></div>
         </div>
@@ -55,14 +55,14 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 <?php if($me):?>
 <div id="wraperContainer" style="display:none">
     <div class="page-title-box-line mb-5">
-        <div class="d-flex justify-content-between align-items-center mt-5">
+        <div class="d-flex justify-content-between align-items-center">
             <div class="page-title-line">
 
                 <div class="d-flex gap-2">
-                    <?=Html::img($site['logo'], ['class' => 'avatar avatar-md me-0 mt-2'])?>
+                    <?=Html::img($site['logo'], ['class' => 'avatar avatar-md me-0'])?>
 
                     <div class="avatar-detail">
-                        <h5 class="mb-0 text-white text-truncate mt-3"><?php echo $site['company_name']?></h5>
+                        <h5 class="mb-0 text-white text-truncate"><?php echo $site['company_name']?></h5>
                         <p class="text-white mb-0 fs-13">ERP Hospital</p>
                     </div>
                 </div>

@@ -48,8 +48,10 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
 </style>
     <?php $this->beginBody() ?>
     <?=$this->render('@app/themes/v3/layouts/modal')?>
-    <div class="container">
+    <div class="row d-flex justify-content-center pt-3">
+        <div class="col-11">
         <?=$content?>
+        </div>
     </div>
     <?php $this->endBody() ?>
 </body>

@@ -20,7 +20,8 @@ $this->title = $model->document->topic;
 
 <?php $this->beginBlock('page-title'); ?>
 
-<div class="container-fluid text-white">
+<div class="container-fluid text-white mt-5">
+
     <div class=" d-flex flex-column" style="max-width:1000px">
         <div class="mt--45">
             <p class="text-truncate fw-semibold fs-5 mb-0">
@@ -60,6 +61,11 @@ $this->title = $model->document->topic;
 </style>
 <div class="card">
     <div class="card-body">
+
+    <?php 
+    print_r($model->document_id);
+    ?>
+    8888
 <h4 class="text-center"><i class="fa-regular fa-comments"></i> การลงความเห็น</h4>
 <?php $form = ActiveForm::begin([
     'id' => 'form-comment',

@@ -43,7 +43,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         <div class="row align-items-center">
             <div class="col-sm-5 col-xl-4">
                 <div class="page-title">
-                    <h5 class="mb-1 text-white">โปรไฟ์</h5>
+                    <h5 class="mb-1 text-white">Profile</h5>
 
                 </div>
             </div>

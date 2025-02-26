@@ -100,31 +100,41 @@ class DocumentsController extends Controller
 
     
     public function actionShow($ref)
-    {
-        // $model = $this->findModel($id);
-        if (Yii::$app->user->isGuest)
-        {
-            return $this->redirect(['/line/profile']);
-        }
-            $id = Yii::$app->request->get('id');
-            $fileUpload = Uploads::findOne(['ref' => $ref]);
-            $type = 'pdf';
-            if (!$fileUpload) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-            } else {
-                $filename = $fileUpload->real_filename;
-                $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
-            }
-            if (!$fileUpload && !file_exists($filepath)) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-            }
+{
+    // if (Yii::$app->user->isGuest) {
+    //     return $this->redirect(['/line/profile']);
+    // }
 
-            $this->setHttpHeaders($type);
-            return Yii::$app->response->sendFile($filepath, $filename, ['mimeType' => 'application/pdf', 'inline' => true]);
-            // \Yii::$app->response->data = file_get_contents($filepath);
-            // return \Yii::$app->response;
-      
+    $fileUpload = Uploads::findOne(['ref' => $ref]);
+
+    if (!$fileUpload) {
+        $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
+        $filename = 'pdf-placeholder.pdf';
+    } else {
+        $filename = $fileUpload->real_filename;
+        $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
     }
+
+    if (!file_exists($filepath)) {
+        $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
+        $filename = 'pdf-placeholder.pdf';
+    }
+
+    Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+    Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+    Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
+    Yii::$app->response->headers->set('Accept-Ranges', 'bytes');
+    Yii::$app->response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    Yii::$app->response->headers->set('Pragma', 'no-cache');
+    Yii::$app->response->headers->set('Expires', '0');
+
+    return Yii::$app->response->sendFile($filepath, $filename, [
+        'mimeType' => 'application/pdf',
+        'inline' => true,
+    ]);
+}
+
+    
 
     protected function setHttpHeaders($type)
     {
@@ -145,8 +155,9 @@ class DocumentsController extends Controller
         try {
       
            $emp = UserHelper::GetEmployee();
+           $documentDetail = DocumentsDetail::findOne($id);
            $model = new DocumentsDetail([
-               'document_id' => $id,
+               'document_id' => $documentDetail->document_id,
                'to_id' => $emp->id,
                'name' => 'comment'
            ]);
@@ -167,7 +178,8 @@ class DocumentsController extends Controller
                Yii::$app->response->format = Response::FORMAT_JSON;
    
                return [
-                   'title' =>$this->request->get('title'),
+                   'title' =>'ssss',
+                //    'title' =>$this->request->get('title'),
                    'content' => $this->renderAjax('_form_comment', [
                        'model' => $model,
                    ])
