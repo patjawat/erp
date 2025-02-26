@@ -14,36 +14,26 @@ $this->params['breadcrumbs'][] = ['label' => 'Inventories', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="row">
-    <div class="col-8">
-        <?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' =>  $model->leave]) ?>
-    </div>
-    <div class="col-4">
-    <?=$this->render('@app/modules/hr/views/leave/view_summary',['model' => $model->leave])?>
-    
+
     <?php $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/me/leave/approve-validator'],
 ])
 ?>
-<div class="d-flex justify-content-center flex-column">
-    <div class="d-flex justify-content-center">
-        <?php  echo $form->field($model, 'status')->radioList(['Approve' => $model->data_json['topic'], 'Reject' => 'ไม่'.$model->data_json['topic']],['custom' => true, 'inline' => true])->label(false)?>
-    </div>
-    <div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-</div>
+<?php  echo $form->field($model, 'status')->hiddenInput()->label(false)?>
+<?php  echo $model->status == 'Reject' ?  $form->field($model, 'data_json[note]')->textArea()->label(false) : ''?>
+
+    <div class="form-group mt-3 d-flex justify-content-center gap-3">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+            class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>
 
 
 
 <?php ActiveForm::end(); ?>
 
-
-    </div>
-
-</div>
 
 <?php
 $js = <<< JS

@@ -20,16 +20,19 @@ $this->title = "ระบบลงทะเบียน";
 </style>
 <?php if($user->line_id):?>
   <div class="row d-flex justify-content-center align-items-center">
-  <div class="col-2">
-    <div class="card p-3">
-    <h4 class="text-center">เชื่อม LineID สำเร็จ!</h4>
+  <div class="col-3">
+    <div class="card">
+      <div class="card-body text-center">
+      <h4 class="text-center">เชื่อม LineID สำเร็จ!</h4>
     <?php if(isset($siteInfo['line_qrcode'])):?>
                 <img src="<?php  echo $siteInfo['line_qrcode']?>" alt="">
                 <?php endif;?>
-      <div class="card-body text-center">
       
         <p>Scan QR-Code เพื่อใช้งาน <i class="fa-brands fa-line fs-3 text-success"></i></p>
 
+      </div>
+      <div class="card-footer">
+        
       </div>
     </div>
 

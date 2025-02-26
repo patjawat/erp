@@ -1,7 +1,7 @@
 <?php
-use app\components\EmployeeHelper;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use app\components\EmployeeHelper;
 
 $this->title = 'บุคลากร';
 
@@ -14,7 +14,7 @@ $this->title = 'บุคลากร';
 Dashboard
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('_search', ['model' => $searchModel]); ?>
+<?= $this->render('@app/modules/hr/views/employees/menu') ?>
 <?php $this->endBlock(); ?>
 
 

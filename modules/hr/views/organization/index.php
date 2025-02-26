@@ -1,8 +1,8 @@
 <?php
 use yii\helpers\Url;
-use app\models\Categorise;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\models\Categorise;
 /** @var yii\web\View $this */
 /** @var app\models\CategoriseSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -23,6 +23,8 @@ $querys = Yii::$app->db->createCommand($sql)
 <?php $this->beginBlock('page-title');?>
 <i class="fa-solid fa-users-viewfinder"></i> <?=$this->title;?>
 <?php $this->endBlock();?>
+
+
 
 <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 

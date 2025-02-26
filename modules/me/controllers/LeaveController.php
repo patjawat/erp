@@ -12,6 +12,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -336,7 +337,8 @@ class LeaveController extends Controller
     {
         $me = UserHelper::GetEmployee();
         $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
-        
+        $model->status = Yii::$app->request->get('status');
+        $old_json = $model->data_json;
         $leave = Leave::findOne($model->from_id);
         if (!$model) {
             return [
@@ -348,29 +350,45 @@ class LeaveController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
+            $model->data_json = ArrayHelper::merge($old_json,$model->data_json, $approveDate);
             if ($model->level == 3) {
                 $model->emp_id = $me->id;
             }
 
             if ($model->save()) {
+
+                
+                
                 $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
-                if ($nextApprove) {
+                if ($nextApprove && $model->status == 'Approve') {
                     $nextApprove->status = 'Pending';
                     $nextApprove->save();
                 }
 
+                $lineId = $model->leave->employee->user->line_id;
+                
                 // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
-                if ($model->level == 4) {
+                if ($model->level == 4 &&  $leave->status = 'Allow') {
                     $leave->status = 'Allow';
                     $leave->save();
-                } else if ($model->status == 'Reject') {
+                    $message = 'อนุมัติให้'.($model->leave->leaveType->title ?? '-').' วันที่ '.Yii::$app->thaiFormatter->asDate($leave->date_start, 'long').' ถึง '.Yii::$app->thaiFormatter->asDate($leave->date_end, 'long');
+                    LineNotify::sendMsg($lineId, $message);
+                    
+                }
+
+                if ($model->status == 'Reject') {
                     $leave->status = 'Reject';
                     $leave->save();
-                } else {
-                    $leave->status = 'Checking';
-                    $leave->save();
-                }
+                    
+                    $message = 'ไม่'.$model->data_json['topic'].'ให้ลาเนื่องจาก'.$model->data_json['note'];
+                    LineNotify::sendMsg($lineId, $message);
+                    
+                } 
+                
+                // else {
+                //     $leave->status = 'Checking';
+                //     $leave->save();
+                // }
 
                 return [
                     'status' => 'success',

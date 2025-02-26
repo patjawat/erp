@@ -51,35 +51,9 @@ class LineNotify extends Component
         return true;
     }
     
-    public function sendMessage($message, $groupId)
+//ส่งข้อความ
+    public static function sendMsg($userId, $message)
     {
-        try {
-            $group = Categorise::find()->where(['name' => 'line_group', 'code' => $groupId])->one();
-            $client = new Client();
-            // $token = 'u090Q5IjiP3BOCPbGGdn1Vdj16AZ6mVtz2SV9Bd22ce';
-            $token = $group->data_json['token'];
-            $response = $client
-                ->createRequest()
-                ->setMethod('POST')
-                ->setUrl('https://notify-api.line.me/api/notify')
-                ->setHeaders(['Authorization' => 'Bearer ' . $token])
-                ->setData(['message' => $message])
-                ->send();
-
-            if ($response->isOk) {
-                return $response->data;
-            } else {
-                throw new \Exception('Failed to send message: ' . $response->content);
-            }
-            // code...
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
-    }
-
-    public static function sendPushMessage($userId, $message)
-    {
-      
         $data = [
             'to' => $userId,
             'messages' => [
@@ -326,25 +300,68 @@ class LineNotify extends Component
                   ],
               ],
           ];
-  
-          $client = new Client();
-          $response = $client->createRequest()
-              ->setMethod('POST')
-              ->setUrl($url)
-              ->addHeaders([
-                  'Authorization' => 'Bearer ' . $channelAccessToken,
-                  'Content-Type' => 'application/json',
-              ])
-              ->setContent(json_encode($data))
-              ->send();
-  
-          if (!$response->isOk) {
-              Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
-              return false;
-          }
-  
+          self::PushMsg($data);
           return true;
       }
       
+
+      // ฟังก์ชันส่ง Flex Message ส่งข้อความขอจองห้องประชุม
+     public static function BookMeeting($id,$userId)
+     {
+        $model = Booking::findOne($id);
+        $uri = Url::base(true) . Url::to(['/line/booking-meeting/view', 'id' => $รก]);
+
+        $altText = 'ขอใช้ห้องประชุม'; // ข้อความสำรอง
+        $flexContent = [
+            'type' => 'bubble',
+            'body' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'text',
+                        'text' => $altText,
+                        'weight' => 'bold',
+                        'size' => 'xl',
+                    ],
+                    [
+                        'type' => 'text',
+                        'text' => 'วันที่',
+                        'size' => 'md',
+                        'wrap' => true,
+                    ],
+                ],
+            ],
+            'footer' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'button',
+                        'style' => 'primary',
+                        'action' => [
+                            'type' => 'uri',
+                            'label' => 'ดำเนินการ',
+                            'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        
+         $data = [
+             'to' => $userId,
+             'messages' => [
+                 [
+                     'type' => 'flex',
+                     'altText' => $altText,
+                     'contents' => $flexContent,
+                 ],
+             ],
+         ];
+        //ส่งข้อความ
+         self::PushMsg($data);
+         return true;
+     }
  
 }

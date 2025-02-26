@@ -7,6 +7,7 @@ use yii\widgets\Pjax;
 use yii\widgets\DetailView;
 use app\components\AppHelper;
 use app\components\UserHelper;
+
 $me = UserHelper::GetEmployee();
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
@@ -40,22 +41,22 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 </div>
 <div class="collapse" id="collapseExample">
-        <div id="viewHistory"></div>
-        <?php echo $this->render('history',['model' => $model])?>
+        <!-- <div id="viewHistory"></div> -->
+        <?php echo $this->render('history', ['model' => $model]) ?>
 </div>
 
 <?php echo $this->render('timeline_approve', ['model' => $model]) ?>
 
 <div class="d-flex justify-content-center gap-3">
-    <?php  echo ($model->status =='ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา',['/hr/leave/cancel','id' => $model->id],['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn','data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : ''?>
-    <?php if($me->user_id == $model->created_by):?>
-        <?= $model->status !=='ReqCancel' ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
-            'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow','data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
+    <?php echo ($model->status == 'ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
+    <?php if ($me->user_id == $model->created_by): ?>
+        <?= $model->status !== 'ReqCancel' ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
+            'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
         ]) : '' ?>
-    <?php  echo ($model->status !=='Allow' && $model->status !=='ReqCancel') ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-warning rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) : ''?>
-    <?php endif;?>
+    <?php echo ($model->status !== 'Allow' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
+    <?php endif; ?>
     <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
-    <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]);?>
+    <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]); ?>
 </div>
 
 
@@ -63,135 +64,154 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::end(); ?>
 
 <?php
-$urlHistory = Url::to(['/hr/leave/view-history','emp_id' => $model->emp_id,'title' =>'ประวัติการลา']);
+$urlHistory = Url::to(['/hr/leave/view-history', 'emp_id' => $model->emp_id, 'title' => 'ประวัติการลา']);
 $urlApprove = Url::to(['/me/approve/leave-approve']);
-$js = <<< JS
+$js = <<<JS
 
-    loadHistory()
-    function loadHistory()
-    {
-        $.ajax({
-            type: "get",
-            url: "$urlHistory",
-            dataType: "json",
-            success: function (res) {
-                $('#viewHistory').html(res.content)
-            }
-        });
-    }
+        // loadHistory()
+        // function loadHistory()
+        // {
+        //     \$.ajax({
+        //         type: "get",
+        //         url: "$urlHistory",
+        //         dataType: "json",
+        //         success: function (res) {
+        //             \$('#viewHistory').html(res.content)
+        //         }
+        //     });
+        // }
 
 
-        // ขอยกเลิกวันลา
-        $("body").on("click", ".req-cancel-btn", function (e) {
+            // ขอยกเลิกวันลา
+            \$("body").on("click", ".req-cancel-btn", function (e) {
+                e.preventDefault();
+                var title = \$(this).data('title')
+                Swal.fire({
+                title: 'ยืนยัน?',
+                text: title+"!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'ใช่',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                    if (result.isConfirmed) {
+                        \$.ajax({
+                            type: "post",
+                            url: \$(this).attr('href'),
+                            dataType: "json",
+                            success: function (res) {
+                                console.log(res);
+                                
+                            }
+                        });
+                    }
+                })
+            });
+            
+
+            \$("body").on("click", ".download-leave", function (e) {
             e.preventDefault();
-            var title = $(this).data('title')
-            Swal.fire({
-            title: 'ยืนยัน?',
-            text: title+"!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'ใช่',
-            cancelButtonText: 'ยกเลิก'
-        }).then((result) => {
+            var filename = \$(this).data('filename');
+            \$.ajax({
+                url: \$(this).attr('href'), // ตรวจสอบให้แน่ใจว่า URL ตรงกับ controller/action ของคุณ
+                method: 'GET',
+                xhrFields: {
+                    responseType: 'blob' // กำหนดให้ตอบกลับเป็น binary data
+                },
+                beforeSend: function() {
+                    \$("#main-modal").modal("show");
+                    \$("#main-modal-label").html("กำลังโหลด");
+                    \$(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                    \$(".modal-dialog").addClass("modal-sm");
+                    \$("#modal-dialog").removeClass("fade");
+                    \$(".modal-body").html(
+                        '<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>'
+                    );
+                },
+                success: function(blob) { // ใช้ 'blob' เป็นชื่อพารามิเตอร์เพื่อหลีกเลี่ยงความสับสน
+                    var getFilename = filename+ '.docx'; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
+                    const file = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                    
+                    // สร้างลิงก์ชั่วคราวสำหรับดาวน์โหลดไฟล์
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(file);
+                    link.download = getFilename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link); // ลบลิงก์ออกหลังจากใช้งานเสร็จ
+                    window.URL.revokeObjectURL(link.href); // ลบ URL Object เพื่อลดการใช้หน่วยความจำ
+
+                    \$("#main-modal").modal("hide");
+                },
+                error: function() {
+                    alert('ไม่สามารถดาวน์โหลดไฟล์ได้');
+                }
+            });
+        });
+
+        //การอนุมัติ
+        \$("body").on("click", ".approve", async function (e) {
+            e.preventDefault();
+            var id = \$(this).data('id');
+            var topic = \$(this).data('topic');
+            var status = \$(this).data('status');
+
+            if(status == 'Reject'){
+                $.ajax({
+                    type: "get",
+                    url: "/me/approve-leave/reject",
+                    data: {
+                        id:id
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        
+                    }
+                });
+
+            }else{
+        
+        Swal.fire({
+                title: 'ยืนยัน?',
+                text: topic+"ใช่หรือไม!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'ใช่',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
+                    \$.ajax({
                         type: "post",
-                        url: $(this).attr('href'),
+                        url: "$urlApprove",
+                        data: {
+                            id:id,
+                            status:status
+                        },
                         dataType: "json",
                         success: function (res) {
-                            console.log(res);
+                            closeModal()
+                            setTimeout(function() {
+                                location.reload()
+                            }, 1000); // หน่วงเวลา 3 วินาทีแล้ว!
+                            // \$.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});  
                             
                         }
                     });
                 }
             })
+            
+     }
+            
+            
+         
+           
+            
         });
-        
 
-        $("body").on("click", ".download-leave", function (e) {
-        e.preventDefault();
-        var filename = $(this).data('filename');
-        $.ajax({
-            url: $(this).attr('href'), // ตรวจสอบให้แน่ใจว่า URL ตรงกับ controller/action ของคุณ
-            method: 'GET',
-            xhrFields: {
-                responseType: 'blob' // กำหนดให้ตอบกลับเป็น binary data
-            },
-            beforeSend: function() {
-                $("#main-modal").modal("show");
-                $("#main-modal-label").html("กำลังโหลด");
-                $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                $(".modal-dialog").addClass("modal-sm");
-                $("#modal-dialog").removeClass("fade");
-                $(".modal-body").html(
-                    '<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>'
-                );
-            },
-            success: function(blob) { // ใช้ 'blob' เป็นชื่อพารามิเตอร์เพื่อหลีกเลี่ยงความสับสน
-                var getFilename = filename+ '.docx'; // ชื่อไฟล์ที่ต้องการดาวน์โหลด
-                const file = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-                
-                // สร้างลิงก์ชั่วคราวสำหรับดาวน์โหลดไฟล์
-                const link = document.createElement('a');
-                link.href = window.URL.createObjectURL(file);
-                link.download = getFilename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link); // ลบลิงก์ออกหลังจากใช้งานเสร็จ
-                window.URL.revokeObjectURL(link.href); // ลบ URL Object เพื่อลดการใช้หน่วยความจำ
-
-                $("#main-modal").modal("hide");
-            },
-            error: function() {
-                alert('ไม่สามารถดาวน์โหลดไฟล์ได้');
-            }
-        });
-    });
-
-    //การอนุมัติ
-    $("body").on("click", ".approve", function (e) {
-        e.preventDefault();
-        var id = $(this).data('id');
-        var topic = $(this).data('topic');
-        var status = $(this).data('status');
-        console.log(topic);
-        
-        Swal.fire({
-            title: 'ยืนยัน?',
-            text: topic+"ใช่หรือไม!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'ใช่',
-            cancelButtonText: 'ยกเลิก'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    type: "post",
-                    url: "$urlApprove",
-                    data: {
-                        id:id,
-                        status:status
-                    },
-                    dataType: "json",
-                    success: function (res) {
-                        closeModal()
-                        setTimeout(function() {
-                            location.reload()
-                        }, 1000); // หน่วงเวลา 3 วินาทีแล้ว!
-                        // $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});  
-                        
-                    }
-                });
-            }
-        })
-       
-        
-    });
-
-JS;
+    JS;
 $this->registerJS($js, View::POS_END);
 ?>

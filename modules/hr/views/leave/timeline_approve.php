@@ -77,9 +77,7 @@ $me = UserHelper::GetEmployee();
         <?php foreach ($model->listApprove() as $item): ?>
         <div class="timeline-item">
             <div class="circle">
-                <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?>
-
-            </div>
+                <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?></div>
             <div class="year">
                 <?php
                                                 $approveDate = $item->viewApproveDate();
@@ -105,30 +103,29 @@ $me = UserHelper::GetEmployee();
             <?php else:?>
 
             <?php if($item->level == 3 && $item->status == 'Pending'):?>
+                
             <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
                 data-topic="ตรวจ<?php echo ($item->data_json['topic'] ?? '')?>" data-id="<?php echo $item->id?>"
                 data-status="Approve">
                 <i class="fa-solid fa-circle-check"></i> <?php echo ($item->data_json['topic'] ?? '')?>
             </button>
+            
             <button type="button" class="btn btn-sm btn-danger rounded-pill shadow approve"
                 data-topic="ตรวจสอบไม่<?php echo ($item->data_json['topic'] ?? '')?>" data-id="<?php echo $item->id?>"
                 data-status="Reject">
                 <i class="fa-solid fa-circle-xmark"></i> ไม่<?php echo ($item->data_json['topic'] ?? '')?>
             </button>
 
-            <?php //  echo  Html::a('ดำเนินการ', ['/hr/leave/approve', 'id' => $item->id, 'title' => $item->title], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal mt-2'])?>
             <?php else:?>
+                
             <?php if($item->emp_id == $me->id && $item->status =="Pending"):?>
-            <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
+            <!-- <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
                 data-topic="<?php echo ($item->data_json['topic'] ?? '')?>" data-status="Approve"
                 data-id="<?php echo $item->id?>">
                 <i class="fa-solid fa-circle-check"></i> <?php echo ($item->data_json['topic'] ?? '')?>
-            </button>
-            <button type="button" class="btn btn-sm btn-danger rounded-pill shadow approve"
-                data-topic="ไม่<?php echo ($item->data_json['topic'] ?? '')?>" data-status="Reject"
-                data-id="<?php echo $item->id?>">
-                <i class="fa-solid fa-circle-xmark"></i> ไม่<?php echo ($item->data_json['topic'] ?? '')?>
-            </button>
+            </button> -->
+            <?php echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['topic'] ?? ''),['/me/leave/approve','id' => $item['id'],'status' => 'Approve','title' => '<i class="fa-solid fa-circle-check text-primary"></i> '.($item->data_json['topic'] ?? '')],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'model-md']])?>
+            <?php echo Html::a('<i class="fa-solid fa-circle-xmark"></i> ไม่'.($item->data_json['topic'] ?? ''),['/me/leave/approve','id' => $item['id'],'status' => 'Reject','title' => '<i class="fa-solid fa-circle-xmark text-danger"></i> ไม่'.($item->data_json['topic'] ?? '')],['class' => 'btn btn-sm btn-danger rounded-pill shadow open-modal','data' => ['size' => 'model-md']])?>
             <?php endif;?>
 
             <?php endif?>

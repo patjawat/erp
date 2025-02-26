@@ -1,15 +1,15 @@
 <?php
+use app\models\Tree;
 use yii\helpers\Html;
-use kartik\tree\TreeView;
-use kartik\tree\TreeViewInput;
 use yii\widgets\Pjax;
+use kartik\tree\TreeView;
 
 
-use app\modules\hr\models\Organization;
+use kartik\tree\TreeViewInput;
 
 // use muhsamsul\treeimage\TreeImage;
 use app\widgets\orgchart\TreeImage;
-use app\models\Tree;
+use app\modules\hr\models\Organization;
 $this->title = "ผังโครงสร้างองค์กร";
 
 $this->params['breadcrumbs'][] = $this->title;
@@ -17,6 +17,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-diagram-3"></i> <?=$this->title;?>  
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('@app/modules/hr/views/employees/menu') ?>
 <?php $this->endBlock(); ?>
 <style>
     .kv-tree-root.kv-root-heading {

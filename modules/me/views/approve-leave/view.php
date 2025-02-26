@@ -1,1 +1,2 @@
-<h1>Appove-leave</h1>
+
+<?php echo $this->render('@app/modules/hr/views/leave/view',['model' => $model])?>

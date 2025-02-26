@@ -62,7 +62,6 @@ class ApproveLeaveController extends \yii\web\Controller
            
 
             if ($approve->save()) {
-                
                 $nextApprove = Approve::findOne(['from_id' => $approve->from_id, 'level' => ($approve->level + 1)]);
                 if ($nextApprove) {
                     $nextApprove->status = 'Pending';
@@ -81,8 +80,6 @@ class ApproveLeaveController extends \yii\web\Controller
                   
                 }
              
-              
-                
                 return [
                     'status' => 'success',
                     'container' => '#approve',
@@ -101,6 +98,40 @@ class ApproveLeaveController extends \yii\web\Controller
         } else {
             return $this->render('leave/form_approve', [
                 'model' => $approve,
+            ]);
+        }
+    }
+
+    public function actionReject($id)
+    {
+        $model = Approve::findOne($id);
+        $model->status = 'Reject';
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
+            if($model->save()){
+                // $leave = Leave::findOne($model->from_id);
+                // $leave->status = 'Reject';
+                // $leave->save();
+                return [
+                    'status' => 'success'
+                ];
+            }
+        }
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title').' (โปรดระบุเหตุผล)',
+                'content' => $this->renderAjax('_form_reject', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('_form_reject', [
+                'model' => $model,
             ]);
         }
     }

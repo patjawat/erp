@@ -182,7 +182,7 @@ class Booking extends \yii\db\ActiveRecord
         foreach($this->listMembers as $item){
             if(isset($item->employee->user->line_id)){
                 $lineId = $item->employee->user->line_id;
-                    LineNotify::sendPushMessage($lineId, $message);
+                    LineNotify::sendMessage($lineId, $message);
             }
         }
         return $data;

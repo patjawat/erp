@@ -12,6 +12,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\LineNotify;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -866,6 +867,9 @@ class LeaveController extends Controller
         ];
         $model->data_json = ArrayHelper::merge($model->data_json, $checkerCancel);
         $model->save();
+        $lineId = $model->employee->user->line_id;
+        $message = 'ขอยกเลิกวัน'.($model->leaveType->title ?? '-').' วันที่ '.Yii::$app->thaiFormatter->asDate($model->date_start, 'long').' ถึง '.Yii::$app->thaiFormatter->asDate($model->date_end, 'long').'ได้รับการอนุมัติแล้ว';
+        LineNotify::sendMsg($lineId, $message);
 
         return $this->redirect(['/hr/leave','status'=>'ReqCancel']);
     }

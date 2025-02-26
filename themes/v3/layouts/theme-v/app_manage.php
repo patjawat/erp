@@ -64,7 +64,7 @@ $items = [
     [
         'title' => 'บุคลากร',
         'icon' => 'fa-regular fa-circle-user fs-1',
-        'url' => ['/hr'],
+        'url' => ['/hr/employees'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('hr') ? true : false,
         // 'show' => true
