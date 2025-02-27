@@ -6,6 +6,7 @@ use Yii;
 use app\models\Uploads;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -102,35 +103,46 @@ class Room extends \yii\db\ActiveRecord
     public function showOwner()
     {
         try {
-            
             $emp = Employees::findOne($this->data_json['owner']);
-            return[
-                'avatar' => $emp->getAvatar(false,'ผู้ดูแล') ?? null,
+            return [
+                'avatar' => $emp->getAvatar(false, 'ผู้ดูแล') ?? null,
                 'line_id' => $emp->user->line_id ?? null
             ];
-            
         } catch (\Throwable $th) {
-           return [
-            'avatar' => null,
-            'line_id' => null
-           ];
+            return [
+                'avatar' => null,
+                'line_id' => null
+            ];
         }
     }
 
-            // แสดงรายการอุปกรณ์
-            public function ListAccessory()
-            {
-                $model = Categorise::find()
-                    ->where(['name' => 'room_accessory','category_id' => $this->code])
-                    ->asArray()
-                    ->all();
-                return ArrayHelper::map($model, 'title', 'title');
-            }
+    // แสดงรายการอุปกรณ์
+    public function ListAccessory()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'room_accessory', 'category_id' => $this->code])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'title', 'title');
+    }
 
-            public function checkRoom($date)
-            {
-                 return Booking::find()->where(['name' => 'meeting','date_start' => $date,'room_id' => $this->code])
-                 ->andWhere(['<>','status','cancel'])->one();
-            }
+    public function checkRoom($date)
+    {
+        return Booking::find()
+            ->where(['name' => 'meeting', 'date_start' => $date, 'room_id' => $this->code])
+            ->andWhere(['<>', 'status', 'cancel'])
+            ->one();
+    }
+
+    //ส่งข้ความไปยังผู้ดูแลห้องประชุม
+    public function SendOwnerRoom() 
+    {
         
+        $ownerRoom = Room::find()->where(['name' => 'meeting_room','room_id' => $this->room_id])->one();
+        $id = $ownerRoom->data_json['owner'] ?? 0;
+        $emp = Employees::findOne($id);
+        $lineId = $emp->user->line_id;
+        LineNotify::BookMeeting
+        
+    }
 }
