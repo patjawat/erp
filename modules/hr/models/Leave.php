@@ -9,7 +9,7 @@ use app\models\Approve;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
@@ -187,7 +187,7 @@ class Leave extends \yii\db\ActiveRecord
                 try {
                     // ส่ง msg ให้ Approve
                     $toUserId = $leaveStep1->employee->user->line_id;
-                    LineNotify::sendLeave($leaveStep1->id, $toUserId);
+                    LineMsg::sendLeave($leaveStep1->id, $toUserId);
                 } catch (\Throwable $th) {
 
                 }

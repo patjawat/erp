@@ -100,12 +100,12 @@ class Room extends \yii\db\ActiveRecord
     }
 
     // ผู้ดูแลห้องประชุม
-    public function showOwner()
+    public function showOwner($msg = '')
     {
         try {
             $emp = Employees::findOne($this->data_json['owner']);
             return [
-                'avatar' => $emp->getAvatar(false, 'ผู้ดูแล') ?? null,
+                'avatar' => $emp->getAvatar(false, 'ผู้ดูแลรับผิดชอบ  '.$msg) ?? null,
                 'line_id' => $emp->user->line_id ?? null
             ];
         } catch (\Throwable $th) {
@@ -134,15 +134,5 @@ class Room extends \yii\db\ActiveRecord
             ->one();
     }
 
-    //ส่งข้ความไปยังผู้ดูแลห้องประชุม
-    public function SendOwnerRoom() 
-    {
-        
-        $ownerRoom = Room::find()->where(['name' => 'meeting_room','room_id' => $this->room_id])->one();
-        $id = $ownerRoom->data_json['owner'] ?? 0;
-        $emp = Employees::findOne($id);
-        $lineId = $emp->user->line_id;
-        LineNotify::BookMeeting
-        
-    }
+
 }

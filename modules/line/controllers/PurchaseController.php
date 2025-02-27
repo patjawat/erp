@@ -13,7 +13,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -62,7 +62,7 @@ class PurchaseController extends \yii\web\Controller
                     try {
                         // ส่ง msg ให้คนถัดไป 
                         $toUserId = $nextApprove->employee->user->line_id;
-                        LineNotify::sendPurchase($nextApprove->id, $toUserId);
+                        LineMsg::sendPurchase($nextApprove->id, $toUserId);
                     } catch (\Throwable $th) {
                         $toUserId = '';
                     }

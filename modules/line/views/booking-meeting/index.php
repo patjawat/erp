@@ -44,10 +44,19 @@ $dateNext->modify('+1 day');
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/line/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')]) ?>
-                    <h6><i class="fa-regular fa-calendar-plus"></i>
-                        <?php $time = time();
-                        echo Yii::$app->thaiFormatter->asDate($searchModel->date_start, 'full') . '<br>'; ?>
-                    </h6>
+                    <div class="d-flex gap-2 align-self-center">
+                        <div>
+                            
+                            <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">27
+                            </span>
+                        </div>
+                        <div class="d-flex flex-column align-self-center">
+                            <span class="fw-bolder fs-6">พฤหัสบดี</span>
+                            <span class="fw-bolder fs-6">
+                                กุมภาพันธฺ 2569
+                            </span>
+                        </div>
+                    </div>
                     <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/line/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')]) ?>
                 </div>
             </div>

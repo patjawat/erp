@@ -216,6 +216,7 @@ class BookingMeetingController extends \yii\web\Controller
                 // $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'pending';
                 if($model->save(false)){
+                    $model->SendMeeting();
                     // return $model->room->showOwner()['line_id'] ?? 'ไม่ระบุ';
                     return $this->redirect(['view', 'id' => $model->id]);
                     // return $this->redirect(['index']);
@@ -260,6 +261,7 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 if($model->save(false)){
+                    $model->SendMeeting();
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }

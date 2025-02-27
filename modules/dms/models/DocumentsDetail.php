@@ -17,7 +17,7 @@ use kartik\file\FileInput;
 use yii\httpclient\Client;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
@@ -191,7 +191,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                 $line_id = $model->employee->user->line_id;
                 $topic = $this->comment;
                 // ส่ง msg ให้ Approve
-                LineNotify::sendDocument($model,$line_id);
+                LineMsg::sendDocument($model,$line_id);
             } catch (\Throwable $th) {
                 
             }
@@ -225,7 +225,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                     $line_id = $model->employee->user->line_id;
                     $topic = $this->comment;
                     // ส่ง msg ให้ Approve
-                    LineNotify::sendDocument($model,$line_id);
+                    LineMsg::sendDocument($model,$line_id);
                 } catch (\Throwable $th) {
                     
                 }

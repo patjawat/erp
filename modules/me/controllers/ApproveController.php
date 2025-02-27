@@ -94,7 +94,7 @@ class ApproveController extends Controller
                     // ส่ง line
                     try {
                         $toUserId = $nextApprove->employee->user->line_id;
-                        LineNotify::sendLeave($nextApprove->id, $toUserId);
+                        LineMsg::sendLeave($nextApprove->id, $toUserId);
                     } catch (\Throwable $th) {
                         //throw $th;
                     }
@@ -107,7 +107,7 @@ class ApproveController extends Controller
                     // try {
                         $toUserId = $leave->employee->user->line_id;
                         $message = 'วันลาขอคุณได้รับการอนุมัติแล้ว';
-                        LineNotify::sendPushMessage(toUserId, $message);
+                        LineMsg::sendPushMessage(toUserId, $message);
                           // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
                 
                     // } catch (\Throwable $th) {

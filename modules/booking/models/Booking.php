@@ -6,10 +6,11 @@ use Yii;
 use DateTime;
 use yii\db\Expression;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
-use app\components\LineNotify;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -182,7 +183,7 @@ class Booking extends \yii\db\ActiveRecord
         foreach($this->listMembers as $item){
             if(isset($item->employee->user->line_id)){
                 $lineId = $item->employee->user->line_id;
-                    LineNotify::sendMsg($lineId, $message);
+                    LineMsg::sendMsg($lineId, $message);
             }
         }
         return $data;
@@ -573,4 +574,17 @@ class Booking extends \yii\db\ActiveRecord
           break;
       }
     }
+
+        //ส่งข้ความไปยังผู้ดูแลห้องประชุม
+        public function SendMeeting() 
+        {
+            
+            $ownerRoom = Room::find()->where(['name' => 'meeting_room','code' => $this->room_id])->one();
+            $id = $ownerRoom->data_json['owner'] ?? 0;
+            $emp = Employees::findOne($id);
+            $lineId = $emp->user->line_id;
+            LineMsg::BookMeeting($this->id,$lineId);
+            
+        }
+        
 }

@@ -26,14 +26,14 @@ $items = [
     ]
 ];
 ?>
-<div class="p-2 mb-3">
+<div class="p-2 mb-3" style="height:180px">
     <h6 class="text-white mb-2">App Menu</h6>
     <div class="overflow-scroll d-flex flex-row borde-0 gap-4 mt-4"
         style="white-space: nowrap; max-width: 100%; height: 100px;">
         <?php foreach ($items as $item): ?>
         <a href="<?php echo Url::to($item['url']) ?>" class="app-menu">
             <div class="d-flex flex-column gap-3 border-0 text-white">
-                <div class=" bg-primary rounded-4 p-3 shadow border border-white bg-opacity-10">
+                <div class="bg-primary rounded-4 p-3 shadow border border-white">
                     <?php echo $item['icon'] ?>
                 </div>
                 <p class="text-center"><?php echo $item['title'] ?></p>
@@ -46,9 +46,12 @@ $items = [
 <?php
 $js = <<<JS
 
-$('.app-menu').click(async function (e) { 
-   
-});
+$(".app-menu").on("click", function () {
+            // ลบคลาส warning ออกจากทุกเมนู
+            $(".app-menu").removeClass("text-bg-warning");
+            // เพิ่มคลาส warning เฉพาะที่ถูกคลิก
+            $(this).find(".bg-primary").removeClass("bg-primary").addClass("bg-warning");
+        });
 
 
 JS;

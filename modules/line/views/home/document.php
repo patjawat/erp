@@ -37,11 +37,11 @@ $docDepartment = DocumentsDetail::find()
 <div class="card rounded-4">
     <div class="card-body rounded-4" style="background:rgba(241, 238, 240, 0.98); min-height:200px">
         <?php foreach($docDepartment as $itemDep):?>
-                <?php echo $this->render('document_item',['item' => $itemDep])?>
+        <?php echo $this->render('document_item',['item' => $itemDep])?>
         <?php endforeach?>
         <?php foreach($docTags as $itemTag):?>
-<?php echo $this->render('document_item',['item' => $itemTag])?>
-        
+        <?php echo $this->render('document_item',['item' => $itemTag])?>
+
         <hr>
         <?php endforeach?>
     </div>

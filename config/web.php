@@ -68,8 +68,8 @@ $config = [
         'site' => 'app\components\SiteHelper',
         'employee' => 'app\components\UserHelper',
         // แจ่งเตือน line Group
-        'lineNotify' => [
-            'class' => 'app\components\LineNotify',
+        'LineMsg' => [
+            'class' => 'app\components\LineMsg',
         ],
         'image' => [
             'class' => 'yii\image\ImageDriver',

@@ -12,7 +12,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -372,7 +372,7 @@ class LeaveController extends Controller
                     $leave->status = 'Allow';
                     $leave->save();
                     $message = 'อนุมัติให้'.($model->leave->leaveType->title ?? '-').' วันที่ '.Yii::$app->thaiFormatter->asDate($leave->date_start, 'long').' ถึง '.Yii::$app->thaiFormatter->asDate($leave->date_end, 'long');
-                    LineNotify::sendMsg($lineId, $message);
+                    LineMsg::sendMsg($lineId, $message);
                     
                 }
 
@@ -381,7 +381,7 @@ class LeaveController extends Controller
                     $leave->save();
                     
                     $message = 'ไม่'.$model->data_json['topic'].'ให้ลาเนื่องจาก'.$model->data_json['note'];
-                    LineNotify::sendMsg($lineId, $message);
+                    LineMsg::sendMsg($lineId, $message);
                     
                 } 
                 

@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
-
+<h6 class="text-primary"><?php echo $model->reason?></h6>
 <div class="row">
     <div class="col-6">
         <div class="flex-shrink-0 rounded p-5 mb-3"
@@ -40,10 +40,9 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-6">
         <div class="card">
             <div class="card-body">
-
-                <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
-                    <h6 class="text-primary"><?php echo $model->reason?></h6>
-                    <div class="d-flex gap-3">
+            
+              
+                <div class="d-flex gap-3 justify-content-end mb-3">
                         <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขการขอใช้ห้องประชุม'], ['class' => 'btn btn-warning shadow rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
 
                         <?= Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/booking-meeting/cancel-order', 'id' => $model->id,'title' => '<i class="fa-solid fa-xmark"></i> ยกเลิกการขอใช้ห้องประชุม'], [
@@ -51,9 +50,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
     ]) ?>
                     </div>
-
-                </div>
-
 
                 <?= DetailView::widget([
             'model' => $model,

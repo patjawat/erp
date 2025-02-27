@@ -99,7 +99,7 @@ $me = UserHelper::GetEmployee();
                                 <i class="fa-brands fa-line fs-1 text-white"></i>
                             </div>
                             <div class="card-body">
-                                <h6 class="text-center">LineNotify</h6>
+                                <h6 class="text-center">LineMsg</h6>
                             </div>
                         </div>
                     </a>

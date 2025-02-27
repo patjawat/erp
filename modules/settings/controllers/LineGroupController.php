@@ -35,9 +35,9 @@ class LineGroupController extends Controller
 
     public function actionNotify()
     {
-        $lineNotify = Yii::$app->lineNotify;
+        $LineMsg = Yii::$app->LineMsg;
         try {
-            $response = $lineNotify->sendMessage('Hello from Yii2!');
+            $response = $LineMsg->sendMessage('Hello from Yii2!');
             return $this->render('notify', ['response' => $response]);
         } catch (\Exception $e) {
             return $this->render('notify', ['error' => $e->getMessage()]);
@@ -177,7 +177,7 @@ class LineGroupController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $message = 'ทดสอบส่งข้อความ';
-        $response = Yii::$app->lineNotify->sendMessage($message, $id);
+        $response = Yii::$app->LineMsg->sendMessage($message, $id);
         if($response){
 
             return [

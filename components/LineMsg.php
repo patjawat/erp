@@ -8,8 +8,9 @@ use app\models\Approve;
 use yii\base\Component;
 use app\models\Categorise;
 use yii\httpclient\Client;
+use app\modules\booking\models\Booking;
 
-class LineNotify extends Component
+class LineMsg extends Component
 {
     public $token;
 
@@ -307,9 +308,15 @@ class LineNotify extends Component
      public static function BookMeeting($id,$userId)
      {
         $model = Booking::findOne($id);
-        $uri = Url::base(true) . Url::to(['/line/booking-meeting/view', 'id' => $รก]);
+        $uri = Url::base(true) . Url::to(['/line/booking-meeting/view', 'id' => $id]);
 
-        $altText = 'ขอใช้ห้องประชุม'; // ข้อความสำรอง
+        $altText = 'ขอใช้'.$model->room->title; // ข้อความสำรอง
+        $content = "วันที่ " . Yii::$app->thaiFormatter->asDate($model->date_start, 'medium') . 
+        " เวลา " . $model->time_start . "-" . $model->time_end . "\n" .
+        "ผู้ติดต่อ " . $model->employee->fullname . "\n" . 
+        "โทรศัพท์ " . $model->data_json['phone'];
+
+        
         $flexContent = [
             'type' => 'bubble',
             'body' => [
@@ -320,11 +327,11 @@ class LineNotify extends Component
                         'type' => 'text',
                         'text' => $altText,
                         'weight' => 'bold',
-                        'size' => 'xl',
+                        'size' => 'md',
                     ],
                     [
                         'type' => 'text',
-                        'text' => 'วันที่',
+                        'text' => $content,
                         'size' => 'md',
                         'wrap' => true,
                     ],

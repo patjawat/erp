@@ -10,7 +10,7 @@ use app\models\Approve;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\sm\models\Product;
@@ -282,7 +282,7 @@ class Order extends \yii\db\ActiveRecord
                       //ส่งข้อความและผุ้อนุมัติไม่ใช่ตัวเอง
                       if($item['level'] == 1){
                         $employeeLeader = Employees::find()->where(['user_id' => $item['emp_id']])->one();
-                        LineNotify::sendPurchase($newItem->id, $employeeLeader->user->line_id);
+                        LineMsg::sendPurchase($newItem->id, $employeeLeader->user->line_id);
                     }
                     
         }

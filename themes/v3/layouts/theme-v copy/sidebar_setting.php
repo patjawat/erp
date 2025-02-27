@@ -44,7 +44,7 @@ use yii\web\View;
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/settings/line-group']) ?>">
                         <i class="fa-brands fa-line"></i>
-                        <span>LineNotify</span>
+                        <span>LineMsg</span>
                     </a>
                 </li>
                 <li>

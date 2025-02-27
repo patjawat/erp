@@ -9,7 +9,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\models\ApproveSearch;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -72,7 +72,7 @@ class ApprovePurchaseController extends \yii\web\Controller
                   
                     $employee = Employees::find()->where(['user_id' => $approve->purchase->created_by])->one();
                     $message = 'ใบขอซื้อ : '. $approve->purchase->pr_number.' ได้รับการอนุมัติแล้ว';
-                    LineNotify::sendPushMessage($employee->user->line_id, $message);
+                    LineMsg::sendPushMessage($employee->user->line_id, $message);
                 }
 
                 return [

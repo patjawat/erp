@@ -9,7 +9,7 @@ use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\SiteHelper;
 use ruskid\csvimporter\CSVReader;
 use yii\validators\DateValidator;
@@ -162,12 +162,12 @@ class EmployeesController extends Controller
         $model = $this->findModel($id);
         $line_id = $model->user->line_id;
         $approveId = 11396;
-        // LineNotify::sendLeave($approveId,$line_id);
+        // LineMsg::sendLeave($approveId,$line_id);
         $docModel = DocumentsDetail::findOne(2);
-        LineNotify::sendDocument($docModel,$line_id);
+        LineMsg::sendDocument($docModel,$line_id);
         
         
-        // $result = Yii::$app->lineNotify->sendLeave($userId);
+        // $result = Yii::$app->LineMsg->sendLeave($userId);
         // return $result;
     }
     /**

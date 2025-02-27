@@ -12,7 +12,7 @@ use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineNotify;
+use app\components\LineMsg;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
