@@ -82,33 +82,51 @@ $("#my_file").on("change", function() {
 });
 
 $('#form-fsn').on('beforeSubmit', function (e) {
-    var form = $(this);
-    var formData = new FormData(form[0]);
+    e.preventDefault();
+    let form = $(this);
 
-    if ($("#my_file").prop('files').length > 0) {
-        var file = $("#my_file").prop('files')[0];
-        formData.append("asset_type", file);
-    }
-
-    $.ajax({
-        url: form.attr('action'),
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        dataType: 'json',
-        beforeSend : async function(){
-            await uploadFile()
-            console.log('beforeSend');
-            
-        },
-        success: async function (response) {
-            form.yiiActiveForm('updateMessages', response, true);
-            if (response.status === 'success') {
-                closeModal();
-                success();
-                await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
-            }
+    Swal.fire({
+        title: 'ยืนยันการบันทึก?',
+        text: "คุณต้องการบันทึกข้อมูลหรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, บันทึกเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                beforeSend: async function () {
+                    await uploadFile();
+                },
+                success: async function (response) {
+                    form.yiiActiveForm('updateMessages', response, true);
+                    if (response.status === 'success') {
+                        closeModal();
+                        await Swal.fire({
+                            title: 'บันทึกสำเร็จ!',
+                            text: 'ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 2000, // ปิดอัตโนมัติใน 3 วินาที
+                            confirmButtonText: 'ตกลง'
+                        });
+                        await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                        icon: 'error',
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+            });
         }
     });
 
