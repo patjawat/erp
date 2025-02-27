@@ -46,3 +46,8 @@ WHERE a.name = 'asset_item'
 
 เปลี่ยน datatype วันลา
 ALTER TABLE `leave_entitlements` CHANGE `days` `days` FLOAT NOT NULL COMMENT 'วันที่ลาได้';
+
+แก้ไขให้มีจุดทศนิยมได้
+ALTER TABLE `leave_entitlements` CHANGE `balance` `balance` DOUBLE NOT NULL DEFAULT '0' COMMENT 'วันที่ลาพักผ่อนสะสม';
+ALTER TABLE `leave_entitlements` 
+MODIFY leave_on_year INT NOT NULL DEFAULT 0;

@@ -34,6 +34,83 @@ if($searchModel->car_type == 'ambulance'){
 <?php  echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+<div class="row">
+    <div class="col-3">
+        <a href="<?php echo Url::to(['/booking/driver','car_type'=>'general','status' => 'RECERVE'])?>">
+
+            <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between gap-1 mb-0">
+                        <span class="h2 fw-semibold">0</span>
+                        <div class="relative">
+                        <i class="fa-solid fa-circle-exclamation text-warning fs-1"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between gap-1 mb-0">
+                        <h6>ร้องขอ</h6>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-3">
+        <a href="<?php echo Url::to(['/booking/driver','car_type'=>'general','status' => 'SUCCESS'])?>">
+            <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between gap-1 mb-0">
+                        <span class="h2 fw-semibold"></span>
+                        <div class="relative">
+                            <i class="fa-solid fa-share-nodes fs-1"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between gap-1 mb-0">
+                        <h6>จัดสรร</h6>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-3">
+        <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="h2 fw-semibold">1,417</span>
+                    <div class="relative">
+                        <i class="fa-solid fa-truck fs-1"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <h6>EMS</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <span class="h2 fw-semibold">445</span>
+                    <div class="relative">
+                        <i class="fa-solid fa-car-side fs-1"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between gap-1 mb-0">
+                    <h6>รับ-ส่ง</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+</div>
+</div>
+
+
 
 <div class="card">
     <div class="card-body">

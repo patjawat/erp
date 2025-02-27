@@ -4,8 +4,11 @@ namespace app\modules\booking\controllers;
 
 use Yii;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Room;
 use app\modules\booking\models\Booking;
@@ -42,12 +45,26 @@ class MeetingController extends Controller
      */
     public function actionIndex()
     {
+        //ตรวจสอบว่าผู้ที่ Login มีห้องประชุมที่รับผิดชอบ
+        $me = UserHelper::GetEmployee();
+        $checkOwnerRoom = Room::find()
+        ->where(['name' => 'meeting_room'])
+        ->andWhere(new Expression("JSON_EXTRACT(data_json, '$.owner') = :owner"), [':owner' => strval($me->id)])
+        ->all();
+        $roomIds = ArrayHelper::getColumn($checkOwnerRoom, 'code');
+        
+        // ตรวจสอบว่ามีห้องอยู่จริงก่อนใช้ IN
+        if (empty($roomIds)) {
+            $roomIds = [-1]; // ป้องกัน error ถ้าไม่มีห้องให้ค้นหา
+        }
+
         $searchModel = new BookingSearch([
             'status' => 'pending'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'meeting']);
-
+        $dataProvider->query->andFilterWhere(['IN','room_id',$roomIds]);
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -158,11 +175,11 @@ class MeetingController extends Controller
         $model->status = $status;
         $model->save(false);
         if($model->status == 'approve'){
-            $model->SendMsg('ขอเชิญเข้าร่วมประชุม');
+            $model->sendMessage('ขอเชิญเข้าร่วมประชุม');
         }
 
         if($model->status == 'cancel'){
-            $model->SendMsg('ยกเลิกประชุม');
+            $model->sendMessage('ยกเลิกประชุม');
         }
        return [
         'status' => 'success'

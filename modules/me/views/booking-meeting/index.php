@@ -39,9 +39,21 @@ $dateNext->modify('+1 day');
 <?php $this->endBlock(); ?>
 
 <style>
-.fc .fc-toolbar>*> :first-child {
+/* .fc .fc-toolbar>*> :first-child {
     margin-left: 0;
     font-size: medium;
+} */
+
+.fc .fc-button {
+    background-color: var(--bs-primary) !important;
+    /* ใช้สี primary ของ Bootstrap */
+    border-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+.fc .fc-button:hover {
+    background-color: var(--bs-dark) !important;
+    /* เมื่อ hover */
 }
 </style>
 <?php // echo $this->render('list_room') ?>
@@ -51,13 +63,27 @@ $dateNext->modify('+1 day');
 
         <div class="card mb-2">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')]) ?>
-                    <h6><i class="fa-regular fa-calendar-plus"></i>
+                <div class="d-flex justify-content-between align-items-center">
+                    <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
+                    <div class="d-flex gap-2 align-self-center">
+                        <div>
+                            
+                            <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">27
+                            </span>
+                        </div>
+                        <div class="d-flex flex-column align-self-center">
+                            <span class="fw-bolder fs-6">พฤหัสบดี</span>
+                            <span class="fw-bolder fs-6">
+                                กุมภาพันธฺ 2569
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- <h6><i class="fa-regular fa-calendar-plus"></i>
                         <?php $time = time();
                         echo Yii::$app->thaiFormatter->asDate($searchModel->date_start, 'full') . '<br>'; ?>
-                    </h6>
-                    <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')]) ?>
+                    </h6> -->
+                    <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
                 </div>
             </div>
         </div>
@@ -71,7 +97,7 @@ $dateNext->modify('+1 day');
                 <div id='calendar'></div>
             </div>
         </div>
-        
+
     </div>
 
     <div class="col-12">
@@ -113,9 +139,15 @@ $js = <<<JS
                 editable: true,
                 dayMaxEvents: true, // allow "more" link when too many events
                 headerToolbar: {
-                    left: 'prevYear,prev,next,nextYear today',
+                    left: 'prev,next,today',
                     center: 'title',
                     right: 'dayGridMonth,dayGridWeek,dayGridDay'
+                },
+                buttonText: {
+                    today: 'วันนี้',
+                    month: 'เดือน',
+                    week: 'สัปดาห์',
+                    day: 'วัน'
                 },
                 eventDidMount: function(info) {
                     var tooltip = new Tooltip(info.el, {

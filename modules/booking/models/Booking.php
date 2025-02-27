@@ -175,14 +175,14 @@ class Booking extends \yii\db\ActiveRecord
     }
 
 
-    public function SendMsg($msg)
+    public function sendMessage($msg)
     {
         $message = $msg.$this->reason. 'วันเวลา '.Yii::$app->thaiFormatter->asDate($this->date_start, 'medium').' เวลา' .$this->time_end.' - '. $this->time_end;
        $data =[];
         foreach($this->listMembers as $item){
             if(isset($item->employee->user->line_id)){
                 $lineId = $item->employee->user->line_id;
-                    LineNotify::sendMessage($lineId, $message);
+                    LineNotify::sendMsg($lineId, $message);
             }
         }
         return $data;

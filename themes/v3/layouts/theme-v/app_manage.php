@@ -89,7 +89,7 @@ $items = [
     [
         'title' => 'ยานพาหนะ',
         'icon' => 'fa-solid fa-car-side fs-1',
-        'url' => ['/booking/driver/dashboard'],
+        'url' => ['/booking/driver?car_type=general'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('driver') ? true : false,
         // 'show' => true
@@ -97,7 +97,7 @@ $items = [
     [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/booking/meeting/dashboard'],
+        'url' => ['/booking/meeting/index'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('meeting') ? true : false,
         // 'show' => true

@@ -4,7 +4,7 @@ use app\components\NotificationHelper;
 $notify = NotificationHelper::Info();
 $totalLeave = $notify['leave']['total'];
 $totalPurchase = $notify['purchase']['total'];
-
+$this->title = "รายการที่ต้องอนุมัติและตรวจสอบ";
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
