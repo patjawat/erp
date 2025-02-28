@@ -19,6 +19,7 @@ use app\modules\hr\models\Organization;
 .field-employeessearch-q {
     margin-bottom: 0px !important;
 }
+
 .right-setting {
     width: 500px !important;
 }
@@ -35,23 +36,24 @@ use app\modules\hr\models\Organization;
 
 
 <div class="d-flex gap-3">
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
-    <span class="filter-emp btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
-        <i class="fa-solid fa-filter"></i>
-    </span>
-</div>
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label(false) ?>
+    <button class="btn btn-primary mt-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+    aria-controls="offcanvasExample">
+            <i class="fa-solid fa-filter"></i> เพิ่มเติม
+        </button>
+    </div>
+        
 
-<div class="right-setting <?=$model->show?>" id="filter-emp">
-    <div class="card mb-0 w-100">
-        <div class="card-header">
-            <h5 class="card-title d-flex justify-content-between">
-                ค้นหาข้อมูล
-                <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
-            </h5>
-        </div>
-        <div class="card-body">
-            <?= $form->field($model, 'show')->hiddenInput(['placeholder' => 'ค้นหา...','id' => 'show'])->label(false) ?>
+<!-- Offcanvas -->
+<div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="offcanvasExample"
+    aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">กรองเพิ่มเติม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body position-relative">
+        
+        <?= $form->field($model, 'show')->hiddenInput(['placeholder' => 'ค้นหา...','id' => 'show'])->label(false) ?>
             <?php //  $form->field($model, 'show')->textInput(['placeholder' => 'ค้นหา...','id' => 'show'])->label(false) ?>
             <?= $form->field($model, 'gender')->widget(Select2::classname(), [
                 'data' => ['ชาย'=> 'ชาย','หญิง' => 'หญิง'],
@@ -85,9 +87,9 @@ use app\modules\hr\models\Organization;
                         'allowClear' => true
                     ],
                 ])->label('หน่วยงาน') ?>
-                
 
-                <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+
+            <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
                     'query' => Organization::find()->addOrderBy('root, lft'),
@@ -113,33 +115,33 @@ use app\modules\hr\models\Organization;
                     ],
             ])->label('สถานะ') ?>
 
-<div class="row">
-<div class="col-6">
+            <div class="row">
+                <div class="col-6">
 
-<?= $form->field($model, 'range1')->textInput(['type' => 'number'])->label('อายุ') ?>
-</div>
-<div class="col-6">
+                    <?= $form->field($model, 'range1')->textInput(['type' => 'number'])->label('อายุ') ?>
+                </div>
+                <div class="col-6">
 
-<?= $form->field($model, 'range2')->textInput(['type' => 'number'])->label('จนถึงอายุ') ?>
-</div>
-<div>
-<?= $form->field($model, 'user_register')->widget(Select2::classname(), [
+                    <?= $form->field($model, 'range2')->textInput(['type' => 'number'])->label('จนถึงอายุ') ?>
+                </div>
+                <div>
+                    <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
                 'data' => [1=>'ลงทะเบียนสำเร็จ', 0=>'ยังไม่ลงทะเบียน'],
                 'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
                         'allowClear' => true
                     ],
             ])->label('สถานนะการลงทะเบียน') ?>
-</div>
-</div>
+                </div>
+            </div>
 
-<?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
+            <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
 
             <?=AppHelper::BtnSave('ค้นหา')?>
-            <?php // Html::a('ทั้งหมด',['/hr/employees','all-status' => true],['class' => 'btn btn-warning']);?>
-        </div>
+            
     </div>
 </div>
+
 
 <?php ActiveForm::end(); ?>
 

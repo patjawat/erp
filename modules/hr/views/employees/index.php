@@ -48,7 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div
-        class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
+        class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center align-items-center">
         <div class="d-flex justify-content-start gap-2">
             <?= app\components\AppHelper::Btn([
                 'url' => ['create'],
