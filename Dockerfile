@@ -47,9 +47,7 @@ RUN rm -rf /app/web/assets/*
 RUN mkdir -p /app/web/downloads /app/web/msword /app/web/import-csv /app/web/msword/results /app/runtime/cache && \
     chmod -R 777 /app/runtime /app/runtime/cache /app/web/assets /app/web/import-csv /app/web/downloads /app/web/msword /app/web/msword/results && \
     chown -R www-data:www-data /app/modules/filemanager && \
-    mkdir -p /app/web/msword/results/leave  && \
-    chmod -R 775 /app/web/msword/results  && \
-    chown -R www-data:www-data /app/web/msword/results
+    chown -R www-data:www-data /app/web/msword
 
 
 
