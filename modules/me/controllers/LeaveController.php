@@ -9,10 +9,10 @@ use yii\web\Response;
 use yii\db\Expression;
 use app\models\Approve;
 use yii\web\Controller;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -310,11 +310,7 @@ class LeaveController extends Controller
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
             $model->save();
 
-            return $this->redirect(['view', 'id' => $model->id]);
-            // return [
-            //     'status' => 'success',
-            //     'container' => '#leave'
-            // ];
+            return $this->redirect(['/me/leave']);
         }
 
         if ($this->request->isAJax) {
@@ -322,12 +318,12 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave/update', [
+                'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave/update', [
+            return $this->render('update', [
                 'model' => $model,
             ]);
         }
