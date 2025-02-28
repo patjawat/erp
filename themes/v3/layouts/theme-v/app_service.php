@@ -6,27 +6,6 @@ use app\components\UserHelper;
 
 $items = [
     [
-        'title' => 'แจ้งซ่อม',
-        'icon' => 'fa-solid fa-circle-exclamation fs-1',
-        'url' => ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],
-        'modal' => true,
-        'size' => 'modal-md'
-    ],
-    [
-        'title' => 'ขอซื้อขอจ้าง',
-        'icon' => 'fa-solid fa-bag-shopping fs-1',
-        'url' => ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง'],
-        'modal' => true,
-        'size' => 'modal-md'
-    ],
-    [
-        'title' => 'เบิกวัสดุ',
-        'icon' => 'fa-solid fa-cart-shopping fs-1',
-        'url' => ['/inventory'],
-        'modal' => false,
-        'size' => 'modal-lg'
-    ],
-    [
         'title' => 'ขอลา',
         'icon' => 'fa-solid fa-calendar-day fs-1',
         'url' => ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'],
@@ -47,8 +26,20 @@ $items = [
         'modal' => false,
         'size' => 'modal-xl'
     ],
-
-   
+    [
+        'title' => 'แจ้งซ่อม',
+        'icon' => 'fa-solid fa-circle-exclamation fs-1',
+        'url' => ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],
+        'modal' => true,
+        'size' => 'modal-md'
+    ],
+    [
+        'title' => 'ขอซื้อขอจ้าง',
+        'icon' => 'fa-solid fa-bag-shopping fs-1',
+        'url' => ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง'],
+        'modal' => true,
+        'size' => 'modal-md'
+    ],
 ];
 ?>
 <div class="d-none d-lg-inline-flex ms-2 dropdown">

@@ -5,6 +5,73 @@ use app\components\UserHelper;
 
 $items = [
     [
+        'title' => 'บุคลากร',
+        'icon' => 'fa-regular fa-circle-user fs-1',
+        'url' => ['/hr/employees'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('hr') ? true : false,
+        // 'show' => true
+        
+    ],
+    [
+        'title' => 'ระบบลา',
+        'icon' => 'fa-solid fa-calendar-day fs-1',
+        'url' => ['/hr/leave/index','status' => 'Checking'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('leave') ? true : false,
+        // 'show' => true
+    ],
+    [
+        'title' => 'สารบรรณ',
+        'icon' => 'bi bi-journal-text fs-1',
+        'url' => ['/dms/documents/receive'],
+        'padding' => 'p-2',
+        'show' => Yii::$app->user->can('document') ? true : false,
+        // 'show' => true
+    ],
+    [
+        'title' => 'พัสดุ/จัดซื้อ',
+        'icon' => 'bi bi-box fs-1',
+        'url' => ['/purchase/order'],
+        'padding' => 'p-2',
+        'show' => Yii::$app->user->can('purchase') ? true : false,
+        // 'show' => true
+    ],
+    
+    [
+        'title' => 'คลัง',
+        'icon' => 'fa-solid fa-cubes-stacked fs-1',
+        'url' => ['/inventory'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('warehouse') ? true : false,
+        // 'show' => true
+        
+    ],
+    [
+        'title' => 'ทรัพย์สิน',
+        'icon' => 'bi bi-folder-check fs-1',
+        'url' => ['/am'],
+        'padding' => 'p-2',
+        'show' => Yii::$app->user->can('asset') ? true : false,
+        // 'show' => true
+    ],
+    [
+        'title' => 'ยานพาหนะ',
+        'icon' => 'fa-solid fa-car-side fs-1',
+        'url' => ['/booking/driver?car_type=general'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('driver') ? true : false,
+        // 'show' => true
+    ],
+    [
+        'title' => 'ห้องประชุม',
+        'icon' => 'fa-solid fa-person-chalkboard fs-1',
+        'url' => ['/booking/meeting/index'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('meeting') ? true : false,
+        // 'show' => true
+    ],
+    [
         'title' => 'งานซ่อมบำรุง',
         'icon' => 'fa-solid fa-screwdriver-wrench fs-2',
         'url' => ['/helpdesk/general'],
@@ -28,56 +95,8 @@ $items = [
         'show' => Yii::$app->user->can('medical') ? true : false,
         // 'show' => true
     ],
-    [
-        'title' => 'ระบบลา',
-        'icon' => 'fa-solid fa-calendar-day fs-2',
-        'url' => ['/hr/leave/index','status' => 'Checking'],
-        'padding' => 'p-3',
-        'show' => Yii::$app->user->can('leave') ? true : false,
-        // 'show' => true
-    ],
-    [
-        'title' => 'สารบรรณ',
-        'icon' => 'bi bi-journal-text fs-1',
-        'url' => ['/dms/documents/receive'],
-        'padding' => 'p-2',
-        'show' => Yii::$app->user->can('document') ? true : false,
-        // 'show' => true
-    ],
-    [
-        'title' => 'คลัง',
-        'icon' => 'fa-solid fa-cubes-stacked fs-1',
-        'url' => ['/inventory'],
-        'padding' => 'p-3',
-        'show' => Yii::$app->user->can('warehouse') ? true : false,
-        // 'show' => true
-        
-    ],
-    [
-        'title' => 'พัสดุ/จัดซื้อ',
-        'icon' => 'bi bi-box fs-1',
-        'url' => ['/purchase/order'],
-        'padding' => 'p-2',
-        'show' => Yii::$app->user->can('purchase') ? true : false,
-        // 'show' => true
-    ],
-    [
-        'title' => 'บุคลากร',
-        'icon' => 'fa-regular fa-circle-user fs-1',
-        'url' => ['/hr/employees'],
-        'padding' => 'p-3',
-        'show' => Yii::$app->user->can('hr') ? true : false,
-        // 'show' => true
-        
-    ],
-    [
-        'title' => 'ทรัพย์สิน',
-        'icon' => 'bi bi-folder-check fs-1',
-        'url' => ['/am'],
-        'padding' => 'p-2',
-        'show' => Yii::$app->user->can('asset') ? true : false,
-        // 'show' => true
-    ],
+
+
     [
         'title' => 'การเงิน',
         'icon' => 'fa-solid fa-calculator fs-1',
@@ -86,22 +105,8 @@ $items = [
         'show' => Yii::$app->user->can('finance') ? true : false,
         // 'show' => true
     ],
-    [
-        'title' => 'ยานพาหนะ',
-        'icon' => 'fa-solid fa-car-side fs-1',
-        'url' => ['/booking/driver?car_type=general'],
-        'padding' => 'p-3',
-        'show' => Yii::$app->user->can('driver') ? true : false,
-        // 'show' => true
-    ],
-    [
-        'title' => 'ห้องประชุม',
-        'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/booking/meeting/index'],
-        'padding' => 'p-3',
-        'show' => Yii::$app->user->can('meeting') ? true : false,
-        // 'show' => true
-    ]
+    
+
     
 ];
 ?>
