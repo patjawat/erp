@@ -344,10 +344,10 @@ class Leave extends \yii\db\ActiveRecord
             ->andwhere(['<', 'date_start', $this->date_start])
             ->one();
 
-        return [
-            'data' => $data ??  0,
-            'sum_all' => $sumAll ?? 0
-        ];
+            return [
+                'data' => $data ?? null,
+                'sum_all' => $sumAll ?? 0
+            ];
     }
 
     // สรุปการลารายบุคคล
