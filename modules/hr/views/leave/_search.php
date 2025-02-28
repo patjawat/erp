@@ -42,7 +42,7 @@ use iamsaint\datetimepicker\Datetimepicker;
     // echo $initEmployee;
   
       echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
-        'data' => $model->listEmployees(),
+        // 'data' => $model->listEmployees(),
           'options' => ['placeholder' => 'เลือกบุคลากร ...'],
           'pluginOptions' => [
               'width' => '230px',
@@ -51,14 +51,14 @@ use iamsaint\datetimepicker\Datetimepicker;
               'language' => [
                   'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
               ],
-            //   'ajax' => [
-            //       'url' => $url,
-            //       'dataType' => 'json',
-            //       'data' => new JsExpression('function(params) { return {q:params.term}; }')
-            //   ],
-            //   'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-            //   'templateResult' => new JsExpression('function(city) { return city.fullname; }'),
-            //   'templateSelection' => new JsExpression('function (city) { return city.fullname; }'),
+              'ajax' => [
+                  'url' => $url,
+                  'dataType' => 'json',
+                  'data' => new JsExpression('function(params) { return {q:params.term}; }')
+              ],
+              'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+              'templateResult' => new JsExpression('function(city) { return city.fullname; }'),
+              'templateSelection' => new JsExpression('function (city) { return city.fullname; }'),
           ],
           'pluginEvents' => [
               'select2:select' => 'function(result) { 

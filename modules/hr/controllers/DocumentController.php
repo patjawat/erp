@@ -182,7 +182,7 @@ class DocumentController extends \yii\web\Controller
 
         // ###########################  การตรวจสอบอนุมัติ ######################################
         // หัวหน้ากลุ่มงาน ตรวจสสอบ level 2
-        $templateProcessor->setValue('leader_fullname', '(' . $model->checkerName(2)['fullname'] . ')');
+        $templateProcessor->setValue('leader_fullname', $model->checkerName(2)['fullname']);
         $templateProcessor->setValue('leader_position', 'ตำแหน่ง' . $model->checkerName(2)['position']);
         $templateProcessor->setValue('leader_date', $model->checkerName(3)['approve_date']);
         try {
@@ -193,7 +193,7 @@ class DocumentController extends \yii\web\Controller
 
         // เจ้าหน้าที่ HR ตรวจสสอบ Level 3
         $hr = $model->checkerName(3);
-        $templateProcessor->setValue('hr_fullname', '(' . $hr['fullname'] . ')');
+        $templateProcessor->setValue('hr_fullname', $hr['fullname']);
         $templateProcessor->setValue('hr_position', 'ตำแหน่ง' . $hr['position']);
         $templateProcessor->setValue('hr_date', $hr['approve_date']);
         try {
@@ -203,7 +203,7 @@ class DocumentController extends \yii\web\Controller
         }
 
         // ผู้อำนวยการตรวจสอบ อนุมัติให้ลา/ไม่ให้ลา
-        $templateProcessor->setValue('direc_fullname', '(' . $model->checkerName(4)['fullname'] . ')');
+        $templateProcessor->setValue('direc_fullname',$model->checkerName(4)['fullname']);
         $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position']);
         $templateProcessor->setValue('direc_date', $model->checkerName(3)['approve_date']);
         try {
