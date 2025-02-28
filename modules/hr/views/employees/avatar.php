@@ -8,18 +8,8 @@ use app\modules\hr\models\EmployeeDetail;
 <div class="card hover-card">
     <div class="card-body">
 
-    <div class="dropdown-menu dropdown-menu-right">
-                                <?= AppHelper::Btn([
-                                    'type' => 'update',
-                                    'url' => ['/hr/employees/update', 'id' => $model->id],
-                                    'modal' => true,
-                                    'size' => 'lg',
-                                    'class' => 'dropdown-item',
-                                ]) ?>
 
-                                <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                            </div>
-                           
+
         <div class="d-flex">
             <div class="position-relative">
                 <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-0 shadow  lazyload',
@@ -30,23 +20,21 @@ use app\modules\hr\models\EmployeeDetail;
                         ]
                         ]) ?>
                 <div class="position-absolute top-0 start-500 translate-middle">
-                <?php if($model->user_id == 0):?>
+                    <?php if($model->user_id == 0):?>
                     <i class="bi bi-exclamation-circle-fill text-warning fs-4"></i>
-                    <?php else:?>    
-                <i class="bi bi-check-circle-fill text-primary fs-4"></i>
-        <?php endif?>
-            </div>
+                    <?php else:?>
+                    <i class="bi bi-check-circle-fill text-primary fs-4"></i>
+                    <?php endif?>
+                </div>
                 <!-- <span class="contact-status offline"></span> -->
             </div>
             <div class="flex-grow-1 w-50">
-                <div class="row">
+            <div class="row">
                     <div class="col-lg-9 col-md-12 col-sm-12 fw-semibold mb-1 d-inline-block text-truncate">
-                        <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id]) ?>" class="text-dark">       
-                        <h6 class="mb-0">
-                            <?= $model->fullname ?> (<code><?= $model->age_y ?></code> ปี)
-
+                        <h6>
+                            <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id]) ?>"
+                                class="text-dark"><?= $model->fullname ?> (<code><?= $model->age_y ?></code> ปี)</a>
                         </h6>
-                    </a>
                     </div>
                     <div class="col-lg-3 col-md-12 col-sm-12">
 
@@ -55,19 +43,29 @@ use app\modules\hr\models\EmployeeDetail;
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-sliders"></i>
                             </a>
-                            
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <?= AppHelper::Btn([
+                                    'type' => 'update',
+                                    'url' => ['/hr/employees/update', 'id' => $model->id],
+                                    'modal' => true,
+                                    'size' => 'lg',
+                                    'class' => 'dropdown-item',
+                                ]) ?>
+
+                                <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?php // Html::a('<i class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id, 'title' => ''], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-
                 <div class="row">
                     <div class="col-12 text-truncate">
                         <p class="text-muted mb-0">
                             <?= $model->positionName(['icon' => true]) ?>
                         </p>
                         <?php if ($model->joinDate()): ?>
-                            <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
-                                <code>
+                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
+                            <code>
                                 <?php 
                                         try {
                                             echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium');
@@ -76,10 +74,10 @@ use app\modules\hr\models\EmployeeDetail;
                                         }
                                         ?>
                                     </code>
-                            </p>
-                            <p><i class="bi bi-check2-circle text-primary"></i>
+                        </p>
+                        <p><i class="bi bi-check2-circle text-primary"></i>
                             อายุราชการ <?= $model->workLife()['full'] ?></p>
-                        
+
 
                         <?php endif; ?>
                         <?php if (isset($showAge) && $showAge == true): ?>
@@ -99,7 +97,7 @@ use app\modules\hr\models\EmployeeDetail;
 
                 <?php if ($model->departmentName()): ?>
                 <div class="d-flex">
-                <i class="bi bi-tags-fill me-1"></i>
+                    <i class="bi bi-tags-fill me-1"></i>
                     <span class="text-primary fw-normal"><?= $model->departmentName() ?></span>
                 </div>
                 <?php else: ?>
@@ -112,13 +110,11 @@ use app\modules\hr\models\EmployeeDetail;
             <!-- End col-6 -->
             <div class="col-6 text-truncate">
                 <?php if ($model->positionTypeName()): ?>
-                <label
-                    class="badge rounded-pill text-primary-emphasis bg-primary-subtle p-2  text-truncate float-end">
+                <label class="badge rounded-pill text-primary-emphasis bg-primary-subtle p-2  text-truncate float-end">
                     <i class="bi bi-clipboard-check"></i> <?= $model->statusName() ?>
                 </label>
                 <?php else: ?>
-                <label
-                    class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
+                <label class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
                     <i class="fa-solid fa-circle-exclamation text-warning"></i> ไม่ระบุสถานะ
                 </label>
                 <?php endif ?>
