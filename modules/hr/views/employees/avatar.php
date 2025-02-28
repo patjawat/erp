@@ -22,7 +22,7 @@ use app\modules\hr\models\EmployeeDetail;
                            
         <div class="d-flex">
             <div class="position-relative">
-                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1  lazyload',
+                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-0 shadow  lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
