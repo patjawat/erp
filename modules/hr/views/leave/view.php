@@ -60,7 +60,16 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
+<?php
+$data = $model->entitlements()->days;
+// $lastDateEnd = $model->LastDays()['data'] !== 0 ?  Yii::$app->thaiFormatter->asDate($model->LastDays()['data']->date_end, 'long') : '';
+echo "<pre>";
+// print_r($model->LastDays()['data']);
+print_r($data);
+echo "</pre>";
 
+
+?>
 <?php Pjax::end(); ?>
 
 <?php

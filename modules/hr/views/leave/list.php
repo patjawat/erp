@@ -146,6 +146,7 @@ $js = <<<JS
                 window.URL.revokeObjectURL(link.href);
                 // ปิด modal หลังดาวน์โหลดเสร็จ
                 \$("#main-modal").modal("hide");
+                location.reload(true)
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 Swal.fire({

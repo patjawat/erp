@@ -7,9 +7,9 @@ use yii\helpers\Html;
 use yii\db\Expression;
 use app\models\Approve;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
@@ -345,7 +345,7 @@ class Leave extends \yii\db\ActiveRecord
             ->one();
 
         return [
-            'data' => $data,
+            'data' => $data ??  0,
             'sum_all' => $sumAll ?? 0
         ];
     }
@@ -471,7 +471,7 @@ class Leave extends \yii\db\ActiveRecord
                 'fullname' => $check->employee ? $check->employee->fullname : 'ไม่ระบุชื่อ',
                 'signature' =>   $check->employee ? $check->employee->signature() : 'ไม่ระบุตำแหน่ง',
                 'position' => $check->employee ? $check->employee->positionName() : 'ไม่ระบุตำแหน่ง',
-                'approve_date' => isset($this->data_json['approve_date']) ? Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long') : '',
+                'approve_date' => isset($check->data_json['approve_date']) ? Yii::$app->thaiFormatter->asDate($check->data_json['approve_date'], 'long') : '',
             ];
         } else {
             return [
