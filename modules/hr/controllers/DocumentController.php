@@ -38,8 +38,16 @@ class DocumentController extends \yii\web\Controller
         @unlink(Yii::getAlias('@webroot') . '/msword/results/leave/' . $result_name);
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/leave/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
-        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start ?? '0000-00-00', 'long');
-        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end ?? '0000-00-00', 'long');
+        try {
+            $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start ?? '0000-00-00', 'long');
+        } catch (\Throwable $th) {
+            $dateStart = '-';
+        }
+        try {
+            $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end ?? '0000-00-00', 'long');
+        } catch (\Throwable $th) {
+            $dateEnd = '';
+        }
         
         $lastDays = $model->LastDays();
         $lastDateStart = is_object($lastDays['data']) ? Yii::$app->thaiFormatter->asDate($lastDays['data']->date_start, 'long') : '-';
