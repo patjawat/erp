@@ -59,6 +59,7 @@ use app\modules\hr\models\Organization;
                 'data' => ['ชาย'=> 'ชาย','หญิง' => 'หญิง'],
                 'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
+                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
             ])->label('เพศ') ?>
@@ -67,6 +68,7 @@ use app\modules\hr\models\Organization;
                 'data' => $model->ListPositionName(),
                 'options' => ['placeholder' => 'เลือก ...'],
                 'pluginOptions' => [
+                    'dropdownParent' => '#offcanvasExample',
                     'allowClear' => true
                 ],
                 ])->label('ตำแหน่ง') ?>
@@ -75,6 +77,7 @@ use app\modules\hr\models\Organization;
                     'data' => $model->ListPositionType(),
                     'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
+                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
                 ])->label('ประเภท') ?>
@@ -84,6 +87,7 @@ use app\modules\hr\models\Organization;
                     'data' => $model->ListDepartment(),
                     'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
+                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
                 ])->label('หน่วยงาน') ?>
@@ -111,6 +115,7 @@ use app\modules\hr\models\Organization;
                 'data' => $model->ListStatus(),
                 'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
+                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
             ])->label('สถานะ') ?>
@@ -129,6 +134,7 @@ use app\modules\hr\models\Organization;
                 'data' => [1=>'ลงทะเบียนสำเร็จ', 0=>'ยังไม่ลงทะเบียน'],
                 'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
+                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
             ])->label('สถานนะการลงทะเบียน') ?>
@@ -148,6 +154,12 @@ use app\modules\hr\models\Organization;
 <?php
 $js = <<< JS
 
+
+$('#offcanvasExample').on('shown.bs.offcanvas', function () {
+    $('#model-position_name').select2({
+        dropdownParent: $('#offcanvasExample') // ให้ dropdown อยู่ภายใน offcanvas
+    });
+});
 
 // $("#w0-tree-input").treeview("expandAll");
 // $("#treeID").treeview("collapseAll");
