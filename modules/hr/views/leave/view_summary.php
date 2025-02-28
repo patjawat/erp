@@ -17,6 +17,7 @@ FROM (
     GROUP BY t.code, t.title, l.thai_year
 ) AS x1 
 GROUP BY x1.code, x1.title, x1.thai_year;";
+
 $querys = Yii::$app->db->createCommand($sql)
 ->bindValue(':date_start',$model->date_start)
 ->bindValue(':thai_year',$model->thai_year)
