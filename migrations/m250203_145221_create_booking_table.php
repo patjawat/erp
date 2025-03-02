@@ -39,6 +39,7 @@ class m250203_145221_create_booking_table extends Migration
             'driver_id' => $this->string()->comment('พนักงานขับ'),
             'leader_id' => $this->string()->comment('หัวหน้างานรับรอง'),
             'emp_id' => $this->string()->comment('ผู้ขอ'),
+            'private_car' => $this->tinyInteger(0)->notNull()->defaultValue(0)->comment('รถยนต์ส่วนตัว'), // 1 = true, 0 = false
             'data_json' => $this->json()->comment('ยานพาหนะ'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),

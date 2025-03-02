@@ -1,12 +1,14 @@
 <?php
 
-namespace app\models;
+namespace app\modules\approve\models;
 
 use Yii;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
+use app\modules\booking\models\Booking;
+
 
 /**
  * This is the model class for table "approve".
@@ -74,6 +76,7 @@ class Approve extends \yii\db\ActiveRecord
         ];
     }
 
+
     // relation table
     public function getEmployee()
     {
@@ -88,10 +91,25 @@ class Approve extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Order::class, ['id' => 'from_id'])->andOnCondition(['name' => 'order']);
     }
-
-
+    
+    public function getBookCar()
+    {
+        return $this->hasOne(Booking::class, ['id' => 'from_id'])->andOnCondition(['name' => 'booking_car']);
+    }
     
 
+    //  หา level สุดท้าย
+    public function maxLevel($fromId)
+    {
+        try {
+            return Approve::find()
+                ->where(['from_id' => $this->from_id])
+                ->max('level') ?? 0; // คืนค่า 0 ถ้าไม่มีข้อมูล
+        } catch (\Throwable $th) {
+            return 0; // ป้องกัน error ที่ไม่คาดคิด
+        }
+    }
+    
     public function viewApproveDate()
     {
     try {
@@ -132,4 +150,29 @@ class Approve extends \yii\db\ActiveRecord
             ];
         }
     }
+
+        //  ภาพทีมผูตรวจสอบ
+        public function stackChecker()
+        {
+            // try {
+            $data = '';
+            $data .= '<div class="avatar-stack">';
+            foreach (self::find()->where(['from_id' => $this->from_id])->andWhere(['not in', 'status', ['None','Pending']])->all() as $key => $item) {
+                try {
+                    $data .=Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
+                            'data' => [
+                                'expand' => '-20',
+                                'sizes' => 'auto',
+                                'src' => $item->employee->showAvatar()
+                            ]]);
+                       
+                } catch (\Throwable $th) {
+                    // throw $th;
+                }
+            }
+            $data .= '</div>';
+            return $data;
+        }
+        
+
 }

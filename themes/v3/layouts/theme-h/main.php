@@ -3,14 +3,14 @@
 /** @var yii\web\View $this */
 /** @var string $content */
 
+use yii\web\View;
 use app\assets\AppAsset;
-use app\assets\BootstapIconAsset;
 // use app\widgets\Alert;
 // use yii\bootstrap5\Breadcrumbs;
 use yii\bootstrap5\Html;
 // use yii\bootstrap5\Nav;
 // use yii\bootstrap5\NavBar;
-use yii\web\View;
+use app\assets\BootstapIconAsset;
 
 AppAsset::register($this);
 BootstapIconAsset::register($this);
@@ -40,9 +40,17 @@ BootstapIconAsset::register($this);
     <?php $this->beginBody() ?>
     <?=$this->render('../modal')?>             
     <main role="main">
+        <div class="">
+            <?php echo $this->render('header')?>
+            <?php echo $this->render('h-navbar')?>
+            
+        </div>
 
-            <?=$this->render('../navbar')?>
-            <?=$this->render('../content',['content' => $content ])?>
+    
+            <div class="p-5" style="margin-top:55px;">
+                <?=$content;?>
+
+            </div>
 
         
     </main>

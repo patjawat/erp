@@ -38,7 +38,6 @@ use app\modules\usermanager\models\User;
  * @property string|null $driver_id พนักงานขับ
  * @property string|null $leader_id หัวหน้างานรับรอง
  * @property string|null $data_json ยานพาหนะ
- * @property int $private_car รถยนต์ส่วนตัว
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
@@ -63,7 +62,7 @@ class Booking extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'date_start', 'time_start', 'date_end', 'time_end','private_car'], 'required'],
+            [['name', 'date_start', 'time_start', 'date_end', 'time_end'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id','tags_department'], 'safe'],
             [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
@@ -164,13 +163,6 @@ class Booking extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);
     }
-
-    //สถานที่ไห
-    public function getLocationOrg()
-    {
-        return $this->hasOne(Categorise::class, ['code' => 'location'])->andOnCondition(['name' => 'document_org']);
-    }
-
 
     //สมาชิกที่จะเข้าร่วมประชุม
     public function getlistMembers()

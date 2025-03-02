@@ -5,7 +5,6 @@ namespace app\modules\hr\models;
 use Yii;
 use yii\helpers\Html;
 use yii\db\Expression;
-use app\models\Approve;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
@@ -15,6 +14,7 @@ use app\components\UserHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\LeaveEntitlements;
 
@@ -173,7 +173,7 @@ class Leave extends \yii\db\ActiveRecord
     {
     // หัวหน้างาน
         $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
-        // try {
+        try {
             if (!$leaveStep1Check) {
                 $leaveStep1 = $leaveStep1Check ? $leaveStep1Check : new Approve();
                 $leaveStep1->from_id = $this->id;
@@ -192,11 +192,11 @@ class Leave extends \yii\db\ActiveRecord
 
                 }
             }
-        // } catch (\Throwable $th) {
+        } catch (\Throwable $th) {
 
-        // }
+        }
 
-        // try {
+        try {
              //หัวหน้ากลุ่มงานเห็นชอบ
             $leaveStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
             if (!$leaveStep2Check) {
@@ -210,10 +210,10 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep2->status = 'None';
                 $leaveStep2->save(false);
             }
-        // } catch (\Throwable $th) {
-        // }
+        } catch (\Throwable $th) {
+        }
 
-        // try {
+        try {
             //ผู้ตรวจสอบผู้ดูแลตรวจสอบวันลา
             $leaveStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
             if (!$leaveStep3Check) {
@@ -227,13 +227,13 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep3->status = 'None';
                $leaveStep3->save(false);
             }
-        // } catch (\Throwable $th) {
-        // }
+        } catch (\Throwable $th) {
+        }
 
         //ผู้อำนวยการอนุมัติ
         $director = SiteHelper::viewDirector();
         $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
-        // try {
+        try {
             if (!$leaveStep4Check) {
             
                 $leaveStep4 = $leaveStep4Check ? $leaveStep4Check : new Approve();
@@ -247,8 +247,8 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep4->save(false);
             }
             // code...
-        // } catch (\Throwable $th) {
-        // }
+        } catch (\Throwable $th) {
+        }
     }
 
     public function listApprove()

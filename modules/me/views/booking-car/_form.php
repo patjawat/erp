@@ -155,13 +155,18 @@ $resultsJs = <<< JS
             </div>
         </div>
         
-
-
-
     </div>
     <div class="col-5">
-
-    <?= $form->field($model, 'data_json[go_type]')->radioList(['1' => 'ไปกลับ','2' => 'ค้างคืน'],['custom' => true,'inline' => true])->label('ประเภทการไป') ?>
+        <div class="d-flex justify-content-between">
+            <?= $form->field($model, 'data_json[go_type]')->radioList(['ไปกลับ' => 'ไปกลับ','ค้างคืน' => 'ค้างคืน'],['custom' => true,'inline' => true])->label('ประเภทการเดินทาง') ?>
+            <div>
+                <?= $form->field($model, 'private_car',[ 'options' => ['class' => 'form-group mb-0']])->checkbox(['custom' => true, 'switch' => true,'checked' => ($model->private_car == 1 ? true : false)])->label('รถยนต์ส่วนตัว');?>
+                <?= $form->field($model, 'data_json[me_car]',['horizontalCssClasses' => [
+                    'wrapper' => 'mb-0'
+                    ]
+                    ])->textInput()->label(false) ?>
+            </div>
+        </div>
         <div class="d-flex flex-column gap-1 mt-1">
 
             <div>
@@ -356,7 +361,7 @@ $resultsJs = <<< JS
 
 <?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'license_plate')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'name')->hiddenInput(['value' => 'driver_service'])->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[req_license_plate]')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'data_json[req_driver_id]')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>

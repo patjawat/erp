@@ -1,6 +1,7 @@
 <?php
 
 namespace app\modules\me\controllers;
+
 use Yii;
 use DateTime;
 use DatePeriod;
@@ -9,21 +10,23 @@ use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\SiteHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
+use app\modules\approve\models\Approve;
 use app\modules\booking\models\Booking;
 use app\modules\hr\models\EmployeesSearch;
+use app\modules\approve\models\ApproveSearch;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\BookingSearch;
 
 class BookingCarController extends \yii\web\Controller
 {
-    
-
-  /**
+    /**
      * @inheritDoc
      */
     public function behaviors()
@@ -50,7 +53,7 @@ class BookingCarController extends \yii\web\Controller
     {
         $carType = $this->request->get('car_type');
         $status = $this->request->get('status');
-        
+
         $me = UserHelper::GetEmployee();
         $userId = Yii::$app->user->id;
         $searchModel = new BookingSearch([
@@ -75,10 +78,9 @@ class BookingCarController extends \yii\web\Controller
 
     //     if ($this->request->isPost) {
     //         if ($model->load($this->request->post())) {
-               
+
     //             if($model->save(false)){
-                   
-                    
+
     //                 \Yii::$app->response->format = Response::FORMAT_JSON;
     //                 return [
     //                     'status' => 'success'
@@ -105,7 +107,7 @@ class BookingCarController extends \yii\web\Controller
 
     // }
 
-      //เลือกแพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้
+    // เลือกแพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้
     //   public function actionListEmployee()
     //   {
     //     $searchModel = new EmployeesSearch([
@@ -113,7 +115,6 @@ class BookingCarController extends \yii\web\Controller
     //     ]);
     //     $dataProvider = $searchModel->search($this->request->queryParams);
     //     $dataProvider->query->andWhere(['status' => 1]);
-  
 
     //     $dataProvider->query->andFilterWhere([
     //         'or',
@@ -124,10 +125,10 @@ class BookingCarController extends \yii\web\Controller
     //     ]);
 
     //     $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
-        
+
     //       if ($this->request->isAJax) {
     //           \Yii::$app->response->format = Response::FORMAT_JSON;
-  
+
     //           return [
     //               'title' => $this->request->get('title'),
     //               'content' => $this->renderAjax('list_employee',[
@@ -142,53 +143,49 @@ class BookingCarController extends \yii\web\Controller
     //           ]);
     //       }
     //   }
-      
 
-        //เลือกประเภทของการใช้งานรถ
-        public function actionSelectType()
-        {
-            if ($this->request->isAJax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-    
-                return [
-                    'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('select_type'),
-                ];
-            } else {
-                return $this->render('select_type');
-            }
+    // เลือกประเภทของการใช้งานรถ
+    public function actionSelectType()
+    {
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('select_type'),
+            ];
+        } else {
+            return $this->render('select_type');
         }
-    
-      
-                //เลือกประเภทของการใช้งานรถ
-                public function actionListCars()
-                {
-                    $carType = $this->request->get('car_type');
-                    
-                    $searchModel = new AssetSearch();
-                    $dataProvider = $searchModel->search($this->request->queryParams);
-                    $dataProvider->query->andFilterWhere(['not','license_plate',null]);
-                    $dataProvider->query->andFilterWhere(['car_type' => $carType]);
+    }
 
-                    if ($this->request->isAJax) {
-                        \Yii::$app->response->format = Response::FORMAT_JSON;
-            
-                        return [
-                            'title' => $this->request->get('title'),
-                            'content' => $this->renderAjax('list_cars',[
-                                'searchModel' => $searchModel,
-                                'dataProvider' => $dataProvider,
-                            ]),
-                        ];
-                    } else {
-                        return $this->render('list_cars',[
-                            'searchModel' => $searchModel,
-                            'dataProvider' => $dataProvider,
-                        ]);
-                    }
-                }
-    
-                
+    // เลือกประเภทของการใช้งานรถ
+    public function actionListCars()
+    {
+        $carType = $this->request->get('car_type');
+
+        $searchModel = new AssetSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['not', 'license_plate', null]);
+        $dataProvider->query->andFilterWhere(['car_type' => $carType]);
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_cars', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('list_cars', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
 
     /**
      * Displays a single BookingCar model.
@@ -198,9 +195,9 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionView($id)
     {
-            $model = $this->findModel($id);
-            if ($this->request->isAJax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('view', [
@@ -213,7 +210,6 @@ class BookingCarController extends \yii\web\Controller
             ]);
         }
     }
-
 
     // ตรวจสอบความถูกต้อง
     public function actionValidator()
@@ -234,7 +230,7 @@ class BookingCarController extends \yii\web\Controller
             return $this->asJson($result);
         }
     }
-    
+
     /**
      * Creates a new BookingCar model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -242,8 +238,9 @@ class BookingCarController extends \yii\web\Controller
      */
     public function actionCreate()
     {
-        $carType = $this->request->get('type'); 
+        $carType = $this->request->get('type');
         $model = new Booking([
+            'name' => 'booking_car',
             'car_type' => $carType,
             'time_start' => '08:00',
             'time_end' => '16:30',
@@ -255,16 +252,19 @@ class BookingCarController extends \yii\web\Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                $model->status = 'RECERVE';
-                if($model->save(false)){
+                $model->status = 'Pending';
+                if ($model->save(false)) {
+                    // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
                     $this->checkLocation($model);
-                    $this->createDetail($model);
-                    
+
+                    // ถ้าเป็นการไปกลับสร้างตารางจรรสรรของแต่ละวัน
+                    if ($model->data_json['go_type'] == 'ไปกลับ') {
+                        $this->createDetail($model);
+                    }
+                    //สร้างการอนุมัติ
                     \Yii::$app->response->format = Response::FORMAT_JSON;
+                        $this->createApprove($model);
                     return $this->redirect(['/me/booking-car']);
-                    return [
-                        'status' => 'success'
-                    ];
                 }
             }
         } else {
@@ -286,18 +286,53 @@ class BookingCarController extends \yii\web\Controller
         }
     }
 
+    protected function createApprove($model)
+    {
+        // try {
+            // หัวหน้างาน
+            $leader = new Approve();
+            $leader->from_id = $model->id;
+            $leader->title = 'ขออนุมัติใช้รถ';
+            $leader->name = 'booking_car';
+            $leader->status = 'Pending';
+            $leader->emp_id = $model->leader_id;
+            $leader->level = 1;
+            $leader->data_json = ['topic' => 'อนุมัติ'];
+            $leader->save(false);
+            $id = $model->id;
+            LineMsg::BookCar($id,1);
+            
+        // } catch (\Throwable $th) {
+        // }
+        // ผู้อำนวยการอนุมัติ
+        $getDirector = SiteHelper::viewDirector();
+        // try {
+            $director = new Approve();
+            $director->from_id = $model->id;
+            $director->name = 'booking_car';
+            $director->emp_id = $director['id'];
+            $director->title = 'ขออนุมัติใช้รถ';
+            $director->data_json = ['topic' => 'อนุมัติ'];
+            $director->level = 2;
+            $director->status = 'None';
+            $director->save(false);
+        // } catch (\Throwable $th) {
+        // }
+
+        
+    }
+
     protected function createDetail($model)
     {
         $startDate = new DateTime($model->date_start);
         $endDate = new DateTime($model->date_end);
-        $endDate->modify('+1 day'); // เพิ่ม 1 วัน เพื่อให้รวมวันที่สิ้นสุด
+        $endDate->modify('+1 day');  // เพิ่ม 1 วัน เพื่อให้รวมวันที่สิ้นสุด
 
-        $interval = new DateInterval('P1D'); // ระยะห่าง 1 วัน
+        $interval = new DateInterval('P1D');  // ระยะห่าง 1 วัน
         $period = new DatePeriod($startDate, $interval, $endDate);
 
         $dates = [];
         foreach ($period as $date) {
-            
             $dates[] = $date->format('Y-m-d');
             $newDetail = new BookingDetail;
             $newDetail->name = 'driver_detail';
@@ -306,24 +341,24 @@ class BookingCarController extends \yii\web\Controller
             $newDetail->date_end = $date->format('Y-m-d');
             $newDetail->save(false);
         }
-        
-
     }
+
+    // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
 
     protected function checkLocation($model)
     {
-     $location = Categorise::findOne($model->location);  
-     if(!$location){
-        $maxCode = Categorise::find()
-    ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
-    ->where(['like', 'name', 'document_org'])
-    ->scalar();
-        $newLocation = new Categorise;
-        $newLocation->code = ($maxCode+1);
-        $newLocation->title = $model->location;
-        $newLocation->name = 'document_org';
-        $newLocation->save(false);
-     } 
+        $location = Categorise::findOne($model->location);
+        if (!$location) {
+            $maxCode = Categorise::find()
+                ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
+                ->where(['like', 'name', 'document_org'])
+                ->scalar();
+            $newLocation = new Categorise;
+            $newLocation->code = ($maxCode + 1);
+            $newLocation->title = $model->location;
+            $newLocation->name = 'document_org';
+            $newLocation->save(false);
+        }
     }
 
     /**
@@ -339,7 +374,7 @@ class BookingCarController extends \yii\web\Controller
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
 
-        if ($this->request->isPost && $model->load($this->request->post()) ) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);

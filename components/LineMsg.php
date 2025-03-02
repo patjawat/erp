@@ -4,10 +4,10 @@ namespace app\components;
 
 use Yii;
 use yii\helpers\Url;
-use app\models\Approve;
 use yii\base\Component;
 use app\models\Categorise;
 use yii\httpclient\Client;
+use app\modules\approve\models\Approve;
 use app\modules\booking\models\Booking;
 
 class LineMsg extends Component
@@ -369,4 +369,72 @@ class LineMsg extends Component
          return true;
      }
  
+     
+     // ฟังก์ชันส่ง Flex Message
+     public static function BookCar($id,$level)
+     {
+        $approve = Approve::find()->where(['name' => 'booking_car','from_id' => $id,'level' => $level,'status'=> 'Pending'])->one();
+        $book = Booking::findOne(['id' => $id,'name' => 'booking_car']);
+        $userId = $approve->employee->user->line_id;
+ 
+        $uri = Url::base(true) . Url::to(['/line/booking-car/approve', 'id' => $approve->id]);
+        $content = "ขออนุญาติใช้รถยนต์".($book->private_car == 1 ? 'ส่วนตัว' : null)."\n";
+        $content .= "เหตุผล : ".$book->reason."\n";
+        $content .= "ไป : ".$book->locationOrg->title."\n";
+        $content .= "ประเภทการเดินทาง : ".$book->data_json['go_type']."\n";
+        $content .= "วันที่ " . Yii::$app->thaiFormatter->asDate($book->date_start, 'medium').' ถึง '.Yii::$app->thaiFormatter->asDate($book->date_end, 'medium')."\n";
+        $content .= "มีผู้ร่วมเดินทาง : ".$book->data_json['total_person_count']." คน";
+
+        $altText = 'ขออนุมัติยนต์'.($book->private_car == 1 ? '(ส่วนตัว)' : null); // ข้อความสำรอง
+        $flexContent = [
+            'type' => 'bubble',
+            'body' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'text',
+                        'text' => $altText,
+                        'weight' => 'bold',
+                        'size' => 'xl',
+                    ],
+                    [
+                        'type' => 'text',
+                        'text' => $content,
+                        'size' => 'md',
+                        'wrap' => true,
+                    ],
+                ],
+            ],
+            'footer' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'button',
+                        'style' => 'primary',
+                        'action' => [
+                            'type' => 'uri',
+                            'label' => 'ดำเนินการ',
+                            'uri' =>$uri // ลิงก์ที่คุณต้องการให้ผู้ใช้งานเปิด
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        
+         $data = [
+             'to' => $userId,
+             'messages' => [
+                 [
+                     'type' => 'flex',
+                     'altText' => $altText,
+                     'contents' => $flexContent,
+                 ],
+             ],
+         ];
+        //ส่งข้อความ
+         self::PushMsg($data);
+         return true;
+     }
 }

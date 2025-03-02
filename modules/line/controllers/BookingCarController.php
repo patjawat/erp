@@ -7,6 +7,7 @@ use DatePeriod;
 use DateInterval;
 use yii\helpers\Html;
 use yii\web\Response;
+use app\models\Approve;
 use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
@@ -284,6 +285,64 @@ class BookingCarController extends \yii\web\Controller
             ]);
         }
     }
+
+    public function actionApprove($id)
+    {
+        $model = Approve::findOne($id);
+
+        if ($this->request->isPost && $model->load($this->request->post()) ) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->save();
+            return [
+                'status' => 'success'
+            ];
+        }
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_approve', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_form_approve', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+    public function actionReject($id)
+    {
+        $model = Approve::findOne($id);
+
+        if ($this->request->isPost && $model->load($this->request->post()) ) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->save();
+            return [
+                'status' => 'success'
+            ];
+        }
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_reject', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_form_reject', [
+                'model' => $model,
+            ]);
+        }
+    }
+    
 
     /**
      * Deletes an existing BookingCar model.

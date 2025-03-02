@@ -14,6 +14,6 @@ $totalPurchase = $notify['purchase']['total'];
 ?>
 <div class="d-flex gap-2">
         <?php echo  Html::a('<i class="fa-solid fa-gauge"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/me','name' => 'leave'],['class' => 'btn btn-light'])?>
-        <?php echo  Html::a('<i class="fa-regular fa-circle-check"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$total.'</span>',['/me/approve'],['class' => 'btn btn-light'])?>
+        <?php echo  Html::a('<i class="fa-regular fa-circle-check"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$total.'</span>',['/approve'],['class' => 'btn btn-light'])?>
 
 </div>

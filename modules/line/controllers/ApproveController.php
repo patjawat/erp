@@ -10,10 +10,10 @@ use yii\web\Response;
 use yii\db\Expression;
 use app\models\Approve;
 use yii\web\Controller;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -36,10 +36,6 @@ class ApproveController extends \yii\web\Controller
         return $this->render('index');
     }
 
-    public function actionSaveApprove()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-    }
 
     public function actionLeave()
     {

@@ -73,5 +73,6 @@ $modules['backoffice'] = ['class' => 'app\modules\backoffice\Module'];  // backo
 $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
+$modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
 
 return $modules;

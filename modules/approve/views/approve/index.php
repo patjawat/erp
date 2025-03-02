@@ -1,24 +1,24 @@
 <?php
 
-use app\modules\booking\models\BookingCar;
+use app\modules\approve\models\Approve;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
 /** @var yii\web\View $this */
-/** @var app\modules\booking\models\BookingCarSearch $searchModel */
+/** @var app\modules\approve\models\ApproveSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Booking Cars';
+$this->title = 'Approves';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="booking-car-index">
+<div class="approve-index">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Create Booking Car', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Create Approve', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php Pjax::begin(); ?>
@@ -31,19 +31,14 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'booking_type',
-            'document_id',
-            'urgent',
-            'asset_item_id',
-            //'location',
-            //'data_json',
+            'from_id',
+            'name',
+            'title:ntext',
+            'data_json',
+            //'emp_id',
             //'status',
-            //'date_start',
-            //'time_start',
-            //'date_end',
-            //'time_end',
-            //'driver_id',
-            //'leader_id',
+            //'level',
+            //'comment:ntext',
             //'created_at',
             //'updated_at',
             //'created_by',
@@ -52,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'deleted_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, BookingCar $model, $key, $index, $column) {
+                'urlCreator' => function ($action, Approve $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

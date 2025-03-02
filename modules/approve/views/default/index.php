@@ -20,7 +20,7 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 
     <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
         <div class="col">
-            <a href="<?php echo Url::to(['/me/approve-leave'])?>">
+            <a href="<?php echo Url::to(['/approve/leave'])?>">
                 <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalLeave >=1):?>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalLeave?></span>
@@ -36,7 +36,8 @@ $this->title = "รายการที่ต้องอนุมัติแ�
         </div>
 
         <div class="col">
-            <a href="<?php echo Url::to(['/me/booking-car/'])?>">
+            <!-- <a href="<?php echo Url::to(['/me/booking-car/'])?>"> -->
+            <a href="<?php echo Url::to(['/approve/booking-car/'])?>">
             <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalBookingCar >=1):?>
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalBookingCar?></span>

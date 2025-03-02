@@ -24,6 +24,7 @@ class NotificationHelper extends Component
         return [
             'total' => (self::Leave()['total']+self::Helpdesk()['total']+self::Purchase()['total']+self::StockApprove()['total']),
             'leave' => self::Leave(),
+            'booking_car' => self::DriverService(),
             'helpdesk' => self::Helpdesk(),
             'stock_approve' => self::StockApprove(),
             'purchase' => self::Purchase(),
@@ -31,21 +32,43 @@ class NotificationHelper extends Component
         ];
     }
 
-//ระบบการแจ้งเตือนการอนุมัติ
-    public static function Leave()
+    //ระบบการแจ้งเตือนการอนุมัติใช้รถยนต์
+    public static function DriverService()
     {
         try {
             $me = UserHelper::GetEmployee();
-        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->limit(10)->all();
+        $datas = Approve::find()->where(['name' => 'driver_service','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->limit(10)->all();
         
         return [
-            'title' => 'แจ้งซ่อม',
+            'title' => 'ขออนุญาติใช้รถ',
             'total' => isset($datas) ? count($datas) : 0,
             'datas' => $datas
         ];
         } catch (\Throwable $th) {
             return [
                 'title' => 'แจ้งซ่อม',
+                'total' => 0,
+                'datas' => []
+            ];
+        }
+       
+    }
+    
+//ระบบการแจ้งเตือนการอนุมัติ
+    public static function Leave()
+    {
+        try {
+        $me = UserHelper::GetEmployee();
+        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+        
+        return [
+            'title' => 'ขออนุมัติลา',
+            'total' => isset($datas) ? count($datas) : 0,
+            'datas' => $datas
+        ];
+        } catch (\Throwable $th) {
+            return [
+                'title' => 'ขออนุมัติลา',
                 'total' => 0,
                 'datas' => []
             ];

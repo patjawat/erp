@@ -1,0 +1,1 @@
+<?php echo $this->render('../approve/level_approve',['model' => $model])?>
