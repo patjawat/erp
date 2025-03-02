@@ -73,39 +73,39 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <!-- Nav tabs -->
                                 <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
                                     <li class="nav-item">
-                                        <a class="nav-link <?=$model->data_json['pr_director_confirm'] == '' ? 'active' : null;?>" data-bs-toggle="pill" href="#home1" role="pill"><span
+                                        <a class="nav-link <?=$model->status <=1 ? 'active' : null;?>" data-bs-toggle="pill" href="#home1" role="pill"><span
                                                 class="badge bg-primary rounded-pill text-white">1</span> ขอซื้อ</a>
                                     </li>
-                                    <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
+                                    <?php if($model->status >= 2):?>
                                     <li class="nav-item">
-                                        <a class="nav-link <?=$model->status == 1 ? 'active' : null;?>" data-bs-toggle="pill" href="#pq_detail" role="pill"><span
+                                        <a class="nav-link <?=$model->status == 2 ? 'active' : null;?>" data-bs-toggle="pill" href="#pq_detail" role="pill"><span
                                                 class="badge bg-primary rounded-pill text-white">2</span> ทะเบียนคุม</a>
                                     </li>
                                     <?php endif?>
-                                    <?php if($model->status >= 2):?>
+                                    <?php if($model->status >= 3):?>
                                         <li class="nav-item">
-                                            <a class="nav-link <?=$model->status == 2 ? 'active' : null;?>" data-bs-toggle="pill" href="#po_detail" role="pill"><span
+                                            <a class="nav-link <?=$model->status == 3 ? 'active' : null;?>" data-bs-toggle="pill" href="#po_detail" role="pill"><span
                                             class="badge bg-primary rounded-pill text-white">3</span> คำสั่งซื้อ</a>
                                         </li>
                                         <?php endif?>
 
-                                        <?php if($model->status >= 3):?>
+                                        <?php if($model->status >= 4):?>
                                         <li class="nav-item">
-                                            <a class="nav-link <?=$model->status == 3 ? 'active' : null;?>" data-bs-toggle="pill" href="#gr_detail" role="pill"><span
-                                            class="badge bg-primary rounded-pill text-white">3</span> ตรวจรับ</a>
+                                            <a class="nav-link <?=$model->status == 4 ? 'active' : null;?>" data-bs-toggle="pill" href="#gr_detail" role="pill"><span
+                                            class="badge bg-primary rounded-pill text-white">4</span> ตรวจรับ</a>
                                         </li>
                                         <?php endif?>
 
-                                        <?php if($model->status >= 4 && $model->category_id != 'M25'):?>
+                                        <?php if($model->status >= 5 && $model->category_id != 'M25'):?>
                                         <li class="nav-item">
-                                            <a class="nav-link <?=$model->status == 4 ? 'active' : null;?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
-                                            class="badge bg-primary rounded-pill text-white">4</span> <?=$model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง'?></a>
+                                            <a class="nav-link <?=$model->status == 6 ? 'active' : null;?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
+                                            class="badge bg-primary rounded-pill text-white">5</span> <?=$model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง'?></a>
                                         </li>
                                         <?php endif?>
-                                        <?php if($model->status >= 5):?>
+                                        <?php if($model->status >= 7):?>
                                         <li class="nav-item">
-                                            <a class="nav-link <?=$model->status == 5 ? 'active' : null;?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
-                                            class="badge bg-primary rounded-pill text-white">5</span> ส่งบัญชี</a>
+                                            <a class="nav-link <?=$model->status == 7 ? 'active' : null;?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
+                                            class="badge bg-primary rounded-pill text-white">7</span> ส่งบัญชี</a>
                                         </li>
                                         <?php endif?>
                                 </ul>
@@ -123,28 +123,28 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <!-- Tab panes -->
                             <div class="tab-content p-0">
-                                <div id="home1" class="tab-pane <?=(isset($model->data_json['pr_director_confirm']) && $model->data_json['pr_director_confirm'] == '') ? 'active' : null;?>">
+                                <div id="home1" class="tab-pane <?=$model->status <=1 ? 'active' : null;?>">
                                     <?= $this->render('detail', ['model' => $model]) ?>
                                 </div>
-                                <div id="pq_detail" class="tab-pane <?=($model->status == 1) ? 'active' : null;?>">
+                                <div id="pq_detail" class="tab-pane <?=($model->status == 2) ? 'active' : null;?>">
                                     <?= $this->render('pq_detail', ['model' => $model]) ?>
 
                                 </div>
-                                <div id="po_detail" class="container tab-pane <?=$model->status == 2 ? 'active' : null;?>">
+                                <div id="po_detail" class="container tab-pane <?=$model->status == 3 ? 'active' : null;?>">
                                     <?= $this->render('po_detail', ['model' => $model]) ?>
                                 </div>
 
-                                <div id="gr_detail" class="container tab-pane <?=$model->status == 3 ? 'active' : null;?>">
+                                <div id="gr_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
                                     <?= $this->render('gr_detail', ['model' => $model]) ?>
                                 </div>
                                 <?php if($model->category_id != 'M25'):?>
-                                <div id="warehouse_detail" class="container tab-pane <?=$model->status == 4 ? 'active' : null;?>">
+                                <div id="warehouse_detail" class="container tab-pane <?=$model->status == 5? 'active' : null;?>">
                                     <!-- คลัง -->
                                     <?= $this->render('warehouse_detail', ['model' => $model]) ?>
                                 </div>
                                 <?php endif;?>
 
-                                <div id="accounting_detail" class="container tab-pane <?=$model->status == 5 ? 'active' : null;?>">
+                                <div id="accounting_detail" class="container tab-pane <?=$model->status == 6 ? 'active' : null;?>">
                                     
                                     <?= $this->render('accounting_detail', ['model' => $model]) ?>
                                 </div>

@@ -13,7 +13,7 @@ use app\components\SiteHelper;
 use yii\bootstrap5\Breadcrumbs;
 use app\assets\BootstapIconAsset;
 $siteInfo = SiteHelper::getInfo();
-use app\components\NotificationHelper;
+use app\components\ApproveHelper;
 use dominus77\sweetalert2\assets\SweetAlert2Asset;
 AppAsset::register($this);
 BootstapIconAsset::register($this);

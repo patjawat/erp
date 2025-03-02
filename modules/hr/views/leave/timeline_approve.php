@@ -1,5 +1,8 @@
 <?php
+use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
+use kartik\form\ActiveForm;
 use app\components\UserHelper;
 
 $this->registerCssFile('@web/css/timeline.css');
@@ -68,7 +71,7 @@ $me = UserHelper::GetEmployee();
             <div class="alert alert-primary" role="alert">
                 <h5 class="font-weight-bold text-center">การอนุมัติเห็นชอบ</h5>
             </div>
-
+ssss
 
 
 <div class="container mb-5">
@@ -103,30 +106,27 @@ $me = UserHelper::GetEmployee();
             <?php else:?>
 
             <?php if($item->level == 3 && $item->status == 'Pending'):?>
-                
-            <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
-                data-topic="ตรวจ<?php echo ($item->data_json['topic'] ?? '')?>" data-id="<?php echo $item->id?>"
-                data-status="Approve">
-                <i class="fa-solid fa-circle-check"></i> <?php echo ($item->data_json['topic'] ?? '')?>
-            </button>
-            
-            <button type="button" class="btn btn-sm btn-danger rounded-pill shadow approve"
-                data-topic="ตรวจสอบไม่<?php echo ($item->data_json['topic'] ?? '')?>" data-id="<?php echo $item->id?>"
-                data-status="Reject">
-                <i class="fa-solid fa-circle-xmark"></i> ไม่<?php echo ($item->data_json['topic'] ?? '')?>
-            </button>
 
-            <?php else:?>
-                
-            <?php if($item->emp_id == $me->id && $item->status =="Pending"):?>
-            <!-- <button type="button" class="btn btn-sm btn-primary rounded-pill shadow approve"
-                data-topic="<?php echo ($item->data_json['topic'] ?? '')?>" data-status="Approve"
-                data-id="<?php echo $item->id?>">
-                <i class="fa-solid fa-circle-check"></i> <?php echo ($item->data_json['topic'] ?? '')?>
-            </button> -->
-            <?php echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['topic'] ?? ''),['/me/leave/approve','id' => $item['id'],'status' => 'Approve','title' => '<i class="fa-solid fa-circle-check text-primary"></i> '.($item->data_json['topic'] ?? '')],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'model-md']])?>
-            <?php echo Html::a('<i class="fa-solid fa-circle-xmark"></i> ไม่'.($item->data_json['topic'] ?? ''),['/me/leave/approve','id' => $item['id'],'status' => 'Reject','title' => '<i class="fa-solid fa-circle-xmark text-danger"></i> ไม่'.($item->data_json['topic'] ?? '')],['class' => 'btn btn-sm btn-danger rounded-pill shadow open-modal','data' => ['size' => 'model-md']])?>
-            <?php endif;?>
+                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> sss'.($item->data_json['topic'] ?? ''),
+                    ['/approve/approve/update','id' => $item->id],
+                    [
+                        'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
+                        'data' => [
+                            'id' => $item->id ,
+                            'status' => 'Pass'
+                            ]
+                    
+                    ])?>
+                    <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> ไม่'.($item->data_json['topic'] ?? ''),
+                    ['/approve/approve/update','id' => $item->id],
+                    [
+                        'class' => 'btn btn-sm btn-danger rounded-pill shadow btn-approve',
+                        'data' => [
+                            'id' => $item->id ,
+                            'status' => 'Reject'
+                            ]
+                    
+                    ])?>
 
             <?php endif?>
             <?php endif?>
@@ -136,3 +136,69 @@ $me = UserHelper::GetEmployee();
 
     </div>
 </div>
+<?php
+$js = <<< JS
+
+
+       //การอนุมัติ
+       $("body").on("click", ".btn-approve", async function (e) {
+        e.preventDefault();
+
+        var id = $(this).data('id');
+        var topic = $(this).data('topic');
+        var status = $(this).data('status');
+        var url = $(this).attr('href');
+        console.log(url)
+
+        Swal.fire({
+            title: 'ยืนยัน?',
+            text: topic + " ใช่หรือไม่!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ใช่',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { id: id, status: status },
+                    dataType: "json",
+                    success: function (response) {
+                        console.log(response);
+                        
+                        
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'บันทึกสำเร็จ',
+                                showConfirmButton: false,
+                                timer: 1000
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: response.message || 'โปรดลองอีกครั้ง',
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: error || 'โปรดลองอีกครั้ง',
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>

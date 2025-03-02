@@ -7,7 +7,7 @@ use DateTime;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
-use app\models\Approve;
+use app\modules\approve\models\Approve;
 use yii\web\Controller;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;

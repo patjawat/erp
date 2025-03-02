@@ -4,7 +4,7 @@ namespace app\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Approve;
+use app\modules\approve\models\Approve;
 
 /**
  * ApproveSearch represents the model behind the search form of `app\models\Approve`.

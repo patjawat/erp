@@ -35,10 +35,10 @@ use iamsaint\datetimepicker\Datetimepicker;
                 <?php
                     echo $form->field($model, 'status')->widget(Select2::classname(), [
                         'data' => [
-                            'pending' => 'ร้องขอ',
-                            'approve' => 'จัดสรร',
-                            'allow' => 'อนุมัติ',
-                            'cancel' => 'ยกเลิก',
+                            'Pending' => 'ร้องขอ',
+                            'Approve' => 'จัดสรร',
+                            'Allow' => 'อนุมัติ',
+                            'Cancel' => 'ยกเลิก',
                         ],
                         // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
                         'pluginOptions' => [

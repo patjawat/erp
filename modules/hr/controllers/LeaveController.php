@@ -7,18 +7,18 @@ use DateTime;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
-use app\models\Approve;
 use yii\web\Controller;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Calendar;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
+use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -642,13 +642,17 @@ class LeaveController extends Controller
         $model = AppHelper::CalDay($dateStart, $dateEnd);
         
         
+        
         \Yii::$app->response->format = Response::FORMAT_JSON;
         // return $auto;
         $holidaysMe = Calendar::find()->where(['name' => 'off'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
-        if($model['dayOff'] >=1){
-            $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
-        }else{
+        
+        if($model['dayOff'] == 0){
+            // return 'Y';
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
+        }else{
+            $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
+            // return 'N';
            
         }
 
@@ -660,7 +664,7 @@ class LeaveController extends Controller
             'isDayOff' => $model['dayOff'],
             'dayOff' => $holidaysMe,
             'on_holidays' => $on_holidays,
-            'total' => $total,
+            'total' => ($total >= 1 ? $total : 0),
             'start_type' => $date_start_type,
             'start_end' => $date_end_type,
             'start' => $dateStart,

@@ -1,12 +1,12 @@
 <?php
 
+use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\widgets\Pjax;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use iamsaint\datetimepicker\Datetimepicker;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\web\View;
-use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\purchase\models\Order $model */
@@ -248,23 +248,73 @@ use yii\widgets\Pjax;
 $js = <<< JS
 
 
-    \$('#form-order').on('beforeSubmit', function (e) {
-        var form = \$(this);
-        \$.ajax({
-            url: form.attr('action'),
-            type: 'post',
-            data: form.serialize(),
-            dataType: 'json',
-            success: async function (response) {
-                form.yiiActiveForm('updateMessages', response, true);
-                if(response.status == 'success') {
-                    success()
-                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+$('#form-order').on('beforeSubmit', function (e) {
+    e.preventDefault(); // ป้องกันการส่งฟอร์มโดยปกติ
+    var form = $(this);
+
+    Swal.fire({
+        title: 'ยืนยันการบันทึก?',
+        text: 'คุณต้องการบันทึกข้อมูลนี้หรือไม่?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'กำลังบันทึก...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
-            }
-        });
-        return false;
+            });
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: async function (response) {
+                    form.yiiActiveForm('updateMessages', response, true);
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            title: 'บันทึกสำเร็จ!',
+                            text: 'ข้อมูลของคุณถูกบันทึกแล้ว',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(true)
+                            // $.pjax.reload({ 
+                            //     container: response.container, 
+                            //     history: false, 
+                            //     replace: false, 
+                            //     timeout: false 
+                            // });
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: response.message || 'ไม่สามารถบันทึกข้อมูลได้',
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'มีบางอย่างผิดพลาด กรุณาลองใหม่อีกครั้ง',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
     });
+
+    return false;
+});
+
 
 
 
@@ -296,7 +346,7 @@ $js = <<< JS
 
 
 
-    JS;
+JS;
 $this->registerJS($js, View::POS_END)
 ?>
 <?php Pjax::end(); ?>

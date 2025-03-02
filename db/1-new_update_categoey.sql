@@ -51,3 +51,12 @@ ALTER TABLE `leave_entitlements` CHANGE `days` `days` FLOAT NOT NULL COMMENT '�
 ALTER TABLE `leave_entitlements` CHANGE `balance` `balance` DOUBLE NOT NULL DEFAULT '0' COMMENT 'วันที่ลาพักผ่อนสะสม';
 ALTER TABLE `leave_entitlements` 
 MODIFY leave_on_year INT NOT NULL DEFAULT 0;
+
+
+ีupdate order_status
+
+UPDATE categorise SET code = CAST(code AS UNSIGNED) + 1 WHERE name = 'order_status' AND CAST(code AS UNSIGNED) >= 2;
+INSERT INTO `categorise` (`id`, `ref`, `group_id`, `category_id`, `code`, `emp_id`, `name`, `title`, `qty`, `description`, `data_json`, `ma_items`, `active`)
+VALUES (NULL, NULL, NULL, '', 2, NULL, 'order_status', 'ผอ.อนุมัติ', NULL, NULL, '{}', NULL, 1);
+ALTER TABLE `helpdesk` ADD `category_id` INT NOT NULL DEFAULT '0' AFTER `id`;
+ALTER TABLE `helpdesk` ADD `emp_id` INT NULL AFTER `category_id`;

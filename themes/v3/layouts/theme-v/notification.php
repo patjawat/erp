@@ -3,13 +3,13 @@ use yii\helpers\Url;
 use yii\helpers\Html; 
 use yii\db\Expression; 
 use app\components\UserHelper; 
-use app\components\NotificationHelper; 
+use app\components\ApproveHelper; 
 use app\modules\purchase\models\Order; 
 use app\modules\helpdesk\models\Helpdesk; 
 use app\modules\inventory\models\StockEvent;  
 
 $emp = UserHelper::GetEmployee(); 
-$notify = NotificationHelper::Info(); 
+$notify = ApproveHelper::Info(); 
 $leave = $notify['leave']; 
 $purchase = $notify['purchase'];  
 ?>   

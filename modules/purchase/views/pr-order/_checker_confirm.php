@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?=$form->field($model, 'status')->radioList(
-        ['Approve' => 'ผ่าน', 'Reject' => 'ไม่ผ่าน'],
+        ['Pass' => 'ผ่าน', 'Reject' => 'ไม่ผ่าน'],
         ['custom' => true, 'inline' => true]
     )->label(false);
 ?>

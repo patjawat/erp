@@ -2,17 +2,17 @@
 
 namespace app\modules\purchase\controllers;
 
-use app\components\AppHelper;
-use app\modules\purchase\models\Order;
-use app\modules\purchase\models\OrderSearch;
-use app\modules\sm\models\Vendor;
 use Yii;
+use yii\helpers\Html;
+use yii\web\Response;
+use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
+use app\components\AppHelper;
+use app\modules\sm\models\Vendor;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use yii\helpers\Html;
+use app\modules\purchase\models\Order;
+use app\modules\purchase\models\OrderSearch;
 
 /**
  * PoOrderController implements the CRUD actions for Order model.
@@ -204,7 +204,7 @@ class PoOrderController extends Controller
 
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $convertDate);
 
-                $model->status = 3;
+                $model->status = 4;
                 $model->save(false);
                 $this->VendorUpdate($model);
 
@@ -265,27 +265,29 @@ class PoOrderController extends Controller
     {   
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $vendor = Vendor::findOne(['name' => 'vendor', 'code' => $order->vendor_id]);
-        $oldObj = $vendor->data_json;
-        try {
-            if (($order->data_json['contact_name'] != $vendor->data_json['contact_name']) OR $order->data_json['contact_position'] != $vendor->data_json['contact_position']) {
-                 $updateData = [
-                    'contact_name' => $order->data_json['contact_name'],
-                    'contact_position' => $order->data_json['contact_position']
+        if($vendor){
+            try {
+                $oldObj = $vendor->data_json;
+                if (($order->data_json['contact_name'] != $vendor->data_json['contact_name']) OR $order->data_json['contact_position'] != $vendor->data_json['contact_position']) {
+                    $updateData = [
+                        'contact_name' => $order->data_json['contact_name'],
+                        'contact_position' => $order->data_json['contact_position']
                     ];
-                 $vendor->data_json = ArrayHelper::merge($oldObj, $updateData);
+                    $vendor->data_json = ArrayHelper::merge($oldObj, $updateData);
                 }
             } catch (\Throwable $th) {
                 $updateData = [
                     'contact_name' => $order->data_json['contact_name'],
                     'contact_position' => $order->data_json['contact_position']
-                    ];
-                 $vendor->data_json = ArrayHelper::merge($oldObj, $updateData);
+                ];
+                $vendor->data_json = ArrayHelper::merge($oldObj, $updateData);
             }
             
-
-
-        return $vendor->save(false);
-    }
+            
+            
+            return $vendor->save(false);
+        }
+        }
 
     /**
      * Deletes an existing Order model.

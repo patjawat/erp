@@ -6,11 +6,10 @@ use Yii;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\db\Expression;
-use app\models\Approve;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\sm\models\Product;
@@ -19,6 +18,7 @@ use app\modules\am\models\AssetItem;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use app\modules\inventory\models\Stock;
 use app\modules\helpdesk\models\Helpdesk;
@@ -229,7 +229,7 @@ class Order extends \yii\db\ActiveRecord
     public function createApprove()
     {
         $emp = Employees::find()->where(['user_id' => $this->created_by])->one();
-        $Approve1 = ($emp->id == $this->data_json['leader1']) ? 'Approve' : $item['status'];
+        $Approve1 = ($emp->id == $this->data_json['leader1']);
 
         $listApprove = [
             [
@@ -237,7 +237,7 @@ class Order extends \yii\db\ActiveRecord
                 'name' => 'purchase',
                 'emp_id' => $this->data_json['leader1'],
                 'title' => 'หัวหน้าลงความเห็นชอบ',
-                'status' =>  ($Approve1 ? 'Approve' : 'Pending'),
+                'status' =>  ($Approve1 ? 'Pass' : 'Pending'),
                 'label' => 'เห็นชอบ'
             ],
             [
@@ -245,7 +245,7 @@ class Order extends \yii\db\ActiveRecord
                 'name' => 'purchase',
                 'emp_id' => '',
                 'title' => 'จนท.พัสดุตรวจสอบ',
-                'status' => ($Approve1 ? 'Pending' : 'None'),
+                'status' => ($Approve1 ? 'Pass' : 'None'),
                 'label' => 'ตรวจสอบ'
             ],
             [
@@ -417,6 +417,33 @@ class Order extends \yii\db\ActiveRecord
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
         return $employee->getAvatar(false, $this->data_json['order_type_name']);
     }
+    
+    //ปรับปรุงใหม่
+    public function getAvatar($empid, $msg = '')
+    {
+        try {
+            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+            $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เขียนเมื่อ' . $this->createdDays();
+            // $msg = $employee->departmentName();
+            return [
+                'avatar' => $employee->getAvatar(false, $msg),
+                
+                // 'avatar' => $employee->getAvatar(false,$this->viewLeaveType()),
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+                'position_name' => $employee->positionName(),
+                // 'product_type_name' => $this->data_json['product_type_name']
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'department' => '',
+                'fullname' => '',
+                'position_name' => '',
+                'product_type_name' => ''
+            ];
+        }
+    }
 
     // Avatar ของฉัน
     public function getMe($msg = null)
@@ -521,7 +548,7 @@ class Order extends \yii\db\ActiveRecord
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (Approve::find()->where(['name' => 'purchase', 'from_id' => $this->id])->andWhere(['IN','status',['Approve','Reject']])->all() as $key => $item) {
+        foreach (Approve::find()->where(['name' => 'purchase', 'from_id' => $this->id])->andWhere(['IN','status',['Pass','Reject']])->all() as $key => $item) {
             $emp = Employees::findOne(['id' => $item->emp_id]);
             $status = ($item->status == 'Approve') ? $item->data_json['label'] : 'ไม่' . $item->data_json['label'];
             

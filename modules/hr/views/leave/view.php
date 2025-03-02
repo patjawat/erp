@@ -7,6 +7,7 @@ use yii\widgets\Pjax;
 use yii\widgets\DetailView;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\approve\models\Approve;
 
 $me = UserHelper::GetEmployee();
 /** @var yii\web\View $this */
@@ -45,7 +46,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php echo $this->render('history', ['model' => $model]) ?>
 </div>
 
-<?php echo $this->render('timeline_approve', ['model' => $model]) ?>
+<?php  echo $this->render('timeline_approve', ['model' => $model]) ?>
+
 
 <div class="d-flex justify-content-center gap-3">
     <?php echo ($model->status == 'ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
@@ -65,21 +67,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $urlHistory = Url::to(['/hr/leave/view-history', 'emp_id' => $model->emp_id, 'title' => 'ประวัติการลา']);
 $urlApprove = Url::to(['/me/approve/leave-approve']);
+// $urlApprove = Url::to(['/approve/leave/approve']);
 $js = <<<JS
-
-        // loadHistory()
-        // function loadHistory()
-        // {
-        //     \$.ajax({
-        //         type: "get",
-        //         url: "$urlHistory",
-        //         dataType: "json",
-        //         success: function (res) {
-        //             \$('#viewHistory').html(res.content)
-        //         }
-        //     });
-        // }
-
 
             // ขอยกเลิกวันลา
             \$("body").on("click", ".req-cancel-btn", function (e) {
@@ -150,66 +139,7 @@ $js = <<<JS
             });
         });
 
-        //การอนุมัติ
-        \$("body").on("click", ".approve", async function (e) {
-            e.preventDefault();
-            var id = \$(this).data('id');
-            var topic = \$(this).data('topic');
-            var status = \$(this).data('status');
 
-            if(status == 'Reject'){
-                $.ajax({
-                    type: "get",
-                    url: "/me/approve-leave/reject",
-                    data: {
-                        id:id
-                    },
-                    dataType: "json",
-                    success: function (res) {
-                        
-                    }
-                });
-
-            }else{
-        
-        Swal.fire({
-                title: 'ยืนยัน?',
-                text: topic+"ใช่หรือไม!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'ใช่',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    \$.ajax({
-                        type: "post",
-                        url: "$urlApprove",
-                        data: {
-                            id:id,
-                            status:status
-                        },
-                        dataType: "json",
-                        success: function (res) {
-                            closeModal()
-                            setTimeout(function() {
-                                location.reload()
-                            }, 1000); // หน่วงเวลา 3 วินาทีแล้ว!
-                            // \$.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});  
-                            
-                        }
-                    });
-                }
-            })
-            
-     }
-            
-            
-         
-           
-            
-        });
 
     JS;
 $this->registerJS($js, View::POS_END);

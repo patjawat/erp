@@ -12,7 +12,10 @@ $this->title = $title;
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 ระบบงานซ่อมบำรุง
+<?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('page-action'); ?>
+<?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'helpdesk-container', 'timeout' => 5000, 'enablePushState' => true]); ?>
@@ -23,7 +26,7 @@ $this->title = $title;
     <div class="col-8">
         <?=$this->render('../repair/_chart_summary',[ 'searchModel' => $searchModel,])?>
     </div>
-    <div class="col-4"> <?= $this->render('../default/progress', ['repair_group' => $searchModel->repair_group]) ?></div>
+    <div class="col-4"> <?php //  $this->render('../default/progress', ['repair_group' => $searchModel->repair_group]) ?></div>
 </div>
 <?=$this->render('list_order', ['searchModel' => $searchModel,'dataProvider' => $dataProvider])?>
 <div class="row">
@@ -32,13 +35,13 @@ $this->title = $title;
             <div class="card-body">
                 <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
                 <div id="viewUserJob"></div>
-                <?php echo $this->render('user_job', ['searchModel' =>  $searchModel]) ?>
+                <?php // echo $this->render('user_job', ['searchModel' =>  $searchModel]) ?>
                 
             </div>
         </div>
     </div>
     <div class="col-4">
-        <?php echo $this->render('../repair/view_rating', ['repair_group' =>  $searchModel->repair_group]) ?>
+        <?php // echo $this->render('../repair/view_rating', ['repair_group' =>  $searchModel->repair_group]) ?>
     </div>
 </div>
 <?php Pjax::end() ?>

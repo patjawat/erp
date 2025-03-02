@@ -59,7 +59,6 @@ use yii\bootstrap5\Html;
 
             <td class="text-center">
 <div class="d-flex gap-2 justify-content-center">
-
     <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>', ['/hr/leave/view', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
     <?php // echo Html::a('<i class="fa-regular fa-pen-to-square text-warning  fa-2x"></i>',['/hr/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
     <?php if ($model->status == 'Allow'): ?>
@@ -71,26 +70,7 @@ use yii\bootstrap5\Html;
                             <?php endif; ?>
                             
 </div>
-    <!-- <div class="dropdown">
-                    <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right" style="">
-
-                    <?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['/hr/leave/view', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'dropdown-item open-modalx', 'data' => ['size' => 'modal-lg']]) ?>
-                    <?php if ($model->status !== 'Allow'): ?>
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/hr/leave/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <?php endif; ?>
-                    <?php if ($model->status == 'Allow'): ?>
-                        <?php echo Html::a('<i class="fa-regular fa-circle-down me-1"></i> ดาน์โหลดเอกสาร',
-                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'],
-                            ['class' => 'dropdown-item download-leave', 'data' => [
-                                'filename' => $model->leaveType->title . '-' . $model->employee->fullname
-                            ]]) ?>
-                            <?php endif; ?>
-                    </div>
-                </div> -->
+    
             </td>
         </tr>
         <?php endforeach; ?>

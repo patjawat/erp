@@ -10,7 +10,7 @@ namespace app\commands;
 
 use Yii;
 use yii\db\Expression;
-use app\models\Approve;
+use app\modules\approve\models\Approve;
 use yii\console\ExitCode;
 use app\models\Categorise;
 use yii\console\Controller;

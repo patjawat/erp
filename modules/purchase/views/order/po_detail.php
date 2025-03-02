@@ -2,9 +2,6 @@
 use yii\helpers\Html;
 ?>
 <?php if($model->po_number != ''):?>
-    <?php
-        echo $model->data_json['po_date'];
-        ?>
 <table class="table table-striped-columns">
     <tbody>
         <tr class="">

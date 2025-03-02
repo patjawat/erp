@@ -40,15 +40,29 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card shadow-lg border rounded">
             <div class="bg-primary rounded-top" style="background-image:url(<?php echo $item->showImg()?>); height: 160px; object-fit: cover;"></div>
             <div class="card-body bg-white text-dark">
+                <div class="d-flex justify-content-between">
                 <h1 class="d-inline-flex align-items-center fs-5 fw-semibold">
-                    <?php echo $item->title?> &nbsp;
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        <?php echo $item->title?> 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                         class="h-4 w-4">
                         <line x1="7" y1="17" x2="17" y2="7"></line>
                         <polyline points="7 7 17 7 17 17"></polyline>
                     </svg>
-                </h1>
+               
+            </h1>
+            <div>
+                    <?php 
+                    try {
+                        $img =  $item->showOwner()['emp']->showAvatar();
+                        echo Html::img($img,['class' => 'avatar avatar-profile me-0 mt--45 shadow']);
+                        
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                    ?>
+                </div>    
+        </div>
                 <p class="text-muted small">ที่นั่ง : <?php echo $item->data_json['seat_capacity'] ?? '-'?></p>
 
                 <div class="d-flex justify-content-between gap-3">

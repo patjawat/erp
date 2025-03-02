@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Url;
-use app\components\NotificationHelper;
-$notify = NotificationHelper::Info();
+use app\components\ApproveHelper;
+$notify = ApproveHelper::Info();
 $totalLeave = $notify['leave']['total'];
 $totalBookingCar = $notify['booking_car']['total'];
 $totalPurchase = $notify['purchase']['total'];
@@ -20,7 +20,7 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 
     <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
         <div class="col">
-            <a href="<?php echo Url::to(['/approve/leave'])?>">
+            <a href="<?php echo Url::to(['/approve/approve','name'=> 'leave'])?>">
                 <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalLeave >=1):?>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalLeave?></span>
@@ -37,7 +37,7 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 
         <div class="col">
             <!-- <a href="<?php echo Url::to(['/me/booking-car/'])?>"> -->
-            <a href="<?php echo Url::to(['/approve/booking-car/'])?>">
+            <a href="<?php echo Url::to(['/approve/approve','name'=> 'booking_car'])?>">
             <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalBookingCar >=1):?>
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalBookingCar?></span>
@@ -53,7 +53,8 @@ $this->title = "รายการที่ต้องอนุมัติแ�
         </div>
 
         <div class="col">
-            <a href="<?php echo Url::to(['/me/approve-purchase'])?>">
+            <!-- <a href="<?php echo Url::to(['/approve-purchase'])?>"> -->
+            <a href="<?php echo Url::to(['/approve/approve','name' => 'purchase'])?>">
             <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalPurchase >=1):?>
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalPurchase?></span>

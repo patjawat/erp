@@ -1,10 +1,10 @@
 <?php
 
+use yii\web\View;
 use yii\helpers\Html;
 use kartik\widgets\ActiveForm;
 use kartik\datecontrol\DateControl;
 use iamsaint\datetimepicker\Datetimepicker;
-use yii\web\View;
 
 /** @var yii\web\View $this */
 /** @var app\modules\purchase\models\Order $model */

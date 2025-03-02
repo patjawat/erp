@@ -4,13 +4,13 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\db\Expression;
 use app\components\UserHelper;
-use app\components\NotificationHelper;
+use app\components\ApproveHelper;
 use app\modules\purchase\models\Order;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 
-$notifications = NotificationHelper::Info()['purchase']['datas'];
-$data = NotificationHelper::Info()['purchase'];
+$notifications = ApproveHelper::Info()['purchase']['datas'];
+$data = ApproveHelper::Info()['purchase'];
 
 ?>
 <div class="card">

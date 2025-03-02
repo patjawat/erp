@@ -2,15 +2,15 @@
 
 namespace app\modules\purchase\controllers;
 
-use app\components\AppHelper;
-use app\modules\purchase\models\Order;
-use app\modules\purchase\models\OrderSearch;
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
+use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use Yii;
+use app\modules\purchase\models\Order;
+use app\modules\purchase\models\OrderSearch;
 
 /**
  * PqOrderController implements the CRUD actions for Order model.
@@ -209,15 +209,15 @@ class PqOrderController extends Controller
 
                 $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
 
-                if($model->status == 1){
-                    $model->status = 2;
+                if($model->status == 2){
+                    $model->status = 3;
                 }
                 $model->save(false);
-                return $this->redirect(['/purchase/order/view','id' => $model->id]);
-                // return [
-                //     'status' => 'success',
-                //     'container' => '#purchase-container',
-                // ];
+                // return $this->redirect(['/purchase/order/view','id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'container' => '#purchase-container',
+                ];
             } else {
                 return false;
             }

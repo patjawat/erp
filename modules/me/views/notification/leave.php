@@ -1,9 +1,9 @@
 <?php
 use yii\helpers\Url;
 use yii\helpers\Html;
-use app\models\Approve;
-use app\components\NotificationHelper;
-$notifications = NotificationHelper::Info()['leave']['datas'];
+use app\modules\approve\models\Approve;
+use app\components\ApproveHelper;
+$notifications = ApproveHelper::Info()['leave']['datas'];
 ?>
 <div class="card">
     <div class="card-body">

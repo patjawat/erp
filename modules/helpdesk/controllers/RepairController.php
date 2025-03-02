@@ -605,6 +605,8 @@ class RepairController extends Controller
         );
         $model->status = 2;
         $model->save();
+        return $this->redirect(['/helpdesk/general/update','id' => $model->id]);
+
 
         return [
             'status' => 'success',

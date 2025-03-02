@@ -1,6 +1,6 @@
 <?php
 use yii\helpers\Html;
-use app\models\Approve;
+use app\modules\approve\models\Approve;
 $checker = Approve::find()->where(['name' => 'purchase', 'from_id' => $model->id,'level' => 2])->andWhere(['IN','status',['Approve','Reject','Pending']])->one();
 $checkerStatus = Approve::find()->where(['name' => 'purchase', 'from_id' => $model->id,'level' => 3])->one();
 ?>
@@ -18,7 +18,7 @@ $checkerStatus = Approve::find()->where(['name' => 'purchase', 'from_id' => $mod
             <?php if($checker):?>
             <?php if($checker->status == 'Pending' &&  Yii::$app->user->can('purchase')):?>
             <!-- <a class="btn btn-sm btn-primary rounded-pill open-modal" data-size="modal-md"><i class="fa-solid fa-circle-plus me-1"></i> เจ้าหน้าที่พัสดุตรวจสอบ</a> -->
-            <?=Html::a('<i class="fa-regular fa-clock"></i> เจ้าหน้าที่พัสดุตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $checker->id],
+            <?=Html::a('<i class="fa-regular fa-clock"></i> เจ้าหน้าที่พัสดุตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $checker->id,'title' => 'เจ้าหน้าที่พัสดุตรวจสอบ'],
                                 ['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
             <?php  endif;?>
 

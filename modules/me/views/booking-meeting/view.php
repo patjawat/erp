@@ -55,14 +55,14 @@ $this->params['breadcrumbs'][] = $this->title;
             'model' => $model,
             'attributes' => [
                 [
-                    'label' => 'เริ่มวันเวลา',
+                    'label' => 'วันที่',
                     'format' => 'html',
-                    'value' => Yii::$app->thaiFormatter->asDate($model->date_start, 'medium') . ' เวลา ' . $model->time_start
+                    'value' => Yii::$app->thaiFormatter->asDate($model->date_start, 'full')
                 ],
                 [
-                    'label' => 'ถึงวันที่เวลา',
+                    'label' => 'เวลา',
                     'format' => 'html',
-                    'value' => Yii::$app->thaiFormatter->asDate($model->date_end, 'medium') . ' เวลา ' . $model->time_end
+                    'value' =>   $model->time_start.' - '.$model->time_end
                 ],
                 [
                     'label' => 'ผู้ขอใช้บริการ',

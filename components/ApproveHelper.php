@@ -4,30 +4,30 @@ namespace app\components;
 
 use Yii;
 use yii\db\Expression;
-use app\models\Approve;
 use yii\base\Component;
 use app\models\Province;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\modules\purchase\models\Order;
+use app\modules\approve\models\Approve;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 
 
 // การแจ้งเตือนต่างๆ
-class NotificationHelper extends Component
+class ApproveHelper extends Component
 {
 
     //รวมค่าการแจ้งเตือนต่างๆ
     public static function Info()
     {
         return [
-            'total' => (self::Leave()['total']+self::Helpdesk()['total']+self::Purchase()['total']+self::StockApprove()['total']),
+            'total' => (self::Leave()['total']+self::Purchase()['total']+self::StockApprove()['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
-            'helpdesk' => self::Helpdesk(),
             'stock_approve' => self::StockApprove(),
             'purchase' => self::Purchase(),
+            // 'helpdesk' => self::Helpdesk(),
             
         ];
     }
@@ -59,33 +59,42 @@ class NotificationHelper extends Component
     {
         try {
         $me = UserHelper::GetEmployee();
-        $datas = Approve::find()->where(['name' => 'leave','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+        $query = Approve::find()
+        ->where(['name' => 'leave', 'status' => 'Pending', 'emp_id' => $me->id])
+        ->orderBy(['id' => SORT_DESC]);
+
+        // Debug SQL ที่ถูกสร้าง
+        $sql = Yii::debug($query->createCommand()->getRawSql(), 'sql');
+
+        $datas = $query->all();
         
         return [
             'title' => 'ขออนุมัติลา',
             'total' => isset($datas) ? count($datas) : 0,
-            'datas' => $datas
+            'datas' => $datas,
+            'sql' => $sql
         ];
         } catch (\Throwable $th) {
             return [
                 'title' => 'ขออนุมัติลา',
                 'total' => 0,
-                'datas' => []
+                'datas' => [],
+                'sql' => 'sql'
             ];
         }
        
     }
     
 //แจ้งเตือนสะานนะการแจ้งซ่อม
-    public static function Helpdesk()
-    {
-        $datas = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])->andWhere(['in', 'status', [1, 2, 3]])->all();
-        return [
-            'title' => 'แจ้งซ่อม',
-            'total' => isset($datas) ? count($datas) : 0,
-            'datas' => $datas
-        ];
-    }
+    // public static function Helpdesk()
+    // {
+    //     $datas = Helpdesk::find()->where(['created_by' => Yii::$app->user->id])->andWhere(['in', 'status', [1, 2, 3]])->all();
+    //     return [
+    //         'title' => 'แจ้งซ่อม',
+    //         'total' => isset($datas) ? count($datas) : 0,
+    //         'datas' => $datas
+    //     ];
+    // }
 
     //แจ้งเตือนขอซื้อขอจ้าง ole
     // public static function Purchase()

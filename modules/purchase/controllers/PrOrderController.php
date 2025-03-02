@@ -6,7 +6,6 @@ use Yii;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
-use app\models\Approve;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -15,6 +14,7 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\purchase\models\Order;
+use app\modules\approve\models\Approve;
 use app\modules\purchase\models\OrderSearch;
 
 /**
@@ -399,7 +399,7 @@ class PrOrderController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $me['avatar'],
+                'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('_checker_confirm', [
                     'model' => $model,
                 ]),

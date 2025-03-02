@@ -134,41 +134,22 @@ class Leave extends \yii\db\ActiveRecord
         parent::afterFind();
     }
 
-    // บันทึกผู้ตรวจสอบ
-    // public function createLeaveStep()
-    // {
-    //     $leaveStep1 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 1]);
-    //     if (!$leaveStep1)
-    //         $leaveStep1 = new LeaveStep();
-    //     $leaveStep1->leave_id = $this->id;
-    //     $leaveStep1->emp_id = $this->data_json['leader'];
-    //     $leaveStep1->title = 'หัวหน้าหน่วยงาน';
-    //     $leaveStep1->level = 1;
-    //     $leaveStep1->status = 'Pending';
-    //     $leaveStep1->save();
-
-    //     $leaveStep2 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 2]);
-    //     if (!$leaveStep2)
-    //         $leaveStep2 = new LeaveStep();
-    //     $leaveStep2->leave_id = $this->id;
-    //     $leaveStep2->emp_id = $this->data_json['leader_group'];
-    //     $leaveStep2->title = 'ตรวจสอบ';
-    //     $leaveStep2->level = 2;
-    //     $leaveStep2->status = 'Pending';
-    //     $leaveStep2->save();
-
-    //     $director = SiteHelper::viewDirector();
-    //     $leaveStep3 = LeaveStep::findOne(['leave_id' => $this->id, 'level' => 3]);
-    //     if (!$leaveStep3)
-    //         $leaveStep3 = new LeaveStep();
-    //     $leaveStep3->leave_id = $this->id;
-    //     $leaveStep3->emp_id = $director['id'];
-    //     $leaveStep3->title = 'ผู้อำนวยการ';
-    //     $leaveStep3->level = 3;
-    //     $leaveStep3->status = 'Pending';
-    //     $leaveStep3->save();
-    // }
-
+    //ส่ง Msg เมื่อไม่ผ่านการอนุมัติ
+    public function MsgReject()
+    {
+        $message = "บันทึกการ".$this->leaveType->title."ไม่ได้รับการอนุมัติ";
+        $lineId = $this->employee->user->line_id;
+        LineMsg::sendMsg($lineId,$message);
+    }
+    
+    //ส่ง Msg เมื่อผ่านการอนุมัติ
+    public function MsgApprove()
+    {
+        $message = "บันทึกการ".$this->leaveType->title."ได้รับการอนุมัติแล้ว";
+        $lineId = $this->employee->user->line_id;
+        LineMsg::sendMsg($lineId,$message);
+    }
+    
     public function createApprove()
     {
     // หัวหน้างาน
@@ -180,7 +161,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep1->name = 'leave';
                 $leaveStep1->emp_id = $this->data_json['approve_1'];
                 $leaveStep1->title = 'เห็นชอบ';
-                $leaveStep1->data_json = ['topic' => 'เห็นชอบ'];
+                $leaveStep1->data_json = ['label' => 'เห็นชอบ'];
                 $leaveStep1->level = 1;
                 $leaveStep1->status = 'Pending';
                 $leaveStep1->save(false);
@@ -205,7 +186,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep2->name = 'leave';
                 $leaveStep2->emp_id = $this->data_json['approve_2'] ?? 0;
                 $leaveStep2->title = 'เห็นชอบ';
-                $leaveStep2->data_json = ['topic' => 'เห็นชอบ'];
+                $leaveStep2->data_json = ['label' => 'เห็นชอบ'];
                 $leaveStep2->level = 2;
                 $leaveStep2->status = 'None';
                 $leaveStep2->save(false);
@@ -222,7 +203,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep3->name = 'leave';
                 $leaveStep3->title = 'ตรวจสอบ';
                 // $leaveStep3->emp_id = $this->data_json['approve_3'];
-                $leaveStep3->data_json = ['topic' => 'ผ่าน'];
+                $leaveStep3->data_json = ['label' => 'ผ่าน'];
                 $leaveStep3->level = 3;
                 $leaveStep3->status = 'None';
                $leaveStep3->save(false);
@@ -241,7 +222,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep4->name = 'leave';
                 $leaveStep4->emp_id = $director['id'];
                 $leaveStep4->title = 'อนุมัติ';
-                $leaveStep4->data_json = ['topic' => 'อนุมัติ'];
+                $leaveStep4->data_json = ['label' => 'อนุมัติ'];
                 $leaveStep4->level = 4;
                 $leaveStep4->status = 'None';
                 $leaveStep4->save(false);
@@ -253,8 +234,9 @@ class Leave extends \yii\db\ActiveRecord
 
     public function listApprove()
     {
-        return Approve::find()->where(['from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
+        return Approve::find()->where(['name' => 'leave','from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
     }
+
 
     // section Relationships
     public function getLeaveType()
@@ -444,6 +426,17 @@ class Leave extends \yii\db\ActiveRecord
             return '<span class="badge rounded-pill badge-soft-' . $color . ' text-primary fs-13 ">' . $icon . ' ' . $this->leaveStatus->title . '</span>';
         } catch (\Throwable $th) {
             return null;
+        }
+    }
+
+//รายการ Approve ที่รอ HR ตรวจสอบ
+    public function hrChecking()
+    {
+        $approve  = Approve::findOne(['name' => 'leave','from_id' => $this->id,'emp_id' => null,'status' =>'Pending']);
+        if($approve){
+            return $approve;
+        }else{
+            return false;
         }
     }
 

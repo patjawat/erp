@@ -101,7 +101,7 @@ class StockInController extends Controller
 
             $searchModel = new OrderSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andFilterWhere(['name' => 'order', 'status' => 4]);
+            $dataProvider->query->andFilterWhere(['name' => 'order', 'status' => 5]);
             $dataProvider->query->andFilterWhere(['!=','category_id', 'M25']);
             $dataProvider->query->andFilterWhere([
                 'or',

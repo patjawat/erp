@@ -105,11 +105,13 @@ class Room extends \yii\db\ActiveRecord
         try {
             $emp = Employees::findOne($this->data_json['owner']);
             return [
+                'emp' => $emp,
                 'avatar' => $emp->getAvatar(false, 'ผู้ดูแลรับผิดชอบ  '.$msg) ?? null,
                 'line_id' => $emp->user->line_id ?? null
             ];
         } catch (\Throwable $th) {
             return [
+                'emp' => '',
                 'avatar' => null,
                 'line_id' => null
             ];

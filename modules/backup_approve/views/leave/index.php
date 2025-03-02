@@ -37,25 +37,25 @@ $msg = 'ขอ';
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr class="">
-                    <td class="text-center fw-semibold"><?php echo $item->bookCar->thai_year?></td>
+                    <td class="text-center fw-semibold"><?php echo $item->leave->thai_year?></td>
                     <td class="text-truncate" style="max-width: 230px;">
-                        <a href="<?php echo Url::to(['/hr/leave/view','id' => $item->bookCar->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
+                        <a href="<?php echo Url::to(['/hr/leave/view','id' => $item->leave->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
                             class="open-modal" data-size="modal-xl">
-                            <?php // $item->bookCar->getAvatar(false)['avatar']?>
+                            <?=$item->leave->getAvatar(false)['avatar']?>
                         </a>
                     </td>
-                    <td class="text-center fw-semibold"><?php // echo $item->bookCar->total_days?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->bookCar->date_start, 'medium')?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->bookCar->date_end, 'medium')?></td>
+                    <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
+                    <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_start, 'medium')?></td>
+                    <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_end, 'medium')?></td>
                     <td class="text-start text-truncate" style="max-width:150px;">
-                        <?php // $item->bookCar->getAvatar(false)['department']?>
+                        <?=$item->leave->getAvatar(false)['department']?>
 
                     </td>
                     </td>
-                    <td><?php  echo $item->stackChecker()?>
+                    <td><?php echo $item->leave->stackChecker()?>
                         <?php
                     try {
-                        $data =  $item->bookCar->checkerName(1)['employee'];
+                        $data =  $item->leave->checkerName(1)['employee'];
                     } catch (\Throwable $th) {
                     }
             ?>
@@ -65,7 +65,7 @@ $msg = 'ขอ';
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 
-                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/booking-car/update', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/approve/update', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                         </div>
 
                     </td>

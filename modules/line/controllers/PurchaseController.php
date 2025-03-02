@@ -8,7 +8,7 @@ use yii\filters\Cors;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
-use app\models\Approve;
+use app\modules\approve\models\Approve;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;

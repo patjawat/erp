@@ -3,6 +3,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\components\AppHelper;
 use app\components\UserHelper;
 
 $this->title = 'ระบบขอใช้ห้องประชุม';
@@ -17,6 +18,23 @@ $dateLast = new DateTime($searchModel->date_start ? $searchModel->date_start : d
 $dateNext = new DateTime($searchModel->date_start ? $searchModel->date_start : date('Y-m-d'));
 $dateLast->modify('-1 day');
 $dateNext->modify('+1 day');
+
+$days = [
+    "Sunday" => "อาทิตย์",
+    "Monday" => "จันทร์",
+    "Tuesday" => "อังคาร",
+    "Wednesday" => "พุธ",
+    "Thursday" => "พฤหัสบดี",
+    "Friday" => "ศุกร์",
+    "Saturday" => "เสาร์"
+];
+
+// ตรวจสอบว่ามีค่า date_start หรือไม่ ถ้าไม่มีให้ใช้วันที่ปัจจุบัน
+$date = $searchModel->date_start ? new DateTime($searchModel->date_start) : new DateTime();
+
+$dayInEnglish = $date->format("l"); // ดึงชื่อวันเป็นภาษาอังกฤษ
+$dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไทย
+
 
 ?>
 
@@ -68,13 +86,25 @@ $dateNext->modify('+1 day');
                     <div class="d-flex gap-2 align-self-center">
                         <div>
                             
-                            <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">27
+                            <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">
+                                
+                                <?php 
+
+                            $dayOnly = date('j', strtotime($searchModel->date_start));
+                            echo $dayOnly; // ผลลัพธ์: 04
+                        ?>
                             </span>
                         </div>
                         <div class="d-flex flex-column align-self-center">
-                            <span class="fw-bolder fs-6">พฤหัสบดี</span>
+                          
+                            <span class="fw-bolder fs-6">  <?php echo $dayInThai;?></span>
                             <span class="fw-bolder fs-6">
-                                กุมภาพันธฺ 2569
+                                <?php
+                                $dayM = date('n', strtotime($searchModel->date_start));
+                                $month = AppHelper::getMonthName($dayM);
+                                echo $month .' '.(date('Y')+543)
+                                ?>
+                                <!-- กุมภาพันธฺ 2569 -->
                             </span>
                         </div>
                     </div>

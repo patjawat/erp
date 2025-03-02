@@ -53,7 +53,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency','auth_item'], 'safe'],
+            [['emp_id','category_id','date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency','auth_item'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -105,6 +105,8 @@ class Helpdesk extends Yii\db\ActiveRecord
 
     public function UpdateStockYear() {}
 
+
+
     public function Upload($name)
     {
         return FileManagerHelper::FileUpload($this->ref, $name);
@@ -154,6 +156,10 @@ class Helpdesk extends Yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['helpdesk_id' => 'id']);
     }
 
+    public function getEmpTeam()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
     // ผู้แจ่งซ่อม
     public function getUserReq($msg = null)
     {
@@ -200,8 +206,14 @@ class Helpdesk extends Yii\db\ActiveRecord
         return ArrayHelper::map($querys, 'user_id', 'fullname');
     }
 
+    public function ListStatus()
+    {
+        $list = Categorise::find()->andWhere(['name' => 'repair_status'])
+        ->andWhere(['IN','code',[3,4,5]])->all();
+        return ArrayHelper::map($list, 'code', 'title');
+    }
+    
     // ความเร่งด่วน
-
     public static function listUrgency()
     {
         return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'code', 'title');
@@ -219,6 +231,25 @@ class Helpdesk extends Yii\db\ActiveRecord
         return ArrayHelper::map(CategoriseHelper::Categorise('repair_group'), 'code', 'title');
     }
 
+
+        // ผู้ร่วมดำเนินการ
+        public function StackTeam()
+        {
+            // try {
+                $data = '';
+                $data .= '<div class="avatar-stack">';
+                foreach (Helpdesk::find()->where(['name' => 'repair_team', 'category_id' => $this->id])->all() as $key => $item) {
+                    $emp = Employees::findOne(['id' => $item->emp_id]);
+                    $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+                        
+                    $data .= '</a>';
+                }
+                $data .= '</div>';
+                return $data;
+            // } catch (\Throwable $th) {
+            // }
+        }
+        
     // หน่วยงานที่ส่งซ่อม
     public function viewRepairGroup()
     {
@@ -265,7 +296,8 @@ class Helpdesk extends Yii\db\ActiveRecord
         try {
             $emp = Employees::findOne(['user_id' => $this->created_by]);
 
-            return Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+            // return Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
+            return $emp->getAvatar(false,$emp->departmentName());
             // code...
         } catch (\Throwable $th) {
             // throw $th;
@@ -311,16 +343,16 @@ class Helpdesk extends Yii\db\ActiveRecord
             if (isset($this->data_json['urgency'])) {
                 $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
                 if ($model->code == 1) {
-                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-face-smile"></i> ' . $model->title . '</span>';
+                    return '<span class="badge text-bg-light fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
                 }
                 if ($model->code == 2) {
-                    return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-exclamation"></i> ' . $model->title . '</span>';
+                    return '<span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
                 }
                 if ($model->code == 3) {
-                    return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-circle-exclamation text-danger"></i> ' . $model->title . '</span>';
+                    return '<span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
                 }
                 if ($model->code == 4) {
-                    return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-bomb text-danger"></i> ' . $model->title . '</span>';
+                    return '<span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
                 }
             }
         } catch (\Throwable $th) {
@@ -332,14 +364,14 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function viewCreateUser()
     {
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-
-        return $employee;
+        $msg = $employee->departmentName().' โทร '.$employee->phone;
+        return $employee->getAvatar(false,$msg);
     }
 
     // แสดงวันที่ส่งซ่อม
     public function viewCreateDate()
     {
-        return \Yii::$app->thaiFormatter->asDate($this->created_at, 'short');
+        return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
     }
 
     public function viewCreateDateTime()

@@ -47,9 +47,9 @@ try {
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-accessory-tab" data-bs-toggle="pill" data-bs-target="#pills-accessory" type="button" role="tab" aria-controls="pills-accessory" aria-selected="false">รายการอุปกรณ์</button>
   </li>
-  <li class="nav-item" role="presentation">
+  <!-- <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-layout_room-tab" data-bs-toggle="pill" data-bs-target="#pills-layout_room" type="button" role="tab" aria-controls="pills-layout_room" aria-selected="false">รูปแบบการจัดโต๊ะ</button>
-  </li>
+  </li> -->
 </ul>
 <div class="tab-content" id="pills-tabContent">
   <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
@@ -130,7 +130,7 @@ try {
 
   <?= $form->field($model, 'data_json[accessory]')->checkboxList($mappedDataAccessory)->label('รายการอุปกรณ์ที่ต้องการ') ?>
   </div>
-  <div class="tab-pane fade" id="pills-layout_room" role="tabpanel" aria-labelledby="pills-layout_room-tab" tabindex="0">...</div>
+  <!-- <div class="tab-pane fade" id="pills-layout_room" role="tabpanel" aria-labelledby="pills-layout_room-tab" tabindex="0">...</div> -->
 </div>
 
 

@@ -7,7 +7,7 @@ use DatePeriod;
 use DateInterval;
 use yii\helpers\Html;
 use yii\web\Response;
-use app\models\Approve;
+use app\modules\approve\models\Approve;
 use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;

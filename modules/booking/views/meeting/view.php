@@ -12,16 +12,30 @@ $this->params['breadcrumbs'][] = ['label' => 'Bookings', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="booking-view">
-    <?= DetailView::widget([
+
+<div class="row">
+    <div class="col-6">
+        <div class="flex-shrink-0 rounded p-5 mb-3"
+            style="background-image:url(<?php echo $model->room ? $model->room->showImg() :  ''?>);background-size:cover;background-repeat:no-repeat;background-position:center;height:258px;">
+
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card">
+            <div class="card-body">
+            
+            <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
             [
                 'label' => 'วันที่',
                 'format' => 'html',
-                'value' => function($model){
-                    return   $model->date_start.' - '.$model->time_start.' : '.$model->time_end;
-                }
+                'value' => Yii::$app->thaiFormatter->asDate($model->date_start, 'full')
+            ],
+            [
+                'label' => 'เวลา',
+                'format' => 'html',
+                'value' =>   $model->time_start.' - '.$model->time_end
             ],
             'reason',
 
@@ -59,23 +73,39 @@ $this->params['breadcrumbs'][] = $this->title;
             
         ],
     ]) ?>
+
+            </div>
+        </div>
+
+    </div>
 </div>
-    <div class="d-flex justify-content-center">
-        <?php if($model->status =='pending'):?>
+
+<?php if(count($model->listMembers) > 0):?>
+    <div class="alert alert-primary p-2" role="alert">
+
+<div class="d-flex justify-content-between align-items-center gap-3">
+    
+    <h6 class="text-center text-primary"><i class="fa-solid fa-circle-exclamation text-warning fs-/"></i> ผู้เข้าร่วมประชุมจะได้รับการแจ้งเตือนข้อความหลังจากที่ห้องประชุมได้รับการจัดสสร</h6>
+
+</div>
+</div>
+
+
+<?php endif;?>
+
+    <div class="d-flex justify-content-center gap-3">
         <?php echo Html::a('จัดสรร',['/booking/meeting/room-status'],['class' => 'btn btn-primary shadow rounded-pill room-status','data' => [
             'title' => 'จัดสรร',
             'id' => $model->id,
-            'status' => 'approve'
+            'status' => 'Approve'
         ]])?>
-        <?php endif;?>
 
-        <?php if($model->status =='approve'):?>
-        <?php echo Html::a('ยกเลิก',['/booking/meeting/room-status'],['class' => 'btn btn-warning shadow rounded-pill room-status','data' => [
+        <?php echo Html::a('ไม่จัดสรรค',['/booking/meeting/room-status'],['class' => 'btn btn-danger shadow rounded-pill room-status','data' => [
              'title' => 'ยกเลิอก',
             'id' => $model->id,
-            'status' => 'cancel'
+            'status' => 'Reject'
         ]])?>
-        <?php endif;?>
+
     </div>
 
 <?php

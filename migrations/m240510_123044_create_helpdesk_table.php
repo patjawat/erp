@@ -16,6 +16,8 @@ class m240510_123044_create_helpdesk_table extends Migration
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
             'code' => $this->string(255),
+            'category_id' => $this->integer()->defaultValue(0)->comment('เชื่อมกับ ID หลัก'),
+            'emp_id' => $this->integer()->comment('รหัสช่างบุคลากร'),
             'date_start' => $this->date(),
             'date_end' => $this->date(),
             'name' => $this->string(255)->comment('ชื่อการเก็บข้อมูล'),

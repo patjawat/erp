@@ -20,10 +20,10 @@ use kartik\widgets\ActiveForm;
 use app\widgets\FlatpickrWidget;
 use yii\web\HtmlResponseFormatter;
 use app\modules\hr\models\Employees;
-use app\components\NotificationHelper;
+use app\components\ApproveHelper;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\widgets\Flatpickr\FlatpickrBuddhistWidget;
-$totalNotification = NotificationHelper::Info()['total'];
+$totalNotification = ApproveHelper::Info()['total'];
 $site = SiteHelper::getInfo();
 $me = UserHelper::GetEmployee();
 

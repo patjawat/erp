@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Url;
-use app\components\NotificationHelper;
-$notify = NotificationHelper::Info();
+use app\components\ApproveHelper;
+$notify = ApproveHelper::Info();
 $totalLeave = $notify['leave']['total'];
 $totalBookingCar = $notify['booking_car']['total'];
 $totalPurchase = $notify['purchase']['total'];

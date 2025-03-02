@@ -2,19 +2,19 @@
 
 namespace app\modules\purchase\controllers;
 
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
 use app\models\Categorise;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\modules\am\models\Asset;
+use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetItem;
 use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use app\components\AppHelper;
-use Yii;
 
 /**
  * GrOrderController implements the CRUD actions for Order model.
@@ -146,9 +146,9 @@ class GrOrderController extends Controller
 
                     //ถ้าเป็นจ้างเหมา ไม่ต้องส่งคลัง
                     if($model->category_id == 'M25'){
-                        $model->status = 5;
+                        $model->status = 6;
                     }else{
-                        $model->status = 4;
+                        $model->status = 5;
                     }
                   
                 }else{
