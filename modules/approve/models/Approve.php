@@ -3,6 +3,7 @@
 namespace app\modules\approve\models;
 
 use Yii;
+use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
@@ -117,7 +118,8 @@ class Approve extends \yii\db\ActiveRecord
     public function viewApproveDate()
     {
     try {
-        return \Yii::$app->thaiFormatter->asDateTime($this->data_json['approve_date'], 'medium');
+        return AppHelper::ThaiDate($this->data_json['approve_date'], 0, true);
+        // return \Yii::$app->thaiFormatter->asDateTime($this->data_json['approve_date'], 'medium');
     } catch (\Throwable $th) {
         return null;
     }    
