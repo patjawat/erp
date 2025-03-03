@@ -62,3 +62,10 @@ EXPOSE 80
 
 # Step 7: เริ่มต้นเซิร์ฟเวอร์ Apache
 CMD ["apache2-foreground"]
+
+# Set the system timezone
+ENV TZ=Asia/Bangkok
+
+# Set PHP timezone configuration
+RUN echo "date.timezone=Asia/Bangkok" > /usr/local/etc/php/conf.d/timezone.ini
+

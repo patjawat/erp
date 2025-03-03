@@ -107,7 +107,7 @@ ssss
 
             <?php if($item->level == 3 && $item->status == 'Pending'):?>
 
-                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> sss'.($item->data_json['topic'] ?? ''),
+                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i>'.($item->data_json['topic'] ?? ''),
                     ['/approve/approve/update','id' => $item->id],
                     [
                         'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',

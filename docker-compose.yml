@@ -4,7 +4,8 @@ services:
     container_name: ${CONTAINER_NAME}
     image: yiisoftware/yii2-php:8.2-apache
     environment:
-      PHP_MEMORY_LIMIT: 2048M
+      - TZ=Asia/Bangkok
+      - PHP_MEMORY_LIMIT=2048M
     volumes:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
