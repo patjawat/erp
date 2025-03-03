@@ -58,5 +58,60 @@ class LeaveController extends \yii\web\Controller
         }
     }
 
+    public function actionApproveAll()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        $approves = Approve::find()->where(['name' => 'leave','emp_id' => $me->id,'status' => 'Pending'])->all();
+        foreach($approves as $item){
+            $model = Approve::findOne($item->id);
+            $model->status = 'Pass';
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate); 
+            if($model->save()){
+                
+                $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
+                if ($nextApprove && $model->status !=='Reject') {
+                    
+                    //เงื่อนไขระบบลา
+                    if($model->name == 'leave'){                        
+                        if($model->level == 2){
+                            $model->leave->status = "Checking";
+                            $model->leave->save();
+                        }
+                        if($model->level == 3){
+                            $model->leave->status = "Verify";
+                            $model->leave->save();
+                        }else{
+                        }
+                    }
+                    
+                    
+                    $nextApprove->status = 'Pending';
+                    $nextApprove->save();
+                   
+                }
+
+                if($model->maxLevel() && $model->status == 'Pass' && $model->name == "leave"){
+                    $model->leave->status = "Approve";
+                    $model->leave->save();
+                    $model->leave->MsgApprove();
+                }
+
+                
+                if($model->maxLevel() && $model->status == 'Pass' && $model->name == "purchase"){
+                    $model->purchase->status = 2;
+                    $model->purchase->save();
+                    // $model->leave->MsgApprove();
+                }
+                
+            }
+          
+        }
+        return [
+            'status' => 'success'
+        ];
+    }
+
     
 }

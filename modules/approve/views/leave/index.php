@@ -1,4 +1,5 @@
 <?php
+use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
@@ -19,6 +20,7 @@ $msg = 'ขอ';
     <div class="card-body">
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <?php echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-primary rounded-pill shadow approve-all']);?>
         </div>
         <table class="table table-striped table-hover">
             <thead>
@@ -91,3 +93,69 @@ $msg = 'ขอ';
     <h5 class="text-center">ไม่มีรายการ</h5>
 <?php endif?>
 <?php // Pjax::end(); ?>
+
+<?php
+$js = <<< JS
+$('.approve-all').click(function (e) { 
+    e.preventDefault();
+    
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'ยืนยันการอนุมัติ?',
+        text: "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติทั้งหมด?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, อนุมัติ!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'กำลังดำเนินการ...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                type: "get",
+                url: url,
+                dataType: "json",
+                success: function (res) {
+                    if (res.status == 'success') {
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: 'อนุมัติทั้งหมดเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 2000, // ตั้งเวลา 2 วินาที
+                            showConfirmButton: false,
+                            willClose: () => {
+                                location.reload(true); // รีโหลดหน้าหลังจากปิด Swal
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: res.message || 'ไม่สามารถอนุมัติได้',
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+    });
+});
+
+
+JS;
+$this->registerJS($js,View::POS_END);
+?>

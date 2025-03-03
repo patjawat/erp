@@ -235,7 +235,7 @@ class Helpdesk extends Yii\db\ActiveRecord
         // ผู้ร่วมดำเนินการ
         public function StackTeam()
         {
-            // try {
+            try {
                 $data = '';
                 $data .= '<div class="avatar-stack">';
                 foreach (Helpdesk::find()->where(['name' => 'repair_team', 'category_id' => $this->id])->all() as $key => $item) {
@@ -246,8 +246,8 @@ class Helpdesk extends Yii\db\ActiveRecord
                 }
                 $data .= '</div>';
                 return $data;
-            // } catch (\Throwable $th) {
-            // }
+            } catch (\Throwable $th) {
+            }
         }
         
     // หน่วยงานที่ส่งซ่อม
