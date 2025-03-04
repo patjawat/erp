@@ -60,7 +60,14 @@ use yii\bootstrap5\Html;
             <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
     <?php endif?>
     <?php if($model->status == 'Approve'):?>
-                        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+
+        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'open-modal','data' => [
+                                'size' => 'modal-xl',
+                                'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                            ]]) ?>
+                        <?php  Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
                             [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'download-leave','data' => [
                                 'filename' => $model->leaveType->title.'-'.$model->employee->fullname
