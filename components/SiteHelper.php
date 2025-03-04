@@ -34,8 +34,7 @@ class SiteHelper extends Component
                         'doc_number' => isset($model->data_json['doc_number']) ? $model->data_json['doc_number'] : null, //เลขที่หนังสือ
                         'director_name' => isset($model->data_json['director_name']) ? $model->data_json['director_name'] : null,
                         'director_position' => isset($model->data_json['director_position']) ? $model->data_json['director_position'] : null,
-                        // 'director_type' => isset($model->data_json['director_type']) ? $model->data_json['director_type'] : null,
-                        'director_type' => $model->data_json['director_type'],
+                        'director_type' => isset($model->data_json['director_type']) ? $model->data_json['director_type'] : null,
                         'leader' => isset($model->data_json['leader']) ? $model->data_json['leader'] : null,
                         'leader_fullname' => isset($model->data_json['leader_fullname']) ? $model->data_json['leader_fullname'] : null,
                         'leader_position' => isset($leader->data_json['position_name_text']) ? ($leader->data_json['position_name_text'].$leader->data_json['position_level_text']) : '',
