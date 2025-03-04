@@ -56,7 +56,7 @@ class DocumentController extends \yii\web\Controller
 
         $createDate = new DateTime($model->created_at ?? '-');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('org_position', 'ตำแหน่งผู้อำนวยการ' . $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
 
         $templateProcessor->setValue('title', $model->leaveType->title);
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
@@ -109,8 +109,10 @@ class DocumentController extends \yii\web\Controller
         }
 
         // ผู้อำนวยการตรวจสอบ อนุมัติให้ลา/ไม่ให้ลา
+        $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทน' ? 'รักษาการแทน' : '');
         $templateProcessor->setValue('direc_fullname', $model->checkerName(4)['fullname']);
-        $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position']);
+        $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position'].$dicrectorType);
+        // $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position']).$dicrectorType;
         $templateProcessor->setValue('direc_date', $model->checkerName(3)['approve_date']);
         try {
             $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
@@ -206,8 +208,9 @@ class DocumentController extends \yii\web\Controller
         }
 
         // ผู้อำนวยการตรวจสอบ อนุมัติให้ลา/ไม่ให้ลา
-        $templateProcessor->setValue('direc_fullname',$model->checkerName(4)['fullname']);
-        $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position']);
+        $dicrectorType = ($this->GetInfo()['director_type'] == 'ผู้อำนวยการ' ? 'ผู้อำนวยการ' : 'รักษาการแทนผู้อำนวยการ');
+        $templateProcessor->setValue('direc_fullname', $model->checkerName(4)['fullname']);
+        $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position'].$dicrectorType);
         $templateProcessor->setValue('direc_date', $model->checkerName(3)['approve_date']);
         try {
             $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
@@ -246,7 +249,8 @@ class DocumentController extends \yii\web\Controller
             'director_name' => $info['director_name'],  // ชื่อผู้บริหาร ผอ.
             'director_fullname' => SiteHelper::viewDirector()['fullname'],  // ชื่อผู้บริหาร ผอ.
             'director_position' => $info['director_position'],  // ตำแหน่งของ ผอ.
-            'director' => $info['director']  // ตำแหน่งของ ผอ.
+            'director' => $info['director'],  // ตำแหน่งของ ผอ.
+            'director_type' => $info['director_type']  // ประเภทตำแหน่งของ ผอ.
         ];
     }
 
@@ -270,7 +274,7 @@ class DocumentController extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',
-                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'title' => Html::a($this->GetInfo()['director_type'].'<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
                 'content' => $this->renderAjax('show', ['filename' => $filename]),
             ];
         } else {

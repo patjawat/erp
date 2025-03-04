@@ -70,6 +70,9 @@ $resultsJs = <<< JS
         background-color: #eaecee !important;
         color: #3F51B5;
     }
+    .field-director_type{
+        margin-bottom: 3px !important;
+    }
 </style>
 
 <!-- <h1 class="text-center"><i class="bi bi-building-fill-check fs-1"></i> ข้อมูลองค์กร</h1> -->
@@ -117,7 +120,14 @@ $resultsJs = <<< JS
                     ?>
                 </div>
                 <?= $form->field($model, 'data_json[website]')->textInput()->label('เว็บไซต์') ?>
-                <?php
+                <div>
+                    <?php
+                    echo $form->field($model, 'data_json[director_type]')->radioList(
+                        ['ผู้อำนวยการ' => 'ผู้อำนวยการ', 'รักษาการแทน' => 'รักษาการแทน'], 
+                        ['custom' => true, 'inline' => true, 'id' => 'director_type']
+                    )->label(false);
+                    ?>
+                                <?php
                 try {
                     //code...
                     $initEmployee = isset($model->data_json['director_name']) ? Employees::find()->where(['id' => $model->data_json['director_name']])->one()->getAvatar(false) : null;
@@ -133,35 +143,36 @@ $resultsJs = <<< JS
                     'size' => Select2::LARGE,
                     'pluginEvents' => [
                         'select2:unselect' => 'function() {
-                                $("#categorise-data_json-director_position").val("")
-
+                            $("#categorise-data_json-director_position").val("")
+                            
                             }',
-                        'select2:select' => 'function() {
-                            var position_name = $(this).select2("data")[0].position_name_text;
-                            $("#categorise-data_json-director_position").val(position_name)
-               
-         }',
-                    ],
-                    'pluginOptions' => [
-                        // 'dropdownParent' => '#main-modal',
-                        'allowClear' => true,
-                        'minimumInputLength' => 1,
-                        'ajax' => [
-                            'url' => Url::to(['/depdrop/employee-by-id']),
-                            'dataType' => 'json',
-                            'delay' => 250,
-                            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                            'processResults' => new JsExpression($resultsJs),
-                            'cache' => true,
-                        ],
-                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                        'templateResult' => new JsExpression('formatRepo'),
-                    ],
-                ])->label('ผู้อำนวยการ')
-                ?>
+                            'select2:select' => 'function() {
+                                var position_name = $(this).select2("data")[0].position_name_text;
+                                $("#categorise-data_json-director_position").val(position_name)
+                                
+                                }',
+                            ],
+                            'pluginOptions' => [
+                                // 'dropdownParent' => '#main-modal',
+                                'allowClear' => true,
+                                'minimumInputLength' => 1,
+                                'ajax' => [
+                                    'url' => Url::to(['/depdrop/employee-by-id']),
+                                    'dataType' => 'json',
+                                    'delay' => 250,
+                                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                                    'processResults' => new JsExpression($resultsJs),
+                                    'cache' => true,
+                                ],
+                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                                'templateResult' => new JsExpression('formatRepo'),
+                            ],
+                            ])->label(false)
+                            ?>
+        </div>
             </div>
-
+            
             <div class="col-4">
                 <?= $form->field($model, 'data_json[province]')->textInput(['placeholder' => 'ระบุ เช่น จังหวัดขอนแก่น'])->label('จังหวัด') ?>
                 <?= $form->field($model, 'data_json[hoscode]')->textInput()->label('รหัสโรงพยาบาล') ?>

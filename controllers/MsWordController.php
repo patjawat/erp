@@ -57,7 +57,8 @@ class MsWordController extends \yii\web\Controller
             'province' => $info['province'],  // ที่อยู่
             'director_name' => $info['director_name'],  // ชื่อผู้บริหาร ผอ.
             'director_fullname' => SiteHelper::viewDirector()['fullname'],  // ชื่อผู้บริหาร ผอ.
-            'director_position' => $info['director_position']  // ตำแหน่งของ ผอ.
+            'director_position' => $info['director_position'],  // ตำแหน่งของ ผอ.
+            'director_type' => $info['director_type'] ?? '-'  // ประเภทของผู้บริการ
         ];
     }
 
