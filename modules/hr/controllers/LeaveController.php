@@ -648,11 +648,9 @@ class LeaveController extends Controller
         $holidaysMe = Calendar::find()->where(['name' => 'off'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
         
         if($model['dayOff'] == 0){
-            // return 'Y';
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
         }else{
             $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
-            // return 'N';
            
         }
 
@@ -664,7 +662,8 @@ class LeaveController extends Controller
             'isDayOff' => $model['dayOff'],
             'dayOff' => $holidaysMe,
             'on_holidays' => $on_holidays,
-            'total' => ($total >= 1 ? $total : 0),
+            'type_days' => ($date_start_type+$date_end_type),
+            'total' => ($total ?? 0),
             'start_type' => $date_start_type,
             'start_end' => $date_end_type,
             'start' => $dateStart,

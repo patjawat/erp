@@ -194,45 +194,28 @@ $resultsJs = <<< JS
                 <div class="col-6">
 
                     <div
-                    class="bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
-                    <?php echo $model->total_days ?></span></h6>
+                    class="bg-primary bg-opacity-10 p-3 rounded mb-3">
                     <div>
                         <!-- <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6> -->
-                                    <table
-                                        class="table table-primary"
-                                    >
+                                    <table class="table table-hover">
                                         <tbody>
                                             <tr class="">
-                                                <td scope="row">
-                                                    <span class="fw-bolder">
-                                                        วันเสาร์-อาทิตย์
-                                                    </span>
-                                                </td>
-                                                <td> <span clas="f-wsemibold" id="satsunDays">0</span></td>
+                                                <td scope="row"><span class="fw-bolder">วันเสาร์-อาทิตย์</span></td>
+                                                <td class="text-center"><span clas="f-wsemibold" id="satsunDays">0</span></td>
                                             </tr>
                                             <tr class="">
                                                 <td scope="row">
-                                                <span class="fw-bolder">
-                                                    วันหยุดนักขัตฤกษ์
-                                                    </span>
-                                                </td>
-                                                <td> <span clas="f-wsemibold" id="holiday">0</span></td>
+                                                <span class="fw-bolder">วันหยุดนักขัตฤกษ์</span></td><td class="text-center"> <span clas="f-wsemibold" id="holiday">0</span></td>
                                             </tr>
                                             <tr class="">
                                                 <td scope="row">
-                                                <span class="fw-bolder">
-                                                        วัน Off
-                                                    </span>
-                                                </td>
-                                                <td> <span clas="f-wsemibold" id="dayOff">0</span></td>
+                                                <span class="fw-bolder">วัน Off</span></td>
+                                                <td class="text-center"> <span clas="f-wsemibold" id="dayOff">0</span></td>
                                             </tr>
                                             <tr class="">
                                                 <td scope="row">
-                                                <span class="fw-bolder">
-                                                สรุปวันลา
-                                                    </span>    
-                                               </td>
-                                                <td> <span clas="f-wsemibold" id="summaryDay">0</span></td>
+                                                <span class="fw-bolder">สรุปวันลา</span></td>
+                                                <td class="text-center"> <span clas="f-wsemibold" id="summaryDay">0</span></td>
                                             </tr>
                                         </tbody>
                                     </table>
