@@ -64,9 +64,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
                     <div class="d-flex flex-row gap-4">
 
-                        <?php
-                        echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false]);
-                        ?>
+                        <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false]);?>
 
                         <?php echo $form->field($model, 'leave_type_id')->checkboxList($model->listLeaveType(),['custom' => true, 'inline' => false]); ?>
                     </div>

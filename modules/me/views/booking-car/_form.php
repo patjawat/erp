@@ -145,28 +145,22 @@ $resultsJs = <<< JS
                 <?= $form->field($model, 'data_json[total_person_count]')->textInput(['type' => 'number'])->label('จำนวนผู้ร่วมเดินทาง') ?>
             </div>
             <div class="col-6">
-                <div class="mb-3 highlight-addon field-booking-data_json-req_license_plate">
-                    <label class="form-label has-star"
-                        for="booking-data_json-req_license_plate">หมายเลขทะเบียนรถที่เลือก</label>
-                    <input type="text" id="req_license_plate" class="form-control" disabled="true"
-                        value="<?php echo $model->license_plate?>">
-                    <div class="invalid-feedback"></div>
-                </div>
+                <div>
+                    <?= $form->field($model, 'private_car',[ 'options' => ['class' => 'form-group mb-0']])->checkbox(['custom' => true, 'switch' => true,'checked' => ($model->private_car == 1 ? true : false)])->label('ใช้รถยนต์ส่วนตัว');?>
+                    <?= $form->field($model, 'license_plate', [
+                            'horizontalCssClasses' => ['wrapper' => 'mb-0']
+                        ])->textInput(['disabled' => !$model->private_car])->label(false) ?>
+
             </div>
+            </div>
+           
         </div>
         
     </div>
     <div class="col-5">
-        <div class="d-flex justify-content-between">
+
             <?= $form->field($model, 'data_json[go_type]')->radioList(['ไปกลับ' => 'ไปกลับ','ค้างคืน' => 'ค้างคืน'],['custom' => true,'inline' => true])->label('ประเภทการเดินทาง') ?>
-            <div>
-                <?= $form->field($model, 'private_car',[ 'options' => ['class' => 'form-group mb-0']])->checkbox(['custom' => true, 'switch' => true,'checked' => ($model->private_car == 1 ? true : false)])->label('รถยนต์ส่วนตัว');?>
-                <?= $form->field($model, 'data_json[me_car]',['horizontalCssClasses' => [
-                    'wrapper' => 'mb-0'
-                    ]
-                    ])->textInput()->label(false) ?>
-            </div>
-        </div>
+           
         <div class="d-flex flex-column gap-1 mt-1">
 
             <div>
@@ -228,7 +222,7 @@ $resultsJs = <<< JS
                         </div>
                     </a>
                     <?php else:?>
-                    <div class="card mb-2 border-2 border-primary">
+                    <div class="card mb-2 border-2 border-primary" >
                         <div class="card-body p-2 d-flex justify-content-center">
                             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
                                 aria-controls="offcanvasRight"> <i class="bi bi-plus-circle fs-1 text-primary"></i></a>
@@ -415,6 +409,54 @@ $js = <<<JS
       thaiDatepicker('#booking-date_start,#booking-date_end')
 
 
+      function toggleLicensePlate() {
+            let isChecked = $('#booking-private_car').prop('checked');
+            let licensePlate = $('#booking-license_plate');
+            let selectCarDiv = $("#selectCar");
+            licensePlate.prop('disabled', !isChecked);
+            
+            // ถ้า private_car ไม่ถูกเลือก ให้เคลียร์ค่าของ license_plate
+            if (!isChecked) {
+                licensePlate.val('');
+                // โคลน HTML และเพิ่มไปที่ #selectCar ถ้ายังไม่มี
+                if (selectCarDiv.children().length === 0) {
+                    selectCarDiv.append(`
+                        <div class="card mb-2 border-2 border-primary">
+                            <div class="card-body p-2 d-flex justify-content-center">
+                                <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+                                    aria-controls="offcanvasRight">
+                                    <i class="bi bi-plus-circle fs-1 text-primary"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `);
+                }
+            }else{
+                    // ล้างเนื้อหาของ #selectCar เมื่อ private_car ถูก uncheck
+                    licensePlate.val('');
+                    selectCarDiv.empty();
+                    selectCarDiv.append(`
+                                    <div class="card mb-2 border-2 border-primary">
+                                        <div class="card-body p-2 d-flex justify-content-center">
+                                            <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+                                                aria-controls="offcanvasRight">
+                                                <i class="bi bi-plus-circle fs-1 text-primary"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                        `);
+                }
+    
+        }
+
+        // เรียกใช้งานเมื่อโหลดหน้าเว็บ
+        toggleLicensePlate();
+
+        // เรียกใช้งานเมื่อมีการเปลี่ยนค่า
+        $('#booking-private_car').on('change', function() {
+            toggleLicensePlate();
+        });
+        
       $('#listEmployee').click(function (e) { 
         e.preventDefault();
         $.ajax({
@@ -475,6 +517,7 @@ $js = <<<JS
 
     $("body").on("click", ".select-car", function (e) {
         e.preventDefault();
+        $("#booking-private_car").prop("checked", false).trigger("change");
         let licensePlate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
         $('#req_license_plate').val(licensePlate)
         $('#booking-license_plate').val(licensePlate)

@@ -53,7 +53,7 @@ class LeaveController extends Controller
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
-            'status' => ['Pending', 'Checking', 'Verify', 'ReqCancel', 'Allow']
+            // 'status' => ['Pending', 'Checking', 'Verify', 'ReqCancel', 'Approve']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
