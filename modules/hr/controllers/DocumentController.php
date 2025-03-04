@@ -75,7 +75,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('days', $model->total_days);
         $templateProcessor->setValue('total', ($model->total_days + ($model->LastDays()['data']->total_days ?? 0)));
         $templateProcessor->setValue('address', $model->data_json['address']);
-        $templateProcessor->setValue('status', $model->status == 'Allow' ? 'อนุญาต' : 'ไม่อนุญาต');
+        $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 
         // ชื่อผู้ขอลา
         $templateProcessor->setValue('emp_fullname', '( '.$model->employee->fullname.' )');
@@ -165,7 +165,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('sum', $model->entitlements()->days ?? 0);  // รวมวันลาพักผ่อนที่ใช้ได้
         $templateProcessor->setValue('total', $model->total_days);  // รวมเป็น
         $templateProcessor->setValue('address', $model->data_json['address']);
-        $templateProcessor->setValue('status', $model->status == 'Allow' ? 'อนุญาต' : 'ไม่อนุญาต');
+        $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 
         // ชื่อผู้ขอลา
         $templateProcessor->setValue('emp_fullname', $model->employee->fullname);
