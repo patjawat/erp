@@ -268,8 +268,6 @@ $resultsJs = <<< JS
 </div>
 </div>
 
-
-
 <?php ActiveForm::end(); ?>
 
 <!-- </div>

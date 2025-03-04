@@ -8,7 +8,9 @@ use yii\helpers\Url;
 use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
 use app\modules\hr\models\Employees;
+$me = UserHelper::GetEmployee()->getInfo();
 
 
 $formatJs = <<< 'JS'
@@ -58,6 +60,7 @@ $resultsJs = <<< JS
                             //code...
                             if($model->isNewRecord){
                                 $initEmployee =  Employees::find()->where(['id' => $model->Approve()['approve_1']['id']])->one()->getAvatar(false);    
+                                // $initEmployee = $me['leader1'];    
                             }else{
                                 $initEmployee =  Employees::find()->where(['id' => $model->data_json['approve_1']])->one()->getAvatar(false);    
                             }

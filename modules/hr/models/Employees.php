@@ -239,6 +239,22 @@ class Employees extends Yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
+    // ข้อมูลเบื้องต้นของบุคลากร
+    public function getInfo()
+    {
+        return[
+            'id' => $this->id,
+            'fullname' => $this->fullname,
+            'photo' => $this->showAvatar(),
+            'avatar' => $this->getAvatar(false),
+            'position' => $this->positionName(),
+            'position_type' => $this->positionTypeName(),
+            'department' => $this->department,
+            'department_name' => $this->departmentName(),
+            // 'leader1' => $this->empDepartment->data_json['leader1'],//หัวหน้า
+            // 'leader2' => $this->empDepartment->data_json['leader2']//รองหัวหน้า
+        ];
+    }
     public function getImg()
     {
         return Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white lazyload',
