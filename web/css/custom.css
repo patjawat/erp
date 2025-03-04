@@ -11997,6 +11997,7 @@ textarea.form-control-lg {
 [data-bs-theme=purple] .form-label {
   margin-bottom: 0.5rem;
   color: #000;
+  font-weight: 400;
 }
 [data-bs-theme=purple] .blank-page {
   background: rgb(111, 129, 218);

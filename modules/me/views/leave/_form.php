@@ -203,19 +203,35 @@ $resultsJs = <<< JS
                                     >
                                         <tbody>
                                             <tr class="">
-                                                <td scope="row">วันเสาร์-อาทิตย์</td>
+                                                <td scope="row">
+                                                    <span class="fw-bolder">
+                                                        วันเสาร์-อาทิตย์
+                                                    </span>
+                                                </td>
                                                 <td> <span clas="f-wsemibold" id="satsunDays">0</span></td>
                                             </tr>
                                             <tr class="">
-                                                <td scope="row">วันหยุดนักขัตฤกษ์</td>
+                                                <td scope="row">
+                                                <span class="fw-bolder">
+                                                    วันหยุดนักขัตฤกษ์
+                                                    </span>
+                                                </td>
                                                 <td> <span clas="f-wsemibold" id="holiday">0</span></td>
                                             </tr>
                                             <tr class="">
-                                                <td scope="row">วัน Off</td>
+                                                <td scope="row">
+                                                <span class="fw-bolder">
+                                                        วัน Off
+                                                    </span>
+                                                </td>
                                                 <td> <span clas="f-wsemibold" id="dayOff">0</span></td>
                                             </tr>
                                             <tr class="">
-                                                <td scope="row">สรุปวันลา</td>
+                                                <td scope="row">
+                                                <span class="fw-bolder">
+                                                สรุปวันลา
+                                                    </span>    
+                                               </td>
                                                 <td> <span clas="f-wsemibold" id="summaryDay">0</span></td>
                                             </tr>
                                         </tbody>

@@ -12,9 +12,14 @@ use app\modules\dms\models\DocumentsDetail;
 
 $me = UserHelper::GetEmployee();
 $documents = DocumentsDetail::find()->where(['name' => 'comment', 'to_id' => $me->id])->all();
-$list = ArrayHelper::map($documents, 'id', function ($model) {
-    return $model->document->topic;
-});
+try {
+    $list = ArrayHelper::map($documents, 'id', function ($model) {
+        return $model->document->topic;
+    });
+} catch (\Throwable $th) {
+    $list = [];
+}
+
 
 
 
