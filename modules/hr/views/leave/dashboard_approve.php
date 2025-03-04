@@ -1,6 +1,6 @@
 
 <?php
-$this->title ="อยู่ระหว่างรอผู้อำนวนการ/อนุมัติ"
+$this->title ="อยู่ระหว่างรอผู้อำนวยการ/อนุมัติ"
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>

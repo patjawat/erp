@@ -56,7 +56,7 @@ class DocumentController extends \yii\web\Controller
 
         $createDate = new DateTime($model->created_at ?? '-');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('org_position', 'ตำแหน่งผู้อำนวนการ' . $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('org_position', 'ตำแหน่งผู้อำนวยการ' . $this->GetInfo()['company_name']);
 
         $templateProcessor->setValue('title', $model->leaveType->title);
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
@@ -78,7 +78,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('status', $model->status == 'Allow' ? 'อนุญาต' : 'ไม่อนุญาต');
 
         // ชื่อผู้ขอลา
-        $templateProcessor->setValue('emp_fullname', $model->employee->fullname);
+        $templateProcessor->setValue('emp_fullname', '( '.$model->employee->fullname.' )');
         $templateProcessor->setValue('emp_position', 'ตำแหน่ง' . $model->employee->positionName());
         try {
             $templateProcessor->setImg('emp_sign', ['src' => $model->employee->signature(), 'size' => [150, 50]]);  // ลายมือผู้ขอลา

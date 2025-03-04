@@ -72,7 +72,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> อยู่ระหว่างรอผู้อำนวนการ/อนุมัติ<span>
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 px-2"><i class="bi bi-exclamation-circle-fill"></i> อยู่ระหว่างรอผู้อำนวยการ/อนุมัติ<span>
                 </div>
             </div>
         </div>

@@ -260,7 +260,7 @@ class ImportLeaveHosController extends Controller
         $newApprove3->status = ($leave->data_json['approve_3_date'] !== '' ? 'Approve' : 'Reject');
         $newApprove3->save(false);
 
-         // ผู้อำนวนการอนุมัติ (ให้หัวหน้าอนุมัติแทน) 
+         // ผู้อำนวยการอนุมัติ (ให้หัวหน้าอนุมัติแทน) 
          $approve4 = Approve::find()->where(['name' => 'leave', 'from_id' => $leave->id, 'emp_id' => $leave->data_json['approve_3'], 'level' => 4])->one();
          if (!$approve4) {
              $newApprove4 = new Approve();

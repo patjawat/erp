@@ -28,7 +28,7 @@ use yii\widgets\DetailView;
     <div class="card-footer">
 
     <?php if($model->status == 'DS1'):?>
-        <?= Html::a('<i class="fa-solid fa-file-signature"></i> เสนอผู้อำนวนการ', ['/dms/document-tags/req-approve'], ['class' => 'btn btn-sm btn-primary rounded-pill req-approve float-end', 'data' => ['document_id' => $model->id,'ref' => $model->ref, 'name' => 'req_approve']]) ?>
+        <?= Html::a('<i class="fa-solid fa-file-signature"></i> เสนอผู้อำนวยการ', ['/dms/document-tags/req-approve'], ['class' => 'btn btn-sm btn-primary rounded-pill req-approve float-end', 'data' => ['document_id' => $model->id,'ref' => $model->ref, 'name' => 'req_approve']]) ?>
     <?php endif;?>
     <?php if($model->status == 'DS3'):?>
             <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> ลงความเห็น', ['/dms/document-tags/comment','id' => $model->id,'tilte' => '<i class="fa-regular fa-pen-to-square"></i> ลงความเห็น'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal float-end']) ?>
