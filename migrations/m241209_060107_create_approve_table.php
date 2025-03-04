@@ -14,8 +14,8 @@ class m241209_060107_create_approve_table extends Migration
     {
         $this->createTable('{{%approve}}', [
             'id' => $this->primaryKey(),
-            'from_id' => $this->string() ->comment('รหัสการขออนุญาติ'),
-            'name' => $this->string()->comment('ชื่อการอนุญาติ'),
+            'from_id' => $this->string() ->comment('รหัสการขออนุญาต'),
+            'name' => $this->string()->comment('ชื่อการอนุญาต'),
             'title' => $this->text()->comment('ชื่อ'),
             'data_json' => $this->json(),
             'emp_id' => $this->integer()->comment('ผู้คตรวจสอลและอนุมัติ'),

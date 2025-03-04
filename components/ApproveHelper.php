@@ -40,7 +40,7 @@ class ApproveHelper extends Component
         $datas = Approve::find()->where(['name' => 'driver_service','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->limit(10)->all();
         
         return [
-            'title' => 'ขออนุญาติใช้รถ',
+            'title' => 'ขออนุญาตใช้รถ',
             'total' => isset($datas) ? count($datas) : 0,
             'datas' => $datas
         ];

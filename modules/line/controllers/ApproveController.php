@@ -48,7 +48,7 @@ class ApproveController extends \yii\web\Controller
         if (!$model) {
             return [
                 'title' => 'แจ้งเตือน',
-                'content' => '<h6 class="text-center">ไม่อนุญาติ</h6>',
+                'content' => '<h6 class="text-center">ไม่อนุญาต</h6>',
             ];
         }
         if ($this->request->isPost && $model->load($this->request->post())) {

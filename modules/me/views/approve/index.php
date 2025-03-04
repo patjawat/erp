@@ -45,7 +45,7 @@ $this->title = "รายการที่ต้องอนุมัติแ�
                         <i class="fa-solid fa-calendar-day fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">ขออนุญาติใช้รถ</h6>
+                        <h6 class="text-center">ขออนุญาตใช้รถ</h6>
                     </div>
                 </div>
             </a>

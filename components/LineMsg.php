@@ -378,7 +378,7 @@ class LineMsg extends Component
         $userId = $approve->employee->user->line_id;
  
         $uri = Url::base(true) . Url::to(['/line/booking-car/approve', 'id' => $approve->id]);
-        $content = "ขออนุญาติใช้รถยนต์".($book->private_car == 1 ? 'ส่วนตัว' : null)."\n";
+        $content = "ขออนุญาตใช้รถยนต์".($book->private_car == 1 ? 'ส่วนตัว' : null)."\n";
         $content .= "เหตุผล : ".$book->reason."\n";
         $content .= "ไป : ".$book->locationOrg->title."\n";
         $content .= "ประเภทการเดินทาง : ".$book->data_json['go_type']."\n";

@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Booking Cars', 'url' => ['index']]
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 
-$msg = "ขออนุญาติใช้รถยนต์".($model->private_car == 1 ? '<code>(ส่วนตัว)</code>' : null);
+$msg = "ขออนุญาตใช้รถยนต์".($model->private_car == 1 ? '<code>(ส่วนตัว)</code>' : null);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-route fs-1"></i> <?= $this->title; ?>

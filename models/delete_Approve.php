@@ -13,8 +13,8 @@ use app\modules\booking\models\Booking;
  * This is the model class for table "approve".
  *
  * @property int $id
- * @property string|null $from_id รหัสการขออนุญาติ
- * @property string|null $name ชื่อการอนุญาติ
+ * @property string|null $from_id รหัสการขออนุญาต
+ * @property string|null $name ชื่อการอนุญาต
  * @property string|null $title ชื่อ
  * @property string|null $data_json
  * @property int|null $emp_id ผู้คตรวจสอลและอนุมัติ
@@ -58,8 +58,8 @@ class Approve extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'from_id' => 'รหัสการขออนุญาติ',
-            'name' => 'ชื่อการอนุญาติ',
+            'from_id' => 'รหัสการขออนุญาต',
+            'name' => 'ชื่อการอนุญาต',
             'title' => 'ชื่อ',
             'data_json' => 'Data Json',
             'emp_id' => 'ผู้คตรวจสอลและอนุมัติ',

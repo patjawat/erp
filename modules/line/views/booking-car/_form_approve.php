@@ -14,7 +14,7 @@ use yii\helpers\ArrayHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
-$this->title = 'ขออนุญาติใช้รถยนต์';
+$this->title = 'ขออนุญาตใช้รถยนต์';
 \yii\web\YiiAsset::register($this);
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>

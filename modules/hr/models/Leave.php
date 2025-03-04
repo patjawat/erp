@@ -528,7 +528,7 @@ class Leave extends \yii\db\ActiveRecord
     public function statusProcess()
     {
         $total = Approve::find()->where(['from_id' => $this->id])->count();
-        $accept = Approve::find()->where(['from_id' => $this->id, 'status' => 'Approve'])->count();
+        $accept = Approve::find()->where(['from_id' => $this->id, 'status' => 'Pass'])->count();
         if ($total > 0) {
             $percentageCompleted = ($accept / $total) * 100;
         } else {
@@ -656,7 +656,7 @@ class Leave extends \yii\db\ActiveRecord
         $color = 'primary';
         $statusName = '';
         if ($leaveStep) {
-            $status = $leaveStep->status == 'Approve' ? '<i class="bi bi-check-circle fw-semibold text-success"></i> ผ่าน' : '<i class="bi bi-exclamation-circle-fill text-danger"></i> ไม่ผ่าน';
+            $status = $leaveStep->status == 'Pass' ? '<i class="bi bi-check-circle fw-semibold text-success"></i> ผ่าน' : '<i class="bi bi-exclamation-circle-fill text-danger"></i> ไม่ผ่าน';
             // $title = $leaveStep->title . ' ' . $status;
             $title = $leaveStep->title;
             $color = '';
