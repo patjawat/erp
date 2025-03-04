@@ -133,7 +133,6 @@ $resultsJs = <<< JS
                                 '0' => 'เต็มวัน',
                                 '0.5' => 'ครึงวัน',
                             ],
-                            // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
                             'pluginOptions' => [
                                 'allowClear' => true,
                                 'dropdownParent' => '#main-modal',
@@ -167,25 +166,8 @@ $resultsJs = <<< JS
                 ])->label('ประเภท');
                 ?>
 
-                <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+               
 
-                <div
-                    class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
-                    <?php echo $model->total_days ?></span></h6>
-                    <div>
-                        <h6>สรุปวันลา : <span
-                                class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6>
-
-                        <!-- <ul>
-        <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
-        <li class="day_normal">วันหยุดนักขัตฤกษ์ : <span class="cal-holiday text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
-        <li class="day_off">วัน OFF : <span class="cal-holiday_me text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span>
-    </ul> -->
-                    </div>
-                </div>
-
-            </div>
-            <div class="col-6">
                 <div class="d-flex justify-content-between gap-3">
                     <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                     <?php
@@ -205,45 +187,95 @@ $resultsJs = <<< JS
                     ?>
                 </div>
                 <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:78px;'])->label('ระหว่างลาติดต่อ') ?>
-                <?php
-                try {
-                    $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
-                } catch (\Throwable $th) {
-                    $initEmployee = '';
-                }
-                echo $form->field($model, 'data_json[leave_work_send_id]')->widget(Select2::classname(), [
-                    'initValueText' => $initEmployee,
-                    'options' => ['placeholder' => 'เลือกรายการ...'],
-                    'size' => Select2::LARGE,
-                    'pluginEvents' => [
-                        'select2:unselect' => 'function() {
-                            $("#leave-data_json-leave_work_send").val("")
-                            }',
-                        'select2:select' => 'function() {
-                                    var fullname = $(this).select2("data")[0].fullname;
-                                    $("#leave-data_json-leave_work_send").val(fullname)
-                            }',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                        'minimumInputLength' => 1,
-                        'ajax' => [
-                            'url' => Url::to(['/depdrop/employee-by-id']),
-                            'dataType' => 'json',
-                            'delay' => 250,
-                            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                            'processResults' => new JsExpression($resultsJs),
-                            'cache' => true,
-                        ],
-                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                        'templateResult' => new JsExpression('formatRepo'),
-                    ],
-                ])->label('มอบหมายงานให้')
-                ?>
+                
+
+            </div>
+       
+                <div class="col-6">
+
+                    <div
+                    class="bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
+                    <?php echo $model->total_days ?></span></h6>
+                    <div>
+                        <!-- <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6> -->
+                                    <table
+                                        class="table table-primary"
+                                    >
+                                        <tbody>
+                                            <tr class="">
+                                                <td scope="row">วันเสาร์-อาทิตย์</td>
+                                                <td> <span clas="f-wsemibold" id="satsunDays">0</span></td>
+                                            </tr>
+                                            <tr class="">
+                                                <td scope="row">วันหยุดนักขัตฤกษ์</td>
+                                                <td> <span clas="f-wsemibold" id="holiday">0</span></td>
+                                            </tr>
+                                            <tr class="">
+                                                <td scope="row">วัน Off</td>
+                                                <td> <span clas="f-wsemibold" id="dayOff">0</span></td>
+                                            </tr>
+                                            <tr class="">
+                                                <td scope="row">สรุปวันลา</td>
+                                                <td> <span clas="f-wsemibold" id="summaryDay">0</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                
+
+                        <!-- <ul>
+                            <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
+                            <li class="day_normal">วันหยุดนักขัตฤกษ์ : <span class="cal-holiday text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
+                            <li class="day_off">วัน OFF : <span class="cal-holiday_me text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span>
+                        </ul> -->
+                    </div>
+                </div>
+                
+                
+                        <?php
+                        try {
+                            $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
+                        } catch (\Throwable $th) {
+                            $initEmployee = '';
+                        }
+                        echo $form->field($model, 'data_json[leave_work_send_id]')->widget(Select2::classname(), [
+                            'initValueText' => $initEmployee,
+                            'options' => ['placeholder' => 'เลือกรายการ...'],
+                            'size' => Select2::LARGE,
+                            'pluginEvents' => [
+                                'select2:unselect' => 'function() {
+                                    $("#leave-data_json-leave_work_send").val("")
+                                    }',
+                                'select2:select' => 'function() {
+                                            var fullname = $(this).select2("data")[0].fullname;
+                                            $("#leave-data_json-leave_work_send").val(fullname)
+                                    }',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                                'minimumInputLength' => 1,
+                                'ajax' => [
+                                    'url' => Url::to(['/depdrop/employee-by-id']),
+                                    'dataType' => 'json',
+                                    'delay' => 250,
+                                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                                    'processResults' => new JsExpression($resultsJs),
+                                    'cache' => true,
+                                ],
+                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                                'templateResult' => new JsExpression('formatRepo'),
+                            ],
+                        ])->label('มอบหมายงานให้')
+                        ?>
                 <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
             </div>
+        </div>
+
+        <div class="row">
+        <div class="col-12">
+            <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+                </div>
         </div>
     </div>
 </div>
@@ -276,11 +308,38 @@ $js = <<< JS
       thaiDatepicker('#leave-date_start,#leave-date_end')
 
 
+        function toggleDateEndType() {
+            let dateStart = $('#leave-date_start').val();
+            let dateEnd = $('#leave-date_end').val();
+
+            if (dateStart && dateEnd && dateStart === dateEnd) {
+                $('#leave-data_json-date_end_type').prop('disabled', true);
+            } else {
+                $('#leave-data_json-date_end_type').prop('disabled', false);
+            }
+        }
+
+        // เรียกใช้เมื่อค่าเปลี่ยนแปลง
+        $('#leave-date_start, #leave-date_end').on('change', function () {
+            toggleDateEndType();
+        });
+
+        // เรียกใช้เมื่อหน้าโหลด
+        toggleDateEndType();
+        
+
       \$('#form-elave').on('beforeSubmit', function (e) {
         var form = \$(this);
-        console.log('Submit');
-        if($('#leave-total_days').val() <= 0){
-            alert('no');
+        
+        let totalDays = parseInt($('#leave-total_days').val(), 10);
+        
+        if (totalDays <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ข้อผิดพลาด',
+                text: 'วันลาต้องไม่เป็น 0 วัน!',
+                confirmButtonText: 'ตกลง'
+            });
             return false;
         }
         
@@ -363,8 +422,13 @@ $js = <<< JS
                 dataType: "json",
                 success: function (res) {
                     console.log(\$('#leave-data_json-date_start_type').val());
-                   \$('.cal-days').html(res.total)
-                   \$('#leave-total_days').val(res.total)
+                   $('#holiday').html(res.holiday)
+                   console.log(res.satsunDays);
+                   
+                   $('#satsunDays').html(res.satsunDays)
+                   $('#dayOff').html(res.isDayOff)
+                   $('#summaryDay').html(res.total)
+                   $('#leave-total_days').html(res.total)
                    if(res.isDayOff >= 1){
                     $('.day_normal').hide()
                     $('.day_off').show()

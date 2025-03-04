@@ -11,6 +11,7 @@ use yii\base\Component;
 use app\models\Hospcode;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\usermanager\models\User;
 
@@ -74,6 +75,7 @@ class AppHelper extends Component
     // นับวันหยุด
     public static function CalDay($dateStart, $dateEnd)
     {
+        $me = UserHelper::GetEmployee();
         // นับวันหยุดไม่รวมเสาร์-อาทิตย์
         $sqlsatsunDays = "WITH RECURSIVE date_range AS (
                         SELECT :date_start AS date
@@ -102,8 +104,11 @@ $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบ�
                             // ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
                              $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND date_start BETWEEN :date_start AND :date_end";
                              //นับวัน Off
-                             $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND MONTH(date_end) = MONTH(:date_end);";
-                             $countDayOff = Yii::$app->db->createCommand($sqlDayOff)->bindValue(':date_end', $dateEnd)->queryScalar();
+                             $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND MONTH(date_end) = MONTH(:date_end);";
+                             $countDayOff = Yii::$app->db->createCommand($sqlDayOff)
+                             ->bindValue(':emp_id', $me->id)
+                             ->bindValue(':date_end', $dateEnd)
+                             ->queryScalar();
                             
                             // นับจำนวนวันทั้งหมด
                             $sqlAllDays = "WITH RECURSIVE date_range AS (SELECT :date_start AS date UNION ALL SELECT DATE_ADD(date, INTERVAL 1 DAY) FROM date_range WHERE date < :date_end ) SELECT count(date) as count_days FROM date_range;"; 
