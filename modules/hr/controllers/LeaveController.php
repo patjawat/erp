@@ -650,7 +650,8 @@ class LeaveController extends Controller
         if($model['dayOff'] == 0){
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
         }else{
-            $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
+            // $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
+            $total = ($model['allDays']-($date_start_type+$date_end_type));
            
         }
 
@@ -660,7 +661,7 @@ class LeaveController extends Controller
             'satsunDays' => $model['satsunDays'],
             'holiday' => $model['holiday'],
             'isDayOff' => $model['dayOff'],
-            'dayOff' => $holidaysMe,
+            // 'dayOff' => $holidaysMe,
             'on_holidays' => $on_holidays,
             'type_days' => ($date_start_type+$date_end_type),
             'total' => ($total ?? 0),

@@ -71,3 +71,7 @@ SET data_json = JSON_SET(
 UPDATE approve
 SET data_json = JSON_SET(data_json, '$.label', 'ตรวจสอบ')
 WHERE name = 'leave' AND level = 3
+
+UPDATE approve
+SET data_json = JSON_SET(data_json, '$.label', 'เห็นชอบ')
+WHERE name = 'leave' AND level = 2

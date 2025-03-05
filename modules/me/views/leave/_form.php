@@ -218,7 +218,9 @@ $resultsJs = <<< JS
                                             </tr>
                                         </tbody>
                                     </table>
-                                
+                                    <p class="text-danger p-0">
+                                        (หากมีวัน Off จะไม่นับวันหยุดและเสาร์-อาทิตย์) *
+                                    </p>
 
                         <!-- <ul>
                             <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
