@@ -48,15 +48,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td><?php echo ($key+1)?></td>
                     <td>
                         
-                        <a href="<?php echo Url::to(['/helpdesk/repair/view', 'id' => $model->id])?>" class="text-dark open-modal-fullscree-xn">
+                        <!-- <a href="<?php echo Url::to(['/helpdesk/repair/view', 'id' => $model->id])?>" class="text-dark open-modal-fullscree-xn"> -->
                             <div>
                                 <p class="text-primary fw-semibold fs-13 mb-0">
                                     <?= $model->viewUrgency() ?>
-                                    <?php echo Yii::$app->thaiFormatter->asDate($model->created_at, 'long')?>
+                                    <?php echo $model->viewCreateDateTime()?>
                                 </p>
                                 <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->data_json['title']?></p>
                             </div>
-                        </a>
+                        <!-- </a> -->
                         
                         <!-- <div class="d-flex flex-row gap-3">
                             <?= $model->showAvatarCreate(); ?>
