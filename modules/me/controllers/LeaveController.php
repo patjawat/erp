@@ -173,59 +173,6 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Creates a new Leave model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     *
-     * @return string|Response
-     */
-    // public function actionCreate()
-    // {
-    //     $leaveTypeId = $this->request->get('leave_type_id');
-    //     $model = new Leave([
-    //         'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-    //         'leave_type_id' => $leaveTypeId,
-    //         'thai_year' => AppHelper::YearBudget(),
-    //     ]);
-    //     $model->data_json = [
-    //         'title' => $this->request->get('title'),
-    //         'address' => $model->CreateBy()->fulladdress,
-    //         'leader' => $model->Approve()['leader']['id'],
-    //         'leader_group' => $model->Approve()['leaderGroup']['id'],
-    //         'phone' => $model->CreateBy()->phone,
-    //         'director' => \Yii::$app->site::viewDirector()['id'],
-    //         'director_fullname' => \Yii::$app->site::viewDirector()['fullname'],
-    //     ];
-    //     if ($this->request->isPost) {
-    //         if ($model->load($this->request->post())) {
-    //             \Yii::$app->response->format = Response::FORMAT_JSON;
-    //             $model->thai_year = AppHelper::YearBudget();
-    //             $model->date_start = AppHelper::convertToGregorian($model->date_start);
-    //             $model->date_end = AppHelper::convertToGregorian($model->date_end);
-    //             $model->save();
-    //             return $this->redirect(['view', 'id' => $model->id]);
-    //             // return [
-    //             //     'status' => 'success',
-    //             //     'container' => '#leave'
-    //             // ];
-    //         }
-    //     } else {
-    //         $model->loadDefaultValues();
-    //     }
-    //     if ($this->request->isAJax) {
-    //         \Yii::$app->response->format = Response::FORMAT_JSON;
-    //         return [
-    //             'title' => $this->request->get('title'),
-    //             'content' => $this->renderAjax('@app/modules/hr/views/leave/create', [
-    //                 'model' => $model,
-    //             ]),
-    //         ];
-    //     } else {
-    //         return $this->render('create', [
-    //             'model' => $model,
-    //         ]);
-    //     }
-    // }
     public function actionCreate()
     {
         $me = UserHelper::GetEmployee();

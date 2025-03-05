@@ -67,7 +67,7 @@ $msg = 'ขอ';
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 
-                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/leave/view', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/leave/update', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                         </div>
 
                     </td>
@@ -110,14 +110,6 @@ $('.approve-all').click(function (e) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({
-                title: 'กำลังดำเนินการ...',
-                text: 'กรุณารอสักครู่',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
 
             $.ajax({
                 type: "get",
@@ -126,15 +118,25 @@ $('.approve-all').click(function (e) {
                 success: function (res) {
                     if (res.status == 'success') {
                         Swal.fire({
-                            title: 'สำเร็จ!',
-                            text: 'อนุมัติทั้งหมดเรียบร้อยแล้ว',
+                        title: 'กำลังบันทึกข้อมูล...',
+                        text: 'โปรดรอสักครู่',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        timer: 1000,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    }).then(() => {
+                        Swal.fire({
                             icon: 'success',
-                            timer: 2000, // ตั้งเวลา 2 วินาที
+                            title: 'บันทึกสำเร็จ',
                             showConfirmButton: false,
-                            willClose: () => {
-                                location.reload(true); // รีโหลดหน้าหลังจากปิด Swal
-                            }
-                        });
+                            timer: 1000
+                        }).then(() => {
+                            window.location.reload();
+                        });  
+                    });
+                    
                     } else {
                         Swal.fire({
                             title: 'เกิดข้อผิดพลาด!',

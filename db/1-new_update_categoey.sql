@@ -60,3 +60,14 @@ INSERT INTO `categorise` (`id`, `ref`, `group_id`, `category_id`, `code`, `emp_i
 VALUES (NULL, NULL, NULL, '', 2, NULL, 'order_status', 'ผอ.อนุมัติ', NULL, NULL, '{}', NULL, 1);
 ALTER TABLE `helpdesk` ADD `category_id` INT NOT NULL DEFAULT '0' AFTER `id`;
 ALTER TABLE `helpdesk` ADD `emp_id` INT NULL AFTER `category_id`;
+
+-- แก้ approve label
+UPDATE approve
+SET data_json = JSON_SET(
+    JSON_REMOVE(data_json, '$.topic'),
+    '$.label', JSON_UNQUOTE(json_extract(data_json, '$.topic'))
+) WHERE name = 'leave'
+
+UPDATE approve
+SET data_json = JSON_SET(data_json, '$.label', 'ตรวจสอบ')
+WHERE name = 'leave' AND level = 3

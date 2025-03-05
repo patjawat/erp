@@ -81,7 +81,6 @@ $resultsJs = <<< JS
 }
 </style>
 
-
 <?php $form = ActiveForm::begin([
     'id' => 'form-elave',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation

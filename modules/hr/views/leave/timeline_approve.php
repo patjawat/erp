@@ -80,22 +80,27 @@ $me = UserHelper::GetEmployee();
                 <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?></div>
             <div class="year">
                 <?php
-                                                $approveDate = $item->viewApproveDate();
                                                 if ($item->status == 'None') {
                                                     echo '<i class="fa-solid fa-clock-rotate-left"></i> รอดำเนินการ';
                                                 }else if ($item->status == 'Pending') {
-                                                    echo '<i class="bi bi-hourglass-bottom  fw-semibold text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['topic'] ?? ''));
-                                                } else if ($item->status == 'Approve') {
-                                                    echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . ($item->data_json['topic'] ?? '');
+                                                    echo '<i class="bi bi-hourglass-bottom  fw-semibold text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['label'] ?? ''));
+                                                } else if ($item->status == 'Pass') {
+                                                    echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . ($item->data_json['label'] ?? '');
                                                 } else if ($item->status == 'Reject') {
-                                                    echo '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่' . ($item->data_json['topic'] ?? '') . ' <i class="bi bi-clock-history"></i> ' . $approveDate;
+                                                    echo '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
                                                 } else if ($item->status == 'Cancel') {
                                                 }
                                                 ?>
             </div>
             <div class="description"><?php echo $item->getAvatar()['fullname']?></div>
-            <?php if($item->status == 'Approve'):?>
-            <i class="bi bi-clock-history"></i> <?php echo $approveDate?>
+            <?php if($item->status == 'Pass'):?>
+            <i class="bi bi-clock-history"></i>  <?php
+            try {
+                echo $item->status == 'Pass' ? $item->viewApproveDate() : '';
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+            ?>
             <?php endif;?>
 
             <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
@@ -104,8 +109,8 @@ $me = UserHelper::GetEmployee();
 
             <?php if($item->level == 3 && $item->status == 'Pending'):?>
 
-                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i>'.($item->data_json['topic'] ?? ''),
-                    ['/approve/approve/update','id' => $item->id],
+                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['label'] ?? ''),
+                    ['/approve/leave/update','id' => $item->id],
                     [
                         'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
                         'data' => [
@@ -114,8 +119,8 @@ $me = UserHelper::GetEmployee();
                             ]
                     
                     ])?>
-                    <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> ไม่'.($item->data_json['topic'] ?? ''),
-                    ['/approve/approve/update','id' => $item->id],
+                    <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> ไม่'.($item->data_json['label'] ?? ''),
+                    ['/approve/leave/update','id' => $item->id],
                     [
                         'class' => 'btn btn-sm btn-danger rounded-pill shadow btn-approve',
                         'data' => [
@@ -142,7 +147,7 @@ $js = <<< JS
         e.preventDefault();
 
         var id = $(this).data('id');
-        var topic = $(this).data('topic');
+        var topic = $(this).data('label');
         var status = $(this).data('status');
         var url = $(this).attr('href');
         console.log(url)
