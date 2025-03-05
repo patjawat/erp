@@ -3,10 +3,11 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\db\Expression;
 use kartik\date\DatePicker;
 use kartik\select2\Select2;
-use kartik\form\ActiveField;
 // use kartik\widgets\DateTimePicker;
+use kartik\form\ActiveField;
 use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
 use kartik\datecontrol\DateControl;
@@ -58,6 +59,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                                 <span class="text-primary">แจ้งซ่อมทั่วไป</span>
                                 <?php echo $model->viewCreateDateTime()?>
                                 <?php endif;?>
+            
                             </div>
                             <span class="fw-semibold"><?php echo $model->data_json['title']?></span>
                         </div>

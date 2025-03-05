@@ -125,7 +125,6 @@ $(".popover-hover")
 
   
 const metisMenu = $('.employee-welcome');
-console.log(metisMenu);
 			var scrollBarCont, isfullscreen = false, ddSliderIns;
 			var sidebarActive = localStorage.getItem("classes") == '' ? false : true;
 			var sidebarMenu = $('#side-menu > li > a.side-nav-link>i')
@@ -135,9 +134,11 @@ console.log(metisMenu);
 				sidebarMenu.addClass('fs-4');
 				
 			}
-					\$("#vertical-menu-btn").on("click", function (e) {
+			
+		$("#vertical-menu-btn").on("click", function (e) {
 					e.preventDefault();
 					e.stopPropagation();
+					alert()
 			        console.log(\$(window).width());
 					if(\$(window).width() > 1024) {
 						if ($("body").hasClass("left-side-menu-condensed")) {

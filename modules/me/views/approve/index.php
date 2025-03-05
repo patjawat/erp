@@ -5,6 +5,7 @@ $notify = ApproveHelper::Info();
 $totalLeave = $notify['leave']['total'];
 $totalBookingCar = $notify['booking_car']['total'];
 $totalPurchase = $notify['purchase']['total'];
+$totalStock = $notify['purchase']['stock'];
 $this->title = "รายการที่ต้องอนุมัติและตรวจสอบ";
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -66,6 +67,23 @@ $this->title = "รายการที่ต้องอนุมัติแ�
                 </div>
             </a>
         </div>
+
+        <div class="col">
+            <a href="<?php echo Url::to(['/me/approve-purchase'])?>">
+            <div class="card border-0 shadow-sm hover-card position-relative">
+                <?php if($totalStock >=1):?>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalStock?></span>
+            <?php endif;?>
+                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
+                        <i class="fa-solid fa-calendar-day fs-1 text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-center">ขออนุมัติเบิกวัสดุ</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
         
     </div>
 </div>

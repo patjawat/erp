@@ -25,7 +25,7 @@ class ApproveHelper extends Component
             'total' => (self::Leave()['total']+self::Purchase()['total']+self::StockApprove()['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
-            'stock_approve' => self::StockApprove(),
+            'stock' => self::StockApprove(),
             'purchase' => self::Purchase(),
             // 'helpdesk' => self::Helpdesk(),
             
@@ -146,25 +146,50 @@ class ApproveHelper extends Component
     }
     }
     
-    public static function StockApprove()
-    {
-        try {
-            $emp = UserHelper::GetEmployee();
-        $datas = isset($emp->id) ? StockEvent::find()->andFilterWhere(['name' => 'order', 'checker' => $emp->id])->andWhere(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"))->all() : 0;
-        return [
-            'title' => 'ขออนุมัติเบิกวัสดุ',
-            'total' => isset($datas) ? count($datas) : 0,
-            'datas' => $datas
-        ];
-        } catch (\Throwable $th) {
-            return [
-                'title' => 'ขออนุมัติเบิกวัสดุ',
-                'total' =>  0,
-                'datas' => []
-            ];
+
+        //รายการที่ต้องอนุมัติจัดซื้อ
+        public static function StockApprove()
+        {
+            try {
+                $me = UserHelper::GetEmployee();
+                $datas = Approve::find()->where(['name' => 'main_stock','status' => 'Pending','emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+                
+                return [
+                    'title' => 'อนุมัติขอเบิกวัสดุ',
+                    'total' => isset($datas) ? count($datas) : 0,
+                    'datas' => $datas,
+                    'emp_id' => $me->id
+                ];
+            } catch (\Throwable $th) {
+                return [
+                    'title' => 'อนุมัติขอเบิกวัสดุ',
+                    'total' =>  0,
+                    'datas' => [],
+                ];
+          
         }
+        }
+    
+    //ระบบเดิม
+    // public static function StockApprove()
+    // {
+    //     try {
+    //         $emp = UserHelper::GetEmployee();
+    //     $datas = isset($emp->id) ? StockEvent::find()->andFilterWhere(['name' => 'order', 'checker' => $emp->id])->andWhere(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.checker_confirm')) = ''"))->all() : 0;
+    //     return [
+    //         'title' => 'ขออนุมัติเบิกวัสดุ',
+    //         'total' => isset($datas) ? count($datas) : 0,
+    //         'datas' => $datas
+    //     ];
+    //     } catch (\Throwable $th) {
+    //         return [
+    //             'title' => 'ขออนุมัติเบิกวัสดุ',
+    //             'total' =>  0,
+    //             'datas' => []
+    //         ];
+    //     }
        
-    }
+    // }
     
     
 

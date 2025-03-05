@@ -186,7 +186,7 @@ $resultsJs = <<< JS
                     ])->label('สถานที่ไป');
                     ?>
                 </div>
-                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:78px;'])->label('ระหว่างลาติดต่อ') ?>
+                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
                 
 
             </div>

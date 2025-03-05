@@ -50,13 +50,15 @@ class StockOrderController extends Controller
         }
 
         $searchModel = new StockEventSearch([
-            'warehouse_id' => $warehouse['warehouse_id']
+            'warehouse_id' => $warehouse['warehouse_id'],
+            'transaction_type' => 'OUT'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '\$.asset_type_name')"), $searchModel->asset_type_name]);
         $dataProvider->query->andFilterWhere(['name' => 'order']);
-        $dataProvider->query->andFilterWhere(['transaction_type' => $searchModel->transaction_type]);
+        // $dataProvider->query->andFilterWhere(['transaction_type' => $searchModel->transaction_type]);
+        $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],

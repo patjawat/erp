@@ -17,9 +17,9 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
 use app\widgets\FlatpickrWidget;
+use app\components\ApproveHelper;
 use yii\web\HtmlResponseFormatter;
 use app\modules\hr\models\Employees;
-use app\components\ApproveHelper;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\widgets\Flatpickr\FlatpickrBuddhistWidget;
 $totalNotification = ApproveHelper::Info()['total'];
@@ -56,12 +56,5 @@ $me = UserHelper::GetEmployee();
     'validationUrl' => ['/hr/leave/create-validator']
 ]); ?>
 
-    
-<div class="card">
-    <div class="card-body">
-sssss
-    
-    </div>
-</div>
 
 <?php ActiveForm::end(); ?>

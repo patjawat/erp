@@ -156,7 +156,7 @@ $js = <<<JS
                         \$('.offcanvas-body').html(res.content)
                     }
                 });
-                \$('.offcanvas-title').text('ssss');
+                \$('.offcanvas-title').text('ทดสอบ');
             });
 
       document.addEventListener('DOMContentLoaded', function(info) {

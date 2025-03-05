@@ -79,6 +79,7 @@ class WarehouseController extends Controller
             ]);
         }
     }
+    
 
     public function actionList()
     {

@@ -78,7 +78,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 
         // ชื่อผู้ขอลา
-        $templateProcessor->setValue('emp_fullname', '( '.$model->employee->fullname.' )');
+        $templateProcessor->setValue('emp_fullname', $model->employee->fullname);
         $templateProcessor->setValue('emp_position', 'ตำแหน่ง' . $model->employee->positionName());
         try {
             $templateProcessor->setImg('emp_sign', ['src' => $model->employee->signature(), 'size' => [150, 50]]);  // ลายมือผู้ขอลา

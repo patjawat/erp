@@ -178,7 +178,7 @@ class DocumentsController extends Controller
                Yii::$app->response->format = Response::FORMAT_JSON;
    
                return [
-                   'title' =>'ssss',
+                   'title' =>'',
                 //    'title' =>$this->request->get('title'),
                    'content' => $this->renderAjax('_form_comment', [
                        'model' => $model,

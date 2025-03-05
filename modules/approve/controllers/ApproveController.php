@@ -125,19 +125,19 @@ class ApproveController extends Controller
             
             if($model->save()){
                  //ถ้าไม่อนุมัติให้ return ออกเลย
-            if($status == 'Reject'){
-                
-                //########## ถ้าหากเป็นระบบลา
-                if($model->name == 'leave'){
-                    $model->leave->status = "Reject";
-                    $model->leave->save();
-                    $model->leave->MsgReject();
-                }
-                
-                    return [
-                    'status' => 'success'
-                ];
-            }
+                 
+                 //########## ถ้าหากเป็นระบบลา
+                 if($model->name == 'leave'){
+                            if($status == 'Reject'){
+                            $model->leave->status = "Reject";
+                            $model->leave->save();
+                            $model->leave->MsgReject();
+                            
+                            return [
+                                'status' => 'success'
+                            ];
+                            
+                        }
 
                 $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
                 if ($nextApprove && $status !=='Reject') {
@@ -166,6 +166,11 @@ class ApproveController extends Controller
                     $model->leave->save();
                     $model->leave->MsgApprove();
                 }
+                
+
+            }
+
+             
 
                 
                 if($model->maxLevel() && $model->status == 'Pass' && $model->name == "purchase"){
@@ -174,10 +179,12 @@ class ApproveController extends Controller
                     // $model->leave->MsgApprove();
                 }
 
-                
-                return [
-                    'status' => 'success'
-                ];
+
+
+
+                // return [
+                //     'status' => 'success'
+                // ];
             }
          
         }

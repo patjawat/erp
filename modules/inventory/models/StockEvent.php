@@ -175,6 +175,13 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'category_id']);
     }
 
+        // ผู้ตรวจสอบ
+    public function getEmpChecker()
+        {
+            return $this->hasOne(Employees::class, ['id' => 'checker']);
+        }
+
+
     // นีับจำนวน stock คงเหลือในคลังที่เลือก
     public static function SumStockWarehouse()
     {
@@ -437,6 +444,13 @@ class StockEvent extends Yii\db\ActiveRecord
             ->where(['name' => 'receive_committee', 'category_id' => $this->id])
             ->all();
     }
+    public function ListItems()
+    {
+        return self::find()
+            ->where(['name' => 'order_item', 'category_id' => $this->id])
+            ->all();
+    }
+    
 
     // แสดงรายละเอียดของแต่ละ lot
     public function LotNumberDetail()
@@ -627,7 +641,8 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public function viewCreatedAt()
     {
-        return \Yii::$app->thaiFormatter->asDateTime($this->created_at, 'php:d/m/Y H:i:s');
+        $time = explode(' ',$this->created_at)[1];
+        return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long').' '.$time;
     }
 
     public function viewCreated()
@@ -935,7 +950,7 @@ class StockEvent extends Yii\db\ActiveRecord
          (SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'IN' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 AND order_status = 'success' AND thai_year = :thai_year) as in9,
          (SELECT IFNULL(CONVERT(SUM(qty * unit_price), UNSIGNED),0) FROM stock_events WHERE transaction_type = 'OUT' AND warehouse_id = :warehouse_id AND MONTH(created_at) = 9 AND order_status = 'success' AND thai_year = :thai_year) as out9
          FROM stock_events
-         where order_status = 'success'
+         where order_status = 'success' AND thai_year = :thai_year
          GROUP BY thai_year";
         $query = \Yii::$app
             ->db
@@ -947,8 +962,8 @@ class StockEvent extends Yii\db\ActiveRecord
 
         try {
             $chartSummary = [
-                'in' => [$query['in10'], $query['in11'], $query['in12'], $query['in1'], $query['in3'], $query['in3'], $query['in4'], $query['in5'], $query['in6'], $query['in7'], $query['in8'], $query['in9']],
-                'out' => [$query['out10'], $query['out11'], $query['out12'], $query['out1'], $query['out3'], $query['out3'], $query['out4'], $query['out5'], $query['out6'], $query['out7'], $query['out8'], $query['out9']]
+                'in' => [$query['in10'], $query['in11'], $query['in12'], $query['in1'], $query['in2'], $query['in3'], $query['in4'], $query['in5'], $query['in6'], $query['in7'], $query['in8'], $query['in9']],
+                'out' => [$query['out10'], $query['out11'], $query['out12'], $query['out1'], $query['out2'], $query['out3'], $query['out4'], $query['out5'], $query['out6'], $query['out7'], $query['out8'], $query['out9']]
             ];
             // code...
         } catch (\Throwable $th) {

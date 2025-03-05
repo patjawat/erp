@@ -373,10 +373,11 @@ class Helpdesk extends Yii\db\ActiveRecord
     {
         return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
     }
-
+    
     public function viewCreateDateTime()
     {
-        return \Yii::$app->thaiFormatter->asDateTime($this->created_at, 'medium');
+        $time = explode(' ',$this->created_at)[1];
+        return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long').' '.$time;
     }
 
     // แสดงวันที่รับเรื่อง

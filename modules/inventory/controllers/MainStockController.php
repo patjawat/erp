@@ -6,9 +6,11 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
@@ -72,10 +74,13 @@ class MainStockController extends Controller
                     }
 
                     // ถ้าผู้ขอกับผู้อนุมิติเป็นคนเดียวกันให้อนุมติได้เลย
-                    if ($userCreate->id == $model->checker) {
-                        $newObj = $model->data_json = ['checker_confirm' => 'Y'];
-                        $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
-                    }
+                    // if ($userCreate->id == $model->checker) {
+                    //     $newObj = $model->data_json = ['checker_confirm' => 'Y'];
+                    //     $model->data_json = ArrayHelper::merge($model->data_json, $newObj);
+                    // }
+                    
+                  
+                    
 
                     $model->thai_year = AppHelper::YearBudget();
                     $model->order_status = 'pending';
@@ -111,6 +116,27 @@ class MainStockController extends Controller
                     \Yii::$app->session->remove('selectMainWarehouse');
                     // ถ้าไม่มีข้อผิดพลาด ทำการ commit
                     $transaction->commit();
+
+                      // สร้างการอนุมัติ new feture
+                      $approve = new Approve;
+
+                      $approve->from_id = $model->id;
+                      $approve->name = 'main_stock';
+                      $approve->emp_id = $model->checker;
+                      $approve->status = 'Pending';
+                      $approve->title = 'อนุมัติ';
+                      $approve->data_json = ['label' => 'อนุมัติ'];
+                      $approve->save(false);
+                      // try {
+                          //ส่ง massage
+                          $userId = $model->empChecker->user->line_id;
+                          $message = 'ขออนุมัติเบิกวัสดุ';
+                          LineMsg::sendMsg($userId, $message);
+                      // } catch (\Throwable $th) {
+                      //     //throw $th;
+                      // }
+                    
+                      
                     return $this->redirect(['/inventory/main-stock']);
                 } catch (\Throwable $e) {
                     $transaction->rollBack();

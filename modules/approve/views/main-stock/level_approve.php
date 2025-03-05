@@ -128,12 +128,12 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
 
 
 <?php
-if(isset($url)){
-    $urlApprove = $url;
-}else{
-    $urlApprove = Url::to(['/approve/leave/approve']);
+// if(isset($url)){
+//     $urlApprove = $url;
+// }else{
+//     $urlApprove = Url::to(['/approve/leave/approve']);
     
-}
+// }
     $js = <<<JS
 
         //การอนุมัติ

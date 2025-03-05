@@ -133,6 +133,7 @@ $emp = UserHelper::GetEmployee();
                 // echo $model->CreateBy()['fullname'];
                 // echo $model->viewCreatedAt();
                 ?>
+                
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
@@ -149,10 +150,11 @@ $emp = UserHelper::GetEmployee();
                             <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse['warehouse_id'])): ?>
-                            <?php if($balanced == 0):?>
+                            
+                            <?php  // if($balanced == 0):?>
                             <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
 
-                            <?php endif;?>
+                            <?php //  endif;?>
                             <?php else:?>
 
                             <?php endif;?>
@@ -187,7 +189,7 @@ $emp = UserHelper::GetEmployee();
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
                     <?php if($model->checker == $emp->id && $model->order_status != 'success'):?>
-                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                    <?php // echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
                     <?php endif;?>
                 </div>
             </div>

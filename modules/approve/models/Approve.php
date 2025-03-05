@@ -9,6 +9,7 @@ use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
 use app\modules\booking\models\Booking;
+use app\modules\inventory\models\StockEvent;
 
 
 /**
@@ -97,6 +98,12 @@ class Approve extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Booking::class, ['id' => 'from_id']);
     }
+
+    public function getStock()
+    {
+        return $this->hasOne(StockEvent::class, ['id' => 'from_id']);
+    }
+    
     
 
     //  หา level สุดท้าย
@@ -118,8 +125,8 @@ class Approve extends \yii\db\ActiveRecord
     public function viewApproveDate()
     {
     try {
-        return AppHelper::ThaiDate($this->data_json['approve_date'], 0, true);
-        // return \Yii::$app->thaiFormatter->asDateTime($this->data_json['approve_date'], 'medium');
+        $time = explode(' ',$this->data_json['approve_date'])[1];
+        return \Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long').' '.$time;
     } catch (\Throwable $th) {
         return null;
     }    

@@ -26,7 +26,8 @@ use iamsaint\datetimepicker\Datetimepicker;
     <div class="d-flex justify-content-between gap-3">
 
         <?= $form->field($model, 'q')->label(false) ?>
-        <?=$form->field($model, 'transaction_type')->widget(Select2::classname(), [
+        <?php
+        $form->field($model, 'transaction_type')->widget(Select2::classname(), [
         'data' => ['IN' => 'รับ','OUT' =>'จ่าย'],
         'options' => ['placeholder' => 'ความเคลื่อนไหว'],
         'pluginOptions' => [
@@ -37,7 +38,8 @@ use iamsaint\datetimepicker\Datetimepicker;
             'select2:select' => "function(result) { $(this).submit()}",
             'select2:unselecting' => "function(result) { $(this).submit()}",
             ]
-        ])->label(false);?>
+        ])->label(false);
+        ?>
                     
         <?=$form->field($model, 'asset_type_name')->widget(Select2::classname(), [
         'data' => ArrayHelper::map($model->ListOrderType(),'id','name'),

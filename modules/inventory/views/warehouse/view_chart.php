@@ -13,6 +13,7 @@ use yii\helpers\Json;
 <?php
 $chartSummeryIn = Json::encode($model->SummaryPriceYear()['in']);
 $chartSummeryOut = Json::encode($model->SummaryPriceYear()['out']);
+
 $js = <<< JS
   // getPendingOrder()
   // getlistOrderRequest()
