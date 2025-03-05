@@ -201,21 +201,21 @@ $resultsJs = <<< JS
                                         <tbody>
                                             <tr class="">
                                                 <td scope="row"><span class="fw-bolder">วันเสาร์-อาทิตย์</span></td>
-                                                <td class="text-center"><span clas="f-wsemibold" id="satsunDays">0</span></td>
+                                                <td class="text-center"><span clas="f-wsemibold" id="satsunDays"><?php echo $model->data_json['sat_sun_days'] ?? 0?></span></td>
                                             </tr>
                                             <tr class="">
                                                 <td scope="row">
-                                                <span class="fw-bolder">วันหยุดนักขัตฤกษ์</span></td><td class="text-center"> <span clas="f-wsemibold" id="holiday">0</span></td>
+                                                <span class="fw-bolder">วันหยุดนักขัตฤกษ์</span></td><td class="text-center"> <span clas="f-wsemibold" id="holiday"><?php echo $model->data_json['holidays'] ?? 0?></span></td>
                                             </tr>
                                             <tr class="">
                                                 <td scope="row">
                                                 <span class="fw-bolder">วัน Off</span></td>
-                                                <td class="text-center"> <span clas="f-wsemibold" id="dayOff">0</span></td>
+                                                <td class="text-center"> <span clas="f-wsemibold" id="dayOff"><?php echo $model->data_json['off_days'] ?? 0?></span></td>
                                             </tr>
                                             <tr class="">
                                                 <td scope="row">
                                                 <span class="fw-bolder">สรุปวันลา</span></td>
-                                                <td class="text-center"> <span clas="f-wsemibold" id="summaryDay">0</span></td>
+                                                <td class="text-center"> <span clas="f-wsemibold" id="summaryDay"><?php echo $model->total_days?></span></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -284,6 +284,9 @@ $resultsJs = <<< JS
 
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'data_json[sat_sun_days]')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'data_json[holidays]')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'data_json[off_days]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
@@ -421,13 +424,19 @@ $js = <<< JS
                 dataType: "json",
                 success: function (res) {
                     console.log(\$('#leave-data_json-date_start_type').val());
-                   $('#holiday').html(res.holiday)
-                   console.log(res.satsunDays);
+                    console.log(res.satsunDays);
+                    
+                    $('#satsunDays').html(res.satsunDays)
+                    $('#leave-data_json-sat_sun_days').val(res.satsunDays)
+                    
+                    $('#dayOff').html(res.isDayOff)
+                    $('#leave-data_json-off_days').val(res.isDayOff)
+                    
+                    $('#holiday').html(res.holiday)
+                   $('#leave-data_json-holidays').val(res.holiday)
                    
-                   $('#satsunDays').html(res.satsunDays)
-                   $('#dayOff').html(res.isDayOff)
                    $('#summaryDay').html(res.total)
-                   $('#leave-total_days').html(res.total)
+                   $('#leave-total_days').val(res.total)
                    if(res.isDayOff >= 1){
                     $('.day_normal').hide()
                     $('.day_off').show()

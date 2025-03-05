@@ -7,7 +7,6 @@ use DateTime;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
-use app\modules\approve\models\Approve;
 use yii\web\Controller;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
@@ -17,6 +16,7 @@ use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\LeaveSearch;
+use app\modules\approve\models\Approve;
 use app\modules\hr\models\LeavePermission;
 
 /**
@@ -234,7 +234,8 @@ class LeaveController extends Controller
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
             'thai_year' => AppHelper::YearBudget(),
-            'on_holidays' => 0
+            'on_holidays' => 0,
+            'total_days' => 0
         ]);
 
         $model->data_json = [
