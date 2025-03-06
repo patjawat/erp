@@ -38,13 +38,9 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
                 <div class="d-flex bg-danger justify-content-between bg-opacity-10 py-2 px-3 rounded mb-3">
                     <div class="d-flex gap-3">
-                        <?php
-                          try {
-                              echo Html::img($model->asset->showImg(), ['class' => 'avatar avatar-xl object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 120px;']);
-                            } catch (\Throwable $th) {
-                                // throw $th;
-                            }
-                            ?>
+
+
+                 
 
                         <div class="d-flex flex-column">
 
@@ -138,6 +134,25 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         </div>
     </div>
     <div class="col-4">
+    <?php if($model->code == ''):?>
+    <?php
+                    try {
+                        echo Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle mb-3', 'style' => 'max-width:100%;min-width: 320px;']);
+                    } catch (\Throwable $th) {
+                    }
+                ?>
+    <?php else:?>
+   
+        <?php
+                          try {
+                              echo Html::img($model->asset->showImg(), ['class' => 'avatar avatar-xl object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 120px;']);
+                            } catch (\Throwable $th) {
+                                // throw $th;
+                            }
+                            ?>
+    <?php endif;?>
+                
+                
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
