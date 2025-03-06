@@ -263,7 +263,12 @@ class Order extends \yii\db\ActiveRecord
            
 
             //ถ้าหากผู้ขอซื้อกับผู้เห็นชอบ เป็น คนเดียวกันให้สถานะเป็น เห็นชอบได้เลย
-            $status = ($emp->id == $item['emp_id']) ? 'Approve' : $item['status'];
+            if($item['level'] == 1){
+                $status =  'Pending';
+
+            }else{
+                $status =  $item['status'];
+            }
             
            
 
@@ -273,7 +278,7 @@ class Order extends \yii\db\ActiveRecord
                     'name' => 'purchase',
                     'emp_id' => $item['emp_id'],
                     'title' => $item['title'],
-                    'status' => $item['status'],
+                    'status' => $status,
                     'data_json' => [
                         'label' => $item['label'],
                         ]

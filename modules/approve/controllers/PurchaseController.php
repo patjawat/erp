@@ -15,35 +15,65 @@ use app\modules\approve\models\ApproveSearch;
 
 class PurchaseController extends \yii\web\Controller
 {
-   
-    public function actionView($id)
+
+    public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-        //ข้อมูลการ Approve
-        $approve = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
-        // ข้อมูลการลา
-        $leave = Leave::findOne($approve->from_id);
-        
-        if (!$approve) {
-            return [
-                'title' => 'แจ้งเตือน',
-                'content' => '<h6 class="text-center">ไม่อนุญาต</h6>',
-            ];
+        $searchModel = new ApproveSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'purchase', 'emp_id' => $me->id, 'status' => 'Pending']);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    
+   
+    public function actionUpdate($id)
+    {
+        $me = UserHelper::GetEmployee();
+        $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            $status = $this->request->post('status');
+             // ระบบอนุมัติเบิกคลัง
+             $old = $model->data_json;
+             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+             $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+             $model->status = $status;
+             //ถ้าบันทุกเรียบร้อย
+             if($model->save(false))
+             {
+                
+                if($model->maxLevel() && $model->status == 'Pass'){
+                    $model->purchase->status = 2;
+                    $model->purchase->save();
+                }
+
+                
+                return [
+                    'status' => 'success'
+                ];
+                
         }
+        
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                // 'title' => isset($approve->leave) ? $approve->leave->getAvatar('ขอ')['avatar'] : '',
-                'title' => '',
-                'content' => $this->renderAjax('view', [
-                    'model' => $approve,
+                'title' => isset($model->stock) ? $model->stock->CreateBy('ขอเบิกวัสดุ')['avatar'] : '',
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('view', [
-               'model' => $approve,
+            return $this->render('update', [
+                'model' => $model,
             ]);
         }
+    }
     }
 
     
