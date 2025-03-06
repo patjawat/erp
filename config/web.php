@@ -241,6 +241,7 @@ $config = [
             'finance/*',
             'debug/*',
             'hr/leave/cal-days',
+            'hr/document/*',
             'hr/leave/create-validator',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
