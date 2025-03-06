@@ -49,7 +49,7 @@ class DriverController extends Controller
             'status' => $status
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'driver_service']);
+        $dataProvider->query->andFilterWhere(['name' => 'booking_car']);
         // $dataProvider->query->andFilterWhere(['car_type' => $carType]);
         // $dataProvider->query->andFilterWhere(['status' => $status]);
         $dataProvider->query->orderBy([

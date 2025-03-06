@@ -264,6 +264,43 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
+
+
+    // บุคลากร
+    public function actionCar($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $querys = Asset::find()
+            ->Where(['or', 
+            ['LIKE', 'code', $q],
+            ])
+            // ->andWhere(['<>', 'user_id', '0'])
+            ->limit(10)
+            ->all();
+
+        $data = [['id' => '', 'text' => '']];
+        foreach ($querys as $model) {
+            $data[] = [
+                'id' => $model->id,
+                'text' => $model->getAvatar(false),
+                'fullname' => $model->fullname,
+                'position_type_id' => $model->position_type,
+                'position_name' => $model->positionName(),
+                'month_of_service' => $model->workLife()['month'],
+                'years_of_service' => $model->workLife()['year'],
+                'position_name_text' => $model->data_json['position_name_text'] ?? '-',
+                // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
+                'avatar' => $model->getAvatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $model ?? []
+        ];
+    }
+
+
     // ตำแหน่งกลุ่มบุคลากร
     public function actionPositionGroupList($q = null, $id = null)
     {

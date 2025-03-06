@@ -178,6 +178,18 @@ class Booking extends \yii\db\ActiveRecord
         return $this->hasMany(BookingDetail::class, ['booking_id' => 'id'])->andOnCondition(['name' => 'meeting_menber']);
     }
 
+
+    public function viewCreateDate()
+    {
+        return Yii::$app->thaiDate->toThaiDate($this->created_at, false, false);
+    }
+
+    public function viewCreateDateTime()
+    {
+        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+    }
+
+    
     public function listDriverDetails()
     {
     return BookingDetail::find()->where(['name' => 'driver_detail','booking_id' => $this->id])->all();

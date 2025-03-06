@@ -87,14 +87,16 @@ class GeneralController extends \yii\web\Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $model->date_start = AppHelper::convertToGregorian($model->date_start);
-            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->date_start = !empty($model->date_start) ? AppHelper::convertToGregorian($model->date_start) : null;
+            $model->date_end = !empty($model->date_end) ? AppHelper::convertToGregorian($model->date_end) : null;
+            
             $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
 
-            if($model->status == 4 && $model->code !==''){
+            if ($model->status == 4 && $model->code !== '' && $model->asset !== null) {
                 $model->asset->asset_status = 1;
                 $model->asset->save();
             }
+            
             $model->save();
         return $this->redirect(['/helpdesk/general/index']);
         

@@ -89,27 +89,42 @@ use kartik\widgets\ActiveForm;
     <table class="table table-primary align-middle">
         <thead>
             <tr>
-                <th scope="col" style="width:220px;">วันที่</th>
-                <th scope="col">พนักงานขับ</th>
-                <th scope="col">รถยนต์</th>
-                <th  style="width:100px;">จัดสสร</th>
+                <th scope="col" style="width:120px;">วันที่</th>
+                <th scope="col" style="width: 400px;">พนักงานขับ</th>
+                <th scope="col" style="width: 400px;">รถยนต์</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach($model->listDriverDetails() as $item):?>
-                <?php
-                $itemDate = Yii::$app->thaiDate->toThaiDate($item->date_start, false, false);
-                    ?>
             <tr class="">
-                <td scope="row"><?php echo $itemDate;?> </td>
-                <td></td>
-                <td></td>
-                <td>
-                    <div class="d-flex gap-3">
-                        <?php echo Html::a('<i class="fa-solid fa-pen-to-square fs-3"></i>',['/booking/driver-items/update','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-day"></i> จัดสรรวันที่ '.$itemDate],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
-                        <?php echo Html::a('<i class="fa-solid fa-trash fs-3"></i>',['/booking/driver-items/delete','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                <td scope="row"><?php echo Yii::$app->thaiDate->toThaiDate($item->date_start, false, false);?> </td>
+                <td id="driver-<?php echo $item->id?>">
+                <a href="<?php echo Url::to(['/booking/driver/list-detail-items','id' => $item->id,'booking_id' => $model->id,'type' => 'driver'])?>" class="list-items" data-bs-toggle="offcanvas" data-title="เลือกพนักงานขับ" data-bs-target="#offcanvasRightDriver" aria-controls="offcanvasRightDriver"> 
+                    <?php if(isset($item->driver)):?>
+                        <?php  echo $item->driver->getAvatar(false);?>
+               
+                <?php else:?>
+                <div class="card mb-0 border-1 border-primary" data-id="<?php echo $item->id?>" >
+                        <div class="card-body p-2 d-flex justify-content-center">
+                            <i class="bi bi-plus-circle text-primary"></i>
+                        </div>
                     </div>
+                    <?php endif?>
+                </a>
                 </td>
+                <td id="car-<?php echo $item->id?>">
+                    <a href="<?php echo Url::to(['/booking/driver/list-detail-items','id' => $item->id,'booking_id' => $model->id,'type' => 'car'])?>" class="list-items" data-title="เลือรถยนต์" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver" aria-controls="offcanvasRightDriver"> 
+                    <?php if(isset($item->car)):?>
+                        <?php  echo Html::img($item->car->showImg(),['class' => 'avatar avatar-xl'])?>
+                <?php else:?>
+                    <div class="card mb-0 border-1 border-primary">
+                <div class="card-body p-2 d-flex justify-content-center">
+                        <i class="bi bi-plus-circle text-primary"></i>
+                        </div>
+                    </div>
+                    <?php endif?>
+                </a>
+        </td>
             </tr>
             <?php endforeach;?>
         </tbody>

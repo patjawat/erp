@@ -324,7 +324,8 @@ class Helpdesk extends Yii\db\ActiveRecord
             $emp = Employees::findOne(['user_id' => $this->created_by]);
 
             // return Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
-            return $emp->getAvatar(false, $emp->departmentName());
+            // return $emp->getAvatar(false, $emp->departmentName());
+            return $emp->getAvatar(false, $this->viewCreateDateTime());
             // code...
         } catch (\Throwable $th) {
             // throw $th;
@@ -403,8 +404,7 @@ class Helpdesk extends Yii\db\ActiveRecord
 
     public function viewCreateDateTime()
     {
-        $time = explode(' ', $this->created_at)[1];
-        return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long') . ' ' . $time;
+        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
     }
 
     // แสดงวันที่รับเรื่อง

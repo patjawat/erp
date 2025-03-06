@@ -18,6 +18,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
 $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
+$ref = $model->ref;
 
 ?>
 <div class="repair-form">
@@ -113,7 +114,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
             <a href="#" class="select-img">
                 <?= Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']) ?>
             </a>
-            <input type="file" id="req_file" style="display: none;" />
+            <input type="file" id="my_file" style="display: none;" />
             <a href="#" class="select-photo-req"></a>
         </div>
     </div>
@@ -299,6 +300,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
 <?php
 $urlDateNow = Url::to(['/helpdesk/default/datetime-now']);
+$ref = isset($ref) ? Html::encode($ref) : '';
 $js = <<< JS
 
     $('#form-repair').on('beforeSubmit', function (e) {
@@ -314,13 +316,15 @@ $js = <<< JS
                                     confirmButtonText: "ใช่!",
                                     cancelButtonText: "ยกเลิก",
                                         }).then((result) => {
-                                        /* Read more about isConfirmed, isDenied below */
                                         if (result.isConfirmed) {
                                             $.ajax({
                                                     url: form.attr('action'),
                                                     type: 'post',
                                                     data: form.serialize(),
                                                     dataType: 'json',
+                                                    beforeSend: async function () {
+                                                        await uploadFile();
+                                                    },
                                                     success: async function (response) {
                                                         form.yiiActiveForm('updateMessages', response, true);
                                                         if(response.status == 'success') {
@@ -471,73 +475,85 @@ $js = <<< JS
 
            
 
-            $(".select-img").click(function() {
-                $("input[id='req_file']").click();
-            });
+            // $(".select-img").click(function() {
+            //     $("input[id='my_file']").click();
+            // });
 
-            $("input[id='req_file']").on("change", function() {
+            // $("input[id='my_file']").on("change", function() {
+            //     var fileInput = $(this)[0];
+            //     if (fileInput.files && fileInput.files[0]) {
+            //         var reader = new FileReader();
+            //         reader.onload = function(e) {
+            //         $(".repair-photo").attr("src", e.target.result);
+            //         };
+            //         reader.readAsDataURL(fileInput.files[0]);
+            //         uploadImg()
+            //     }
+
+            // });
+
+
+            //###########
+
+            $("#my_file").on("change", function() {
                 var fileInput = $(this)[0];
                 if (fileInput.files && fileInput.files[0]) {
                     var reader = new FileReader();
                     reader.onload = function(e) {
-                    $(".repair-photo").attr("src", e.target.result);
+                        $(".repair-photo").attr("src", e.target.result);
                     };
                     reader.readAsDataURL(fileInput.files[0]);
-                    uploadImg()
                 }
-
+            });
+            //###########
+            
+            $(".select-img").click(function() {
+                $("#my_file").click();
+                console.log('click');
+                
             });
 
-            function uploadImg()
-            {
-                formdata = new FormData();
-                if($("input[id='req_file']").prop('files').length > 0)
-                {
-            file = $("input[id='req_file']").prop('files')[0];
-                    formdata.append("repair", file);
-                    formdata.append("id", 1);
-                    formdata.append("ref", '$model->ref');
-                    formdata.append("name", 'repair');
+            // $("input[id='my_file']").on("change", function() {
+            //     var fileInput = $(this)[0];
+            //     if (fileInput.files && fileInput.files[0]) {
+            //         var reader = new FileReader();
+            //         reader.onload = function(e) {
+            //         $(".repair-photo").attr("src", e.target.result);
+            //         };
+            //         reader.readAsDataURL(fileInput.files[0]);
+            //         uploadImg()
+            //     }
 
-                    console.log(file);
-            $.ajax({
-            url: '/filemanager/uploads/single',
-            type: "POST",
-            data: formdata,
-            processData: false,
-            contentType: false,
-            success: function (res) {
-                            success('แก้ไขภาพสำเร็จ')
-                            console.log(res)
-            }
-            });
-                }
-            }
+            // });
+            
 
-            $("button[id='summit']").on('click', function() {
-                formdata = new FormData();
-                if($("input[id='req_file']").prop('files').length > 0)
-                {
-            file = $("input[id='req_file']").prop('files')[0];
-                    formdata.append("avatar", file);
-                    formdata.append("id", 1);
-                    formdata.append("ref", '$model->ref');
-                    formdata.append("name", 'req_repair');
 
-                    console.log(file);
-            \$.ajax({
-            url: '/filemanager/uploads/single',
-            type: "POST",
-            data: formdata,
-            processData: false,
-            contentType: false,
-            success: function (res) {
-                            // success('แก้ไขภาพ')
-                            console.log(res)
-            }
-            });
-                }
-            })
+ function uploadFile(){
+    formdata = new FormData();
+    var checkFile = $("input[id='my_file']").prop('files').length;
+    console.log(checkFile);
+    
+    
+    if($("input[id='my_file']").prop('files').length > 0)
+    {
+		file = $("input[id='my_file']").prop('files')[0];
+        formdata.append("repair", file);
+        formdata.append("id", 1);
+        formdata.append("ref", '$ref');
+        formdata.append("name", 'repair');
+		$.ajax({
+			url: '/filemanager/uploads/single',
+			type: "POST",
+			data: formdata,
+			processData: false,
+			contentType: false,
+			success: function (res) {
+                return true;
+			}
+		});
+    }
+}
+
 
 
 JS;

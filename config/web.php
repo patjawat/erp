@@ -29,7 +29,12 @@ $config = [
     ],
     'language' => 'th_TH',  // เปิดใช้งานภาษาไทย
     'components' => [
-     
+        'thaiFormatter' => [
+            'class' => 'dixonsatit\thaiYearFormatter\ThaiYearFormatter',
+        ],
+        'thaiDate' => [
+        'class' => 'app\components\ThaiDate',
+    ],
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
@@ -117,9 +122,7 @@ $config = [
                 ],
             ],
         ],
-        'thaiFormatter' => [
-            'class' => 'dixonsatit\thaiYearFormatter\ThaiYearFormatter',
-        ],
+
         'view' => [
             'theme' => [
                 'pathMap' => [

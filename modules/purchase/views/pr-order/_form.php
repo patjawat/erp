@@ -255,12 +255,8 @@ try {
 
         }
         });
-                return false;
-            });
-
-            
-
-
+            return false;
+    });
 
 JS;
 $this->registerJS($js, View::POS_END)

@@ -1,7 +1,13 @@
 <?php
 use yii\helpers\Html;
 use app\modules\hr\models\Employees;
+
+$date = '2025-03-07 22:23:00';
+
+// แปลงเป็น "7 มีนาคม 2568 22:23"
+echo Yii::$app->thaiDate->toThaiDate($date, true, false);
 ?>
+
 <tr>
     <td colspan="6" class="text-center bg-warning-subtle">
         <span class="fw-semibold"> <i class="fa-solid fa-file-pen"></i> บันทึกการแจ้งซ่อม : </span>
