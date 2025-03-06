@@ -1,11 +1,11 @@
 <?php
-use app\modules\hr\models\Employees;
 use yii\helpers\Html;
+use app\modules\hr\models\Employees;
 ?>
 <tr>
     <td colspan="6" class="text-center bg-warning-subtle">
         <span class="fw-semibold"> <i class="fa-solid fa-file-pen"></i> บันทึกการแจ้งซ่อม : </span>
-        <?= Yii::$app->thaiFormatter->asDateTime($repair->created_at, 'medium') ?>
+        <?php echo $model->viewCreateDateTime()?>
     </td>
 </tr>
 <tr>
