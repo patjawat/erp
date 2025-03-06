@@ -247,6 +247,7 @@ class LeaveController extends Controller
      */
     public function actionUpdate($id)
     {
+        $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);

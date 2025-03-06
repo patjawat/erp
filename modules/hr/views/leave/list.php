@@ -2,6 +2,8 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
+use app\components\UserHelper;
+$me = UserHelper::GetEmployee();
 ?>
 
 
@@ -57,7 +59,7 @@ use yii\bootstrap5\Html;
     <?php if($model->status == 'Approve'):?>
         <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
         <?php else:?>
-            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+            <?php echo ($me->id == $model->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']]) : ''?>
     <?php endif?>
     <?php if($model->status == 'Approve'):?>
 
