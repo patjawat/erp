@@ -38,13 +38,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
                 <div class="d-flex bg-danger justify-content-between bg-opacity-10 py-2 px-3 rounded mb-3">
                     <div class="d-flex gap-3">
-
-
-                 
-
                         <div class="d-flex flex-column">
-
-
                             <div>
                                 <i class="fa-solid fa-triangle-exclamation text-danger"></i>
                                 <?php if($model->code !== ''):?>
@@ -137,7 +131,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     <?php if($model->code == ''):?>
     <?php
                     try {
-                        echo Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle mb-3', 'style' => 'max-width:100%;min-width: 320px;']);
+                        echo Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle mb-3', 'style' => 'max-width:100%;min-width: 320px; max-height: 400px;']);
                     } catch (\Throwable $th) {
                     }
                 ?>
@@ -145,7 +139,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
    
         <?php
                           try {
-                              echo Html::img($model->asset->showImg(), ['class' => 'avatar avatar-xl object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 120px;']);
+                              echo Html::img($model->asset->showImg(), ['class' => 'avatar avatar-xl object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 120px; max-height: 400px;']);
                             } catch (\Throwable $th) {
                                 // throw $th;
                             }
