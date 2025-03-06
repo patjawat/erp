@@ -5,7 +5,7 @@ use app\modules\hr\models\Employees;
 <tr>
     <td colspan="6" class="text-center bg-warning-subtle">
         <span class="fw-semibold"> <i class="fa-solid fa-file-pen"></i> บันทึกการแจ้งซ่อม : </span>
-        <?php echo $model->viewCreateDateTime()?>
+        <?php echo $repair->viewCreateDateTime()?>
     </td>
 </tr>
 <tr>
