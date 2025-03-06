@@ -5,6 +5,7 @@ namespace app\modules\hr\models;
 use Yii;
 use yii\helpers\Html;
 use yii\db\Expression;
+use app\models\Uploads;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
@@ -17,6 +18,7 @@ use yii\behaviors\TimestampBehavior;
 use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\LeaveEntitlements;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "leave".
@@ -260,6 +262,25 @@ class Leave extends \yii\db\ActiveRecord
         return LeaveEntitlements::find()->where(['emp_id' => $this->emp_id, 'thai_year' => $this->thai_year])->one();
     }
 
+
+    public function Upload($name)
+    {
+        return FileManagerHelper::FileUpload($this->ref, $name);
+    }
+
+    //รายการเอกสารแนบ
+    public function listClipFile()
+    {
+        $listFfiles = Uploads::find()->where(['ref' => $this->ref, 'name' => 'leave_file'])->all();
+        $file = '<ul>';
+        
+        foreach ($listFfiles as $item) {
+            $file .= '<li>' . Html::a($item->file_name, ['/filemanager/uploads/show', 'id' => $item->id],['target' => '_blank']) . '</li>';
+        }
+        
+        $file .= '</ul>';
+        return $file;
+    }
 
     public function listHistory()
     {

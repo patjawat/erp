@@ -95,14 +95,11 @@ $resultsJs = <<< JS
             <div class="col-6">
 
                 <div class="d-flex justify-content-between gap-3">
-                    <div>
-
+                    <div class="w-50">
                         <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
                         <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
-
                     </div>
-                    <div>
-
+                    <div class="w-50">
                         <?php
                     echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
                         'data' => [
@@ -113,7 +110,7 @@ $resultsJs = <<< JS
                         'pluginOptions' => [
                             'allowClear' => true,
                             'dropdownParent' => '#main-modal',
-                            'width' => '150px',
+                            'width' => '100%',
                         ],
                         'pluginEvents' => [
                             'select2:unselect' => 'function() {
@@ -135,7 +132,7 @@ $resultsJs = <<< JS
                             'pluginOptions' => [
                                 'allowClear' => true,
                                 'dropdownParent' => '#main-modal',
-                                'width' => '150px',
+                                'width' => '100%',
                             ],
                             'pluginEvents' => [
                                 'select2:unselect' => 'function() {
@@ -167,25 +164,8 @@ $resultsJs = <<< JS
 
                
 
-                <div class="d-flex justify-content-between gap-3">
-                    <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
-                    <?php
-                    echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
-                    'data' => [
-                        'ภายในจังหวัด' => 'ภายในจังหวัด',
-                        'ต่างจังหวัด' => 'ต่างจังหวัด',
-                        'ต่างประเทศ' => 'ต่างประเทศ',
-                    ],
-                    'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                        // 'width' => '100%',
-                    ],
-                    ])->label('สถานที่ไป');
-                    ?>
-                </div>
-                <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
+              
+               
                 
 
             </div>
@@ -231,7 +211,52 @@ $resultsJs = <<< JS
                 </div>
                 
                 
-                        <?php
+                     
+            </div>
+        </div>
+
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">รายละเอียดเพิ่มเติม</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
+  </li>
+
+</ul>
+<div class="tab-content" id="pills-tabContent">
+  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
+    <!-- Start row -->
+<div class="row">
+<div class="col-6">
+<div class="d-flex gap-3">
+    <div class="w-50">
+        
+        <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
+    </div>
+    <div class="w-50">
+        <?php
+                    echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+                    'data' => [
+                        'ภายในจังหวัด' => 'ภายในจังหวัด',
+                        'ต่างจังหวัด' => 'ต่างจังหวัด',
+                        'ต่างประเทศ' => 'ต่างประเทศ',
+                    ],
+                    'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                        'width' => '100%',
+                    ],
+                    ])->label('สถานที่ไป');
+                    ?>
+                </div>
+                </div>
+<?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
+</div>
+<div class="col-6">
+
+<?php
                         try {
                             $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
                         } catch (\Throwable $th) {
@@ -269,12 +294,23 @@ $resultsJs = <<< JS
                         ])->label('มอบหมายงานให้')
                         ?>
                 <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
-            </div>
-        </div>
+                
 
+</div>
+</div>
+<?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+  <!-- End Row -->
+  </div>
+  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
+    <?php echo $model->Upload('leave_file')?>
+  </div>
+
+</div>
+
+        
         <div class="row">
         <div class="col-12">
-            <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+           
                 </div>
         </div>
     </div>
