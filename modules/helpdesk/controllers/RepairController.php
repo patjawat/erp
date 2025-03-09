@@ -5,6 +5,7 @@ namespace app\modules\helpdesk\controllers;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -372,9 +373,12 @@ class RepairController extends Controller
                 // template message
                 $emp = Yii::$app->employee::GetEmployee();
 
-                $message = 'แจ้งงานซ่อมจาก ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->data_json['title'] . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
+                $tecReq =  Employees::find()->where(['id' => $model->data_json['technician_req']])->one();
+                $lineId = $tecReq->user->line_id;
+
+                $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->data_json['title'] . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
                 try {
-                    //$response = Yii::$app->LineMsg->sendMessage($message, $model->repair_group);
+                    $response = LineMsg::sendMsg($lineId, $message);
                     return $this->redirect(['/me/repair']);
                     return [
                         'status' => 'success',
@@ -480,6 +484,7 @@ class RepairController extends Controller
             $model->data_json['title'] == '' ? $model->addError('data_json[title]', 'ต้องระบุอาการ...') : null;
             $model->data_json['urgency'] == '' ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
             $model->data_json['location'] == '' ? $model->addError('data_json[location]', 'ต้องระบุสถานะที่...') : null;
+            $model->data_json['technician_req'] == '' ? $model->addError('data_json[technician_req]', 'ต้องระบุช่างเพื่อรับการแจ้งเตือน...') : null;
             $model->repair_group == '' ? $model->addError('repair_group', 'ต้องระบุ...') : null;
 
             foreach ($model->getErrors() as $attribute => $errors) {
@@ -647,6 +652,72 @@ class RepairController extends Controller
             return $this->render('rating', ['model' => $model]);
         }
     }
+
+
+    public function actionTechnicianList()
+{
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    $q = Yii::$app->request->get('q');
+    $group = $this->request->get('repair_group');
+    $item_name = '';
+    // ซ่อมบำรุง
+    if ($group == 1) {
+        $item_name = 'technician';
+        // 2 คือศูนย์คอมพิวเตอร์
+    } elseif ($group == 2) {
+        $item_name = 'computer';
+        // 3 คือศูนย์เครื่องมือแพทย์
+    } elseif ($group == 3) {
+        $item_name = 'medical';
+    } else {
+        $item_name = 'technician';
+    }
+
+
+    if ($q == '') {
+        $querys = Employees::find()
+            ->from('employees e')
+            ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+            ->where(['a.item_name' => $item_name])
+            ->all();
+    } else {
+        $querys = Employees::find()
+            ->from('employees e')
+            ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+            ->where(['a.item_name' => $item_name])
+            ->andWhere([
+                'or',
+                ['LIKE', 'fname', $q],
+                ['LIKE', 'lname', $q],
+            ])
+            ->all();
+    }
+
+      
+
+        $data = [['id' => '', 'text' => '']];
+        foreach ($querys as $model) {
+            $data[] = [
+                'id' => $model->id,
+                'text' => $model->getAvatar(false),
+                'fullname' => $model->fullname,
+                'position_type_id' => $model->position_type,
+                'position_name' => $model->positionName(),
+                'month_of_service' => $model->workLife()['month'],
+                'years_of_service' => $model->workLife()['year'],
+                'position_name_text' => $model->data_json['position_name_text'] ?? '-',
+                // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
+                'avatar' => $model->getAvatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $model ?? [],
+            'group' => $group
+        ];
+        
+}
+
 
     /**
      * Deletes an existing Repair model.

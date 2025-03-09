@@ -172,7 +172,6 @@ $resultsJs = <<< JS
                 <h6 class="mb-0"><i class="fa-solid fa-circle-info text-primary"></i> เลือกคนขับ</h6>
                 <div id="showSelectDriver">
                     <?php if($model->showDriver()):?>
-
                     <a href="#" data-driver_id="<?php  echo $model->id?>"
                         data-driver_fullname="<?php echo $model->data_json['req_driver_fullname'];?>"
                         data-bs-toggle="offcanvas" data-bs-target="#offcanvasRightDriver"

@@ -104,6 +104,10 @@ class GeneralController extends \yii\web\Controller
 
         return $this->render('_form', ['model' => $model]);
     }
+    public function actionTechnician()
+    {
+        return $this->render('technician/index');
+    }
 
 
     protected function findModel($id)

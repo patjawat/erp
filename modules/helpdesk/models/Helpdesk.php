@@ -232,6 +232,35 @@ class Helpdesk extends Yii\db\ActiveRecord
         return ArrayHelper::map($querys, 'user_id', 'fullname');
     }
 
+
+    // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
+    public static function TechnicianList($group)
+    {
+        $item_name = '';
+        // ซ่อมบำรุง
+        if ($group == 1) {
+            $item_name = 'technician';
+            // 2 คือศูนย์คอมพิวเตอร์
+        } elseif ($group == 2) {
+            $item_name = 'computer';
+            // 3 คือศูนย์เครื่องมือแพทย์
+        } elseif ($group == 3) {
+            $item_name = 'medical';
+        } else {
+            $item_name = 'technician';
+        }
+
+        $employees = Employees::find()
+        ->alias('emp')
+        ->innerJoin('user', 'user.id = emp.user_id')
+        ->innerJoin('auth_assignment auth', 'auth.user_id = user.id')
+        ->where(['auth.item_name' => $item_name])
+        ->all();
+        return  $employees;
+
+    }
+
+
     public function ListStatus()
     {
         $list = Categorise::find()
