@@ -2,15 +2,15 @@
 
 namespace app\modules\sm\controllers;
 
-use app\models\Categorise;
 use Yii;
-use app\modules\sm\models\Product;
-use app\modules\sm\models\ProductSearch;
+use yii\web\Response;
+use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\web\Controller;
+use app\modules\sm\models\Product;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
+use app\modules\sm\models\ProductSearch;
 
 /**
  * ProductController implements the CRUD actions for Product model.
@@ -120,7 +120,7 @@ class ProductController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 if($model->auto == "1"){
-                    $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'?????');
+                    $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'-?');
                 }
 
                 $model->save(false);
