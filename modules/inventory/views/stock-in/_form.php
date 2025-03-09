@@ -1,8 +1,8 @@
 <?php
 
+use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\form\ActiveForm;
-use yii\helpers\Url;
 use kartik\select2\Select2;
 use iamsaint\datetimepicker\Datetimepicker;
 
@@ -64,6 +64,7 @@ $js = <<< JS
                                         }).then((result) => {
                                         /* Read more about isConfirmed, isDenied below */
                                         if (result.isConfirmed) {
+                                            $("#main-modal").modal("hide");
                                             $.ajax({
                                                     url: form.attr('action'),
                                                     type: 'post',
@@ -71,12 +72,32 @@ $js = <<< JS
                                                     dataType: 'json',
                                                     success: async function (response) {
                                                         form.yiiActiveForm('updateMessages', response, true);
-                                                        if(response.status == 'success') {
-                                                            closeModal()
-                                                            success()
-                                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                                                        }
-                                                    }
+                                                        // if(response.status == 'success') {
+                                                        //     closeModal()
+                                                        //     success()
+                                                        //     await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                                                        // }
+
+                                                        if (response.status == "success") {
+                                                            Swal.fire({
+                                                                title: 'สำเร็จ!',
+                                                                text: 'ดำเนินการลบสำเร็จ!',
+                                                                icon: 'success',
+                                                                showConfirmButton: false,
+                                                                timer: 1000 // ✅ ปิด Swal อัตโนมัติใน 1 วินาที
+                                                            });
+
+                                                            setTimeout(() => {
+                                                                location.reload(); // ✅ รีโหลดหน้าเว็บหลังจาก Swal ปิด
+                                                            }, 1000);
+                                                            } else {
+                                                            Swal.fire(
+                                                                'ผิดพลาด!',
+                                                                'ไม่สามารถลบรายการได้',
+                                                                'error'
+                                                            );
+                                                            }
+                                                                                                    }
                                                 });
                                                 return false;
                                         } else if (result.isDenied) {

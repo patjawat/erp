@@ -1,10 +1,10 @@
 <?php
 
-use app\components\AppHelper;
 use yii\helpers\Html;
-use yii\widgets\DetailView;
-use app\modules\inventory\models\StockEvent;
 use yii\widgets\Pjax;
+use yii\widgets\DetailView;
+use app\components\AppHelper;
+use app\modules\inventory\models\StockEvent;
 $totalPrice = 0;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
@@ -157,7 +157,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="d-flex justify-content-center gap-2">
                                     <?php if($item->order_status == 'pending'):?>
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-in/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-in/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-in/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-order-item']) ?>
                                     <?php else:?>
                                     <span>ดำเนินการแล้ว</span>
                                     <?php endif?>
@@ -180,6 +180,82 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 
 $js = <<< JS
+
+
+$("body").on("click", ".delete-order-item", async function (e) {
+  e.preventDefault();
+  var url = $(this).attr("href");
+
+  // แสดง Swal ยืนยันการลบ
+  const result = await Swal.fire({
+    title: "คุณแน่ใจไหม?",
+    text: "ลบรายการที่เลือก!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ลบเลย!",
+    cancelButtonText: "ยกเลิก",
+  });
+
+  if (result.isConfirmed) {
+    // ✅ แสดง Loading หลังจากกดยืนยัน
+    Swal.fire({
+      title: 'กำลังลบ...',
+      text: 'กรุณารอซักครู่',
+      icon: 'info',
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    setTimeout(async () => {
+      try {
+        await $.ajax({
+          type: "post",
+          url: url,
+          dataType: "json",
+          success: function (response) {
+            if (response.status == "success") {
+              Swal.fire({
+                title: 'สำเร็จ!',
+                text: 'ดำเนินการลบสำเร็จ!',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 1000 // ✅ ปิด Swal อัตโนมัติใน 1 วินาที
+              });
+
+              setTimeout(() => {
+                location.reload(); // ✅ รีโหลดหน้าเว็บหลังจาก Swal ปิด
+              }, 1000);
+            } else {
+              Swal.fire(
+                'ผิดพลาด!',
+                'ไม่สามารถลบรายการได้',
+                'error'
+              );
+            }
+          },
+          error: function () {
+            Swal.fire(
+              'ผิดพลาด!',
+              'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้',
+              'error'
+            );
+          }
+        });
+      } catch (error) {
+        Swal.fire(
+          'ข้อผิดพลาด!',
+          'เกิดข้อผิดพลาดในการดำเนินการ',
+          'error'
+        );
+      }
+    }, 2000); // ✅ Loading 2 วินาทีก่อนส่งคำขอ
+  }
+});
 
                
 JS;
