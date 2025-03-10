@@ -1,8 +1,8 @@
 <?php
 use yii\web\View;
-use yii\helpers\Url;
+use yii\web\View;
 /** @var yii\web\View $this */
-use yii\helpers\Html;
+use yii\helpers\Url;
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
@@ -67,63 +67,64 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         </div>
 </div>
 
-
 <?php
+use yii\helpers\Url;
+use yii\helpers\Html;
 use app\components\SiteHelper;
+
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
-$liffLofinUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_login'];
+$liffLoginUrl = 'https://liff.line.me/' . SiteHelper::getInfo()['line_liff_login'];
 
 $js = <<< JS
 var vConsole = new window.VConsole();
-let userId = "";
 
-// ตรวจสอบสิทธิในระบบและยืนยันตัวตน
-async function checkProfile(){
-          const {userId} = await liff.getProfile()
-          await $.ajax({
-              type: "post",
-              url: "$urlCheckProfile",
-              data:{
-                  line_id:userId
-              },
-              dataType: "json",
-              success: function (res) {
-                  if(res.status == false){
-                      location.replace("$liffLofinUrl");
-                  }
-                  if(res.status == true){
-                      $('#avatar').html(res.avatar)
-                      $('#loading').hide()
-                  }
-              }
-          });
-      }
-
-      
-
-async function main() {
-  await liff.init({ liffId:"$liffProfile", withLoginOnExternalBrowser: true });
-
-  if (liff.isLoggedIn()) {
+// ฟังก์ชันตรวจสอบสิทธิ์และยืนยันตัวตน
+async function checkProfile(userId) {
     try {
-      var profile = await liff.getProfile();
-      
-      $('#loginform-line_id').val(profile.userId);
-      $("#pictureUrl").attr("src", profile.pictureUrl);
-      console.log(profile);
-      await checkProfile()
+        let response = await $.ajax({
+            type: "POST",
+            url: "$urlCheckProfile",
+            data: { line_id: userId },
+            dataType: "json"
+        });
+
+        if (response.status === false) {
+            location.replace("$liffLoginUrl");
+        } else {
+            $('#avatar').html(response.avatar);
+            $('#loading').hide();
+        }
     } catch (error) {
-      console.error("Error fetching profile:", error);
+        console.error("Error checking profile:", error);
     }
-  } else {
-    liff.login();
-  }
 }
 
+// ฟังก์ชันเริ่มต้น LIFF
+async function main() {
+    try {
+        await liff.init({ liffId: "$liffProfile", withLoginOnExternalBrowser: true });
+
+        if (!liff.isLoggedIn()) {
+            return liff.login();
+        }
+
+        // ดึงข้อมูลโปรไฟล์
+        let profile = await liff.getProfile();
+        $('#loginform-line_id').val(profile.userId);
+        $("#pictureUrl").attr("src", profile.pictureUrl);
+        console.log("User Profile:", profile);
+
+        // ตรวจสอบสิทธิ์
+        await checkProfile(profile.userId);
+    } catch (error) {
+        console.error("LIFF initialization failed:", error);
+    }
+}
+
+// เรียกใช้ฟังก์ชันหลัก
 main();
-
-
 JS;
-$this->registerJs($js,View::POS_END);
+
+$this->registerJs($js, View::POS_END);
 ?>
