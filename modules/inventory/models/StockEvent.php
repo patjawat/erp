@@ -832,7 +832,8 @@ class StockEvent extends Yii\db\ActiveRecord
             ->where([
                 'se.thai_year' => $year,
                 'se.transaction_type' => 'IN',
-                'w.warehouse_type' => 'MAIN'
+                'w.warehouse_type' => 'MAIN',
+                'order_status' => 'success'
             ])
             ->andFilterWhere(['se.warehouse_id' => $this->warehouse_id])
             ->scalar();
@@ -852,6 +853,7 @@ class StockEvent extends Yii\db\ActiveRecord
             ->where([
                 'se.thai_year' => $year,
                 'se.transaction_type' => 'IN',
+                'se.order_status' => 'success'
                 // 'w.warehouse_type' => 'SUB'
             ])
             ->andFilterWhere(['!=', 'w.warehouse_type', 'MAIN'])

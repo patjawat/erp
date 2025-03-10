@@ -373,10 +373,14 @@ class RepairController extends Controller
                 // template message
                 $emp = Yii::$app->employee::GetEmployee();
 
+            try {
+
                 $tecReq =  Employees::find()->where(['id' => $model->data_json['technician_req']])->one();
                 $lineId = $tecReq->user->line_id;
-
                 $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->data_json['title'] . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
                 try {
                     $response = LineMsg::sendMsg($lineId, $message);
                     return $this->redirect(['/me/repair']);
