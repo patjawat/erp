@@ -615,24 +615,21 @@ class RepairController extends Controller
         $model->status = 2;
         $model->save();
 
-        if ($model->repair_group == 1) {
-            $item_name = 'technician';
-            return $this->redirect(['/helpdesk/general/update','id' => $model->id]);
-            // 2 คือศูนย์คอมพิวเตอร์
-        } elseif ($model->repair_group == 2) {
-            $item_name = 'computer';
-            // 3 คือศูนย์เครื่องมือแพทย์
-            return $this->redirect(['/helpdesk/computer/update','id' => $model->id]);
-        } elseif ($model->repair_group == 3) {
-            $item_name = 'medical';
-            return $this->redirect(['/helpdesk/medical/update','id' => $model->id]);
-        } else {
+        // if ($model->repair_group == 1) {
+        //     $item_name = 'technician';
+        //     return $this->redirect(['/helpdesk/general/update','id' => $model->id]);
+        //     // 2 คือศูนย์คอมพิวเตอร์
+        // } elseif ($model->repair_group == 2) {
+        //     $item_name = 'computer';
+        //     // 3 คือศูนย์เครื่องมือแพทย์
+        //     return $this->redirect(['/helpdesk/computer/update','id' => $model->id]);
+        // } elseif ($model->repair_group == 3) {
+        //     $item_name = 'medical';
+        //     return $this->redirect(['/helpdesk/medical/update','id' => $model->id]);
+        // } else {
 
-        }
+        // }
         
-     
-
-
         return [
             'status' => 'success',
             'container' => '#helpdesk-container',

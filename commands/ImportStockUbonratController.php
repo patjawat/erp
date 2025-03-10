@@ -294,7 +294,7 @@ class ImportStockUbonratController extends Controller
             'warehouse_id' => 1,
             'assettype' => 'M12',
             'categoryName' => 'วัสดุคอมพิวเตอร์',
-            'category_id' => 248,
+            'category_id' => 348,
             'code' => 'IN-680004',
             'items' => [
                 ['title' => 'หมึก PB285A', 'unit' => 'กล่อง','unit_price' =>290.00,'qty' =>61],
