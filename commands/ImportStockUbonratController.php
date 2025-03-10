@@ -52,8 +52,8 @@ class ImportStockUbonratController extends Controller
             'warehouse_id' => 1,
             'assettype' => 'M1',
             'categoryName' => 'วัสดุวิสำนักงาน',
-            'category_id' => 1024,
-            'code' => 'IN-680003',
+            'category_id' => 706,
+            'code' => 'IN-680002',
             'items' => [
                 ['title' => 'กระดาษกาวชิ้น A12', 'unit' => 'แพ็ค', 'unit_price' => 35.0, 'qty' => 116],
                 ['title' => 'กระดาษกาวชิ้น A5', 'unit' => 'แพ็ค', 'unit_price' => 35.0, 'qty' => 80],
@@ -187,8 +187,8 @@ class ImportStockUbonratController extends Controller
             'warehouse_id' => 1,
             'assettype' => 'M3',
             'categoryName' => 'วัสดุงานบ้านงานครัว',
-            'category_id' => 1498,
-            'code' => 'IN-680004',
+            'category_id' => 707,
+            'code' => 'IN-680003',
             'items' => [
                 ['title' => 'กรวยกระดาษ (1*25)', 'unit' => 'แถว','unit_price' =>44.94,'qty' =>22],
                 ['title' => 'กระดาษฟรอย์', 'unit' => 'กล่อง','unit_price' =>205.00,'qty' =>0],
@@ -294,7 +294,7 @@ class ImportStockUbonratController extends Controller
             'warehouse_id' => 1,
             'assettype' => 'M3',
             'categoryName' => 'วัสดุคอมพิวเตอร์',
-            'category_id' => 1498,
+            'category_id' => 708,
             'code' => 'IN-680004',
             'items' => [
                 ['title' => 'หมึก PB285A', 'unit' => 'กล่อง','unit_price' =>290.00,'qty' =>61],
