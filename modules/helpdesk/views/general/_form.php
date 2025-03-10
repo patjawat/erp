@@ -19,11 +19,17 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
 $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
-
+$this->title = 'งานซ่อมบำรุง';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-screwdriver-wrench fs-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
+
 <?php $form = ActiveForm::begin([
         'id' => 'form-repair',
     ]); ?>
@@ -41,14 +47,14 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                         <div class="d-flex flex-column">
                             <div>
                                 <i class="fa-solid fa-triangle-exclamation text-danger"></i>
-                                <?php if($model->code !== ''):?>
-                                <span class="text-primary">แจ้งซ่อมครุภัณฑ์</span>
-                                <?php echo $model->viewCreateDateTime()?>
-
-                                <?php else:?>
-                                <span class="text-primary">แจ้งซ่อมทั่วไป</span>
-                                <?php echo $model->viewCreateDateTime()?>
-                                <?php endif;?>
+                                <?php if($model->code == ''):?>
+                                    <span class="text-primary">แจ้งซ่อมทั่วไป</span>
+                                    <?php echo $model->viewCreateDateTime()?>
+                                    
+                                    <?php else:?>
+                                        <span class="text-primary">แจ้งซ่อมครุภัณฑ์</span>
+                                        <?php echo $model->viewCreateDateTime()?>
+                                        <?php endif;?>
             
                             </div>
                             <span class="fw-semibold"><?php echo $model->data_json['title']?></span>

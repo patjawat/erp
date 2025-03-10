@@ -364,6 +364,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     // แสดงสถานะ
     public function viewStatus()
     {
+        try {
         if (isset($this->data_json['urgency'])) {
             $model = Categorise::findOne(['name' => 'repair_status', 'code' => $this->status]);
 
@@ -383,6 +384,10 @@ class Helpdesk extends Yii\db\ActiveRecord
                 return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-solid fa-circle-minus text-danger"></i> ' . $model->title . '</span>';
             }
         }
+                    //code...
+                } catch (\Throwable $th) {
+                   return 'ไม่ระบุ';
+                }
     }
 
     public function UrgencyName()

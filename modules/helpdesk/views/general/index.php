@@ -69,7 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
                             <?php // echo Html::a('<i class="fa-regular fa-hourglass-half"></i> รับเรื่อง',['/helpdesk/general/update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
                         <?php else:?>
-                        <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['/helpdesk/general/update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
+                        <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
                     <?php endif;?>
                     </td>
                 </tr>

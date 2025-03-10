@@ -3,10 +3,11 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\db\Expression;
 use kartik\date\DatePicker;
 use kartik\select2\Select2;
-use kartik\form\ActiveField;
 // use kartik\widgets\DateTimePicker;
+use kartik\form\ActiveField;
 use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
 use kartik\datecontrol\DateControl;
@@ -18,13 +19,11 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
 $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
-$this->title = 'ศูนย์คอมพิวเตอร์';
+$this->title = 'ศูนย์เครื่องมือแพทย์';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-computer fs-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<i class="fa-solid fa-briefcase-medical fs-2"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
@@ -45,17 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <div class="d-flex bg-danger justify-content-between bg-opacity-10 py-2 px-3 rounded mb-3">
                     <div class="d-flex gap-3">
-                        <?php
-                          try {
-                              echo Html::img($model->asset->showImg(), ['class' => 'avatar avatar-xl object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 120px;']);
-                            } catch (\Throwable $th) {
-                                // throw $th;
-                            }
-                            ?>
-
                         <div class="d-flex flex-column">
-
-
                             <div>
                                 <i class="fa-solid fa-triangle-exclamation text-danger"></i>
                                 <?php if($model->code !== ''):?>
@@ -66,6 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <span class="text-primary">แจ้งซ่อมทั่วไป</span>
                                 <?php echo $model->viewCreateDateTime()?>
                                 <?php endif;?>
+            
                             </div>
                             <span class="fw-semibold"><?php echo $model->data_json['title']?></span>
                         </div>
@@ -144,6 +134,25 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="col-4">
+    <?php if($model->code == ''):?>
+    <?php
+                    try {
+                        echo Html::img($model->showImg(), ['class' => 'repair-photo object-fit-cover rounded m-auto border border-2 border-secondary-subtle mb-3', 'style' => 'max-width:100%;min-width: 320px; max-height: 400px;']);
+                    } catch (\Throwable $th) {
+                    }
+                ?>
+    <?php else:?>
+   
+        <?php
+                          try {
+                              echo Html::img($model->asset->showImg(), ['class' => 'avatar avatar-xl object-fit-cover rounded m-auto mb-3 border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 120px; max-height: 400px;']);
+                            } catch (\Throwable $th) {
+                                // throw $th;
+                            }
+                            ?>
+    <?php endif;?>
+                
+                
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">

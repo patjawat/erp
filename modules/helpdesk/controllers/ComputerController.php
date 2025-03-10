@@ -87,8 +87,9 @@ class ComputerController extends \yii\web\Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $model->date_start = AppHelper::convertToGregorian($model->date_start);
-            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->date_start = !empty($model->date_start) ? AppHelper::convertToGregorian($model->date_start) : null;
+            $model->date_end = !empty($model->date_end) ? AppHelper::convertToGregorian($model->date_end) : null;
+            
             $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
 
             if($model->status == 4 && $model->code !==''){
@@ -96,7 +97,7 @@ class ComputerController extends \yii\web\Controller
                 $model->asset->save();
             }
             $model->save();
-        return $this->redirect(['/helpdesk/general/index']);
+        return $this->redirect(['/helpdesk/computer/index']);
         
     }
 

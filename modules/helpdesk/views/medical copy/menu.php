@@ -9,7 +9,6 @@ $listAssetGroups = Categorise::find()
 ->all();
 ?>
 <div class="d-flex gap-2">
-    <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['dashboard'],['class' => 'btn btn-light'])?>
-    <?=Html::a('<i class="fa-solid fa-bars"></i> ทะเบียนงานซ่อม',['index'],['class' => 'btn btn-light'])?>
-
+    <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['/helpdesk/computer/dashboard'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-bars"></i> ทะเบียนงานซ่อม',['/helpdesk/computer'],['class' => 'btn btn-light'])?>
 </div>
