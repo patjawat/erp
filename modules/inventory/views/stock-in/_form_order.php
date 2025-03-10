@@ -1,9 +1,9 @@
 <?php
 
-use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use kartik\select2\Select2;
+use yii\bootstrap5\ActiveForm;
 use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
@@ -82,16 +82,7 @@ echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), 
 </div>
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า');?>
 
-<?=$form->field($model, 'data_json[receive_date]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('วันที่รับเข้า');
+<?=$form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่รับเข้า');
                 ?>
 
 <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
@@ -100,6 +91,7 @@ echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), 
 <?php
 $js = <<< JS
 
+    thaiDatepicker('#stockevent-data_json-receive_date')
     console.log($("#stockevent-auto_lot").val())
     if($("#stockevent-auto_lot").val()){
     $( "#stockevent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
