@@ -75,7 +75,6 @@ $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
 $liffLoginUrl = 'https://liff.line.me/' . SiteHelper::getInfo()['line_liff_login'];
 
 $js = <<< JS
-var vConsole = new window.VConsole();
 
 // ฟังก์ชันตรวจสอบสิทธิ์และยืนยันตัวตน
 async function checkProfile(userId) {
