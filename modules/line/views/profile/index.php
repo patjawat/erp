@@ -1,6 +1,5 @@
 <?php
 use yii\web\View;
-use yii\web\View;
 /** @var yii\web\View $this */
 use yii\helpers\Url;
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
