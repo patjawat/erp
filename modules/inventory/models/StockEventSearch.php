@@ -68,6 +68,7 @@ class StockEventSearch extends StockEvent
             'id' => $this->id,
             'warehouse_id' => $this->warehouse_id,
             'from_warehouse_id' => $this->from_warehouse_id,
+            'transaction_type' => $this->transaction_type,
             'qty' => $this->qty,
             'total_price' => $this->total_price,
             'unit_price' => $this->unit_price,

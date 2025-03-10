@@ -51,7 +51,8 @@ class StockInController extends Controller
             return $this->redirect(['/inventory']);
         }
         $searchModel = new StockEventSearch([
-           'warehouse_id' => $warehouse['warehouse_id']
+           'warehouse_id' => $warehouse['warehouse_id'],
+           'transaction_type' => 'IN'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $searchModel->asset_type_name]);
@@ -63,7 +64,7 @@ class StockInController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
         ]);
 
-        $dataProvider->query->andWhere([ 'transaction_type' => 'IN', 'name' => 'order']);
+        $dataProvider->query->andWhere(['name' => 'order']);
 
         //ค้นหาช่วบงวันที่
    

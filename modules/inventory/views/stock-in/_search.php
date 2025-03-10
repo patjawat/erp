@@ -1,9 +1,9 @@
 <?php
 use yii\web\View;
-use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
 use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
