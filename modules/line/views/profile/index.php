@@ -1,7 +1,8 @@
 <?php
 use yii\web\View;
-/** @var yii\web\View $this */
 use yii\helpers\Url;
+use yii\helpers\Html;
+use app\components\SiteHelper;
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
@@ -67,9 +68,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 </div>
 
 <?php
-use yii\helpers\Url;
-use yii\helpers\Html;
-use app\components\SiteHelper;
+
 
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
