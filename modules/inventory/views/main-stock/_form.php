@@ -1,7 +1,7 @@
 <?php
 
-use kartik\form\ActiveForm;
 use yii\helpers\Html;
+use kartik\form\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
@@ -73,9 +73,10 @@ $js = <<< JS
                                         });
                                     }
                                     if(response.status == 'success') {
-                                            closeModal()
-                                            success()
-                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                                            location.reload()
+                                            // closeModal()
+                                            // success()
+                                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                                         }
                                     }
                             });
