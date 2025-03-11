@@ -255,6 +255,7 @@ $config = [
             'inventory/stock-in/add-item',
             'inventory/stock-order/update-lot-validator/*',
             'helpdesk/repair/create-validator',
+            'helpdesk/repair/technician-list',
             'filemanager/*',
             // 'usermanager/*',
             'site/login',
