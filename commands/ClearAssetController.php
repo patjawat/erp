@@ -42,6 +42,7 @@ class ClearAssetController extends Controller
      */
     public function actionIndex()
     {
+        if (BaseConsole::confirm('Are you sure?')) {
         //ลบครุภัณฑ? computer
         $listAssets = Asset::find()->leftJoin('categorise at', 'at.code=asset.asset_item')
         ->andWhere(['at.category_id' =>12])->all();
@@ -62,6 +63,7 @@ class ClearAssetController extends Controller
         // } catch (\Throwable $th) {
         //     //throw $th;
         // }
+        }
         }
     }
         
