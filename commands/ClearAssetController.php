@@ -43,18 +43,22 @@ class ClearAssetController extends Controller
     public function actionIndex()
     {
         //ลบครุภัณฑ? computer
-        $querys = Asset::find()->leftJoin('categorise at', 'at.code=asset.asset_item')
+        $listAssets = Asset::find()->leftJoin('categorise at', 'at.code=asset.asset_item')
         ->andWhere(['at.category_id' =>12])->all();
 
-        foreach ($querys as $key => $item) {
+        foreach ($listAssets as $key => $item) {
             // try {
+            //total = 623
+            //directory = 763
+            // asset = 541
             $model = Uploads::find()->where(['ref' => $item->ref])->one();
             if($model){
-                    FileManagerHelper::Deletefile($model->id);
+                    FileManagerHelper::removeUploadDir($model->ref);
+                    $model->delete();
             }
-            if($item->delete()){
-                echo $item->id." Success! \n";
-            }
+          
+            $checkItem = Asset::findOne($item->id);
+            $checkItem->delete();
         // } catch (\Throwable $th) {
         //     //throw $th;
         // }
