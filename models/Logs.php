@@ -3,6 +3,11 @@
 namespace app\models;
 
 use Yii;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use app\components\UserHelper;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
 
 /**
  * This is the model class for table "logs".
@@ -63,4 +68,39 @@ class Logs extends \yii\db\ActiveRecord
             'deleted_by' => 'ผู้ลบ',
         ];
     }
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+
+    public function beforeSave($insert)
+    {
+
+        // try {
+            $me = UserHelper::GetEmployee();
+            $items = [
+                "fullname" =>$me->fullname
+            ];
+                $this->data_json = ArrayHelper::merge($this->data_json, $items);
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        // }    
+        return parent::beforeSave($insert);
+    }
+    
+
+    
 }

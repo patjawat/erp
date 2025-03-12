@@ -7,6 +7,8 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\LogHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\LeaveEntitlements;
@@ -121,6 +123,13 @@ class LeaveEntitlementsController extends Controller
                 }
 
                 if($model->save()){
+
+                    $data = [
+                        'title' => 'กำหนดสิทธิลาพักผ่อน',
+                        'data' => $model
+                    ];
+                    LogHelper::log('leaev_entitlements',$data);
+                    
                     return [
                         'status' => 'success',
                         'message' => 'บันทึกข้อมูลสำเร็จ',
@@ -303,6 +312,13 @@ return [
         if ($this->request->isPost && $model->load($this->request->post())) {
             if($model->save()){
                 \Yii::$app->response->format = Response::FORMAT_JSON;
+                $me = UserHelper::GetEmployee();
+                $data = [
+                    "fullname" =>$me->fullname,
+                    'title' => 'แก้ไขสิทธิลาพักผ่อน',
+                    'data' => $model
+                ];
+                LogHelper::log('leaev_entitlements',$data);
                 return [
                     'status' => 'success',
                     'message' => 'บันทึกข้อมูลสำเร็จ',
