@@ -50,8 +50,9 @@ class StockOrderController extends Controller
         }
 
         $searchModel = new StockEventSearch([
-            'warehouse_id' => $warehouse['warehouse_id'],
-            'transaction_type' => 'OUT'
+            // 'warehouse_id' => $warehouse['warehouse_id'],
+            'from_warehouse_id' => 8,
+            // 'transaction_type' => 'OUT'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider = $searchModel->search($this->request->queryParams);

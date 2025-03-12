@@ -58,7 +58,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
 
         $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);  // ผู้อำนวยการโรงพยาบาล
-        $templateProcessor->setValue('org_name', 'ผู้อำนวนยการ' . $this->GetInfo()['company_name']);  // ชื่อโรงพยาบาล
+        $templateProcessor->setValue('org_name', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);  // ชื่อโรงพยาบาล
 
         // วันที่สั่งจ่าย
         try {

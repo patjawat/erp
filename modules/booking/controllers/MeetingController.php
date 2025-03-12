@@ -8,6 +8,7 @@ use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Room;
@@ -64,6 +65,14 @@ class MeetingController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'meeting']);
         $dataProvider->query->andFilterWhere(['IN','room_id',$roomIds]);
+
+        $dateStart =  AppHelper::DateToDb($searchModel->date_start);
+        $dateEnd =  AppHelper::DateToDb($searchModel->date_end);
+        // เพิ่มเงื่อนไขช่วงวันที่
+        if (!empty($dateStart) && !empty($dateEnd)) {
+            $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
+        }
+
         
         return $this->render('index', [
             'searchModel' => $searchModel,

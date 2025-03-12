@@ -452,6 +452,19 @@ class StockEvent extends Yii\db\ActiveRecord
     }
     
 
+        // รายชื่อคลังสินค้าย่อยตามผู้รับผิดชอบมีสิทธิ์
+        public function listWareHouseSub(): array
+        {
+            $id = \Yii::$app->user->id;
+            return ArrayHelper::map(
+                Warehouse::find()->where(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"))
+                    ->all(),
+                'id',
+                'warehouse_name'
+            );
+        }
+        
+
     // แสดงรายละเอียดของแต่ละ lot
     public function LotNumberDetail()
     {
@@ -641,8 +654,7 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public function viewCreatedAt()
     {
-        $time = explode(' ',$this->created_at)[1];
-        return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long').' '.$time;
+        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
     }
 
     public function viewCreated()

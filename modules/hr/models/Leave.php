@@ -387,7 +387,8 @@ class Leave extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['id' => $this->emp_id])->one();
-            $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เขียนเมื่อ' . $this->createdDays();
+            $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เขียนเมื่อ' . $this->viewCreated();
+            $msg = 'เขียน '. $this->viewCreated();
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),
@@ -470,7 +471,8 @@ class Leave extends \yii\db\ActiveRecord
     // แสดงวันที่สร้าง
     public function viewCreated()
     {
-        return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
+        // return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
+        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
     }
 
     public function viewLeaveType()

@@ -154,6 +154,7 @@ class DocumentController extends \yii\web\Controller
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
 
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
         $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
         $templateProcessor->setValue('emp_department', $model->employee->departmentName());

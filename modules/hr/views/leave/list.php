@@ -11,9 +11,12 @@ $me = UserHelper::GetEmployee();
         <thead>
         <tr>
             <th scope="col">ผู้ขออนุมัติการลา</th>
-            <th class="text-center" scope="col">วัน</th>
-            <th scope="col">จากวันที่</th>
-            <th scope="col">ถึงวันที่</th>
+            <th>
+                การลา
+            </th>
+            <!-- <th class="text-center" scope="col">วัน</th> -->
+            <!-- <th scope="col">จากวันที่</th>
+            <th scope="col">ถึงวันที่</th> -->
             <th scope="col">ปีงบประมาณ</th>
             <th class="text-start" scope="col">หนวยงาน</th>
             <th scope="col">มอบหมาย</th>
@@ -31,9 +34,17 @@ $me = UserHelper::GetEmployee();
                 <?=$model->getAvatar(false)['avatar']?>
                 </a>
             </td>
-            <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
+            <td>
+                <div class="d-flex flex-column justofy-content-start align-items-start">
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $model->leaveType->title ?> <code><?php echo $model->total_days?> </code> วัน</span>
+                    <div>
+                        ระหว่าง <?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?> - <?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?>
+                    </div>
+                </div>
+            </td>
+            <!-- <td class="text-center fw-semibold"><?php echo $model->total_days?></td> -->
+            <!-- <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
+            <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td> -->
             <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             </td>
