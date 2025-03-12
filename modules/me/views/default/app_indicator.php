@@ -14,11 +14,6 @@ $items = [
         'url' => ['/me/purchase'],
     ],
     [
-        'title' => 'เบิกวัสดุ',
-        'icon' => 'fa-solid fa-cart-shopping fs-1',
-        'url' => ['/inventory'],
-    ],
-    [
         'title' => 'จองรถ',
         'icon' => 'fa-solid fa-car fs-1',
         'url' => ['/me/booking-car'],

@@ -1,28 +1,407 @@
 <?php
+use yii\web\View;
 use yii\helpers\Html;
+$order =  Yii::$app->session->get('order');
+// echo "<pre>";
+// print_r($order);
+// echo "</pre>";
+$this->title = 'ใบเบิกวัสดุคลังหลัก';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-shop"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/me/views/store-v2/menu') ?>
+<?php $this->endBlock(); ?>
 
 <div class="row">
     <div class="col-8">
-<?php foreach($model->listItems() as $item):?>
-    <div class="card">
-        <div class="card-body">
-            <h4 class="card-title">Title</h4>
-            <p class="card-text">Body</p>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6>แสดงรายการเบิกวัสดุ</h6>
+                    <!-- ปุ่มลบที่เลือก -->
+                    <button class="btn btn-danger mt-2" id="delete-selected" style="display: none;">ลบที่เลือก</button>
+
+
+                </div>
+            </div>
         </div>
+
+        <?php foreach($model->listItems() as $item):?>
+        <div id="cart-container">
+            <div class="card mb-2">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                    <?php if($model->order_status == 'none'):?>
+                        <div class="col-md-1 p-1 d-flex justify-content-center">
+                            <input type="checkbox" class="product-checkbox" value="<?php echo $item->id; ?>">
+                        </div>
+                        <?php endif;?>
+                        <div class="col-md-1 p-1">
+                            <?php echo Html::img($item->product->ShowImg(),['class' => 'img-fluid object-fit-cover rounded-1'])?>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1"><?php echo $item->product->title?></h6>
+                            <p class="text-muted mb-0 fw-bold"><?php echo $item->lot_number; ?></p>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="fw-bold"><?php echo $item->unit_price?></span>
+                        </div>
+                        <div class="col-md-3">
+
+                            <div class="d-flex align-items-center gap-1">
+
+                            <?php if($model->order_status == 'none'):?>
+                                <button class="btn btn-sm btn-light"
+                                    onclick="updateQuantity(<?php echo $item->id; ?>, -1)">
+                                    <i class="fa-solid fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control quantity-input"
+                                    id="qty-<?php echo $item->id; ?>" value="<?php echo $item->qty?>" min="1"
+                                    data-item-id="<?php echo $item->id; ?>">
+                                <button class="btn btn-sm btn-light"
+                                    onclick="updateQuantity(<?php echo $item->id; ?>, 1)">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                                <?php else:?>
+                                    <input type="number" class="form-control quantity-input" value="<?php echo $item->qty?>" disabled>
+                                <?php endif;?>
+                            </div>
+
+
+                        </div>
+                        <div class="col-md-1 d-flex justify-content-center">
+                        <?php if($model->order_status == 'none'):?>
+                            <?php echo Html::a('<i class="bi bi-trash remove-btn text-danger fs-3"></i>',['/me/store-v2/delete-item','id'=> $item->id],['class' => 'delete-product-item']);?>
+                            <?php else:?>
+                                <i class="bi bi-trash remove-btn text-secondary fs-3"></i>
+                                <?php endif;?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endforeach;?>
+
+
+
+
     </div>
-    
-<?php endforeach;?>    
-</div>
     <div class="col-4">
 
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Title</h4>
-                <p class="card-text">Body</p>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="">ใบเบิกวัสดุ</h6>
+                        <p class="text-muted mb-0 fw-bold"><?php echo $model->code?></p>
+                    </div>
+                    <h6 class=""><?php echo $model->warehouse->warehouse_name?></h6>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <p class="">วันที่เบิก</p>
+                    <p class=""><?php echo $model->created_at?></p>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <p>จำนวน</p>
+                    <p><?php echo $model->OrderSummary()['total_item']?></p>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <p>มูลค่า</p>
+                    <p><?php echo $model->OrderSummary()['total']?></p>
+                </div>
+
+                <div class="d-grid gap-2 mx-auto">
+                    <?php if($model->order_status == 'none'):?>
+                    <?php echo Html::a('ส่งข้อมูลใบเบิก',['/me/store-v2/checkout','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow','id' => 'checkout'])?>
+                    <?php endif;?>
+
+                    <?php if($model->order_status == 'pending'):?>
+                    <?php echo Html::a('แก้ไข',['/me/store-v2/edit','id' => $model->id],['class' => 'btn btn-warning rounded-pill shadow','id' => 'edit-order'])?>
+                    <?php endif;?>
+                </div>
+
             </div>
         </div>
-
     </div>
-    
 </div>
+<?php if($model->order_status == 'none'):?>
+<div id="viewStore"></div>
+<?php endif;?>
+<?php
+$js = <<< JS
+loadStore()
+
+
+$('#checkout').click(function (e) { 
+    e.preventDefault();
+    Swal.fire({
+            title: "ยืนยัน?",
+            text: "ข้อมูลใบเบิก!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "ใช่, ยืนยืน!",
+            cancelButtonText: "ยกเลิก"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url:$(this).attr('href'),
+                    type: "POST",
+                    dataType: "json",
+                    success: function(res) {
+                        if(res.status == 'success'){
+                            Swal.fire({
+                                title: "ส่งใบเบิกสำเร็จ!",
+                                text: "รอผลการตรวจสอบและคำอนุมัติจะส่งไปที่คลัง",
+                                icon: "success",
+                                timer: 3000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // location.reload();
+                                window.location.href = "/me/store-v2";
+                            });
+                        }else{
+                            Swal.fire({
+                                title: "เกิดข้อผิดพลาด!",
+                                text: "ไม่สามารถส่งใบเบิกได้",
+                                icon: "error"
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            title: "เกิดข้อผิดพลาด!",
+                            text: "ไม่สามารถส่งใบเบิกได้",
+                            icon: "error"
+                        });
+                    }
+                });
+            }
+        });
+    
+});
+
+
+$('#edit-order').click(function (e) { 
+    e.preventDefault();
+    Swal.fire({
+            title: "ยืนยัน?",
+            text: "แก้ไขใบเบิก!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "ใช่, ยืนยืน!",
+            cancelButtonText: "ยกเลิก"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url:$(this).attr('href'),
+                    type: "POST",
+                    dataType: "json",
+                    success: function(res) {
+                        if(res.status == 'success'){
+                            location.reload();
+                        }else{
+                            Swal.fire({
+                                title: "เกิดข้อผิดพลาด!",
+                                text: "ไม่สามารถแก้ไขเบิกได้",
+                                icon: "error"
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            title: "เกิดข้อผิดพลาด!",
+                            text: "ไม่สามารถแก้ไขใบเบิกได้",
+                            icon: "error"
+                        });
+                    }
+                });
+            }
+        });
+    
+});
+
+function updateQuantity(itemId, change) {
+    let inputField = $("#qty-" + itemId);
+    let currentQuantity = parseInt(inputField.val()) || 1;
+    
+    let newQty = currentQuantity + change;
+    if (newQty < 1) newQty = 1; // ป้องกันค่าต่ำกว่า 1
+
+    inputField.val(newQty);
+    sendUpdateRequest(itemId, newQty);
+}
+
+// ตรวจจับการเปลี่ยนแปลงจากคีย์บอร์ด
+$("body").on("input", ".quantity-input", function() {
+    let itemId = $(this).data("item-id");
+    let newQty = parseInt($(this).val()) || 1;
+
+    if (newQty < 1) {
+        newQty = 1;
+        $(this).val(1);
+    }
+
+    sendUpdateRequest(itemId, newQty);
+    console.log('update');
+    
+});
+
+// ฟังก์ชันส่งค่าปรับปรุงไปยังเซิร์ฟเวอร์
+function sendUpdateRequest(itemId, qty) {
+    $.ajax({
+        url: "/me/store-v2/update-quantity", // เปลี่ยนเป็น URL ของคุณ
+        type: "POST",
+        data: { id: itemId, qty: qty },
+        success: function(response) {
+            console.log("อัปเดตจำนวนสำเร็จ");
+        },
+        error: function() {
+            alert("เกิดข้อผิดพลาดในการอัปเดตจำนวน");
+        }
+    });
+}
+
+
+
+    function toggleDeleteButton() {
+        if ($(".product-checkbox:checked").length > 0) {
+            $("#delete-selected").fadeIn();
+        } else {
+            $("#delete-selected").fadeOut();
+        }
+    }
+
+    // ตรวจจับการคลิก checkbox
+    $(".product-checkbox").on("change", function() {
+        toggleDeleteButton();
+    });
+
+    $('.delete-product-item').click(function (e) { 
+        e.preventDefault();
+        Swal.fire({
+            title: "ยืนยัน?",
+            text: "สินค้าที่เลือกจะถูกลบอย่างถาวร!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "ใช่, ลบเลย!",
+            cancelButtonText: "ยกเลิก"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url:$(this).attr('href'),
+                    type: "POST",
+                    dataType: "json",
+                    success: function(res) {
+                        if(res.status == 'success'){
+                            Swal.fire({
+                                title: "ลบสำเร็จ!",
+                                text: "สินค้าที่เลือกถูกลบแล้ว",
+                                icon: "success",
+                                timer: 1000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }else{
+                            Swal.fire({
+                                title: "เกิดข้อผิดพลาด!",
+                                text: "ไม่สามารถลบสินค้าได้",
+                                icon: "error"
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            title: "เกิดข้อผิดพลาด!",
+                            text: "ไม่สามารถลบสินค้าได้",
+                            icon: "error"
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // เมื่อกดปุ่มลบที่เลือก
+    $("#delete-selected").click(function() {
+        let selectedIds = [];
+        
+        $(".product-checkbox:checked").each(function() {
+            selectedIds.push($(this).val());
+        });
+
+        if (selectedIds.length === 0) {
+            return; // ป้องกันการกดปุ่มถ้าไม่มี checkbox ถูกเลือก
+        }
+
+   
+        Swal.fire({
+            title: "คุณแน่ใจหรือไม่?",
+            text: "สินค้าที่เลือกจะถูกลบอย่างถาวร!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "ใช่, ลบเลย!",
+            cancelButtonText: "ยกเลิก"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "/me/store-v2/delete-multiple-items",
+                    type: "POST",
+                    data: { ids: selectedIds },
+                    success: function(response) {
+                        Swal.fire({
+                            title: "ลบสำเร็จ!",
+                            text: "สินค้าที่เลือกถูกลบแล้ว",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function() {
+                        Swal.fire({
+                            title: "เกิดข้อผิดพลาด!",
+                            text: "ไม่สามารถลบสินค้าได้",
+                            icon: "error"
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+
+function loadStore(){
+    $.ajax({
+        url: '/me/store-v2/store',
+        type: 'GET',
+        data: {
+            title: 'เลือกคลังสินค้า'
+        },
+        dataType: 'json',
+        success: function (res) {
+            $('#viewStore').html(res.content);
+        }
+    })
+}
+
+JS;
+$this->registerJs($js,View::POS_END);
+?>

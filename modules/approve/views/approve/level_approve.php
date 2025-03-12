@@ -102,7 +102,6 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
             <?php if($item->status == 'Approve'):?>
             <i class="bi bi-clock-history"></i> <?php echo $approveDate?>
             <?php endif;?>
-
             <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
             -
             <?php else:?>

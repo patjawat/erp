@@ -5,8 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
 use app\modules\inventory\models\Warehouse;
-$warehouse = Yii::$app->session->get('warehouse');
-$this->title = $warehouse['warehouse_name'];
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
@@ -32,11 +31,6 @@ $products = $cart->getItems();
             </span> รายการ</h6>
 
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-        <div>
-            <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
-                    <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
-                    </button>', ['/inventory/main-stock/show-cart'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
-        </div>
     </div>
 </div>
 
@@ -65,7 +59,7 @@ $products = $cart->getItems();
                     </div>
                     <?php
                                                 try {
-                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/store-v2/add-item', 'id' => $model->getLotQty()['id']], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal','data' => ['size' => 'modal-md']]); 
+                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/store-v2/add-card', 'id' => $model->getLotQty()['id']], ['class' => 'btn btn-sm btn-primary rounded-pill add-card']); 
                                                 } catch (Throwable $th) {
                                                     // throw $th;
                                                 }
@@ -93,137 +87,53 @@ $products = $cart->getItems();
 </div>
 
 <?php Pjax::end(); ?>
-<!-- End CardBody -->
 
 <?php
 $js = <<< JS
 
 
-    $("body").on("click", ".add-cart", function (e) {
+$("body").on("click", ".add-card", function (e) {
     e.preventDefault();
+    
+    let url = $(this).attr('href'); 
+
     $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
+        type: "POST",
+        url: url,
         dataType: "json",
         success: function (res) {
-            if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
+            if (res.status === "success") {
+                // ใช้ SweetAlert2 Toast
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "เพิ่มสินค้าในตะกร้าเรียบร้อย!",
                     showConfirmButton: false,
-                    timer: 1500,
+                    timer: 1000
+                }).then(() => {
+                    location.reload();
                 });
-            }else{
-                $('#totalCount').text(res.totalCount)
-            }
-                // success()
-                // $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-        }
-    });
-});
-
-
-
-$("body").on("keypress", ".update-qty", function (e) {
-    var keycode = e.keyCode ? e.keyCode : e.which;
-    if (keycode == 13) {
-        let qty = $(this).val()
-        let id = $(this).attr('id')
-        console.log(qty);
-        
-        $.ajax({
-            type: "get",
-            url: "/inventory/main-stock/update-cart",
-            data: {
-                'id':id,
-                'quantity':qty 
-            },
-            dataType: "json",
-            success: function (res) {
-                if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "เกิดข้อผิดพลาด",
+                    text: res.message
                 });
-                }
-                ViewMainCar();
-                $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
             }
-        });
-    }
-});
-
-
-        $("body").on("click", ".update-cart", function (e) {
-        e.preventDefault();
-        $.ajax({
-            type: "get",
-            url: $(this).attr('href'),
-            data: {},
-            dataType: "json",
-            success: function (res) {
-                if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                }
-                // success()
-                ViewMainCar();
-                $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-            }
-        });
-    });
-
-    $("body").on("click", ".delete-item-cart", function (e) {
-    e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: function (response) {
-            ViewMainCar();
-            success()
-            $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-        }
-    });
-});
-
-$("body").on("click", ".checkout", async function (e) {
-    e.preventDefault();
-
-  await Swal.fire({
-    title: "ยืนยัน?",
-    text: "บันทึกรายการนี้!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "ใช่, ยืนยัน!",
-    cancelButtonText: "ยกเลิก",
-  }).then(async (result) => {
-    if (result.value == true) {
-      await $.ajax({
-        type: "post",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: async function (response) {
-            console.log(response);
-            
-          if (response.status == "success") {
-            // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            success("บันสำเร็จ!.");
-          }
         },
-      });
-    }
-  });
+        error: function (xhr, status, error) {
+            Swal.fire({
+                icon: "error",
+                title: "การร้องขอล้มเหลว",
+                text: error
+            });
+        }
+    });
+  
+});
 
-  });
+
 
 
 JS;

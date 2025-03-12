@@ -72,7 +72,7 @@ use app\modules\purchase\models\Order;
 </div>
     
 
-<?php echo $this->render('../approve/level_approve',[
-    'model' => $model->leave,'name' => 'main_stock',
+<?php echo $this->render('level_approve',[
+    'model' => $model->stock,'name' => 'main_stock',
     ])?>
 <?php // echo $this->render('../approve/level_approve',['model' => $model->purchase,'name' => 'purchase'])?>

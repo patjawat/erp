@@ -72,29 +72,41 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
                 <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?></div>
             <div class="year">
                 <?php
-                                                $approveDate = $item->viewApproveDate();
+                try {
+
                                                 if ($item->status == 'None') {
                                                     echo '<i class="fa-solid fa-clock-rotate-left"></i> รอดำเนินการ';
                                                 }else if ($item->status == 'Pending') {
                                                     echo '<i class="bi bi-hourglass-bottom  fw-semibold text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['label'] ?? ''));
-                                                } else if ($item->status == 'Approve') {
+                                                } else if ($item->status == 'Pass') {
                                                     echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . ($item->data_json['label'] ?? '');
                                                 } else if ($item->status == 'Reject') {
-                                                    echo '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ' . $approveDate;
+                                                    echo '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
                                                 } else if ($item->status == 'Cancel') {
                                                 }
+
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+                                                
                                                 ?>
             </div>
             <div class="description"><?php echo $item->getAvatar()['fullname']?></div>
+            <?php
+            try {
+                echo $item->status == 'Pass' ? $item->viewApproveDate() : '';
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+            ?>
             <?php if($item->status == 'Approve'):?>
             <i class="bi bi-clock-history"></i> <?php echo $approveDate?>
             <?php endif;?>
-
-            <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
+            <?php if($model->order_status == 'ReqCancel' || $model->order_status == 'Cancel'):?>
             -
             <?php else:?>
                 <?php if($item->emp_id == $me->id && $item->status =="Pending"):?>
-                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i>'.($item->data_json['label'] ?? ''),
+                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['label'] ?? ''),
                     ['update','id' => $item->id],
                     [
                         'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
@@ -128,15 +140,10 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
 
 
 <?php
-// if(isset($url)){
-//     $urlApprove = $url;
-// }else{
-//     $urlApprove = Url::to(['/approve/leave/approve']);
-    
-// }
-    $js = <<<JS
 
-        //การอนุมัติ
+$js = <<<JS
+
+//การอนุมัติ
 $("body").on("click", ".btn-approve", async function (e) {
     e.preventDefault();
 
@@ -162,19 +169,21 @@ $("body").on("click", ".btn-approve", async function (e) {
                 data: { id: id, status: status },
                 dataType: "json",
                 beforeSend: function() {
-                    Swal.fire({
+                   
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+
+                        Swal.fire({
                         title: 'กำลังบันทึกข้อมูล...',
                         text: 'โปรดรอสักครู่',
                         allowOutsideClick: false,
                         allowEscapeKey: false,
-                        timer: 3000,
+                        timer: 1000,
                         didOpen: () => {
                             Swal.showLoading();
                         }
-                    });
-                },
-                success: function (response) {
-                    if (response.status === 'success') {
+                    }).then(() => {
                         Swal.fire({
                             icon: 'success',
                             title: 'บันทึกสำเร็จ',
@@ -182,7 +191,10 @@ $("body").on("click", ".btn-approve", async function (e) {
                             timer: 1000
                         }).then(() => {
                             window.location.reload();
-                        });
+                        });  
+                    });
+                    
+
                     } else {
                         Swal.fire({
                             icon: 'error',

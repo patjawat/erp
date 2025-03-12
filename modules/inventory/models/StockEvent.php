@@ -667,6 +667,19 @@ class StockEvent extends Yii\db\ActiveRecord
         return AppHelper::timeDifference($this->updated_at);
     }
 
+    // สรุปรายการ Order
+    public function OrderSummary()
+    {
+        $totalPrice = self::find()
+            ->where(['name' => 'order_item', 'category_id' => $this->id])
+            ->sum('qty * unit_price');
+         $totalItem =    self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->sum('qty');
+        return [
+                'total' => $totalPrice,
+                'total_item' => $totalItem 
+        ];
+    }
+
     // รวมเงินทั้งหมด
     public function SummaryTotal($status = true)
     {
