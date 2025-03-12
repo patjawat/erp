@@ -32,6 +32,7 @@ $title = '';
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>
+                        <th scope="col">ผู้ขอเบิก</th>
                         <th scope="col">คลังหลัก</th>
                         <th scope="col">มูลค่า</th>
                         <th scope="col">สถานะ</th>
@@ -47,6 +48,14 @@ $title = '';
                                 <div><?php echo $item->viewCreatedAt()?></div>
                             </div>
                         </td>
+                        <td>
+                                <?php
+                                try {
+                                   echo $item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar'];
+                                } catch (\Throwable $th) {
+                                }
+                                ?>
+                            </td>
                         <td><?php echo $item->warehouse->warehouse_name?></td>
                         <td><?php echo $item->getTotalOrderPrice()?></td>
                         <td><?php echo $item->viewStatus()?></td>

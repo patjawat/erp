@@ -104,7 +104,6 @@ Dashboard
 
 <?php
 
-use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/order-request']);
 $js = <<< JS
   getStoreInWarehouse()
