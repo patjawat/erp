@@ -1,14 +1,14 @@
 <?php
 use yii\helpers\Html;
 
-$title = '';
+$this->title = 'คลังหน่วยงาน';
 ?>
 <?php
 $cart = Yii::$app->cartSub;
 $products = $cart->getItems();
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-clipboard-user fs-1"></i> <?php echo $this->title; ?>
+<i class="bi bi-shop fs-1"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>

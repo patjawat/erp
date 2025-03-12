@@ -24,7 +24,7 @@ $items = [
         'url' => ['/me/booking-meeting'],
     ],    [
         'title' => 'คลังหน่วยงาน',
-        'icon' => 'bi bi-box-fill fs-2',
+        'icon' => 'bi bi-shop fs-2',
         'url' => ['/me/store-v2'],
     ]
    
