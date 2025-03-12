@@ -61,16 +61,18 @@ class StoreV2Controller extends \yii\web\Controller
         if ($order = Yii::$app->session->get('order')) {
             Yii::$app->session->remove('order');
         }
+        $emp = UserHelper::GetEmployee();
         
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('warehouses w', 'w.id=stock_events.warehouse_id');
         $dataProvider->query->andFilterWhere([
-            // 'warehouse_type' => 'SUB',
             'stock_events.name' => 'order',
             'transaction_type' => 'OUT',
             // 'stock_events.created_by' => Yii::$app->user->id
         ]);
+        // $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
+        $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
 
         return $this->render('order_in', [
             'searchModel' => $searchModel,
