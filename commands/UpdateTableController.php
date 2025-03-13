@@ -147,6 +147,7 @@ class UpdateTableController extends Controller
             ['name' => '/profile/*', 'type' => 2,'description' =>''],
             
             //ขัดซื้อ
+            ['name' => '/purchase/*', 'type' => 2,'description' =>''],
             ['name' => '/purchase/document/download-file', 'type' => 2,'description' =>''],
             ['name' => '/purchase/gr-order/update', 'type' => 2,'description' =>''],
             ['name' => '/purchase/order-item/committee', 'type' => 2,'description' =>''],
@@ -301,6 +302,7 @@ class UpdateTableController extends Controller
             ['child' => '/me/*', 'parent' => 'user'],
             ['child' => '/ms-word/*', 'parent' => 'user'],
             ['child' => '/profile/*', 'parent' => 'user'],
+            ['child' => '/purchase/*', 'parent' => 'purchase'],
             ['child' => '/purchase/document/download-file', 'parent' => 'purchase'],
             ['child' => '/purchase/gr-order/update', 'parent' => 'purchase'],
             ['child' => '/purchase/order-item/committee', 'parent' => 'purchase'],
