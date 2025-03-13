@@ -23,7 +23,7 @@ $this->title = "ระบบลงทะเบียน";
   <div class="col-3">
     <div class="card">
       <div class="card-body text-center">
-      <h4 class="text-center">เชื่อม LineID สำเร็จ!</h4>
+      <h4 class="text-center" id="lineID" data-line_id="<?echo $user->line_id?>">เชื่อม LineID สำเร็จ!</h4>
     <?php if(isset($siteInfo['line_qrcode'])):?>
                 <img src="<?php  echo $siteInfo['line_qrcode']?>" alt="">
                 <?php endif;?>
@@ -60,6 +60,9 @@ $this->title = "ระบบลงทะเบียน";
 <?php endif;?>
 
 <?php // Html::a('Lgin',['/profile/line-connect'],['class' => 'btn btn-primary','target' => '_blank'])?>
+
+<?php if(!$user->line_id):?>
+  
 <?php
 
 $lineConnectUrl = Url::to(['/profile/line-connect']);
@@ -197,3 +200,4 @@ JS;
 $this->registerJs($js,View::POS_END);
 ?>
 
+<?php endif;?>

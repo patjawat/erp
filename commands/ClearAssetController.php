@@ -45,13 +45,17 @@ class ClearAssetController extends Controller
         if (BaseConsole::confirm('Are you sure?')) {
         //ลบครุภัณฑ? computer
         $listAssets = Asset::find()->leftJoin('categorise at', 'at.code=asset.asset_item')
-        ->andWhere(['at.category_id' =>12])->all();
-
+        ->andWhere(['owner' => '1400700004437'])->all();
+        // echo $listAssets;
+        // ->andWhere(['at.category_id' =>12])->all();
+$total = 0;
         foreach ($listAssets as $key => $item) {
+            $total++;
             // try {
             //total = 623
             //directory = 763
             // asset = 541
+            
             $model = Uploads::find()->where(['ref' => $item->ref])->one();
             if($model){
                     FileManagerHelper::removeUploadDir($model->ref);
@@ -60,10 +64,12 @@ class ClearAssetController extends Controller
           
             $checkItem = Asset::findOne($item->id);
             $checkItem->delete();
+            echo $item->id."\n";
         // } catch (\Throwable $th) {
         //     //throw $th;
         // }
         }
+        echo $total.""."\n";
         }
     }
         
