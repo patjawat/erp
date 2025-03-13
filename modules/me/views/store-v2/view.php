@@ -99,15 +99,31 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h6 class="">ใบเบิกวัสดุ</h6>
-                        <p class="text-muted mb-0 fw-bold"><?php echo $model->code?></p>
+
+                    <?php
+                                try {
+                                   echo $model->CreateBy($model->fromWarehouse->warehouse_name.' | '.$model->viewCreated())['avatar'];
+                                } catch (\Throwable $th) {
+                                }
+                                ?>
+                                
                     </div>
-                    <h6 class=""><?php echo $model->warehouse->warehouse_name?></h6>
+                    <div>
+                        <p class="text-muted mb-0 fs-13"><?php echo $model->viewCreatedAt()?></p>
+                        <p class="text-primary mb-0 fs-13 text-end fw-semibold"><?php echo $model->code?></p>
+                    </div>
+                
                 </div>
                 <hr>
+
+                
                 <div class="d-flex justify-content-between">
-                    <p class="">วันที่เบิก</p>
-                    <p class=""><?php echo $model->created_at?></p>
+                    <p class="">ประเภทวัสดุ</p>
+                    <p class=""><?php echo $model->data_json['asset_type_name'] ?? 'ไม่ระบุประเภท'?></p>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <p class="">คลัง</p>
+                    <p class=""><?php echo $model->warehouse->warehouse_name?></p>
                 </div>
                 <div class="d-flex justify-content-between">
                     <p>จำนวน</p>
@@ -124,7 +140,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif;?>
 
                     <?php if($model->order_status == 'pending'):?>
+                        <?php if($model->created_by == Yii::$app->user->id):?>
                     <?php echo Html::a('แก้ไข',['/me/store-v2/edit','id' => $model->id],['class' => 'btn btn-warning rounded-pill shadow','id' => 'edit-order'])?>
+                    <?php else:?>
+                        <button class="btn btn-secondary rounded-pill shadow">แก้ไข</button>
+                    <?php endif;?>
                     <?php endif;?>
                 </div>
 

@@ -62,17 +62,21 @@ class StoreV2Controller extends \yii\web\Controller
             Yii::$app->session->remove('order');
         }
         $emp = UserHelper::GetEmployee();
-        
+        $id = \Yii::$app->user->id;
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('warehouses w', 'w.id=stock_events.warehouse_id');
+        $dataProvider->query->leftJoin('warehouses tw', 'tw.id=stock_events.warehouse_id');
+        $dataProvider->query->leftJoin('warehouses fw', 'fw.id=stock_events.from_warehouse_id');
+        // $dataProvider->query->andFilterWhere(new Expression("JSON_CONTAINS(w.data_json->'$.officer','\"$id\"')"));
+        $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(fw.data_json->'$.officer','\"$id\"')"));
+
         $dataProvider->query->andFilterWhere([
             'stock_events.name' => 'order',
             'transaction_type' => 'OUT',
             // 'stock_events.created_by' => Yii::$app->user->id
         ]);
         // $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
-        $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
+        // $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
 
         return $this->render('order_in', [
             'searchModel' => $searchModel,

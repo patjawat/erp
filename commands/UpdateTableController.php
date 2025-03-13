@@ -96,6 +96,7 @@ class UpdateTableController extends Controller
             ['name' => '/dms/documents/update', 'type' => 2,'description' =>'แก้ไขหนังสือ'],
             ['name' => '/dms/documents/view', 'type' => 2,'description' =>'แสดงหนังสือ'],
             ['name' => '/dms/documents/delete', 'type' => 2,'description' =>'ลบหนังสือ'],
+            ['name' => '/am/asset/*', 'type' => 2,'description' =>''],
             ['name' => '/am/asset/depreciation', 'type' => 2,'description' =>''],
             ['name' => '/am/asset/index', 'type' => 2,'description' =>''],
             ['name' => '/am/asset/qrcode', 'type' => 2,'description' =>''],
@@ -174,6 +175,7 @@ class UpdateTableController extends Controller
             ['name' => '/settings/*', 'type' => 2,'description' =>''],
             ['name' => '/site/*', 'type' => 2,'description' =>''],
             
+            ['name' => '/sm/*', 'type' => 2,'description' =>''],
             ['name' => '/sm/default/accept-pr-order', 'type' => 2,'description' =>''],
             ['name' => '/sm/default/budget-chart', 'type' => 2,'description' =>''],
             ['name' => '/sm/default/chart', 'type' => 2,'description' =>''],
@@ -220,6 +222,8 @@ class UpdateTableController extends Controller
             
             // ระบบสารบรรณ
             ['child' => '/dms/*', 'parent' => 'document'],
+            
+            ['child' => '/am/asset/*', 'parent' => 'user'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],
             ['child' => '/am/asset/index', 'parent' => 'user'],
             ['child' => '/am/asset/qrcode', 'parent' => 'user'],
@@ -330,6 +334,7 @@ class UpdateTableController extends Controller
             ['child' => '/purchase/pr-order/update', 'parent' => 'purchase'],
             ['child' => '/purchase/pr-order/update', 'parent' => 'user'],
             ['child' => '/site/*', 'parent' => 'user'],
+            ['child' => '/sm/*', 'parent' => 'sm'],
             ['child' => '/sm/default/accept-pr-order', 'parent' => 'user'],
             ['child' => '/sm/default/budget-chart', 'parent' => 'user'],
             ['child' => '/sm/default/chart', 'parent' => 'user'],
