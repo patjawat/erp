@@ -24,18 +24,13 @@ class StoreV2Controller extends \yii\web\Controller
 {
     public function actionIndex()
     {
+
+        try {
+       
         $emp = UserHelper::GetEmployee();
         $checkWarehouse = Warehouse::find()
                                 ->andWhere(['warehouse_type' => 'SUB'])
                                 ->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->all();
-        // if (!Yii::$app->session->get('warehouse_id') && count($checkWarehouse) >= 2) 
-        // {
-        //     $warehouse = $checkWarehouse[0]->id;
-        //     Yii::$app->session->set('warehouse_id', $warehouse);
-        // }else{
-        //     return $this->redirect(['/me/store-v2/select-warehouse']);
-        // }
-
         if (!Yii::$app->session->get('warehouse')) 
         {
             return $this->redirect(['/me/store-v2/select-warehouse']);
@@ -74,6 +69,11 @@ class StoreV2Controller extends \yii\web\Controller
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
+                 //code...
+        } catch (\Throwable $th) {
+            return $this->redirect(['/me/store-v2/select-warehouse']);
+        }
+
     }
 
     public function actionDashboard()
