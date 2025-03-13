@@ -326,7 +326,6 @@ class StoreV2Controller extends \yii\web\Controller
             $product = Stock::findOne($id);
 
             $checkCartOrder = StockEvent::find()->where(['asset_item' => $product->asset_item])->andWhere(['category_id' => $order->id,'lot_number' => $product->lot_number])->one();
-            // return $checkCartOrder;
             if(!$checkCartOrder){
                 $model = new StockEvent([
                     'asset_item' => $product->asset_item,
