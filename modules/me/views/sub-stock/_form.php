@@ -34,41 +34,77 @@ $toWarehouse = Yii::$app->session->get('warehouse');
 <?php
 $js = <<< JS
 
-    $('#form').on('beforeSubmit',  function (e) {
-        e.preventDefault();
-         Swal.fire({
-                title: 'ยืนยัน',
-                text: 'เบิกวัสดุ',
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "ใช่, ยืนยัน!",
-                cancelButtonText: "ยกเลิก",
-                }).then(async (result) => {
-                if (result.value == true) {
-                    var form = \$(this);
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: 'post',
-                        data: form.serialize(),
-                        dataType: 'json',
-                        success: async function (response) {
-                                    if(response.status == 'success') {
-                                            // closeModal()
-                                            // success()
-                                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                                        }
-                                    }
-                            });
-                        return false;
+$('#form').on('beforeSubmit', function (e) {
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'ยืนยัน',
+        text: 'เบิกวัสดุ',
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "ใช่, ยืนยัน!",
+        cancelButtonText: "ยกเลิก",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $("#main-modal").modal("hide");
+      
+
+            var form = $('#form'); // ดึงฟอร์มมาใช้งาน
+            $.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status == 'success') {
+
+                              // แสดง SweetAlert เป็น loading พร้อม timer
+                    Swal.fire({
+                        title: 'กำลังดำเนินการ...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        timer: 1000, // 5 วินาที
+                        timerProgressBar: true,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    })
+                    .then(() => {
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: 'ดำเนินการเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload(); // รีโหลดหน้า
+                        });   
+                        });
                         
+                    } else {
+                        Swal.fire({
+                            title: 'ผิดพลาด!',
+                            text: response.message || 'ไม่สามารถดำเนินการได้',
+                            icon: 'error'
+                        });
                     }
-                    return false;
-                });
-                return false;
-                
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'ผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการส่งข้อมูล',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
     });
+
+    return false;
+});
+
 JS;
 $this->registerJS($js);
 ?>

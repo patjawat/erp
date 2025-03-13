@@ -26,6 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between">
                     <h6>แสดงรายการเบิกวัสดุ</h6>
                     <!-- ปุ่มลบที่เลือก -->
+                     <?php // echo Html::a('<i class="fa-solid fa-circle-exclamation"></i> คำนวนวัดุเหลือน้อย',['/me'],['class' => 'btn btn-primary rounded-pill'])?>
                     <button class="btn btn-danger mt-2" id="delete-selected" style="display: none;">ลบที่เลือก</button>
 
 
@@ -187,7 +188,7 @@ $('#checkout').click(function (e) {
                                 showConfirmButton: false
                             }).then(() => {
                                 // location.reload();
-                                window.location.href = "/me/store-v2";
+                                window.location.href = "/me/store-v2/order-in";
                             });
                         }else{
                             Swal.fire({

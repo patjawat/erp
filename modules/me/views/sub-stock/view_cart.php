@@ -1,13 +1,9 @@
 <?php
 use yii\web\View;
-?>
-
-<?php
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-
-    $cart = \Yii::$app->cartSub;
-    $products = $cart->getItems();
+$cart = \Yii::$app->cartSub;
+$products = $cart->getItems();
 ?>
 
 <table class="table table-primary">

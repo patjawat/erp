@@ -19,6 +19,7 @@ async function ViewSubCart()
             $('.countSubItem').html(res.countItem)
             if(res.countItem < 1){
                 $("#main-modal").modal("hide");
+                window.location.reload();
             }
             console.log(res.countItem);
             

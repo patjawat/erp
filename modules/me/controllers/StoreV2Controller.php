@@ -14,6 +14,7 @@ use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\Product;
 use app\modules\inventory\models\StockOut;
+use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\WarehouseSearch;
@@ -23,17 +24,38 @@ class StoreV2Controller extends \yii\web\Controller
 {
     public function actionIndex()
     {
+        $emp = UserHelper::GetEmployee();
+        $checkWarehouse = Warehouse::find()
+                                ->andWhere(['warehouse_type' => 'SUB'])
+                                ->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->all();
+        // if (!Yii::$app->session->get('warehouse_id') && count($checkWarehouse) >= 2) 
+        // {
+        //     $warehouse = $checkWarehouse[0]->id;
+        //     Yii::$app->session->set('warehouse_id', $warehouse);
+        // }else{
+        //     return $this->redirect(['/me/store-v2/select-warehouse']);
+        // }
 
-        $warehouse = 1;
-        $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse);
+        if (!Yii::$app->session->get('warehouse')) 
+        {
+            return $this->redirect(['/me/store-v2/select-warehouse']);
+        }
+        
+
+        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
         $item = $warehouseModel->data_json['item_type'];
         $searchModel = new StockSearch([
-            'warehouse_id' => $warehouse
+            'warehouse_id' => $warehouse->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->leftJoin('warehouses w', 'w.id=stock.warehouse_id');
         $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
+        $dataProvider->query->andFilterWhere(['w.department' => $emp->department]);
+
+
 
         $dataProvider->query->andFilterWhere([
             'or',
@@ -54,6 +76,44 @@ class StoreV2Controller extends \yii\web\Controller
             ]);
     }
 
+    public function actionDashboard()
+    {
+        $warehouse = \Yii::$app->session->get('warehouse');
+        $id = \Yii::$app->user->id;
+        $searchModel = new WarehouseSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['delete' => null]);
+
+        if (!\Yii::$app->user->can('admin')) {
+            $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
+        } else {
+        }
+
+        // หากเลือกคลังแล้วให้แสดง ในคลัง
+        if ($warehouse) {
+            $searchModel = new StockEventSearch([
+                'thai_year' => AppHelper::YearBudget(),
+                'warehouse_id' => $warehouse->id
+            ]);
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse->id]);
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'code', $searchModel->q],
+                ['like', 'thai_year', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+            ]);
+
+            return $this->render('dashboard', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                // 'model' => $this->findModel($warehouse['warehouse_id']),
+            ]);
+
+        }
+    }
+    
+
     // แสดงรายการขอเบิกวัสดุคลังหลัก
     public function actionOrderIn()
     {
@@ -61,7 +121,7 @@ class StoreV2Controller extends \yii\web\Controller
         if ($order = Yii::$app->session->get('order')) {
             Yii::$app->session->remove('order');
         }
-        $emp = UserHelper::GetEmployee();
+        
         $id = \Yii::$app->user->id;
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -69,6 +129,7 @@ class StoreV2Controller extends \yii\web\Controller
         $dataProvider->query->leftJoin('warehouses fw', 'fw.id=stock_events.from_warehouse_id');
         // $dataProvider->query->andFilterWhere(new Expression("JSON_CONTAINS(w.data_json->'$.officer','\"$id\"')"));
         $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(fw.data_json->'$.officer','\"$id\"')"));
+        // $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
 
         $dataProvider->query->andFilterWhere([
             'stock_events.name' => 'order',
@@ -76,7 +137,6 @@ class StoreV2Controller extends \yii\web\Controller
             // 'stock_events.created_by' => Yii::$app->user->id
         ]);
         // $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
-        // $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
 
         return $this->render('order_in', [
             'searchModel' => $searchModel,
@@ -86,13 +146,16 @@ class StoreV2Controller extends \yii\web\Controller
 
     public function actionOrderOut()
     {
+        $warehouse = Yii::$app->session->get('warehouse');
+        
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('warehouses w', 'w.id=stock_events.warehouse_id');
         $dataProvider->query->andFilterWhere([
-            // 'warehouse_type' => 'SUB',
+            'w.warehouse_type' => 'SUB',
             'stock_events.name' => 'order',
             'transaction_type' => 'OUT',
+            'warehouse_id' =>$warehouse->id,
             // 'stock_events.created_by' => Yii::$app->user->id
         ]);
 
@@ -114,45 +177,59 @@ class StoreV2Controller extends \yii\web\Controller
     
     
 
-    // public function actionSelectStore()
-    // {
-    //     $id = \Yii::$app->user->id;
-    //     $searchModel = new WarehouseSearch();
-    //     $dataProvider = $searchModel->search($this->request->queryParams);
-    //     $dataProvider->query->where(['delete' => null]);
-
-    //     if (\Yii::$app->user->can('warehouse')) {
-    //         $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
-    //     } else {
-    //         $emp = UserHelper::GetEmployee();
-    //         $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
-    //         $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0]);
-    //     }
-    //     $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
-    //     $dataProvider->pagination->pageSize = 100;
-    //     if ($this->request->isAjax) {
-    //         Yii::$app->response->format = Response::FORMAT_JSON;
-    //         return [
-    //             'title' => $this->request->get('title'),
-    //             'content' => $this->renderAjax('select_store', [
-    //                 'searchModel' => $searchModel,
-    //                 'dataProvider' => $dataProvider,
-    //             ])
-    //         ];
-    //     } else {
-    //         return $this->render('select_store', [
-    //             'searchModel' => $searchModel,
-    //             'dataProvider' => $dataProvider,
-    //         ]);
-    //     }
-    // }
-
-    public function actionSetWarehouse($id)
+    public function actionSelectWarehouse()
     {
-        $warehouse = Yii::$app->session->get('warehouse_id');
-        if ($warehouse) {
-            Yii::$app->session->set('warehouse_id', $id);
-            return $this->redirect(['/me/store-v2/index']);
+        // clear session
+        Yii::$app->session->remove('warehouse');
+
+        //clear cart
+        $cart = Yii::$app->cartSub;
+        $items = $cart->getItems();
+        $cart->checkOut(false);
+
+
+        $id = \Yii::$app->user->id;
+        $searchModel = new WarehouseSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['delete' => null]);
+
+        if (\Yii::$app->user->can('warehouse')) {
+            $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
+        } else {
+            $emp = UserHelper::GetEmployee();
+            $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
+            $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0]);
+        }
+        $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
+        $dataProvider->pagination->pageSize = 100;
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('select_warehouse', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('select_warehouse', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+    public function actionSetWarehouse()
+    {
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $warehouse_id = $this->request->post('warehouse_id');
+            $warehouse = Warehouse::findOne($warehouse_id);
+            Yii::$app->session->set('warehouse',$warehouse);
+            return [
+                'status' => 'success',
+            ];
+            // return $this->redirect(['/me/store-v2/index']);
         }
     }
 
@@ -247,24 +324,32 @@ class StoreV2Controller extends \yii\web\Controller
             $order = Yii::$app->session->get('order');
             Yii::$app->response->format = Response::FORMAT_JSON;
             $product = Stock::findOne($id);
-            $model = new StockEvent([
-                'asset_item' => $product->asset_item,
-                'name' => 'order_item',
-                'thai_year' => AppHelper::YearBudget(),
-                'transaction_type' => $order->transaction_type,
-                'code' => $order->code,
-                'category_id' => $order->id,
-                'warehouse_id' => $order->warehouse_id,
-                'from_warehouse_id' => $order->from_warehouse_id,
-                'lot_number' => $product->lot_number,
-                'unit_price' => $product->unit_price,
-                'qty' => 1,
-                'data_json' => [
-                    'req_qty' => 1,
-                ],
-                'order_status' => 'pending',
-            ]);
-            $model->save();
+
+            $checkCartOrder = StockEvent::find()->where(['asset_item' => $product->asset_item])->andWhere(['category_id' => $order->id,'lot_number' => $product->lot_number])->one();
+            // return $checkCartOrder;
+            if(!$checkCartOrder){
+                $model = new StockEvent([
+                    'asset_item' => $product->asset_item,
+                    'name' => 'order_item',
+                    'thai_year' => AppHelper::YearBudget(),
+                    'transaction_type' => $order->transaction_type,
+                    'code' => $order->code,
+                    'category_id' => $order->id,
+                    'warehouse_id' => $order->warehouse_id,
+                    'from_warehouse_id' => $order->from_warehouse_id,
+                    'lot_number' => $product->lot_number,
+                    'unit_price' => $product->unit_price,
+                    'qty' => 1,
+                    'data_json' => [
+                        'req_qty' => 1,
+                    ],
+                    'order_status' => 'pending',
+                ]);
+                $model->save();
+            }else{
+                $checkCartOrder->qty = $checkCartOrder->qty + 1;
+                $checkCartOrder->save();
+            }
 
             return [
                 'status' => 'success',

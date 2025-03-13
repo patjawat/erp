@@ -1,9 +1,9 @@
 <?php
 use yii\helpers\Html;
+$warehouse = Yii::$app->session->get('warehouse');
 
-$this->title = 'คลังหน่วยงาน';
-?>
-<?php
+$this->title = 'คลัง'.$warehouse->warehouse_name;
+
 $cart = Yii::$app->cartSub;
 $products = $cart->getItems();
 ?>
@@ -21,7 +21,7 @@ $products = $cart->getItems();
     <div class="card-body">
         <div class="row">
             <div class="col-4 d-flex justify-content-start align-items-center">
-                <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount(); ?> </span> รายการ</h6>
+                <h6><i class="bi bi-ui-checks"></i> วัสดุในคลัง <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount(); ?> </span> รายการ</h6>
             </div>
             <div class="col-4"><?= $this->render('_search_stock', ['model' => $searchModel]); ?></div>
             <div class="col-4 d-flex justify-content-end align-items-center">
@@ -33,6 +33,8 @@ $products = $cart->getItems();
         </div>
     </div>
 </div>
+<div class="row">
+<div class="col-8">
 
 <div id="cart-container">
     <?php foreach ($dataProvider->getModels() as $item): ?>
@@ -43,11 +45,12 @@ $products = $cart->getItems();
                     <?php echo Html::img($item->product->ShowImg(), ['class' => 'img-fluid object-fit-cover rounded-1']) ?>
                 </div>
                 <div class="col-md-7">
-                    <h6 class="mb-1"> <?php echo $item->SumQty() == 0 ? '<span class="badge text-bg-danger me-1">หมด</span>' : ''?><?= $item->product->title ?></h6>
-                    <p class="text-muted mb-0 fw-bold"><?php echo $item->lot_number ?> | คงเหลือ <?=$item->SumQty()?>  <?php echo $item->product->unit_name; ?></p>
+                    <h5 class="mb-1"> <?php echo $item->SumQty() == 0 ? '<span class="badge text-bg-danger me-1"><i class="fa-solid fa-triangle-exclamation"></i> หมด</span>' : ''?><?= $item->product->title ?></h5>
+                    <p class="text-muted mb-0 fw-semibold"> <?= isset($item->product->productType->title) ? $item->product->productType->title : 'ไม่พบข้อมูล' ?></p>
+                    <p class="text-muted mb-0 fw-semibold"><?php echo $item->lot_number ?> | คงเหลือ <?=$item->SumQty()?>  <?php echo $item->product->unit_name; ?></p>
                 </div>
                 <div class="col-md-3">
-                    <?= isset($item->product->productType->title) ? $item->product->productType->title : 'ไม่พบข้อมูล' ?>
+                    <?= isset($item->warehouse) ? $item->warehouse->warehouse_name  : 'ไม่พบข้อมูล' ?>
                 </div>
 
                 <div class="col-md-1 d-flex justify-content-center">
@@ -61,17 +64,35 @@ $products = $cart->getItems();
         </div>
     </div>
     <?php endforeach; ?>
+    
+    <div class="d-flex justify-content-center">
+        <?= yii\bootstrap5\LinkPager::widget([
+                    'pagination' => $dataProvider->pagination,
+                    'firstPageLabel' => 'หน้าแรก',
+                    'lastPageLabel' => 'หน้าสุดท้าย',
+                    'options' => [
+                        'class' => 'pagination pagination-sm',
+                    ],
+                ]); ?>
+    
+    </div>
 </div>
-<div class="d-flex justify-content-center">
-    <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'class' => 'pagination pagination-sm',
-                ],
-            ]); ?>
 
+    
+</div>
+<div class="col-4">
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <h6>ประวัติจ่ายวัสดุ</h6>
+            <?php echo Html::a('ทะเบียนทั้งหมด',['/me/store-v2/order-out'],['class' => 'btn btn-light rounded-pill'])?>
+        </div>
+            <p class="card-text">กำลังอยู่ระหว่างพัฒนา</p>
+    </div>
+</div>
+
+</div>
 </div>
 
 <?php

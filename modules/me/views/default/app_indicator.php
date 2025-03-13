@@ -25,7 +25,8 @@ $items = [
     ],    [
         'title' => 'คลังหน่วยงาน',
         'icon' => 'bi bi-shop fs-2',
-        'url' => ['/me/store-v2'],
+        // 'url' => ['/me/store-v2/select-warehouse'],
+        'url' => ['/me/store-v2/index'],
     ]
    
 ];

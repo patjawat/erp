@@ -172,7 +172,7 @@ class SubStockController extends \yii\web\Controller
     {
         $cart = \Yii::$app->cartSub;
         $items = $cart->getItems();
-        $warehouse = 1;
+        $warehouse = Yii::$app->session->get('warehouse');
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
            
@@ -200,7 +200,7 @@ class SubStockController extends \yii\web\Controller
 
             // Save Order
             $model->code = \mdm\autonumber\AutoNumber::generate('OUT-'.substr(AppHelper::YearBudget(), 2).'????');
-            $model->warehouse_id = $warehouse['warehouse_id'];
+            $model->warehouse_id = $warehouse->id;
             $model->name = 'order';
             $model->transaction_type = 'OUT';
             $model->order_status = 'success';
@@ -239,7 +239,6 @@ class SubStockController extends \yii\web\Controller
                             throw new \Exception('ไม่สามารถบันทึกข้อมูล Stock ได้');
                         }
                         }
-
                 }
                 $cart->checkOut(false);
                 $transaction->commit();
