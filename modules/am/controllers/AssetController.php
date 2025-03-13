@@ -282,6 +282,9 @@ class AssetController extends Controller
     {
         $model = $this->findModel($id);
         $model->receive_date = AppHelper::DateFormDb($model->receive_date);
+        if($model->ref == ''){
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
         if (isset($model->data_json["item_options"])) {
             $model->item_options = $model->data_json["item_options"];
         }

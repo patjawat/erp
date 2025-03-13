@@ -176,30 +176,37 @@ class Helpdesk extends Yii\db\ActiveRecord
     }
 
     // ประเภทของงานซ่อม
-    public function RepairType(): array|false
-    {
-        if (empty($this->data_json['send_type'])) {
-            return false;
-        }
-    
-        $imgSrc = $this->data_json['send_type'] === 'asset' ? $this->asset->showImg() : $this->showImg();
-        
-        return match ($this->data_json['send_type']) {
-            'general' => [
-                'title' => 'ซ่อมทั่วไป',
-                'image' => Html::img($imgSrc, [
-                    'class' => 'avatar avatar-lg rounded-3',
-                    ])
-                ],
-                'asset' => [
-                    'title' => 'ซ่อมครุภัณฑ์',
-                    'image' => Html::img($imgSrc, [
-                    'class' => 'avatar avatar-sm',
-                ])
-            ],
-            default => false
-        };
+    public function RepairType(): array
+{
+    if (empty($this->data_json['send_type'])) {
+        return [
+            'title' => 'ไม่พบข้อมูล',
+            'image' => '',
+        ];
     }
+
+    $imgSrc = $this->data_json['send_type'] === 'asset' ? $this->asset->showImg() : $this->showImg();
+    
+    return match ($this->data_json['send_type']) {
+        'general' => [
+            'title' => 'ซ่อมทั่วไป',
+            'image' => Html::img($imgSrc, [
+                'class' => 'avatar avatar-lg rounded-3',
+            ])
+        ],
+        'asset' => [
+            'title' => 'ซ่อมครุภัณฑ์',
+            'image' => Html::img($imgSrc, [
+                'class' => 'avatar avatar-sm',
+            ])
+        ],
+        default => [
+            'title' => 'ไม่พบประเภทการซ่อม',
+            'image' => '',
+        ]
+    };
+}
+
     
 
     // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
