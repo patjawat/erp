@@ -3,6 +3,7 @@
 namespace app\modules\me\controllers;
 
 use Yii;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\db\Expression;
 use app\components\LineMsg;
@@ -193,13 +194,13 @@ class StoreV2Controller extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['delete' => null]);
 
-        if (\Yii::$app->user->can('warehouse')) {
-            $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
-        } else {
+        // if (\Yii::$app->user->can('warehouse')) {
+        //     $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
+        // } else {
             $emp = UserHelper::GetEmployee();
             $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
-            $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0]);
-        }
+            $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET(' . ($emp->department ?? 0) . ', department)'), 0]);
+        // }
         $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
         $dataProvider->pagination->pageSize = 100;
         if ($this->request->isAjax) {
@@ -496,6 +497,7 @@ class StoreV2Controller extends \yii\web\Controller
             $model->delete();
             return [
                 'status' => 'success',
+                'url' => Url::to(['/me/store-v2/view', 'id' => $model->category_id]),
             ];
         }
     }

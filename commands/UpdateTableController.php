@@ -101,6 +101,7 @@ class UpdateTableController extends Controller
             ['name' => '/am/asset/index', 'type' => 2,'description' =>''],
             ['name' => '/am/asset/qrcode', 'type' => 2,'description' =>''],
             ['name' => '/am/asset/view', 'type' => 2,'description' =>''],
+            ['name' => '/am/asset/update', 'type' => 2,'description' =>''],
             ['name' => '/am/default/index', 'type' => 2,'description' =>''],
             ['name' => '/depdrop/*', 'type' => 2,'description' =>''],
             ['name' => '/employees/*', 'type' => 2,'description' =>''],
@@ -228,6 +229,7 @@ class UpdateTableController extends Controller
             ['child' => '/am/asset/index', 'parent' => 'user'],
             ['child' => '/am/asset/qrcode', 'parent' => 'user'],
             ['child' => '/am/asset/view', 'parent' => 'user'],
+            ['child' => '/am/asset/update', 'parent' => 'user'],
             ['child' => '/am/default/index', 'parent' => 'user'],
             ['child' => '/depdrop/*', 'parent' => 'user'],
             // ซ่อมบำรุง

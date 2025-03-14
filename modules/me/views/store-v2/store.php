@@ -16,21 +16,17 @@ use app\modules\inventory\models\Warehouse;
 <?php // echo $this->render('../default/menu'); ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'inventory-container']); ?>
+<?php Pjax::begin(['id' => 'store-container','enablePushState' => false]); ?>
 <?php
 
 $cart = Yii::$app->cartMain;
 $products = $cart->getItems();
 
 ?>
-
-<div class="card">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span
-                class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?>
-            </span> รายการ</h6>
-
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+<div class="row">
+    <div class="col-4"><?php echo $this->render('_search', ['model' => $searchModel]); ?></div>
+    <div class="col-8">
+        
     </div>
 </div>
 
@@ -103,6 +99,7 @@ $("body").on("click", ".add-card", function (e) {
         dataType: "json",
         success: function (res) {
             if (res.status === "success") {
+                $.pjax.reload({container:'#order-container', history:false,url:res.url});
                 // ใช้ SweetAlert2 Toast
                 Swal.fire({
                     toast: true,
@@ -110,9 +107,9 @@ $("body").on("click", ".add-card", function (e) {
                     icon: "success",
                     title: "เพิ่มสินค้าในตะกร้าเรียบร้อย!",
                     showConfirmButton: false,
-                    timer: 1000
+                    timer: 500
                 }).then(() => {
-                    location.reload();
+                    // location.reload();
                 });
             } else {
                 Swal.fire({

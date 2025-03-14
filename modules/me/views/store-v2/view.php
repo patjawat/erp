@@ -1,6 +1,7 @@
 <?php
 use yii\web\View;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 $order =  Yii::$app->session->get('order');
 // echo "<pre>";
 // print_r($order);
@@ -18,7 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'order-container','enablePushState' => false]); ?>
 <div class="row">
     <div class="col-8">
         <div class="card">
@@ -153,6 +154,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+<?php Pjax::end()?>
 <?php if($model->order_status == 'none'):?>
 <div id="viewStore"></div>
 <?php endif;?>
@@ -160,8 +162,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = <<< JS
 loadStore()
 
-
-$('#checkout').click(function (e) { 
+$("body").on("click", "#checkout", function (e) {
     e.preventDefault();
     Swal.fire({
             title: "ยืนยัน?",
@@ -309,7 +310,7 @@ function sendUpdateRequest(itemId, qty) {
         toggleDeleteButton();
     });
 
-    $('.delete-product-item').click(function (e) { 
+    $("body").on("click", ".delete-product-item", function (e) {
         e.preventDefault();
         Swal.fire({
             title: "ยืนยัน?",
@@ -335,7 +336,9 @@ function sendUpdateRequest(itemId, qty) {
                                 timer: 1000,
                                 showConfirmButton: false
                             }).then(() => {
-                                location.reload();
+                                // location.reload();
+                                // $.pjax.reload({container:'#order-container', history:false,url:response.url});
+                                $.pjax.reload({container:'#order-container'});
                             });
                         }else{
                             Swal.fire({

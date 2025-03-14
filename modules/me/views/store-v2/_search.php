@@ -23,7 +23,7 @@ use app\modules\inventory\models\Warehouse;
         ],
     ]); ?>
 
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control form-control-md rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10 is-valid p-2'])->label(false) ?>
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control form-control-md rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10 is-valid ps-3 py-2'])->label(false) ?>
 
 
 

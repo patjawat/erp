@@ -9,15 +9,13 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   // NProgress.start();
-  $("#page-content").hide();
-  $("#loader").show();
+
 
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   // NProgress.done();
-  $("#page-content").show();
-  $("#loader").hide();
+ 
 });
 
 // focus เวลาเปิก select2
@@ -30,6 +28,16 @@ $(document).on("select2:open", () => {
 $(".link-loading").click(function (e) {
   $(".loading-page").show();
 });
+
+function showLoading() {
+  $("#page-content").hide();
+  $("#loader").show();
+}
+
+function hideLoading() {
+  $("#page-content").show();
+  $("#loader").hide();
+}
 
 function beforLoadModal() {
   console.log("beforLoadModal");
