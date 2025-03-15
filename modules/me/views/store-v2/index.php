@@ -25,7 +25,7 @@ $products = $cart->getItems();
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
-            <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary">
+            <h6><i class="bi bi-ui-checks"></i> ทะเบียนวัสดุ <span class="badge rounded-pill text-bg-primary">
                     <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
 
                         <?=$this->render('_search', ['model' => $searchModel]); ?>
