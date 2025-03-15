@@ -31,7 +31,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <?php
     // นับจำนวน order ที่รอรับเข้าคลัง
-    $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+    $warehouseModel = Warehouse::findOne($warehouse->id);
     if (isset($warehouseModel->data_json['item_type'])) {
         $item = $warehouseModel->data_json['item_type'];
         $count = Order::find()

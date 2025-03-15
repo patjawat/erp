@@ -1,13 +1,13 @@
 <?php
 
-use app\modules\inventory\models\Warehouse;
-use yii\bootstrap5\LinkPager;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use yii\bootstrap5\LinkPager;
+use app\modules\inventory\models\Warehouse;
 
 $this->title = 'ตั้งค่าระบบคลัง';
 ?>
@@ -20,7 +20,7 @@ $this->title = 'ตั้งค่าระบบคลัง';
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?= $this->render('./menu') ?>
+<?php echo $this->render('@app/modules/inventory/views/default/menu_dashbroad') ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory']); ?>
@@ -29,7 +29,10 @@ $this->title = 'ตั้งค่าระบบคลัง';
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center align-middle">
             <h6><i class="bi bi-ui-checks"></i> จำนวนคลัง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-            <?= $this->render('_search', ['model' => $searchModel]); ?>
+            <div class="d-flex flex-row align-items-center gap-3">
+                <?= $this->render('_search', ['model' => $searchModel]); ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่', ['/inventory/warehouse/create', 'title' => '<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่'], ['id' => 'addWarehouse', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+            </div>
         </div>
         <table class="table table-striped">
             <thead>

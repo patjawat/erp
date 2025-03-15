@@ -2,6 +2,7 @@
 
 namespace app\modules\inventory\controllers;
 
+use Yii;
 use yii\db\Expression;
 use yii\web\Controller;
 use app\components\AppHelper;
@@ -21,7 +22,51 @@ class DefaultController extends Controller
      *
      * @return string
      */
+
+
     public function actionIndex()
+    {
+        // clear session
+        Yii::$app->session->remove('warehouse');
+
+        //clear cart
+        $cart = Yii::$app->cartSub;
+        $items = $cart->getItems();
+        $cart->checkOut(false);
+
+
+        $id = \Yii::$app->user->id;
+        $searchModel = new WarehouseSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->where(['delete' => null]);
+        $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
+        $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
+        $dataProvider->pagination->pageSize = 100;
+        
+        if($dataProvider->getTotalCount() == 1){
+            $setWarehouse = $dataProvider->getModels()[0];
+            Yii::$app->session->set('warehouse',$setWarehouse);
+            return $this->redirect(['/inventory/warehouse/index']);
+        }
+        
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('index', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+    
+    public function actionDashboard()
     {
         \Yii::$app->session->remove('warehouse');
         \Yii::$app->session->remove('selectMainWarehouse');
@@ -32,7 +77,7 @@ class DefaultController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        return $this->render('index', [
+        return $this->render('dashboard', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'searchModelWarehouse' => $this->Warehouse()['searchModelWarehouse'],
@@ -66,6 +111,11 @@ class DefaultController extends Controller
         ];
     }
 
+
+ 
+
+
+    
     // ปริมาณวัสดุตามหมวดหมู่
     protected function ProductSummary()
     {

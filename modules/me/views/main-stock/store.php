@@ -44,7 +44,7 @@ $products = $cart->getItems();
             
             <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
-                    </button>',['/me/main-stock/create'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                    </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังกลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
         </div>
     </div>
 </div>
@@ -188,19 +188,19 @@ $("body").on("keypress", ".update-qty", function (e) {
         });
     });
 
-    $("body").on("click", ".delete-item-cart", function (e) {
-    e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: function (response) {
-            ViewMainCar();
-            success()
-            $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-        }
-    });
-});
+//     $("body").on("click", ".delete-item-cart", function (e) {
+//     e.preventDefault();
+//     $.ajax({
+//         type: "get",
+//         url: $(this).attr('href'),
+//         dataType: "json",
+//         success: function (response) {
+//             ViewMainCar();
+//             success()
+//             $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
+//         }
+//     });
+// });
 
 $("body").on("click", ".checkout", async function (e) {
     e.preventDefault();

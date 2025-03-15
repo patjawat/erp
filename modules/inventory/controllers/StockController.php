@@ -89,7 +89,7 @@ class StockController extends Controller
             return $this->redirect(['/inventory']);
         }
         $searchModel = new StockSearch([
-            'warehouse_id' => $warehouse['warehouse_id']
+            'warehouse_id' => $warehouse->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
@@ -192,7 +192,7 @@ class StockController extends Controller
             ->where([
                 't.asset_item' => $model->asset_item,
                 't.name' => 'order_item',
-                't.warehouse_id' => $warehouse['warehouse_id'],
+                't.warehouse_id' => $warehouse->id,
                 't.order_status' => 'success',
                 'o.order_status' => 'success'
                 ])

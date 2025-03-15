@@ -51,7 +51,7 @@ class StockInController extends Controller
             return $this->redirect(['/inventory']);
         }
         $searchModel = new StockEventSearch([
-           'warehouse_id' => $warehouse['warehouse_id'],
+           'warehouse_id' => $warehouse->id,
            'transaction_type' => 'IN'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);

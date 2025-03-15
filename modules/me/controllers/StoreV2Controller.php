@@ -185,48 +185,6 @@ class StoreV2Controller extends \yii\web\Controller
     
     
 
-    public function actionSelectWarehouse()
-    {
-        // clear session
-        Yii::$app->session->remove('warehouse');
-
-        //clear cart
-        $cart = Yii::$app->cartSub;
-        $items = $cart->getItems();
-        $cart->checkOut(false);
-
-
-        $id = \Yii::$app->user->id;
-        $searchModel = new WarehouseSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['delete' => null]);
-
-        // if (\Yii::$app->user->can('warehouse')) {
-        //     $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
-        // } else {
-            $emp = UserHelper::GetEmployee();
-            $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
-            $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET(' . ($emp->department ?? 0) . ', department)'), 0]);
-        // }
-        $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
-        $dataProvider->pagination->pageSize = 100;
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('select_warehouse', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ])
-            ];
-        } else {
-            return $this->render('select_warehouse', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
-
 
     public function actionShow()
     {

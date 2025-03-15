@@ -1,13 +1,21 @@
 <?php
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\db\Expression;
+use app\modules\inventory\models\Warehouse;
+$id = \Yii::$app->user->id;
 $warehouse = Yii::$app->session->get('warehouse');
+$checkOffer = Warehouse::find()->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"))->count();
 
 ?>
 
 <div class="d-flex gap-2">
-    <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory'], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory/default/dashboard'], ['class' => 'btn btn-light']) ?>
     <?= Html::a('<i class="fa-solid fa-house"></i> หน้าหลัก', ['/inventory/warehouse'], ['class' => 'btn btn-light']) ?>
+    <?php if($checkOffer >=2):?>
+        <?php echo Html::a('<i class="fa-solid fa-chart-simple me-1"></i> คลัง', ['/inventory/default/index'], ['class' => 'btn btn-light']) ?>
+        
+    <?php endif;?>
     <?php Html::a('<i class="fa-solid fa-chart-simple me-1"></i> เลือกคลังหลัก', ['/inventory/warehouse/clear'], ['class' => 'btn btn-light']) ?>
     <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
         <?php echo Html::a('<i class="fa-solid fa-cube"></i> สต๊อก', ['/inventory/stock/in-stock'], ['class' => 'btn btn-light']) ?>

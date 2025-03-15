@@ -178,19 +178,19 @@ $("body").on("keypress", ".update-qty", function (e) {
         });
     });
 
-    $("body").on("click", ".delete-item-cart", function (e) {
-    e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: function (response) {
-            ViewMainCar();
-            success()
-            $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-        }
-    });
-});
+//     $("body").on("click", ".delete-item-cart", function (e) {
+//     e.preventDefault();
+//     $.ajax({
+//         type: "get",
+//         url: $(this).attr('href'),
+//         dataType: "json",
+//         success: function (response) {
+//             ViewMainCar();
+//             success()
+//             $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
+//         }
+//     });
+// });
 
 $("body").on("click", ".checkout", async function (e) {
     e.preventDefault();

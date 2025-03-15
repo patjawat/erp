@@ -53,12 +53,13 @@ class WarehouseController extends Controller
 
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
+            $warehouseId = $warehouse->id;
             $searchModel = new StockEventSearch([
                 'thai_year' => AppHelper::YearBudget(),
-                'warehouse_id' => $warehouse['warehouse_id']
+                'warehouse_id' => $warehouseId
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouseId]);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'code', $searchModel->q],
@@ -69,7 +70,7 @@ class WarehouseController extends Controller
             return $this->render('view', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                // 'model' => $this->findModel($warehouse['warehouse_id']),
+                // 'model' => $this->findModel($warehouse->id),
             ]);
 
         } else {
@@ -90,10 +91,10 @@ class WarehouseController extends Controller
         if ($warehouse) {
             $searchModel = new StockEventSearch([
                 'thai_year' => AppHelper::YearBudget(),
-                'warehouse_id' => $warehouse['warehouse_id']
+                'warehouse_id' => $warehouse->id
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse->id]);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'code', $searchModel->q],
@@ -104,7 +105,7 @@ class WarehouseController extends Controller
             return $this->render('_order_request', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                // 'model' => $this->findModel($warehouse['warehouse_id']),
+                // 'model' => $this->findModel($warehouse->id),
             ]);
 
         } else {
@@ -147,6 +148,7 @@ class WarehouseController extends Controller
      */
     public function actionView($id)
     {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $this->setWarehouse($id);
         return $this->redirect(['index']);
         // return $this->render('view', [
@@ -235,19 +237,14 @@ class WarehouseController extends Controller
     }
 
     // เลือกคลังที่จะทำงาน
-    protected function setWarehouse($id)
+    public function setWarehouse($id)
     {
         $model = Warehouse::find()->where(['id' => $id])->One();
-        \Yii::$app->session->set('warehouse', [
-            'id' => $model->id,
-            'warehouse_id' => $model->id,
-            'warehouse_code' => $model->warehouse_code,
-            'warehouse_name' => $model->warehouse_name,
-            'warehouse_type' => $model->warehouse_type,
-            'category_id' => $model->category_id,
-            'checker' => isset($model->data_json['checker']) ? $model->data_json['checker'] : '',
-            'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
-        ]);
+        \Yii::$app->session->set('warehouse',$model);
+        return [
+            'status' => 'success',
+            'container' => '#warehouse',
+        ];
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
 
@@ -299,8 +296,8 @@ class WarehouseController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         if ($this->request->isAjax) {
-            // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id'],'order_status' => 'pending']);
-            $dataProvider->query->where(['transaction_type' => 'OUT', 'name' => 'order', 'order_status' => 'pending', 'warehouse_id' => $warehouse['warehouse_id']]);
+            // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse->id,'order_status' => 'pending']);
+            $dataProvider->query->where(['transaction_type' => 'OUT', 'name' => 'order', 'order_status' => 'pending', 'warehouse_id' => $warehouse->id]);
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -316,7 +313,7 @@ class WarehouseController extends Controller
                 ]),
             ];
         } else {
-            // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse['warehouse_id']]);
+            // $dataProvider->query->where(['transaction_type' => 'OUT','name' => 'order','warehouse_id' => $warehouse->id]);
             $dataProvider->query->where(['transaction_type' => 'OUT', 'name' => 'order']);
 
             return $this->render('list_order_request', [
@@ -361,7 +358,7 @@ class WarehouseController extends Controller
                 GROUP BY thai_year";
             $query = \Yii::$app->db
                 ->createCommand($sql)
-                ->bindValue(':warehouse_id', $warehouse['warehouse_id'])
+                ->bindValue(':warehouse_id', $warehouse->id)
                 ->queryOne();
             try {
                 $chartSummary = [
