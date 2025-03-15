@@ -12,7 +12,7 @@ use yii\widgets\Pjax;
 use app\models\Categorise;
 use app\modules\inventory\models\Stock;
 
-$warehouse = Yii::$app->session->get('warehouse');
+$warehouse = Yii::$app->session->get('sub-warehouse');
 $this->title = $warehouse->warehouse_name;
 ?>
 

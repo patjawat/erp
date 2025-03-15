@@ -15,7 +15,7 @@ use app\modules\inventory\models\Warehouse;
 <div class="order-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['/me/store-v2/store'],
+        'action' => ['/me/store-v2/index'],
         'method' => 'get',
         'id' => 'form-search',
         'options' => [

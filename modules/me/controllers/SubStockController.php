@@ -172,7 +172,7 @@ class SubStockController extends \yii\web\Controller
     {
         $cart = \Yii::$app->cartSub;
         $items = $cart->getItems();
-        $warehouse = Yii::$app->session->get('warehouse');
+        $warehouse = Yii::$app->session->get('sub-warehouse');
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
            

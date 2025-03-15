@@ -23,36 +23,41 @@ use app\modules\inventory\models\StockEventSearch;
 
 class StoreV2Controller extends \yii\web\Controller
 {
+
+    public function actionSetWarehouse()
+    {
+        $emp = UserHelper::GetEmployee();
+            $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
+            $warehouse = Warehouse::findOne($checkWarehouse->id);
+            Yii::$app->session->set('sub-warehouse',$warehouse);
+            return $this->redirect(['/me/store-v2/index']);
+    }
+
+    
     public function actionIndex()
     {
-
-        try {
-       
-        $emp = UserHelper::GetEmployee();
-        $checkWarehouse = Warehouse::find()
-                                ->andWhere(['warehouse_type' => 'SUB'])
-                                ->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->all();
-        if (!Yii::$app->session->get('warehouse')) 
-        {
-            return $this->redirect(['/me/store-v2/select-warehouse']);
+        $warehouse = Yii::$app->session->get('sub-warehouse');
+        if(!$warehouse){
+            return $this->redirect(['/me/store-v2/set-warehouse']);
         }
         
+        $emp = UserHelper::GetEmployee();
+        $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
 
-        $warehouse = Yii::$app->session->get('warehouse');
-        $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
-        $item = $warehouseModel->data_json['item_type'];
+        // $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
+        $item = $warehouse->data_json['item_type'];
         $searchModel = new StockSearch([
             'warehouse_id' => $warehouse->id
         ]);
+
+
+        
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
         $dataProvider->query->leftJoin('warehouses w', 'w.id=stock.warehouse_id');
         $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere(['w.department' => $emp->department]);
-
-
-
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_item', $searchModel->q],
@@ -70,16 +75,18 @@ class StoreV2Controller extends \yii\web\Controller
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
-                 //code...
-        } catch (\Throwable $th) {
-            return $this->redirect(['/me/store-v2/select-warehouse']);
-        }
+        // } catch (\Throwable $th) {
+        //     // return $this->redirect(['/me/store-v2/select-warehouse']);
+        // }
 
     }
 
     public function actionDashboard()
     {
-        $warehouse = \Yii::$app->session->get('warehouse');
+        $warehouse = Yii::$app->session->get('sub-warehouse');
+        if(!$warehouse){
+            return $this->redirect(['/me/store-v2/set-warehouse']);
+        }
         $id = \Yii::$app->user->id;
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -220,19 +227,6 @@ class StoreV2Controller extends \yii\web\Controller
         }
     }
 
-    public function actionSetWarehouse()
-    {
-        if ($this->request->isPost) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            $warehouse_id = $this->request->post('warehouse_id');
-            $warehouse = Warehouse::findOne($warehouse_id);
-            Yii::$app->session->set('warehouse',$warehouse);
-            return [
-                'status' => 'success',
-            ];
-            // return $this->redirect(['/me/store-v2/index']);
-        }
-    }
 
     public function actionShow()
     {
