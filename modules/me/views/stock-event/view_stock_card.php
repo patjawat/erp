@@ -6,8 +6,8 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\Stock $model */
 
-$warehouse = Yii::$app->session->get('warehouse');
-$this->title = $warehouse['warehouse_name'];
+$warehouse = Yii::$app->session->get('sub-warehouse');
+$this->title = $warehouse->warehouse_name;
 $this->params['breadcrumbs'][] = ['label' => 'Stocks', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
