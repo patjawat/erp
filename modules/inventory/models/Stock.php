@@ -258,7 +258,8 @@ public function listLotNumber()
         $sql = "SELECT s.id,o.data_json->>'$.receive_date' as receive_date,i.lot_number,IFNULL(s.qty,0) as qty FROM `stock_events` i
                 LEFT JOIN stock_events o ON i.code = o.code AND o.name ='order'
                 LEFT JOIN stock s ON s.lot_number = i.lot_number
-                WHERE i.asset_item = :asset_item AND IFNULL(s.qty,0) > 0
+                -- WHERE i.asset_item = :asset_item AND IFNULL(s.qty,0) > 0
+                WHERE i.asset_item = :asset_item
                 AND s.warehouse_id = :warehouse_id
                 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.receive_date')) ASC limit 1;";
                 

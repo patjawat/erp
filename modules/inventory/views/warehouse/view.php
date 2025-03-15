@@ -95,7 +95,6 @@ Dashboard
             </div>
         </div>
 
-
 <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
 <?= $this->render('_order_request',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
 <?php else:?>

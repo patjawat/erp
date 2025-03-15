@@ -81,6 +81,39 @@ class WarehouseController extends Controller
     }
     
 
+    public function actionOrderRequest()
+    {
+        $warehouse = \Yii::$app->session->get('warehouse');
+        $id = \Yii::$app->user->id;
+
+        // หากเลือกคลังแล้วให้แสดง ในคลัง
+        if ($warehouse) {
+            $searchModel = new StockEventSearch([
+                'thai_year' => AppHelper::YearBudget(),
+                'warehouse_id' => $warehouse['warehouse_id']
+            ]);
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse['warehouse_id']]);
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'code', $searchModel->q],
+                ['like', 'thai_year', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+            ]);
+
+            return $this->render('_order_request', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                // 'model' => $this->findModel($warehouse['warehouse_id']),
+            ]);
+
+        } else {
+          
+        }
+    }
+    
+
+    
     public function actionList()
     {
         $warehouse = \Yii::$app->session->get('warehouse');

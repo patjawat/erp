@@ -2,14 +2,14 @@
 
 namespace app\modules\inventory\models;
 
+use Yii;
 use yii\helpers\Html;
 use app\models\Categorise;
-use app\modules\filemanager\components\FileManagerHelper;
-use yii\helpers\ArrayHelper;
-use app\modules\filemanager\models\Uploads;
-use Yii;
 use asyou99\cart\ItemTrait;
+use yii\helpers\ArrayHelper;
 use asyou99\cart\ItemInterface;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "asset".
@@ -142,7 +142,7 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
         return '<div class="d-flex">
         '.Html::img($this->ShowImg(),['class' => 'avatar object-fit-cover']).'
                                 <div class="avatar-detail">
-                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                    <h6 class="mb-1 fs-15 fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
                                     <p class="text-primary mb-0 fs-13">'. $this->ViewTypeName()['title'].'</p>

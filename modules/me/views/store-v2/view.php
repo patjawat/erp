@@ -306,7 +306,7 @@ function sendUpdateRequest(itemId, qty) {
     }
 
     // ตรวจจับการคลิก checkbox
-    $(".product-checkbox").on("change", function() {
+    $("body").on("change", ".product-checkbox", function (e) {
         toggleDeleteButton();
     });
 
@@ -361,7 +361,7 @@ function sendUpdateRequest(itemId, qty) {
     });
 
     // เมื่อกดปุ่มลบที่เลือก
-    $("#delete-selected").click(function() {
+    $("body").on("click", "#delete-selected", function (e) {
         let selectedIds = [];
         
         $(".product-checkbox:checked").each(function() {
@@ -396,7 +396,8 @@ function sendUpdateRequest(itemId, qty) {
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => {
-                            location.reload();
+                            // location.reload();
+                            $.pjax.reload({container:'#order-container'});
                         });
                     },
                     error: function() {

@@ -326,6 +326,7 @@ class StoreV2Controller extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             $product = Stock::findOne($id);
 
+
             $checkCartOrder = StockEvent::find()->where(['asset_item' => $product->asset_item])->andWhere(['category_id' => $order->id,'lot_number' => $product->lot_number])->one();
             if(!$checkCartOrder){
                 $model = new StockEvent([

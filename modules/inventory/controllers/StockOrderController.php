@@ -631,7 +631,7 @@ class StockOrderController extends Controller
                 $newStockItem->code = $newStockModel->code;
                 $newStockItem->asset_item = $item->asset_item;
                 $newStockItem->lot_number = $item->lot_number;
-                $newStockItem->qty = $item->qty;
+                $newStockItem->qty = ($item->SumStockQty() > 0) ? $item->qty : 0;
                 $newStockItem->unit_price = $item->unit_price;
                 $newStockItem->transaction_type = 'IN';
                 $newStockItem->warehouse_id = $model->from_warehouse_id;

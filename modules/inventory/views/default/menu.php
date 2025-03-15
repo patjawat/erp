@@ -12,7 +12,8 @@ $warehouse = Yii::$app->session->get('warehouse');
     <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
         <?php echo Html::a('<i class="fa-solid fa-cube"></i> สต๊อก', ['/inventory/stock/in-stock'], ['class' => 'btn btn-light']) ?>
         <?=Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'btn btn-light'])  ?>
-        <?=Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> ทะเบียนขอเบิก', ['/inventory/stock-order'], ['class' => 'btn btn-light'])  ?>
+        <?php // Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> ทะเบียนขอเบิก', ['/inventory/stock-order'], ['class' => 'btn btn-light'])  ?>
+        <?=Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> ทะเบียนขอเบิก', ['/inventory/warehouse/order-request'], ['class' => 'btn btn-light'])  ?>
         <?php //  Html::a('<i class="bi bi-cart-check-fill"></i> ทะเบียนขอเบิก', ['/inventory/order-request'], ['class' => 'btn btn-light']) ?>
         <?php else:?>
             

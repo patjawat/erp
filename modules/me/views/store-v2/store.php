@@ -54,10 +54,14 @@ $products = $cart->getItems();
                         <?php echo number_format($model->unit_price,2); ?>
                     </div>
                     <?php
+                    
                                                 try {
                                                     echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/store-v2/add-card', 'id' => $model->getLotQty()['id']], ['class' => 'btn btn-sm btn-primary rounded-pill add-card']); 
                                                 } catch (Throwable $th) {
                                                     // throw $th;
+                                                    echo "<pre>";
+                                                    print_r($model);
+                                                    echo "</pre>";
                                                 }
                                 ?>
                 </div>
