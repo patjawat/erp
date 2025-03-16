@@ -26,9 +26,7 @@ $products = $cart->getItems();
     <?php echo $form->field($model, 'data_json[checker_confirm]')->hiddenInput()->label(false); ?>
     <?php echo $model->isNewRecord ? $form->field($model, 'category_id')->hiddenInput()->label(false) : null; ?>
 
-    <!-- <div class="form-group mt-3 d-flex justify-content-center">
-        <?php // echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']); ?>
-    </div> -->
+
 
     <div class="text-center">
         <?php if($cart->getCount() == 0):?>

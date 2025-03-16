@@ -50,6 +50,32 @@ class StockEventController extends Controller
         ]);
     }
 
+    //แสดงรายหารขอเบิกคลังหลัก
+    public function actionReuqestOrder()
+    {
+        $warehouse = Yii::$app->session->get('sub-warehouse');
+        $searchModel = new StockEventSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'order']);
+        $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
+        $dataProvider->query->andFilterWhere(['from_warehouse_id' => $warehouse->id]);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+            'title' => '',
+            'content' =>    $this->renderAjax('stock_out', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]) 
+            ];
+        }
+        return $this->render('request_order', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    // รายการจ่ายออกจากคลัง
     public function actionOut()
     {
         $warehouse = Yii::$app->session->get('sub-warehouse');
@@ -73,6 +99,7 @@ class StockEventController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+    
 
     public function actionView($id)
     {

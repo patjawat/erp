@@ -9,11 +9,12 @@ use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\sm\models\Product;
+// use app\modules\sm\models\Product;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\purchase\models\Order;
+use app\modules\inventory\models\Product;
 
 /**
  * This is the model class for table "stock_in".
@@ -636,8 +637,8 @@ class StockEvent extends Yii\db\ActiveRecord
     public function ShowPlayer()
     {
         try {
-            $datetime = \Yii::$app->thaiFormatter->asDateTime($this->data_json['player_date'], 'medium');
-            $msg = 'ผู้ดำเนินการ' . ' | ' . $datetime;
+            $datetime = \Yii::$app->thaiDate->toThaiDate($this->data_json['player_date'], true, false);
+            $msg = 'ผู้จ่าย' . ' | ' . $datetime;
             return $this->getAvatar($this->data_json['player'], $msg);
         } catch (\Throwable $th) {
            return [

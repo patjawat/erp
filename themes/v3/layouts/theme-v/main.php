@@ -111,17 +111,17 @@ $js = <<< JS
 
 
 
-let popover = new bootstrap.Popover($(".popover-hover"), {
-  trigger: "manual",
-});
+// let popover = new bootstrap.Popover($(".popover-hover"), {
+//   trigger: "manual",
+// });
 
-$(".popover-hover")
-  .on("mouseenter", function () {
-    popover.show();
-  })
-  .on("mouseleave", function () {
-    popover.hide();
-  });
+// $(".popover-hover")
+//   .on("mouseenter", function () {
+//     popover.show();
+//   })
+//   .on("mouseleave", function () {
+//     popover.hide();
+//   });
 
   
 const metisMenu = $('.employee-welcome');
@@ -138,7 +138,6 @@ const metisMenu = $('.employee-welcome');
 		$("#vertical-menu-btn").on("click", function (e) {
 					e.preventDefault();
 					e.stopPropagation();
-					alert()
 			        console.log(\$(window).width());
 					if(\$(window).width() > 1024) {
 						if ($("body").hasClass("left-side-menu-condensed")) {

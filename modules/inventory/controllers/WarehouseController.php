@@ -150,7 +150,7 @@ class WarehouseController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $this->setWarehouse($id);
-        return $this->redirect(['index']);
+        return $this->redirect(['/inventory/warehouse/order-request']);
         // return $this->render('view', [
         //     'model' => $this->findModel($id),
         // ]);

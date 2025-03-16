@@ -45,9 +45,9 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                         <td class="text-end"><span class="fw-semibold"><?=number_format($item->unit_price,2)?></span></td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center flex-row">
-                                <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/inventory/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
+                                <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/me/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>
                                 <input type="text" value="<?=$item->getQuantity()?>" class="form-control update-qty" id="<?=$item->id?>" style="width:100px;font-weight: 600;" />
-                                <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/inventory/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
+                                <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/me/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-cart'])?>
                             </div>
                         </td>
                         <td>

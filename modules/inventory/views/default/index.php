@@ -52,7 +52,15 @@ $this->title = 'คลังหลัก';
                         </div>
                     </div>
                  </div>
-                 <?= $model->avatarStack() ?>
+                 <div class="d-flex justify-content-between">
+                     <?= $model->avatarStack() ?>
+                     <div>
+
+                         <?php if($model->countOrderRequest() > 0):?>
+                            <span class="badge rounded-pill text-bg-primary"><?=$model->countOrderRequest()?> </span>
+                            <?php endif;?>
+                        </div>
+                 </div>
             </div>
             <!-- CTA -->
 

@@ -86,6 +86,9 @@ $product = ArrayHelper::map(Categorise::find()
             'select2:select' => "function(result) { 
                 $(this).submit()
                 }",
+                  "select2:unselect" => "function() { 
+                    $(this).submit()
+                     }",
             ],
             ])->label(false);
             ?>

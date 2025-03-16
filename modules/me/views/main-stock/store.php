@@ -26,11 +26,10 @@ $products = $cart->getItems();
 
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center">
-        <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span
-                class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?>
-            </span> รายการ</h6>
-
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <div class="d-flex flex-column">
+            <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?></span> รายการ</h6>
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
         <div>
 
         <?php
@@ -41,10 +40,13 @@ $products = $cart->getItems();
                 //throw $th;
             }
             ?>
-            
-            <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
+            <div>
+
+                <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
                     </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังกลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                    <?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary rounded-pill shadow'])?>
+                    </div>
         </div>
     </div>
 </div>
@@ -74,7 +76,7 @@ $products = $cart->getItems();
                             </div>
                                 <?php
                                                 try {
-                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
+                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
                                                 } catch (Throwable $th) {
                                                     // throw $th;
                                                 }
@@ -122,6 +124,7 @@ $js = <<< JS
                     timer: 1500,
                 });
             }else{
+                $('#stocksearch-warehouse_id').val(res.mainWarehouse.id);
                 $('#stocksearch-warehouse_id').prop('disabled', true).trigger('change');
                 $('#totalCount').text(res.totalCount)
             }
@@ -142,7 +145,7 @@ $("body").on("keypress", ".update-qty", function (e) {
         
         $.ajax({
             type: "get",
-            url: "/inventory/main-stock/update-cart",
+            url: "/me/main-stock/update-cart",
             data: {
                 'id':id,
                 'quantity':qty 
@@ -158,6 +161,7 @@ $("body").on("keypress", ".update-qty", function (e) {
                 });
                 }
                 ViewMainCar();
+                $('#totalCount').text(res.totalCount)
                 $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
             }
         });
@@ -183,24 +187,29 @@ $("body").on("keypress", ".update-qty", function (e) {
                 }
                 // success()
                 ViewMainCar();
+                $('#totalCount').text(res.totalCount)
                 $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
             }
         });
     });
 
-//     $("body").on("click", ".delete-item-cart", function (e) {
-//     e.preventDefault();
-//     $.ajax({
-//         type: "get",
-//         url: $(this).attr('href'),
-//         dataType: "json",
-//         success: function (response) {
-//             ViewMainCar();
-//             success()
-//             $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
-//         }
-//     });
-// });
+    $("body").on("click", ".delete-item-cart", function (e) {
+    e.preventDefault();
+    $.ajax({
+        type: "get",
+        url: $(this).attr('href'),
+        dataType: "json",
+        success: function (res) {
+            ViewMainCar();
+            success()
+            if(res.totalCount == 0){
+                window.location.reload()
+            }
+            $('#totalCount').text(res.totalCount)
+            // $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
+        }
+    });
+});
 
 $("body").on("click", ".checkout", async function (e) {
     e.preventDefault();

@@ -37,12 +37,12 @@ class MainStockController extends Controller
 
     public function actionCreate()
     {
-        $formWarehouse = \Yii::$app->session->get('sub-warehouse');
-        $toWarehouse = \Yii::$app->session->get('selectMainWarehouse');
+        $submWarehouse = \Yii::$app->session->get('sub-warehouse');
+        $mainWarehouse = \Yii::$app->session->get('main-warehouse');
 
         // หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
         // if (!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse->id)) {
-            // return $this->redirec(['/me']);
+        // return $this->redirec(['/me']);
         // }
 
         $cart = \Yii::$app->cartMain;
@@ -53,7 +53,6 @@ class MainStockController extends Controller
 
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-        
             'checker' => $userCreate->leaderUser()['leader1'],
         ]);
 
@@ -68,11 +67,11 @@ class MainStockController extends Controller
                     $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . substr(AppHelper::YearBudget(), 2) . '????');
                     $model->name = 'order';
                     $model->transaction_type = 'OUT';
-                    
+
                     $model->thai_year = AppHelper::YearBudget();
                     $model->order_status = 'pending';
-                    $model->warehouse_id = $toWarehouse['warehouse_id'];
-                    $model->from_warehouse_id = $formWarehouse->id;
+                    $model->warehouse_id = $mainWarehouse->id;
+                    $model->from_warehouse_id = $submWarehouse->id;
                     if (!$model->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
                     }
@@ -88,7 +87,7 @@ class MainStockController extends Controller
                             'asset_item' => $item->asset_item,
                             'lot_number' => $item->lot_number,
                             'unit_price' => $item->unit_price,
-                            'qty' => $item->getQuantity(),
+                            'qty' => $item->qty,
                             // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
                             'data_json' => [
                                 'req_qty' => $item->getQuantity(),
@@ -102,7 +101,7 @@ class MainStockController extends Controller
                     $cart->checkOut(false);
                     // ถ้าไม่มีข้อผิดพลาด ทำการ commit
                     $transaction->commit();
-                    
+
                     // สร้างการอนุมัติ new feture
                     $approve = new Approve;
                     $approve->from_id = $model->id;
@@ -118,11 +117,10 @@ class MainStockController extends Controller
                         $message = 'ขออนุมัติเบิกวัสดุ';
                         LineMsg::sendMsg($userId, $message);
                     } catch (\Throwable $th) {
-                        //throw $th;
+                        // throw $th;
                     }
-                    
-                    
-                    \Yii::$app->session->remove('selectMainWarehouse');
+
+                    \Yii::$app->session->remove('main-warehouse');
                     return $this->redirect(['/me/main-stock/store']);
                 } catch (\Throwable $e) {
                     $transaction->rollBack();
@@ -149,7 +147,6 @@ class MainStockController extends Controller
         }
     }
 
-
     // ตรวจสอบความถูกต้อง
     public function actionCreateValidator()
     {
@@ -157,20 +154,19 @@ class MainStockController extends Controller
         $model = new StockEvent();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-
             $model->checker == '' ? $model->addError('checker', $requiredName) : null;
-                if (isset($model->data_json['note'])) {
-                    $model->data_json['note'] == '' ? $model->addError('data_json[note]', $requiredName) : null;
-                }
+            if (isset($model->data_json['note'])) {
+                $model->data_json['note'] == '' ? $model->addError('data_json[note]', $requiredName) : null;
             }
+        }
         foreach ($model->getErrors() as $attribute => $errors) {
-                $result[Html::getInputId($model, $attribute)] = $errors;
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
         }
     }
-    
+
     protected function saveCartItem($model)
     {
         $cart = \Yii::$app->cartMain;
@@ -199,23 +195,24 @@ class MainStockController extends Controller
 
     public function actionStore()
     {
-            $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
-            $warehouse = Yii::$app->session->get('sub-warehouse');
-            $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
-            $item = $warehouseModel->data_json['item_type'];
-            $product = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => 4])->andWhere(['IN', 'code', $item])->all(), 'code', 'title');
+        $mainWarehouse = \Yii::$app->session->get('main-warehouse');
+        $warehouse = Yii::$app->session->get('sub-warehouse');
+        $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
+        $item = $warehouseModel->data_json['item_type'];
+        
+        $product = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->andWhere(['IN', 'code', $item])->all(), 'code', 'title');
 
         $searchModel = new StockSearch([
-            'warehouse_id' => isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : '',
+            'warehouse_id' => isset($mainWarehouse->id) ? $mainWarehouse->id : '',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->leftJoin('categorise', 'categorise.code = stock.asset_item AND categorise.name = :name', [':name' => 'asset_item'])
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
         $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
-        $dataProvider->query->andFilterWhere(['warehouse_id' => ($getWarehouse ? $getWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
+        $dataProvider->query->andFilterWhere(['warehouse_id' => ($mainWarehouse ? $mainWarehouse->id : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
         // $dataProvider->query->andFilterWhere(['p.category_id' =>$product]);
-        
+
         // ->where(['categorise.category_id' => ['M1', 'M2']])
         $dataProvider->query->andFilterWhere([
             'or',
@@ -248,17 +245,15 @@ class MainStockController extends Controller
         }
     }
 
-
-
     public function actionStore2()
     {
-        $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
+        $mainWarehouse = \Yii::$app->session->get('main-warehouse');
         $searchModel = new StockSearch([
-            'warehouse_id' => isset($getWarehouse['warehouse_id']) ? $getWarehouse['warehouse_id'] : '',
+            'warehouse_id' => isset($mainWarehouse['warehouse_id']) ? $mainWarehouse['warehouse_id'] : '',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
-        $dataProvider->query->andFilterWhere(['warehouse_id' => ($getWarehouse ? $getWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
+        $dataProvider->query->andFilterWhere(['warehouse_id' => ($mainWarehouse ? $mainWarehouse['warehouse_id'] : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
 
         $dataProvider->query->andFilterWhere([
@@ -291,7 +286,7 @@ class MainStockController extends Controller
             ]);
         }
     }
-    
+
     public function actionViewCart()
     {
         $cart = \Yii::$app->cartMain;
@@ -331,13 +326,10 @@ class MainStockController extends Controller
 
         $model = Stock::findOne($id);
 
-        $getWarehouse = \Yii::$app->session->get('selectMainWarehouse');
-        if (!$getWarehouse) {
-            $warehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
-            \Yii::$app->session->set('selectMainWarehouse', [
-                'warehouse_id' => $warehouse->id,
-                'warehouse_name' => $warehouse->warehouse_name,
-            ]);
+        $mainWarehouse = \Yii::$app->session->get('main-warehouse');
+        if (!$mainWarehouse) {
+            $mainWarehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
+            \Yii::$app->session->set('main-warehouse', $mainWarehouse);
         }
         $cart->create($model, 1);
         $totalCount = $cart->getCount();
@@ -346,6 +338,8 @@ class MainStockController extends Controller
             'status' => 'success',
             'container' => '#inventory-container',
             'totalCount' => $totalCount,
+            'model' => $model,
+            'mainWarehouse' => Yii::$app->session->get('main-warehouse')
         ];
     }
 
@@ -362,6 +356,7 @@ class MainStockController extends Controller
         return [
             'container' => '#inventory-container',
             'status' => 'success',
+            'totalCount' => $cart->getCount(),
         ];
     }
 
@@ -372,14 +367,14 @@ class MainStockController extends Controller
         if ($product) {
             $cart->delete($product);
             if ($cart->getCount() < 1) {
-                \Yii::$app->session->remove('selectMainWarehouse');
+                \Yii::$app->session->remove('main-warehouse');
             }
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
                 'container' => '#inventory-container',
                 'status' => 'success',
-                'countItem' => $cart->getCount(),
+                'totalCount' => $cart->getCount(),
             ];
         }
     }
@@ -387,7 +382,7 @@ class MainStockController extends Controller
     public function actionClearWarehouse()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        \Yii::$app->session->remove('selectMainWarehouse');
+        \Yii::$app->session->remove('main-warehouse');
         $cart = \Yii::$app->cartMain;
 
         return $this->redirect(['/inventory/main-stock']);
