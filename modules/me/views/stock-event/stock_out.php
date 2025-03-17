@@ -6,13 +6,24 @@ use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use app\modules\inventory\models\StockEvent;
-/** @var yii\web\View $this */
-/** @var app\modules\inventory\models\StockEventSearch $searchModel */
-/** @var yii\data\ActiveDataProvider $dataProvider */
-
-$this->title = 'Stock Events';
-$this->params['breadcrumbs'][] = $this->title;
+$warehouse = Yii::$app->session->get('sub-warehouse');
+$this->title = 'คลัง'.$warehouse->warehouse_name;
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-shop fs-1"></i> <?php echo $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>
+<?php $this->endBlock(); ?>
+
+
+<div class="card">
+    <div class="card-body">
+
+
 <div class="stock-event-index">
 
     <?php Pjax::begin(); ?>
@@ -53,4 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php Pjax::end(); ?>
 
+</div>
+
+</div>
 </div>
