@@ -80,6 +80,7 @@ class DocumentController extends \yii\web\Controller
             $templateProcessor->setValue('detail#' . $i, $item->product->title);
             $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
             // $templateProcessor->setValue('qty#' . $i, $item->qty);
+            $templateProcessor->setValue('rqty#' . $i, $item->data_json['req_qty']);
             $templateProcessor->setValue('qty#' . $i, $item->qty);
             $templateProcessor->setValue('unitprice#' . $i, $item->unit_price);
             $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price), 2));
@@ -87,8 +88,8 @@ class DocumentController extends \yii\web\Controller
         }
 
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/' . $result_name);
-        // return $this->Show($result_name);
+        // return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/' . $result_name);
+        return $this->Show($result_name);
     }
 
     // ดึงค่ากน่วยงาน

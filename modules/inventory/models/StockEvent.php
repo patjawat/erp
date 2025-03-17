@@ -634,11 +634,15 @@ class StockEvent extends Yii\db\ActiveRecord
         
 
     // ผู้สั่งจ่ายวัสดุ
-    public function ShowPlayer()
+    public function ShowPlayer($data = '')
     {
         try {
             $datetime = \Yii::$app->thaiDate->toThaiDate($this->data_json['player_date'], true, false);
-            $msg = 'ผู้จ่าย' . ' | ' . $datetime;
+            if($data){
+                $msg = $data;
+            }else{
+                $msg = 'ผู้จ่าย' . ' | ' . $datetime;
+            }
             return $this->getAvatar($this->data_json['player'], $msg);
         } catch (\Throwable $th) {
            return [

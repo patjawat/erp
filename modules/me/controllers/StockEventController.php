@@ -4,6 +4,7 @@ namespace app\modules\me\controllers;
 
 use Yii;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
@@ -59,11 +60,18 @@ class StockEventController extends Controller
         $dataProvider->query->andFilterWhere(['name' => 'order']);
         $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
         $dataProvider->query->andFilterWhere(['from_warehouse_id' => $warehouse->id]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', 'thai_year', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+        ]);
+        
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
             'title' => '',
-            'content' =>    $this->renderAjax('stock_out', [
+            'content' =>    $this->renderAjax('request_order', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]) 

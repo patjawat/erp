@@ -90,11 +90,12 @@ class WarehouseController extends Controller
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
             $searchModel = new StockEventSearch([
-                'thai_year' => AppHelper::YearBudget(),
-                'warehouse_id' => $warehouse->id
+                'thai_year' => AppHelper::YearBudget()
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouse->id]);
+            $dataProvider->query->andFilterWhere(['name' => 'order']);
+            $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
+            $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse->id]);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'code', $searchModel->q],

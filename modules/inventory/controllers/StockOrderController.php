@@ -569,6 +569,8 @@ class StockOrderController extends Controller
         // ตรวจสอบว่า stock พอจ่ายหรือไม่
         $checkBalanced = 0;
         foreach ($model->getItems() as $item) {
+            $item->qty =  (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (int)$item->qty) : 0;
+            $item->save();
             if ($item->SumStockQty() <= 0 && $item->qty > 0) {
                 ++$checkBalanced;
             }
@@ -579,13 +581,13 @@ class StockOrderController extends Controller
         }
 
         // ถ้ามีรายการที่ไม่พอจ่าย
-        if ($checkBalanced >= 1) {
-            return [
-                'status' => 'error',
-                'message' => 'ไม่พอจ่าย',
-                'container' => '#inventory-container',
-            ];
-        }
+        // if ($checkBalanced >= 1) {
+        //     return [
+        //         'status' => 'error',
+        //         'message' => 'ไม่พอจ่าย',
+        //         'container' => '#inventory-container',
+        //     ];
+        // }
         // ตรวจสอบความเรียบร้อยก่อนบันทึก
         $transaction = \Yii::$app->db->beginTransaction();
         try {
@@ -618,7 +620,7 @@ class StockOrderController extends Controller
             if (!$newStockModel->save(false)) {
                 throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
             }
-
+            
             foreach ($model->getItems() as $item) {
                 $checkStock = Stock::findOne(['id' => $item->id, 'lot_number' => $item->lot_number]);
 
@@ -631,12 +633,14 @@ class StockOrderController extends Controller
                 $newStockItem->code = $newStockModel->code;
                 $newStockItem->asset_item = $item->asset_item;
                 $newStockItem->lot_number = $item->lot_number;
-                $newStockItem->qty = ($item->SumStockQty() > 0) ? $item->qty : 0;
+                // $newStockItem->qty = ($item->SumStockQty() > 0) ? $item->qty : 0;
+                $newStockItem->qty = (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (int)$item->qty) : 0;
                 $newStockItem->unit_price = $item->unit_price;
                 $newStockItem->transaction_type = 'IN';
                 $newStockItem->warehouse_id = $model->from_warehouse_id;
                 $newStockItem->category_id = $newStockModel->id;
                 $newStockItem->data_json = $item->data_json;
+
                 if (!$newStockItem->save(false)) {
                     throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                 }
@@ -649,8 +653,9 @@ class StockOrderController extends Controller
                     throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                 }
 
-                //     // UpdateNewStock ที่ขอเบิก
-                if ($item->SumStockQty() != '0') {
+                // //     // UpdateNewStock ที่ขอเบิก
+                // if ($item->SumStockQty() != '0') {
+                if ((int)$item->SumStockQty() !== 0){
                     $checkToStock = Stock::findOne(['asset_item' => $item->asset_item, 'warehouse_id' => $model->from_warehouse_id, 'lot_number' => $item->lot_number]);
                     if ($checkToStock) {
                         $toStock = $checkToStock;
@@ -670,11 +675,26 @@ class StockOrderController extends Controller
                     }
 
                     // ตัด stock และทำการ update
-                    $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
-                    $checkStock->qty = $checkStock->qty - $item->qty;
-                    // ถ้าหากผิดพลาด
-                    if (!$checkStock->save(false)) {
-                        throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
+                    // $checkStock = Stock::findOne(['asset_item' => $item->asset_item, 'lot_number' => $item->lot_number, 'warehouse_id' => $model->warehouse_id]);
+                    // $checkStock->qty = $checkStock->qty - $item->qty;
+                    // // ถ้าหากผิดพลาด
+                    // if (!$checkStock->save(false)) {
+                    //     throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
+                    // }
+
+                    $checkStock = Stock::findOne([
+                        'asset_item' => $item->asset_item,
+                        'lot_number' => $item->lot_number,
+                        'warehouse_id' => $model->warehouse_id
+                    ]);
+                    
+                    if ($checkStock) {
+                        $checkStock->qty = max(0, $checkStock->qty - $item->qty);
+                        if (!$checkStock->save(false)) {
+                            throw new \Exception('ไม่สามารถตัด stock และทำการ update ได้');
+                        }
+                    } else {
+                        throw new \Exception('ไม่พบ stock ที่ต้องการตัด');
                     }
                 }
             }

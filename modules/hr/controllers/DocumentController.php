@@ -126,13 +126,9 @@ class DocumentController extends \yii\web\Controller
         
         if (file_exists($filePath)) {
             return $this->Show($result_name);
-            // return Yii::$app->response->sendFile($filePath);
         } else {
             throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }
-
-        // return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
-        // return $this->CreateFile($data);
     }
 
     // ใบพักผ่อน

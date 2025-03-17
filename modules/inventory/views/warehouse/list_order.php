@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use kartik\grid\GridView;
 use yii\grid\ActionColumn;
+use yii\bootstrap5\LinkPager;
 use app\modules\inventory\models\StockEvent;
 ?>
 <table class="table table-striped table-sm">
@@ -58,3 +59,17 @@ use app\modules\inventory\models\StockEvent;
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <div class="d-flex justify-content-center mt-5">
+            <div class="text-muted">
+                <?= LinkPager::widget([
+                            'pagination' => $dataProvider->pagination,
+                            'firstPageLabel' => 'หน้าแรก',
+                            'lastPageLabel' => 'หน้าสุดท้าย',
+                            'options' => [
+                                'listOptions' => 'pagination pagination-sm',
+                                'class' => 'pagination-sm',
+                            ],
+                        ]); ?>
+            </div>
+        </div>
