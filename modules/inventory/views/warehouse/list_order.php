@@ -12,7 +12,7 @@ use app\modules\inventory\models\StockEvent;
                         <tr>
                             <th style="width:210px">รหัส</th>
                             <th scope="col">ผู้เบิก</th>
-                            <th >ผู้ตรวจสอบ</th>
+                            <th >หัวหน้าตรวจสอบ</th>
                             <th >มูลค่า</th>
                             <th class="text-center" style="width:300px">สถานะ</th>
                             <th style="width:100px">ดำเนินการ</th>

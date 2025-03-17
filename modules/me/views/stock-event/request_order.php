@@ -54,7 +54,7 @@ $products = $cart->getItems();
                         <tr>
                             <th style="width:210px">รหัส/วันที่</th>
                             <th scope="col">ผู้เบิก</th>
-                            <th >ผู้ตรวจสอบ</th>
+                            <th >หัวหน้าตรวจสอบ</th>
                             <th>คลังหลัก</th>
                             <th class="text-center" style="width:350px">สถานะ</th>
                             <th class="text-start">มูลค่า</th>
