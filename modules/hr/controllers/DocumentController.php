@@ -206,7 +206,7 @@ class DocumentController extends \yii\web\Controller
         }
 
         // ผู้อำนวยการตรวจสอบ อนุมัติให้ลา/ไม่ให้ลา
-        $dicrectorType = ($this->GetInfo()['director_type'] == 'ผู้อำนวยการ' ? 'ผู้อำนวยการ' : 'รักษาการแทนผู้อำนวยการ');
+        $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
         $templateProcessor->setValue('direc_fullname', $model->checkerName(4)['fullname']);
         $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position'].$dicrectorType);
         $templateProcessor->setValue('direc_date', $model->checkerName(4)['approve_date']);
