@@ -238,7 +238,7 @@ class StockInController extends Controller
                     
 ;
                 $model->order_status = 'pending';
-                $model->warehouse_id = $warehouse['warehouse_id'];
+                $model->warehouse_id = $warehouse->id;
 
                 if ($model->save(false)) {
                     if ($model->name == 'order') {
@@ -558,6 +558,10 @@ class StockInController extends Controller
                 if (isset($model->data_json['do_number'])) {
                     $model->data_json['do_number'] == '' ? $model->addError('data_json[do_number]', $requiredName) : null;
                 }
+                if (isset($model->data_json['item_type'])) {
+                    $model->data_json['item_type'] == '' ? $model->addError('data_json[item_type]', $requiredName) : null;
+                }
+                
                 $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
 
             }

@@ -678,116 +678,6 @@ class ImportStockUbonratController extends Controller
 
 
 
-//     public static function Import($data)
-//     {
-//         if (BaseConsole::confirm('Are you sure?')) {
-//             $total = 0;
-
-//             // clear
-//             $oldItems = Categorise::find()->where([
-//                 'name' => 'asset_item',
-//                 'group_id' => 4,
-//                 'category_id' => $data['assettype']
-//             ])->all();
-
-            
-
-//             if (!empty($oldItems)) {
-//                 foreach ($oldItems as $oldItem) {
-//                     $clearUpload = Uploads::find()->where(['ref' => $oldItem->ref])->one();
-//                     if ($clearUpload) {
-//                         FileManagerHelper::removeUploadDir($clearUpload->ref);
-//                     }
-//                     $check = Categorise::findOne($oldItem->id);
-//                     if($check){
-//                         $check->delete();
-//                     }
-//                 }
-//             }
-//             // ############################
-
-//             foreach ($data['items'] as $key => $value) {
-//                 $itemCode = $data['assettype'] . '-' . ($key + 1);
-//                 $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $itemCode, 'title' => $value['title']]);
-//                 // echo $itemCode."\n";
-//                 $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
-//                 // ถ้าไม่มีหน่วยให้สร้างใหม่
-//                 if (!$unit) {
-//                     $newUnit = new Categorise([
-//                         'name' => 'unit',
-//                         'title' => $value['unit'],
-//                         'active' => 1,
-//                     ]);
-//                     $newUnit->save(false);
-//                 }
-//                 // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
-//                 if (!$asetItem) {
-//                     $newItem = new Categorise([
-//                         'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-//                         'name' => 'asset_item',
-//                         'group_id' => 4,
-//                         'category_id' => $data['assettype'],
-//                         'code' => $itemCode,
-//                         'title' => $value['title'],
-//                         'data_json' => [
-//                             'unit' => $value['unit'],
-//                             'sub_title' => '',
-//                             'price_name' => '',
-//                             'category_name' => $data['categoryName'],
-//                             'asset_type_name' => '',
-//                         ],
-//                     ]);
-//                     $newItem->save(false);
-//                 }
-
-//                 $qty = (int) explode('.', $value['qty'])[0];
-
-//                 $lot = \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
-//                 $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
-
-//                 // $checkModel = StockEvent::findOne([])
-//                 $model = new StockEvent([
-//                     'ref' => $ref,
-//                     'lot_number' => $lot,
-//                     'name' => 'order_item',
-//                     'code' => $data['code'],
-//                     'category_id' => $data['category_id'],
-//                     'transaction_type' => 'IN',
-//                     'thai_year' => $data['thai_year'],
-//                     'asset_item' => $itemCode,
-//                     'warehouse_id' => $data['warehouse_id'],
-//                     'qty' => $value['qty'],
-//                     'unit_price' => (float) $value['unit_price'],
-//                     'order_status' => 'pending',
-//                     'data_json' => [
-//                         'req_qty' => '0',
-//                         'exp_date' => '',
-//                         'mfg_date' => '',
-//                         'item_type' => 'ยอดยกมา',
-//                         'po_number' => '',
-//                         'pq_number' => '',
-//                         'asset_type' => '',
-//                         'receive_date' => '',
-//                         'asset_type_name' => '',
-//                         'employee_fullname' => 'Administrator Lastname',
-//                         'employee_position' => 'นักวิชาการคอมพิวเตอร์',
-//                         'employee_department' => 'งานซ่อมบำรุง',
-//                     ],
-//                     'created_by' => 1,
-//                     'updated_by' => 1,
-//                 ]);
-//                 // echo (DOUBLE) $value['unit_price'],"\n";
-//                 if ($model->save(false)) {
-//                     echo 'นำเข้า ' . $data['code'] . ' รหัส : ' . $data['code'] . "สำเร็จ! \n";
-//                 } else {
-//                     echo 'นำเข้า ' . $data['code'] . ' รหัส : ' . $data['code'] . "ผิดพลาด! \n";
-//                 }
-//                 $sum = $qty * (int) $value['unit_price'];
-//                 $total += $sum;
-//             }
-//             echo $total;
-//         }
-//     }
 
 //     // วัสดุวิทยาศาสตร์หรือการแพทย์ สำเร็จ!!
 //     public function actionM7()
@@ -1703,5 +1593,251 @@ class ImportStockUbonratController extends Controller
 //             echo $total;
 //         }
 //     }
+
+
+
+    // วัสดุวิทยาศาสตร์หรือการแพทย์ Lab
+    public function actionM7Lab()
+    {
+        $data = [
+            'thai_year' => 2568,
+            'warehouse_id' => 2,
+            'assettype' => 'M7',
+            'categoryName' => 'วัสดุวิทยาศาสตร์หรือการแพทย์',
+            'category_id' => 1365,
+            'code' => 'IN-680009',
+            'items' => [
+                ['title' => 'AST/GOT (600/กล่อง)', 'unit' => 'กล่อง','unit_price' =>12.00,'qty' =>0],
+                ['title' => 'ALT/GPT (600/กล่อง)', 'unit' => 'กล่อง','unit_price' =>12.00,'qty' =>0],
+                ['title' => 'ALKALINE PHOSPHATASE (400/กล่อง)', 'unit' => 'กล่อง','unit_price' =>12.00,'qty' =>0],
+                ['title' => 'ALBUMINE BCG [ALB2] (800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>7.00,'qty' =>0],
+                ['title' => 'ACID ALCOHOL (ชุดAFB) (450ml.)', 'unit' => 'ขวด','unit_price' =>430.00,'qty' =>4],
+                ['title' => 'CABAL FUCHSIN (ชุดAFB) (450ml.)', 'unit' => 'ขวด','unit_price' =>980.00,'qty' =>3],
+                ['title' => 'Metheline Blue (ชุดAFB) (450ml.)', 'unit' => 'ขวด','unit_price' =>378.00,'qty' =>0],
+                ['title' => 'BLUE TIPS (500 ชิ้น/แพค)', 'unit' => 'ชิ้น','unit_price' =>5.50,'qty' =>2000],
+                ['title' => 'COVER CHAMBER  (10)', 'unit' => 'กล่อง','unit_price' =>300.00,'qty' =>7],
+                ['title' => 'COVER GLASS (10)', 'unit' => 'กล่อง ','unit_price' =>65.00,'qty' =>10],
+                ['title' => 'CONTROL FOR URINE [BIORAD ]', 'unit' => 'กล่อง','unit_price' =>6741.00,'qty' =>1],
+                ['title' => 'CLOT TUBE [GRANULE+COAG]จุกแดง (100/กล่อง)', 'unit' => 'ชิ้น ','unit_price' =>2.40,'qty' =>0],
+                ['title' => 'CRITOSEAL (ดินน้ำมันปิดHct Tube) (10)', 'unit' => 'กล่อง','unit_price' =>65.00,'qty' =>24],
+                ['title' => 'CAPILLARY BLOOD EDTA TUBE2.5 (100/แพค)', 'unit' => 'ชิ้น ','unit_price' =>4.49,'qty' =>300],
+                ['title' => 'CARY BLAIR TRANSPORT MEDIA (100/แพค)', 'unit' => 'ชิ้น ','unit_price' =>12.00,'qty' =>60],
+                ['title' => 'CHOLESTERAL (800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>11.00,'qty' =>0],
+                ['title' => 'CREATININ Enz. Test(930/กล่อง)', 'unit' => 'กล่อง','unit_price' =>14.00,'qty' =>0],
+                ['title' => 'DHF NS1/igg/iggM (DUO) (Ag&Ab) (10)', 'unit' => 'กล่อง ','unit_price' =>1980.00,'qty' =>7],
+                ['title' => 'DIRECT BILIRUBIN Test(600/กล่อง)', 'unit' => 'กล่อง ','unit_price' =>8.00,'qty' =>0],
+                ['title' => 'DELUENT D5 (ชุดCBC)', 'unit' => 'ถัง','unit_price' =>7980.00,'qty' =>0],
+                ['title' => 'LYSE D5 (ชุดCBC)', 'unit' => 'ถัง','unit_price' =>7980.00,'qty' =>0],
+                ['title' => 'RINSE D5 (ชุดCBC)', 'unit' => 'ถัง','unit_price' =>7980.00,'qty' =>0],
+                ['title' => 'EMERTION OIL ( Merck ) 500ml', 'unit' => 'ขวด','unit_price' =>2568.00,'qty' =>0],
+                ['title' => 'ESR TUBE (พลาสติก) (200)', 'unit' => 'กล่อง ','unit_price' =>3900.00,'qty' =>0],
+                ['title' => '( Gram Stain )Cystal Violet (450ml)', 'unit' => 'ขวด','unit_price' =>300.00,'qty' =>6],
+                ['title' => '( Gram Stain ) Iodine (450ml)', 'unit' => 'ขวด','unit_price' =>300.00,'qty' =>6],
+                ['title' => '( Gram Stain ) Decolonizer (450ml)', 'unit' => 'ขวด','unit_price' =>300.00,'qty' =>4],
+                ['title' => 'GLUCOSE Test(800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>4.00,'qty' =>0],
+                ['title' => 'HCT TUBE (1 x 100 )', 'unit' => 'หลอด','unit_price' =>74.25,'qty' =>41],
+                ['title' => 'HbsAg One step Test(100/กล่อง)', 'unit' => 'กล่อง','unit_price' =>12.00,'qty' =>5],
+                ['title' => 'HbsAb One step Test(100/กล่อง)', 'unit' => 'กล่อง','unit_price' =>13.00,'qty' =>2],
+                ['title' => 'HEMOCULTURE Adult รพศ.ขก', 'unit' => 'ขวด','unit_price' =>0.00,'qty' =>10],
+                ['title' => 'HEMOCULTURE CHILD (74)', 'unit' => 'ขวด','unit_price' =>0.00,'qty' =>20],
+                ['title' => 'HEMOCULTURE Adult (40ขวด/แพ็ค)', 'unit' => 'ขวด','unit_price' =>120.00,'qty' =>180],
+                ['title' => 'Hitachi Cup 2.5 ml. (Chem Cup) (1000)', 'unit' => 'กล่อง','unit_price' =>1500.00,'qty' =>1000],
+                ['title' => 'HIV (Alere HIV Combo) (100 test)', 'unit' => 'ซอง ','unit_price' =>12500.00,'qty' =>1],
+                ['title' => 'HIV SD BIOLINE 1/2 3.0 CASSETTE (30)', 'unit' => 'กล่อง','unit_price' =>3500.00,'qty' =>1],
+                ['title' => 'HIV Wonfo Diagnotic Kid  (25test)', 'unit' => 'กล่อง','unit_price' =>2250.00,'qty' =>1],
+                ['title' => 'HbA1C Test(120/กล่อง)', 'unit' => 'กล่อง','unit_price' =>90.00,'qty' =>0],
+                ['title' => 'HDL DIRECT Test(250/กล่อง)', 'unit' => 'กล่อง','unit_price' =>35.00,'qty' =>0],
+                ['title' => 'INR test strip (แถม IQC) 1 x 24 ', 'unit' => 'test','unit_price' =>3000.00,'qty' =>3],
+                ['title' => 'Infuenza (30test)', 'unit' => 'กล่อง ','unit_price' =>3884.00,'qty' =>0],
+                ['title' => 'KKU. DCIP (100test)', 'unit' => 'กล่อง','unit_price' =>1700.00,'qty' =>3],
+                ['title' => 'K3 VACUUM TUBE 3 ML (จุกม่วง)  (100)', 'unit' => 'ชิ้น','unit_price' =>2.50,'qty' =>2900],
+                ['title' => '10% KOH (450 ml.)', 'unit' => 'ขวด ','unit_price' =>850.00,'qty' =>2],
+                ['title' => 'Leptospirosis titer (IgM) (30t.)', 'unit' => 'กล่อง ','unit_price' =>4680.00,'qty' =>2],
+                ['title' => 'LITHIUM HEPARINE TUBE 2.5-4 ML (จุกเขียว)  (1000)', 'unit' => 'ชิ้น','unit_price' =>3.21,'qty' =>2300],
+                ['title' => 'LDL DIRECT Test(250/กล่อง)', 'unit' => 'กล่อง','unit_price' =>35.00,'qty' =>0],
+                ['title' => 'MICROALBUMIN/ CREATININ (50)', 'unit' => 'กล่อง','unit_price' =>1605.00,'qty' =>31],
+                ['title' => 'METHANAL A , R 5 liter', 'unit' => 'liter','unit_price' =>2000.00,'qty' =>0],
+                ['title' => 'Occult Blood (FOB )กล่อง (25Test)', 'unit' => 'กล่อง','unit_price' =>1000.00,'qty' =>2],
+                ['title' => 'PREGTEST STRIP Test(50/กล่อง)', 'unit' => 'กล่อง','unit_price' =>5.35,'qty' =>310],
+                ['title' => 'PARAFILM ปิด TUBE', 'unit' => 'ม้วน','unit_price' =>1200.00,'qty' =>0],
+                ['title' => 'Quick HCV  (100Test)', 'unit' => 'กล่อง','unit_price' =>1800.00,'qty' =>5],
+                ['title' => 'Quick Syphylis (100Test)', 'unit' => 'กล่อง ','unit_price' =>1800.00,'qty' =>2],
+                ['title' => 'RPR Carbon (ใช้ตรวจConfirm) แถมกระดาษ (500)', 'unit' => 'กล่อง ','unit_price' =>3000.00,'qty' =>3],
+                ['title' => 'RPR CARD (กระดาษVDRL) (50)', 'unit' => 'กล่อง ','unit_price' =>500.00,'qty' =>0],
+                ['title' => 'RHEUMATOID TEST', 'unit' => 'ชุด','unit_price' =>1700.00,'qty' =>4],
+                ['title' => 'REAGENT PACK E\'LYTE', 'unit' => 'ชุด','unit_price' =>16000.00,'qty' =>3],
+                ['title' => 'Rapid scrub thyphus', 'unit' => 'กล่อง','unit_price' =>3825.00,'qty' =>2],
+                ['title' => 'Salmonela thyphus', 'unit' => 'กล่อง','unit_price' =>3750.00,'qty' =>3],
+                ['title' => 'Start Strip Lactate Test (2*25T/4500) (50 Test)', 'unit' => 'กล่อง','unit_price' =>4500.00,'qty' =>7],
+                ['title' => 'SL IDE ฝ้า (72ชิ้น)', 'unit' => 'กล่อง','unit_price' =>39.00,'qty' =>42],
+                ['title' => 'STUART MEDIA (100/กล่อง)', 'unit' => 'ชิ้น ','unit_price' =>12.00,'qty' =>100],
+                ['title' => 'TCBS AGAR Media (อายุสั้น 1ด.) (10ถาด)', 'unit' => 'แพ็ค','unit_price' =>160.00,'qty' =>0],
+                ['title' => 'TEST TUBE 12 x 75 PYREX(แก้ว) (72ชิ้น)', 'unit' => 'อัน','unit_price' =>15.00,'qty' =>72],
+                ['title' => 'TUBEปั่น15ml.พลาสติก(Centufugue)จุกฟ้า', 'unit' => 'อัน','unit_price' =>6.50,'qty' =>0],
+                ['title' => 'TEST TUBE Plastic 12 x75 (ไม่มีจุก) (1000ชิ้น)', 'unit' => 'อัน','unit_price' =>1.50,'qty' =>500],
+                ['title' => 'ฝาจุก test tube [ 1*1000 ] (1000)', 'unit' => 'ห่อ ','unit_price' =>650.00,'qty' =>2000],
+                ['title' => 'Tube Sodium citrate ( ตรวจINR) (100ชิ้น)', 'unit' => 'กล่อง ','unit_price' =>2.35,'qty' =>400],
+                ['title' => 'Tube Sodium Fuoride (ตรวจAlc.ในbl.) (100ชิ้น)', 'unit' => 'กล่อง ','unit_price' =>2.35,'qty' =>150],
+                ['title' => 'Tribulb (หลอดดูดurine 1 ml. ตรวจUA) (500ชิ้น)', 'unit' => 'กล่อง ','unit_price' =>3000.00,'qty' =>0],
+                ['title' => 'TROPONIN - T (มี IQC Trop-T) (10)', 'unit' => 'กล่อง ','unit_price' =>2568.00,'qty' =>14],
+                ['title' => 'Trop -T control', 'unit' => 'กล่อง','unit_price' =>1384.00,'qty' =>0],
+                ['title' => 'TRIGLYCERIDE Test(800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>14.00,'qty' =>0],
+                ['title' => 'TOTAL PROTEIN Test(800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>7.00,'qty' =>0],
+                ['title' => 'TOTAL BILIRUBIN BILTS Test(600/กล่อง)', 'unit' => 'กล่อง','unit_price' =>8.00,'qty' =>0],
+                ['title' => 'URIC ACID Test(800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>11.00,'qty' =>0],
+                ['title' => 'UREA Test(800/กล่อง)', 'unit' => 'กล่อง','unit_price' =>8.00,'qty' =>0],
+                ['title' => 'URISTIX 6 แถบ (100)', 'unit' => 'กล่อง ','unit_price' =>488.50,'qty' =>5],
+                ['title' => 'Urine strip 11 แถบ (งานส่งเสริม) (100)', 'unit' => 'กล่อง ','unit_price' =>599.00,'qty' =>25],
+                ['title' => 'ANTIVIBRIO POLYVALENT', 'unit' => 'ขวด','unit_price' =>1300.00,'qty' =>0],
+                ['title' => 'V.CHOLERA INABA', 'unit' => 'ขวด','unit_price' =>825.00,'qty' =>0],
+                ['title' => 'V.CHOLERA OGAVA', 'unit' => 'ขวด','unit_price' =>1333.00,'qty' =>0],
+                ['title' => 'V. CHOLERA O139', 'unit' => 'ขวด','unit_price' =>1300.00,'qty' =>0],
+                ['title' => '(ตรวจCovid) ATK', 'unit' => 'ชุด','unit_price' =>34.00,'qty' =>567],
+                ['title' => 'WIDAL TEST O', 'unit' => 'ขวด','unit_price' =>400.00,'qty' =>0],
+                ['title' => 'WIDAL TEST H', 'unit' => 'ขวด','unit_price' =>400.00,'qty' =>0],
+                ['title' => 'WRIGHT Geimza STAIN A 5 liter', 'unit' => ' liter','unit_price' =>5000.00,'qty' =>1],
+                ['title' => 'WRIGHT Geimza STAIN B 5 liter', 'unit' => 'liter','unit_price' =>5000.00,'qty' =>0],
+                ['title' => 'YELLOW TIPS 5 liter', 'unit' => 'ชิ้น ','unit_price' =>450.00,'qty' =>8],
+                ['title' => 'กระดาษเช็ดเลนส์', 'unit' => 'ห่อ','unit_price' =>45.00,'qty' =>0],
+                ['title' => 'กระดาษกรอง', 'unit' => 'กล่อง','unit_price' =>350.00,'qty' =>0],
+                ['title' => 'กระดาษ Bar code (5x25 ซม.)', 'unit' => 'ม้วน','unit_price' =>500.00,'qty' =>22],
+                ['title' => 'กระดาษเทอร์มอล 57*25มม (ปริ้นUrine)', 'unit' => 'ม้วน','unit_price' =>96.30,'qty' =>5],
+                ['title' => 'กระป๋องเก็บปัสสาวะ/เสมหะมีฝาปิด', 'unit' => 'อัน','unit_price' =>2.00,'qty' =>1100],
+                ['title' => 'ตลับใส่อุจจาระ', 'unit' => 'ตลับ','unit_price' =>1.80,'qty' =>1300],
+                ['title' => 'ตลับหมึกเครื่องเป่าแอลกอฮอล์', 'unit' => 'อัน','unit_price' =>1500.00,'qty' =>1],
+                ['title' => 'แถบตรวจน้ำตาลในเลือดOPTIUM(ไม่มีเข็ม) (50ชิ้น)', 'unit' => 'กล่อง ','unit_price' =>160.00,'qty' =>584],
+                ['title' => 'เข็มเจาะน้ำตาลในเลือดปลายนิ้ว (100อัน)', 'unit' => 'กล่อง ','unit_price' =>200.00,'qty' =>412],
+                ['title' => 'เครื่องตรวจน้ำตาล', 'unit' => 'เครื่อง','unit_price' =>1500.00,'qty' =>8],
+                ['title' => 'ถ่านเครื่องตรวจน้ำตาล', 'unit' => 'ก้อน','unit_price' =>45.00,'qty' =>6],
+                ['title' => 'ถังขยะทิ้งเข็ม ( LAB ใหญ่ )', 'unit' => 'อัน','unit_price' =>80.00,'qty' =>26],
+                ['title' => 'แถบตรวจยาบ้า Test(50/กล่อง)', 'unit' => 'กล่อง','unit_price' =>15.00,'qty' =>2600],
+                ['title' => 'Leukocyte Poor Packed Red Cell', 'unit' => 'ถุง','unit_price' =>500.00,'qty' =>0],
+                ['title' => '3%01cells,02cells(Antibody Screening) (10ml.)', 'unit' => 'ขวด ','unit_price' =>70.00,'qty' =>0],
+                ['title' => '3%A cells,B cells(ABO Reverse grouping) (10ml.)', 'unit' => 'ขวด ','unit_price' =>60.00,'qty' =>0],
+                ['title' => '3%Coombs Control cells(for Antiglobuline test) (10ml.)', 'unit' => 'ขวด ','unit_price' =>100.00,'qty' =>0],
+                ['title' => 'Liss(Low-Ionic Strength Sall solution) (10ml.)', 'unit' => 'ขวด ','unit_price' =>100.00,'qty' =>0],
+                ['title' => 'Anti-Human Globuline (anti-IgG) (10ml.)', 'unit' => 'ขวด ','unit_price' =>100.00,'qty' =>0],
+                ['title' => 'Anti-A (10ml.)', 'unit' => 'ขวด ','unit_price' =>80.00,'qty' =>0],
+                ['title' => 'Anti-B (10ml.)', 'unit' => 'ขวด','unit_price' =>80.00,'qty' =>0],
+                ['title' => 'Anti-AB (10ml.)', 'unit' => 'ขวด','unit_price' =>200.00,'qty' =>0],
+                ['title' => 'Anti-D (10ml.)', 'unit' => 'ขวด','unit_price' =>100.00,'qty' =>0],
+                ['title' => 'น้ำยา Deconix Power zyme P(5.3kg/5L)', 'unit' => 'แกลลอน','unit_price' =>4815.00,'qty' =>1],
+              
+            ]
+        ];
+        $this->Import($data);
+    }
+
+public static function Import($data)
+{
+    if (BaseConsole::confirm('Are you sure?')) {
+        $total = 0;
+
+        // clear
+        // $oldItems = Categorise::find()->where([
+        //     'name' => 'asset_item',
+        //     'group_id' => 4,
+        //     'category_id' => $data['assettype']
+        // ])->all();
+
+        
+
+        // if (!empty($oldItems)) {
+        //     foreach ($oldItems as $oldItem) {
+        //         $clearUpload = Uploads::find()->where(['ref' => $oldItem->ref])->one();
+        //         if ($clearUpload) {
+        //             FileManagerHelper::removeUploadDir($clearUpload->ref);
+        //         }
+        //         $check = Categorise::findOne($oldItem->id);
+        //         if($check){
+        //             $check->delete();
+        //         }
+        //     }
+        // }
+        // ############################
+
+        foreach ($data['items'] as $key => $value) {
+            $itemCode = \mdm\autonumber\AutoNumber::generate($data['assettype'] . '-?');
+            // $itemCode = $data['assettype'] . '-' . ($key + 1);
+            $asetItem = Categorise::findOne(['name' => 'asset_item', 'code' => $itemCode, 'title' => $value['title']]);
+            // echo $itemCode."\n";
+            $unit = Categorise::findOne(['name' => 'unit', 'title' => $value['unit']]);
+            // ถ้าไม่มีหน่วยให้สร้างใหม่
+            if (!$unit) {
+                $newUnit = new Categorise([
+                    'name' => 'unit',
+                    'title' => $value['unit'],
+                    'active' => 1,
+                ]);
+                $newUnit->save(false);
+            }
+            // ถ้าไม่มีประวัสดุใฟ้สร้างมห่
+            if (!$asetItem) {
+                $newItem = new Categorise([
+                    'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
+                    'name' => 'asset_item',
+                    'group_id' => 4,
+                    'category_id' => $data['assettype'],
+                    'code' => $itemCode,
+                    'title' => $value['title'],
+                    'data_json' => [
+                        'unit' => $value['unit'],
+                        'sub_title' => '',
+                        'price_name' => '',
+                        'category_name' => $data['categoryName'],
+                        'asset_type_name' => '',
+                    ],
+                ]);
+                $newItem->save(false);
+            }
+
+            $qty = (int) explode('.', $value['qty'])[0];
+
+            $lot = \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
+            $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+
+            // $checkModel = StockEvent::findOne([])
+            $model = new StockEvent([
+                'ref' => $ref,
+                'lot_number' => $lot,
+                'name' => 'order_item',
+                'code' => $data['code'],
+                'category_id' => $data['category_id'],
+                'transaction_type' => 'IN',
+                'thai_year' => $data['thai_year'],
+                'asset_item' => $itemCode,
+                'warehouse_id' => $data['warehouse_id'],
+                'qty' => $value['qty'],
+                'unit_price' => (float) $value['unit_price'],
+                'order_status' => 'pending',
+                'data_json' => [
+                    'req_qty' => '0',
+                    'exp_date' => '',
+                    'mfg_date' => '',
+                    'item_type' => 'ยอดยกมา',
+                    'po_number' => '',
+                    'pq_number' => '',
+                    'asset_type' => '',
+                    'receive_date' => '',
+                    'asset_type_name' => '',
+                    'employee_fullname' => 'Administrator Lastname',
+                    'employee_position' => 'นักวิชาการคอมพิวเตอร์',
+                    'employee_department' => 'งานซ่อมบำรุง',
+                ],
+                'created_by' => 1,
+                'updated_by' => 1,
+            ]);
+            echo (DOUBLE) $value['unit_price'],"\n";
+            if ($model->save(false)) {
+                echo 'นำเข้า ' . $data['code'] . ' รหัส : ' . $data['code'] . "สำเร็จ! \n";
+            } else {
+                echo 'นำเข้า ' . $data['code'] . ' รหัส : ' . $data['code'] . "ผิดพลาด! \n";
+            }
+            $sum = $qty * (int) $value['unit_price'];
+            $total += $sum;
+        }
+        echo $total;
+    }
+}
 
 }
