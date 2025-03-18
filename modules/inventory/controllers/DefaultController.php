@@ -46,7 +46,7 @@ class DefaultController extends Controller
         if($dataProvider->getTotalCount() == 1){
             $setWarehouse = $dataProvider->getModels()[0];
             Yii::$app->session->set('warehouse',$setWarehouse);
-            return $this->redirect(['/inventory/warehouse/order-request']);
+            return $this->redirect(['/inventory/warehouse']);
         }
         
         if ($this->request->isAjax) {

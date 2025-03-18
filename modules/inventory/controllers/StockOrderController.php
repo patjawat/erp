@@ -374,7 +374,7 @@ class StockOrderController extends Controller
             if ($model->save(false)) {
                 StockEvent::updateAll(['order_status' => 'cancel'], ['category_id' => $model->order_status]);
 
-                return $this->redirect(['/inventory/order-request']);
+                return $this->redirect(['/inventory/warehouse/order-request']);
             }
             // return $model;
         }

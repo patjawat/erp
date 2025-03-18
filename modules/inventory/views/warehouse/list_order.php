@@ -13,7 +13,7 @@ use app\modules\inventory\models\StockEvent;
                             <th style="width:210px">รหัส</th>
                             <th scope="col">ผู้เบิก</th>
                             <th >หัวหน้าตรวจสอบ</th>
-                            <th >มูลค่า</th>
+                            <th class="text-end">มูลค่า</th>
                             <th class="text-center" style="width:300px">สถานะ</th>
                             <th style="width:100px">ดำเนินการ</th>
                         </tr>
@@ -36,7 +36,11 @@ use app\modules\inventory\models\StockEvent;
                                 ?>
                             </td>
                             <td><?=$item->viewChecker()['avatar']?></td>
-                            <td><?=number_format($item->getTotalOrderPrice(),2)?></td>
+                            <td class="text-end">
+                                <span class="fw-semibold">
+                                    <?=number_format($item->getTotalOrderPrice(),2)?>        
+                                </span>
+                            </td>
                             <td class="text-center"><?=$item->viewstatus()?></td>
                             <td>
                                 <div class="btn-group">

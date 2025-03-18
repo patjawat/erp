@@ -59,7 +59,10 @@ class WarehouseController extends Controller
                 'warehouse_id' => $warehouseId
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'OUT','warehouse_id' => $warehouseId]);
+            $dataProvider->query->andwhere(['name' => 'order']);
+            $dataProvider->query->andwhere(['transaction_type' => 'OUT']);
+            $dataProvider->query->andwhere(['warehouse_id' => $warehouseId]);
+            $dataProvider->query->andwhere(['order_status' => 'pending']);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'code', $searchModel->q],
@@ -70,7 +73,6 @@ class WarehouseController extends Controller
             return $this->render('view', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                // 'model' => $this->findModel($warehouse->id),
             ]);
 
         } else {
@@ -90,12 +92,14 @@ class WarehouseController extends Controller
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
             $searchModel = new StockEventSearch([
-                'thai_year' => AppHelper::YearBudget()
+                'thai_year' => AppHelper::YearBudget(),
+                'order_status' =>   ['pending']
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order']);
             $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
             $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse->id]);
+            $dataProvider->query->andFilterWhere(['order_status' => $searchModel->order_status]);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'code', $searchModel->q],

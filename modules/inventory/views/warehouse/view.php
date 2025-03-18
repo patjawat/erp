@@ -96,9 +96,8 @@ Dashboard
         </div>
 
 <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
-<?= $this->render('_order_request',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
-<?php else:?>
-<?= $this->render('_order_withdraw',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
+<?php echo $this->render('_order_request',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
+<?php // $this->render('_order_withdraw',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
 <?php endif?>
 
 <?php
