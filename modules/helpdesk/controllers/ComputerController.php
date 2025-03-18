@@ -92,7 +92,7 @@ class ComputerController extends \yii\web\Controller
             
             $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
 
-            if($model->status == 4 && $model->code !==''){
+            if ($model->status == 4 && !empty($model->code)) {
                 $model->asset->asset_status = 1;
                 $model->asset->save();
             }
