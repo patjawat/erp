@@ -25,10 +25,17 @@ class StoreV2Controller extends \yii\web\Controller
 {
     public function actionSetWarehouse()
     {
-        $emp = UserHelper::GetEmployee();
-        $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
-        $warehouse = Warehouse::findOne($checkWarehouse->id);
-        Yii::$app->session->set('sub-warehouse', $warehouse);
+        try {
+            $emp = UserHelper::GetEmployee();
+            $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
+            $warehouse = Warehouse::findOne($checkWarehouse->id);
+            if (!$checkWarehouse) {
+               return $this->renderContent('<h1 class="text-center">ไม่พบคลัง</h1>');
+            }
+            Yii::$app->session->set('sub-warehouse', $warehouse);
+        } catch (\Throwable $th) {
+            return $this->renderContent('<h1 class="text-center">ไม่พบคลัง</h1>');
+        }
         return $this->redirect(['/me/store-v2/index']);
     }
 
