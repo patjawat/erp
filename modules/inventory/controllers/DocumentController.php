@@ -47,7 +47,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
 
         $templateProcessor->setValue('drawer_name', $model->CreateBy()['fullname']);
-        $templateProcessor->setValue('date_drawer',  explode(' ', $model->viewCreatedAt())[0]);
+        $templateProcessor->setValue('date_drawer', $model->viewCreatedAt());
 
         $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname'] !='' ? $model->viewChecker()['fullname'] : '.................................................') ;
         $templateProcessor->setValue('approve_date',  $model->viewChecker()['checker_date'] !='' ? $model->viewChecker()['checker_date'] : '.................................................') ;
