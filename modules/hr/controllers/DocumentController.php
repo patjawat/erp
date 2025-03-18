@@ -184,11 +184,12 @@ class DocumentController extends \yii\web\Controller
 
         // ###########################  การตรวจสอบอนุมัติ ######################################
         // หัวหน้ากลุ่มงาน ตรวจสสอบ level 2
-        $templateProcessor->setValue('leader_fullname', $model->checkerName(2)['fullname']);
-        $templateProcessor->setValue('leader_position', 'ตำแหน่ง' . $model->checkerName(2)['position']);
-        $templateProcessor->setValue('leader_date', $model->checkerName(3)['approve_date']);
+        $leader =  $model->checkerName(2);
+        $templateProcessor->setValue('leader_fullname', $leader['fullname']);
+        $templateProcessor->setValue('leader_position', 'ตำแหน่ง' . $leader['position']);
+        $templateProcessor->setValue('leader_date',$leader['approve_date']);
         try {
-            $templateProcessor->setImg('leader_sign', ['src' => $model->checkerName(1)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือหัวหน้างาน
+            $templateProcessor->setImg('leader_sign', ['src' => $leader['employee']->signature(), 'size' => [150, 60]]);  // ลายมือหัวหน้างาน
         } catch (\Throwable $th) {
             $templateProcessor->setValue('leader_sign', '');
         }
@@ -208,7 +209,7 @@ class DocumentController extends \yii\web\Controller
         $dicrectorType = ($this->GetInfo()['director_type'] == 'ผู้อำนวยการ' ? 'ผู้อำนวยการ' : 'รักษาการแทนผู้อำนวยการ');
         $templateProcessor->setValue('direc_fullname', $model->checkerName(4)['fullname']);
         $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position'].$dicrectorType);
-        $templateProcessor->setValue('direc_date', $model->checkerName(3)['approve_date']);
+        $templateProcessor->setValue('direc_date', $model->checkerName(4)['approve_date']);
         try {
             $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
             // $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150,60]]); //ลายมือผู้อำนวยการ
