@@ -1604,8 +1604,8 @@ class ImportStockUbonratController extends Controller
             'warehouse_id' => 2,
             'assettype' => 'M7',
             'categoryName' => 'วัสดุวิทยาศาสตร์หรือการแพทย์',
-            'category_id' => 1365,
-            'code' => 'IN-680009',
+            'category_id' => 1399,
+            'code' => 'IN-680014',
             'items' => [
                 ['title' => 'AST/GOT (600/กล่อง)', 'unit' => 'กล่อง','unit_price' =>12.00,'qty' =>0],
                 ['title' => 'ALT/GPT (600/กล่อง)', 'unit' => 'กล่อง','unit_price' =>12.00,'qty' =>0],
