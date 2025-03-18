@@ -1,7 +1,7 @@
 <?php
-use app\components\UserHelper;
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
+use app\components\UserHelper;
 
 $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-') . ' รหัส : <code>' . $model->code . '</code>';
 ?>
@@ -169,6 +169,9 @@ $js = <<< JS
         });
     }
 
+
+
+
     //ครุภัณฑ์ภายใน
     // function assetItems(){
     //     \$.ajax({
@@ -188,6 +191,6 @@ $js = <<< JS
     //     });
     // }
 
-    JS;
+JS;
 $this->registerJS($js, yii\web\View::POS_END);
 ?>

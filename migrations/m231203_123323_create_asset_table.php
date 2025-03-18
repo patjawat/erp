@@ -37,7 +37,9 @@ class m231203_123323_create_asset_table extends Migration
             'updated_at' => $this->dateTime()->comment('วันเวลาแก้ไข'),
             'created_at' => $this->dateTime()->comment('วันเวลาสร้าง'), 
             'created_by' => $this->integer()->comment('ผู้สร้าง'),
-            'updated_by' => $this->integer()->comment('ผู้แก้ไข')
+            'updated_by' => $this->integer()->comment('ผู้แก้ไข'),
+            'deleted_by' => $this->integer()->comment('ผู้ลบ'),
+            'deleted_at' => $this->dateTime()->comment('วันที่ลบ'), 
         ]);
     }
 

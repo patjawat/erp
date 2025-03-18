@@ -1,6 +1,6 @@
 <?php
-use app\components\AppHelper;
 use yii\helpers\Html;
+use app\components\AppHelper;
 
 $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-') . ' รหัส : <code>' . $model->code . '</code>';
 ?>
@@ -77,6 +77,7 @@ $assetName = (isset($model->data_json['asset_name']) ? $model->data_json['asset_
                             <?= Html::a('<i class="fa-solid fa-qrcode"></i> QR-Code', ['qrcode', 'id' => $model->id], ['class' => 'open-modal btn btn-success rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
                             <?= Html::a('<i class="fa-solid fa-chart-line"></i> ค่าเสื่อม', ['depreciation', 'id' => $model->id], ['class' => 'open-modal btn btn-primary rounded-pill shadow', 'data' => ['size' => 'modal-lg']]) ?>
                             <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow']) ?>
+                            <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill shadow delete-asset']) ?>
                         </div>
                     </div>
                     <hr>
@@ -117,53 +118,54 @@ $js = <<< JS
     function uploadImg()
     {
         formdata = new FormData();
-        if(\$("input[id='my_file']").prop('files').length > 0)
+        if($("input[id='my_file']").prop('files').length > 0)
         {
-    \t\tfile = \$("input[id='my_file']").prop('files')[0];
+    file = $("input[id='my_file']").prop('files')[0];
             formdata.append("asset", file);
             formdata.append("id", 1);
             formdata.append("ref", '$model->ref');
             formdata.append("name", 'asset');
 
             console.log(file);
-    \t\t\$.ajax({
-    \t\t\turl: '/filemanager/uploads/single',
-    \t\t\ttype: "POST",
-    \t\t\tdata: formdata,
-    \t\t\tprocessData: false,
-    \t\t\tcontentType: false,
-    \t\t\tsuccess: function (res) {
+    $.ajax({
+    turl: '/filemanager/uploads/single',
+    ttype: "POST",
+    tdata: formdata,
+    tprocessData: false,
+    tcontentType: false,
+    tsuccess: function (res) {
                     success('แก้ไขภาพสำเร็จ')
                     console.log(res)
-    \t\t\t}
-    \t\t});
+    }
+    });
         }
     }
 
-    \$("button[id='summit']").on('click', function() {
+    $("button[id='summit']").on('click', function() {
         formdata = new FormData();
-        if(\$("input[id='my_file']").prop('files').length > 0)
+        if($("input[id='my_file']").prop('files').length > 0)
         {
-    \t\tfile = \$("input[id='my_file']").prop('files')[0];
+    file = $("input[id='my_file']").prop('files')[0];
             formdata.append("avatar", file);
             formdata.append("id", 1);
             formdata.append("ref", '$model->ref');
             formdata.append("name", 'avatar');
 
             console.log(file);
-    \t\t\$.ajax({
-    \t\t\turl: '/filemanager/uploads/single',
-    \t\t\ttype: "POST",
-    \t\t\tdata: formdata,
-    \t\t\tprocessData: false,
-    \t\t\tcontentType: false,
-    \t\t\tsuccess: function (res) {
+    $.ajax({
+    turl: '/filemanager/uploads/single',
+    ttype: "POST",
+    tdata: formdata,
+    tprocessData: false,
+    tcontentType: false,
+    tsuccess: function (res) {
                     // success('แก้ไขภาพ')
                     console.log(res)
-    \t\t\t}
-    \t\t});
+    }
+    });
         }
     })
-    JS;
+
+JS;
 $this->registerJs($js);
 ?>

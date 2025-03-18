@@ -31,6 +31,7 @@ use app\components\AppHelper;
                         <div>
                             <?=Html::a('<i class="fa-regular fa-money-bill-1"></i> ค่าเสื่อม',['depreciation','id'=> $model->id],['class' => 'open-modal btn btn-primary rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
                             <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['update','id'=> $model->id],['class' => 'btn btn-warning rounded-pill shadow'])?>
+                            <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill shadow delete-asset']) ?>
                         </div>
 
                     </div>

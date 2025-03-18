@@ -48,4 +48,63 @@ $group = Yii::$app->request->get('group');
     <?php endif?>
 </div>
 
+<?php
+$js = <<< JS
+
+
+$('.delete-asset').click(function (e) { 
+    e.preventDefault();
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "ข้อมูลนี้จะถูกลบและไม่สามารถกู้คืนได้!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url: url,
+                dataType: "json",
+                success: function (res) {
+                    if (res.status == 'success') {
+                        Swal.fire({
+                            title: 'ลบข้อมูลสำเร็จ!',
+                            text: 'รายการถูกลบเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 1000, // ตั้งค่าให้ Swal ปิดอัตโนมัติหลัง 1 วินาที
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/am/asset'; // Redirect หลังจาก timer หมด
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            res.message || 'ไม่สามารถลบข้อมูลได้',
+                            'error'
+                        );
+                    }
+                },
+                error: function () {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+});
+
+
+JS;
+$this->registerJS($js);
+
+?>
 <?php Pjax::end(); ?>

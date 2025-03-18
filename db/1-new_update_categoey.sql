@@ -75,3 +75,7 @@ WHERE name = 'leave' AND level = 3
 UPDATE approve
 SET data_json = JSON_SET(data_json, '$.label', 'เห็นชอบ')
 WHERE name = 'leave' AND level = 2
+
+
+## แก้ไข asset
+ALTER TABLE `asset` ADD `deleted_at` DATETIME NULL DEFAULT NULL COMMENT 'วันที่ลบ' AFTER `updated_by`, ADD `deleted_by` INT NULL DEFAULT NULL COMMENT 'ผู้ลบ' AFTER `deleted_at`;
