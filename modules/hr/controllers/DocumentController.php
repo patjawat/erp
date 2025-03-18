@@ -200,7 +200,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('hr_position', 'ตำแหน่ง' . $hr['position']);
         $templateProcessor->setValue('hr_date', $hr['approve_date']);
         try {
-            $templateProcessor->setImg('hr_sign', ['src' => $model->checkerName(1)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
+            $templateProcessor->setImg('hr_sign', ['src' => $hr['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
             $templateProcessor->setValue('hr_sign', '');
         }
