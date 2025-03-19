@@ -55,9 +55,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i>
                                     <?php echo $model->RepairType()['title']?>
                                 </span>
-                                <?= $model->viewUrgency() ?>
                             </p>
-                            <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->data_json['title']?></p>
+                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->data_json['title']?></p>
+                                <p class="text-primary fs-13 mb-0">
+                                    <?php echo $model->viewCreateDateTime()?>
+                                </p>
                         </div>
                     </div>
                     </td>

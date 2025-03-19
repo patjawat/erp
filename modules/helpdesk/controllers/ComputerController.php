@@ -90,11 +90,10 @@ class ComputerController extends \yii\web\Controller
             $model->date_start = !empty($model->date_start) ? AppHelper::convertToGregorian($model->date_start) : null;
             $model->date_end = !empty($model->date_end) ? AppHelper::convertToGregorian($model->date_end) : null;
             
-            $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
+            $model->data_json = ArrayHelper::merge($old_json,$model->data_json);
 
             if ($model->status == 4 && !empty($model->code)) {
                 $model->asset->asset_status = 1;
-                $model->asset->save();
             }
             $model->save();
         return $this->redirect(['/helpdesk/computer/index']);

@@ -185,8 +185,13 @@ class Helpdesk extends Yii\db\ActiveRecord
         ];
     }
 
-    $imgSrc = $this->data_json['send_type'] === 'asset' ? $this->asset->showImg() : $this->showImg();
-    
+    $imgSrc = '';
+    if ($this->data_json['send_type'] === 'asset') {
+        $imgSrc = isset($this->asset) && method_exists($this->asset, 'showImg') ? $this->asset->showImg() : '';
+    } else {
+        $imgSrc = method_exists($this, 'showImg') ? $this->showImg() : '';
+    }
+
     return match ($this->data_json['send_type']) {
         'general' => [
             'title' => 'ซ่อมทั่วไป',
@@ -197,7 +202,7 @@ class Helpdesk extends Yii\db\ActiveRecord
         'asset' => [
             'title' => 'ซ่อมครุภัณฑ์',
             'image' => Html::img($imgSrc, [
-                'class' => 'avatar avatar-sm',
+                'class' => 'avatar rounded-3',
             ])
         ],
         default => [
@@ -360,8 +365,8 @@ class Helpdesk extends Yii\db\ActiveRecord
             $emp = Employees::findOne(['user_id' => $this->created_by]);
 
             // return Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
-            // return $emp->getAvatar(false, $emp->departmentName());
-            return $emp->getAvatar(false, $this->viewCreateDateTime());
+            return $emp->getAvatar(false, $emp->departmentName());
+            // return $emp->getAvatar(false, $this->viewCreateDateTime());
             // code...
         } catch (\Throwable $th) {
             // throw $th;

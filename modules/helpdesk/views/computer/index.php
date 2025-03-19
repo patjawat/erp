@@ -25,13 +25,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php // Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
+<?php  Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
-    <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-    <?=$this->render('_search', ['model' => $searchModel])?>
+        <div class="d-flex flex-column">
+            <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+            <?=$this->render('_search', ['model' => $searchModel])?>
+        </div>
     </div>
         <table class="table table-striped">
             <thead>
@@ -49,26 +51,21 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr class="align-middle">
                     <td><?php echo ($key+1)?></td>
                     <td>
-                        
-                        <a href="<?php echo Url::to(['/helpdesk/repair/view', 'id' => $model->id])?>" class="text-dark open-modal-fullscree-xn">
-                            <div>
+                            <div class="d-flex">
+                            <?php echo $model->RepairType()['image']?>
+                            <div class="avatar-detail">
+                                
                                 <p class="text-primary fw-semibold fs-13 mb-0">
-                                    <?= $model->viewUrgency() ?>
-                                    <?php echo Yii::$app->thaiFormatter->asDate($model->created_at, 'long')?>
-                                </p>
+                                    <span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i>
+                                    <?php echo $model->RepairType()['title']?>
+                                </span>
+                            </p>
                                 <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->data_json['title']?></p>
-                            </div>
-                        </a>
-                        
-                        <!-- <div class="d-flex flex-row gap-3">
-                            <?= $model->showAvatarCreate(); ?>
-                            <div class="d-flex flex-column">
-                                <?= Html::a($model->data_json['title'], ['/helpdesk/repair/view', 'id' => $model->id]) ?>
-                                <div>
-                                    <span class="mb-0 fs-13 text-muted"><?= $model->data_json['location'] ?></span> | <?= $model->viewCreateDate() ?>
-                                </div>
-                            </div>
-                        </div> -->
+                                <p class="text-primary fs-13 mb-0">
+                                    <?php echo $model->viewCreateDateTime()?>
+                                </p>
+                        </div>
+                    </div>
                     </td>
                     <td> <?= $model->showAvatarCreate(); ?></td>
                     <td><?= $model->StackTeam() ?></td>
@@ -101,7 +98,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-<?php // Pjax::end(); ?>
+<?php Pjax::end(); ?>
 
 
 <?php

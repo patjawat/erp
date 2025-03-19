@@ -48,7 +48,7 @@ $me = UserHelper::GetEmployee();
             <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             </td>
-            <td><?php echo $model->leaveWorkSend()['avatar']?></td>
+            <td><?php echo $model->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td>
             <td><?php echo $model->stackChecker()?></td>
             <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $model->showStatus();?></td>
             <td class="fw-center align-middle text-start">
