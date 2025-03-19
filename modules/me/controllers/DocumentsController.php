@@ -5,12 +5,14 @@ namespace app\modules\me\controllers;
 use Yii;
 use yii\web\Response;
 use yii\db\Expression;
+use app\models\Uploads;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentTagsSearch;
 use app\modules\dms\models\DocumentsDetailSearch;
+use app\modules\filemanager\components\FileManagerHelper;
 
 class DocumentsController extends \yii\web\Controller
 {
