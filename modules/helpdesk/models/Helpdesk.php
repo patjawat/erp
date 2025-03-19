@@ -509,9 +509,21 @@ class Helpdesk extends Yii\db\ActiveRecord
     }
 
     // ผลรวมสถานะ
-    public function SummaryStatus($id)
+    // public function SummaryStatus($id)
+    // {
+    //     return self::find()->where(['status' => $id, 'repair_group' => $this->repair_group])->andWhere(['thai_year' => $this->thai_year])->count();
+    // }
+    // ผลรวมสถานะ
+    public function SummaryStatus($status_id)
     {
-        return self::find()->where(['status' => $id, 'repair_group' => $this->repair_group])->andWhere(['thai_year' => $this->thai_year])->count();
+        $total = Helpdesk::find()->where(['repair_group' => $this->repair_group, 'thai_year' => $this->thai_year])->count();
+        $count_status = Helpdesk::find()->where(['status' => $status_id, 'repair_group' => $this->repair_group, 'thai_year' => $this->thai_year])->count();
+        $progress_bar = ($count_status > 0) ? round(($count_status / $total) * 100, 2) : 0;
+        return [
+            'total' => $total,
+            'count_status' => self::find()->where(['status' => $status_id, 'repair_group' => $this->repair_group])->andWhere(['thai_year' => $this->thai_year])->count(),
+            'progress_bar' => $progress_bar
+        ];
     }
 
     public function SummaryOfYear()

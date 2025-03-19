@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php  Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
-
+<?php echo $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]);?>
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">

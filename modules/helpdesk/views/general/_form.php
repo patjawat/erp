@@ -46,13 +46,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="d-flex gap-3">
                         <div class="d-flex flex-column">
                             <div>
-                                <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+                                <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
                                 <?php if($model->code == ''):?>
-                                    <span class="text-primary">แจ้งซ่อมทั่วไป</span>
+                                    <span class="text-primary fs-5">แจ้งซ่อมทั่วไป</span>
                                     <?php echo $model->viewCreateDateTime()?>
                                     
                                     <?php else:?>
-                                        <span class="text-primary">แจ้งซ่อมครุภัณฑ์</span>
+                                        <span class="text-primary fs-5">แจ้งซ่อมครุภัณฑ์</span>
                                         <?php echo $model->viewCreateDateTime()?>
                                         <?php endif;?>
             

@@ -77,8 +77,8 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 <?php // echo $this->render('list_room') ?>
 
 
- <!-- Sidebar -->
- <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+<!-- Sidebar -->
+<!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
         <a class="navbar-brand" href="#">📅 Meeting Room Booking</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -93,86 +93,134 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
         </div>
     </nav> -->
 
-    <div class="mt-4">
-        <!-- Welcome Message -->
-        <div class="alert alert-primary text-center">
-            👋 ยินดีต้อนรับ! จัดการการจองห้องประชุมของคุณได้ที่นี่
-        </div>
+<div class="mt-4">
+    <!-- Welcome Message -->
+    <div class="alert alert-primary text-center">
+        👋 ยินดีต้อนรับ! จัดการการจองห้องประชุมของคุณได้ที่นี่
+    </div>
 
-        <div class="row">
-            <!-- ตารางการจองวันนี้ -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>📆 การจองวันนี้</h5>
-                    
-                
-                <ul class="list-group">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>09:00 - 10:00 | ห้อง A | คุณสมชาย</span>
-                        <span class="badge bg-success">กำลังใช้งาน</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>11:00 - 12:00 | ห้อง B | คุณวราภรณ์</span>
-                        <span class="badge bg-secondary">รอเริ่ม</span>
-                    </li>
-                </ul>
+    <div class="row">
+        <!-- ตารางการจองวันนี้ -->
+        <div class="col-md-6">
+            <h5>📆 การขอใช้ห้องประชุมวันนี้</h5>
+            <div class="card" style="height:380px">
+                <div class="card-body">
 
-                </div>
+                    <table class="table table-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">เวลา</th>
+                                <th scope="col">สถานที่</th>
+                                <th scope="col">ผู้ขอใช้ห้องประชุม</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="">
+                                <td scope="row">09:00 - 10:00</td>
+                                <td>ห้อง A </td>
+                                <td>คุณสมชาย</td>
+                                <td><span class="badge bg-success text-white">กำลังใช้งาน</span></td>
+                            </tr>
+                            <tr class="">
+                                <td scope="row">09:00 - 10:00</td>
+                                <td>ห้อง A </td>
+                                <td>คุณสมชาย</td>
+                                <td> <span class="badge bg-secondary  text-white">รอเริ่ม</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </div>
             </div>
 
-            <!-- รายการห้องประชุม -->
-            <div class="col-md-6">
-                <h5>🏢 สถานะห้องประชุม</h5>
-                
-                <div class="card mb-2">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
-                    <div class="d-flex gap-2 align-self-center">
-                        <div>
-                            
-                            <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">
-                                
-                                <?php 
+
+            <div class="card" style="height:380px">
+                <div class="card-body">
+                    <h6><i class="fa-regular fa-calendar-plus"></i> รายการประชุมพรุ่งนี้</h6>
+
+                    <table class="table table-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">เวลา</th>
+                                <th scope="col">สถานที่</th>
+                                <th scope="col">ผู้ขอใช้ห้องประชุม</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="">
+                                <td scope="row">09:00 - 10:00</td>
+                                <td>ห้อง A </td>
+                                <td>คุณสมชาย</td>
+                                <td><span class="badge bg-success text-white">กำลังใช้งาน</span></td>
+                            </tr>
+                            <tr class="">
+                                <td scope="row">09:00 - 10:00</td>
+                                <td>ห้อง A </td>
+                                <td>คุณสมชาย</td>
+                                <td> <span class="badge bg-secondary  text-white">รอเริ่ม</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6> -->
+                    <!-- <div id='calendar'></div> -->
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- รายการห้องประชุม -->
+        <div class="col-md-6">
+            <h5>🏢 สถานะห้องประชุม</h5>
+            <div class="card mb-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
+                        <div class="d-flex gap-2 align-self-center">
+                            <div>
+
+                                <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">
+
+                                    <?php 
 
                             $dayOnly = date('j', strtotime($searchModel->date_start));
                             echo $dayOnly; // ผลลัพธ์: 04
                         ?>
-                            </span>
-                        </div>
-                        <div class="d-flex flex-column align-self-center">
-                          
-                            <span class="fw-bolder fs-6">  <?php echo $dayInThai;?></span>
-                            <span class="fw-bolder fs-6">
-                                <?php
+                                </span>
+                            </div>
+                            <div class="d-flex flex-column align-self-center">
+
+                                <span class="fw-bolder fs-6"> <?php echo $dayInThai;?></span>
+                                <span class="fw-bolder fs-6">
+                                    <?php
                                 $dayM = date('n', strtotime($searchModel->date_start));
                                 $month = AppHelper::getMonthName($dayM);
                                 echo $month .' '.(date('Y')+543)
                                 ?>
-                                <!-- กุมภาพันธฺ 2569 -->
-                            </span>
+                                    <!-- กุมภาพันธฺ 2569 -->
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- <h6><i class="fa-regular fa-calendar-plus"></i>
+                        <!-- <h6><i class="fa-regular fa-calendar-plus"></i>
                         <?php $time = time();
                         echo Yii::$app->thaiFormatter->asDate($searchModel->date_start, 'full') . '<br>'; ?>
                     </h6> -->
-                    <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
+                        <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
+                    </div>
                 </div>
             </div>
-        </div>
-        <?php echo $this->render('list_room', ['model' => $searchModel]) ?>
-            </div>
-        </div>
-
-        <!-- ปุ่มจองห้องประชุม -->
-        <div class="text-center mt-4">
-            <button class="btn btn-primary btn-lg">➕ จองห้องประชุม</button>
+            <?php echo $this->render('list_room', ['model' => $searchModel]) ?>
         </div>
     </div>
+
+    <!-- ปุ่มจองห้องประชุม -->
+    <!-- <div class="text-center mt-4">
+            <button class="btn btn-primary btn-lg">➕ จองห้องประชุม</button>
+        </div> -->
+</div>
 
 
 
@@ -180,12 +228,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6>
-                <!-- <div id='calendar'></div> -->
-            </div>
-        </div>
+
 
     </div>
 

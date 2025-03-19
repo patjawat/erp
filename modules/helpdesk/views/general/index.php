@@ -23,14 +23,19 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php // Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
+<?php  Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
+<?php echo $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]);?>
 
 <div class="card">
     <div class="card-body">
-    <div class="d-flex justify-content-between">
-    <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-    <?=$this->render('_search', ['model' => $searchModel])?>
-    </div>
+        <div class="d-flex justify-content-between">
+            <div>
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span
+                        class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+                </h6>
+                <?=$this->render('_search', ['model' => $searchModel])?>
+            </div>
+        </div>
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -47,35 +52,37 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr class="align-middle">
                     <td><?php echo ($key+1)?></td>
                     <td>
-                            <div class="d-flex">
+                        <div class="d-flex">
                             <?php echo $model->RepairType()['image']?>
                             <div class="avatar-detail">
-                                
+
                                 <p class="text-primary fw-semibold fs-13 mb-0">
-                                    <span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i>
-                                    <?php echo $model->RepairType()['title']?>
-                                </span>
-                            </p>
-                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->data_json['title']?></p>
+                                    <span class="badge text-bg-primary fs-13"><i
+                                            class="fa-solid fa-circle-exclamation"></i>
+                                        <?php echo $model->RepairType()['title']?>
+                                    </span>
+                                </p>
+                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                    <?php echo $model->data_json['title']?></p>
                                 <p class="text-primary fs-13 mb-0">
                                     <?php echo $model->viewCreateDateTime()?>
                                 </p>
+                            </div>
                         </div>
-                    </div>
                     </td>
                     <td> <?= $model->showAvatarCreate(); ?></td>
                     <td><?= $model->StackTeam() ?></td>
                     <td class="text-center"> <?= $model->viewStatus() ?></td>
                     <td class="text-center">
                         <?php if($model->status == 1):?>
-                            <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
-                            <?php // echo Html::a('<i class="fa-regular fa-hourglass-half"></i> รับเรื่อง',['/helpdesk/general/update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
+                        <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?php // echo Html::a('<i class="fa-regular fa-hourglass-half"></i> รับเรื่อง',['/helpdesk/general/update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
                         <?php else:?>
                         <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
-                    <?php endif;?>
+                        <?php endif;?>
                     </td>
                 </tr>
-    
+
                 <?php endforeach; ?>
             </tbody>
         </table>
@@ -94,7 +101,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-<?php // Pjax::end(); ?>
+<?php  Pjax::end(); ?>
 
 
 <?php

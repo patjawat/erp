@@ -38,7 +38,6 @@ $this->title = 'My DashBoard';
             </div>
             <div class="col-6">
                 <?php echo $this->render('leave', ['searchModel' => $searchModel]); ?>
-                
             </div>
             <div class="col-12">
 

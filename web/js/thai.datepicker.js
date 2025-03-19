@@ -8,5 +8,7 @@ function thaiDatepicker(el) {
         lang: 'th',
         yearOffset : 543,
         validateOnBlur: false,
+        closeOnDateSelect: true,
     })
 }
+

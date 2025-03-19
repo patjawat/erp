@@ -15,10 +15,8 @@ $this->title = "ระบบยานาหนะ"
 Dashboard
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('menu') ?>
-<?php $this->endBlock(); ?>
 
+<?php  echo $this->render('menu') ?>
 
 <div class="row">
     <div class="col-3">

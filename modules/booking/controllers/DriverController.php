@@ -125,6 +125,29 @@ class DriverController extends Controller
         ]);
     }
 
+    public function actionApprove($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return [
+                    'statsus' => 'success'
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('_form_approve', [
+                'model' => $model,
+            ]),
+        ];
+    }
+
+
     /**
      * Updates an existing Booking model.
      * If update is successful, the browser will be redirected to the 'view' page.

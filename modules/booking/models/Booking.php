@@ -178,7 +178,18 @@ class Booking extends \yii\db\ActiveRecord
         return $this->hasMany(BookingDetail::class, ['booking_id' => 'id'])->andOnCondition(['name' => 'meeting_menber']);
     }
 
-
+    //ผู้ขอบริการ
+    public function userRequest()
+    {
+        $emp = Employees::findOne(['user_id' =>  $this->created_by]);
+        $msg = $this->reason;
+        return $emp->getAvatar(false,$msg);
+    }
+    public function listRooms()
+    {
+        $model = Room::find()->where(['name' => 'meeting_room'])->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
     public function viewCreateDate()
     {
         return Yii::$app->thaiDate->toThaiDate($this->created_at, false, false);

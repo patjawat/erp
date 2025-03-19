@@ -230,7 +230,8 @@ class BookingMeetingController extends \yii\web\Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $this->request->get('title'),
+                // 'title' => $this->request->get('title'),
+                'title' => 'จองห้องประชุม',
                 'content' => $this->renderAjax('create', [
                     'model' => $model
                 ]),
@@ -297,8 +298,8 @@ class BookingMeetingController extends \yii\web\Controller
             $model->reason == '' ? $model->addError('reason', $requiredName) : null;
             // $model->location == '' ? $model->addError('location', $requiredName) : null;
             // $model->urgent == '' ? $model->addError('urgent', $requiredName) : null;
-            $model->data_json['employee_point'] == '' ? $model->addError('data_json[employee_point]', $requiredName) : null;
-            $model->data_json['employee_total'] == '' ? $model->addError('data_json[employee_total]', $requiredName) : null;
+            // $model->data_json['employee_point'] == '' ? $model->addError('data_json[employee_point]', $requiredName) : null;
+            // $model->data_json['employee_total'] == '' ? $model->addError('data_json[employee_total]', $requiredName) : null;
             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
             $model->data_json['period_time'] == '' ? $model->addError('data_json[period_time]', $requiredName) : null;
         }

@@ -15,6 +15,11 @@ use app\modules\helpdesk\models\HelpdeskSearch;
 
 class ComputerController extends \yii\web\Controller
 {
+
+    public function actionDemo()
+    {
+        return $this->render('demo');
+    }
     public function actionIndex()
     {
 
