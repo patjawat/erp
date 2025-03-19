@@ -21,7 +21,8 @@ class GeneralController extends \yii\web\Controller
         $searchModel = new HelpdeskSearch([
             'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 1,
-            'auth_item' => 'technician'
+            'auth_item' => 'technician',
+            'status' => [1,2,3]
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);

@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="d-flex justify-content-between">
         <div class="d-flex flex-column">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?=$this->render('_search', ['model' => $searchModel])?>
+            <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
         </div>
     </div>
         <table class="table table-striped">

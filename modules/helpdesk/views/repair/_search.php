@@ -48,23 +48,24 @@ use iamsaint\datetimepicker\Datetimepicker;
                                     ]
                                 ])->label(false);
                         ?>
-    <?=$form->field($model, 'status')->widget(Select2::classname(), [
-                                    'data' => $model->listRepairStatus(),
-                                    'options' => ['placeholder' => 'เลือกสถานะ'],
-                                    'pluginOptions' => [
-                                        'width' => '200px',
-                                    'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        'select2:select' => "function(result) { 
-                                                  $(this).submit()
-                                                }",
-                                                'select2:unselecting' => "function(result) { 
-                                                    $(this).submit()
-                                                  }",
+    <?php
+    // $form->field($model, 'status')->widget(Select2::classname(), [
+    //                                 'data' => $model->listRepairStatus(),
+    //                                 'options' => ['placeholder' => 'เลือกสถานะ'],
+    //                                 'pluginOptions' => [
+    //                                     'width' => '200px',
+    //                                 'allowClear' => true,
+    //                                 ],
+    //                                 'pluginEvents' => [
+    //                                     'select2:select' => "function(result) { 
+    //                                               $(this).submit()
+    //                                             }",
+    //                                             'select2:unselecting' => "function(result) { 
+    //                                                 $(this).submit()
+    //                                               }",
                                                 
-                                    ]
-                                ])->label(false);
+    //                                 ]
+    //                             ])->label(false);
                         ?>
 
 <div class="right-setting" id="filter-emp">
@@ -76,6 +77,9 @@ use iamsaint\datetimepicker\Datetimepicker;
             </h5>
         </div>
 <div class="p-2">
+
+
+<?php echo $form->field($model, 'status')->checkboxList($model->listRepairStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline'])->label('สถานะ'); ?>
 
 
             <div class="d-flex justify-content-between gap-3">
@@ -105,22 +109,22 @@ use iamsaint\datetimepicker\Datetimepicker;
                             </div>
                     <?php
                 
-                echo $form->field($model, 'date_between')->widget(Select2::classname(), [
-                    'data' => [
-                        'pr_create_date' => 'วันที่ขอซื้อ',
-                        'po_date' => 'วันที่สั่งซื้อ',
-                        'gr_date' => 'วันที่ตรวจรับ'
-                    ],
-                    'options' => ['placeholder' => 'ระบุประเภท'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                    'pluginEvents' => [
-                        'select2:select' => "function(result) { 
-                                    $(this).submit()
-                                }",
-                    ]
-                ])->label('ประเภท');
+                // echo $form->field($model, 'date_between')->widget(Select2::classname(), [
+                //     'data' => [
+                //         'pr_create_date' => 'วันที่ขอซื้อ',
+                //         'po_date' => 'วันที่สั่งซื้อ',
+                //         'gr_date' => 'วันที่ตรวจรับ'
+                //     ],
+                //     'options' => ['placeholder' => 'ระบุประเภท'],
+                //     'pluginOptions' => [
+                //         'allowClear' => true,
+                //     ],
+                //     'pluginEvents' => [
+                //         'select2:select' => "function(result) { 
+                //                     $(this).submit()
+                //                 }",
+                //     ]
+                // ])->label('ประเภท');
                 ?>
 
                 <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
