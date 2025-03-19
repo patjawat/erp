@@ -325,19 +325,24 @@ public function actionListComment($id)
         }
     }
 
-    public function actionShow($id)
+    public function actionShow($ref)
     {
-        $model = $this->findModel($id);
+        // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
             $id = Yii::$app->request->get('id');
-            $fileUpload = Uploads::findOne(['ref' => $model->ref]);
-            $filename = $fileUpload->real_filename;
-            $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
-            if (!file_exists($filepath)) {
-                throw new \yii\web\NotFoundHttpException('The requested file does not exist.');
+            $fileUpload = Uploads::findOne(['ref' => $ref]);
+            $type = 'pdf';
+            if (!$fileUpload) {
+                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
+            } else {
+                $filename = $fileUpload->real_filename;
+                $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
+            }
+            if (!$fileUpload && !file_exists($filepath)) {
+                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             }
 
-            $this->setHttpHeaders($fileUpload->type);
+            $this->setHttpHeaders($type);
             \Yii::$app->response->data = file_get_contents($filepath);
             return \Yii::$app->response;
         } else {

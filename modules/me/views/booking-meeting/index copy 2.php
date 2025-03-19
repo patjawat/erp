@@ -78,7 +78,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 
 
  <!-- Sidebar -->
- <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+ <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
         <a class="navbar-brand" href="#">📅 Meeting Room Booking</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -91,7 +91,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
                 <li class="nav-item"><a class="nav-link" href="#">⚙️ การตั้งค่า</a></li>
             </ul>
         </div>
-    </nav> -->
+    </nav>
 
     <div class="mt-4">
         <!-- Welcome Message -->
@@ -102,11 +102,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
         <div class="row">
             <!-- ตารางการจองวันนี้ -->
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>📆 การจองวันนี้</h5>
-                    
-                
+                <h5>📆 การจองวันนี้</h5>
                 <ul class="list-group">
                     <li class="list-group-item d-flex justify-content-between">
                         <span>09:00 - 10:00 | ห้อง A | คุณสมชาย</span>
@@ -117,9 +113,6 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
                         <span class="badge bg-secondary">รอเริ่ม</span>
                     </li>
                 </ul>
-
-                </div>
-                </div>
             </div>
 
             <!-- รายการห้องประชุม -->
@@ -183,7 +176,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
         <div class="card">
             <div class="card-body">
                 <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6>
-                <!-- <div id='calendar'></div> -->
+                <div id='calendar'></div>
             </div>
         </div>
 

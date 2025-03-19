@@ -60,7 +60,7 @@ $this->title = $model->topic;
                         <?php echo Html::a(($detail->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
                     </div>
                     <iframe id="myIframe"
-                        src="<?= Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
+                        src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
                         frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
 
                 </div>
