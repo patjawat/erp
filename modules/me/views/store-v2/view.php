@@ -32,33 +32,48 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
                 </div>
-            </div>
-        </div>
-
-        <?php foreach($model->listItems() as $item):?>
-        <div id="cart-container">
-            <div class="card mb-2">
-                <div class="card-body py-2">
-                    <div class="row align-items-center">
-                    <?php if($model->order_status == 'none'):?>
+     
+        <div
+            class="table-responsive"
+        >
+            <table
+                class="table table-striped table-hover align-middle"
+            >
+                <thead class="">
+                    <caption>
+                        Table Name
+                    </caption>
+                    <tr>
+                        <th class="text-center" style="width: 30px;">#</th>
+                        <th>รายการ</th>
+                        <th class="text-center" style="width:180px">จำนวนเบิก</th>
+                        <th class="text-center" style="width:125px">หน่วยนับ</th>
+                        <th class="text-center" style="width:100px">ดําเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                <?php foreach($model->listItems() as $item):?>
+                    <tr class="">
+                        <td>
+                        <?php if($model->order_status == 'none'):?>
                         <div class="col-md-1 p-1 d-flex justify-content-center">
                             <input type="checkbox" class="product-checkbox" value="<?php echo $item->id; ?>">
                         </div>
                         <?php endif;?>
-                        <div class="col-md-1 p-1">
-                            <?php echo Html::img($item->product->ShowImg(),['class' => 'img-fluid object-fit-cover rounded-1'])?>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="mb-1"><?php echo $item->product->title?></h6>
-                            <p class="text-muted mb-0 fw-bold"><?php echo $item->lot_number; ?></p>
-                        </div>
-                        <div class="col-md-2">
-                            <span class="fw-bold"><?php echo $item->unit_price?></span>
-                        </div>
-                        <div class="col-md-3">
+                        </td>
+                        <td scope="row">
+                            <div class="d-flex gap-3">
+                            <?php echo Html::img($item->product->ShowImg(),['class' => 'img-fluid object-fit-cover rounded-1','style' => 'width:60px'])?>
 
-                            <div class="d-flex align-items-center gap-1">
-
+                                <div class="avatar-detail">
+                                <h6 class="mb-1"><?php echo $item->product->title?></h6>
+                                <p class="text-muted mb-0">
+                              คงเหลือ  <span class="fw-semibold"><?php echo $item->stock->SumQty() ?></span>  <?php echo $item->product->unit_name?>
+                            </p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><div class="d-flex align-items-center gap-1">
                             <?php if($model->order_status == 'none'):?>
                                 <button class="btn btn-sm btn-light"
                                     onclick="updateQuantity(<?php echo $item->id; ?>, -1)">
@@ -74,25 +89,30 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php else:?>
                                     <input type="number" class="form-control quantity-input" value="<?php echo $item->qty?>" disabled>
                                 <?php endif;?>
-                            </div>
-
-
-                        </div>
-                        <div class="col-md-1 d-flex justify-content-center">
+                            </div></td>
+                        <td class="text-center">
+                            <?php echo $item->product->unit_name?>
+                        </td>
+                        <td class="text-center">
                         <?php if($model->order_status == 'none'):?>
                             <?php echo Html::a('<i class="bi bi-trash remove-btn text-danger fs-3"></i>',['/me/store-v2/delete-item','id'=> $item->id],['class' => 'delete-product-item']);?>
                             <?php else:?>
                                 <i class="bi bi-trash remove-btn text-secondary fs-3"></i>
                                 <?php endif;?>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach;?>
+                </tbody>
+                <tfoot>
+                    
+                </tfoot>
+            </table>
         </div>
-        <?php endforeach;?>
 
+        </div>
+        </div>
 
-
+        
 
     </div>
     <div class="col-4">
