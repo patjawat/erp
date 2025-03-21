@@ -84,7 +84,9 @@ $resultsJs = <<< JS
          }',
                 'select2:select' => 'function() {
                 var fullname = $(this).select2("data")[0].fullname;
+                var position_name = $(this).select2("data")[0].position_name;
                 $("#stockevent-data_json-recipient_fullname").val(fullname)
+                $("#stockevent-data_json-recipient_position").val(position_name)
 
          }',
             ],
@@ -118,6 +120,7 @@ $resultsJs = <<< JS
 
 
     <?= $form->field($model, 'data_json[recipient_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'data_json[recipient_position]')->hiddenInput(['maxlength' => true])->label(false) ?>
 
     <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

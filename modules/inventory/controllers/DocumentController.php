@@ -40,7 +40,7 @@ class DocumentController extends \yii\web\Controller
         // $templateProcessor->setValue('date', Yii::$app->thaiFormatter->asDateTime(date('Y-m-y'), 'php:d/m/Y'));
         $templateProcessor->setValue('date',  Yii::$app->thaiDate->toThaiDate($model->created_at, false, false));
         $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
-        $templateProcessor->setValue('department', $model->CreateBy()['department']);
+        $templateProcessor->setValue('department',$model->CreateBy()['department']);
         $templateProcessor->setValue('number', $model->code);
         $templateProcessor->setValue('total', number_format($model->getTotalOrderPrice(), 2));
         // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
@@ -48,15 +48,18 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
 
         $templateProcessor->setValue('drawer_name', $model->CreateBy()['fullname']);
+        $templateProcessor->setValue('drawer_position', 'ตำแหน่ง'.$model->CreateBy()['position_name']);
         $templateProcessor->setValue('date_drawer', $model->viewCreatedAt());
 
         $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname'] !='' ? $model->viewChecker()['fullname'] : '.................................................') ;
-        $templateProcessor->setValue('approve_date',  $model->viewChecker()['checker_date'] !='' ? $model->viewChecker()['checker_date'] : '.................................................') ;
+        $templateProcessor->setValue('a_position',  'ตำแหน่ง'.$model->viewChecker()['position']);
+        $templateProcessor->setValue('approve_date',  $model->viewChecker()['approve_date'] !='' ? $model->viewChecker()['approve_date'] : '.................................................') ;
         $templateProcessor->setValue('recipientname', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '.................................................');
+        $templateProcessor->setValue('r_position', isset($model->data_json['recipient_position']) ? 'ตำแหน่ง'.$model->data_json['recipient_position'] : 'ตำแหน่ง'.'.................................................');
         $templateProcessor->setValue('recipientdate',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiDate->toThaiDate($model->data_json['recipient_date'], true, false) : '........................................');
 
         $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
-        $templateProcessor->setValue('leader_position', $this->getInfo()['leader_position']);
+        $templateProcessor->setValue('leader_position', 'ตำแหน่ง'.$this->getInfo()['leader_position']);
 
         $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);  // ผู้อำนวยการโรงพยาบาล
         $templateProcessor->setValue('org_name', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);  // ชื่อโรงพยาบาล
@@ -70,6 +73,7 @@ class DocumentController extends \yii\web\Controller
         }
 
         $templateProcessor->setValue('pay_name', $model->ShowPlayer()['fullname']);  // ผู้จ่าย
+        $templateProcessor->setValue('pay_position', 'ตำแหน่ง'.$model->ShowPlayer()['position_name']);  // ผู้จ่าย
 
         $templateProcessor->cloneRow('detail', count($model->getItems()));
         $i = 1;

@@ -14,6 +14,7 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\purchase\models\Order;
+use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Product;
 
 /**
@@ -546,22 +547,27 @@ class StockEvent extends Yii\db\ActiveRecord
             }
 
             $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
+            $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
 
             return
                 [
-                   
                     'status' => $status,
-                    'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
+                    // 'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
                     // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
+                    'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
+                    'position' => $this->getAvatar($approve->emp_id)['position_name'],
+                    'approve_date' => $approve->data_json['approve_date'] ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
+                    'avatar' => $this->getAvatar($approve->emp_id, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
                     'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
-                    'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
+                    // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
                 ];
         } catch (\Throwable $th) {
             return
                 [
                     'status' => '',
                     'fullname' => '',
-                    'checker_date' => '',
+                    'position' => '',
+                    'approve_date' => '',
                     'avatar' => '',
                 ];
         }
@@ -649,7 +655,7 @@ class StockEvent extends Yii\db\ActiveRecord
     // ผู้สั่งจ่ายวัสดุ
     public function ShowPlayer($data = '')
     {
-        try {
+        // try {
             $datetime = \Yii::$app->thaiDate->toThaiDate($this->data_json['player_date'], true, false);
             if($data){
                 $msg = $data;
@@ -657,12 +663,13 @@ class StockEvent extends Yii\db\ActiveRecord
                 $msg = 'ผู้จ่าย' . ' | ' . $datetime;
             }
             return $this->getAvatar($this->data_json['player'], $msg);
-        } catch (\Throwable $th) {
-           return [
-            'fullname' => 'ไม่ระบุผู้จ่าย',
-            'avatar' => ''
-           ];
-        }
+        // } catch (\Throwable $th) {
+        //    return [
+        //     'fullname' => 'ไม่ระบุผู้จ่าย',
+        //     'position_name' => '',
+        //     'avatar' => ''
+        //    ];
+        // }
     }
 
     public function ViewReceiveDate()
