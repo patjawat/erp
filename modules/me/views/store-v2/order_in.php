@@ -20,10 +20,10 @@ $title = '';
             <div class="col-4 d-flex justify-content-start align-items-center">
                 <h6><i class="bi bi-ui-checks"></i> จำนวนใบเบิก <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount(); ?> </span> รายการ</h6>
             </div>
-            <div class="col-4"><?= $this->render('_search_order_in', ['model' => $searchModel]); ?></div>
-            <div class="col-4 d-flex justify-content-end align-items-center">
-                <?php echo Html::a('<i class="fa-solid fa-plus"></i> สร้างใบเบิก',['/me/store-v2/create-order','title' => 'เบิกวัสดุคลังหลัก'],['class' => 'btn btn-primary open-modal rounded-pill','data' => ['size' => 'modal-lg']])?>
+            <div class="col-4">
+                <?= $this->render('_search_order_in', ['model' => $searchModel]); ?>
             </div>
+            
             </div>
             <div class="table-responsive">
                 <table class="table table-primary">
@@ -37,7 +37,7 @@ $title = '';
                             <th class="text-center">ดำเนินการ</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="table-group-divider">
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr class="">
                             <td>
@@ -55,7 +55,11 @@ $title = '';
                                 ?>
                             </td>
                             <td><?php echo $item->warehouse->warehouse_name?></td>
-                            <td><?php echo $item->getTotalOrderPrice()?></td>
+                            <td>
+
+                            <span class="fw-semibold"><?php echo number_format($item->getTotalOrderPrice(),2)?></span>
+                                
+                            </td>
                             <td><?php echo $item->viewStatus()?></td>
                             <td class="text-center">
                                 <?php echo Html::a('<i class="fa-solid fa-pen-to-square fs-3"></i>',['/me/store-v2/view','id' => $item->id])?>

@@ -37,7 +37,11 @@ use app\modules\inventory\models\Warehouse;
                                             }",
                                             "select2:select" => "function() {
                                                $(this).submit();
-                                        }",],
+                                        }",
+                                        "select2:unselect" => "function() {
+                                            $(this).submit();
+                                     }",
+                                    ],
                                         'pluginOptions' => [
                                             'allowClear' => true,
                                         ],

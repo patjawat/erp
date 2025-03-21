@@ -39,6 +39,7 @@ class MainStockController extends Controller
     {
         $submWarehouse = \Yii::$app->session->get('sub-warehouse');
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
+        $assetType = \Yii::$app->session->get('asset_type');
 
         // หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
         // if (!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse->id)) {
@@ -72,6 +73,7 @@ class MainStockController extends Controller
                     $model->order_status = 'pending';
                     $model->warehouse_id = $mainWarehouse->id;
                     $model->from_warehouse_id = $submWarehouse->id;
+
                     if (!$model->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
                     }
@@ -87,8 +89,8 @@ class MainStockController extends Controller
                             'asset_item' => $item->asset_item,
                             'lot_number' => $item->lot_number,
                             'unit_price' => $item->unit_price,
-                            'qty' => $item->qty,
-                            // 'qty' => $item->SumLotQty(), //ระบุจำนวนจริงตาม lot ที่เหลือ
+                            'qty' => 0,
+                            'qty' => $item->getQuantity(), //ระบุจำนวนจริงตาม lot ที่เหลือ
                             'data_json' => [
                                 'req_qty' => $item->getQuantity(),
                             ],
@@ -105,6 +107,7 @@ class MainStockController extends Controller
                     // สร้างการอนุมัติ new feture
                     $approve = new Approve;
                     $approve->from_id = $model->id;
+                    $approve->level = 1;
                     $approve->name = 'main_stock';
                     $approve->emp_id = $model->checker;
                     $approve->status = 'Pending';
@@ -121,6 +124,7 @@ class MainStockController extends Controller
                     }
 
                     \Yii::$app->session->remove('main-warehouse');
+                    \Yii::$app->session->remove('asset_type');
                     return $this->redirect(['/me/main-stock/store']);
                 } catch (\Throwable $e) {
                     $transaction->rollBack();
@@ -290,6 +294,12 @@ class MainStockController extends Controller
     public function actionViewCart()
     {
         $cart = \Yii::$app->cartMain;
+        
+        if ($cart->getCount() < 1) {
+            \Yii::$app->session->remove('main-warehouse');
+            \Yii::$app->session->remove('asset_type');
+        }
+
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -330,6 +340,7 @@ class MainStockController extends Controller
         if (!$mainWarehouse) {
             $mainWarehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
             \Yii::$app->session->set('main-warehouse', $mainWarehouse);
+            \Yii::$app->session->set('asset_type',$model->product->productType);
         }
         $cart->create($model, 1);
         $totalCount = $cart->getCount();
@@ -368,6 +379,7 @@ class MainStockController extends Controller
             $cart->delete($product);
             if ($cart->getCount() < 1) {
                 \Yii::$app->session->remove('main-warehouse');
+                \Yii::$app->session->remove('asset_type');
             }
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -383,6 +395,7 @@ class MainStockController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         \Yii::$app->session->remove('main-warehouse');
+        \Yii::$app->session->remove('asset_type');
         $cart = \Yii::$app->cartMain;
 
         return $this->redirect(['/inventory/main-stock']);

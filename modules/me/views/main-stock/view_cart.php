@@ -17,13 +17,11 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
 <?php $this->endBlock(); ?>
-<?=number_format($cart->getCost(),2);?>
 
             <table class="table table-primary">
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>
-                        <th class="text-center">จำนวนสต็อก</th>
                         <th class="text-center">หน่วย</th>
                         <th class="text-end">มูลค่า</th>
                         <th class="text-center" style="width:300px">จำนวนเบิก</th>
@@ -38,9 +36,6 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                             ?>
                     <tr class="">
                         <td scope="row"><?=$item->product->Avatar();?></td>
-                        <td class="text-center">
-                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?=$item->SumQty()?> </span>
-                        </td>
                         <td class="text-center"><?=$item->product->unit_name?></td>
                         <td class="text-end"><span class="fw-semibold"><?=number_format($item->unit_price,2)?></span></td>
                         <td class="text-center">

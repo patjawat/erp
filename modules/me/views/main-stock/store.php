@@ -41,10 +41,15 @@ $products = $cart->getItems();
             }
             ?>
             <div>
-
+<?php if($cart->getCount() == 0):?>
+    <button type="button" class="btn btn-primary rounded-pill disabled">
+                    <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount"> 0 </span> รายการ
+                    </button>
+<?php else:?>
                 <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
                     </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังกลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                    <?php endif;?>
                     <?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary rounded-pill shadow'])?>
                     </div>
         </div>
@@ -125,8 +130,15 @@ $js = <<< JS
                 });
             }else{
                 $('#stocksearch-warehouse_id').val(res.mainWarehouse.id);
-                $('#stocksearch-warehouse_id').prop('disabled', true).trigger('change');
+                $('#stocksearch-asset_type').val(res.asset_type);
+                // $('#stocksearch-warehouse_id').prop('disabled', true).trigger('change');
                 $('#totalCount').text(res.totalCount)
+                
+                if(res.totalCount >= 1){
+                }
+                if(res.totalCount == 1){
+                    window.location.reload()    
+                }
             }
                 // success()
                 // $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
@@ -185,9 +197,11 @@ $("body").on("keypress", ".update-qty", function (e) {
                     timer: 1500,
                 });
                 }
-                // success()
                 ViewMainCar();
                 $('#totalCount').text(res.totalCount)
+                if(res.totalCount == 0){
+                    window.location.reload()
+                }
                 $.pjax.reload({ container:'#inventory-container', history:false,replace: false,timeout: false});
             }
         });
@@ -247,4 +261,3 @@ $("body").on("click", ".checkout", async function (e) {
 JS;
 $this->registerJS($js, View::POS_END);
 
-?>

@@ -11,6 +11,7 @@ use kartik\widgets\ActiveForm;
 
 $cart = \Yii::$app->cartMain;
 $products = $cart->getItems();
+$assetType = \Yii::$app->session->get('asset_type');
 
 ?>
     <?php $form = ActiveForm::begin([
@@ -24,13 +25,17 @@ $products = $cart->getItems();
         <?php echo $this->render('_form_order', ['form' => $form, 'model' => $model]); ?>
     <?php echo $form->field($model, 'name')->hiddenInput()->label(false); ?>
     <?php echo $form->field($model, 'data_json[checker_confirm]')->hiddenInput()->label(false); ?>
+    <?php if($model->isNewRecord):?>
+    <?php echo $form->field($model, 'data_json[asset_type]')->hiddenInput(['value' => $assetType->code ?? ''])->label(false); ?>
+    <?php echo $form->field($model, 'data_json[asset_type_name]')->hiddenInput(['value' => $assetType->title ?? '' ])->label(false); ?>
+    <?php endif;?>
     <?php echo $model->isNewRecord ? $form->field($model, 'category_id')->hiddenInput()->label(false) : null; ?>
 
 
 
     <div class="text-center">
         <?php if($cart->getCount() == 0):?>
-            <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิกdd</button>
+            <button type="button" class="btn btn-primary" disabled><i class="fa-solid fa-cart-shopping"></i> เบิก</button>
         <?php else:?>
             <?php  echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']); ?>
             <?php

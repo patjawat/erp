@@ -46,8 +46,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <th class="text-center" style="width: 30px;">#</th>
                         <th>รายการ</th>
-                        <th class="text-center" style="width:180px">จำนวนเบิก</th>
                         <th class="text-center" style="width:125px">หน่วยนับ</th>
+                        <th class="text-center" style="width:180px">เบิก</th>
+                        <th class="text-center" style="width:100px">อนุมัติ</th>
                         <th class="text-center" style="width:100px">ดําเนินการ</th>
                     </tr>
                 </thead>
@@ -73,6 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                         </td>
+                        <td class="text-center"><?php echo $item->product->unit_name?></td>
                         <td><div class="d-flex align-items-center gap-1">
                             <?php if($model->order_status == 'none'):?>
                                 <button class="btn btn-sm btn-light"
@@ -90,9 +92,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <input type="number" class="form-control quantity-input" value="<?php echo $item->qty?>" disabled>
                                 <?php endif;?>
                             </div></td>
-                        <td class="text-center">
-                            <?php echo $item->product->unit_name?>
-                        </td>
+                            <td>
+                            <input type="number" class="form-control quantity-input" value="<?php echo $model->order_status == 'success' ? $item->qty : 0?>" disabled>
+                            </td>
                         <td class="text-center">
                         <?php if($model->order_status == 'none'):?>
                             <?php echo Html::a('<i class="bi bi-trash remove-btn text-danger fs-3"></i>',['/me/store-v2/delete-item','id'=> $item->id],['class' => 'delete-product-item']);?>

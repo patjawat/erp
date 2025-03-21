@@ -18,6 +18,7 @@ async function ViewMainCar()
             $('.countMainItem').html(res.countItem)
             if(res.countItem < 1){
                 $("#main-modal").modal("hide");
+               
 
             }
             console.log(res.countItem);

@@ -8,11 +8,9 @@ use yii\helpers\ArrayHelper;
 use yii\bootstrap5\ActiveForm;
 use app\modules\inventory\models\Warehouse;
 
-$getWarehouse = Yii::$app->session->get('selectMainWarehouse');
-/** @var yii\web\View $this */
-/** @var app\modules\sm\models\OrderSearch $model */
-/** @var yii\widgets\ActiveForm $form */
 
+$getWarehouse = Yii::$app->session->get('main-warehouse');
+$assetType = Yii::$app->session->get('asset_type');
 $warehouse = Yii::$app->session->get('sub-warehouse');
 $warehouseModel = app\modules\inventory\models\Warehouse::findOne($warehouse->id);
 $item = $warehouseModel->data_json['item_type'];
@@ -21,9 +19,9 @@ $product = ArrayHelper::map(Categorise::find()
 ->andWhere(['IN', 'code', $item])
 ->all(), 'code', 'title');
 
-// echo "<pre>";
-// print_r($item);
-// echo "</pre>";
+/** @var yii\web\View $this */
+/** @var app\modules\sm\models\OrderSearch $model */
+/** @var yii\widgets\ActiveForm $form */
 
 ?>
 
@@ -44,7 +42,7 @@ $product = ArrayHelper::map(Categorise::find()
     <div>
         <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
             'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-            'options' => ['placeholder' => 'เลือกคลัง'],
+            'options' => ['placeholder' => 'เลือกคลัง','value' =>$getWarehouse ? $getWarehouse->id : ''],
             'disabled' => ($getWarehouse ?  true : false),
             'pluginEvents' => [
                 "select2:unselect" => "function() { 
@@ -77,7 +75,8 @@ $product = ArrayHelper::map(Categorise::find()
   
   echo $form->field($model, 'asset_type')->widget(Select2::classname(), [
       'data' => $product,
-      'options' => ['placeholder' => 'เลือกประเภทวัสดุ', 'class' => 'rounded-pill border-0'],
+      'options' => ['placeholder' => 'เลือกประเภทวัสดุ','value' =>($assetType ?? $model->code),'class' => 'rounded-pill border-0'],
+      'disabled' => ($assetType ?  true : false),
       'pluginOptions' => [
           'allowClear' => true,
           'width' => '200px',
