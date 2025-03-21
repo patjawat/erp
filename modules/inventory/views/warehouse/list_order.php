@@ -50,13 +50,13 @@ use app\modules\inventory\models\StockEvent;
                                         data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                         <i class="bi bi-caret-down-fill"></i>
                                     </button>
+                                    <?php if($item->order_status == 'success'):?>
                                     <ul class="dropdown-menu">
-
-                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
-                                        </li>
-
-
+                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?></li>
                                     </ul>
+                                        <?php endif;?>
+
+
                                 </div>
                             </td>
                         </tr>
