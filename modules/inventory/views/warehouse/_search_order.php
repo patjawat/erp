@@ -28,22 +28,22 @@ use iamsaint\datetimepicker\Datetimepicker;
 
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุสิ่งที่ต้องการค้นหา..'])->label(false) ?>
     <?php
-                                // echo $form->field($model, 'order_status')->widget(Select2::classname(), [
-                                //     'data' => ['pending' => 'รอดำเนินการ','success' => 'สำเร็จ'],
-                                //     'options' => ['placeholder' => 'เลือกสถานะ ...'],
-                                //     'pluginOptions' => [
-                                //         'width' => '200px',
-                                //     'allowClear' => true,
-                                //     ],
-                                //     'pluginEvents' => [
-                                //         'select2:select' => "function(result) { 
-                                //                   $(this).submit()
-                                //                 }",
-                                //                 'select2:unselect' => "function(result) { 
-                                //                   $(this).submit()
-                                //                 }",
-                                //     ]
-                                // ])->label('สถานะ');
+                                echo $form->field($model, 'from_warehouse_id')->widget(Select2::classname(), [
+                                    'data' => $model->listFormWarehouse(),
+                                    'options' => ['placeholder' => 'เลือกคลัง ...'],
+                                    'pluginOptions' => [
+                                        'width' => '400px',
+                                    'allowClear' => true,
+                                    ],
+                                    'pluginEvents' => [
+                                        'select2:select' => "function(result) { 
+                                                  $(this).submit()
+                                                }",
+                                                'select2:unselect' => "function(result) { 
+                                                  $(this).submit()
+                                                }",
+                                    ]
+                                ])->label(false);
                         ?>
                          <?php
                                 echo $form->field($model, 'order_status')->widget(Select2::classname(), [

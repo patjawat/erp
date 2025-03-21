@@ -465,7 +465,11 @@ class StockEvent extends Yii\db\ActiveRecord
                 'warehouse_name'
             );
         }
-        
+    public function listFormWarehouse(): array
+    {
+        // $fromWarehouseList = self::find()->select('from_warehouse_id')->where(['name' => 'order'])->column();
+        return ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'SUB' ])->all(), 'id', 'warehouse_name');
+    }
 
     // แสดงรายละเอียดของแต่ละ lot
     public function LotNumberDetail()

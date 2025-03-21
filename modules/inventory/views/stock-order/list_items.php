@@ -17,10 +17,10 @@ $emp = UserHelper::GetEmployee();
                             <th>รายการ</th>
                             <th class="text-end">มูลค่า</th>
                             <th class="text-start">ล็อตผลิต</th>
+                            <th class="text-center">หน่วย</th>
                             <th class="text-center">ขอเบิก</th>
                             <!-- <th class="text-center">คงเหลือ</th> -->
                             <th class="text-center">อนุมัติจ่าย</th>
-                            <th class="text-center">หน่วย</th>
                             <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
                         </tr>
                     </thead>
@@ -44,6 +44,9 @@ $emp = UserHelper::GetEmployee();
                            
                             <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
                             <td class="align-middle text-start"><?php echo $item->lot_number; ?></td>
+                            <td class="align-middle text-center">
+                                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
+                            </td>
                             <td class="align-middle text-center"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
                             <!-- <td class="text-center"><?php //echo $item->SumStockQty(); ?></td> -->
                             <td class="text-center">
@@ -78,9 +81,7 @@ $emp = UserHelper::GetEmployee();
                                 <?php  echo  $model->order_status == 'success' ? $item->qty : '-' ?>
                                 <?php endif;?>
                             </td>
-                            <td class="align-middle text-center">
-                                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
-                            </td>
+                          
                             <td class="text-center">
 
                                 <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
