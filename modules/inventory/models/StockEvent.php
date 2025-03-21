@@ -567,11 +567,23 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
+    //แสดงวันเวลารับวัสดุ
+    public function viewRecipient()
+    {
+        try {
+            $dateTime = $this->data_json['recipient_date'].' '.$this->data_json['recipient_time'];
+            return  \Yii::$app->thaiDate->toThaiDate($dateTime, true, false);
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
 // ผู้รับวสดุ
     public function Recipient()
     {
         try{
-            return $this->getAvatar($this->data_json['recipient'],'ผู้รับวัสดุ');
+           
+            $msg = 'ผู้รับวัสดุ'.' | '.$this->viewRecipient();
+            return $this->getAvatar($this->data_json['recipient'],$msg);
 
         }catch (\Throwable $th) {
             return [

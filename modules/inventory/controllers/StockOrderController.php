@@ -269,6 +269,9 @@ class StockOrderController extends Controller
             if (isset($model->data_json['recipient_date'])) {
                 preg_replace('/\D/', '', $model->data_json['recipient_date']) == '' ? $model->addError('data_json[recipient_date]', 'ลงวันที่ต้องระบุ') : null;
             }
+            if (isset($model->data_json['recipient_time'])) {
+                preg_replace('/\D/', '', $model->data_json['recipient_time']) == '' ? $model->addError('data_json[recipient_time]', 'เวลาต้องระบุ') : null;
+            }
 
             if (isset($model->data_json['recipient'])) {
                 $model->data_json['recipient'] == '' ? $model->addError('data_json[recipient]', $requiredName) : null;
@@ -372,11 +375,9 @@ class StockOrderController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             if ($model->save(false)) {
-                StockEvent::updateAll(['order_status' => 'cancel'], ['category_id' => $model->order_status]);
-
+                StockEvent::updateAll(['order_status' => 'cancel'], ['name' => 'order_item','category_id' => $model->id]);
                 return $this->redirect(['/inventory/warehouse/order-request']);
             }
-            // return $model;
         }
 
         if ($this->request->isAJax) {

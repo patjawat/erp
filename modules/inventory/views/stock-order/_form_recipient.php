@@ -1,13 +1,13 @@
 <?php
 
-use app\modules\hr\models\Employees;
-use kartik\select2\Select2;
-use kartik\widgets\ActiveForm;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\web\JsExpression;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\web\JsExpression;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use kartik\widgets\ActiveForm;
+use app\modules\hr\models\Employees;
 use iamsaint\datetimepicker\Datetimepicker;
 
 $formatJs = <<< 'JS'
@@ -72,7 +72,6 @@ $resultsJs = <<< JS
 
     <?php
         $initEmployee = isset($model->data_json['recipient']) ? Employees::find()->where(['id' => $model->data_json['recipient']])->one()->getAvatar(false) : null;
-        // echo $initEmployee->getAvatar(false);
         echo $form->field($model, 'data_json[recipient]')->widget(Select2::classname(), [
             'initValueText' => $initEmployee,
             'id' => 'boardId',
@@ -107,17 +106,15 @@ $resultsJs = <<< JS
             ],
         ])->label('ชื่อ')
     ?>
+<div class="row">
+    <div class="col-6">
+    <?php echo $form->field($model, 'data_json[recipient_date]')->textInput()->label('<i class="bi bi-calendar-check"></i> วันที่') ?>
+    </div>
+    <div class="col-6">
+    <?= $form->field($model, 'data_json[recipient_time]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('<i class="bi bi-clock"></i> เวลา') ?>
+    </div>
+</div>
 
-<?php echo $form->field($model, 'data_json[recipient_date]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('วันที่') ?>
 
 
     <?= $form->field($model, 'data_json[recipient_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
@@ -134,32 +131,8 @@ $resultsJs = <<< JS
 $js = <<< JS
 
 
-    var thaiYear = function (ct) {
-        var leap=3;  
-        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
-        if(ct){  
-            var yearL=new Date(ct).getFullYear()-543;  
-            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
-            if(leap==2){  
-                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
-            }  
-        }              
-        this.setOptions({  
-            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
-        })                
-    };    
-     
-    $("#stockevent-data_json-recipient_date").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-        lang:'th',  // แสดงภาษาไทย
-        onChangeMonth:thaiYear,          
-        onShow:thaiYear,                  
-        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-        closeOnDateSelect:true,
-    });       
- 
-
+thaiDatepicker("#stockevent-data_json-recipient_date")
+    
     \$('#form').on('beforeSubmit', function (e) {
         var form = \$(this);
         \$.ajax({
@@ -179,7 +152,7 @@ $js = <<< JS
         return false;
     });
 
-    JS;
+JS;
 $this->registerJS($js, View::POS_END)
 ?>
 

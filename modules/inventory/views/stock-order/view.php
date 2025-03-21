@@ -72,14 +72,17 @@ $emp = UserHelper::GetEmployee();
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
-                    <h6>รายละเอียดการขอเบิก</h6>
+                    <?php
+                    // echo $model->CreateBy()['avatar'];
+                    ?>
                     <?php
                      try {
-                         $model->CreateBy('<code>ผู้เบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$model->viewCreated())['avatar'];
+                         echo $model->CreateBy('<code>ผู้เบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$model->viewCreated())['avatar'];
                      } catch (Throwable $th) {
                          // throw $th;
-                     }
-?>
+                        }
+                    ?>
+                    <?php if(!in_array($model->order_status, ['success','cancel'])):?>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
@@ -90,6 +93,7 @@ $emp = UserHelper::GetEmployee();
                             <?php  echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
                         </div>
                     </div>
+                    <?php endif;?>
                 </div>
 
                 <?php echo DetailView::widget([
@@ -130,11 +134,6 @@ $emp = UserHelper::GetEmployee();
 
             </div>
             <div class="card-footer">
-                <?php
-                // echo $model->CreateBy()['fullname'];
-                // echo $model->viewCreatedAt();
-                ?>
-                
                 <div class="d-flex justify-content-between">
                     <div class="">
                         <?php  if(isset($model->data_json['player'])):?>
@@ -153,7 +152,7 @@ $emp = UserHelper::GetEmployee();
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse->id)): ?>
                             
                             <?php  // if($balanced == 0):?>
-                            <?php echo $model->countNullQty() == 0 ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
+                            <?php echo (!in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
 
                             <?php //  endif;?>
                             <?php else:?>

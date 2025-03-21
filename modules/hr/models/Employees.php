@@ -1041,19 +1041,20 @@ class Employees extends Yii\db\ActiveRecord
     {
      
         try {
-            $model = Organization::findOne($this->department);
-            if($model){
-                return $model->name;
-            }else{
-                return 'ไม่ระบุ';
-            }
+            return $this->empDepartment?->name ?? 'ไม่ระบุ';
+        } catch (\Throwable $th) {
+            return 'ไม่ระบุ';
+        }
+        // $model = Organization::findOne($this->department);
+            // return $model;
+            // if($model){
+            //     return $model->name;
+            // }else{
+            //     return 'ไม่ระบุ';
+            // }
             
             // return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : '';
             // code...
-        } catch (\Throwable $th) {
-            // throw $th;
-            return '';
-        }
         // return isset($this->empDepartment) ? $this->empDepartment->title : $this->department;
     }
 

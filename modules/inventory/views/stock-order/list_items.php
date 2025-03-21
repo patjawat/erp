@@ -15,12 +15,12 @@ $emp = UserHelper::GetEmployee();
                     <thead class="table-primary">
                         <tr>
                             <th>รายการ</th>
-                            <th class="text-center">หน่วย</th>
-                            <th class="text-start">ล็อตผลิต</th>
                             <th class="text-end">มูลค่า</th>
+                            <th class="text-start">ล็อตผลิต</th>
                             <th class="text-center">คงเหลือ</th>
                             <th class="text-center">ขอเบิก</th>
                             <th class="text-center">จ่าย</th>
+                            <th class="text-center">หน่วย</th>
                             <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
                         </tr>
                     </thead>
@@ -41,17 +41,16 @@ $emp = UserHelper::GetEmployee();
                                         }
                                     ?>
                             </td>
-                            <td class="align-middle text-center">
-                                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
-                            </td>
-                            <td class="align-middle text-start">
-                                <?php echo $item->lot_number; ?>(<code><?php echo $item->SumLotQty(); ?></code>)</td>
+                           
                             <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
+                            <td class="align-middle text-start"><?php echo $item->lot_number; ?></td>
                             <td class="text-center"><?php echo $item->SumStockQty(); ?></td>
                             <td class="align-middle text-center"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
                             <td class="text-center">
-                                <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &  $item->SumLotQty() > 0 && isset($office) && $model->order_status != 'success'): ?>
+                            <?php // if ($model->OrderApprove() && Yii::$app->user->can('warehouse') && $item->SumLotQty() > 0 && $office ?? false && !in_array($model->order_status, ['cancel'])): ?>
+                            <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &&($item->SumLotQty() > 0) && ($office ?? false) && !in_array($model->order_status, ['success','cancel'])): ?>
                                 <div class="d-flex">
+                                    <?php echo $item->order_status?>
                                     <span type="button" class="minus btn btn-sm btn-light" id="min"
                                         data-lot_qty="<?php echo $item->SumLotQty(); ?>"
                                         data-id="<?php echo $item->id;?>"
@@ -78,10 +77,13 @@ $emp = UserHelper::GetEmployee();
                                 <?php  echo  $model->order_status == 'success' ? $item->qty : '-' ?>
                                 <?php endif;?>
                             </td>
+                            <td class="align-middle text-center">
+                                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
+                            </td>
                             <td class="text-center">
 
                                 <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
-                                <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
+                                <?php echo in_array($model->order_status, ['success','cancel']) ? '' : Html::a('<i class="fa-solid fa-copy"></i>', ['/inventory/stock-order/copy-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-primary copy-item']); ?>
                                 <?php endif;?>
 
                                 <?php //if (($item->data_json['req_qty'] > $item->SumLotQty()) && $item->CountItem($model->id) < 2) { ?>
@@ -89,7 +91,7 @@ $emp = UserHelper::GetEmployee();
                                 <?php if(!$model->OrderApprove()):?>
                                 <?php //echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
                                 <?php endif;?>
-                                <?php if($model->order_status != 'success' && $userid == $item->created_by):?>
+                                <?php if(!in_array($model->order_status, ['success','cancel']) && $userid == $item->created_by):?>
                                 <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']); ?>
                                 <?php endif?>
 

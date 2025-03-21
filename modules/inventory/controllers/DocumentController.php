@@ -38,7 +38,7 @@ class DocumentController extends \yii\web\Controller
 
         $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
         // $templateProcessor->setValue('date', Yii::$app->thaiFormatter->asDateTime(date('Y-m-y'), 'php:d/m/Y'));
-        $templateProcessor->setValue('date',  Yii::$app->thaiDate->toThaiDate(date('Y-m-y'), false, false));
+        $templateProcessor->setValue('date',  Yii::$app->thaiDate->toThaiDate($model->created_at, false, false));
         $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
         $templateProcessor->setValue('department', $model->CreateBy()['department']);
         $templateProcessor->setValue('number', $model->code);
@@ -63,9 +63,7 @@ class DocumentController extends \yii\web\Controller
 
         // วันที่สั่งจ่าย
         try {
-            $dateTime = $model->data_json['player_date'];
-            $paydate = explode(' ', $dateTime)[0];
-            Yii::$app->thaiFormatter->asDate($paydate, 'long');
+             $datetime = \Yii::$app->thaiDate->toThaiDate($model->data_json['player_date'], true, false);
             $templateProcessor->setValue('pay_date', $datetime);  // วันที่
         } catch (\Throwable $th) {
             $templateProcessor->setValue('pay_date', '-');  // วันที่
