@@ -47,6 +47,37 @@ class GeneralController extends \yii\web\Controller
 
     }
 
+    public function actionDashboardDev()
+    {
+        $searchModel = new HelpdeskSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'repair_group' => 1,
+            'auth_item' => 'technician'
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+        ]);
+        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
+        $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
+        $dataProvider->pagination->pageSize = 15;
+
+            return $this->render('dashboard_dev', [
+                'title' => 'ศูนย์งานซ่อมบำรุง',
+                'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                
+            ]);
+
+        // return $this->render('dashboard');
+    }
+
     public function actionDashboard()
     {
         $searchModel = new HelpdeskSearch([
@@ -77,7 +108,7 @@ class GeneralController extends \yii\web\Controller
 
         // return $this->render('dashboard');
     }
-
+    
     public function actionUpdate($id)
     {
         

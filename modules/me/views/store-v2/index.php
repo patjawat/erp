@@ -1,3 +1,5 @@
+<!-- ตัวอย่าง -->
+<!-- https://spruko.com/demo/tailwind/xintra/dist/html/index13.html -->
 <?php
 use yii\helpers\Html;
 $warehouse = Yii::$app->session->get('sub-warehouse');

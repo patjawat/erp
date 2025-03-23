@@ -21,7 +21,7 @@ use app\modules\dms\models\Documents;
                 <tr class="" style="max-width:200px">
                     <td class="fw-semibold">
 
-                        <?php  echo $item->document->doc_regis_number?></td>
+                        <?php  echo $item->document?->doc_regis_number ?? '-'?></td>
                     <td class="fw-light align-middle">
                         <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>"
                             class="text-dark open-modal-fullscreen-x">
