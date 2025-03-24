@@ -659,7 +659,7 @@ class StockEvent extends Yii\db\ActiveRecord
     // ผู้สั่งจ่ายวัสดุ
     public function ShowPlayer($data = '')
     {
-        // try {
+        try {
             $datetime = \Yii::$app->thaiDate->toThaiDate($this->data_json['player_date'], true, false);
             if($data){
                 $msg = $data;
@@ -667,13 +667,13 @@ class StockEvent extends Yii\db\ActiveRecord
                 $msg = 'ผู้จ่าย' . ' | ' . $datetime;
             }
             return $this->getAvatar($this->data_json['player'], $msg);
-        // } catch (\Throwable $th) {
-        //    return [
-        //     'fullname' => 'ไม่ระบุผู้จ่าย',
-        //     'position_name' => '',
-        //     'avatar' => ''
-        //    ];
-        // }
+        } catch (\Throwable $th) {
+           return [
+            'fullname' => 'ไม่ระบุผู้จ่าย',
+            'position_name' => '',
+            'avatar' => ''
+           ];
+        }
     }
 
     public function ViewReceiveDate()

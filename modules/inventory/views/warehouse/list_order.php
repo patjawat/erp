@@ -43,21 +43,12 @@ use app\modules\inventory\models\StockEvent;
                             </td>
                             <td class="text-center"><?=$item->viewstatus()?></td>
                             <td>
-                                <div class="btn-group">
-                                    <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-light'])?>
 
-                                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                        <i class="bi bi-caret-down-fill"></i>
-                                    </button>
-                                    <?php if($item->order_status == 'success'):?>
-                                    <ul class="dropdown-menu">
-                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?></li>
-                                    </ul>
-                                        <?php endif;?>
-
-
+                            <div class="btn-group" role="group" aria-label="Basic outlined example">
+                            <?= Html::a('<i class="fa-solid fa-print me-1"></i>', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'btn btn-outline-primary open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
+                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-outline-primary'])?>
                                 </div>
+
                             </td>
                         </tr>
                         <?php endforeach; ?>
