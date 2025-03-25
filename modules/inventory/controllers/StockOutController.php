@@ -2,24 +2,24 @@
 
 namespace app\modules\inventory\controllers;
 
+use Yii;
+use yii\web\Response;
+use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\sm\models\Product;
+use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockOut;
+
+use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\StockOutSearch;
 use app\modules\inventory\models\StockEventSearch;
-use app\modules\sm\models\Product;
-use app\components\AppHelper;
-use app\modules\inventory\models\Warehouse;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
-use yii\web\Response;
-
-use Yii;
-use yii\helpers\ArrayHelper;
-use app\modules\inventory\models\StockSearch;
-use app\components\UserHelper;
-use yii\db\Expression;
 
 /**
  * StockOutController implements the CRUD actions for StockOut model.
@@ -357,6 +357,7 @@ public function actionShowCart()
             $checkStock = Stock::findOne(['id' => $item->id, 'lot_number' => $item->lot_number, 'warehouse_id' => $newStockItem->warehouse_id]);
             $checkStock->qty = $checkStock->qty - $item->getQuantity();
             $checkStock->save(false);
+  
         }
 
         // $model->order_status = 'success';

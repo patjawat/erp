@@ -1,0 +1,16 @@
+# ตั้งค่า webapp
+APP_IMAGE=patjawat/erp:1.1
+DOMAIN_NAME=ubonrat.hospital-erp.org
+APP_PORT=11001
+PAM_PORT=8000
+
+# phpmyadmin
+MYSQL_ROOT_PASSWORD=docker
+MYSQL_PASSWORD=docker
+MYSQL_PORT=3306
+
+# connect database
+DB_NAME=dansai
+DB_DSN=mysql:host=mysqlDB;dbname=dansai
+DB_USERNAME=root
+DB_PASS=docker

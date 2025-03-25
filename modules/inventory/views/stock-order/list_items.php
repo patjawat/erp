@@ -15,6 +15,7 @@ $emp = UserHelper::GetEmployee();
                     <thead class="table-primary">
                         <tr>
                             <th>รายการ</th>
+                            <th class="text-end">คงเหลือ</th>
                             <th class="text-end">มูลค่า</th>
                             <th class="text-start">ล็อตผลิต</th>
                             <th class="text-center">หน่วย</th>
@@ -41,14 +42,14 @@ $emp = UserHelper::GetEmployee();
                                         }
                                     ?>
                             </td>
+                            <td class="text-center fw-semibold"><?php echo $item->SumStockQty(); ?></td>
                            
                             <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
                             <td class="align-middle text-start"><?php echo $item->lot_number; ?></td>
                             <td class="align-middle text-center">
                                 <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
                             </td>
-                            <td class="align-middle text-center"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
-                            <!-- <td class="text-center"><?php //echo $item->SumStockQty(); ?></td> -->
+                            <td class="align-middle text-center fw-semibold"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
                             <td class="text-center">
                             <?php // if ($model->OrderApprove() && Yii::$app->user->can('warehouse') && $item->SumLotQty() > 0 && $office ?? false && !in_array($model->order_status, ['cancel'])): ?>
                             <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &&($item->SumLotQty() > 0) && ($office ?? false) && !in_array($model->order_status, ['success','cancel'])): ?>

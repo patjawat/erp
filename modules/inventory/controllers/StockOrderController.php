@@ -623,6 +623,16 @@ class StockOrderController extends Controller
             }
             
             foreach ($model->getItems() as $item) {
+
+                $logQty = [
+                    'balance' =>$item->SumStockQty(),
+                    'balance_lot_number' => $item->lot_number,
+                ];
+                $oriJson = $item->data_json;
+                $item->data_json = ArrayHelper::merge($oriJson,  $logQty);
+                $item->save();
+                
+                
                 $checkStock = Stock::findOne(['id' => $item->id, 'lot_number' => $item->lot_number]);
 
                 // if ($item->SumStockQty() != 0 && $item->qty > 0) {
@@ -641,6 +651,9 @@ class StockOrderController extends Controller
                 $newStockItem->warehouse_id = $model->from_warehouse_id;
                 $newStockItem->category_id = $newStockModel->id;
                 $newStockItem->data_json = $item->data_json;
+
+
+     
 
                 if (!$newStockItem->save(false)) {
                     throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
@@ -698,10 +711,13 @@ class StockOrderController extends Controller
                         throw new \Exception('ไม่พบ stock ที่ต้องการตัด');
                     }
                 }
+
+                
             }
 
             // ถ้าไม่มีข้อผิดพลาด ทำการ commit
             $transaction->commit();
+            
 
             // return ['status' => 'success', 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว'];
             return $this->redirect(['/inventory/warehouse']);
