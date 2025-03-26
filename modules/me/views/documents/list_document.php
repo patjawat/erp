@@ -43,7 +43,7 @@ use app\modules\dms\models\Documents;
 
                                         <?= isset($item->document) ? Html::encode($item->document->doc_number) : 'ไม่พบเลขที่เอกสาร'; ?>
                                     </p>
-                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo isset($item->document) ? $item->document->topic : '' ?> <?php echo $item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : '' ?></p>
+                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo isset($item->document) ? $item->document->topic : '' ?> <?php echo (isset($item->document) && $item->document->isFile()) ? '<i class="fas fa-paperclip"></i>' : '' ?></p>
                                         </div>
                                         <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>
