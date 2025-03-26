@@ -286,6 +286,56 @@ class BookingCarController extends \yii\web\Controller
         }
     }
 
+
+    public function actionCreate2()
+    {
+        $carType = $this->request->get('type');
+        $model = new Booking([
+            'name' => 'booking_car',
+            // 'time_start' => '08:00',
+            // 'time_end' => '16:30',
+        ]);
+        $model->leader_id = $model->Approve()['approve_1']['id'];
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $model->thai_year = AppHelper::YearBudget();
+                $model->date_start = AppHelper::convertToGregorian($model->date_start);
+                $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                $model->status = 'Pending';
+                if ($model->save(false)) {
+                    // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
+                    // $this->checkLocation($model);
+
+                    // ถ้าเป็นการไปกลับสร้างตารางจรรสรรของแต่ละวัน
+                    // if ($model->data_json['go_type'] == 'ไปกลับ') {
+                    //     $this->createDetail($model);
+                    // }
+                    //สร้างการอนุมัติ
+                    \Yii::$app->response->format = Response::FORMAT_JSON;
+                        // $this->createApprove($model);
+                    return $this->redirect(['/me/booking-car']);
+                }
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create2', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('create2', [
+                'model' => $model
+            ]);
+        }
+    }
+    
     protected function createApprove($model)
     {
         // try {

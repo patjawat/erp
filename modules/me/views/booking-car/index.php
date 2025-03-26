@@ -79,15 +79,17 @@ if($searchModel->car_type == 'ambulance'){
         <div id="user-view">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3>ขอใช้รถยนต์</h3>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#requestVehicleModal">
+                <!-- <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#requestVehicleModal">
                     <i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่
-                </button>
+                </button> -->
+                <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-car/create2','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
             </div>
 
             <!-- Request History Table -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">ประวัติการขอใช้รถยนต์</h5>
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
+                class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -127,19 +129,6 @@ if($searchModel->car_type == 'ambulance'){
                                     <td>รถยนต์ส่วนตัว</td>
                                     <td>ไปกลับ</td>
                                     <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>REQ-20250110-003</td>
-                                    <td>10 ม.ค. 2568</td>
-                                    <td>โรงพยาบาลรามา</td>
-                                    <td>รถยนต์ราชการ</td>
-                                    <td>ไปกลับ</td>
-                                    <td><span class="badge bg-danger">ไม่อนุมัติ</span></td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i>
