@@ -4,6 +4,7 @@ $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 $db2 = require __DIR__ . '/db2.php';
 $modules = require __DIR__ . '/add_modules.php';
+$baseUrl = getenv('BASE_URL') ?: '/app-erp';
 
 $config = [
     'id' => 'basic',
@@ -131,6 +132,7 @@ $config = [
             ],
         ],
         'request' => [
+            'baseUrl' => $baseUrl,
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'UDNVjHYuFN4F2HiYRvQjPXW-kbcki6C8',
             // 'class' => 'app\components\Request',
