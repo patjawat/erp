@@ -131,6 +131,7 @@ $config = [
             ],
         ],
         'request' => [
+            'baseUrl' => '/app-erp',
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'UDNVjHYuFN4F2HiYRvQjPXW-kbcki6C8',
             // 'class' => 'app\components\Request',
