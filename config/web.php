@@ -229,6 +229,7 @@ $config = [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
+            'baseUrl' => $baseUrl,
             'rules' => [],
         ],
     ],
