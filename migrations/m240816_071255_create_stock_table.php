@@ -19,7 +19,7 @@ class m240816_071255_create_stock_table extends Migration
             'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น order, item'),
             'code' => $this->string(50)->comment('รหัส'),
             'asset_item' => $this->string(255)->comment('รหัสสินค้า'),
-            'qty' => $this->integer()->comment('จำนวนสินค้าที่เคลื่อนย้าย'),
+            'qty' => $this->double()->comment('จำนวนสินค้าที่เคลื่อนย้าย'),
             'unit_price' => $this->double(255)->comment('ราคาต่อหน่วย'),
             'data_json' => $this->json(),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
