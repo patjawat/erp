@@ -47,19 +47,57 @@ $ref = isset($ref) ? Html::encode($ref) : '';
                     <?= $form->field($model, 'auto')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('รหัสอัตโนมัติ'); ?>
                 </div>
                 <div class="row">
+                   
+
+                    
                     <div class="col-8">
+                    <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                                'data' => $model->listAssetType(),
+                                'options' => ['placeholder' => 'ประเภทของวัสดุ'],
+                                'pluginOptions' => [
+                                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                    'allowClear' => true,
+                                    'dropdownParent' => '#main-modal',
+                                ],
+                                'pluginEvents' => [
+                                    'select2:select' => 'function(result) {}',
+                                    'select2:unselecting' => 'function() {}',
+                                ],
+                        
+                            ])->label('ประเภท') ?>
                         <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อรายการ') ?>
                     </div>
                     <div class="col-4">
-                        <?php if ($model->isNewRecord): ?>
-                            <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสสินค้า/barcode'])->label('รหัสสินค้า') ?>
-                        <?php else: ?>
-                            <div class="mb-3 highlight-addon field-product-code">
-                                <label class="form-label has-star" for="product-code">รหัสสินค้า</label>
-                                <input type="text" class="form-control" name="Product[code]" value="<?= Html::encode($model->code) ?>" disabled>
-                            </div>
-                        <?php endif ?>
+                    <?php if ($model->isNewRecord): ?>
+                    <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสสินค้า/barcode'])->label('รหัสสินค้า') ?>
+                    <?php else: ?>
+                        <div class="mb-3 highlight-addon field-product-code">
+                            <label class="form-label has-star" for="product-code">รหัสสินค้า</label>
+                            <input type="text" class="form-control" name="Product[code]" value="<?= Html::encode($model->code) ?>" disabled>
+                        </div>
+                    <?php endif ?>
+                    
+                        <?php
+                                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                                    'data' => $model->listUnit(),
+                                    'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'tags' => true,
+                                        'dropdownParent' => '#main-modal',
+                                    ],
+                                    'pluginEvents' => [
+                                        'select2:select' => "function(result) { 
+                                            var data = \$(this).select2('data')[0].text;
+                                            console.log(data)
+                                        }",
+                                    ]
+                                        ])->label('หน่วย')
+                                    ?>
+
                     </div>
+                    
+                    
                 </div>
             </div>
         </div>
@@ -148,7 +186,7 @@ $('#form-product').on('beforeSubmit', function (e) {
                             title: 'บันทึกสำเร็จ!',
                             text: 'ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว',
                             icon: 'success',
-                            timer: 2000, // ปิดอัตโนมัติใน 3 วินาที
+                            timer: 1000, // ปิดอัตโนมัติใน 3 วินาที
                             confirmButtonText: 'ตกลง'
                         });
                         await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });

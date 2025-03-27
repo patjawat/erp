@@ -124,6 +124,7 @@ class ProductController extends Controller
                 }
 
                 $model->save(false);
+                
                 $this->UpdateUnit($model);
                 return [
                     'title' => $this->request->get('title'),
@@ -183,6 +184,7 @@ class ProductController extends Controller
         }
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            $this->UpdateUnit($model);
             return [
                 'title' => $this->request->get('title'),
                 // 'content' => $this->renderAjax('view', [

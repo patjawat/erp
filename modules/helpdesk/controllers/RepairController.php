@@ -381,21 +381,21 @@ class RepairController extends Controller
             } catch (\Throwable $th) {
                 //throw $th;
             }
-                try {
+                // try {
                     $response = LineMsg::sendMsg($lineId, $message);
                     return $this->redirect(['/me/repair']);
-                    return [
-                        'status' => 'success',
-                        'container' => '#helpdesk-container',
-                        'response' => $response
-                    ];
-                } catch (\Exception $e) {
-                    return [
-                        'status' => false,
-                        'container' => '#helpdesk-container',
-                        'error' => $e->getMessage()
-                    ];
-                }
+                    // return [
+                    //     'status' => 'success',
+                    //     'container' => '#helpdesk-container',
+                    //     'response' => $response
+                    // ];
+                // } catch (\Exception $e) {
+                //     return [
+                //         'status' => false,
+                //         'container' => '#helpdesk-container',
+                //         'error' => $e->getMessage()
+                //     ];
+                // }
             }
         } else {
             $model->loadDefaultValues();

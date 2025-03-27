@@ -107,6 +107,13 @@ class Product extends \yii\db\ActiveRecord
         return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
+
+    public function listAssetType()
+    {
+        $items = self::find()->where(['category_id' => 4,'name' => 'asset_type'])->all();
+        return ArrayHelper::map($items, 'code','title');
+    }
+
     public function ShowImg()
     {
         $model = Uploads::find()->where(['ref' => $this->ref])->one();
