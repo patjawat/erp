@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
   
             
-            
+                <?= Yii::$app->urlManager->createUrl(['site/index']) ?>
           <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
             <div class="col-lg-12 col-md-12 col-sm-12">
                 <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label('อีเมล') ?>
