@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="fw-semibold" scope="col" class="text-center">จำนวนเข้า</th>
                     <th class="fw-semibold" scope="col" class="text-center">จำนวนออก</th>
                     <th class="fw-semibold" scope="col" class="text-center">คงเหลือ</th>
-                    <th class="fw-semibold" scope="col" class="text-end">มูลค่าวัสดุคงเหลือ</th>
+                    <th class="fw-semibold text-end" scope="col">มูลค่าวัสดุคงเหลือ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">

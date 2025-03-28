@@ -60,8 +60,8 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
     public function rules()
     {
         return [
-            [['warehouse_id', 'qty', 'created_by'], 'integer'],
-            [['data_json', 'created_at', 'updated_at', 'unit_price', 'q', 'total','asset_type'], 'safe'],
+            [['warehouse_id','created_by'], 'integer'],
+            [['data_json', 'created_at', 'updated_at', 'unit_price', 'q', 'total','asset_type', 'qty'], 'safe'],
             [['name', 'code'], 'string', 'max' => 50],
             [['asset_item'], 'string', 'max' => 255],
         ];
@@ -165,7 +165,8 @@ public function listLotNumber()
     {
         // $warehouse = \Yii::$app->session->get('warehouse');
         // return self::find()->where(['warehouse_id' => $warehouse['warehouse_id'], 'asset_item' => $this->asset_item])->sum('qty');
-        return self::find()->where(['warehouse_id' => $this->warehouse_id, 'asset_item' => $this->asset_item])->sum('qty');
+        $totalQty = self::find()->where(['warehouse_id' => $this->warehouse_id, 'asset_item' => $this->asset_item])->sum('qty');
+        return round($totalQty, 2);
     }
        // นับจำนวนทีอยู่ใน lot_number stock
        public function SumLotQty()

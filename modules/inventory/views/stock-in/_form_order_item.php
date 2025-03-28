@@ -1,11 +1,11 @@
 <?php
-use app\modules\sm\models\Product;
-use iamsaint\datetimepicker\Datetimepicker;
-use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use yii\web\View;
 use yii\helpers\Url;
 use yii\web\JsExpression;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use app\modules\sm\models\Product;
+use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
@@ -81,7 +81,7 @@ $resultsJs = <<< JS
                     ],
                     ])->label('วันหมดอายุ');
                 ?>
-    <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 2])->label('จำนวนรับเข้า'); ?>
+    <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 5,'step' => '0.01'])->label('จำนวนรับเข้า'); ?>
     </div>
     <div class="col-6">
         <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>

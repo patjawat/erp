@@ -23,7 +23,7 @@ class m240820_170545_created_stock_events_table extends Migration
             'vendor_id' => $this->string(255)->comment('ผู้จำหน่าย ผู้บริจาค'),
             'po_number' => $this->string(255)->comment('จากเลขที่สั่งซื้อ'),
             'from_warehouse_id' => $this->integer()->comment('รหัสคลังสินค้าต้นทาง'),
-            'qty' => $this->double()->comment('จำนวนสินค้าที่เคลื่อนย้าย'),
+            'qty' => $this->float()->comment('จำนวนสินค้าที่เคลื่อนย้าย'),
             'total_price' => $this->double(255)->comment('รวมราคา'),
             'unit_price' => $this->double(255)->comment('ราคาต่อหน่วย'),
             'receive_type' => $this->string(255)->comment('วิธีนำเข้า (normal = รับเข้าแบบปกติ, purchase = รับเข้าจาก PO)'),

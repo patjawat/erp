@@ -526,7 +526,8 @@ class StockInController extends Controller
 
             $storeModel->thai_year = AppHelper::YearBudget();
             $storeModel->asset_item = $item->asset_item;
-            $storeModel->qty = $storeModel->qty + $item->qty;
+            // $storeModel->qty = $storeModel->qty + $item->qty;
+            $storeModel->qty += (float) $item->qty;
             $storeModel->unit_price = $item->unit_price;
             $storeModel->warehouse_id = $item->warehouse_id;
             $storeModel->save(false);

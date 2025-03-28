@@ -81,8 +81,8 @@ WHERE name = 'leave' AND level = 2
 ALTER TABLE `asset` ADD `deleted_at` DATETIME NULL DEFAULT NULL COMMENT 'วันที่ลบ' AFTER `updated_by`, ADD `deleted_by` INT NULL DEFAULT NULL COMMENT 'ผู้ลบ' AFTER `deleted_at`;
 
 -- update qty stock 
-ALTER TABLE `stock` CHANGE `qty` `qty` DOUBLE NULL DEFAULT NULL COMMENT 'จำนวนสินค้าที่เคลื่อนย้าย';
-ALTER TABLE `stock_events` CHANGE `qty` `qty` DOUBLE NULL DEFAULT NULL COMMENT 'จำนวนสินค้าที่เคลื่อนย้าย';
+ALTER TABLE `stock` CHANGE `qty` `qty` FLOAT NULL DEFAULT NULL COMMENT 'จำนวนสินค้าที่เคลื่อนย้าย';
+ALTER TABLE `stock_events` CHANGE `qty` `qty` FLOAT NULL DEFAULT NULL COMMENT 'จำนวนสินค้าที่เคลื่อนย้าย';
 
 SELECT title,code,MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)) AS max_value  FROM `categorise` WHERE `group_id` = 4 AND `name` LIKE 'asset_item'
 GROUP BY category_id
