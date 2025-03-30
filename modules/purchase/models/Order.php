@@ -75,9 +75,10 @@ class Order extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['price'], 'number'],
             [[
+                'qty',
                 'data_json',
                 'created_at',
                 'updated_at',
@@ -739,6 +740,7 @@ class Order extends \yii\db\ActiveRecord
         }
         return $name;
     }
+   
 
     // คำนวน vat
     function calculateVAT()
@@ -780,13 +782,23 @@ class Order extends \yii\db\ActiveRecord
                 break;
         }
 
+        // return [
+        //     'priceBeforeVAT' => round($priceBeforeVAT, 20),
+        //     'priceAfterVAT' => round($priceAfterVAT, 20),
+        //     'priceAfterVAT' => round($priceAfterVAT, 2),
+        //     'vatAmount' => round($vatAmount, 20),
+        //     'priceBeforeDiscount' => round($priceBeforeDiscount, 10),
+        //     'priceAfterDiscount' => round($priceAfterDiscount, 10)
+        // ];
         return [
-            'priceBeforeVAT' => round($priceBeforeVAT, 2),
-            'priceAfterVAT' => round($priceAfterVAT, 2),
-            'vatAmount' => round($vatAmount, 2),
-            'priceBeforeDiscount' => round($priceBeforeDiscount, 2),
-            'priceAfterDiscount' => round($priceAfterDiscount, 2)
+            'priceBeforeVAT' => floor($priceBeforeVAT* 100) / 100,
+            'priceAfterVAT' => floor($priceAfterVAT* 100) / 100,
+            'priceAfterVAT' => floor($priceAfterVAT* 100) / 100,
+            'vatAmount' => floor($vatAmount* 100) / 100,
+            'priceBeforeDiscount' => floor($priceBeforeDiscount* 100) / 100,
+            'priceAfterDiscount' => floor($priceAfterDiscount* 100) / 100
         ];
+       
     }
 
     public function getVat()

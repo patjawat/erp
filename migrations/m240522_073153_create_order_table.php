@@ -28,7 +28,7 @@ class m240522_073153_create_order_table extends Migration
             'gr_number' => $this->string(255)->comment('เลขที่รับสินค้า'),
             'price' => $this->double(255)->comment('ราคา'),
             'discount_price' => $this->double(255)->comment('ราคาส่ววนลด'),
-            'qty' => $this->integer(255)->comment('จำนวน'),
+            'qty' => $this->float(255)->comment('จำนวน'),
             'to_stock' => $this->integer(255)->comment('จำนวนที่รับเข้าคลังแล้ว'),
             'status' => $this->integer(255)->comment('สถานะ'),
             'approve' => $this->string(1)->comment('อนุมัติ'),

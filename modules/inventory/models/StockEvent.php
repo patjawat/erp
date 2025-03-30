@@ -184,6 +184,27 @@ class StockEvent extends Yii\db\ActiveRecord
         }
 
 
+
+
+        /**
+     * คำนวณราคาต่อหน่วย (price_per_unit)
+     */
+    public function getPricePerUnit()
+    {
+        if ($this->total_volume > 0) {
+            return round($this->total_price / $this->total_volume, 6);
+        }
+        return 0;
+    }
+
+    /**
+     * คำนวณราคารวมจากราคาต่อหน่วย (total_price)
+     */
+    public function getTotalPrice()
+    {
+        return round($this->getPricePerUnit() * $this->total_volume, 2);
+    }
+    
     // นีับจำนวน stock คงเหลือในคลังที่เลือก
     public static function SumStockWarehouse()
     {

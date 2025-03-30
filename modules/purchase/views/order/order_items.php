@@ -1,10 +1,10 @@
 <?php
-use app\modules\purchase\models\Order;
+use yii\web\View;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use yii\web\View;
+use app\modules\purchase\models\Order;
 
 ?>
 <style>
@@ -125,7 +125,8 @@ use yii\web\View;
                         </tr>
                         <tr class="">
                             <td>จำนวนเงินทั้งสิ้น</td>
-                            <td class="text-end"><span class="fw-semibold"><?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?></span>
+                            <!-- <td class="text-end"><span class="fw-semibold"><?php //  number_format($model->calculateVAT()['priceAfterVAT'],2) ?></span> -->
+                            <td class="text-end"><span class="fw-semibold"><?=$model->calculateVAT()['priceAfterVAT'] ?></span>
                             </td>
                         </tr>
                     </tbody>

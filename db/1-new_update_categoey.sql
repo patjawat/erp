@@ -81,6 +81,7 @@ WHERE name = 'leave' AND level = 2
 ALTER TABLE `asset` ADD `deleted_at` DATETIME NULL DEFAULT NULL COMMENT 'วันที่ลบ' AFTER `updated_by`, ADD `deleted_by` INT NULL DEFAULT NULL COMMENT 'ผู้ลบ' AFTER `deleted_at`;
 
 -- update qty stock 
+ALTER TABLE `orders` CHANGE `qty` `qty` FLOAT NULL DEFAULT NULL COMMENT 'จำนวน';
 ALTER TABLE `stock` CHANGE `qty` `qty` FLOAT NULL DEFAULT NULL COMMENT 'จำนวนสินค้าที่เคลื่อนย้าย';
 ALTER TABLE `stock_events` CHANGE `qty` `qty` FLOAT NULL DEFAULT NULL COMMENT 'จำนวนสินค้าที่เคลื่อนย้าย';
 

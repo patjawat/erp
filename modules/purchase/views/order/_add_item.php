@@ -1,17 +1,17 @@
 <?php
 
-use app\modules\am\models\Asset;
-use kartik\datecontrol\DateControl;
-use kartik\form\ActiveField;
+use yii\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
+use yii\widgets\DetailView;
+use kartik\form\ActiveField;
+use yii\helpers\ArrayHelper;
 use kartik\widgets\DatePicker;
+use app\modules\am\models\Asset;
 use kartik\widgets\DateTimePicker;
+use kartik\datecontrol\DateControl;
 use unclead\multipleinput\MultipleInput;
 use unclead\multipleinput\MultipleInputColumn;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
-use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
@@ -33,7 +33,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="row">
             <div class="col-8">
-                <?= $form->field($model, 'qty')->textInput()->label('จำนวน'); ?>
+                <?= $form->field($model, 'qty')->textInput([
+                'type' => 'number',
+                'step' => '0.00001',
+                'min' => '0',
+                'max' => '99999.99999' // ปรับตามความเหมาะสม
+            ])->label('จำนวน'); ?>
             </div>
             <div class="col-4">
                 <div class="mb-3 highlight-addon field-order-qty has-success">

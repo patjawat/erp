@@ -20,8 +20,8 @@ use app\modules\dms\models\Documents;
                 <?php // if($item->viewCount()['reading'] <= 0): ?>
                 <tr class="" style="max-width:200px">
                     <td class="fw-semibold">
-
-                        <?php echo $item->document?->doc_regis_number ?? '-' ?></td>
+                        <?php echo $item->document?->doc_regis_number ?? '-' ?>
+                    </td>
                     <td class="fw-light align-middle">
                         <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->id]) ?>"
                             class="text-dark open-modal-fullscreen-x">
@@ -42,6 +42,12 @@ use app\modules\dms\models\Documents;
                                         <?= Html::img('@web/img/krut.png', ['style' => 'width:20px']); ?>
 
                                         <?= isset($item->document) ? Html::encode($item->document->doc_number) : 'ไม่พบเลขที่เอกสาร'; ?>
+                                        <?php
+                                        echo "<pre>";
+                                        print_r($item->document->doc_number);
+                                        echo "</pre>";
+
+                                        ?>
                                     </p>
                                         <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo isset($item->document) ? $item->document->topic : '' ?> <?php echo (isset($item->document) && $item->document->isFile()) ? '<i class="fas fa-paperclip"></i>' : '' ?></p>
                                         </div>

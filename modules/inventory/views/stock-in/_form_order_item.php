@@ -55,7 +55,12 @@ $resultsJs = <<< JS
 
 ?>
 
-
+<style>
+    .field-stockevent-auto_lot
+    {
+        margin-bottom: 1px;
+    }
+</style>
 <div class="row">
     <div class="col-6">
 <?=$form->field($model, 'data_json[mfg_date]')->widget(Datetimepicker::className(),[
@@ -81,14 +86,20 @@ $resultsJs = <<< JS
                     ],
                     ])->label('วันหมดอายุ');
                 ?>
-    <?= $form->field($model, 'qty')->textInput(['type' => 'number', 'maxlength' => 5,'step' => '0.01'])->label('จำนวนรับเข้า'); ?>
+            <?= $form->field($model, 'qty')->textInput([
+                'type' => 'number',
+                'step' => '0.00001',
+                'min' => '0',
+                'max' => '99999.99999' // ปรับตามความเหมาะสม
+            ])->label('จำนวนรับเข้า'); ?>
     </div>
     <div class="col-6">
-        <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
+        <?= $form->field($model, 'auto_lot', ['options' => ['class' => 'mb-0']])->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
         <?= $form->field($model, 'lot_number')->textInput()->label(false); ?>
         
+        
         <?= $form->field($model, 'unit_price')->textInput(['type' => 'number','step' => '0.00001',])->label('ราคาต่อหน่วย'); ?>
-        <?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
+        <?= $form->field($model, 'total_price')->textInput(['type' => 'number','step' => '0.00001',])->label('รวมราคา'); ?>
    
 
     </div>
@@ -102,10 +113,20 @@ $resultsJs = <<< JS
 
     </div>
 </div>
-
+<?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
 
 <?php
 $js = <<< JS
+
+    function calculateUnitPrice() {
+        var totalPrice = parseFloat($('#stockevent-total_price').val()) || 0;
+        var qty = parseFloat($('#stockevent-qty').val()) || 1; // ป้องกันการหารด้วย 0
+        var unitPrice = totalPrice / qty;
+        $('#stockevent-unit_price').val(unitPrice.toFixed(5)); // ปัดเศษทศนิยม 5 ตำแหน่ง
+    }
+    $('#stockevent-total_price, #stockevent-qty').on('input', calculateUnitPrice);
+
+    
 
     console.log($("#stockevent-auto_lot").val())
     if($("#stockevent-auto_lot").val()){

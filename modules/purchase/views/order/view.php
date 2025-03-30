@@ -163,7 +163,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h6><i class="fa-solid fa-circle-info text-primary"></i> รายการขอซื้อ/ขอจ้าง</h6>
 
                 </div>
-                <?= $this->render('@app/modules/purchase/views/order/order_items', ['model' => $model]) ?>
+                <?php echo $this->render('@app/modules/purchase/views/order/order_items', ['model' => $model]) ?>
+                <?php
+                // print_r($model->calculateVAT());
+                ?>
 
                 <div class="row d-flex justify-content-end">
                     <div class="col-4">

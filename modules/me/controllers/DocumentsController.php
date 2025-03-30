@@ -124,6 +124,7 @@ class DocumentsController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $emp = UserHelper::GetEmployee();
         $document = DocumentsDetail::findOne($id);
+        // return $document;
         $bookmark = DocumentsDetail::findOne(['name' => 'bookmark','document_id' => $document->document_id,'to_id' => $emp->id ]);
         if($bookmark){
             $bookmark->bookmark = ($bookmark->bookmark == 'Y') ? 'N' : 'Y';
