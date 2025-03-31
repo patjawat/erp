@@ -179,7 +179,7 @@ class LeaveController extends Controller
                 'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
                 'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
             ]);
-            $dataProvider->query->andFilterWhere(['leave.status' => 'Allow']);
+            $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
             // search employee department
          // ค้นหาคามกลุ่มโครงสร้าง
          $org1 = Organization::findOne($searchModel->q_department);
@@ -207,24 +207,24 @@ class LeaveController extends Controller
              $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
          }
 
-            if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-                $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-                $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-            }
-            
-            try {
-             
+         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+        try {
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
             $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-               
+            
         } catch (\Throwable $th) {
             //throw $th;
         }
         
+        
             $dataProvider->query->groupBy('emp_id');
             $dataProvider->sort->defaultOrder = ['emp_id' => SORT_DESC];
-          
+            $dataProvider->pagination->pageSize = 1000000000000;
 
             if(isset($searchModel->data_json['export']) && $searchModel->data_json['export'] == 'true'){
                 $dataProvider->pagination->pageSize = 1000000000000;
