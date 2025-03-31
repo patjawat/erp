@@ -221,7 +221,7 @@ class BookingCarController extends \yii\web\Controller
             $model->reason == '' ? $model->addError('reason', $requiredName) : null;
             $model->location == '' ? $model->addError('location', $requiredName) : null;
             $model->urgent == '' ? $model->addError('urgent', $requiredName) : null;
-            $model->data_json['total_person_count'] == '' ? $model->addError('data_json[total_person_count]', $requiredName) : null;
+            // $model->data_json['total_person_count'] == '' ? $model->addError('data_json[total_person_count]', $requiredName) : null;
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[Html::getInputId($model, $attribute)] = $errors;

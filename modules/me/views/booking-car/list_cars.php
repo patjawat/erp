@@ -6,8 +6,7 @@ $listCars = Asset::find()
 ->andWhere(['car_type' => $model->car_type])
 ->all();
 ?>
-
-ุ้<h6>เลือกรถหากต้องการ</h6>
+<h6>เลือกรถหากต้องการ</h6>
 <div id="car-container">
 <?php foreach($listCars as $item):?>
         <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">

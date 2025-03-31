@@ -200,6 +200,20 @@ class Booking extends \yii\db\ActiveRecord
         return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
     }
 
+    //แสดงราชชื่อพนักงานขับรถ
+    public function listDriver()
+    {
+        $arrDrivers = Employees::find()
+                ->from('employees e')
+                ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+                ->where(['a.item_name' => 'driver'])
+                ->all();
+return  ArrayHelper::map($arrDrivers,'id',function($model){
+    return $model->fullname;
+});
+
+    }
+
     
     public function listDriverDetails()
     {

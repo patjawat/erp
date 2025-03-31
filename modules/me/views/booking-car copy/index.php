@@ -36,19 +36,60 @@ if($searchModel->car_type == 'ambulance'){
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php // echo $this->render('menu') ?>
+<?php  echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 
 
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-truck me-2"></i>ระบบขอใช้รถยนต์
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="user-view-btn">หน้าผู้ใช้งาน</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="admin-view-btn">หน้าผู้ดูแลระบบ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-person-circle me-1"></i>นายสมชาย ใจดี
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="#">
+                            <i class="bi bi-box-arrow-right me-1"></i>ออกจากระบบ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <!-- Content Area -->
     <div class="container my-4">
         <!-- User View -->
-        <div id="user-view">            <!-- Request History Table -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header p-3 bg-white d-flex justify-content-between align-items-center">
-                <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+        <div id="user-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>ขอใช้รถยนต์</h3>
+                <!-- <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#requestVehicleModal">
+                    <i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่
+                </button> -->
                 <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-car/create2','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
+            </div>
+
+            <!-- Request History Table -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
+                class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -64,7 +105,7 @@ if($searchModel->car_type == 'ambulance'){
                                     <th>จัดการ</th>
                                 </tr>
                             </thead>
-                            <tbody class="align-middle table-group-divider">
+                            <tbody>
                                 <tr>
                                     <td>REQ-20250101-001</td>
                                     <td>1 - 3 ม.ค. 2568</td>
