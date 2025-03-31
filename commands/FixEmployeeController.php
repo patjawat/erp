@@ -36,14 +36,14 @@ class FixEmployeeController extends Controller
      */
     public function actionIndex()
     {
-        if (BaseConsole::confirm('Are you sure?')) {
+        // if (BaseConsole::confirm('Are you sure?')) {
             $this->Backup();
             $data = [];
             $employees = Employees::find()->all();
             foreach ($employees as $model) {
                 $this->UpdatePosition($model);
             }
-        }
+        // }
     }
 
     public static  function Backup(){
