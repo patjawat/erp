@@ -16,6 +16,76 @@ $msg = 'ขอ';
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
+<div class="card">
+    <div class="card-body">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <h2><?= Html::encode($this->title) ?></h2>
+        </div>
+        <div class="col-md-8 text-end">
+            <div class="btn-group me-2">
+                <button id="prev-day" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-chevron-left"></i> วันก่อนหน้า
+                </button>
+                <button id="today" class="btn btn-sm btn-outline-secondary">วันนี้</button>
+                <button id="next-day" class="btn btn-sm btn-outline-primary">
+                    วันถัดไป <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            <div class="btn-group">
+                <button id="prev-week" class="btn btn-outline-primary">
+                    <i class="bi bi-chevron-left"></i> สัปดาห์ก่อนหน้า
+                </button>
+                <button id="next-week" class="btn btn-outline-primary">
+                    สัปดาห์ถัดไป <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="calendar-container">
+
+
+    <div class="current-date-range alert alert-info text-center mb-3">
+        <span id="date-range">กำลังโหลด...</span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered calendar-table">
+            <thead>
+                <tr class="bg-light" id="calendar-header">
+                    <th width="50">เวลา</th>
+                    <!-- JavaScript จะใส่วันที่ตรงนี้ -->
+                </tr>
+            </thead>
+            <tbody id="calendar-body">
+                <!-- JavaScript จะใส่เวลาและช่องปฏิทินตรงนี้ -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal แสดงรายละเอียดกิจกรรม -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="event-title">รายละเอียดกิจกรรม</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="event-details"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <?php if($dataProvider->getTotalCount() > 0):?>
 <div class="card">
     <div class="card-body">
