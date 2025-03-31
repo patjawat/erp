@@ -495,6 +495,44 @@ if($searchModel->car_type == 'ambulance'){
     </div>
 </div>
 
+
+
+
+
+<div class="container mt-5">
+    <h2 class="text-center">Simple Calendar</h2>
+    <div class="row border">
+        <div class="col border p-2 text-center bg-light">Sun</div>
+        <div class="col border p-2 text-center bg-light">Mon</div>
+        <div class="col border p-2 text-center bg-light">Tue</div>
+        <div class="col border p-2 text-center bg-light">Wed</div>
+        <div class="col border p-2 text-center bg-light">Thu</div>
+        <div class="col border p-2 text-center bg-light">Fri</div>
+        <div class="col border p-2 text-center bg-light">Sat</div>
+    </div>
+    <div class="row">
+        <div class="col border p-3"></div> <!-- Empty for alignment -->
+        <div class="col border p-3 text-center">1</div>
+        <div class="col border p-3 text-center">2</div>
+        <div class="col border p-3 text-center">3</div>
+        <div class="col border p-3 text-center">4</div>
+        <div class="col border p-3 text-center">5</div>
+        <div class="col border p-3 text-center">6</div>
+    </div>
+    <div class="row">
+        <div class="col border p-3 text-center">7</div>
+        <div class="col border p-3 text-center">8</div>
+        <div class="col border p-3 text-center">9</div>
+        <div class="col border p-3 text-center">10</div>
+        <div class="col border p-3 text-center">11</div>
+        <div class="col border p-3 text-center">12</div>
+        <div class="col border p-3 text-center">13</div>
+    </div>
+    <!-- Add more rows for full calendar -->
+</div>
+
+
+
 <?php // Pjax::end(); ?>
 <?php
 $js = <<< JS

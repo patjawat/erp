@@ -190,7 +190,11 @@ class Employees extends Yii\db\ActiveRecord
     {
         $this->birthday = AppHelper::DateToDb($this->birthday);
         // $this->join_date = $this->join_date;
-        $this->cid = AppHelper::SaveCid($this->cid);
+        try {
+            $this->cid = AppHelper::SaveCid($this->cid);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
         if ($this->prefix == 'นาย') {
             $this->gender = 'ชาย';
         } else {

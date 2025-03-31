@@ -385,7 +385,7 @@ class Leave extends \yii\db\ActiveRecord
 
     public function getAvatar($empid, $msg = '')
     {
-        try {
+        // try {
             $employee = Employees::find()->where(['id' => $this->emp_id])->one();
             $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เขียนเมื่อ' . $this->viewCreated();
             $msg = 'เขียน '. $this->viewCreated();
@@ -399,15 +399,15 @@ class Leave extends \yii\db\ActiveRecord
                 'position_name' => $employee->positionName(),
                 // 'product_type_name' => $this->data_json['product_type_name']
             ];
-        } catch (\Throwable $th) {
-            return [
-                'avatar' => '',
-                'department' => '',
-                'fullname' => '',
-                'position_name' => '',
-                'product_type_name' => ''
-            ];
-        }
+        // } catch (\Throwable $th) {
+        //     return [
+        //         'avatar' => '',
+        //         'department' => '',
+        //         'fullname' => '',
+        //         'position_name' => '',
+        //         'product_type_name' => ''
+        //     ];
+        // }
     }
 
     // แสดงสถานะในรูปแบบสี
