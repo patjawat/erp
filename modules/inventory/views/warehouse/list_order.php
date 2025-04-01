@@ -44,7 +44,7 @@ use app\modules\inventory\models\StockEvent;
                             <td><?=$item->viewChecker()['avatar']?></td>
                             <td class="text-end">
                                 <span class="fw-semibold">
-                                    <?=number_format($item->getTotalOrderPrice(),2)?>        
+                                    <?php echo $item->order_status == 'success' ? number_format($item->getTotalOrderPriceSuccess(),2) : number_format($item->getTotalOrderPrice(),2) ?>        
                                 </span>
                             </td>
                             <td class="text-center"><?=$item->viewstatus()?></td>
