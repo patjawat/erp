@@ -3,10 +3,13 @@ use yii\helpers\Html;
 $this->title = 'ศูนย์คอมพิวเตอร์';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-computer fs-1"></i> <?= $this->title; ?>
+<i class="fa-solid fa-screwdriver-wrench fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <div class="card vh-100 d-flex justify-content-center align-items-center">
