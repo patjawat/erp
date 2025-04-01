@@ -48,7 +48,7 @@ if($searchModel->car_type == 'ambulance'){
             <div class="card shadow-sm mb-4">
                 <div class="card-header p-3 bg-white d-flex justify-content-between align-items-center">
                 <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-                <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-car/create2','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
+                <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-car/create2','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -78,19 +78,6 @@ if($searchModel->car_type == 'ambulance'){
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>REQ-20250105-002</td>
-                                    <td>5 ม.ค. 2568</td>
-                                    <td>สำนักงานสาธารณสุขจังหวัด</td>
-                                    <td>รถยนต์ส่วนตัว</td>
-                                    <td>ไปกลับ</td>
-                                    <td><span class="badge bg-success">อนุมัติแล้ว</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
                                         </button>
                                     </td>
                                 </tr>

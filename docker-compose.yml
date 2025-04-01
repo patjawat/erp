@@ -18,6 +18,9 @@ services:
       - ./.env
     depends_on:
       - redis
+     # ใช้ custom command เพื่อเปิดใช้งาน calendar extension
+    command: >
+      bash -c "docker-php-ext-install calendar && apache2-foreground"
 
   redis:
     image: redis:alpine

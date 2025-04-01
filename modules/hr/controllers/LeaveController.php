@@ -224,7 +224,6 @@ class LeaveController extends Controller
         
             $dataProvider->query->groupBy('emp_id');
             $dataProvider->sort->defaultOrder = ['emp_id' => SORT_DESC];
-            $dataProvider->pagination->pageSize = 1000000000000;
 
             if(isset($searchModel->data_json['export']) && $searchModel->data_json['export'] == 'true'){
                 $dataProvider->pagination->pageSize = 1000000000000;

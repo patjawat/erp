@@ -73,8 +73,54 @@ class Leave extends \yii\db\ActiveRecord
             [['balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department','step'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
+            ['date_end', 'default', 'value' => function ($model) {
+                return $model->date_start;
+            }],
+            ['date_end', 'validateDateRange'],
         ];
     }
+
+      /**
+     * Validates the date range
+     * 
+     * @param string $attribute the attribute being validated
+     */
+    public function validateDateRange($attribute)
+    {
+        if (strtotime($this->date_end) < strtotime($this->date_start)) {
+            $this->addError($attribute, 'วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น');
+        }
+    }
+    
+
+      /**
+     * ตรวจสอบว่าอีเวนต์อยู่ในวันที่กำหนดหรือไม่
+     * 
+     * @param string $date วันที่ในรูปแบบ Y-m-d
+     * @return boolean
+     */
+    public function isInDate($date)
+    {
+        $eventStart = strtotime($this->date_start);
+        $eventEnd = strtotime($this->date_end);
+        $checkDate = strtotime($date);
+
+        return ($checkDate >= $eventStart && $checkDate <= $eventEnd);
+    }
+
+    /**
+     * คำนวณจำนวนวันของอีเวนต์
+     * 
+     * @return int จำนวนวัน
+     */
+    public function getDurationDays()
+    {
+        $eventStart = strtotime($this->date_start);
+        $eventEnd = strtotime($this->date_end);
+
+        return round(($eventEnd - $eventStart) / (60 * 60 * 24)) + 1;
+    }
+    
 
     /**
      * {@inheritdoc}

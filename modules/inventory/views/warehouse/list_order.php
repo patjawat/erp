@@ -6,10 +6,14 @@ use kartik\grid\GridView;
 use yii\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
 use app\modules\inventory\models\StockEvent;
+// คำนวณค่าเริ่มต้นของลำดับที่
+
+
 ?>
 <table class="table table-striped table-sm">
                     <thead>
                         <tr>
+                            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                             <th style="width:210px">รหัส</th>
                             <th scope="col">ผู้เบิก</th>
                             <th >หัวหน้าตรวจสอบ</th>
@@ -19,9 +23,11 @@ use app\modules\inventory\models\StockEvent;
                         </tr>
                     </thead>
                     <tbody class="align-middle table-group-divider">
-                        <?php foreach ($dataProvider->getModels() as $item): ?>
+                        <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <tr>
+                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                             <td>
+                              
                                 <div>
                                     <p class="fw-semibold mb-0"><?=$item->code?></p>
                                     <p class="text-muted mb-0 fs-13"><?=$item->viewCreatedAt()?></p>

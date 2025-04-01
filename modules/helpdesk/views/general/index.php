@@ -39,46 +39,45 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">รายการ</th>
-                    <th scope="col">ผู้แจ้งซ่อม</th>
-                    <th style="width:300px">ผู้ร่วมงานซ่อม </th>
-                    <th class="text-center" style="width:150px">สถานะ</th>
-                    <th class="text-center" style="width:150px">ดำเนินการ</th>
+                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="fw-semibold" scope="col">รายการ</th>
+                    <th class="fw-semibold" scope="col">ผู้แจ้งซ่อม</th>
+                    <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th>
+                    <th class="fw-semibold text-center" style="width:150px">สถานะ</th>
+                    <th class="fw-semibold text-center" style="width:150px">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($dataProvider->getModels() as $key => $model): ?>
-                <tr class="align-middle">
-                    <td><?php echo ($key+1)?></td>
-                    <td>
+            <?php foreach($dataProvider->getModels() as $key => $item):?>
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <tr class="align-middle">
                         <div class="d-flex">
-                            <?php echo $model->RepairType()['image']?>
+                            <?php echo $item->RepairType()['image']?>
                             <div class="avatar-detail">
 
                                 <p class="text-primary fw-semibold fs-13 mb-0">
                                     <span class="badge text-bg-primary fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i>
-                                        <?php echo $model->RepairType()['title']?>
+                                        <?php echo $item->RepairType()['title']?>
                                     </span>
                                 </p>
                                 <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
-                                    <?php echo $model->data_json['title']?></p>
+                                    <?php echo $item->data_json['title']?></p>
                                 <p class="text-primary fs-13 mb-0">
-                                    <?php echo $model->viewCreateDateTime()?>
+                                    <?php echo $item->viewCreateDateTime()?>
                                 </p>
                             </div>
                         </div>
                     </td>
-                    <td> <?= $model->showAvatarCreate(); ?></td>
-                    <td><?= $model->StackTeam() ?></td>
-                    <td class="text-center"> <?= $model->viewStatus() ?></td>
+                    <td> <?= $item->showAvatarCreate(); ?></td>
+                    <td><?= $item->StackTeam() ?></td>
+                    <td class="text-center"> <?= $item->viewStatus() ?></td>
                     <td class="text-center">
-                        <?php if($model->status == 1):?>
-                        <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $model->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
-                        <?php // echo Html::a('<i class="fa-regular fa-hourglass-half"></i> รับเรื่อง',['/helpdesk/general/update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
+                        <?php if($item->status == 1):?>
+                        <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $item->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?php // echo Html::a('<i class="fa-regular fa-hourglass-half"></i> รับเรื่อง',['/helpdesk/general/update','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
                         <?php else:?>
-                        <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update','id' => $model->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
+                        <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
                         <?php endif;?>
                     </td>
                 </tr>

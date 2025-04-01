@@ -63,10 +63,12 @@ class Booking extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'date_start', 'time_start', 'date_end', 'time_end','private_car'], 'required'],
+            [['name', 'date_start', 'date_end','private_car'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id','tags_department'], 'safe'],
             [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
+            [['time_start'], 'required', 'message' => 'ต้องระบุ'],
+            [['time_end'], 'required', 'message' => 'ต้องระบุ'],
         ];
     }
 

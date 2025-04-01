@@ -13,6 +13,12 @@ class EventCalendar extends Widget
     public $year;
     public $month;
     public $options = [];
+    
+    /**
+     * URL configurations
+     */
+    public $calendarUrl = ['calendar/load']; // URL สำหรับโหลดปฏิทิน
+    public $eventUrl = ['event/view']; // URL สำหรับดูรายละเอียดอีเวนต์
 
     public function init()
     {
@@ -125,6 +131,15 @@ class EventCalendar extends Widget
         $html .= '</div>'; // end calendar-body
         $html .= '</div>'; // end calendar-container
         
+        // ส่งค่า URL ไปยัง JavaScript
+        $calendarLoadUrl = Url::to($this->calendarUrl);
+        $eventViewUrl = Url::to($this->eventUrl);
+        
+        $this->view->registerJs("
+            var calendarLoadUrl = '$calendarLoadUrl';
+            var eventViewUrl = '$eventViewUrl';
+        ", View::POS_HEAD);
+        
         return $html;
     }
     
@@ -143,8 +158,33 @@ class EventCalendar extends Widget
             $html .= '<div class="events-container">';
             
             foreach ($dayEvents as $event) {
-                $html .= '<div class="event" style="background-color:' . $event['color'] . '">';
-                $html .= Html::a($event['title'], 'javascript:void(0);', [
+                // กำหนด class พิเศษสำหรับวันแรกและวันสุดท้ายของอีเวนต์
+                $eventClasses = 'event';
+                if ($event['date_start'] === $currentDate) {
+                    $eventClasses .= ' event-start';
+                }
+                if ($event['date_end'] === $currentDate) {
+                    $eventClasses .= ' event-end';
+                }
+                
+                // สร้างสัญลักษณ์หรือข้อความแสดงระยะเวลา
+                $durationText = '';
+                $startDate = new \DateTime($event['date_start']);
+                $endDate = new \DateTime($event['date_end']);
+                $interval = $startDate->diff($endDate);
+                
+                if ($interval->days > 0) {
+                    if ($event['date_start'] === $currentDate) {
+                        $durationText = ' (เริ่ม)';
+                    } elseif ($event['date_end'] === $currentDate) {
+                        $durationText = ' (สิ้นสุด)';
+                    } else {
+                        $durationText = ' (ต่อเนื่อง)';
+                    }
+                }
+                
+                $html .= '<div class="' . $eventClasses . '" style="background-color:' . $event['color'] . '">';
+                $html .= Html::a($event['title'] . $durationText, 'javascript:void(0);', [
                     'class' => 'event-link',
                     'data-id' => $event['id'],
                     'data-toggle' => 'tooltip',
@@ -166,7 +206,12 @@ class EventCalendar extends Widget
         $dayEvents = [];
         
         foreach ($this->events as $event) {
-            if ($event['date'] === $date) {
+            // ตรวจสอบว่าอีเวนต์อยู่ในวันที่กำหนดหรือไม่
+            $startDate = strtotime($event['date_start']);
+            $endDate = strtotime($event['date_end']);
+            $checkDate = strtotime($date);
+            
+            if ($checkDate >= $startDate && $checkDate <= $endDate) {
                 $dayEvents[] = $event;
             }
         }
@@ -224,6 +269,12 @@ class EventCalendar extends Widget
                 color: white;
                 text-decoration: none;
             }
+            .event-start {
+                border-left: 4px solid #28a745;
+            }
+            .event-end {
+                border-right: 4px solid #dc3545;
+            }
         ");
         
         $js = <<<JS
@@ -253,7 +304,7 @@ class EventCalendar extends Widget
                 
                 function loadCalendar(year, month) {
                     $.ajax({
-                        url: 'index.php?r=calendar/load',
+                        url: calendarLoadUrl,
                         type: 'GET',
                         data: {
                             year: year,
@@ -270,7 +321,7 @@ class EventCalendar extends Widget
                 
                 function showEventDetails(eventId) {
                     $.ajax({
-                        url: 'index.php?r=event/view',
+                        url: eventViewUrl,
                         type: 'GET',
                         data: {
                             id: eventId

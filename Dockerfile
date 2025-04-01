@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
 
     # เปิดใช้งาน Opcache
 RUN docker-php-ext-install opcache
+# เปิดใช้งาน Calendar extension
+RUN docker-php-ext-install calendar
 
 # ติดตั้ง Redis extension
 RUN pecl install redis \

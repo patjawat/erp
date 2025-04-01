@@ -71,6 +71,7 @@ if($searchModel->date_between == 'pr_create_date'){
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
+                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
                     <th class="fw-semibold" style="width:300px">ผู้ขอ/วันเวลา</th>
                     <th class="fw-semibold" style="width:180px">ประเภท</th>
@@ -82,43 +83,44 @@ if($searchModel->date_between == 'pr_create_date'){
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-                <?php foreach ($dataProvider->getModels() as $model): ?>
-                <tr>
-                    <td><span class="fw-semibold "><?=$model->pq_number?></span></td>
-                    <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
-                    <td><?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?>
+            <?php foreach($dataProvider->getModels() as $key => $item):?>
+        <tr>
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td><span class="fw-semibold "><?=$item->pq_number?></span></td>
+                    <td class="fw-light"> <?= $item->getUserReq()['avatar'] ?></td>
+                    <td><?=isset($item->data_json['order_type_name']) ? $item->data_json['order_type_name'] : ''?>
                     </td>
 
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <span class="fw-semibold "><?=$model->po_number?></span>
-                            <?= isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '' ?>
+                            <span class="fw-semibold "><?=$item->po_number?></span>
+                            <?= isset($item->data_json['vendor_name']) ? $item->data_json['vendor_name'] : '' ?>
                         </div>
                     </td>
                     <td class="fw-light align-middle">
-                        <?php // $model->showChecker()['leader']?>
-                        <?php echo $model->StackApprove()?>
+                        <?php // $item->showChecker()['leader']?>
+                        <?php echo $item->StackApprove()?>
                     </td>
                     <td class="fw-light align-middle text-end">
                         <div class="d-felx flex-column">
                             <div class="fw-semibold ">
-                                <?= number_format($model->calculateVAT()['priceAfterVAT'],2)?>
+                                <?= number_format($item->calculateVAT()['priceAfterVAT'],2)?>
                             </div>
                             <div class="text-primary mb-0 fs-15">
-                                <?=isset($model->data_json['pq_budget_type_name']) ? $model->data_json['pq_budget_type_name'] : ''?>
+                                <?=isset($item->data_json['pq_budget_type_name']) ? $item->data_json['pq_budget_type_name'] : ''?>
                             </div>
                         </div>
                     </td>
                     <td class="fw-light align-middle">
-                        <?php if($model->deleted_at == null):?>
+                        <?php if($item->deleted_at == null):?>
                         <div class="d-flex justify-content-between">
                             <span class="text-muted mb-0 fs-13">
                                 <span
-                                    class="badge rounded-pill text-bg-<?=$model->viewStatus()['color']?> mb-2 fs-13"><?=$model->viewStatus()['status_name']?></span>
+                                    class="badge rounded-pill text-bg-<?=$item->viewStatus()['color']?> mb-2 fs-13"><?=$item->viewStatus()['status_name']?></span>
                                 <span class="text-primary">
-                                    <?=$model->viewStatus()['progress']?>%</span>
+                                    <?=$item->viewStatus()['progress']?>%</span>
                             </span>
-                            <span class="text-muted mb-0 fs-13"><?=$model->viewUpdated()?>ที่แล้ว</span>
+                            <span class="text-muted mb-0 fs-13"><?=$item->viewUpdated()?>ที่แล้ว</span>
                         </div>
 
                         <?php else:?>
@@ -127,45 +129,45 @@ if($searchModel->date_between == 'pr_create_date'){
                             <span class="text-muted mb-0 fs-13">
                                 <i class="fa-regular fa-circle-stop text-danger"></i> ยกเลิกรายการ<span
                                     class="text-primary">
-                                    <?=$model->viewStatus()['progress']?>%</span>
+                                    <?=$item->viewStatus()['progress']?>%</span>
                             </span>
-                            <span class="text-muted mb-0 fs-13"><?=$model->viewUpdated()?>ที่แล้ว</span>
+                            <span class="text-muted mb-0 fs-13"><?=$item->viewUpdated()?>ที่แล้ว</span>
                         </div>
 
                         <?php endif;?>
                         <div class="progress" style="height: 5px;">
-                            <div class="progress-bar bg-<?=$model->viewStatus()['color']?>" role="progressbar"
-                                aria-label="Progress" aria-valuenow="<?=$model->viewStatus()['progress']?>"
+                            <div class="progress-bar bg-<?=$item->viewStatus()['color']?>" role="progressbar"
+                                aria-label="Progress" aria-valuenow="<?=$item->viewStatus()['progress']?>"
                                 aria-valuemin="0" aria-valuemax="100">
                             </div>
                         </div>
                     </td>
                     <td class="fw-light">
                         <div class="btn-group">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
                             <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                             data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                             <i class="bi bi-caret-down-fill"></i>
                         </button>
                         
-                        <?php if($model->status !== 7):?>
+                        <?php if($item->status !== 7):?>
                             <ul class="dropdown-menu">
-                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                              
 
-                                    <?php if ($model->status >= 2): ?>
-                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบีนยคุม', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบีนยคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?php if ($item->status >= 2): ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบีนยคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบีนยคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?php endif;?>
 
-                                    <?php if ($model->status >= 3): ?>
-                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำสั่งซื้อ', ['/purchase/po-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> คำสั่งซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?php if ($item->status >= 3): ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำสั่งซื้อ', ['/purchase/po-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำสั่งซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                     <?php endif;?>
 
-                                    <?php if ($model->status >= 4): ?>
-                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ใบตรวจรับ', ['/purchase/gr-order/update', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ใบตรวจรับ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?php if ($item->status >= 4): ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ใบตรวจรับ', ['/purchase/gr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ใบตรวจรับ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                     <?php endif;?>
 
-                                <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document','id' => $item->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                 </li>
                             </ul>
                             <?php endif;?>

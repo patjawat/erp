@@ -42,7 +42,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
         $templateProcessor->setValue('department',$model->CreateBy()['department']);
         $templateProcessor->setValue('number', $model->code);
-        $templateProcessor->setValue('total', number_format($model->getTotalOrderPrice(), 2));
+        $templateProcessor->setValue('total', number_format($model->getTotalOrderPriceSuccess(), 2));
         // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
         // $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
         $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
@@ -86,7 +86,7 @@ class DocumentController extends \yii\web\Controller
             $templateProcessor->setValue('rqty#' . $i, $item->data_json['req_qty']);
             $templateProcessor->setValue('qty#' . $i, ($model->order_status == 'success' ? $item->qty : ''));
             $templateProcessor->setValue('unitprice#' . $i, number_format($item->unit_price, 2));
-            $templateProcessor->setValue('sumprice#' . $i, number_format(($item->qty * $item->unit_price), 2));
+            $templateProcessor->setValue('sumprice#' . $i, $model->order_status == 'success' ? number_format(($item->qty * $item->unit_price), 2) : 0);
             $i++;
         }
 

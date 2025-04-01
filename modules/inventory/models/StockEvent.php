@@ -231,7 +231,7 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public function getTotalOrderPriceSuccess()
     {
-        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
+        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND order_status = 'sucess' AND `category_id` = :category_id;";
         $query = \Yii::$app
             ->db
             ->createCommand($sql)

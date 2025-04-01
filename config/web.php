@@ -80,6 +80,19 @@ $config = [
             'class' => 'yii\image\ImageDriver',
             'driver' => 'GD',  // GD or Imagick
         ],
+        'i18n' => [
+            'translations' => [
+                'app*' => [
+                    'class' => 'yii\i18n\PhpMessageSource',
+                    'basePath' => '@app/messages',
+                    'sourceLanguage' => 'en-US',
+                    'fileMap' => [
+                        'app' => 'app.php',
+                        'app/error' => 'error.php',
+                    ],
+                ],
+            ],
+        ],
         'formatter' => [
             'class' => 'yii\i18n\Formatter',
             'dateFormat' => 'php:d/m/Y',

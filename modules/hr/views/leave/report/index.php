@@ -31,21 +31,21 @@ $this->title = 'รายงานระบบลา';
         <table class="table table-bordered table-striped table-hover">
         <thead class="">
             <tr>
-                <th class="text-center">ลำดับ</th>
-                <th>ชื่อ นามสกุล</th>
-                <th>ตำแหน่ง</th>
-                <th>ฝ่าย/แผนก</th>
-                <th class="text-center">ลาป่วย</th>
-                <th class="text-center">ลากิจ</th>
-                <th class="text-center">ลาคลอดบุตร</th>
-                <th class="text-center">ลาพักผ่อน</th>
-                <th class="text-center">รวมได้ลาแล้ว</th>
+                <th class="fw-semibold text-center">ลำดับ</th>
+                <th class="fw-semibold">ชื่อ นามสกุล</th>
+                <th class="fw-semibold">ตำแหน่ง</th>
+                <th class="fw-semibold">ฝ่าย/แผนก</th>
+                <th  class="fw-semibold text-center">ลาป่วย</th>
+                <th class="fw-semibold text-center">ลากิจ</th>
+                <th class="fw-semibold text-center">ลาคลอดบุตร</th>
+                <th class="fw-semibold text-center">ลาพักผ่อน</th>
+                <th class="fw-semibold text-center">รวมได้ลาแล้ว</th>
             </tr>
         </thead>
-        <tbody class="table-group-divider">
-            <?php foreach($dataProvider->getModels() as $key => $item):?>
-            <tr>
-                <td class="text-center"><?php echo $key+1?></td>
+        <tbody class="align-middle table-group-divider">
+        <?php foreach($dataProvider->getModels() as $key => $item):?>
+        <tr>
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                 <td><?php echo $item->employee->fullname?></td>
                 <td><?php echo $item->employee->positionName()?></td>
                 <td><?php echo $item->employee->departmentName()?></td>

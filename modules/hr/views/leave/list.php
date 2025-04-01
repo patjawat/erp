@@ -10,52 +10,49 @@ $me = UserHelper::GetEmployee();
     <table class="table table-striped table-hover">
         <thead>
         <tr>
-            <th scope="col">ผู้ขออนุมัติการลา</th>
-            <th>
-                การลา
-            </th>
-            <!-- <th class="text-center" scope="col">วัน</th> -->
-            <!-- <th scope="col">จากวันที่</th>
-            <th scope="col">ถึงวันที่</th> -->
-            <th scope="col">ปีงบประมาณ</th>
-            <th class="text-start" scope="col">หนวยงาน</th>
-            <th scope="col">มอบหมาย</th>
-            <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-            <th class="text-start">ความคืบหน้า</th>
-            <th class="text-start">สถานะ</th>
-            <th class="text-center">ดำเนินการ</th>
+        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
+            <th class="fw-semibold">การลา</th>
+            <th class="fw-semibold" scope="col">ปีงบประมาณ</th>
+            <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
+            <th class="fw-semibold" scope="col">มอบหมาย</th>
+            <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+            <th class="fw-semibold text-start">ความคืบหน้า</th>
+            <th class="fw-semibold text-start">สถานะ</th>
+            <th class="fw-semibold text-center">ดำเนินการ</th>
         </tr>
     </thead>
     <tbody class="align-middle table-group-divider">
-        <?php foreach($dataProvider->getModels() as $model):?>
-        <tr class="">
+        <?php foreach($dataProvider->getModels() as $key => $item):?>
+        <tr>
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
             <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/me/leave/view','id' => $model->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
-                <?=$model->getAvatar(false)['avatar']?>
+                <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
+                <?=$item->getAvatar(false)['avatar']?>
                 </a>
             </td>
             <td>
                 <div class="d-flex flex-column justofy-content-start align-items-start">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $model->leaveType->title ?> <code><?php echo $model->total_days?> </code> วัน</span>
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType->title ?> <code><?php echo $item->total_days?> </code> วัน</span>
                     <div>
-                        ระหว่าง <?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?> - <?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?>
+                        ระหว่าง <?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?> - <?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?>
                     </div>
                 </div>
             </td>
-            <!-- <td class="text-center fw-semibold"><?php echo $model->total_days?></td> -->
-            <!-- <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td> -->
-            <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
-            <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
+            <!-- <td class="text-center fw-semibold"><?php echo $item->total_days?></td> -->
+            <!-- <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
+            <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td> -->
+            <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
+            <td class="text-start text-truncate" style="max-width:150px;"><?=$item->getAvatar(false)['department']?>
             </td>
-            <td><?php echo $model->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td>
-            <td><?php echo $model->stackChecker()?></td>
-            <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $model->showStatus();?></td>
+            <td><?php echo $item->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td>
+            <td><?php echo $item->stackChecker()?></td>
+            <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?></td>
             <td class="fw-center align-middle text-start">
 
                 <?php
                         try {
-                            echo $model->viewStatus();
+                            echo $item->viewStatus();
                         } catch (\Throwable $th) {
                             //throw $th;
                         }
@@ -66,24 +63,24 @@ $me = UserHelper::GetEmployee();
 
             <div class="d-flex gap-2 justify-content-center">
 
-    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $model->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-    <?php if($model->status == 'Approve'):?>
+    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+    <?php if($item->status == 'Approve'):?>
         <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
         <?php else:?>
-            <?php echo ($me->id == $model->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']]) : ''?>
+            <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']]) : ''?>
     <?php endif?>
-    <?php if($model->status == 'Approve'):?>
+    <?php if($item->status == 'Approve'):?>
 
         <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
-                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'open-modal','data' => [
                                 'size' => 'modal-xl',
-                                'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                                'filename' => $item->leaveType->title.'-'.$item->employee->fullname
                             ]]) ?>
                         <?php  Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
-                            [$model->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $model->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'download-leave','data' => [
-                                'filename' => $model->leaveType->title.'-'.$model->employee->fullname
+                                'filename' => $item->leaveType->title.'-'.$item->employee->fullname
                             ]]) ?>
                             <?php else:?>
                                 <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>

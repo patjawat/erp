@@ -364,14 +364,31 @@ class UpdateTableController extends Controller
 
     public function actionCreateView()
     {
-        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary`')->execute();
-        echo "Drop leave_summary\n";
-        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary_year`')->execute();
-        echo "Drop leave_summary_year\n";
-        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock`')->execute();
-        echo "Drop view_stock\n";
-        Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock_transaction`')->execute();
-        echo "Drop view_stock_transaction\n";
+        try {
+            Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary`')->execute();
+            echo "Drop leave_summary\n";
+        } catch (\Throwable $th) {
+
+        }
+        try {
+            Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary_year`')->execute();
+            echo "Drop leave_summary_year\n";
+        } catch (\Throwable $th) {
+
+        }
+        try {
+            Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock`')->execute();
+            echo "Drop view_stock\n";
+        } catch (\Throwable $th) {
+
+        }
+        try {
+            Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock_transaction`')->execute();
+            echo "Drop view_stock_transaction\n";
+        } catch (\Throwable $th) {
+
+        }
+    
 
         $sqlViewStock = "CREATE VIEW view_stock as SELECT t.code as type_code ,t.title as asset_type_name,i.code as asset_item,i.title as asset_item_name,s.warehouse_id,w.warehouse_type,w.warehouse_name,s.qty,sum(s.qty*s.unit_price) as total_price FROM stock s 
                         INNER JOIN warehouses w ON w.id = s.warehouse_id
