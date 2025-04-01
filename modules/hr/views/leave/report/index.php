@@ -50,8 +50,8 @@ $this->title = 'รายงานระบบลา';
                 <td><?php echo $item->employee->positionName()?></td>
                 <td><?php echo $item->employee->departmentName()?></td>
                 <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
-                <td class="text-center fw-bolder"><?php echo $item->sum_lt2?></td>
                 <td class="text-center fw-bolder"><?php echo $item->sum_lt3?></td>
+                <td class="text-center fw-bolder"><?php echo $item->sum_lt2?></td>
                 <td class="text-center fw-bolder"><?php echo $item->sum_lt4?></td>
                 <td class="text-center fw-bolder"><?php echo ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4)?></td>
             </tr>
