@@ -13,13 +13,13 @@ use app\modules\inventory\models\StockEvent;
 <table class="table table-striped table-sm">
                     <thead>
                         <tr>
-                            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                            <th style="width:210px">รหัส</th>
-                            <th scope="col">ผู้เบิก</th>
-                            <th >หัวหน้าตรวจสอบ</th>
-                            <th class="text-end">มูลค่า</th>
-                            <th class="text-center" style="width:300px">สถานะ</th>
-                            <th style="width:100px">ดำเนินการ</th>
+                            <th class="fw-semibold text-center fw-semibold" style="width:30px">ลำดับ</th>
+                            <th class="fw-semibold" style="width:210px">รหัส</th>
+                            <th class="fw-semibold" scope="col">ผู้เบิก</th>
+                            <th class="fw-semibold">หัวหน้าตรวจสอบ</th>
+                            <th class="fw-semibold text-end">มูลค่า</th>
+                            <th class="fw-semibold text-center" style="width:300px">สถานะ</th>
+                            <th class="fw-semibold" style="width:100px">ดำเนินการ</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle table-group-divider">
