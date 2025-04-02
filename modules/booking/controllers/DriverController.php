@@ -125,7 +125,7 @@ class DriverController extends Controller
         ]);
     }
 
-    public function actionApprove($id)
+    public function actionApprove00($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
@@ -147,6 +147,63 @@ class DriverController extends Controller
         ];
     }
 
+    public function actionApprove($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        
+        if ($model->load(Yii::$app->request->post())) {
+            $model->status = 'Pass';
+            $post = Yii::$app->request->post();
+
+            // Yii::info('POST data: ' . print_r($post, true), 'booking');
+        
+            // ตรวจสอบและแสดงข้อมูล
+            $dates = Yii::$app->request->post('dates', []);
+            $cars = Yii::$app->request->post('cars', []);
+            $drivers = Yii::$app->request->post('drivers', []);
+            
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                // บันทึกข้อมูลหลักการจอง
+                if (!$model->save()) {
+                    throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
+                }
+                
+                foreach ($post['bookingDetails'] as $key => $detail) {
+                    $bookingDetail = BookingDetail::findOne($detail['id']);
+                    if ($bookingDetail) {
+                        $bookingDetail->driver_id = $detail['driver'];
+                        $bookingDetail->license_plate = $detail['car'];
+                        $bookingDetail->save(false);
+                    }
+                    
+                    if (!$bookingDetail->save()) {
+                        throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
+                    }
+                }
+                
+                $transaction->commit();
+                return [
+                    'status' => 'success'
+                ];
+                // return $this->redirect(['view', 'id' => $model->id]);
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+        }
+        
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('_form_approve', [
+                'model' => $model,
+            ]),
+        ];
+    
+    }
+
+    
 
     /**
      * Updates an existing Booking model.

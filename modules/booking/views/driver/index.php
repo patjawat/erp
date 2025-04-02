@@ -127,14 +127,14 @@ if($searchModel->car_type == 'ambulance'){
                             <?php foreach($dataProvider->getModels() as $key => $item):?>
                                 <tr>
                                     <td>
-                                        <p class="mb-0 fw-semibold">REQ-20250101-001</p>
-                                        <p class="fs-13 mb-0"><?php echo Yii::$app->thaiDate->toThaiDate($item->created_at, false, false)?></p>
+                                        <p class="mb-0 fw-semibold"><?=$item->code?></p>
+                                        <p class="fs-13 mb-0"><?php echo Yii::$app->thaiDate->toThaiDate($item->created_at, true, true)?></p>
                                     </td>
-                                    <td><?php echo $item->userRequest()?></td>
-                                    <td>1 - 3 ม.ค. 2568</td>
-                                    <td>โรงพยาบาลศิริราช</td>
-                                    <td>รถพยาบาล</td>
-                                    <td>ค้างคืน</td>
+                                    <td><?php echo $item->userRequest()['avatar'];?></td>
+                                    <td><?php echo $item->showDateRange()?></td>
+                                    <td><?php echo $item->locationOrg?->title ?? '-'?></td>
+                                    <td><?php echo $item->car_type?></td>
+                                    <td><?php echo $item->data_json['go_type'] ?? '-'?></td>
                                     <td>
                                     <?php echo Html::a('<i class="bi bi-check-circle me-1"></i> อนุมัติ', ['/booking/driver/approve', 'id' => $item->id,'title' => '<i class="bi bi-check-circle me-1"></i> อนุมัติการจัดสรรรถ'], ['class' => 'btn btn-sm btn-success me-1 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
                                     <?php echo Html::a('<i class="bi bi-x-circle me-1"></i> ปฏิเสธ', ['/booking/driver/reject', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger'])?>
@@ -142,7 +142,7 @@ if($searchModel->car_type == 'ambulance'){
                                     </td>
                                 </tr>
                                 <?php endforeach;?>
-                                <tr>
+                                <!-- <tr>
                                     <td>REQ-20250107-004</td>
                                     <td>นางสาวสมศรี รักดี</td>
                                     <td>7 ม.ค. 2568</td>
@@ -158,7 +158,7 @@ if($searchModel->car_type == 'ambulance'){
                                             <i class="bi bi-x-circle me-1"></i>ปฏิเสธ
                                         </button>
                                     </td>
-                                </tr>
+                                </tr> -->
                             </tbody>
                         </table>
                     </div>

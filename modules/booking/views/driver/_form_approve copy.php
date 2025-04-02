@@ -12,7 +12,7 @@ use kartik\widgets\ActiveForm;
 $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 ?>
 
-<?php $form = ActiveForm::begin(['id' => 'booking-form']); ?>
+<div class="booking-update">
     <div class="mb-3">
         <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label>
         <p><?php echo $model->userRequest()['fullname'];?>
@@ -20,6 +20,7 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
             <?php echo $model->showDateRange()?></p>
 
     </div>
+    <?php $form = ActiveForm::begin(['id' => 'booking-form']); ?>
 
     <div class="booking-details">
         <label class="form-label">จัดสรรรถ</label>
@@ -37,12 +38,11 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
                 <tr class="detail-row">
                     <td>
                         <?=$detail->showDate()?>
-                        <input type="hidden" name="bookingDetails[<?= $index ?>][id]" value="<?= $detail->id ?>">
                     </td>
                     <td>
                         <?php
                          echo Html::dropDownList(
-                            "bookingDetails[{$index}][car]",  // เปลี่ยนชื่อ name
+                            'cars[]',
                             $detail->license_plate,
                             $model->ListCarItems(),
                             ['class' => 'form-select form-select-sm']
@@ -52,7 +52,7 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
                     <td>
                         <?php
                          echo Html::dropDownList(
-                            "bookingDetails[{$index}][driver]", // เปลี่ยนชื่อ name
+                            'drivers[]',
                             $detail->driver_id,
                             $model->listDriver(),
                             ['class' => 'form-select form-select-sm']
@@ -106,6 +106,7 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
     <div class="form-group">
         <?php echo $form->field($model, 'data_json[remarks]')->textarea(['rows' => 2]) ?>
     </div>
+</div>
 
 <div class="d-flex justify-content-center gap-3">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
@@ -115,67 +116,38 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 <?php ActiveForm::end(); ?>
 
 <?php
-$js = <<<JS
-$('#booking-form').on('beforeSubmit', function (e) {
-    var form = $(this);
-    
-    Swal.fire({
-        title: "ยืนยัน?",
-        text: "บันทึกขอใช้ยานพาหนะ!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        cancelButtonText: "ยกเลิก!",
-        confirmButtonText: "ใช่, ยืนยัน!"
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // แสดงข้อมูลในคอนโซลเพื่อดีบัก
-            console.log('Form data:', form.serialize());
+// $js = <<<JS
+// $('#booking-form').on('beforeSubmit', function (e) {
+//         var form = \$(this);
+//         Swal.fire({
+//         title: "ยืนยัน?",
+//         text: "บันทึกขอใช้ยานพาหนะ!",
+//         icon: "warning",
+//         showCancelButton: true,
+//         confirmButtonColor: "#3085d6",
+//         cancelButtonColor: "#d33",
+//         cancelButtonText: "ยกเลิก!",
+//         confirmButtonText: "ใช่, ยืนยัน!"
+//         }).then((result) => {
+//         if (result.isConfirmed) {
             
-            $.ajax({
-                url: form.attr('action'),
-                type: 'post',
-                data: form.serialize(),
-                dataType: 'json',
-                success: function (response) {
-                    console.log('Response:', response);
-                    if (response.status == 'success') {
-                        Swal.fire({
-                            title: "สำเร็จ!",
-                            text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
-                            icon: "success",
-                            timer: 1000
-                        }).then(() => {
-                            window.location.reload();
-                            if (response.redirect) {
-                                // window.location.href = response.redirect;
-                            } else {
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            title: "เกิดข้อผิดพลาด!",
-                            text: response.message || "ไม่สามารถบันทึกข้อมูลได้",
-                            icon: "error"
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', xhr.responseText);
-                    Swal.fire({
-                        title: "เกิดข้อผิดพลาด!",
-                        text: "ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้",
-                        icon: "error"
-                    });
-                }
-            });
-        }
-    });
-    
-    return false;
-});
+//             \$.ajax({
+//                 url: form.attr('action'),
+//                 type: 'post',
+//                 data: form.serialize(),
+//                 dataType: 'json',
+//                 boforeSubmit: function(){
+//                     beforLoadModal()
+//                 },
+//                 success: function (response) {
+//                     console.log(response);
+//                 }
+//             });
+//         }
+//         });
+//         return false;
+//     });
 
-JS;
-$this->registerJs($js);
+// JS;
+// $this->registerJs($js);
 ?>

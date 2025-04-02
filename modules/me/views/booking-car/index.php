@@ -65,13 +65,14 @@ if($searchModel->car_type == 'ambulance'){
                                 </tr>
                             </thead>
                             <tbody class="align-middle table-group-divider">
+                                <?php foreach($dataProvider->getModels() as $item):?>
                                 <tr>
-                                    <td>REQ-20250101-001</td>
-                                    <td>1 - 3 ม.ค. 2568</td>
-                                    <td>โรงพยาบาลศิริราช</td>
-                                    <td>รถพยาบาล</td>
-                                    <td>ค้างคืน</td>
-                                    <td><span class="badge bg-warning">รออนุมัติ</span></td>
+                                    <td><?php echo $item->code;?></td>
+                                    <td><?php echo $item->showDateRange()?></td>
+                                    <td><?php echo $item->locationOrg?->title ?? '-'?></td>
+                                    <td><?php echo $item->car_type?></td>
+                                    <td><?php echo $item->data_json['go_type'] ?? '-'?></td>
+                                    <td><span class="badge bg-warning"><?php echo $item->status?></span></td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary me-1">
                                             <i class="bi bi-eye"></i>
@@ -81,6 +82,7 @@ if($searchModel->car_type == 'ambulance'){
                                         </button>
                                     </td>
                                 </tr>
+                                <?php endforeach;?>
                             </tbody>
                         </table>
                     </div>
@@ -425,49 +427,12 @@ if($searchModel->car_type == 'ambulance'){
 
     
 
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
-                    class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <p>
-                <?php echo html::a('<i class="fa-solid fa-car-side"></i> ขอใช้รถยนต์ทั่วไป',['/me/booking-car/select-type','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-            </p>
-        </div>
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th scope="col">รายการ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th scope="col">วันที่ไป</th>
-                    <th scope="col">เวลาไป</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th scope="col">เวลากลับ</th>
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-                    <th scope="col">สถานะ</th>
-                    <th class="text-center">ดำเนินการ</th>
-                </tr>
-            </thead>
-            <tbody class="align-middle table-group-divider">
-                <?php foreach($dataProvider->getModels() as $item):?>
-                <tr>
-                    <td><?php echo $item->reason;?></td>
-                    <td><?php // echo $item->car->Avatar();?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
-                    <td><?php echo $item->time_start?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
-                    <td><?php echo $item->time_end?></td>
-                    <td><?php echo $item->leader_id?></td>
-                    <td><?php echo $item->bookingStatus->title ?? '-'?></td>
-                    <td class="text-center">
-                        <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-car/view','id' => $item->id],['class' => 'open-modalx','data' => ['size' => 'modal-xl']])?>
-                        <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/booking-car/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                    </td>
-                </tr>
-                <?php endforeach;?>
-            </tbody>
-        </table>
-        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+
+    </div>
+</div>
+
+
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
             <?= yii\bootstrap5\LinkPager::widget([
                 'pagination' => $dataProvider->pagination,
                 'firstPageLabel' => 'หน้าแรก',
@@ -478,45 +443,6 @@ if($searchModel->car_type == 'ambulance'){
                 ],
             ]); ?>
         </div>
-
-    </div>
-</div>
-
-
-
-
-
-<div class="container mt-5">
-    <h2 class="text-center">Simple Calendar</h2>
-    <div class="row border">
-        <div class="col border p-2 text-center bg-light">Sun</div>
-        <div class="col border p-2 text-center bg-light">Mon</div>
-        <div class="col border p-2 text-center bg-light">Tue</div>
-        <div class="col border p-2 text-center bg-light">Wed</div>
-        <div class="col border p-2 text-center bg-light">Thu</div>
-        <div class="col border p-2 text-center bg-light">Fri</div>
-        <div class="col border p-2 text-center bg-light">Sat</div>
-    </div>
-    <div class="row">
-        <div class="col border p-3"></div> <!-- Empty for alignment -->
-        <div class="col border p-3 text-center">1</div>
-        <div class="col border p-3 text-center">2</div>
-        <div class="col border p-3 text-center">3</div>
-        <div class="col border p-3 text-center">4</div>
-        <div class="col border p-3 text-center">5</div>
-        <div class="col border p-3 text-center">6</div>
-    </div>
-    <div class="row">
-        <div class="col border p-3 text-center">7</div>
-        <div class="col border p-3 text-center">8</div>
-        <div class="col border p-3 text-center">9</div>
-        <div class="col border p-3 text-center">10</div>
-        <div class="col border p-3 text-center">11</div>
-        <div class="col border p-3 text-center">12</div>
-        <div class="col border p-3 text-center">13</div>
-    </div>
-    <!-- Add more rows for full calendar -->
-</div>
 
 
 

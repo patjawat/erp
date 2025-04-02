@@ -289,6 +289,7 @@ class BookingCarController extends \yii\web\Controller
 
     public function actionCreate2()
     {
+        $me = UserHelper::GetEmployee();
         $carType = $this->request->get('type');
         $model = new Booking([
             'name' => 'booking_car',
@@ -299,20 +300,24 @@ class BookingCarController extends \yii\web\Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'Pending';
+                $model->emp_id = $me->id;
+                // $model->code  = CARREQ-20250101-001
+                $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???');
                 if ($model->save(false)) {
                     // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
                     // $this->checkLocation($model);
 
                     // ถ้าเป็นการไปกลับสร้างตารางจรรสรรของแต่ละวัน
-                    // if ($model->data_json['go_type'] == 'ไปกลับ') {
-                    //     $this->createDetail($model);
-                    // }
+                    if ($model->data_json['go_type'] == 'ไปกลับ') {
+                        $this->createDetail($model);
+                    }
                     //สร้างการอนุมัติ
-                    \Yii::$app->response->format = Response::FORMAT_JSON;
+                 
                         // $this->createApprove($model);
                     return $this->redirect(['/me/booking-car']);
                 }

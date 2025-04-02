@@ -25,7 +25,15 @@ use app\modules\inventory\models\StockEvent;
                     <tbody class="align-middle table-group-divider">
                         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <tr>
-                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                        <td class="text-center fw-semibold">
+                                <?php 
+                                if ($dataProvider->pagination !== false) {
+                                    echo (($dataProvider->pagination->offset + 1) + $key);
+                                } else {
+                                    echo ($key + 1);
+                                }
+                                ?>
+                            </td>
                             <td>
                               
                                 <div>
@@ -63,7 +71,7 @@ use app\modules\inventory\models\StockEvent;
 
                 <div class="d-flex justify-content-center mt-5">
             <div class="text-muted">
-                <?= LinkPager::widget([
+                <?= ($dataProvider->pagination !== false) ?  LinkPager::widget([
                             'pagination' => $dataProvider->pagination,
                             'firstPageLabel' => 'หน้าแรก',
                             'lastPageLabel' => 'หน้าสุดท้าย',
@@ -71,6 +79,6 @@ use app\modules\inventory\models\StockEvent;
                                 'listOptions' => 'pagination pagination-sm',
                                 'class' => 'pagination-sm',
                             ],
-                        ]); ?>
+                        ]) : ''; ?>
             </div>
         </div>

@@ -4,6 +4,7 @@ namespace app\modules\booking\models;
 
 use Yii;
 use app\modules\am\models\Asset;
+use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 
 /**
@@ -99,5 +100,9 @@ class BookingDetail extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'driver_id']);
     }
 
+    public function showDate()
+    {
+        return ThaiDateHelper::formatThaiDate($this->date_start);
+    }
     
 }

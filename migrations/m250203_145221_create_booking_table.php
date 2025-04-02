@@ -15,6 +15,7 @@ class m250203_145221_create_booking_table extends Migration
         $this->createTable('{{%booking}}', [
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
+            'code' => $this->string(255),
             'name' => $this->string(255)->comment('ชื่อกาารเก็บข้อมูล (meeting_service,driver_service)'),
             'thai_year' => $this->integer(255)->comment('ปีงบประมาณ'),
             'ambulance_type' => $this->string(255)->comment('ประเภทของการรับส่งสำหรับรถพยาบาล'),
@@ -48,6 +49,14 @@ class m250203_145221_create_booking_table extends Migration
             'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
             'deleted_by' => $this->integer()->comment('ผู้ลบ')
         ]);
+
+        $sql1 = Yii::$app->db->createCommand("select * from categorise where name = 'car_type'")->queryAll();
+        if(count($sql1) < 1){
+            $this->insert('categorise',['name'=>'car_type','code' =>'official','title'=>'รถยนต์ราชการ','active' => 1]);
+            $this->insert('categorise',['name'=>'car_type','code' =>'personal','title'=>'รถยนต์ส่วนตัว','active' => 1]);
+            $this->insert('categorise',['name'=>'car_type','code' =>'ambulance','title'=>'รถพยาบาล','active' => 1]);
+        }   
+
     }
 
     /**

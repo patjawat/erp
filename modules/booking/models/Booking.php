@@ -10,6 +10,7 @@ use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use app\components\ThaiDateHelper;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
@@ -65,7 +66,7 @@ class Booking extends \yii\db\ActiveRecord
         return [
             [['name', 'date_start', 'date_end','private_car'], 'required'],
             [['thai_year', 'document_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id','tags_department'], 'safe'],
+            [['code','date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'ambulance_type', 'mileage_start', 'mileage_end','oil_liter','oil_price','owner_id','tags_department'], 'safe'],
             [['ref', 'name', 'car_type', 'urgent', 'license_plate', 'room_id', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id'], 'string', 'max' => 255],
             [['time_start'], 'required', 'message' => 'ต้องระบุ'],
             [['time_end'], 'required', 'message' => 'ต้องระบุ'],
@@ -138,7 +139,12 @@ class Booking extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'driver_id']);
     }
-
+//ประเภทของการจองรถ
+    public function getCarType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'car_type']);
+    }
+    
     // ห้องประชุม
     public function getRoom()
     {
@@ -174,18 +180,32 @@ class Booking extends \yii\db\ActiveRecord
     }
 
 
+    public function showDateRange()
+    {
+        // กรณีแสดงช่วงวันที่
+        echo ThaiDateHelper::formatThaiDateRange($this->date_start,$this->date_end); // แสดงผล: 1 - 3 ม.ค. 2568
+
+    }
     //สมาชิกที่จะเข้าร่วมประชุม
     public function getlistMembers()
     {
         return $this->hasMany(BookingDetail::class, ['booking_id' => 'id'])->andOnCondition(['name' => 'meeting_menber']);
     }
 
+    public function getBookingDetails()
+    {
+        return $this->hasMany(BookingDetail::class, ['booking_id' => 'id']);
+    }
+    
     //ผู้ขอบริการ
     public function userRequest()
     {
         $emp = Employees::findOne(['user_id' =>  $this->created_by]);
-        $msg = $this->reason;
-        return $emp->getAvatar(false,$msg);
+        $msg = $emp->departmentName();
+        return [
+            'avatar' => $emp->getAvatar(false,$msg),
+            'fullname' => $emp->fullname
+        ];
     }
     public function listRooms()
     {
@@ -322,7 +342,13 @@ return  ArrayHelper::map($arrDrivers,'id',function($model){
     // แสดงรายการทะยานพาหนะ
     public function ListCarItems()
     {
-        $items = BookingCarItems::find()->all();
+
+        $items = Asset::find()
+            ->andWhere(['IS NOT', 'license_plate', null])
+            // ->andWhere(['car_type' => $model->car_type])
+            ->all();
+
+        // $items = BookingCarItems::find()->all();
         return ArrayHelper::map($items, 'license_plate', 'license_plate');
     }
 

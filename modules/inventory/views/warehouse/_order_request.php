@@ -38,7 +38,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                     <div>
 
                         <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-                        <?php echo $this->render('_search_order', ['model' => $searchModel]); ?>
+                        <?php echo $this->render('_search_order', ['model' => $searchModel,'dataProvider' => $dataProvider]); ?>
                         </div>
                         <div>
                             <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>

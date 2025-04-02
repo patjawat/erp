@@ -84,7 +84,7 @@ class WarehouseController extends Controller
     }
     
 
-    public function actionOrderRequest()
+    public function actionOrderRequest($all = null)
     {
         $warehouse = \Yii::$app->session->get('warehouse');
         $id = \Yii::$app->user->id;
@@ -95,17 +95,31 @@ class WarehouseController extends Controller
                 'thai_year' => AppHelper::YearBudget(),
                 'order_status' =>   ['pending']
             ]);
+            
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order']);
             $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
             $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse->id]);
             $dataProvider->query->andFilterWhere(['order_status' => $searchModel->order_status]);
+            
+            try {
+            //ค้นหาตามช่วงของวันที่
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dataProvider->query->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'code', $searchModel->q],
                 ['like', 'thai_year', $searchModel->q],
                 ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
             ]);
+            if ($all) {
+                $dataProvider->pagination = false; // ปิดการแบ่งหน้า
+            }
 
             return $this->render('_order_request', [
                 'searchModel' => $searchModel,

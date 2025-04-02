@@ -339,8 +339,6 @@ $resultsJs = <<<JS
 </div>
 
 
-<?= $form->field($model, 'car_type')->hiddenInput(['maxlength' => true])->label(false) ?>
-
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
 <?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
