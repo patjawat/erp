@@ -75,8 +75,8 @@ $months = [
                             ]
                             ])->label('ปีงบประมาน');
                             ?>
-                <?=$form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');?>
-                <?=$form->field($model, 'date_end')->textInput()->label('ถึงวันที่');?>
+                <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label('ช่วงวันที่'); ?>
+                <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label('ถึงวันที่'); ?>
                 <?php echo Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-primary rounded-pill shadow mt-3', 'id' => 'summit']) ?>
                 
 </div>
