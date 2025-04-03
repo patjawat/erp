@@ -523,6 +523,55 @@ class StockEvent extends Yii\db\ActiveRecord
         return UserHelper::getMe($msg);
     }
 
+
+//สรุปราคาและจำนวน
+public function mainOrderSummary($status = null)
+{
+    try {
+        $dateStart = AppHelper::convertToGregorian($this->date_start);
+        $dateEnd = AppHelper::convertToGregorian($this->date_end);
+    } catch (\Throwable $th) {
+        $dateStart = null;
+        $dateEnd = null;
+    }
+    
+    // Query นับจำนวนออเดอร์
+    $queryTotalOrder = self::find()
+        ->where([
+            'name' => 'order',
+            'warehouse_id' => $this->warehouse_id
+        ])
+        ->andFilterWhere(['from_warehouse_id' => $this->from_warehouse_id])
+        ->andFilterWhere(['transaction_type' => $this->transaction_type])
+        ->andFilterWhere(['order_status' => $status])
+        ->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
+
+    $totalOrder = $queryTotalOrder->count();
+    $totalOrderSql = $queryTotalOrder->createCommand()->getRawSql(); // ดึง SQL ออกมา
+
+    // Query คำนวณยอดรวม
+    $queryTotalPrice = self::find()
+        ->select(['total' => new \yii\db\Expression('SUM(stock_events.qty * stock_events.unit_price)')])
+        ->leftJoin('categorise i', 'i.code = stock_events.asset_item')
+        ->where(['warehouse_id' => $this->warehouse_id])
+        ->andFilterWhere(['stock_events.from_warehouse_id' => $this->from_warehouse_id])
+        ->andFilterWhere(['stock_events.transaction_type' => $this->transaction_type])
+        ->andFilterWhere(['stock_events.order_status' => $status])
+        ->andFilterWhere(['between', 'stock_events.created_at', $dateStart, $dateEnd])
+        ->groupBy('stock_events.transaction_type');
+
+    $totalPrice = $queryTotalPrice->scalar();
+    $totalPriceSql = $queryTotalPrice->createCommand()->getRawSql(); // ดึง SQL ออกมา
+
+    return [
+        'totalPrice' => $totalPrice,
+        'totalOrder' => $totalOrder,
+        'totalPriceSql' => $totalPriceSql,
+        'totalOrderSql' => $totalOrderSql
+    ];
+}
+
+    
     public function viewStatus()
     {
         switch ($this->order_status) {
@@ -551,6 +600,8 @@ class StockEvent extends Yii\db\ActiveRecord
 
         return $msg;
     }
+
+
 
     // แสดงผู้ตรวจสอบ
     public function viewChecker($msg = null)

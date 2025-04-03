@@ -720,7 +720,7 @@ class Leave extends \yii\db\ActiveRecord
 
     public function showStatus()
     {
-        $leaveStep = Approve::find()->where(['from_id' => $this->id])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();
+        $leaveStep = Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();
 
         $color = 'primary';
         $statusName = '';

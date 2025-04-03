@@ -1,6 +1,6 @@
 function thaiDatepicker(el) {
     $.datetimepicker.setLocale('th')
-    $(el).attr('readonly', true)
+    $(el).attr('readonly', false)
     $(el).addClass('date-readonly')
     $(el).datetimepicker({
         timepicker: false,

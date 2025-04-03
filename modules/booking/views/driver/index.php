@@ -32,6 +32,7 @@ if($searchModel->car_type == 'ambulance'){
 
 
 <?php  echo $this->render('menu') ?>
+
     
 
     <!-- Admin View (Hidden by default) -->

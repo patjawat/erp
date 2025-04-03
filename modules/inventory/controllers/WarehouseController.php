@@ -93,13 +93,13 @@ class WarehouseController extends Controller
         if ($warehouse) {
             $searchModel = new StockEventSearch([
                 'thai_year' => AppHelper::YearBudget(),
-                'order_status' =>   ['pending']
+                'order_status' =>   ['pending'],
+                'warehouse_id' => $warehouse->id,
+                'transaction_type' => 'OUT'
             ]);
             
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order']);
-            $dataProvider->query->andFilterWhere(['transaction_type' => 'OUT']);
-            $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse->id]);
             $dataProvider->query->andFilterWhere(['order_status' => $searchModel->order_status]);
             
             try {
