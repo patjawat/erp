@@ -53,7 +53,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <i class="bi bi-plus-circle-fill text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <a href="/purchase/pr-order">รอดำเนินการ</a>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('pending')['totalOrder']?></span>
+                <span>รอดำเนินการ</span>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('pending')['totalOrder']?></span>
             </div>
         </div>
     </div>
@@ -65,7 +65,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <i class="bi bi-rocket text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
-            <a href="/purchase/po-order">ยกเลิก</a>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('cancel')['totalOrder']?></span>
+            <span>ยกเลิก</span>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('cancel')['totalOrder']?></span>
             </div>
         </div>
     </div>
@@ -76,7 +76,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                 <i class="fa-solid fa-user-check text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <a href="/purchase/pq-order">เสร็จสิ้น</a>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('success')['totalOrder']?></span>
+                <span>เสร็จสิ้น</span>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('success')['totalOrder']?></span>
             </div>
         </div>
     </div>
