@@ -181,16 +181,16 @@ $this->title = 'ระบบคลัง';
     <div class="col-xl-8">
         <?php
         
-        try {
+        // try {
             echo $this->render('list_warehouse', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 'searchModelWarehouse' => $searchModelWarehouse,
                 'dataProviderWarehouse' => $dataProviderWarehouse,
             ]);
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        // }
         ?>
         <div id="showWarehouse"></div>
     </div>

@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?php echo $item->viewCreateDateTime()?>
                                 </p>
                         </div>
-                    </div>
+                        </div>
                     </td>
                     <td> <?= $item->showAvatarCreate(); ?></td>
                     <td><?= $item->StackTeam() ?></td>

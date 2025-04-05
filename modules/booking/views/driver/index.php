@@ -106,65 +106,7 @@ if($searchModel->car_type == 'ambulance'){
             </div>
 
             <!-- Pending Approvals -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h6><i class="bi bi-ui-checks me-1"></i> คำขอรออนุมัติ <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>เลขที่</th>
-                                    <th>ผู้ขอ</th>
-                                    <th>วันที่ขอใช้</th>
-                                    <th>จุดหมาย</th>
-                                    <th>ประเภทรถ</th>
-                                    <th>ลักษณะการใช้</th>
-                                    <th>จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach($dataProvider->getModels() as $key => $item):?>
-                                <tr>
-                                    <td>
-                                        <p class="mb-0 fw-semibold"><?=$item->code?></p>
-                                        <p class="fs-13 mb-0"><?php echo Yii::$app->thaiDate->toThaiDate($item->created_at, true, true)?></p>
-                                    </td>
-                                    <td><?php echo $item->userRequest()['avatar'];?></td>
-                                    <td><?php echo $item->showDateRange()?></td>
-                                    <td><?php echo $item->locationOrg?->title ?? '-'?></td>
-                                    <td><?php echo $item->car_type?></td>
-                                    <td><?php echo $item->data_json['go_type'] ?? '-'?></td>
-                                    <td>
-                                    <?php echo Html::a('<i class="bi bi-check-circle me-1"></i> อนุมัติ', ['/booking/driver/approve', 'id' => $item->id,'title' => '<i class="bi bi-check-circle me-1"></i> อนุมัติการจัดสรรรถ'], ['class' => 'btn btn-sm btn-success me-1 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
-                                    <?php echo Html::a('<i class="bi bi-x-circle me-1"></i> ปฏิเสธ', ['/booking/driver/reject', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger'])?>
-                                      
-                                    </td>
-                                </tr>
-                                <?php endforeach;?>
-                                <!-- <tr>
-                                    <td>REQ-20250107-004</td>
-                                    <td>นางสาวสมศรี รักดี</td>
-                                    <td>7 ม.ค. 2568</td>
-                                    <td>กรมอนามัย</td>
-                                    <td>รถยนต์ราชการ</td>
-                                    <td>ไปกลับ</td>
-                                    <td>
-                                      
-                                    <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal" data-bs-target="#approveModal">
-                                            <i class="bi bi-check-circle me-1"></i>อนุมัติ
-                                        </button>
-                                        <button class="btn btn-sm btn-danger">
-                                            <i class="bi bi-x-circle me-1"></i>ปฏิเสธ
-                                        </button>
-                                    </td>
-                                </tr> -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </div>
 

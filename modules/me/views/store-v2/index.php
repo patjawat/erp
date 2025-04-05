@@ -41,6 +41,7 @@ $products = $cart->getItems();
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
+                                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                                 <th scope="col" class="fw-semibold">ชื่อรายการ</th>
                                 <th class="text-start fw-semibold">ประเภท</th>
                                 <th scope="col" class="text-center fw-semibold">คงเหลือ</th>
@@ -50,9 +51,11 @@ $products = $cart->getItems();
                             </tr>
                         </thead>
                         <tbody class="align-middle table-group-divider">
-                            <?php foreach($dataProvider->getModels() as $item):?>
-                            <tr>
-                                <th scope="row">
+                            <?php foreach($dataProvider->getModels() as $key => $item):?>
+                            <tr class="align-middle">
+                                <td class="text-center fw-semibold">
+                                    <?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                                <td>
                                     <?php // echo Html::a($item->product->Avatar(),['/inventory/stock/view-stock-card','id' => $item->id])?>
                                     <div class="d-flex">
                                         <?php echo Html::img($item->product->showImg(),['class' => 'avatar'])?>
@@ -66,7 +69,7 @@ $products = $cart->getItems();
 
                                         </div>
                                     </div>
-                                </th>
+                                </td>
                                 <td class="text-start">
                                     <?=isset($item->product->productType->title) ? $item->product->productType->title : 'ไม่พบข้อมูล' ?>
                                 </td>
@@ -115,17 +118,6 @@ $products = $cart->getItems();
                 </div>
             </div>
 
-            <div class="d-flex justify-content-center">
-                <?= yii\bootstrap5\LinkPager::widget([
-                    'pagination' => $dataProvider->pagination,
-                    'firstPageLabel' => 'หน้าแรก',
-                    'lastPageLabel' => 'หน้าสุดท้าย',
-                    'options' => [
-                        'class' => 'pagination pagination-sm',
-                    ],
-                ]); ?>
-
-            </div>
         </div>
 
 

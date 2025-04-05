@@ -21,6 +21,21 @@ use kartik\widgets\ActiveForm;
 
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุสิ่งที่ต้องการค้นหา..'])->label('ค้นหา') ?>
     <?php
+        echo $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+                'data' => $model->listWareHouseMain(),
+                'options' => ['placeholder' => 'เลือกคลัง ...'],
+                'pluginOptions' => ['width' => '200px','allowClear' => true],
+                'pluginEvents' => [
+                                    'select2:select' => 'function(result) { 
+                                                  $(this).submit()
+                                                }',
+                                    'select2:unselect' => 'function(result) { 
+                                                  $(this).submit()
+                                                }',
+                                ]
+                            ])->label('คลัง');
+                            ?>
+    <?php
                                 echo $form->field($model, 'order_status')->widget(Select2::classname(), [
                                     'data' => ['pending' => 'รอดำเนินการ','success' => 'สำเร็จ'],
                                     'options' => ['placeholder' => 'เลือกสถานะ ...'],

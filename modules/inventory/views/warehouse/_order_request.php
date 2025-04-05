@@ -45,69 +45,24 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         <div class="card">
             <div class="card-body">
 
-            <div class="row mb-3">
-    <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?php echo $searchModel->mainOrderSummary('pending')['totalPrice']?> บาท</span>
-                <i class="bi bi-plus-circle-fill text-black-50"></i>
-            </div>
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span>รอดำเนินการ</span>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('pending')['totalOrder']?></span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?php echo $searchModel->mainOrderSummary('cancel')['totalPrice']?> บาท</span>
-                <i class="bi bi-rocket text-black-50"></i>
-            </div>
-            <div class="d-flex justify-content-between gap-1 mb-0">
-            <span>ยกเลิก</span>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('cancel')['totalOrder']?></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?php echo $searchModel->mainOrderSummary('success')['totalPrice']?> บาท</span>
-                <i class="fa-solid fa-user-check text-black-50"></i>
-            </div>
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span>เสร็จสิ้น</span>                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13"><?php echo $searchModel->mainOrderSummary('success')['totalOrder']?></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold">0.00</span>
-                <i class="bi bi-bag-check-fill text-black-50"></i>
-            </div>
-            <div class="d-flex justify-content-between gap-1 mb-0">
-                <span>รวมทั้งสิ้น</span>
-                <span class="text-black bg-primary-subtle badge rounded-pill fw-ligh fs-13">0</span>
-            </div>
-        </div>
-    </div>
-</div>
+
 
                 <div class="d-flex justify-content-between">
                     <div>
 
-                        <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
+                        <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span
+                                class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span>
+                            รายการ</h6>
                         <?php echo $this->render('_search_order', ['model' => $searchModel,'dataProvider' => $dataProvider]); ?>
-                        </div>
-                        <div>
-                            <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
-                            <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/warehouse/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
+                    </div>
+                    <div>
+                        <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
+                        <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/warehouse/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
                     </div>
 
                 </div>
 
-                
+
                 <?= $this->render('list_order',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
 
             </div>

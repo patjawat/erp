@@ -58,7 +58,7 @@ $items = [
     [
         'title' => 'ยานพาหนะ',
         'icon' => 'fa-solid fa-car-side fs-1',
-        'url' => ['/booking/driver?car_type=general'],
+        'url' => ['/booking/vehicle'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('driver') ? true : false,
         // 'show' => true

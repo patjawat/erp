@@ -136,7 +136,7 @@ $moduleId = Yii::$app->controller->module->id;
                     </a>
                 </li>
                 <li>
-                    <a class="side-nav-link" href="<?= Url::to(['/me/booking-car']) ?>">
+                    <a class="side-nav-link" href="<?= Url::to(['/me/booking-vehicle']) ?>">
                     <i class="fa-solid fa-car"></i>
                         <span>จองรถ</span>
                     </a>

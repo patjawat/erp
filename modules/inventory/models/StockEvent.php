@@ -524,7 +524,7 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
 
-//สรุปราคาและจำนวน
+//สรุปราคาและจำนวนคลังหลัก
 public function mainOrderSummary($status = null)
 {
     try {

@@ -455,6 +455,39 @@ class BookingCarController extends \yii\web\Controller
         }
     }
 
+    public function actionUpdate2($id)
+    {
+        $model = $this->findModel($id);
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->save();
+            return [
+                'status' => 'success'
+            ];
+        }
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update2', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('update2', [
+                'model' => $model,
+            ]);
+        }
+    }
+    
+
     /**
      * Deletes an existing BookingCar model.
      * If deletion is successful, the browser will be redirected to the 'index' page.

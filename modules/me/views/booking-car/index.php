@@ -74,12 +74,10 @@ if($searchModel->car_type == 'ambulance'){
                                     <td><?php echo $item->data_json['go_type'] ?? '-'?></td>
                                     <td><span class="badge bg-warning"><?php echo $item->status?></span></td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary me-1">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+    
+                                        <?=Html::a('<i class="bi bi-eye"></i>',['/me/booking-car/view2','id' => $item->id],['class' => 'btn btn-sm btn-outline-primary me-1 open-modal','data' => ['size' => 'modal-lg']])?>
+                                        <?=Html::a('<i class="bi bi-pencil"></i>',['/me/booking-car/update2','id' => $item->id,'title' => '<i class="bi bi-pencil"></i> แก้ไขแบบขอใช้รถยนต์'],['class' => 'btn btn-sm btn-outline-warning me-1 open-modal','data' => ['size' => 'modal-lg']])?>
+                                        <?=Html::a('<i class="bi bi-trash"></i>',['/me/booking-car/delete','id' => $item->id],['class' => 'btn btn-sm btn-outline-danger'])?>
                                     </td>
                                 </tr>
                                 <?php endforeach;?>

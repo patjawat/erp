@@ -135,12 +135,29 @@ class Warehouse extends \yii\db\ActiveRecord
     {
 
         // $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id AND thai_year <> :thai_year";
-        $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id";
-        $model =  Yii::$app->db->createCommand($sql, [
-            ':warehouse_id' => $this->id,
-            // ':thai_year' => AppHelper::YearBudget()
-            ])->queryScalar();
-            return number_format($model,2);
+        // $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id";
+        // $model =  Yii::$app->db->createCommand($sql, [
+        //     ':warehouse_id' => $this->id,
+        //     // ':thai_year' => AppHelper::YearBudget()
+        //     ])->queryScalar();
+        //     return number_format($model,2);
+
+        $model = StockEvent::find()
+            ->select([
+                'order_in' => 'SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END)',
+                'order_out' => 'SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END)',
+                'total_price' => 'SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END) - SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END)'
+            ])
+            ->leftJoin('categorise', 'categorise.code = stock_events.asset_item AND categorise.name = "asset_item"')
+            ->where([
+                'stock_events.name' => 'order_item',
+                'stock_events.order_status' => 'success',
+                'stock_events.warehouse_id' => $this->id
+            ])
+            ->one();
+            return $model['total_price'];
+        //     return number_format($model['total_price'],2);
+        
     }
 
     // ยอดรับเข้า
