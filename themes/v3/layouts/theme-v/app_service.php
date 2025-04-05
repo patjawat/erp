@@ -15,17 +15,18 @@ $items = [
     [
         'title' => 'จองรถ',
         'icon' => 'fa-solid fa-car-side fs-1',
-        'url' => ['/me/booking-car/select-type','title' => '<i class="bi bi-ui-checks-grid"></i> เลือกประเภทรถที่ต้องการใช้งาน'],
+        // 'url' => ['/me/booking-car/select-type','title' => '<i class="bi bi-ui-checks-grid"></i> เลือกประเภทรถที่ต้องการใช้งาน'],
+        'url' => ['/me/booking-vehicle/create','title' => '<i class="bi bi-ui-checks-grid"></i> ขอใช้ยานพาหนะ(จองรถ)'],
         'modal' => true,
-        'size' => 'modal-md'
+        'size' => 'modal-lg'
     ],
-    [
-        'title' => 'จองห้องประชุม',
-        'icon' => 'fa-solid fa-person-chalkboard fs-1',
-       'url' => ['/me/booking-meeting/index','title' => 'ขอใช้ห้องประชุม'],
-        'modal' => false,
-        'size' => 'modal-xl'
-    ],
+    // [
+    //     'title' => 'จองห้องประชุม',
+    //     'icon' => 'fa-solid fa-person-chalkboard fs-1',
+    //    'url' => ['/me/booking-meeting/index','title' => 'ขอใช้ห้องประชุม'],
+    //     'modal' => false,
+    //     'size' => 'modal-xl'
+    // ],
     [
         'title' => 'แจ้งซ่อม',
         'icon' => 'fa-solid fa-circle-exclamation fs-1',
