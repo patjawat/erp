@@ -16,7 +16,7 @@ use app\modules\booking\models\Booking;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\RoomSearch;
 use app\modules\booking\models\BookingDetail;
-use app\modules\booking\models\BookingSearch;
+use app\modules\booking\models\MeetingSearch;
 
 class BookingMeetingController extends \yii\web\Controller
 {
@@ -38,7 +38,7 @@ class BookingMeetingController extends \yii\web\Controller
     
     public function actionIndex()
     { 
-        $searchModel = new BookingSearch([
+        $searchModel = new MeetingSearch([
             'date_start' => $this->request->get('date_start') ?? date('Y-m-d')
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -51,7 +51,7 @@ class BookingMeetingController extends \yii\web\Controller
 
     public function actionListMe()
     { 
-        $searchModel = new BookingSearch([
+        $searchModel = new MeetingSearch([
             'created_by' => Yii::$app->user->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
