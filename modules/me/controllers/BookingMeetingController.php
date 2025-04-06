@@ -10,8 +10,10 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
+use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\booking\models\Booking;
+use app\modules\booking\models\Meeting;
 use app\modules\booking\models\RoomSearch;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\BookingSearch;
@@ -190,15 +192,14 @@ class BookingMeetingController extends \yii\web\Controller
     }
     }
     
-    public function actionCreate($room_id)
+    public function actionCreate($room_id = null)
     {
 
         $me = UserHelper::GetEmployee();
         $carType = $this->request->get('type'); 
         $dateStart = $this->request->get('date_start'); 
         $room_id = $this->request->get('room_id'); 
-        $model = new Booking([
-            'name' => 'meeting',
+        $model = new Meeting([
             'emp_id' => $me->id,
             'room_id' => $room_id,
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
@@ -217,10 +218,7 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->status = 'pending';
                 if($model->save(false)){
                     $model->SendMeeting();
-                    // return $model->room->showOwner()['line_id'] ?? 'ไม่ระบุ';
                     return $this->redirect(['view', 'id' => $model->id]);
-                    // return $this->redirect(['index']);
-
                 }
             }
         } else {
@@ -285,17 +283,27 @@ class BookingMeetingController extends \yii\web\Controller
         }
     }
     
-    
+public function actionGetRoom($id)
+{
+    $model = Room::find()->where(['code' => $id])->one();
+    \Yii::$app->response->format = Response::FORMAT_JSON;
+    return [
+        'status' => 'success',
+        'title' => $model->title,
+        'img' => $model->showImg(),
+        'seat' => $model->data_json['seat_capacity'] ?? 0
+    ];
+}    
 
 
     // ตรวจสอบความถูกต้อง
     public function actionValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Booking();
+        $model = new Meeting();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $model->reason == '' ? $model->addError('reason', $requiredName) : null;
+            $model->title == '' ? $model->addError('titlt', $requiredName) : null;
             // $model->location == '' ? $model->addError('location', $requiredName) : null;
             // $model->urgent == '' ? $model->addError('urgent', $requiredName) : null;
             // $model->data_json['employee_point'] == '' ? $model->addError('data_json[employee_point]', $requiredName) : null;

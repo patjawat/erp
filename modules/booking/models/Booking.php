@@ -207,11 +207,6 @@ class Booking extends \yii\db\ActiveRecord
             'fullname' => $emp->fullname
         ];
     }
-    public function listRooms()
-    {
-        $model = Room::find()->where(['name' => 'meeting_room'])->all();
-        return ArrayHelper::map($model, 'code', 'title');
-    }
     public function viewCreateDate()
     {
         return Yii::$app->thaiDate->toThaiDate($this->created_at, false, false);

@@ -87,13 +87,21 @@ $resultsJs = <<<JS
             ],
             'pluginEvents' => [
                 'select2:select' => 'function(result) { 
+                if($(this).val() == "personal"){
+                    $("#vehicle-driver_id").prop("disabled", true);
+                    $("#vehicle-driver_id").val("").trigger("change");
+                    $(".btn-driver ,.list-car").hide();
+                }else{
+                    $(".btn-driver ,.list-car").show();
+                    $("#vehicle-driver_id").val("").trigger("change");
+                    $("#vehicle-driver_id").prop("disabled", false);}
                                             }',
                 'select2:unselecting' => 'function() {
 
                                             }',
             ],
         ])->label('ประเภทรถที่ต้องการใช้') ?>
-        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกค้ลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
+        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
 
     </div>
 
@@ -121,7 +129,7 @@ $resultsJs = <<<JS
     <div class="col-3">
         <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
             'data' => $model->ListUrgent(),
-            'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
+            'options' => ['placeholder' => 'เลือกระดับความแร่งด่วน'],
             'pluginOptions' => [
                 'allowClear' => true,
                 // 'width' => '370px',
@@ -140,11 +148,11 @@ $resultsJs = <<<JS
     <div class="row mb-3">
         <div class="col-md-6">
             <?php
-            echo $form->field($model, 'data_json[req_driver_id]', [
+            echo $form->field($model, 'driver_id', [
                 'addon' => [
                     'append' => [
                         'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
-                            'class' => 'btn btn-primary',
+                            'class' => 'btn btn-primary btn-driver',
                             'title' => 'Mark on map',
                             'data-toggle' => 'tooltip',
                             'data-driver_id' => $model->id,
@@ -160,6 +168,7 @@ $resultsJs = <<<JS
                 'data' => $model->listDriver(),
                 'options' => ['placeholder' => 'เลือก...'],
                 'pluginOptions' => [
+                    'tags' => true,
                     'allowClear' => true,
                     'dropdownParent' => '#main-modal',
                 ]
@@ -175,7 +184,7 @@ $resultsJs = <<<JS
                 'addon' => [
                     'append' => [
                         'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
-                            'class' => 'btn btn-primary',
+                            'class' => 'btn btn-primary list-car',
                             'title' => 'Mark on map',
                             'data-toggle' => 'tooltip',
                             'data-driver_id' => $model->id,
@@ -188,19 +197,20 @@ $resultsJs = <<<JS
                     ]
                 ]
             ])->widget(Select2::classname(), [
-                'data' => [],
+                'data' => $model->ListCarItems(),
                 'options' => ['placeholder' => 'เลือก...'],
                 'pluginOptions' => [
+                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
                     'allowClear' => true,
                     'dropdownParent' => '#main-modal',
                 ]
-            ]);
+            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>)');
             ?>
         </div>
     </div>
 </div>
 <div class="">
-    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ะบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
+    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
 </div>
 <div class="row">
     <div class="col-6">
@@ -339,7 +349,8 @@ $resultsJs = <<<JS
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <?PHP echo $this->render('list_cars', ['model' => $model]) ?>
+    <div id="showListCar"></div>
+        <?PHP // echo $this->render('list_cars', ['model' => $model]) ?>
     </div>
 </div>
 
@@ -357,15 +368,15 @@ $resultsJs = <<<JS
 </div>
 
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightEmployee"
-    aria-labelledby="offcanvasRightLabelEmployee">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightCar"
+    aria-labelledby="offcanvasRightLabelCar">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabeEmployee"><i class="bi bi-person-circle"></i>
+        <h5 class="offcanvas-title" id="offcanvasRightLabeCar"><i class="bi bi-person-circle"></i>
             แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="showListEmployee"></div>
+        <div id="showListCar"></div>
     </div>
 </div>
 
@@ -404,9 +415,15 @@ $js = <<<JS
                     // form.yiiActiveForm('updateMessages', response, true);
                     if(response.status == 'success') {
                         closeModal()
-                        location.reload(true)
-                        // success()
-                        // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                        Swal.fire({
+                            title: "สำเร็จ!",
+                            text: "บันทึกข้อมูลเรียบร้อยแล้ว",
+                            icon: "success",
+                            timer: 1000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = "/me/booking-vehicle";
+                        });
                     }
                 }
             });
@@ -431,16 +448,37 @@ $js = <<<JS
         e.preventDefault();
         let driver_id = $(this).data("driver_id"); // ดึงค่าจาก data-license_plate
         let driver_fullname = $(this).data("driver_fullname"); // ดึงค่าจาก data-license_plate
-        // $('#vehicle-driver_id').val(driver_id)
-        // $('#vehicle-data_json-req_driver_id').val(driver_id)
-        // $('#vehicle-data_json-req_driver_fullname').val(driver_fullname)
-        
-        $('#vehicle-data_json-req_driver_id').val(driver_id).trigger('change');
+        $('#vehicle-driver_id').val(driver_id).trigger('change');
         $("#offcanvasRightDriver").offcanvas("hide"); // ปิด Offcanvas
         success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
+    });
+
+    $("body").on("click", ".list-car", function (e) {
+        e.preventDefault();
+        
+       $.ajax({
+        type: "get",
+        url: "/me/booking-vehicle/list-cars",
+        data: {
+            car_type_id: $('#vehicle-car_type_id').val(),
+        },
+        dataType: "json",
+        success: function (res) {
+            $('#showListCar').html(res.content);
+
+        }
+       });
         
     });
-    
+
+    $("body").on("click", ".select-car", function (e) {
+        e.preventDefault();
+        let license_plate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
+        $('#vehicle-license_plate').val(license_plate).trigger('change');
+        $("#offcanvasRight").offcanvas("hide"); // ปิด Offcanvas
+        success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
+    });
+
 
     JS;
 $this->registerJS($js, View::POS_END);

@@ -38,7 +38,6 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -52,195 +51,236 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('menu') ?>
-<?php $this->endBlock(); ?>
+
+
+
 
 <style>
-/* .fc .fc-toolbar>*> :first-child {
+/* .card {
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    } */
+.success-text {
+    color: #28a745;
+}
+
+.warning-text {
+    color: #ffc107;
+}
+
+.btn-reserve {
+    background-color: #212529;
+    color: white;
+    border-radius: 8px;
+    padding: 6px 15px;
+}
+
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+</style>
+</head>
+
+<body>
+    <div class="container py-4">
+
+        <?=$this->render('navbar')?>
+
+        <p class="text-muted mb-4">ยินดีต้อนรับกลับมา, คุณสามารถจัดการการจองห้องประชุมได้ที่นี่</p>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">การจองทั้งหมด</p>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="fw-semibold mb-0">12</h2>
+                                <small class="text-success">+2 จากเดือนที่แล้ว</small>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="bi bi-calendar"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">การจองที่กำลังจะถึง</p>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="fw-semibold mb-0">4</h2>
+                                <small class="text-muted">ใน 7 วันข้างหน้า</small>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">การจองที่อนุมัติแล้ว</p>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="fw-semibold mb-0">8</h2>
+                                <small class="text-muted">จาก 12 การจอง</small>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">การจองที่รอการอนุมัติ</p>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="fw-semibold mb-0">4</h2>
+                                <small class="text-muted">จาก 12 การจอง</small>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Bookings and Available Rooms -->
+        <div class="row">
+            <!-- Upcoming Bookings -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="fw-semibold mb-3">การจองที่กำลังจะถึง</h5>
+                        <p class="text-muted">รายการจองห้องประชุมที่กำลังจะถึงใน 7 วันข้างหน้า</p>
+
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-semibold mb-0">ห้องประชุมใหญ่</h6>
+                                <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-calendar me-2"></i>
+                                <span>10 เม.ย. 2025</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted mt-1">
+                                <i class="bi bi-clock me-2"></i>
+                                <span>09:00 - 12:00 น.</span>
+                            </div>
+                        </div>
+
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-semibold mb-0">ห้องประชุมเล็ก</h6>
+                                <span class="badge bg-warning text-dark rounded-pill">รอการอนุมัติ</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-calendar me-2"></i>
+                                <span>11 เม.ย. 2025</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted mt-1">
+                                <i class="bi bi-clock me-2"></i>
+                                <span>13:00 - 16:00 น.</span>
+                            </div>
+                        </div>
+
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-semibold mb-0">ห้องประชุมกลาง</h6>
+                                <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-calendar me-2"></i>
+                                <span>12 เม.ย. 2025</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted mt-1">
+                                <i class="bi bi-clock me-2"></i>
+                                <span>10:00 - 11:30 น.</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-semibold mb-0">ห้องประชุมใหญ่</h6>
+                                <span class="badge bg-warning text-dark rounded-pill">รอการอนุมัติ</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-calendar me-2"></i>
+                                <span>13 เม.ย. 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Rooms -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="fw-semibold mb-3">ห้องประชุมที่ว่าง</h5>
+                            <div class="d-flex gap-2 align-self-center">
+                                <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-semibolder']) ?>
+                                <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-semibolder']) ?>
+
+                            </div>
+
+                        </div>
+                        <p class="text-muted">ห้องประชุมที่ว่างในวันนี้</p>
+                        <?php echo $this->render('list_room', ['model' => $searchModel]) ?>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <?=Html::a('จองห้องประชุม',['/me/booking-meeting/create','date_start' => $searchModel->date_start,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal-xx','data' => ['size' => 'modal-xl']])?>
+    </div>
+
+
+
+    <style>
+    /* .fc .fc-toolbar>*> :first-child {
     margin-left: 0;
     font-size: medium;
 } */
 
-.fc .fc-button {
-    background-color: var(--bs-primary) !important;
-    /* ใช้สี primary ของ Bootstrap */
-    border-color: var(--bs-primary) !important;
-    color: white !important;
-}
+    .fc .fc-button {
+        background-color: var(--bs-primary) !important;
+        /* ใช้สี primary ของ Bootstrap */
+        border-color: var(--bs-primary) !important;
+        color: white !important;
+    }
 
-.fc .fc-button:hover {
-    background-color: var(--bs-dark) !important;
-    /* เมื่อ hover */
-}
-</style>
-<?php // echo $this->render('list_room') ?>
-
-
-<!-- Sidebar -->
-<!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-        <a class="navbar-brand" href="#">📅 Meeting Room Booking</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#">🏠 Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">📆 ตารางจอง</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">🏢 ห้องประชุม</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">⚙️ การตั้งค่า</a></li>
-            </ul>
-        </div>
-    </nav> -->
-
-<div class="mt-4">
-    <!-- Welcome Message -->
-    <div class="alert alert-primary text-center">
-        👋 ยินดีต้อนรับ! จัดการการจองห้องประชุมของคุณได้ที่นี่
-    </div>
-
-    <div class="row">
-        <!-- ตารางการจองวันนี้ -->
-        <div class="col-md-6">
-            <h5>📆 การขอใช้ห้องประชุมวันนี้</h5>
-            <div class="card" style="height:380px">
-                <div class="card-body">
-
-                    <table class="table table-primary">
-                        <thead>
-                            <tr>
-                                <th scope="col">เวลา</th>
-                                <th scope="col">สถานที่</th>
-                                <th scope="col">ผู้ขอใช้ห้องประชุม</th>
-                                <th>สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="">
-                                <td scope="row">09:00 - 10:00</td>
-                                <td>ห้อง A </td>
-                                <td>คุณสมชาย</td>
-                                <td><span class="badge bg-success text-white">กำลังใช้งาน</span></td>
-                            </tr>
-                            <tr class="">
-                                <td scope="row">09:00 - 10:00</td>
-                                <td>ห้อง A </td>
-                                <td>คุณสมชาย</td>
-                                <td> <span class="badge bg-secondary  text-white">รอเริ่ม</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
+    .fc .fc-button:hover {
+        background-color: var(--bs-dark) !important;
+        /* เมื่อ hover */
+    }
+    </style>
+    <?php // echo $this->render('list_room') ?>
 
 
-            <div class="card" style="height:380px">
-                <div class="card-body">
-                    <h6><i class="fa-regular fa-calendar-plus"></i> รายการประชุมพรุ่งนี้</h6>
-
-                    <table class="table table-primary">
-                        <thead>
-                            <tr>
-                                <th scope="col">เวลา</th>
-                                <th scope="col">สถานที่</th>
-                                <th scope="col">ผู้ขอใช้ห้องประชุม</th>
-                                <th>สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="">
-                                <td scope="row">09:00 - 10:00</td>
-                                <td>ห้อง A </td>
-                                <td>คุณสมชาย</td>
-                                <td><span class="badge bg-success text-white">กำลังใช้งาน</span></td>
-                            </tr>
-                            <tr class="">
-                                <td scope="row">09:00 - 10:00</td>
-                                <td>ห้อง A </td>
-                                <td>คุณสมชาย</td>
-                                <td> <span class="badge bg-secondary  text-white">รอเริ่ม</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <!-- <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6> -->
-                    <!-- <div id='calendar'></div> -->
-                </div>
-            </div>
-
-
-        </div>
-
-        <!-- รายการห้องประชุม -->
-        <div class="col-md-6">
-            <h5>🏢 สถานะห้องประชุม</h5>
-            <div class="card mb-2">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
-                        <div class="d-flex gap-2 align-self-center">
-                            <div>
-
-                                <span class="badge rounded-pill badge-soft-primary text-primary fs-3 p-3">
-
-                                    <?php 
-
-                            $dayOnly = date('j', strtotime($searchModel->date_start));
-                            echo $dayOnly; // ผลลัพธ์: 04
-                        ?>
-                                </span>
-                            </div>
-                            <div class="d-flex flex-column align-self-center">
-
-                                <span class="fw-bolder fs-6"> <?php echo $dayInThai;?></span>
-                                <span class="fw-bolder fs-6">
-                                    <?php
-                                $dayM = date('n', strtotime($searchModel->date_start));
-                                $month = AppHelper::getMonthName($dayM);
-                                echo $month .' '.(date('Y')+543)
-                                ?>
-                                    <!-- กุมภาพันธฺ 2569 -->
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- <h6><i class="fa-regular fa-calendar-plus"></i>
-                        <?php $time = time();
-                        echo Yii::$app->thaiFormatter->asDate($searchModel->date_start, 'full') . '<br>'; ?>
-                    </h6> -->
-                        <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-bolder']) ?>
-                    </div>
-                </div>
-            </div>
-            <?php echo $this->render('list_room', ['model' => $searchModel]) ?>
-        </div>
-    </div>
-
-    <!-- ปุ่มจองห้องประชุม -->
-    <!-- <div class="text-center mt-4">
-            <button class="btn btn-primary btn-lg">➕ จองห้องประชุม</button>
-        </div> -->
-</div>
-
-
-
-
-
-<div class="row">
-    <div class="col-12">
-
-
-    </div>
-
-    <div class="col-12">
-        <?php //  $this->render('list_room') ?>
-    </div>
-</div>
-
-
-<?php // echo $this->render('grid_room') ?>
-
-<?php
+    <?php
 $js = <<<JS
 
 

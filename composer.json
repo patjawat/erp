@@ -87,7 +87,8 @@
         "phpoffice/phpspreadsheet": "dev-master",
         "cgsmith/yii2-flatpickr-widget": "~1.1",
         "codenix-sv/yii2-flatpickr" : "~2.0",
-        "linecorp/line-bot-sdk": "dev-master"
+        "linecorp/line-bot-sdk": "dev-master",
+        "kartik-v/yii2-number": "dev-master"
         
     },
     "require-dev": {

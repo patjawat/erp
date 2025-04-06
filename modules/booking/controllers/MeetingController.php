@@ -2,22 +2,14 @@
 
 namespace app\modules\booking\controllers;
 
-use Yii;
-use yii\web\Response;
-use yii\db\Expression;
+use app\modules\booking\models\Meeting;
+use app\modules\booking\models\MeetingSearch;
 use yii\web\Controller;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
-use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\booking\models\Room;
-use app\modules\booking\models\Booking;
-use app\modules\booking\models\RoomSearch;
-use app\modules\booking\models\BookingSearch;
+use yii\filters\VerbFilter;
 
 /**
- * ConferenceController implements the CRUD actions for Booking model.
+ * MeetingController implements the CRUD actions for Meeting model.
  */
 class MeetingController extends Controller
 {
@@ -40,92 +32,42 @@ class MeetingController extends Controller
     }
 
     /**
-     * Lists all Booking models.
+     * Lists all Meeting models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        //ตรวจสอบว่าผู้ที่ Login มีห้องประชุมที่รับผิดชอบ
-        $me = UserHelper::GetEmployee();
-        $checkOwnerRoom = Room::find()
-        ->where(['name' => 'meeting_room'])
-        ->andWhere(new Expression("JSON_EXTRACT(data_json, '$.owner') = :owner"), [':owner' => strval($me->id)])
-        ->all();
-        $roomIds = ArrayHelper::getColumn($checkOwnerRoom, 'code');
-        
-        // ตรวจสอบว่ามีห้องอยู่จริงก่อนใช้ IN
-        if (empty($roomIds)) {
-            $roomIds = [-1]; // ป้องกัน error ถ้าไม่มีห้องให้ค้นหา
-        }
-
-        $searchModel = new BookingSearch([
-            'status' => 'pending'
-        ]);
+        $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'meeting']);
-        $dataProvider->query->andFilterWhere(['IN','room_id',$roomIds]);
 
-        $dateStart =  AppHelper::DateToDb($searchModel->date_start);
-        $dateEnd =  AppHelper::DateToDb($searchModel->date_end);
-        // เพิ่มเงื่อนไขช่วงวันที่
-        if (!empty($dateStart) && !empty($dateEnd)) {
-            $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
-        }
-
-        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
 
-    public function actionDashboard()
-    {
-        $searchModel = new RoomSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('dashboard', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-    
     /**
-     * Displays a single Booking model.
+     * Displays a single Meeting model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-            $model = $this->findModel($id);
-
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => 'ขอใช้'.$model->room->title,
-                'content' => $this->renderAjax('view', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('view', [
-                'model' => $model,
-            ]);
-        }
-        
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
     }
 
     /**
-     * Creates a new Booking model.
+     * Creates a new Meeting model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Booking();
+        $model = new Meeting();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -141,7 +83,7 @@ class MeetingController extends Controller
     }
 
     /**
-     * Updates an existing Booking model.
+     * Updates an existing Meeting model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -161,7 +103,7 @@ class MeetingController extends Controller
     }
 
     /**
-     * Deletes an existing Booking model.
+     * Deletes an existing Meeting model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -174,36 +116,16 @@ class MeetingController extends Controller
         return $this->redirect(['index']);
     }
 
-
-    public function actionRoomStatus()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $id = Yii::$app->request->post('id');
-        $status = Yii::$app->request->post('status');
-        $model = $this->findModel($id);
-        $model->status = $status;
-        $model->save(false);
-        if($model->status == 'approve'){
-            $model->sendMessage('ขอเชิญเข้าร่วมประชุม');
-        }
-
-        if($model->status == 'cancel'){
-            $model->sendMessage('ยกเลิกประชุม');
-        }
-       return [
-        'status' => 'success'
-       ];
-    }
     /**
-     * Finds the Booking model based on its primary key value.
+     * Finds the Meeting model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Booking the loaded model
+     * @return Meeting the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Booking::findOne(['id' => $id])) !== null) {
+        if (($model = Meeting::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

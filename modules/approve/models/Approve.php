@@ -9,6 +9,7 @@ use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
 use app\modules\booking\models\Booking;
+use app\modules\booking\models\Vehicle;
 use app\modules\inventory\models\StockEvent;
 
 
@@ -94,9 +95,9 @@ class Approve extends \yii\db\ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'from_id'])->andOnCondition(['name' => 'order']);
     }
     
-    public function getBook()
+    public function getVehicle()
     {
-        return $this->hasOne(Booking::class, ['id' => 'from_id']);
+        return $this->hasOne(Vehicle::class, ['id' => 'from_id']);
     }
 
     public function getStock()

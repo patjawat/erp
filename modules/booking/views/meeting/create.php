@@ -3,13 +3,13 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\booking\models\Booking $model */
+/** @var app\modules\booking\models\Meeting $model */
 
-$this->title = 'Create Booking';
-$this->params['breadcrumbs'][] = ['label' => 'Bookings', 'url' => ['index']];
+$this->title = 'Create Meeting';
+$this->params['breadcrumbs'][] = ['label' => 'Meetings', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="booking-create">
+<div class="meeting-create">
 
     <h1><?= Html::encode($this->title) ?></h1>
 

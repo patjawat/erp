@@ -1,14 +1,15 @@
 <?php
 use yii\helpers\Html;
 use app\modules\am\models\Asset;
-$listCars = Asset::find()
-->andWhere(['IS NOT', 'license_plate', null])
-->andWhere(['car_type' => $model->car_type_id])
-->all();
+// $listCars = Asset::find()
+// ->andWhere(['IS NOT', 'license_plate', null])
+// ->andWhere(['car_type' => $car_type_id])
+// ->all();
+
 ?>
 <h6>เลือกรถหากต้องการ</h6>
 <div id="car-container">
-<?php foreach($listCars as $item):?>
+<?php foreach($dataProvider->getModels() as $item):?>
         <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">
         <div class="card mb-3 hover-card">
             <div class="row g-0">
