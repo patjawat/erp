@@ -46,7 +46,7 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
                             "vehicleDetails[{$index}][car]",  // เปลี่ยนชื่อ name
                             $detail->license_plate,
                             $model->ListCarItems(),
-                            ['class' => 'form-select form-select-sm']
+                            ['class' => 'form-select form-select-sm', 'prompt' => 'เลือกทะเบียนรถ']
                         )
                          ?>
                     </td>
@@ -56,7 +56,7 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
                             "vehicleDetails[{$index}][driver]", // เปลี่ยนชื่อ name
                             $detail->driver_id,
                             $model->listDriver(),
-                            ['class' => 'form-select form-select-sm']
+                            ['class' => 'form-select form-select-sm', 'prompt' => 'เลือกพนักงานขับรถ']
                         )
                          ?>
                     </td>
