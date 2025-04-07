@@ -40,6 +40,7 @@ class MeetingController extends Controller
     {
         $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['status' => 'Pending']);
 
         return $this->render('dashboard', [
             'searchModel' => $searchModel,

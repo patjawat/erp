@@ -21,7 +21,7 @@ use app\modules\booking\models\Room;
                             <p class="text-muted mb-0">เวลา: 13:00 - 17:00 น.</p>
                         </div>
                         <div>
-                            <?=Html::a('จองห้องประชุม',['/me/booking-meeting/create','date_start' => $model->date_start,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal-xx','data' => ['size' => 'modal-xl']])?>
+                            <?=Html::a('จองห้องประชุม',['/me/booking-meeting/create','date_start' => $model->date_start,'room_id' => $item->code,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-xl']])?>
                         </div>
                     </div>
                 </div>

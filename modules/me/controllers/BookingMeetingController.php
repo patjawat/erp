@@ -4,6 +4,7 @@ namespace app\modules\me\controllers;
 use Yii;
 use yii\helpers\Html;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -38,11 +39,11 @@ class BookingMeetingController extends \yii\web\Controller
 
     public function actionDashbroad()
     {
-        $searchModel = new MeetingSearch([
-            // 'date_start' => $this->request->get('date_start') ?? date('Y-m-d')
-        ]);
+        $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andFilterWhere(['name' => 'conference_room']);
+        // รายการจองห้องประชุมที่กำลังจะถึงใน 7 วันข้างหน้า
+        $dataProvider->query->andFilterWhere(['between', 'date_start', new Expression('CURDATE()'), new Expression('DATE_ADD(CURDATE(), INTERVAL 7 DAY)')]);
+        // $dataProvider->pagination->pageSize = 7;
         return $this->render('dashbroad',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -82,7 +83,7 @@ class BookingMeetingController extends \yii\web\Controller
             if ($this->request->isAJax) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $this->request->get('title'),
+                'title' => 'รายละเอียดการจอง',
                 'content' => $this->renderAjax('view', [
                     'model' => $model
                 ]),
@@ -93,6 +94,24 @@ class BookingMeetingController extends \yii\web\Controller
             ]);
         }
     }
+
+public function actionConfirm()
+{
+    \Yii::$app->response->format = Response::FORMAT_JSON;
+    if ($this->request->isPost) {
+        $model = $this->findModel($this->request->post('id'));
+        $model->status = $this->request->post('status');
+        if($model->save(false)){
+            return [
+                'status' => 'success'
+            ];
+        }
+    }
+    return [
+        'status' => 'error',
+        'message' => 'ไม่สามารถบันทึกข้อมูลได้'
+    ];
+}    
 
     public function actionSelectFormDepartment($id)
     {
@@ -203,7 +222,7 @@ class BookingMeetingController extends \yii\web\Controller
     }
     }
     
-    public function actionCreate($room_id = null)
+    public function actionCreate()
     {
 
         $me = UserHelper::GetEmployee();
@@ -227,10 +246,14 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 // $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                $model->status = 'pending';
+                $model->status = 'Pending';
                 if($model->save(false)){
+                    \Yii::$app->response->format = Response::FORMAT_JSON;
                     $model->SendMeeting();
-                    return $this->redirect(['view', 'id' => $model->id]);
+                    return [
+                        'status' => 'success'
+                    ];
+                    // return $this->redirect(['/me/booking-meeting/index', 'id' => $model->id]);
                 }
             }
         } else {

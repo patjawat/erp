@@ -31,18 +31,18 @@ try {
         object-fit: cover;max-width: 100%;height: auto;
     }
 </style>
-<div class="container">
-    <?=$this->render('navbar')?>
+<div class="container-xx">
+    <?php // $this->render('navbar')?>
 
     <?php $form = ActiveForm::begin([
-        'id' => 'booking-form',
+        'id' => 'meeting-form',
         'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
         'validationUrl' => ['/me/booking-meeting/validator']
     ]); ?>
 
 
     <div class="row">
-        <div class="col-8">
+        <div class="col-7">
             <div class="card text-start">
                 <div class="card-body">
                     <h4 class="fw-medium mb-2">จองห้องประชุม</h4>
@@ -136,14 +136,18 @@ try {
                 </div>
             </div>
         </div>
-        <div class="col-4">
+        <div class="col-5">
 
             <div class="card">
                 <div class="card-body">
                     <h4 class="fw-medium mb-2">ข้อมูลห้องประชุม</h4>
                     <p class="card-text">รายละเอียดห้องประชุมที่เลือก</p>
                     <div class="rounded-md d-flex align-items-center justify-content-center mb-3">
+                        <?php if($room && $room->showImg()):?>
+                        <?=Html::img($room->showImg(), ['class' => 'room-img'])?>
+                        <?php else:?>
                         <?= Html::img('@web/img/placeholder.svg', ['class' => 'room-img']) ?>
+                        <?php endif?>
                     </div>
 
                     <div>
@@ -287,8 +291,7 @@ $js = <<<JS
                         if(response.status == 'success') {
                             closeModal()
                             location.reload(true)
-                            // success()
-                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                            
                         }
                     }
                 });

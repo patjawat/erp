@@ -36,6 +36,16 @@ class m250406_125854_create_meeting_table extends Migration
             'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
             'deleted_by' => $this->integer()->comment('ผู้ลบ')
         ]);
+
+        $sql1 = Yii::$app->db->createCommand("select * from categorise where name = 'meeting_status'")->queryAll();
+        if(count($sql1) < 1){
+            $this->insert('categorise',['name'=>'meeting_status','code' =>'Pending','title'=>'รอการอนุมัติ','active' => 1]);
+            $this->insert('categorise',['name'=>'meeting_status','code' =>'Pass','title'=>'อนุมัติแล้ว','active' => 1]);
+            $this->insert('categorise',['name'=>'meeting_status','code' =>'Approve','title'=>'ผอ.อนุมัติ','active' => 1]);
+            $this->insert('categorise',['name'=>'meeting_status','code' =>'Reject','title'=>'ปฏิเสธ','active' => 1]);
+            $this->insert('categorise',['name'=>'meeting_status','code' =>'Cancel','title'=>'ยกเลิก','active' => 1]);
+        } 
+
     }
 
     /**

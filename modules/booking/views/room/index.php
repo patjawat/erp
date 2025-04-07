@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </style>
 
 <div class="container py-4">
-    <?=$this->render('../meeting/menu')?>
+    <?=$this->render('../meeting/navbar')?>
     <div class="row mb-4">
         <div class="col">
             <div class="d-flex justify-content-between align-items-center">

@@ -2025,3 +2025,82 @@ small {
   background-color: white !important;
   color: black;
 }
+
+.nav-pills .nav-link {
+  color: #333;
+  border-radius: 0;
+  padding: 10px 20px;
+}
+.nav-pills .nav-link.active {
+  background-color: transparent;
+  border-bottom: 2px solid #0d6efd;
+  color: #0d6efd;
+  font-weight: 500;
+}
+.meeting-table {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.meeting-table th {
+  font-weight: normal;
+  color: #666;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+.meeting-table td {
+  padding: 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid #eee;
+}
+.status-badge {
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+.status-badge.approved {
+  background-color: #f8f9fa;
+  color: #0d6efd;
+}
+.status-badge.confirmed {
+  background-color: #84c889;
+  color: white;
+}
+.status-badge.rejected {
+  background-color: #dc3545;
+  color: white;
+}
+.status-badge.cancelled {
+  background-color: #dc3545;
+  color: white;
+}
+.name-title {
+  font-weight: 500;
+  margin-bottom: 0;
+}
+.department {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+.action-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+  cursor: pointer;
+}
+.action-icon.view {
+  background-color: #f8f9fa;
+}
+.action-icon.approve {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+.action-icon.reject {
+  background-color: #ffebee;
+  color: #f44336;
+}

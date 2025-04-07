@@ -3,9 +3,12 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use yii\db\Expression;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\ThaiDateHelper;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\booking\models\MeetingDetail;
@@ -41,6 +44,7 @@ class Meeting extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $q;
     public static function tableName()
     {
         return 'meeting';
@@ -53,7 +57,7 @@ class Meeting extends \yii\db\ActiveRecord
     {
         return [
             [['code', 'room_id', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'thai_year', 'urgent', 'status', 'emp_id'], 'required'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['thai_year', 'document_id', 'emp_number', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['ref', 'code', 'room_id', 'title', 'time_start', 'time_end', 'urgent', 'status', 'emp_id'], 'string', 'max' => 255],
         ];
@@ -133,21 +137,51 @@ class Meeting extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'code', 'title');
     }
 
+        // แสดงรายการาถานะ
+        public function ListStatus()
+        {
+            $model = Categorise::find()
+                ->where(['name' => 'meeting_status'])
+                ->asArray()
+                ->all();
+            return ArrayHelper::map($model, 'code', 'title');
+        }
+        
 
+ public function getUserReq()
+    {
+        $emp = $this->employee;
+        
+        return [
+            'avatar' => $emp->getAvatar(false,$emp->departmentName()),
+            'fullname' => $emp->fullname,
+            'department' => $emp->departmentName(),
+        ];
+    }
+
+    public function viewMeetingDate()
+    {
+        return ThaiDateHelper::formatThaiDate($this->date_start);
+    }
+
+    public function viewMeetingTime()
+    {
+        return $this->time_start . ' - ' . $this->time_end.' น.';
+    }
     public function viewStatus()
     {
       switch ($this->status) {
-        case 'pending':
-          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">รออนุมัติ</span>';
+        case 'Pending':
+          return ' <span class="status-badge approved">รอการอนุมัติ</span>';
           break;
-        case 'approve':
-          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">อนุมัติ</span>';
+        case 'Pass':
+          return '<span class="status-badge confirmed">อนุมัติแล้ว</span>';
           break;
-        case 'cancel':
-          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">ยกเลิก</span>';
+        case 'Cancel':
+          return '<span class="status-badge rejected">ปฏิเสธ</span>';
           break;
         default:
-          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">ไม่ระบุ</span>';
+          return '<span class="badge rounded-pill">ไม่ระบุ</span>';
           break;
       }
     }
@@ -155,13 +189,13 @@ class Meeting extends \yii\db\ActiveRecord
     public function statusColor()
     {
         switch ($this->status) {
-            case 'pending':
+            case 'Pending':
                 return 'warning';
                 break;
-            case 'approve':
+            case 'Pass':
                 return 'success';
                 break;
-            case 'cancel':
+            case 'Cancel':
                 return 'danger';
                 break;
             default:
@@ -169,6 +203,52 @@ class Meeting extends \yii\db\ActiveRecord
                 break;
         }
     }
+
+    //นับจำนวนการจองห้องประชุมตามสถานะ
+    public function countStatus($status = null)
+    {
+        $count = Meeting::find()
+            ->andFilterwhere(['status' => $status])
+            ->count();
+        return $count;
+    }
+
+    // การจองที่กำลังจะถึง
+    public function upComing()
+    {
+        $date = date('Y-m-d');
+        $count = Meeting::find()
+            ->andFilterwhere(['between', 'date_start', new Expression('CURDATE()'), new Expression('DATE_ADD(CURDATE(), INTERVAL 7 DAY)')])
+            ->andFilterwhere(['status' => 'Pass'])
+            ->count();
+        return $count;
+    }
+
+    //สถิติการใช้ห้องประชุม
+
+    public static function getUsageStatistics()
+{
+    // นับจำนวนทั้งหมดของ meeting
+$totalAll = Meeting::find()->count();
+
+// เขียน ActiveRecord query
+$data = Meeting::find()
+    ->alias('m')
+    ->select([
+        new Expression("IFNULL(r.title, 'ไม่ระบุห้อง') AS title"),
+        new Expression("COUNT(m.id) AS total"),
+        new Expression("ROUND(COUNT(m.id) * 100.0 / :totalAll, 0) AS percentage"),
+    ])
+    ->leftJoin(['r' => Categorise::tableName()], "r.code = m.room_id AND r.name = 'meeting_room'")
+    ->groupBy('r.code')
+    ->addParams([':totalAll' => $totalAll])
+    ->asArray()
+    ->all();
+
+return $data;
+
+}
+
 
     
     // ส่งข้ความไปยังผู้ดูแลห้องประชุม

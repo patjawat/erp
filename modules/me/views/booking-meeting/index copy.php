@@ -1,75 +1,115 @@
 <?php
-use yii\helpers\Url;
-use yii\helpers\Html;
-$this->title = 'จองห้องประชุม';
+use yii\web\View;
+$this->title = 'Meetings';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
+<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<style>
-.fc .fc-toolbar > * > :first-child {
-    margin-left: 0;
-    font-size: medium;
-}
-</style>
-<?php // echo $this->render('list_room')?>
-<div class="row">
-    <div class="col-6">
-    <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-<?php echo Html::a('วันก่อน',['/me/booking-metting'])?>
-<h6><i class="fa-regular fa-calendar-plus"></i> <?php $time = time(); echo Yii::$app->thaiFormatter->asDate($time, 'full')."<br>";?> </h6>
-<?php echo Html::a('วันถัดไป',['/me/booking-metting'])?>
-                </div>
-                <table class="table table-striped table-bordered">
-                    <tbody class="align-middle table-group-divider">
-                        <tr class="text-center" style="background:#dcdcdc;">
-                            <th class="text-start">สถานที่</th>
-                            <th width="150px">วันที่ และเวลา</th>
-                            <th>หัวข้อการใช้ห้องปรุชุม</th>
-                            <th width="80px">จำนวน</th>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                            14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-                           
-                            <td class="text-center"><span class="badge badge-success">10</span></td>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                            14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-                           
-                            <td class="text-center"><span class="badge badge-success">8</span></td>
-                        </tr>
-                        <tr>
-                            <td>ห้องหน่อไม้หวาน</td>
-                            <td class="text-center p-1">
-                            14:00-14:00 น.</td>
-                            <td>ประชุม กกบ.รพร.</td>
-                           
-                            <td class="text-center"><span class="badge badge-success">13</span></td>
-                        </tr>
-                    </tbody>
-                </table>
 
-            </div>
-        </div>
 
+<div class="container">
+<?=$this->render('navbar')?>
+
+<?php echo $this->render('_search', ['model' => $searchModel]); ?>
+
+    <!-- Navigation Pills -->
+    <ul class="nav nav-pills mb-4" id="meetingTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-tab-pane" type="button" role="tab" aria-controls="all-tab-pane" aria-selected="true">ทั้งหมด</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-tab-pane" type="button" role="tab" aria-controls="pending-tab-pane" aria-selected="false" tabindex="-1">รอการอนุมัติ</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-tab-pane" type="button" role="tab" aria-controls="approved-tab-pane" aria-selected="false" tabindex="-1">อนุมัติแล้ว</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected-tab-pane" type="button" role="tab" aria-controls="rejected-tab-pane" aria-selected="false" tabindex="-1">ปฏิเสธ/ยกเลิก</button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="meetingTabsContent">
+      <!-- All Meetings Tab -->
+      <div class="tab-pane fade active show" id="all-tab-pane" role="tabpanel" aria-labelledby="all-tab" tabindex="0">
+        <?=$this->render('list', ['dataProvider' => $dataProvider,'status' => 'All'])?>
+      </div>
+
+      <!-- Pending Approval Tab -->
+      <div class="tab-pane fade" id="pending-tab-pane" role="tabpanel" aria-labelledby="pending-tab" tabindex="0">
+      <?=$this->render('list', ['dataProvider' => $dataProvider,'status' => 'Pending'])?>
+      </div>
+
+      <!-- Approved Tab -->
+      <div class="tab-pane fade" id="approved-tab-pane" role="tabpanel" aria-labelledby="approved-tab" tabindex="0">
+      <?=$this->render('list', ['dataProvider' => $dataProvider,'status' => 'Pass'])?>
+      </div>
+
+      <!-- Rejected/Cancelled Tab -->
+      <div class="tab-pane fade" id="rejected-tab-pane" role="tabpanel" aria-labelledby="rejected-tab" tabindex="0">
+      <?=$this->render('list', ['dataProvider' => $dataProvider,'status' => 'Cancel'])?>
+      </div>
     </div>
-    <div class="col-6">
-        <div class="card">
-            <div class="card-body">
-            <h6><i class="fa-regular fa-calendar-plus"></i> ปฏิทินรวม </h6>
-            
+  </div>
 
-            </div>
-        </div>
-    </div>
-</div>
+<?php
+$js = <<< JS
+
+  $('body').on('click', '.confirm-meeting', function (e) {
+    e.preventDefault();
+
+    var status = $(this).data('status');
+    var id = $(this).data('id');
+    var text = $(this).data('text');
+    Swal.fire({
+      title: "ยืนยัน!",
+      text:text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'ใช่, ยืนยัน!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          type: "post",
+          url: '/me/booking-meeting/confirm',
+          data: {
+            id: id,
+            status: status
+          },
+          dataType: "json",
+          success: function (res) {
+            if (res.status == 'success') {
+              $('.modal').modal('hide');
+              Swal.fire({
+              icon: 'success',
+              title: 'Confirmed!',
+              text: res.message || 'ดำเนินการเรียบร้อยแล้ว',
+              timer: 1000,
+              showConfirmButton: false
+              }).then(() => {
+              location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: res.message || 'Something went wrong.',
+              });
+            }
+          }
+        });
+      }
+    });
+  });
+  JS;
+  $this->registerJS($js,View::POS_END);
+  ?>

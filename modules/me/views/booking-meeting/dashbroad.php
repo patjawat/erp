@@ -91,73 +91,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 
         <p class="text-muted mb-4">ยินดีต้อนรับกลับมา, คุณสามารถจัดการการจองห้องประชุมได้ที่นี่</p>
 
-        <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1">การจองทั้งหมด</p>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h2 class="fw-semibold mb-0">12</h2>
-                                <small class="text-success">+2 จากเดือนที่แล้ว</small>
-                            </div>
-                            <div class="icon-circle">
-                                <i class="bi bi-calendar"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1">การจองที่กำลังจะถึง</p>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h2 class="fw-semibold mb-0">4</h2>
-                                <small class="text-muted">ใน 7 วันข้างหน้า</small>
-                            </div>
-                            <div class="icon-circle">
-                                <i class="bi bi-clock"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1">การจองที่อนุมัติแล้ว</p>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h2 class="fw-semibold mb-0">8</h2>
-                                <small class="text-muted">จาก 12 การจอง</small>
-                            </div>
-                            <div class="icon-circle">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1">การจองที่รอการอนุมัติ</p>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h2 class="fw-semibold mb-0">4</h2>
-                                <small class="text-muted">จาก 12 การจอง</small>
-                            </div>
-                            <div class="icon-circle">
-                                <i class="bi bi-clock-history"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?=$this->render('@app/modules/booking/views/meeting/summary', ['searchModel' => $searchModel])?>
 
         <!-- Upcoming Bookings and Available Rooms -->
         <div class="row">
@@ -167,64 +101,37 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
                     <div class="card-body">
                         <h5 class="fw-semibold mb-3">การจองที่กำลังจะถึง</h5>
                         <p class="text-muted">รายการจองห้องประชุมที่กำลังจะถึงใน 7 วันข้างหน้า</p>
-
+                        <?php foreach($dataProvider->getModels() as $key => $item):?>
                         <div class="border-bottom pb-3 mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-semibold mb-0">ห้องประชุมใหญ่</h6>
-                                <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
+                                <h6 class="fw-semibold mb-0"><?=$item->room->title?></h6>
+                                <?=$item->viewStatus();?>
                             </div>
                             <div class="d-flex align-items-center text-muted">
                                 <i class="bi bi-calendar me-2"></i>
-                                <span>10 เม.ย. 2025</span>
+                                <span><?=$item->viewMeetingDate()?></span>
                             </div>
                             <div class="d-flex align-items-center text-muted mt-1">
                                 <i class="bi bi-clock me-2"></i>
-                                <span>09:00 - 12:00 น.</span>
+                                <span><?=$item->viewMeetingTime()?></span>
                             </div>
                         </div>
-
-                        <div class="border-bottom pb-3 mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-semibold mb-0">ห้องประชุมเล็ก</h6>
-                                <span class="badge bg-warning text-dark rounded-pill">รอการอนุมัติ</span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="bi bi-calendar me-2"></i>
-                                <span>11 เม.ย. 2025</span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted mt-1">
-                                <i class="bi bi-clock me-2"></i>
-                                <span>13:00 - 16:00 น.</span>
-                            </div>
-                        </div>
-
-                        <div class="border-bottom pb-3 mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-semibold mb-0">ห้องประชุมกลาง</h6>
-                                <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="bi bi-calendar me-2"></i>
-                                <span>12 เม.ย. 2025</span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted mt-1">
-                                <i class="bi bi-clock me-2"></i>
-                                <span>10:00 - 11:30 น.</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-semibold mb-0">ห้องประชุมใหญ่</h6>
-                                <span class="badge bg-warning text-dark rounded-pill">รอการอนุมัติ</span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="bi bi-calendar me-2"></i>
-                                <span>13 เม.ย. 2025</span>
-                            </div>
-                        </div>
+                    <?php endforeach;?>
                     </div>
                 </div>
+
+                <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
+        </div>
+        
             </div>
 
             <!-- Available Rooms -->
@@ -235,8 +142,8 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h5 class="fw-semibold mb-3">ห้องประชุมที่ว่าง</h5>
                             <div class="d-flex gap-2 align-self-center">
-                                <?php echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-semibolder']) ?>
-                                <?php echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-semibolder']) ?>
+                                <?php // echo Html::a('<i class="fa-solid fa-angle-left"></i> วันก่อน', ['/me/booking-meeting/index', 'date_start' => $dateLast->format('Y-m-d')],['class' => 'fs-6 fw-semibolder']) ?>
+                                <?php // echo Html::a('วันถัดไป <i class="fa-solid fa-angle-right"></i> ', ['/me/booking-meeting/index', 'date_start' => $dateNext->format('Y-m-d')],['class' => 'fs-6 fw-semibolder']) ?>
 
                             </div>
 
@@ -251,7 +158,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
     </div>
 
     <div class="d-flex justify-content-center align-items-center">
-        <?=Html::a('จองห้องประชุม',['/me/booking-meeting/create','date_start' => $searchModel->date_start,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal-xx','data' => ['size' => 'modal-xl']])?>
+        <?=Html::a('จองห้องประชุม',['/me/booking-meeting/create','date_start' => $searchModel->date_start,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-xl']])?>
     </div>
 
 
