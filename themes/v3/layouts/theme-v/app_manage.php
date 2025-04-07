@@ -66,7 +66,7 @@ $items = [
     [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/booking/meeting/index'],
+        'url' => ['/booking/meeting/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('meeting') ? true : false,
         // 'show' => true
