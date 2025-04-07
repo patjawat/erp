@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
-<h6 class="text-primary"><?php echo $model->reason?></h6>
+<h6 class="text-primary"><?php echo $model->title?></h6>
 <div class="row">
     <div class="col-6">
         <div class="flex-shrink-0 rounded p-5 mb-3"
@@ -66,7 +66,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
                 [
                     'label' => 'ผู้ขอใช้บริการ',
-                    'value' => 'ขอ'.$model->reason
+                    'value' => 'ขอ'.$model->title
                 ],
                 [
                     'label' => 'สถานะ',

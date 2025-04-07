@@ -3,8 +3,12 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use app\models\Categorise;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\modules\booking\models\Room;
+use app\modules\hr\models\Employees;
+use app\modules\booking\models\MeetingDetail;
 
 /**
  * This is the model class for table "meeting".
@@ -86,10 +90,94 @@ class Meeting extends \yii\db\ActiveRecord
         ];
     }
 
+    // ห้องประชุม
+    public function getRoom()
+    {
+        return $this->hasOne(Room::class, ['code' => 'room_id'])->andOnCondition(['name' => 'meeting_room']);
+    }
+
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+
+    public function getOwner()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'owner_id']);
+    }
+    public function getBookingStatus()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);
+    }
+        //สมาชิกที่จะเข้าร่วมประชุม
+        public function getlistMembers()
+        {
+            return $this->hasMany(MeetingDetail::class, ['meeting_id' => 'id'])->andOnCondition(['name' => 'meeting_menber']);
+        }
+    
 
     public function listRooms()
     {
         $model = Room::find()->where(['name' => 'meeting_room'])->all();
         return ArrayHelper::map($model, 'code', 'title');
+    }
+
+
+    
+    public function listUrgent()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'urgent'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+
+    public function viewStatus()
+    {
+      switch ($this->status) {
+        case 'pending':
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">รออนุมัติ</span>';
+          break;
+        case 'approve':
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">อนุมัติ</span>';
+          break;
+        case 'cancel':
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">ยกเลิก</span>';
+          break;
+        default:
+          return '<span class="badge rounded-pill text-bg-'.$this->statusColor().'">ไม่ระบุ</span>';
+          break;
+      }
+    }
+
+    public function statusColor()
+    {
+        switch ($this->status) {
+            case 'pending':
+                return 'warning';
+                break;
+            case 'approve':
+                return 'success';
+                break;
+            case 'cancel':
+                return 'danger';
+                break;
+            default:
+                return 'secondary';
+                break;
+        }
+    }
+
+    
+    // ส่งข้ความไปยังผู้ดูแลห้องประชุม
+    public function SendMeeting()
+    {
+        $ownerRoom = Room::find()->where(['name' => 'meeting_room', 'code' => $this->room_id])->one();
+        $id = $ownerRoom->data_json['owner'] ?? 0;
+        $emp = Employees::findOne($id);
+        $lineId = $emp->user->line_id;
+        LineMsg::BookMeeting($this->id, $lineId);
     }
 }

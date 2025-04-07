@@ -23,7 +23,7 @@ $items = [
     [
         'title' => 'จองห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-       'url' => ['/me/booking-meeting/index','title' => 'ขอใช้ห้องประชุม'],
+       'url' => ['/me/booking-meeting/dashbroad','title' => 'ขอใช้ห้องประชุม'],
         'modal' => false,
         'size' => 'modal-xl'
     ],

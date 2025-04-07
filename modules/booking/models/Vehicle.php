@@ -307,7 +307,7 @@ class Vehicle extends \yii\db\ActiveRecord
             return 'ค้างคืน';
         }
     }
-    public function ListUrgent()
+    public function listUrgent()
     {
         $model = Categorise::find()
             ->where(['name' => 'urgent'])

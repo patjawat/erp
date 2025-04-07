@@ -9,6 +9,7 @@ use app\models\Categorise;
 use yii\httpclient\Client;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Booking;
+use app\modules\booking\models\Meeting;
 
 class LineMsg extends Component
 {
@@ -307,7 +308,7 @@ class LineMsg extends Component
       // ฟังก์ชันส่ง Flex Message ส่งข้อความขอจองห้องประชุม
      public static function BookMeeting($id,$userId)
      {
-        $model = Booking::findOne($id);
+        $model = Meeting::findOne($id);
         $uri = Url::base(true) . Url::to(['/line/booking-meeting/view', 'id' => $id]);
 
         $altText = 'ขอใช้'.$model->room->title; // ข้อความสำรอง

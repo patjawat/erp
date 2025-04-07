@@ -33,7 +33,7 @@ class MeetingDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['meeting_id'], 'required'],
+            [['meeting_id','name'], 'required'],
             [['meeting_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];

@@ -2,11 +2,11 @@
 
 namespace app\modules\booking\controllers;
 
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\MeetingSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * MeetingController implements the CRUD actions for Meeting model.
@@ -36,6 +36,17 @@ class MeetingController extends Controller
      *
      * @return string
      */
+    public function actionDashboard()
+    {
+        $searchModel = new MeetingSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('dashboard', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     public function actionIndex()
     {
         $searchModel = new MeetingSearch();
@@ -46,6 +57,7 @@ class MeetingController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+    
 
     /**
      * Displays a single Meeting model.

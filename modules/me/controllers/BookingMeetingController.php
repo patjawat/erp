@@ -35,12 +35,23 @@ class BookingMeetingController extends \yii\web\Controller
             ]
         );
     }
+
+    public function actionDashbroad()
+    {
+        $searchModel = new MeetingSearch([
+            // 'date_start' => $this->request->get('date_start') ?? date('Y-m-d')
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        // $dataProvider->query->andFilterWhere(['name' => 'conference_room']);
+        return $this->render('dashbroad',[
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
     
     public function actionIndex()
     { 
-        $searchModel = new MeetingSearch([
-            'date_start' => $this->request->get('date_start') ?? date('Y-m-d')
-        ]);
+        $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['name' => 'conference_room']);
         return $this->render('index',[
@@ -212,6 +223,7 @@ class BookingMeetingController extends \yii\web\Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-MEETING' .date('ymd') . '-???');
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 // $model->date_end = AppHelper::convertToGregorian($model->date_end);
@@ -285,13 +297,14 @@ class BookingMeetingController extends \yii\web\Controller
     
 public function actionGetRoom($id)
 {
-    $model = Room::find()->where(['code' => $id])->one();
+    $model = Room::find()->where(['code' => $id,'name' => 'meeting_room'])->one();
     \Yii::$app->response->format = Response::FORMAT_JSON;
     return [
         'status' => 'success',
         'title' => $model->title,
         'img' => $model->showImg(),
-        'seat' => $model->data_json['seat_capacity'] ?? 0
+        'seat' => $model->data_json['seat_capacity'] ?? 0,
+        'data' => $model
     ];
 }    
 
@@ -406,7 +419,7 @@ public function actionGetRoom($id)
     
     protected function findModel($id)
     {
-        if (($model = Booking::findOne(['id' => $id])) !== null) {
+        if (($model = Meeting::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

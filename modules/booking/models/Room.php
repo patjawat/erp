@@ -83,7 +83,7 @@ class Room extends \yii\db\ActiveRecord
     public function showImg($class = null)
     {
         try {
-            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'meeting_room'])->one();
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'meeting_room'])->one();
 
             // return $this->ref;
             // return FileManagerHelper::getImg($model->id);

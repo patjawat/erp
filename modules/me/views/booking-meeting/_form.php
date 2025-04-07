@@ -71,25 +71,14 @@ try {
                     ?>
 
 
-                    <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('ตั้งแต่วันที่') ?>
-                    <div class="row">
-                        <div class="col-6">
+<div class="row">
+    <div class="col-6">
+                            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('ตั้งแต่วันที่') ?>
                             
                             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาเริ่มต้น') ?>
                         </div>
                         <div class="col-6">
-                            <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาสิ้นสุด') ?>
-                        </div>
-                    </div>
-
-                    <?= $form->field($model, 'emp_number')->textInput(['class' => ''])->label('จำนวนผู้เข้าร่วม') ?>
-                    <?= $form->field($model, 'title')->textInput(['class' => ''])->label('หัวข้อการประชุม') ?>
-                    <?= $form->field($model, 'data_json[meeting_details]')->textArea(['rows' => 3, 'class' => ''])->label('รายละเอียดการประชุม') ?>
-                    <?= $form->field($model, 'data_json[equipment]')->textInput(['class' => ''])->label('อุปกรณ์ที่ต้องการ') ?>
-                    <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ', 'class' => ''])->label('เบอร์ติดต่อ') ?>
-
-                    <?php
-                    echo $form->field($model, 'data_json[period_time]')->widget(Select2::classname(), [
+                        <?=$form->field($model, 'data_json[period_time]')->widget(Select2::classname(), [
                         'data' => [
                             'เต็มวัน' => 'เต็มวัน',
                             'ครึ่งวันเช้า' => 'ครึ่งวันเช้า',
@@ -101,19 +90,40 @@ try {
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
+                            // 'dropdownParent' => '#main-modal',
                             // 'width' => '150px',
                         ],
                         'pluginEvents' => [
-                            'select2:unselect' => 'function() {
-                                                setTime();
-                                                }',
-                            'select2:select' => 'function() {
-                                                    setTime();
-                                                    }',
+                            'select2:unselect' => 'function() {setTime();}',
+                            'select2:select' => 'function() {setTime();}',
                         ],
                     ])->label('ช่วงเวลา');
                     ?>
+                            <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาสิ้นสุด') ?>
+                        </div>
+                    </div>
+
+                    <?= $form->field($model, 'emp_number')->textInput(['class' => ''])->label('จำนวนผู้เข้าร่วม') ?>
+                    <?= $form->field($model, 'title')->textInput(['class' => ''])->label('หัวข้อการประชุม') ?>
+                    <?= $form->field($model, 'data_json[meeting_details]')->textArea(['rows' => 3, 'class' => ''])->label('รายละเอียดการประชุม') ?>
+                    <?= $form->field($model, 'data_json[equipment]')->textInput(['class' => ''])->label('อุปกรณ์ที่ต้องการ') ?>
+                    <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ', 'class' => ''])->label('เบอร์ติดต่อ') ?>
+
+                    <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
+                        'data' => $model->listUrgent(),
+                        'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            // 'width' => '370px',
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => 'function(result) { 
+                                            }',
+                            'select2:unselecting' => 'function() {
+
+                                            }',
+                        ]
+                    ]) ?>
 
                     <div class="d-flex justify-content-between">
                         <div class="mt-3">
@@ -216,7 +226,7 @@ try {
 
 <?php
 $js = <<<JS
-          thaiDatepicker('#booking-date_start')
+          thaiDatepicker('#meeting-date_start')
 
             \$('#meeting-room_id').on('change', function() {
               \$.ajax({
@@ -235,21 +245,21 @@ $js = <<<JS
               });
             });
 
-            \$('#booking-date_end').on('change', function() {
-                var dateStart = \$('#booking-date_start').val();
-                var dateEnd = \$('#booking-date_end').val();
+            \$('#meeting-date_end').on('change', function() {
+                var dateStart = \$('#meeting-date_start').val();
+                var dateEnd = \$('#meeting-date_end').val();
                 listCars(dateStart,dateEnd)
             });
 
-          \$('#booking-date_start').on('change', function() {
-                var dateStart = \$('#booking-date_start').val();
-                var dateEnd = \$('#booking-date_end').val();
+          \$('#meeting-date_start').on('change', function() {
+                var dateStart = \$('#meeting-date_start').val();
+                var dateEnd = \$('#meeting-date_end').val();
                 listCars(dateStart,dateEnd)
             });
 
             
 
-          \$('#booking-form').on('beforeSubmit', function (e) {
+          \$('#meeting-form').on('beforeSubmit', function (e) {
             var form = \$(this);
 
             Swal.fire({
@@ -290,18 +300,18 @@ $js = <<<JS
 
         function setTime()
         {
-            var period_time = \$('#booking-data_json-period_time').val();
-            var dateStart = \$('#booking-date_start').val();
-            var dateEnd = \$('#booking-date_end').val();
+            var period_time = \$('#meeting-data_json-period_time').val();
+            var dateStart = \$('#meeting-date_start').val();
+            var dateEnd = \$('#meeting-date_end').val();
             if(period_time == 'เต็มวัน'){
-                \$('#booking-time_start').val('08:00')
-                \$('#booking-time_end').val('16:00')
+                \$('#meeting-time_start').val('08:00')
+                \$('#meeting-time_end').val('16:00')
             }else if(period_time == 'ครึ่งวันเช้า'){
-                \$('#booking-time_start').val('08:00')
-                \$('#booking-time_end').val('12:00')
+                \$('#meeting-time_start').val('08:00')
+                \$('#meeting-time_end').val('12:00')
             }else if(period_time == 'ครึ่งวันบ่าย'){
-                \$('#booking-time_start').val('13:30')
-                \$('#booking-time_end').val('16:00')
+                \$('#meeting-time_start').val('13:30')
+                \$('#meeting-time_end').val('16:00')
             }
         }
 

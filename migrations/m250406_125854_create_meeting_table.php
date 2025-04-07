@@ -15,11 +15,11 @@ class m250406_125854_create_meeting_table extends Migration
         $this->createTable('{{%meeting}}', [
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
-            'code' => $this->string(255)->notNull()->comment('รหัส'),
+            'code' => $this->string(255)->comment('รหัส'),
             'room_id' => $this->string(255)->notNull()->comment('รหัส'),
             'title' => $this->string()->notNull()->comment('หัวข้อการประชุ'),
             'date_start' => $this->date()->notNull()->comment('เริ่มวันที่'),
-            'date_end' => $this->date()->notNull()->comment('ถึงวันที่'),
+            'date_end' => $this->date()->comment('ถึงวันที่'),
             'time_start' => $this->string()->notNull()->comment('เริ่มเวลา'),
             'time_end' => $this->string()->notNull()->comment('ถึงเวลา'),
             'thai_year' => $this->integer(255)->notNull()->comment('ปีงบประมาณ'),

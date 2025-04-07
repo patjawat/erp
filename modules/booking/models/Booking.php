@@ -184,7 +184,6 @@ class Booking extends \yii\db\ActiveRecord
     {
         // กรณีแสดงช่วงวันที่
         echo ThaiDateHelper::formatThaiDateRange($this->date_start,$this->date_end); // แสดงผล: 1 - 3 ม.ค. 2568
-
     }
     //สมาชิกที่จะเข้าร่วมประชุม
     public function getlistMembers()
@@ -643,16 +642,6 @@ return  ArrayHelper::map($arrDrivers,'id',function($model){
       }
     }
 
-        //ส่งข้ความไปยังผู้ดูแลห้องประชุม
-        public function SendMeeting() 
-        {
-            
-            $ownerRoom = Room::find()->where(['name' => 'meeting_room','code' => $this->room_id])->one();
-            $id = $ownerRoom->data_json['owner'] ?? 0;
-            $emp = Employees::findOne($id);
-            $lineId = $emp->user->line_id;
-            LineMsg::BookMeeting($this->id,$lineId);
-            
-        }
+
         
 }
