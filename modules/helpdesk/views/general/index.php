@@ -55,7 +55,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="d-flex">
                             <?php echo $item->RepairType()['image']?>
                             <div class="avatar-detail">
-
                                 <p class="text-primary fw-semibold fs-13 mb-0">
                                     <span class="badge text-bg-primary fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i>

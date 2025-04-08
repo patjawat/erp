@@ -274,9 +274,12 @@ class Vehicle extends \yii\db\ActiveRecord
     public function viewStatus()
     {
         switch ($this->status) {
-            case 'Pending':
-                return '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half me-1"></i> รออนุมัติ</span>';
+            case 'None':
+                return '<span class="badge bg-light"><i class="fa-solid fa-circle-exclamation me-1"></i> รอ หน.เห็นชอบ</span>';
                 break;
+                case 'Pending':
+                    return '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half me-1"></i> รออนุมัติ</span>';
+                    break;
             case 'Approve':
                 return '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>อนุมัติ</span>';
                 break;

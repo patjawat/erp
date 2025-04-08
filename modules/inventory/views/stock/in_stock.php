@@ -32,15 +32,17 @@ $products = $cart->getItems();
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary">
-                    <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
-                    <?=$this->render('_search', ['model' => $searchModel]); ?>
+            <h6><i class="bi bi-ui-checks"></i> วัสดุในสต๊อก <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
+                   
             <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
             <div>
                     มูลค่า <span
                         class="fw-semibold badge rounded-pill text-bg-light fs-6"><?= $searchModel->SumPrice(false) ?></span>บาท
                 </div>
                 <?php endif;?>
+        </div>
+        <div>
+        <?=$this->render('_search', ['model' => $searchModel]); ?>
         </div>
         <table class="table table-striped table-hover">
             <thead>

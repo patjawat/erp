@@ -113,7 +113,7 @@ class BookingVehicleController extends Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                $model->status =  $model->car_type_id == "personal" ? 'Pass' : 'Pending';
+                $model->status =  $model->car_type_id == "personal" ? 'Pass' : 'None';
                 $model->emp_id = $me->id;
                 // $model->code  = CARREQ-20250101-001
                 $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???');
@@ -125,11 +125,12 @@ class BookingVehicleController extends Controller
                     // ถ้าเป็นการไปกลับสร้างตารางจรรสรรของแต่ละวัน
                    
                         $this->createDetail($model);
-                        LineMsg::BookVehicle($model->id,1);
-
-                    //สร้างการอนุมัติ
-                 
-                        // $this->createApprove($model);
+                        
+                        
+                        //สร้างการอนุมัติ
+                        
+                        $this->createApprove($model);
+                        
                     return $this->redirect(['/me/booking-vehicle/index', 'id' => $model->id]);
                 }
             }
@@ -217,32 +218,36 @@ class BookingVehicleController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+ public function actionTest(){
+    \Yii::$app->response->format = Response::FORMAT_JSON;
 
+   return  LineMsg::BookVehicle(1060,1);
+ }
 
     protected function createApprove($model)
     {
-        try {
+        // try {
             // หัวหน้างาน
             $leader = new Approve();
             $leader->from_id = $model->id;
             $leader->title = 'ขออนุมัติใช้รถ';
-            $leader->name = 'booking_car';
+            $leader->name = 'vehicle';
             $leader->status = 'Pending';
             $leader->emp_id = $model->leader_id;
             $leader->level = 1;
             $leader->data_json = ['label' => 'อนุมัติ'];
             $leader->save(false);
             $id = $model->id;
-            LineMsg::BookCar($id,1);
+            LineMsg::BookVehicle($id,1);
             
-        } catch (\Throwable $th) {
-        }
+        // } catch (\Throwable $th) {
+        // }
         // ผู้อำนวยการอนุมัติ
         $getDirector = SiteHelper::viewDirector();
         // try {
             $director = new Approve();
             $director->from_id = $model->id;
-            $director->name = 'booking_car';
+            $director->name = 'vehicle';
             $director->emp_id = $director['id'];
             $director->title = 'ขออนุมัติใช้รถ';
             $director->data_json = ['label' => 'อนุมัติ'];

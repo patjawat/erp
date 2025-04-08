@@ -40,17 +40,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 </td>
                 <td class="">
                             <div class="d-flex">
-                                <?=Html::img($detail->car->ShowImg(),['class' => 'avatar rounded border-secondary'])?>
+                                <?=Html::img($detail->car?->ShowImg(),['class' => 'avatar rounded border-secondary'])?>
                                 <div class="avatar-detail">
                                     <div class="d-flex flex-column">
-                                        <p class="mb-0"><?=$detail->car->data_json['brand'];?></p>
+                                        <p class="mb-0"><?=$detail->car?->data_json['brand'];?></p>
                                         <p class="mb-0 fw-semibold text-primary"><?=$detail->license_plate?></p>
                                     </div>
                                 </div>
                             </div>
                         </td>
                 <td>
-                    <?=$detail->driver->getAvatar(false,($detail->driver->phone))?>
+                    <?=$detail->driver?->getAvatar(false,($detail->driver->phone))?>
                 </td>
             </tr>
             <?php endforeach; ?>

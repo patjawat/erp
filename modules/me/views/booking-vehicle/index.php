@@ -26,8 +26,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="container my-4">
-
-
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
 
@@ -81,10 +79,5 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
-
-
-    <?php Pjax::begin(); ?>
-
-    <?php Pjax::end(); ?>
 
 </div>

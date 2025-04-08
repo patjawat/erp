@@ -49,8 +49,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody>
             <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr class="align-middle">
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <tr class="align-middle">
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <td>
                             <div class="d-flex">
                             <?php echo $item->RepairType()['image']?>
                             <div class="avatar-detail">

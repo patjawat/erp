@@ -15,7 +15,7 @@ $this->title = 'รายงานระบบลา';
 <?php $this->endBlock(); ?>
 <div class="card">
     <div class="card-body">
-    <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between">
             <h6>
                 <i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา
                 <span
@@ -23,43 +23,48 @@ $this->title = 'รายงานระบบลา';
                 รายการ
             </h6>
         </div>
-        <div class="d-flex justify-content-between  align-top align-items-center mt-2">
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel"></i> ส่งออก</span>
-            <?php // Html::a('<i class="fa-regular fa-file-excel"></i> ส่งออก', ['/hr/leave/export-leave', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-success rounded-pill shadow export-leave', 'data' => ['size' => 'modal-lg']]) ?>
+
+        <div class="d-flex justify-content-between align-items-center mt-2">
+           <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+            <span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
         </div>
+
+
+
+
         <table class="table table-bordered table-striped table-hover">
-        <thead class="">
-            <tr>
-                <th class="fw-semibold text-center">ลำดับ</th>
-                <th class="fw-semibold">ชื่อ นามสกุล</th>
-                <th class="fw-semibold">ตำแหน่ง</th>
-                <th class="fw-semibold">ฝ่าย/แผนก</th>
-                <th  class="fw-semibold text-center">ลาป่วย</th>
-                <th class="fw-semibold text-center">ลากิจ</th>
-                <th class="fw-semibold text-center">ลาคลอดบุตร</th>
-                <th class="fw-semibold text-center">ลาพักผ่อน</th>
-                <th class="fw-semibold text-center">รวมได้ลาแล้ว</th>
-            </tr>
-        </thead>
-        <tbody class="align-middle table-group-divider">
-        <?php foreach($dataProvider->getModels() as $key => $item):?>
-        <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                <td><?php echo $item->employee->fullname?></td>
-                <td><?php echo $item->employee->positionName()?></td>
-                <td><?php echo $item->employee->departmentName()?></td>
-                <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
-                <td class="text-center fw-bolder"><?php echo $item->sum_lt3?></td>
-                <td class="text-center fw-bolder"><?php echo $item->sum_lt2?></td>
-                <td class="text-center fw-bolder"><?php echo $item->sum_lt4?></td>
-                <td class="text-center fw-bolder"><?php echo ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4)?></td>
-            </tr>
-           <?php endforeach;?>
-        </tbody>
-    </table>
-    <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-    <?= yii\bootstrap5\LinkPager::widget([
+            <thead class="">
+                <tr>
+                    <th class="fw-semibold text-center">ลำดับ</th>
+                    <th class="fw-semibold">ชื่อ นามสกุล</th>
+                    <th class="fw-semibold">ตำแหน่ง</th>
+                    <th class="fw-semibold">ฝ่าย/แผนก</th>
+                    <th class="fw-semibold text-center">ลาป่วย</th>
+                    <th class="fw-semibold text-center">ลากิจ</th>
+                    <th class="fw-semibold text-center">ลาคลอดบุตร</th>
+                    <th class="fw-semibold text-center">ลาพักผ่อน</th>
+                    <th class="fw-semibold text-center">รวมได้ลาแล้ว</th>
+                </tr>
+            </thead>
+            <tbody class="align-middle table-group-divider">
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
+                <tr>
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td><?php echo $item->employee->fullname?></td>
+                    <td><?php echo $item->employee->positionName()?></td>
+                    <td><?php echo $item->employee->departmentName()?></td>
+                    <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
+                    <td class="text-center fw-bolder"><?php echo $item->sum_lt3?></td>
+                    <td class="text-center fw-bolder"><?php echo $item->sum_lt2?></td>
+                    <td class="text-center fw-bolder"><?php echo $item->sum_lt4?></td>
+                    <td class="text-center fw-bolder">
+                        <?php echo ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4)?></td>
+                </tr>
+                <?php endforeach;?>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
                 'pagination' => $dataProvider->pagination,
                 'firstPageLabel' => 'หน้าแรก',
                 'lastPageLabel' => 'หน้าสุดท้าย',
@@ -68,7 +73,7 @@ $this->title = 'รายงานระบบลา';
                     'class' => 'pagination-sm',
                 ],
             ]); ?>
-</div>
+        </div>
     </div>
 </div>
 
@@ -121,4 +126,3 @@ $js = <<< JS
     JS;
 $this->registerJS($js, View::POS_END);
 ?>
-

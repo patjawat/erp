@@ -26,62 +26,27 @@ use iamsaint\datetimepicker\Datetimepicker;
         ],
     ]); ?>
 
-<div class="d-flex justify-content-between gap-3 align-items-center align-middle">
-    <div class="d-flex gap-3 mb-3">
+<?=$this->render('@app/components/Search',['form' => $form,'model' => $model])?>
 
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
-        <?=$form->field($model, 'status')->widget(Select2::classname(), [
-            'data' => $model->listStatus(),
-            'options' => ['placeholder' => 'เลือกสถานะ'],
-            'pluginOptions' => [
-                'width' => '200px',
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                'select2:select' => "function(result) { 
-                    $(this).submit()
-                    }",
-                    'select2:unselecting' => "function(result) { 
-                        $(this).submit()
-                        }",
-                        
-                        ]
-                        ])->label(false);
-                        ?>
-
+<!-- Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-
-
-    <div class="right-setting" id="filter-emp">
-        <div class="card mb-0 w-100">
-            <div class="card-header">
-                <h5 class="card-title d-flex justify-content-between">
-                    ค้นหาข้อมูล
-                    <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
-                </h5>
-            </div>
-            <div class="p-2">
-
-                <div class="d-flex justify-content-between gap-3">
-
-
-                </div>
-
-                <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
-
-            </div>
-        </div>
+    <div class="offcanvas-body">
+        <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light mt-3']);?>
     </div>
-
 </div>
+
 <?php ActiveForm::end(); ?>
 
 <?php
 
 
 $js = <<<JS
-  
-
+thaiDatepicker('#meetingsearch-date_start,#meetingsearch-date_end')
 
 JS;
 $this->registerJS($js, View::POS_END)

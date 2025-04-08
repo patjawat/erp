@@ -44,34 +44,26 @@ if($searchModel->date_between == 'pr_create_date'){
 <?php Pjax::begin(['id' => 'purchase-container','enablePushState' => true,'timeout' => 88888888]); ?>
 
 <div class="card">
-    <div class="card-body d-flex justify-content-between align-items-center align-middle">
-        <div class="d-flex gap-3 justify-content-start">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-3">
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ </h6>
+                <?php if($searchModel->date_between):?>
+                <div><?=$betwenTitle?> ช่วงวันที่ <span class="fw-semibold"><?=$searchModel->date_start?></span> ถึงวันที่ <span class="fw-semibold"><?=$searchModel->date_end?></span></div>
+                <?php endif;?>
+                มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
+            </div>
             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างคำขอซื้อ/ขอจ้าง ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
         </div>
-        <div class="d-flex align-items-center  align-middle gap-2">
-            <?=$this->render('_search', ['model' => $searchModel])?>
-        </div>
-    </div>
-</div>
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php if($searchModel->date_between):?>
-            <div>
-                <?=$betwenTitle?> ช่วงวันที่ <span class="fw-semibold"><?=$searchModel->date_start?></span> ถึงวันที่ <span class="fw-semibold"><?=$searchModel->date_end?></span>
-            </div>
-            <?php endif;?>
-                    <div>
-                มูลค่า <span
-                    class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>
-                บาท </div>
+        <div>
 
         </div>
+
+        <?=$this->render('_search', ['model' => $searchModel])?>
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
                     <th class="fw-semibold" style="width:300px">ผู้ขอ/วันเวลา</th>
                     <th class="fw-semibold" style="width:180px">ประเภท</th>
@@ -83,9 +75,9 @@ if($searchModel->date_between == 'pr_create_date'){
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-            <?php foreach($dataProvider->getModels() as $key => $item):?>
-        <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
+                <tr>
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td><span class="fw-semibold "><?=$item->pq_number?></span></td>
                     <td class="fw-light"> <?= $item->getUserReq()['avatar'] ?></td>
                     <td><?=isset($item->data_json['order_type_name']) ? $item->data_json['order_type_name'] : ''?>
@@ -146,14 +138,14 @@ if($searchModel->date_between == 'pr_create_date'){
                         <div class="btn-group">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
                             <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                            data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                            <i class="bi bi-caret-down-fill"></i>
-                        </button>
-                        
-                        <?php if($item->status !== 7):?>
+                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                <i class="bi bi-caret-down-fill"></i>
+                            </button>
+
+                            <?php if($item->status !== 7):?>
                             <ul class="dropdown-menu">
                                 <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                             
+
 
                                     <?php if ($item->status >= 2): ?>
                                 <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบีนยคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบีนยคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>

@@ -280,17 +280,17 @@ class Employees extends Yii\db\ActiveRecord
             ],
         ]);
         if ($msg != '') {
-            return '<div class="d-flex">'.$img.'
+            return '<div class="d-flex align-items-center">'.$img.'
             <div class="avatar-detail">
-                <h6 class="mb-1 fs-13">'.$this->fullname.'</h6>
+                <h6 class="mb-0 fs-13">'.$this->fullname.'</h6>
                 <p class="text-muted mb-0 fs-13">'.$msg.'</p>
             </div>
         </div>';
         } else {
-            return '<div class="d-flex">'
+            return '<div class="d-flex align-items-center">'
                 .$img.'
         <div class="avatar-detail">
-            <h6 class="mb-1 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
+            <h6 class="mb-0 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
                 .$this->fullname.'

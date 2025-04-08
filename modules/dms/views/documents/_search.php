@@ -59,7 +59,7 @@ use yii\widgets\ActiveForm;
                     ?>
                     
     <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-4']) ?>
+        <?= Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-light mt-4']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

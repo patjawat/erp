@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php endif;?>
                         </td>
                 <td>
-                    <?=$detail->driver->getAvatar(false,($detail->driver->phone))?>
+                    <?=$detail->driver?->getAvatar(false,($detail->driver->phone))?>
                 </td>
             </tr>
             <?php endforeach; ?>

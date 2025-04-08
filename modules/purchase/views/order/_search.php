@@ -1,10 +1,10 @@
 <?php
 
-use yii\helpers\Html;
 use yii\web\View;
-use kartik\widgets\ActiveForm;
+use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
+use kartik\widgets\ActiveForm;
 use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
@@ -12,13 +12,13 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-
 .right-setting {
     width: 500px !important;
 }
 </style>
-
-<?php $form = ActiveForm::begin([
+<div class="d-flex justify-content-between align-items-center mb-3">
+    
+    <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
         'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
@@ -27,45 +27,47 @@ use iamsaint\datetimepicker\Datetimepicker;
         ],
     ]); ?>
 
-<div class="d-flex justify-content-between gap-3 align-items-center align-middle">
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
-
+<div class="d-flex justify-content-start gap-3 align-items-center align-middle">
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+    <?=$form->field($model, 'date_start')->textInput(['style' => 'width:150px'])->label('ช่วงวันที่');?>
+    <?=$form->field($model, 'date_end')->textInput(['style' => 'width:150px'])->label('ถึงวันที่');?>
+    
     <?=$form->field($model, 'order_type_name')->widget(Select2::classname(), [
-                                    'data' => ArrayHelper::map($model->ListItemTypeOrder(),'id','name'),
-                                    'options' => ['placeholder' => 'เลือกประเภท'],
-                                    'pluginOptions' => [
+        'data' => ArrayHelper::map($model->ListItemTypeOrder(),'id','name'),
+        'options' => ['placeholder' => 'เลือกประเภท'],
+        'pluginOptions' => [
                                         'width' => '200px',
-                                    'allowClear' => true,
+                                        'allowClear' => true,
                                     ],
                                     'pluginEvents' => [
                                         'select2:select' => "function(result) { 
-                                                  $(this).submit()
+                                            $(this).submit()
+                                            }",
+                                            'select2:unselecting' => "function(result) { 
+                                                $(this).submit()
                                                 }",
-                                                'select2:unselecting' => "function(result) { 
-                                                    $(this).submit()
-                                                  }",
                                                 
-                                    ]
-                                ])->label(false);
-                        ?>
+                                                ]
+                                                ])->label('ประเภท');
+                                                ?>
     <?=$form->field($model, 'status')->widget(Select2::classname(), [
-                                    'data' => ArrayHelper::map($model->ListStatus(),'code','title'),
-                                    'options' => ['placeholder' => 'เลือกสถานะ'],
-                                    'pluginOptions' => [
-                                        'width' => '200px',
+        'data' => ArrayHelper::map($model->ListStatus(),'code','title'),
+        'options' => ['placeholder' => 'เลือกสถานะ'],
+        'pluginOptions' => [
+            'width' => '200px',
                                     'allowClear' => true,
                                     ],
                                     'pluginEvents' => [
                                         'select2:select' => "function(result) { 
-                                                  $(this).submit()
+                                            $(this).submit()
+                                            }",
+                                            'select2:unselecting' => "function(result) { 
+                                                $(this).submit()
                                                 }",
-                                                'select2:unselecting' => "function(result) { 
-                                                    $(this).submit()
-                                                  }",
                                                 
-                                    ]
-                                ])->label(false);
-                        ?>
+                                                ]
+                                                ])->label('สถานะ');
+                                                ?>
 
 <div class="right-setting" id="filter-emp">
     <div class="card mb-0 w-100">
@@ -75,35 +77,9 @@ use iamsaint\datetimepicker\Datetimepicker;
                 <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
             </h5>
         </div>
-<div class="p-2">
+        <div class="p-2">
 
-
-            <div class="d-flex justify-content-between gap-3">
-
-                                <?=$form->field($model, 'date_start')->widget(Datetimepicker::className(),[
-                        'options' => [
-                            'timepicker' => false,
-                            'datepicker' => true,
-                            'mask' => '99/99/9999',
-                            'lang' => 'th',
-                            'yearOffset' => 543,
-                            'format' => 'd/m/Y', 
-                        ],
-                        ])->label('ช่วงวันที่');
-                        ?>
-                                <?=$form->field($model, 'date_end')->widget(Datetimepicker::className(),[
-                                    'options' => [
-                                        'timepicker' => false,
-                                        'datepicker' => true,
-                                        'mask' => '99/99/9999',
-                                        'lang' => 'th',
-                                        'yearOffset' => 543,
-                                        'format' => 'd/m/Y', 
-                                    ],
-                                    ])->label('ถึงวันที่');
-                                ?>
-                            </div>
-                    <?php
+            <?php
                 
                 echo $form->field($model, 'date_between')->widget(Select2::classname(), [
                     'data' => [
@@ -117,34 +93,34 @@ use iamsaint\datetimepicker\Datetimepicker;
                     ],
                     'pluginEvents' => [
                         'select2:select' => "function(result) { 
-                                    $(this).submit()
-                                }",
-                    ]
-                ])->label('ประเภท');
-                ?>
+                            $(this).submit()
+                            }",
+                            ]
+                            ])->label('ประเภท');
+                            ?>
 
-                <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
-                    
+<?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
+
 </div>
 </div>
-    </div>
+</div>
 
 
-    <span class="filter-emp btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
-        <i class="fa-solid fa-filter"></i>
-    </span>
+<span class="filter-emp btn btn-outline-primary mt-4" data-bs-toggle="tooltip" data-bs-placement="top"
+data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
+<i class="fa-solid fa-filter"></i>
+</span>
 
-    <?php //  Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary']) ?>
-    <?php // Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary']) ?>
 </div>
 <?php ActiveForm::end(); ?>
 
+</div>
 <?php
 
 
 $js = <<<JS
 
+thaiDatepicker('#ordersearch-date_start,#ordersearch-date_end')
 $(".filter-emp").on("click", function(){
   $("#filter-emp").addClass("show");
   localStorage.setItem('right-setting','show')
@@ -170,26 +146,6 @@ var thaiYear = function (ct) {
     })                
 };    
  
-
-$("#ordersearch-date_start").datetimepicker({
-    timepicker:false,
-    format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-    lang:'th',  // แสดงภาษาไทย
-    onChangeMonth:thaiYear,          
-    onShow:thaiYear,                  
-    yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-    closeOnDateSelect:true,
-});   
-
-$("#ordersearch-date_end").datetimepicker({
-    timepicker:false,
-    format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-    lang:'th',  // แสดงภาษาไทย
-    onChangeMonth:thaiYear,          
-    onShow:thaiYear,                  
-    yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-    closeOnDateSelect:true,
-});       
 
 
 JS;

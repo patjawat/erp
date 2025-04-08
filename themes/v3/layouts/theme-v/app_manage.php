@@ -7,7 +7,7 @@ $items = [
     [
         'title' => 'บุคลากร',
         'icon' => 'fa-regular fa-circle-user fs-1',
-        'url' => ['/hr/employees'],
+        'url' => ['/hr'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('hr') ? true : false,
         // 'show' => true
@@ -16,7 +16,7 @@ $items = [
     [
         'title' => 'ระบบลา',
         'icon' => 'fa-solid fa-calendar-day fs-1',
-        'url' => ['/hr/leave/index','status' => 'Checking'],
+        'url' => ['/hr/leave/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('leave') ? true : false,
         // 'show' => true
@@ -24,7 +24,7 @@ $items = [
     [
         'title' => 'สารบรรณ',
         'icon' => 'bi bi-journal-text fs-1',
-        'url' => ['/dms/documents/receive'],
+        'url' => ['/dms/dashboard'],
         'padding' => 'p-2',
         'show' => Yii::$app->user->can('document') ? true : false,
         // 'show' => true
@@ -32,7 +32,7 @@ $items = [
     [
         'title' => 'พัสดุ/จัดซื้อ',
         'icon' => 'bi bi-box fs-1',
-        'url' => ['/purchase/order'],
+        'url' => ['/sm'],
         'padding' => 'p-2',
         'show' => Yii::$app->user->can('purchase') ? true : false,
         // 'show' => true

@@ -15,65 +15,66 @@ $msg = 'ขอ';
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 <?php if($dataProvider->getTotalCount() >= 1):?>
-<div class="card">
-    <div class="card-body">
-    <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+
+
+
+
+<div class="container my-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+
+                <div>
+                    <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
+                            class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span>
+                        รายการ</h6>
+                </div>
+
         </div>
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th scope="col">ปีงบประมาณ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">วัน</th>
-                    <th scope="col">จากวันที่</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
-                    <!-- <th scope="col">มอบหมาย</th> -->
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-                    <th class="text-center">ดำเนินการ</th>
-                </tr>
-            </thead>
-            <tbody class="align-middle table-group-divider">
-                <?php foreach($dataProvider->getModels() as $item):?>
-                <tr class="">
-                    <td class="text-center fw-semibold"><?php echo $item->vehicle->thai_year?></td>
-                    <td class="text-truncate" style="max-width: 230px;">
-                        <a href="<?php echo Url::to(['/hr/leave/view','id' => $item->vehicle->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
-                            class="open-modal" data-size="modal-xl">
-                            <?php // $item->vehicle->getAvatar(false)['avatar']?>
-                        </a>
-                    </td>
-                    <td class="text-center fw-semibold"><?php // echo $item->vehicle->total_days?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->vehicle->date_start, 'medium')?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->vehicle->date_end, 'medium')?></td>
-                    <td class="text-start text-truncate" style="max-width:150px;">
-                        <?php // $item->vehicle->getAvatar(false)['department']?>
-
-                    </td>
-                    </td>
-                    <td><?php  echo $item->stackChecker()?>
-                        <?php
-                    try {
-                        $data =  $item->vehicle->checkerName(1)['employee'];
-                    } catch (\Throwable $th) {
-                    }
-            ?>
-                    </td>
-
-
-                    <td class="text-center">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>เลขที่</th>
+                            <th>วันที่ขอใช้</th>
+                            <th>จุดหมาย</th>
+                            <th>ประเภทรถ</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="align-middle table-group-divider">
+                        <?php foreach($dataProvider->getModels() as $item):?>
+                        <tr>
+                            <td>
+                                <p class="mb-0 fw-semibold"><?=$item->vehicle->code?></p>
+                                <p class="fs-13 mb-0">
+                                    <?php echo Yii::$app->thaiDate->toThaiDate($item->vehicle->created_at, true, true)?></p>
+                            </td>
+                            <td>
+                                <p class="mb-0"><?php echo $item->vehicle->viewGoType()?></p>
+                                <p class="mb-0 fw-semibold"><?php echo $item->vehicle->showDateRange()?></p>
+                            </td>
+                            <td><?php echo $item->vehicle->locationOrg?->title ?? '-'?></td>
+                            <td><?php echo $item->vehicle->carType?->title ?? '-'?></td>
+                            <td><?php echo $item->vehicle->viewStatus() ?? '-'?></td>
+                            <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 
                             <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/vehicle/update', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                         </div>
 
                     </td>
-                </tr>
-                <?php endforeach;?>
-            </tbody>
-        </table>
-        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+                        </tr>
+                        <?php endforeach;?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
             <?= yii\bootstrap5\LinkPager::widget([
                 'pagination' => $dataProvider->pagination,
                 'firstPageLabel' => 'หน้าแรก',
@@ -85,8 +86,6 @@ $msg = 'ขอ';
             ]); ?>
         </div>
 
-    </div>
-</div>
 <?php else:?>
     <h5 class="text-center">ไม่มีรายการ</h5>
 <?php endif?>

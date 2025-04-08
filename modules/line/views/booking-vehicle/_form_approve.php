@@ -26,7 +26,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 <?php if ($model->status == 'Pending'): ?>
 <div class="mt-5" id="leaveContent">
     <h6 class="text-center text-white"><?php echo $this->title;?></h6>
-    <?= $this->render('view', ['model' => $model->bookCar]) ?>
+    <?= $this->render('view', ['model' => $model->vehicle]) ?>
 </div>
 <?php // if($model->status == 'Pending'): ?>
 <div class="d-flex justify-content-center gap-3 mt-4" id="btn-warp">

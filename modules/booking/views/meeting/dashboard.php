@@ -10,16 +10,23 @@ use app\modules\booking\models\Meeting;
 /** @var app\modules\booking\models\MeetingSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Meetings';
+$this->title = 'ระบบจัดการห้องประชุม';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+Dashboard
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
-<div class="container">
-    <?=$this->render('navbar')?>
+
+
+<div class="container-fluid">
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
     <?=$this->render('summary', ['searchModel' => $searchModel])?>

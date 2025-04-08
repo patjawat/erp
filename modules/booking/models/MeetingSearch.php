@@ -59,8 +59,6 @@ class MeetingSearch extends Meeting
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'date_start' => $this->date_start,
-            'date_end' => $this->date_end,
             'thai_year' => $this->thai_year,
             'document_id' => $this->document_id,
             'emp_number' => $this->emp_number,

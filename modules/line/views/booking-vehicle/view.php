@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Booking Cars', 'url' => ['index']]
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 
-$msg = "ขออนุญาตใช้รถยนต์".($model->private_car == 1 ? '<code>(ส่วนตัว)</code>' : null);
+$msg = "ขออนุญาตใช้รถยนต์".($model->carType->title);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-route fs-1"></i> <?= $this->title; ?>
@@ -23,7 +23,7 @@ $msg = "ขออนุญาตใช้รถยนต์".($model->private_ca
         <div class="card">
             <div class="card-body">
                 <div class="mb-2">
-                    <?php echo $model->user->employee->getavatar(false,$msg)?>
+                    <?php // echo $model->user->employee->getavatar(false,$msg)?>
                 </div>
 
 
@@ -48,7 +48,7 @@ $msg = "ขออนุญาตใช้รถยนต์".($model->private_ca
             [
                 'label' => 'ผู้ร่วมเดินทาง',
                 'value' => function($model){
-                    return $model->data_json['total_person_count']." คน";
+                    // return $model->data_json['total_person_count']." คน";
                 }
             ],
             [

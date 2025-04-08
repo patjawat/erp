@@ -48,12 +48,6 @@ $this->params['breadcrumbs'][] = $this->title;
             <div
                 class="card hover-card-under <?php echo (isset($searchModel->status[0]) && $searchModel->status[0]  == 'Pending') ? 'border-4 border-start-0 border-end-0 border-top-0 border-danger' :''?>">
                 <div class="card-body">
-                    <?php
-                // echo $searchModel->status[0];
-                // echo "<pre>";
-                // print_r($searchModel->status);
-                // echo "</pre>";
-                ?>
                     <div class="d-flex justify-content-between gap-1 mb-0">
                         <span
                             class="h2 fw-semibold text-primary"><?php echo $searchModel->countLeaveStatus('Pending') ?></span>
@@ -139,9 +133,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
             </h6>
         </div>
-        <div class="d-flex justify-content-between  align-top align-items-center mt-2">
+        <div class="d-flex justify-content-between  align-top align-items-center">
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?php //  Html::a('<i class="fa-solid fa-plus"></i> สร้างใหม่', ['/hr/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow open-modal rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
 
         <?php

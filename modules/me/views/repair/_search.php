@@ -21,26 +21,9 @@ use iamsaint\datetimepicker\Datetimepicker;
 ]); ?>
 <div>
 
-
-    <div class="d-flex gap-2">
-
-
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
-        
-       <!-- <div class="d-flex justify-content-between gap-2" style="width:250px">
-       <?php echo $form->field($model, 'date_start')->textInput()->label('ตั้งแต่วันที่');?>
-       <?php echo $form->field($model, 'date_end')->textInput()->label('ถึงวันที่');?>
-      
-            </div> -->
-        <div class="d-flex flex-row mb-3 mt-4">
-            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
-        </div>
-       
-        
+<?=$this->render('@app/components/Search',['form' => $form,'model' => $model,'showEmp' => false])?>
     
 
-    </div>
-</div>
 <?php ActiveForm::end(); ?>
 
 

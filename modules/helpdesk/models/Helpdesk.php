@@ -281,6 +281,21 @@ class Helpdesk extends Yii\db\ActiveRecord
             ->all();
         return ArrayHelper::map($list, 'code', 'title');
     }
+    public function ListThaiYear()
+    {
+        $model = self::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
 
     // ความเร่งด่วน
     public static function listUrgency()

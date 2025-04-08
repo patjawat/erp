@@ -373,15 +373,17 @@ class LineMsg extends Component
  
      
      // ฟังก์ชันส่ง Flex Message
-     public static function BookVehicle($id,$level)
+     public static function BookVehicle($id)
      {
-        $approve = Approve::find()->where(['name' => 'vehicle','from_id' => $id,'level' => $level,'status'=> 'Pending'])->one();
-        $book = Vehicle::findOne($id);
+        // $approve = Approve::find()->where(['name' => 'vehicle','from_id' => $id,'level' => $level,'status'=> 'Pending'])->one();
+        $approve = Approve::findOne($id);
+        $book = Vehicle::findOne($approve->from_id);
         $userId = $book->employee->user->line_id;
+        
  
-        $uri = Url::base(true) . Url::to(['/line/booking-car/approve', 'id' => $approve->id]);
+        $uri = Url::base(true) . Url::to(['/line/booking-vehicle/approve', 'id' => $approve->id]);
         $content = "ขออนุญาตใช้รถยนต์".($book->carType->title)."\n";
-        $content .= "เหตุผล : ".$book->title."\n";
+        $content .= "เหตุผล : ".$book->reason."\n";
         $content .= "ไป : ".$book->locationOrg->title."\n";
         $content .= "ประเภทการเดินทาง : ".$book->viewGoType()."\n";
         $content .= "วันที่ " . $book->showDateRange()."\n";

@@ -43,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex justify-content-between align-top align-items-center">
 
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
-                <?= Html::a('<i class="fa-solid fa-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
             </div>
 
 

@@ -7,7 +7,6 @@ use DatePeriod;
 use DateInterval;
 use yii\helpers\Html;
 use yii\web\Response;
-use app\modules\approve\models\Approve;
 use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
@@ -15,11 +14,12 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
-use app\modules\booking\models\Booking;
-use app\modules\booking\models\BookingDetail;
-use app\modules\booking\models\BookingSearch;
+use app\modules\approve\models\Approve;
+use app\modules\Vehicle\models\Vehicle;
+use app\modules\Vehicle\models\VehicleDetail;
+use app\modules\Vehicle\models\VehicleSearch;
 
-class BookingCarController extends \yii\web\Controller
+class BookingVehicleController extends \yii\web\Controller
 {
     
 
@@ -42,7 +42,7 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Lists all BookingCar models.
+     * Lists all VehicleCar models.
      *
      * @return string
      */
@@ -53,7 +53,7 @@ class BookingCarController extends \yii\web\Controller
         
         $me = UserHelper::GetEmployee();
         $userId = Yii::$app->user->id;
-        $searchModel = new BookingSearch([
+        $searchModel = new VehicleSearch([
             'car_type' => $carType,
             'status' => $status
         ]);
@@ -114,7 +114,7 @@ class BookingCarController extends \yii\web\Controller
                 
 
     /**
-     * Displays a single BookingCar model.
+     * Displays a single VehicleCar model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -142,7 +142,7 @@ class BookingCarController extends \yii\web\Controller
     public function actionValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Booking();
+        $model = new Vehicle();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
             $model->reason == '' ? $model->addError('reason', $requiredName) : null;
@@ -159,14 +159,14 @@ class BookingCarController extends \yii\web\Controller
     }
     
     /**
-     * Creates a new BookingCar model.
+     * Creates a new VehicleCar model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
         $carType = $this->request->get('type'); 
-        $model = new Booking([
+        $model = new Vehicle([
             'car_type' => $carType
         ]);
         $model->leader_id = $model->Approve()['approve_1']['id'];
@@ -182,7 +182,7 @@ class BookingCarController extends \yii\web\Controller
                     $this->createDetail($model);
                     
                     \Yii::$app->response->format = Response::FORMAT_JSON;
-                    return $this->redirect(['/me/booking-car']);
+                    return $this->redirect(['/me/Vehicle-car']);
                     return [
                         'status' => 'success'
                     ];
@@ -220,9 +220,9 @@ class BookingCarController extends \yii\web\Controller
         foreach ($period as $date) {
             
             $dates[] = $date->format('Y-m-d');
-            $newDetail = new BookingDetail;
+            $newDetail = new VehicleDetail;
             $newDetail->name = 'driver_detail';
-            $newDetail->booking_id = $model->id;
+            $newDetail->Vehicle_id = $model->id;
             $newDetail->date_start = $date->format('Y-m-d');
             $newDetail->date_end = $date->format('Y-m-d');
             $newDetail->save(false);
@@ -248,7 +248,7 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Updates an existing BookingCar model.
+     * Updates an existing VehicleCar model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -345,7 +345,7 @@ class BookingCarController extends \yii\web\Controller
     
 
     /**
-     * Deletes an existing BookingCar model.
+     * Deletes an existing VehicleCar model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -359,15 +359,15 @@ class BookingCarController extends \yii\web\Controller
     }
 
     /**
-     * Finds the BookingCar model based on its primary key value.
+     * Finds the VehicleCar model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return BookingCar the loaded model
+     * @return VehicleCar the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Booking::findOne(['id' => $id])) !== null) {
+        if (($model = Vehicle::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

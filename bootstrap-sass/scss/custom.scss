@@ -734,6 +734,17 @@ a {
   }
 }
 
+.avatar-form-control {
+  height: 1.5rem;
+  width: 1.5rem;
+  font-size: 1rem;
+
+  .contact-status {
+    width: 10px;
+    height: 10px;
+  }
+}
+
 .avatar-sm {
   height: 2.5rem;
   width: 2.5rem;

@@ -38,7 +38,7 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 
         <div class="col">
             <!-- <a href="<?php echo Url::to(['/me/booking-car/'])?>"> -->
-            <a href="<?php echo Url::to(['/approve/approve','name'=> 'booking_car'])?>">
+            <a href="<?php echo Url::to(['/approve/vehicle'])?>">
             <div class="card border-0 shadow-sm hover-card position-relative">
                 <?php if($totalBookingCar >=1):?>
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalBookingCar?></span>

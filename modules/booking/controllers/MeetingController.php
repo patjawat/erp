@@ -2,8 +2,10 @@
 
 namespace app\modules\booking\controllers;
 
+use DateTime;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\MeetingSearch;
@@ -50,8 +52,27 @@ class MeetingController extends Controller
 
     public function actionIndex()
     {
-        $searchModel = new MeetingSearch();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $searchModel = new MeetingSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' => 'Pending'
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+        try {
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+           
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
 
         return $this->render('index', [
             'searchModel' => $searchModel,

@@ -366,8 +366,10 @@ class RepairController extends Controller
         $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                // && $model->save()
+            if ($model->load($this->request->post())) {
+                $me = UserHelper::GetEmployee();
+                $model->emp_id = $me->id;
+                $model->save();
                 $this->changAssetStatus($model->code);
 
                 // template message
