@@ -37,7 +37,7 @@ use yii\helpers\Json;
 $query = $model->getChartSummary('receive');
 
 try {
-  $chartSummary = [$query['m1'], $query['m3'], $query['m3'], $query['m4'], $query['m5'], $query['m6'], $query['m7'], $query['m8'], $query['m9'],$query['m10'], $query['m11'], $query['m12'], ];
+  $chartSummary = [$query['m1'], $query['m2'], $query['m3'], $query['m4'], $query['m5'], $query['m6'], $query['m7'], $query['m8'], $query['m9'],$query['m10'], $query['m11'], $query['m12'], ];
 } catch (\Throwable $th) {
   $chartSummary = [];
 }
