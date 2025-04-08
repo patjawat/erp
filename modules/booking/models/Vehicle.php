@@ -3,10 +3,12 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use DateTime;
 use yii\db\Expression;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\components\ThaiDateHelper;
@@ -55,6 +57,7 @@ class Vehicle extends \yii\db\ActiveRecord
 {
 
     public $q;
+    public $q_department;
     /**
      * {@inheritdoc}
      */
@@ -72,7 +75,7 @@ class Vehicle extends \yii\db\ActiveRecord
             [['code', 'thai_year', 'car_type_id', 'go_type', 'urgent', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'leader_id', 'emp_id'], 'required', 'message' => 'ต้องระบุ'],
             [['thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
             [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -137,6 +140,12 @@ class Vehicle extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categorise::class, ['code' => 'location'])->andOnCondition(['name' => 'document_org']);
     }
+
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+
 
     // ประเภทของการจองรถ
     public function getCarType()
@@ -297,6 +306,23 @@ class Vehicle extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'code', 'title');
     }
 
+        // แสดงปีงบประมานทั้งหมด
+        public function ListThaiYear()
+        {
+            $model = self::find()
+                ->select('thai_year')
+                ->groupBy('thai_year')
+                ->orderBy(['thai_year' => SORT_DESC])
+                ->asArray()
+                ->all();
+    
+            $year = AppHelper::YearBudget();
+            $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+            // รวมข้อมูล
+            $model = ArrayHelper::merge($isYear, $model);
+            return ArrayHelper::map($model, 'thai_year', 'thai_year');
+        }
+        
 
     //แสดงรายการประเภทการเดินทาง
     public function viewGoType()

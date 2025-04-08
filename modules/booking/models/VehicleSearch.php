@@ -18,7 +18,7 @@ class VehicleSearch extends Vehicle
     {
         return [
             [['id', 'thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
             [['oil_price', 'oil_liter'], 'number'],
         ];
     }
@@ -66,8 +66,8 @@ class VehicleSearch extends Vehicle
             'oil_liter' => $this->oil_liter,
             'document_id' => $this->document_id,
             'owner_id' => $this->owner_id,
-            'date_start' => $this->date_start,
-            'date_end' => $this->date_end,
+            // 'date_start' => $this->date_start,
+            // 'date_end' => $this->date_end,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
@@ -83,7 +83,7 @@ class VehicleSearch extends Vehicle
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
             ->andFilterWhere(['like', 'location', $this->location])
             ->andFilterWhere(['like', 'reason', $this->reason])
-            ->andFilterWhere(['like', 'status', $this->status])
+            ->andFilterWhere(['like', 'vehicle.status', $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])
