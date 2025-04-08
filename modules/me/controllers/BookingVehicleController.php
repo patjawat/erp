@@ -125,6 +125,7 @@ class BookingVehicleController extends Controller
                     // ถ้าเป็นการไปกลับสร้างตารางจรรสรรของแต่ละวัน
                    
                         $this->createDetail($model);
+                        LineMsg::BookVehicle($model->id,1);
 
                     //สร้างการอนุมัติ
                  

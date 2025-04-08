@@ -331,6 +331,7 @@ class VehicleController extends Controller
                         $bookingDetail->license_plate = $detail['car'];
                         $bookingDetail->status = 'Pass';
                         $bookingDetail->save(false);
+                      
                     }
 
                     if (!$bookingDetail->save()) {
@@ -339,6 +340,7 @@ class VehicleController extends Controller
                 }
 
                 // $transaction->commit();
+                
                 return [
                     'status' => 'success'
                 ];

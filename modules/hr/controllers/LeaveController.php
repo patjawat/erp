@@ -376,14 +376,14 @@ class LeaveController extends Controller
                 $sheet->getStyle('E' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
                 $sheet->getStyle('E' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-                $sheet->setCellValue('F' . $numRow, $item->sum_lt2);
+                $sheet->setCellValue('F' . $numRow, $item->sum_lt3);
                 $sheet->getStyle('F' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('F' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
                 $sheet->getStyle('F' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
                 $sheet->getStyle('F' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
                 $sheet->getStyle('F' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-                $sheet->setCellValue('G' . $numRow, $item->sum_lt3);
+                $sheet->setCellValue('G' . $numRow, $item->sum_lt2);
                 $sheet->getStyle('G' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('G' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
                 $sheet->getStyle('G' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);

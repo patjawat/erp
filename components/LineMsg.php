@@ -10,6 +10,7 @@ use yii\httpclient\Client;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Booking;
 use app\modules\booking\models\Meeting;
+use app\modules\booking\models\Vehicle;
 
 class LineMsg extends Component
 {
@@ -372,21 +373,21 @@ class LineMsg extends Component
  
      
      // ฟังก์ชันส่ง Flex Message
-     public static function BookCar($id,$level)
+     public static function BookVehicle($id,$level)
      {
-        $approve = Approve::find()->where(['name' => 'booking_car','from_id' => $id,'level' => $level,'status'=> 'Pending'])->one();
-        $book = Booking::findOne(['id' => $id,'name' => 'booking_car']);
-        $userId = $approve->employee->user->line_id;
+        $approve = Approve::find()->where(['name' => 'vehicle','from_id' => $id,'level' => $level,'status'=> 'Pending'])->one();
+        $book = Vehicle::findOne($id);
+        $userId = $book->employee->user->line_id;
  
         $uri = Url::base(true) . Url::to(['/line/booking-car/approve', 'id' => $approve->id]);
-        $content = "ขออนุญาตใช้รถยนต์".($book->private_car == 1 ? 'ส่วนตัว' : null)."\n";
-        $content .= "เหตุผล : ".$book->reason."\n";
+        $content = "ขออนุญาตใช้รถยนต์".($book->carType->title)."\n";
+        $content .= "เหตุผล : ".$book->title."\n";
         $content .= "ไป : ".$book->locationOrg->title."\n";
-        $content .= "ประเภทการเดินทาง : ".$book->data_json['go_type']."\n";
-        $content .= "วันที่ " . Yii::$app->thaiFormatter->asDate($book->date_start, 'medium').' ถึง '.Yii::$app->thaiFormatter->asDate($book->date_end, 'medium')."\n";
-        $content .= "มีผู้ร่วมเดินทาง : ".$book->data_json['total_person_count']." คน";
+        $content .= "ประเภทการเดินทาง : ".$book->viewGoType()."\n";
+        $content .= "วันที่ " . $book->showDateRange()."\n";
+        // $content .= "มีผู้ร่วมเดินทาง : ".$book->data_json['total_person_count']." คน";
 
-        $altText = 'ขออนุมัติยนต์'.($book->private_car == 1 ? '(ส่วนตัว)' : null); // ข้อความสำรอง
+        $altText = 'ขออนุมัติยนต์'.$book->carType->title; // ข้อความสำรอง
         $flexContent = [
             'type' => 'bubble',
             'body' => [
