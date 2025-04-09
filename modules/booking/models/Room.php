@@ -119,13 +119,22 @@ class Room extends \yii\db\ActiveRecord
     }
 
     // แสดงรายการอุปกรณ์
-    public function ListAccessory()
+    public function listAccessory()
     {
         $model = Categorise::find()
             ->where(['name' => 'room_accessory', 'category_id' => $this->code])
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'title', 'title');
+    }
+    public function showAccessory()
+    {
+        $data = $this->data_json['room_accessory'];
+        $result = [];
+        foreach ($data as $key => $value) {
+            $result[] = $value;
+        }
+        return implode(', ', $result);
     }
 
     public function checkRoom($date)

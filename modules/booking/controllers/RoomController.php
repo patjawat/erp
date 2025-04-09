@@ -58,9 +58,21 @@ class RoomController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+            $model = $this->findModel($id);
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+    
+                return [
+                    'title' => $this->request->get('title'),
+                    'content' => $this->renderAjax('view', [
+                        'model' => $model,
+                    ]),
+                ];
+            } else {
+                return $this->render('view', [
+                    'model' => $model,
+                ]);
+            }
     }
 
     /**

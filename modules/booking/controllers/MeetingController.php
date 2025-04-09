@@ -2,7 +2,9 @@
 
 namespace app\modules\booking\controllers;
 
+use Yii;
 use DateTime;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
@@ -55,9 +57,9 @@ class MeetingController extends Controller
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new MeetingSearch([
             'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
-            'status' => 'Pending'
+            // 'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            // 'date_end' => AppHelper::convertToThai($lastDay),
+            // 'status' => 'Pending'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
@@ -68,7 +70,8 @@ class MeetingController extends Controller
         try {
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        // $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
            
     } catch (\Throwable $th) {
         //throw $th;
@@ -87,12 +90,26 @@ class MeetingController extends Controller
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($id)
-    {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
-    }
+
+     public function actionView($id)
+     {
+             $model = $this->findModel($id);
+             if ($this->request->isAJax) {
+                 \Yii::$app->response->format = Response::FORMAT_JSON;
+             return [
+                 'title' => 'รายละเอียดการจอง',
+                 'content' => $this->renderAjax('view', [
+                     'model' => $model,
+                     'action' => true
+                 ]),
+             ];
+         } else {
+             return $this->render('view', [
+                 'model' => $model,
+                 'action' => true
+             ]);
+         }
+     }
 
     /**
      * Creates a new Meeting model.

@@ -48,10 +48,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">สถานะ:</label>
     <div class="col-sm-8">
-    <?=$model->viewStatus()?>
+    <?=$model->viewStatus()['view']?>
     </div>
 </div>
-
+<?php if($action):?>
 <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-center gap-2 mt-3">
   <button type="button" class="btn btn-outline-secondary">
   <i class="fa-solid fa-power-off"></i> ปิด
@@ -63,3 +63,4 @@ $this->params['breadcrumbs'][] = $this->title;
   <i class="fa-regular fa-circle-check"></i> อนุมัติ
   </button>
 </div>
+<?php endif?>

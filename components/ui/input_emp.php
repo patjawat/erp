@@ -1,3 +1,4 @@
+
 <?php
 use yii\web\View;
 use yii\helpers\Url;
@@ -8,6 +9,10 @@ use kartik\widgets\ActiveForm;
 use app\widgets\FlatpickrWidget;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+
+$feild = $fieldName ?? 'emp_id';
+$showEmp = $showEmp ?? true;
+$label = $label ?? 'บุคลากร';
 ?>
 <style>
 :not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
@@ -41,16 +46,14 @@ use app\modules\hr\models\Organization;
     padding: 0.1rem 0.1rem 0.5rem 0.1rem;
 }
 </style>
-<div class="d-flex gap-2">
-    <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label('คำค้นหา') ?>
-    <?php if(!isset($showEmp)):?>
-    <div class="avatar-form">
-        <?php
+<div class="avatar-form">
+
+<?php
             $url = Url::to(['/depdrop/employee-by-id']);
-            $employee = Employees::find()->where(['id' => $model->emp_id])->one();
-            $initEmployee = empty($model->emp_id) ? '' : Employees::findOne($model->emp_id)->getAvatar(false);//กำหนดค่าเริ่มต้น
+            $employee = Employees::find()->where(['id' => $model->$feild])->one();
+            $initEmployee = empty($model->$feild) ? '' : Employees::findOne($model->$feild)->getAvatar(false);//กำหนดค่าเริ่มต้น
             
-            echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
+            echo $form->field($model, $feild)->widget(Select2::classname(), [
                 'initValueText' => $initEmployee,
                 // 'size' => Select2::,
                 'options' => ['placeholder' => 'เลือกบุคลากร ...'],
@@ -71,42 +74,6 @@ use app\modules\hr\models\Organization;
                     'select2:select' => new JsExpression('function() { $(this).closest("form").submit(); }'),
                     'select2:unselecting' => new JsExpression('function() { $(this).closest("form").submit(); }'),
                     ]
-                    ])->label('บุคลากร');
-                    
-                    ?>
-    </div>
-    <?php endif?>
-    <?php
-        echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ปีงบประมาณ'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '150px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                        $(this).submit()
-                        }',
-                'select2:unselecting' => "function() {
-                             $(this).submit()
-                            $('#leavesearch-date_start').val('');
-                            $('#leavesearch-date_end').val('');
-                        }",
-            ]
-        ])->label('ปีงบประมาณ');
-        ?>
-
-    <div class="d-flex justify-content-between gap-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control'])->label('ตั้งแต่วันที่');?>
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control'])->label('ถึงวันที่');?>
-    </div>
-
-    <div class="d-flex flex-row align-items-center gap-2 mt-4">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-light']) ?>
-         
-        <button class="btn btn-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i class="fa-solid fa-filter"></i></button>
-
-
-    </div>
-</div>
+                    ])->label($label ?? 'บุคลากร');
+                    ?>       
+       </div>

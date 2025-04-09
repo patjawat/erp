@@ -15,7 +15,7 @@ $me = UserHelper::GetEmployee();
             <th class="fw-semibold">การลา</th>
             <th class="fw-semibold" scope="col">ปีงบประมาณ</th>
             <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
-            <th class="fw-semibold" scope="col">มอบหมาย</th>
+            <!-- <th class="fw-semibold" scope="col">มอบหมาย</th> -->
             <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
             <th class="fw-semibold text-start">ความคืบหน้า</th>
             <th class="fw-semibold text-start">สถานะ</th>
@@ -35,7 +35,7 @@ $me = UserHelper::GetEmployee();
                 <div class="d-flex flex-column justofy-content-start align-items-start">
                     <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType->title ?> <code><?php echo $item->total_days?> </code> วัน</span>
                     <div>
-                        ระหว่าง <?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?> - <?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?>
+                       <?=$item->showLeaveDate()?>
                     </div>
                 </div>
             </td>
@@ -45,7 +45,7 @@ $me = UserHelper::GetEmployee();
             <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$item->getAvatar(false)['department']?>
             </td>
-            <td><?php echo $item->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td>
+            <!-- <td><?php // echo $item->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td> -->
             <td><?php echo $item->stackChecker()?></td>
             <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?></td>
             <td class="fw-center align-middle text-start">

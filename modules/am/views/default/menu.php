@@ -1,20 +1,20 @@
 <?php
 use yii\helpers\Html;
+use app\models\Categorise;
 use app\components\CategoriseHelper;
 use app\modules\am\models\AssetItem;
-use app\models\Categorise;
 $listAssetGroups = Categorise::find()
 ->where(['name' => 'asset_group'])
 // ->andWhere(['NOT',['code'=>[1]]])
 ->all();
 ?>
 <div class="d-flex gap-2">
-    <?=Html::a('<i class="fa-solid fa-chart-simple me-1"></i> Dashbroad',['/am'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-chart-simple"></i> Dashbroad',['/am'],['class' => 'btn btn-light'])?>
     <div class="btn-group">
-        <?=Html::a('<i class="fa-solid fa-box-open me-1"></i> ทะเบียนทรัพย์สิน',['/am/asset'],['class' => 'btn btn-light'])?>
+        <?=Html::a('<i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน',['/am/asset'],['class' => 'btn btn-light'])?>
 
 </div>
-<?=Html::a('<i class="fa-solid fa-box-open me-1"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'btn btn-light'])?>
+<?=Html::a('<i class="fa-solid fa-chart-simple"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'btn btn-light'])?>
 
 <!-- <div class="dropdown btn btn-light">
     <a href="javascript:void(0)" class="dropdown-toggle me-0" data-bs-toggle="dropdown" aria-expanded="false">

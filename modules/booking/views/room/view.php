@@ -39,7 +39,6 @@ $this->params['breadcrumbs'][] = $this->title;
             'title',
             'qty',
             'description',
-            'data_json',
             'ma_items',
             'active',
         ],

@@ -182,41 +182,18 @@ class Meeting extends \yii\db\ActiveRecord
     {
         return $this->time_start . ' - ' . $this->time_end.' น.';
     }
-    public function viewStatus()
+
+    public function viewMeetingDateTime()
     {
-      switch ($this->status) {
-        case 'Pending':
-          return ' <span class="status-badge approved">รอการอนุมัติ</span>';
-          break;
-        case 'Pass':
-          return '<span class="status-badge confirmed">อนุมัติแล้ว</span>';
-          break;
-        case 'Cancel':
-          return '<span class="status-badge rejected">ปฏิเสธ</span>';
-          break;
-        default:
-          return '<span class="badge rounded-pill">ไม่ระบุ</span>';
-          break;
-      }
+        return ThaiDateHelper::formatThaiDate($this->date_start).' '.$this->viewMeetingTime();
     }
 
-    public function statusColor()
+    public function viewStatus()
     {
-        switch ($this->status) {
-            case 'Pending':
-                return 'warning';
-                break;
-            case 'Pass':
-                return 'success';
-                break;
-            case 'Cancel':
-                return 'danger';
-                break;
-            default:
-                return 'secondary';
-                break;
-        }
+      return AppHelper::viewStatus($this->status);
+       
     }
+
 
     //นับจำนวนการจองห้องประชุมตามสถานะ
     public function countStatus($status = null)

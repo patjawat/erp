@@ -7,7 +7,7 @@ $menuItems = [
         'url' => '/hr'
     ],
     [
-        'title' => '<i class="bi bi-person-check-fill"></i> ทะเบียนประวัติ <span class="badge text-bg-secondary text-light rounded-pill align-text-bottom">'.EmployeeHelper::Summary()['total'].'</span>',
+        'title' => '<i class="bi bi-ui-checks"></i> ทะเบียนประวัติ <span class="badge text-bg-secondary text-light rounded-pill align-text-bottom">'.EmployeeHelper::Summary()['total'].'</span>',
         'url' => '/hr/employees'
     ],
     [

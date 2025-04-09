@@ -88,3 +88,9 @@ ALTER TABLE `stock_events` CHANGE `qty` `qty` FLOAT NULL DEFAULT NULL COMMENT '�
 SELECT title,code,MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)) AS max_value  FROM `categorise` WHERE `group_id` = 4 AND `name` LIKE 'asset_item'
 GROUP BY category_id
 ORDER BY `categorise`.`id` DESC;
+
+-- update ตารางงานซ่อมบำรุง
+UPDATE helpdesk h
+LEFT JOIN employees e ON e.user_id = h.created_by
+SET h.emp_id = e.id
+WHERE h.emp_id IS NULL;

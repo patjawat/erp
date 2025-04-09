@@ -12,6 +12,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
+use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -718,6 +719,10 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
+    public function showLeaveDate()
+    {
+        return ThaiDateHelper::formatThaiDateRange($this->date_start, $this->date_end, 'long', 'short');
+    }
     public function showStatus()
     {
         $leaveStep = Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();

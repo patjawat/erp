@@ -102,14 +102,12 @@ try {
                             <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาสิ้นสุด') ?>
                         </div>
                     </div>
-
-                    <?= $form->field($model, 'emp_number')->textInput(['class' => ''])->label('จำนวนผู้เข้าร่วม') ?>
-                    <?= $form->field($model, 'title')->textInput(['class' => ''])->label('หัวข้อการประชุม') ?>
-                    <?= $form->field($model, 'data_json[meeting_details]')->textArea(['rows' => 3, 'class' => ''])->label('รายละเอียดการประชุม') ?>
-                    <?= $form->field($model, 'data_json[equipment]')->textInput(['class' => ''])->label('อุปกรณ์ที่ต้องการ') ?>
-                    <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ', 'class' => ''])->label('เบอร์ติดต่อ') ?>
-
-                    <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
+<div class="row">
+<div class="col-6">
+    <?= $form->field($model, 'emp_number')->textInput(['class' => ''])->label('จำนวนผู้เข้าร่วม') ?>
+    </div>
+    <dv class="col-6">
+    <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
                         'data' => $model->listUrgent(),
                         'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
                         'pluginOptions' => [
@@ -124,6 +122,14 @@ try {
                                             }',
                         ]
                     ]) ?>
+</dv>
+</div>
+                    <?= $form->field($model, 'title')->textInput(['class' => ''])->label('หัวข้อการประชุม') ?>
+                    <?= $form->field($model, 'data_json[meeting_details]')->textArea(['rows' => 3, 'class' => ''])->label('รายละเอียดการประชุม') ?>
+                    <?= $form->field($model, 'data_json[equipment]')->textInput(['class' => ''])->label('อุปกรณ์ที่ต้องการ') ?>
+                    <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ', 'class' => ''])->label('เบอร์ติดต่อ') ?>
+
+                 
 
                     <div class="d-flex justify-content-between">
                         <div class="mt-3">

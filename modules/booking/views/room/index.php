@@ -11,7 +11,7 @@ use app\modules\booking\models\Room;
 /** @var app\modules\booking\models\RoomSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ห้องประชุม';
+$this->title = 'ห้องประชุม(ผู้ดูแลระบบ)';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="d-flex justify-content-between align-items-center mb-3">    
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม', ['/booking/room/create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
         </div>
         <div class="table-responsive">
             <table class="table table-hover">
@@ -56,15 +56,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
                     <tr>
                         <td class="fw-medium"><?=$item->title?></td>
-                        <td>30 คน</td>
-                        <td class="d-none d-md-table-cell">อาคาร A ชั้น 2</td>
-                        <td class="d-none d-md-table-cell">โปรเจคเตอร์, ไมโครโฟน, เครื่องเสียง, Wi-Fi</td>
-                        <td><span class="badge badge-available">พร้อมใช้งาน</span></td>
+                        <td><?=$item->data_json['seat_capacity']?> คน</td>
+                        <td class="d-none d-md-table-cell"><?=$item->data_json['location'] ?? '-';?></td>
+                        <td class="d-none d-md-table-cell"><?=$item->showAccessory()?></td>
+                        <td>พร้อมใช้งาน</td>
                         <td class="text-end">
                             <div class="d-flex gap-2 justify-content-end">
                                 <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/room/view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> ดู'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                                 <?=Html::a('<i class="fa-solid fa-pen-to-square fa-2x text-warning"></i>',['/booking/room/update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>',['/booking/room/delete','id' => $item->id,'title' => '<i class="fa-solid fa-trash"></i> ลบ'],['data-method' => 'post','data-confirm' => 'คุณต้องการลบห้องประชุมนี้หรือไม่?'])?>
+                                <?=Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>',['/booking/room/delete','id' => $item->id,'title' => '<i class="fa-solid fa-trash"></i> ลบ'],['class' => 'delete-item'])?>
                             </div>
                         </td>
                     </tr>

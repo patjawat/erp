@@ -10,7 +10,7 @@ use app\modules\booking\models\Meeting;
 /** @var app\modules\booking\models\MeetingSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ระบบจัดการห้องประชุม';
+$this->title = 'ระบบจัดการห้องประชุม(ผู้ดูแลระบบ)';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -60,11 +60,11 @@ Dashboard
                             <div class="d-flex align-items-start gap-2">
                         <div class="action-icon approve d-inline-flex confirm-meeting" data-id="<?=$item->id?>"
                             data-status="Pass" data-text="อนุมัติการจอง">
-                            <i class="bi bi-check-lg"></i>
+                            <i class="fa-solid fa-circle-check fa-2x"></i>
                         </div>
                         <div class="action-icon reject d-inline-flex confirm-meeting" data-id="<?=$item->id?>"
-                            data-status="Cancel" data-text="ปฏิเสธการจอง">
-                            <i class="bi bi-x-lg"></i>
+                            data-status="Cancel" data-text="ยกเลิกการจอง">
+                            <i class="fa-solid fa-circle-xmark fa-2x"></i>
                         </div>
                             </div>
                         </div>

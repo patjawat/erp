@@ -16,12 +16,12 @@ $items = [
     [
         'title' => 'จองรถ',
         'icon' => 'fa-solid fa-car fs-1',
-        'url' => ['/me/booking-car'],
+        'url' => ['/me/booking-vehicle'],
     ],
     [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/me/booking-meeting'],
+        'url' => ['/me/booking-meeting/dashbroad'],
     ],    [
         'title' => 'คลังหน่วยงาน',
         'icon' => 'bi bi-shop fs-2',

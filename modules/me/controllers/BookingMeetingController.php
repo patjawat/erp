@@ -2,6 +2,7 @@
 
 namespace app\modules\me\controllers;
 use Yii;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
@@ -37,14 +38,14 @@ class BookingMeetingController extends \yii\web\Controller
         );
     }
 
-    public function actionDashbroad()
+    public function actionDashboard()
     {
         $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         // รายการจองห้องประชุมที่กำลังจะถึงใน 7 วันข้างหน้า
         $dataProvider->query->andFilterWhere(['between', 'date_start', new Expression('CURDATE()'), new Expression('DATE_ADD(CURDATE(), INTERVAL 7 DAY)')]);
         // $dataProvider->pagination->pageSize = 7;
-        return $this->render('dashbroad',[
+        return $this->render('dashboard',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -85,12 +86,14 @@ class BookingMeetingController extends \yii\web\Controller
             return [
                 'title' => 'รายละเอียดการจอง',
                 'content' => $this->renderAjax('view', [
-                    'model' => $model
+                    'model' => $model,
+                    'action' => false
                 ]),
             ];
         } else {
             return $this->render('view', [
-                'model' => $model
+                'model' => $model,
+                'action' => false
             ]);
         }
     }
@@ -340,10 +343,6 @@ public function actionGetRoom($id)
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
             $model->title == '' ? $model->addError('titlt', $requiredName) : null;
-            // $model->location == '' ? $model->addError('location', $requiredName) : null;
-            // $model->urgent == '' ? $model->addError('urgent', $requiredName) : null;
-            // $model->data_json['employee_point'] == '' ? $model->addError('data_json[employee_point]', $requiredName) : null;
-            // $model->data_json['employee_total'] == '' ? $model->addError('data_json[employee_total]', $requiredName) : null;
             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
             $model->data_json['period_time'] == '' ? $model->addError('data_json[period_time]', $requiredName) : null;
         }
@@ -400,6 +399,25 @@ public function actionGetRoom($id)
         }
     }
 
+
+//     public function actionEvents()
+// {
+//     \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+//     return [
+//         [
+//             'title' => 'Meeting',
+//             'start' => '2025-04-10',
+//             'end' => '2025-04-10',
+//         ],
+//         [
+//             'title' => 'Conference',
+//             'start' => '2025-04-12',
+//             'end' => '2025-04-14',
+//         ],
+//     ];
+// }
+
+
     // public function actionEvents($id, $start, $end)
     public function actionEvents()
 	{
@@ -409,9 +427,8 @@ public function actionGetRoom($id)
 		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
 
-            $bookings = Booking::find()
-                ->where(['name' => 'meeting'])
-                ->andWhere(['<>', 'status', 'cancel'])
+            $bookings = Meeting::find()
+                ->andWhere(['<>', 'status', 'Cancel'])
                 ->all();
                 $data = [];
 
@@ -421,23 +438,36 @@ public function actionGetRoom($id)
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$item->time_end), "php:Y-m-d\TH:i:s");
                     $data[] = [
                         'id'               => $item->id,
-                        'title'            => $item->reason,
+                        'title'            => $item->room->title,
                         'start'            => $dateStart,
-                        'end'            => $dateEnd,
-                        'data' => $item,
-                        'view' => $this->renderAjax('view', ['model' => $item]),
+                        'end'            => $dateStart,
+                        'extendedProps' => [
+                            'title' => $item->title,
+                            'dateTime' => $item->viewMeetingTime(),
+                            'status' => $item->viewStatus()['view'],
+                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
+                            'description' => 'คำอธิบาย',
+                        ],
+                         'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
                         'description' => 'description for All Day Event',
                         // 'eventDisplay' => '',
-                        'color' => 'danger',   // an option!
+                        // 'color' => 'danger',   // an option!
                         'textColor' => 'black', // an option!
-                         'rendering' => 'background',
-        'color'=> '#ff9f89'
+                        //  'rendering' => 'background',
+                        // 'color'=> '#ff9f89',
+                        'backgroundColor' => '#3aa3e3',
+                        // 'url' => Url::to(['/event/view', 'id' => $item->id]),
                     ];
                 }
 
             return  $data;
        
 	}
+
+    public function actionCalendar()
+    {
+        return $this->render('calendar');
+    }
     
     
     protected function findModel($id)

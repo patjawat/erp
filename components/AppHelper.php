@@ -787,4 +787,43 @@ $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบ�
         $data = explode(',', implode(',', $data));
         return $data;
     }
+
+    public static function viewStatus($status)
+    {
+        $title = '';
+        $color = '';
+        $view = '';
+        switch ($status) {
+            case 'Pending':
+                $title = 'รอการอนุมัติ';
+                $color = 'warning';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-hourglass-start"></i> ' . $title . '</span>';
+                break;
+            case 'Pass':
+                $title = 'อนุมัติ';
+                $color = 'primary';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-check"></i> ' . $title . '</span>';
+                break;
+            case 'Approve':
+                $title = 'ผอ.อนุมัติ';
+                $color = 'success';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-star"></i> ' . $title . '</span>';
+                break;
+            case 'Cancel':
+                $title = 'ยกเลิก';
+                $color = 'secondary';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-stop"></i> ' . $title . '</span>';
+                break;
+            default:
+                $title = 'ไม่ระบุ';
+                $color = 'light';
+                $view = '<span class="badge-soft-' . $color . ' rounded-pill">' . $title . '</span>';
+                break;
+        }
+        return [
+            'title' => $title,
+            'color' => $color,
+            'view' => $view
+        ];
+    }
 }

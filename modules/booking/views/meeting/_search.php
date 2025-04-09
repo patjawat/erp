@@ -26,7 +26,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         ],
     ]); ?>
 
-<?=$this->render('@app/components/Search',['form' => $form,'model' => $model])?>
+<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 
 <!-- Offcanvas -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">

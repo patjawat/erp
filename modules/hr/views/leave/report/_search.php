@@ -27,7 +27,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 <div class="d-flex gap-2 align-items-center">
     <?php echo $form->field($model, 'data_json[export]')->hiddenInput()->label(false) ?>
 
-    <?=$this->render('@app/components/Search',['form' => $form,'model' => $model])?>
+    <?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 
     <button class="btn btn-light mt-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
         aria-controls="offcanvasExample"><i class="fa-solid fa-filter"></i></button>

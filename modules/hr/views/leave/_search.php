@@ -28,7 +28,7 @@ use iamsaint\datetimepicker\Datetimepicker;
     ],
 ]); ?>
 <div class="d-flex justify-content-between align-items-center gap-2">
-<?=$this->render('@app/components/Search',['form' => $form,'model' => $model])?>
+<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 </div>
     <!-- Offcanvas -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">

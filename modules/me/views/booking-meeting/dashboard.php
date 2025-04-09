@@ -39,60 +39,18 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 <i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-title'); ?>
-ระบบห้องประชุม
-<?php $this->endBlock(); ?>
-
-
 <?php $this->beginBlock('sub-title'); ?>
 <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('page-action'); ?>
+<?=$this->render('menu')?>
+<?php $this->endBlock(); ?>
 
-
-
-
-<style>
-/* .card {
-      border-radius: 15px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    } */
-.success-text {
-    color: #28a745;
-}
-
-.warning-text {
-    color: #ffc107;
-}
-
-.btn-reserve {
-    background-color: #212529;
-    color: white;
-    border-radius: 8px;
-    padding: 6px 15px;
-}
-
-.icon-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.05);
-}
-</style>
-</head>
-
-<body>
-    <div class="container">
-        <?=$this->render('navbar')?>
-
-
-        <p class="text-muted mb-4">ยินดีต้อนรับกลับมา, คุณสามารถจัดการการจองห้องประชุมได้ที่นี่</p>
-
+    <div class="container-fluid">
         <?=$this->render('@app/modules/booking/views/meeting/summary', ['searchModel' => $searchModel])?>
-
+        
+        <!-- <p class="text-muted">ยินดีต้อนรับกลับมา, คุณสามารถจัดการการจองห้องประชุมได้ที่นี่</p> -->
         <!-- Upcoming Bookings and Available Rooms -->
         <div class="row">
             <!-- Upcoming Bookings -->
@@ -105,7 +63,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
                         <div class="border-bottom pb-3 mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="fw-semibold mb-0"><?=$item->room->title?></h6>
-                                <?=$item->viewStatus();?>
+                                <?=$item->viewStatus()['view'];?>
                             </div>
                             <div class="d-flex align-items-center text-muted">
                                 <i class="bi bi-calendar me-2"></i>
