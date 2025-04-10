@@ -4,6 +4,7 @@ namespace app\modules\helpdesk\controllers;
 
 use Yii;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
@@ -85,6 +86,8 @@ class RepairController extends Controller
             ];
         } else {
             return $this->render('index', [
+                'title' => 'title',
+                'icon' => 'title',
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);

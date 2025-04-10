@@ -74,7 +74,7 @@ $items = [
     [
         'title' => 'งานซ่อมบำรุง',
         'icon' => 'fa-solid fa-screwdriver-wrench fs-2',
-        'url' => ['/helpdesk/general'],
+        'url' => ['/helpdesk/general/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('technician') ? true : false,
         // 'show' => true
@@ -82,7 +82,7 @@ $items = [
     [
         'title' => 'ศูนย์คอม',
         'icon' => 'fa-solid fa-computer fs-2',
-        'url' => ['/helpdesk/computer'],
+        'url' => ['/helpdesk/computer/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('computer') ? true : false,
         // 'show' => true
@@ -90,7 +90,7 @@ $items = [
     [
         'title' => 'เครื่องมือแพทย์',
         'icon' => 'fa-solid fa-briefcase-medical fs-2',
-        'url' => ['/helpdesk/medical'],
+        'url' => ['/helpdesk/medical/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('medical') ? true : false,
         // 'show' => true
