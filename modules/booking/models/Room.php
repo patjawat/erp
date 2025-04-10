@@ -129,12 +129,17 @@ class Room extends \yii\db\ActiveRecord
     }
     public function showAccessory()
     {
+        try {
+ 
         $data = $this->data_json['room_accessory'];
         $result = [];
         foreach ($data as $key => $value) {
             $result[] = $value;
         }
         return implode(', ', $result);
+    } catch (\Throwable $th) {
+       return [];
+    }
     }
 
     public function checkRoom($date)
