@@ -40,17 +40,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 </td>
                 <td class="">
                             <div class="d-flex">
-                                <?=Html::img($detail->car->ShowImg(),['class' => 'avatar rounded border-secondary'])?>
+                                <?=$detail->car ? Html::img($detail->car?->ShowImg(),['class' => 'avatar rounded border-secondary']) : ''?>
                                 <div class="avatar-detail">
                                     <div class="d-flex flex-column">
-                                        <p class="mb-0"><?=$detail->car->data_json['brand'];?></p>
+                                        <p class="mb-0"><?=$detail->car?->data_json['brand'];?></p>
                                         <p class="mb-0 fw-semibold text-primary"><?=$detail->license_plate?></p>
                                     </div>
                                 </div>
                             </div>
                         </td>
                 <td>
-                    <?=$detail->driver->getAvatar(false,($detail->driver->phone))?>
+                    <?=$detail->driver?->getAvatar(false,($detail->driver?->phone))?>
                 </td>
             </tr>
             <?php endforeach; ?>
@@ -61,6 +61,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php echo $model->data_json['remarks'] ?? '-'; ?>
 </div>
 <div class="d-flex justify-content-center gap-2">
-        <?= Html::a('<i class="bi bi-pencil"></i> แก้ไข', ['/me/booking-vehicle/update','id' => $model->id,'title' => '<i class="bi bi-pencil"></i> แก้ไขแบบขอใช้รถยนต์'],['class' => 'btn btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
-        <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิกการจอง', ['print', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill']) ?>
-</div>
+    <?php if($model->status == 'Pending'):?>
+        <?php echo Html::a('<i class="bi bi-check-circle me-1"></i> จัดสรร', ['/booking/vehicle/approve', 'id' => $model->id,'title' => '<i class="bi bi-check-circle me-1"></i> อนุมัติการจัดสรรรถ'], ['class' => 'btn btn-sm btn-success rounded-pill shadow me-1 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
+        <?php echo Html::a('<i class="bi bi-x-circle me-1"></i> ปฏิเสธ', ['/booking/vehicle/reject', 'id' => $model->id], ['class' => 'btn btn-sm btn-danger rounded-pill shadow me-1'])?>
+        <?php else:?>
+            <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/booking/vehicle/approve', 'id' => $model->id,'title' => '<i class="bi bi-check-circle me-1"></i> อนุมัติการจัดสรรรถ'], ['class' => 'btn btn-sm btn-warning rounded-pill shadow me-1 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
+            <?php echo Html::a('<i class="fa-regular fa-circle-xmark"></i> ยกเลิก', ['/booking/vehicle/reject', 'id' => $model->id], ['class' => 'btn btn-sm btn-secondary rounded-pill shadow me-1'])?>
+            <?php endif;?>
+        </div>

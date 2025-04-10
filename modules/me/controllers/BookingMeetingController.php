@@ -299,8 +299,11 @@ public function actionConfirm()
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 if($model->save(false)){
-                    $model->SendMeeting();
-                    return $this->redirect(['view', 'id' => $model->id]);
+                    // $model->SendMeeting();
+                    return [
+                        'status' => 'success'
+                    ];
+                    
                 }
             }
         } else {
@@ -445,9 +448,16 @@ public function actionGetRoom($id)
 
     public function actionCalendar()
     {
-        return $this->render('@app/modules/booking/views/meeting/calendar',['url' => '/me/booking-meeting/']);
+        return $this->render('calendar');
     }
     
+    
+    public function actionDelete($id)
+    {
+        $this->findModel($id)->delete();
+
+        return $this->redirect(['index']);
+    }
     
     protected function findModel($id)
     {

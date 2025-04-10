@@ -75,8 +75,8 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
     </div>
 
 <div class="d-flex justify-content-center gap-3">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ยกเลิก</button>
     <?= Html::submitButton('<i class="bi bi-check-circle"></i> บันทึก', ['class' => 'btn btn-success']) ?>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ยกเลิก</button>
 </div>
 
 <?php ActiveForm::end(); ?>

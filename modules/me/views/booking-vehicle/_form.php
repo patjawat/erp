@@ -10,8 +10,6 @@ use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\DocumentsDetail;
 
-
-
 $me = UserHelper::GetEmployee();
 
 $formatJs = <<<'JS'
@@ -75,11 +73,49 @@ $resultsJs = <<<JS
     <div class="col-6">
         <?= $form->field($model, 'car_type_id')->widget(Select2::classname(), [
             'data' => [
-                'official' => 'รถยนต์ราชการ',
-                'personal' => 'รถยนต์ส่วนตัว',
-                'ambulance' => 'รถพยาบาล',
+            'official' => 'รถยนต์ราชการ',
+            'personal' => 'รถยนต์ส่วนตัว',
+            'ambulance' => 'รถพยาบาล',
             ],
             'options' => ['placeholder' => 'เลือกประเภทรถ'],
+            'pluginOptions' => [
+            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+            'allowClear' => true,
+            'dropdownParent' => '#main-modal',
+            ],
+            
+            'pluginEvents' => [
+                'select2:select' => new JsExpression('function(result) { 
+                    if ($(this).val() === "personal") {
+                        $("#vehicle-driver_id").prop("disabled", true);
+                        $("#vehicle-driver_id").val("").trigger("change");
+                        $(".btn-driver, .list-car").hide();
+                    } else {
+                        $(".btn-driver, .list-car").show();
+                        $("#vehicle-driver_id").val("").trigger("change");
+                        $("#vehicle-driver_id").prop("disabled", false);
+                    }
+        
+                    if ($(this).val() === "ambulance") {
+                        $(".field-vehicle-refer_type").show();
+                         $(".field-vehicle-go_type").hide();
+                        $("input[name=\"Vehicle[go_type]\"][value=\'1\']").prop("checked", true);
+                    } else {
+                        $(".field-vehicle-refer_type").hide();
+                        $(".field-vehicle-go_type").show();
+                    }
+                }'),
+                'select2:unselecting' => new JsExpression('function() {
+                    // Add any additional logic for unselecting if needed
+                }'),
+            ],
+        ])->label('ประเภทรถที่ต้องการใช้') ?>
+        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
+        
+
+        <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
+            'data' => $model->listReferType(),
+            'options' => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
             'pluginOptions' => [
                 'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
                 'allowClear' => true,
@@ -87,41 +123,32 @@ $resultsJs = <<<JS
             ],
             'pluginEvents' => [
                 'select2:select' => 'function(result) { 
-                if($(this).val() == "personal"){
-                    $("#vehicle-driver_id").prop("disabled", true);
-                    $("#vehicle-driver_id").val("").trigger("change");
-                    $(".btn-driver ,.list-car").hide();
-                }else{
-                    $(".btn-driver ,.list-car").show();
-                    $("#vehicle-driver_id").val("").trigger("change");
-                    $("#vehicle-driver_id").prop("disabled", false);}
                                             }',
                 'select2:unselecting' => 'function() {
 
                                             }',
             ],
-        ])->label('ประเภทรถที่ต้องการใช้') ?>
-        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
+        ])->label('ประเภท REFER'); ?>
 
     </div>
 
     <div class="col-12">
         <?= $form->field($model, 'location')->widget(Select2::classname(), [
-        'data' => $model->ListOrg(),
-        'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-        'pluginOptions' => [
-            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-            'allowClear' => true,
-            'dropdownParent' => '#main-modal',
-        ],
-        'pluginEvents' => [
-            'select2:select' => 'function(result) { 
+            'data' => $model->ListOrg(),
+            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+            'pluginOptions' => [
+                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                'allowClear' => true,
+                'dropdownParent' => '#main-modal',
+            ],
+            'pluginEvents' => [
+                'select2:select' => 'function(result) { 
                                             }',
-            'select2:unselecting' => 'function() {
+                'select2:unselecting' => 'function() {
 
                                             }',
-        ],
-    ]) ?>
+            ],
+        ]) ?>
     </div>
     <div class="col-9">
         <?= $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
@@ -384,9 +411,19 @@ $resultsJs = <<<JS
 
 $js = <<<JS
 
+    thaiDatepicker('#vehicle-date_start,#vehicle-date_end')
 
-      thaiDatepicker('#vehicle-date_start,#vehicle-date_end')
-
+    \$(document).ready(function () {
+    if(\$('#vehicle-car_type_id').val() == ''){
+            \$('.field-vehicle-refer_type').hide();
+      }
+        if(\$('#vehicle-car_type_id').val() == 'ambulance'){
+            $(".field-vehicle-go_type").hide();
+        }else{
+            $(".field-vehicle-go_type").show();
+            \$('.field-vehicle-refer_type').hide();
+        }
+    });
 
       \$('#vehicle-form').on('beforeSubmit', function (e) {
         var form = \$(this);
@@ -445,38 +482,38 @@ $js = <<<JS
         });
     }
 
-    $("body").on("click", ".select-driver", function (e) {
+    \$("body").on("click", ".select-driver", function (e) {
         e.preventDefault();
-        let driver_id = $(this).data("driver_id"); // ดึงค่าจาก data-license_plate
-        let driver_fullname = $(this).data("driver_fullname"); // ดึงค่าจาก data-license_plate
-        $('#vehicle-driver_id').val(driver_id).trigger('change');
-        $("#offcanvasRightDriver").offcanvas("hide"); // ปิด Offcanvas
+        let driver_id = \$(this).data("driver_id"); // ดึงค่าจาก data-license_plate
+        let driver_fullname = \$(this).data("driver_fullname"); // ดึงค่าจาก data-license_plate
+        \$('#vehicle-driver_id').val(driver_id).trigger('change');
+        \$("#offcanvasRightDriver").offcanvas("hide"); // ปิด Offcanvas
         success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
     });
 
-    $("body").on("click", ".list-car", function (e) {
+    \$("body").on("click", ".list-car", function (e) {
         e.preventDefault();
         
-       $.ajax({
+       \$.ajax({
         type: "get",
         url: "/me/booking-vehicle/list-cars",
         data: {
-            car_type_id: $('#vehicle-car_type_id').val(),
+            car_type_id: \$('#vehicle-car_type_id').val(),
         },
         dataType: "json",
         success: function (res) {
-            $('#showListCar').html(res.content);
+            \$('#showListCar').html(res.content);
 
         }
        });
         
     });
 
-    $("body").on("click", ".select-car", function (e) {
+    \$("body").on("click", ".select-car", function (e) {
         e.preventDefault();
-        let license_plate = $(this).data("license_plate"); // ดึงค่าจาก data-license_plate
-        $('#vehicle-license_plate').val(license_plate).trigger('change');
-        $("#offcanvasRight").offcanvas("hide"); // ปิด Offcanvas
+        let license_plate = \$(this).data("license_plate"); // ดึงค่าจาก data-license_plate
+        \$('#vehicle-license_plate').val(license_plate).trigger('change');
+        \$("#offcanvasRight").offcanvas("hide"); // ปิด Offcanvas
         success('เลือกรถที่ต้องการใช้งานเรียบร้อยแล้ว')
     });
 

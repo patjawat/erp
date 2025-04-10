@@ -3,9 +3,13 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\modules\am\models\Asset;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
+use app\modules\booking\models\Vehicle;
 
 /**
  * This is the model class for table "vehicle_detail".
@@ -39,6 +43,8 @@ class VehicleDetail extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $q;
+    public $emp_id;
+    public $thai_year;
     public static function tableName()
     {
         return 'vehicle_detail';
@@ -53,7 +59,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
             [['vehicle_id'], 'required'],
             [['vehicle_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','emp_id','thai_year'], 'safe'],
             [['ref', 'license_plate', 'status', 'time_start', 'time_end', 'driver_id'], 'string', 'max' => 255],
         ];
     }
@@ -113,5 +119,32 @@ class VehicleDetail extends \yii\db\ActiveRecord
     {
         return ThaiDateHelper::formatThaiDate($this->date_start);
     }
+    
+
+    public function ListThaiYear()
+    {
+        $model = Vehicle::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
+
+        // แสดงรายการาถานะ
+        public function ListStatus()
+        {
+            $model = Categorise::find()
+                ->where(['name' => 'vehicle_detail_status'])
+                ->asArray()
+                ->all();
+            return ArrayHelper::map($model, 'code', 'title');
+        }
     
 }

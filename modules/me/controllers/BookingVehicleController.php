@@ -60,6 +60,7 @@ class BookingVehicleController extends Controller
         $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere([
             'or',
+            ['like', 'reason', $searchModel->q],
             ['like', 'code', $searchModel->q],
         ]);
 
@@ -71,10 +72,10 @@ class BookingVehicleController extends Controller
 
     public function actionCalendar()
     {
-        return $this->render('@app/modules/booking/views/vehicle/calendar',['url' => '/me/booking-vehicle/']);
+        return $this->render('calendar',['url' => '/me/booking-vehicle/']);
     }
     
-    
+
 
     public function actionEvents()
 	{
@@ -82,8 +83,6 @@ class BookingVehicleController extends Controller
         $end = $this->request->get('end');
         
 		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-
             $bookings = Vehicle::find()
                 // ->andWhere(['<>', 'status', 'Cancel'])
                 ->all();
@@ -101,7 +100,7 @@ class BookingVehicleController extends Controller
                         'start'            => $dateStart,
                         'end'            => $dateEnd,
                         // 'display' => 'auto',
-                        'allDay' => true,
+                        'allDay' => false,
                         'source' => 'vehicle',
                         'extendedProps' => [
                             'title' => $item->reason,

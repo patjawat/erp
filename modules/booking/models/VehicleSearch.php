@@ -18,7 +18,7 @@ class VehicleSearch extends Vehicle
     {
         return [
             [['id', 'thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
+            [['ref', 'code', 'car_type_id','refer_type', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
             [['oil_price', 'oil_liter'], 'number'],
         ];
     }

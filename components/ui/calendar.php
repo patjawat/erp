@@ -145,10 +145,14 @@ $js = <<<JS
                         });
                 },
                 select: function(info) {
-                        console.log('Selected from', info.startStr, 'to', info.endStr);
 
                         const dateStart = info.startStr;
-                        const dateEnd = info.endStr;
+                        // แปลง dateEnd เป็น Date แล้วลบ 1 วัน
+                            const endDateObj = new Date(info.endStr);
+                            endDateObj.setDate(endDateObj.getDate() - 1);
+                            
+                            // แปลงกลับเป็นรูปแบบ YYYY-MM-DD
+                            const dateEnd = endDateObj.toISOString().split('T')[0];
                                 $.ajax({
                                     type: "get",
                                     url: '$url'+'create',

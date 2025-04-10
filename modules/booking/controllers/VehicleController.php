@@ -3,6 +3,7 @@
 namespace app\modules\booking\controllers;
 
 use Yii;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -227,17 +228,82 @@ class VehicleController extends Controller
         ]);
     }
 
+    public function actionCalendar()
+    {
+        return $this->render('calendar');
+    }
+
+    public function actionEvents()
+	{
+        $start = $this->request->get('start');
+        $end = $this->request->get('end');
+        
+		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $bookings = Vehicle::find()
+                // ->andWhere(['<>', 'status', 'Cancel'])
+                ->all();
+                $data = [];
+
+                foreach($bookings as $item)
+                {
+                    $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
+                    $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+                    $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
+                    $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
+                    $data[] = [
+                        'id'               => $item->id,
+                        'title'            => $item->reason,
+                        'start'            => $dateStart,
+                        'end'            => $dateEnd,
+                        // 'display' => 'auto',
+                        'allDay' => false,
+                        'source' => 'vehicle',
+                        'extendedProps' => [
+                            'title' => $item->reason,
+                            'dateTime' => 'ttttt',
+                            // 'dateTime' => $item->viewMeetingTime(),
+                            'status' => $item->viewStatus()['view'],
+                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
+                            'description' => 'คำอธิบาย',
+                        ],
+                         'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
+                        'description' => 'description for All Day Event',
+                        'textColor' => 'black',
+                        'backgroundColor' => '#eee',
+                        'url' => Url::to(['/event/view', 'id' => $item->id]),
+                    ];
+                }
+
+            return  $data;
+       
+	}
+
+
     public function actionWork()
     {
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['status' => 'Pass']);
+        $dataProvider->query->joinWith('vehicle');
+        $dataProvider->query->andFilterWhere(['vehicle.status' => 'Pass']);
         // $dataProvider->query->joinWith('vehicle');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'code', $searchModel->q],
+            ['like', 'vehicle.code', $searchModel->q],
         ]);
 
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', $dateStart])->andFilterWhere(['<=', 'vehicle_detail.date_end', $dateEnd]);
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
+        
         return $this->render('work', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

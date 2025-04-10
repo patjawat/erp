@@ -18,6 +18,7 @@ class m250405_094239_create_vehicle_table extends Migration
             'code' => $this->string(255)->notNull()->comment('รหัส'),
             'thai_year' => $this->integer(255)->notNull()->comment('ปีงบประมาณ'),
             'car_type_id' => $this->string()->notNull()->comment('ประเภทของรถ general หรือ ambulance'),
+            'refer_type' => $this->string()->notNull()->comment('ประเภทของการ refer รถพยาบาล refer,ems,normal'),
             'go_type' => $this->integer()->notNull()->comment('ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน'),
             'oil_price' => $this->double(255)->comment('น้ำมันที่เติม'),
             'oil_liter' => $this->double(255)->comment('ปริมาณน้ำมัน'),
@@ -52,6 +53,19 @@ class m250405_094239_create_vehicle_table extends Migration
             $this->insert('categorise',['name'=>'vehicle_status','code' =>'Reject','title'=>'ปฏิเสธ','active' => 1]);
             $this->insert('categorise',['name'=>'vehicle_status','code' =>'Cancel','title'=>'ยกเลิก','active' => 1]);
         } 
+        $sql2 = Yii::$app->db->createCommand("select * from categorise where name = 'refer_type'")->queryAll();
+        if(count($sql2) < 1){
+            $this->insert('categorise',['name'=>'refer_type','code' =>'normal','title'=>'รับ-ส่ง [ไม่ฉุกเฉิน]','active' => 1]);
+            $this->insert('categorise',['name'=>'refer_type','code' =>'refer','title'=>'EMS','active' => 1]);
+            $this->insert('categorise',['name'=>'refer_type','code' =>'ems','title'=>'REFER','active' => 1]);
+        } 
+
+        $sql3 = Yii::$app->db->createCommand("select * from categorise where name = 'vehicle_detail_status'")->queryAll();
+        if(count($sql3) < 1){
+            $this->insert('categorise',['name'=>'vehicle_detail_status','code' =>'Pass','title'=>'จัดสรร','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_detail_status','code' =>'Success','title'=>'สําเร็จ','active' => 1]);
+        } 
+
 
     }
 

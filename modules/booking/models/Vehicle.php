@@ -55,9 +55,9 @@ use app\modules\booking\models\BookingCarItems;
  */
 class Vehicle extends \yii\db\ActiveRecord
 {
-
     public $q;
     public $q_department;
+
     /**
      * {@inheritdoc}
      */
@@ -75,7 +75,7 @@ class Vehicle extends \yii\db\ActiveRecord
             [['code', 'thai_year', 'car_type_id', 'go_type', 'urgent', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'leader_id', 'emp_id'], 'required', 'message' => 'ต้องระบุ'],
             [['thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'refer_type'], 'safe'],
             [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -91,6 +91,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'code' => 'รหัส',
             'thai_year' => 'ปีงบประมาณ',
             'car_type_id' => 'ประเภทของรถ general หรือ ambulance',
+            'refer_type' => 'ประเภทของการ refer รถพยาบาล refer,ems,normal',
             'go_type' => 'ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน',
             'oil_price' => 'น้ำมันที่เติม',
             'oil_liter' => 'ปริมาณน้ำมัน',
@@ -146,11 +147,15 @@ class Vehicle extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
-
     // ประเภทของการจองรถ
     public function getCarType()
     {
         return $this->hasOne(Categorise::class, ['code' => 'car_type_id']);
+    }
+
+    public function getReferType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'refer_type'])->andOnCondition(['name' => 'refer_type']);
     }
 
     // สถานะ
@@ -194,6 +199,15 @@ class Vehicle extends \yii\db\ActiveRecord
         });
     }
 
+    public function listReferType()
+    {
+        $list = Categorise::find()
+            ->where(['name' => 'refer_type'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($list, 'code', 'title');
+    }
+
     public function listDriverDetails()
     {
         return BookingDetail::find()->where(['name' => 'driver_detail', 'booking_id' => $this->id])->all();
@@ -210,6 +224,11 @@ class Vehicle extends \yii\db\ActiveRecord
             }
         }
         return $data;
+    }
+
+    public function viewTime()
+    {
+        return $this->time_start . ' - ' . $this->time_end . ' น.';
     }
 
     public function showStartTime()
@@ -273,8 +292,66 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
-      return AppHelper::viewStatus($this->status);
-       
+       return $this->getStatus($this->status);
+  
+    }
+
+    public static function getStatus($status)
+    {
+        $title = '';
+        $color = '';
+        $view = '';
+        switch ($status) {
+            case 'Pending':
+                $title = 'รอการอนุมัติ';
+                $color = 'warning';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-hourglass-start"></i> ' . $title . '</span>';
+                break;
+            case 'Pass':
+                $title = 'จัดสรร';
+                $color = 'primary';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-check"></i> ' . $title . '</span>';
+                break;
+            case 'Success':
+                $title = 'เสร็จสิ้นภารกิจ';
+                $color = 'primary';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-check"></i> ' . $title . '</span>';
+                break;
+            case 'Approve':
+                $title = 'ผอ.อนุมัติ';
+                $color = 'success';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-star"></i> ' . $title . '</span>';
+                break;
+            case 'Cancel':
+                $title = 'ยกเลิก';
+                $color = 'secondary';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-stop"></i> ' . $title . '</span>';
+                break;
+            default:
+                $title = 'ไม่ระบุ';
+                $color = 'light';
+                $view = '<span class="badge-soft-' . $color . ' rounded-pill">' . $title . '</span>';
+                break;
+        }
+        return [
+            'title' => $title,
+            'color' => $color,
+            'view' => $view
+        ];
+    }
+
+    public function viewCarType()
+    {
+        try {
+            $title = $this->carType?->title ?? '-';
+            if ($this->car_type_id == 'ambulance') {
+                return $title . ' (<code>' . $this->referType->title . '</code>)';
+            } else {
+                return $title;
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
     }
 
     // แสดงรายการาถานะ
@@ -287,33 +364,33 @@ class Vehicle extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'code', 'title');
     }
 
-        // แสดงปีงบประมานทั้งหมด
-        public function ListThaiYear()
-        {
-            $model = self::find()
-                ->select('thai_year')
-                ->groupBy('thai_year')
-                ->orderBy(['thai_year' => SORT_DESC])
-                ->asArray()
-                ->all();
-    
-            $year = AppHelper::YearBudget();
-            $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
-            // รวมข้อมูล
-            $model = ArrayHelper::merge($isYear, $model);
-            return ArrayHelper::map($model, 'thai_year', 'thai_year');
-        }
-        
+    // แสดงปีงบประมานทั้งหมด
+    public function ListThaiYear()
+    {
+        $model = self::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
 
-    //แสดงรายการประเภทการเดินทาง
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
+
+    // แสดงรายการประเภทการเดินทาง
     public function viewGoType()
     {
-        if($this->go_type == 1){
+        if ($this->go_type == 1) {
             return 'ไปกลับ';
-        }else{
+        } else {
             return 'ค้างคืน';
         }
     }
+
     public function listUrgent()
     {
         $model = Categorise::find()
@@ -321,6 +398,11 @@ class Vehicle extends \yii\db\ActiveRecord
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
+    }
+
+    public function viewUrgent()
+    {
+        return $this->urgent;
     }
 
     public function listDocument()
@@ -336,10 +418,9 @@ class Vehicle extends \yii\db\ActiveRecord
     public function ListCarItems()
     {
         $items = Asset::find()->andWhere(['AND',
-        ['IS NOT', 'license_plate', null],
-        ['<>', 'license_plate', ''],
-        ['<>', 'license_plate', ' ']
-    ])->all();
+            ['IS NOT', 'license_plate', null],
+            ['<>', 'license_plate', ''],
+            ['<>', 'license_plate', ' ']])->all();
         return ArrayHelper::map($items, 'license_plate', 'license_plate');
     }
 
