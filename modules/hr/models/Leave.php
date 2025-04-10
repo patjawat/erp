@@ -333,7 +333,7 @@ class Leave extends \yii\db\ActiveRecord
     {
         $emp = UserHelper::GetEmployee();
         return self::find()
-        ->andWhere(['emp_id' => $this->emp_id,'thai_year' => $this->thai_year,'status' => 'Allow'])
+        ->andWhere(['emp_id' => $this->emp_id,'thai_year' => $this->thai_year,'status' => 'Approve'])
         ->andWhere(['<','date_start',$this->date_start])
         ->all();
     }
@@ -382,7 +382,7 @@ class Leave extends \yii\db\ActiveRecord
                 'emp_id' => $this->emp_id,
                 'thai_year' => $this->thai_year,
                 'leave_type_id' => $this->leave_type_id,
-                'status' => 'Allow'
+                'status' => 'Approve'
             ])
             ->andwhere(['<', 'date_start', $this->date_start])
             ->sum('total_days');
@@ -392,7 +392,7 @@ class Leave extends \yii\db\ActiveRecord
                 'emp_id' => $this->emp_id,
                 'thai_year' => $this->thai_year,
                 'leave_type_id' => $this->leave_type_id,
-                'status' => 'Allow'
+                'status' => 'Approve'
             ])
             ->andwhere(['<', 'date_start', $this->date_start])
             ->one();
@@ -416,7 +416,7 @@ class Leave extends \yii\db\ActiveRecord
                 WHERE 
                     l.emp_id = :emp_id 
                     AND thai_year = :thai_year 
-                    AND l.status = 'Allow'
+                    AND l.status = 'Approve'
                     AND date_start < :date_start
                 )
                 SELECT * FROM summary";
@@ -466,7 +466,7 @@ class Leave extends \yii\db\ActiveRecord
                     $color = 'warning';
                     $icon = '<i class="bi bi-hourglass-split"></i>';
                     break;
-                case 'Allow':
+                case 'Approve':
                     $color = 'success';
                     $icon = '<i class="bi bi-check-circle-fill text-success"></i>';
                     break;
@@ -773,7 +773,7 @@ class Leave extends \yii\db\ActiveRecord
     public function sumLeaveType($type = null)
     {
         $sum = self::find()
-            ->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id, 'leave_type_id' => $type, 'status' => 'Allow'])
+            ->where(['thai_year' => $this->thai_year, 'emp_id' => $this->emp_id, 'leave_type_id' => $type, 'status' => 'Approve'])
             ->sum('total_days');
         if (!$sum) {
             $sum = 0;
@@ -796,7 +796,7 @@ class Leave extends \yii\db\ActiveRecord
     public function countLeaveType($type = null)
     {
         $sum = self::find()
-            ->where(['status' => 'Allow'])
+            ->where(['status' => 'Approve'])
             ->andFilterWhere(['leave.thai_year' => $this->thai_year])
             ->andFilterWhere(['emp_id' => $this->emp_id])
             ->andFilterWhere(['leave_type_id' => $type])
@@ -869,7 +869,7 @@ class Leave extends \yii\db\ActiveRecord
                         ON l.emp_id = lp.emp_id 
                         AND l.thai_year = lp.thai_year 
                         AND l.leave_type_id = 'LT4' 
-                        AND l.status = 'Allow'
+                        AND l.status = 'Approve'
                     WHERE 
                         lp.emp_id = :emp_id
                         AND lp.thai_year = :thai_year

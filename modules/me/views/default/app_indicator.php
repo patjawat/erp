@@ -21,7 +21,7 @@ $items = [
     [
         'title' => 'ห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-        'url' => ['/me/booking-meeting/dashbroad'],
+        'url' => ['/me/booking-meeting/dashboard'],
     ],    [
         'title' => 'คลังหน่วยงาน',
         'icon' => 'bi bi-shop fs-2',

@@ -142,6 +142,13 @@ $moduleId = Yii::$app->controller->module->id;
                     </a>
                 </li>
                 <li>
+                    <a class="side-nav-link" href="<?= Url::to(['/me/booking-meeting/calendar']) ?>">
+                    <i class="fa-solid fa-person-chalkboard"></i>
+                    
+                        <span>จองห้องประชุม</span>
+                    </a>
+                </li>
+                <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me/time']) ?>">
                     <i class="fa-solid fa-business-time"></i>
                         <span> เวลาเข้า-ออก</span>

@@ -23,8 +23,9 @@ $items = [
     [
         'title' => 'จองห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-       'url' => ['/me/booking-meeting/dashboard','title' => 'ขอใช้ห้องประชุม'],
-        'modal' => false,
+    //    'url' => ['/me/booking-meeting/dashboard','title' => 'ขอใช้ห้องประชุม'],
+       'url' => ['/me/booking-meeting/create','date_start' => date('Y-m-d'),'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-xl']],
+        'modal' => true,
         'size' => 'modal-xl'
     ],
     [
