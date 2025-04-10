@@ -165,32 +165,6 @@ $js = <<<JS
                         });
                 },
                 select: function(info) {
-
-                        const dateStart = info.startStr;
-                        // แปลง dateEnd เป็น Date แล้วลบ 1 วัน
-                            const endDateObj = new Date(info.endStr);
-                            endDateObj.setDate(endDateObj.getDate() - 1);
-                            
-                            // แปลงกลับเป็นรูปแบบ YYYY-MM-DD
-                            const dateEnd = endDateObj.toISOString().split('T')[0];
-                            beforLoadModal();
-                                $.ajax({
-                                    type: "get",
-                                    url: '$url'+'/create',
-                                    data: {
-                                        date_start: dateStart,
-                                        date_end: dateEnd,
-                                    },
-                                    dataType: "json",
-                                    success: function (res) {
-                                        $("#main-modal").modal("show");
-                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                                        $(".modal-dialog").addClass("modal-xl");
-                                            $("#main-modal-label").html(res.title);
-                                            $(".modal-body").html(res.content);
-                                            $(".modal-footer").html(res.footer);
-                                    }
-                                });
                     },
                 drop: function(info) {
                     console.log('drop: ' + info.dateStr);
