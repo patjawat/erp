@@ -66,6 +66,66 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php echo Html::a('<i class="bi bi-x-circle me-1"></i> ปฏิเสธ', ['/booking/vehicle/reject', 'id' => $model->id], ['class' => 'btn btn-sm btn-danger rounded-pill shadow me-1'])?>
         <?php else:?>
             <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/booking/vehicle/approve', 'id' => $model->id,'title' => '<i class="bi bi-check-circle me-1"></i> อนุมัติการจัดสรรรถ'], ['class' => 'btn btn-sm btn-warning rounded-pill shadow me-1 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
-            <?php echo Html::a('<i class="fa-regular fa-circle-xmark"></i> ยกเลิก', ['/booking/vehicle/reject', 'id' => $model->id], ['class' => 'btn btn-sm btn-secondary rounded-pill shadow me-1'])?>
+            <?php echo Html::a('<i class="fa-regular fa-circle-xmark"></i> ยกเลิกการจอง', ['/booking/vehicle/cancel', 'id' => $model->id], ['class' => 'btn btn-sm btn-danger rounded-pill shadow me-1 btn-cancel'])?>
+            <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+            class="fa-regular fa-circle-xmark"></i> ปิด</button>
             <?php endif;?>
-        </div>
+</div>
+
+
+<?php
+$js = <<<JS
+
+$('.btn-cancel').click(function (e) { 
+    e.preventDefault();
+    const url = $(this).attr('href');
+    Swal.fire({
+        title: 'ยืนยันการยกเลิกการจอง?',
+        text: "คุณต้องการยกเลิกการจองหรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก'
+      }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status == 'success') {
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: response.message,
+                            icon: 'success',
+                            timer: 1000
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: response.message,
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถยกเลิกการจองได้',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+    }); 
+});
+
+
+
+JS;
+$this->registerJs($js);
+?>

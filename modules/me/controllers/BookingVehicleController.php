@@ -105,7 +105,7 @@ class BookingVehicleController extends Controller
                         'extendedProps' => [
                             'title' => $item->reason,
                             'dateTime' => 'ttttt',
-                            // 'dateTime' => $item->viewMeetingTime(),
+                            'dateTime' => $item->viewTime(),
                             'status' => $item->viewStatus()['view'],
                             'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
                             'description' => 'คำอธิบาย',

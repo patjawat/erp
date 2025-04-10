@@ -404,7 +404,6 @@ public function actionGetRoom($id)
     }
 
 
-    // public function actionEvents($id, $start, $end)
     public function actionEvents()
 	{
         $start = $this->request->get('start');

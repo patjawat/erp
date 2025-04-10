@@ -15,6 +15,8 @@ use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\booking\models\Vehicle;
+use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\VehicleDetail;
@@ -504,4 +506,105 @@ class Vehicle extends \yii\db\ActiveRecord
             ];
         }
     }
+
+   
+        // รายงานแยกตามเดือน
+        public function getChartSummary($name)
+        {
+            // return $name;
+            $arr =  Vehicle::find()
+            ->select([
+                'thai_year',
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 1 THEN 1 END) AS m1'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 2 THEN 1 END) AS m2'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 3 THEN 1 END) AS m3'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 4 THEN 1 END) AS m4'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 5 THEN 1 END) AS m5'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 6 THEN 1 END) AS m6'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 7 THEN 1 END) AS m7'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 8 THEN 1 END) AS m8'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 9 THEN 1 END) AS m9'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 10 THEN 1 END) AS m10'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 11 THEN 1 END) AS m11'),
+                new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 12 THEN 1 END) AS m12'),
+            ])
+            ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
+                // ->where(['thai_year' => $this->thai_year, 'car_type_id' => $name])
+                ->where(['d.status' => 'Success','car_type_id' => $name])
+                ->groupBy('thai_year')
+                ->asArray()
+                ->one();
+                // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+            for ($i = 1; $i <= 12; $i++) {
+                $key = 'm' . $i;
+                if (!isset($arr[$key])) {
+                    $arr[$key] = 0;
+                }
+            }
+            return $arr;
+        }
+         // รายงานแยกตามเดือน
+         public function getChartSummaryAmbulance($ambulanceType)
+         {
+             // return $name;
+             $arr =  Vehicle::find()
+             ->select([
+                 'thai_year',
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 1 THEN 1 END) AS m1'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 2 THEN 1 END) AS m2'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 3 THEN 1 END) AS m3'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 4 THEN 1 END) AS m4'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 5 THEN 1 END) AS m5'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 6 THEN 1 END) AS m6'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 7 THEN 1 END) AS m7'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 8 THEN 1 END) AS m8'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 9 THEN 1 END) AS m9'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 10 THEN 1 END) AS m10'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 11 THEN 1 END) AS m11'),
+                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 12 THEN 1 END) AS m12'),
+             ])
+             ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
+                 // ->where(['thai_year' => $this->thai_year, 'car_type_id' => $name])
+                 ->where(['d.status' => 'Success','car_type_id' => 'ambulance', 'refer_type' => $ambulanceType])
+                 ->groupBy('thai_year')
+                 ->asArray()
+                 ->one();
+                 // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+             for ($i = 1; $i <= 12; $i++) {
+                 $key = 'm' . $i;
+                 if (!isset($arr[$key])) {
+                     $arr[$key] = 0;
+                 }
+             }
+             return $arr;
+         }
+
+         public function departmentSummary()
+         {
+            $query = Vehicle::find()
+                ->select(['d.name', 'COUNT(v.id) as total'])
+                ->from(['v' => Vehicle::tableName()])
+                ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
+                ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
+                ->groupBy('d.id');
+
+            $result = $query->asArray()->all();
+            return $result;
+         }
+
+         public function carSummary()
+         {
+            $vehicles = Vehicle::find()
+                    ->select([
+                        'license_plate',
+                        new Expression('COUNT(id) AS total'),
+                    ])
+                    ->groupBy('license_plate')
+                    ->asArray()
+                    ->all();
+
+                    return $vehicles;
+         }
+         
+        
 }

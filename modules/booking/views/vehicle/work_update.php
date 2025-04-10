@@ -11,7 +11,9 @@ use kartik\widgets\ActiveForm;
 ?>
 
 <div class="vehicle-form">
-    <?php $form = ActiveForm::begin(); ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'booking-form',
+    ]); ?>
     <div>
         <h4 class="text-center">บันทึกภาระกิจการใช้รถยนต์</h4>
         <p class="text-center mb-0">เลขที่ <?= $model->vehicle->code ?></p>    
@@ -62,3 +64,67 @@ use kartik\widgets\ActiveForm;
     <?php ActiveForm::end(); ?>
 
 </div>
+
+
+<?php
+$js = <<<JS
+$('#booking-form').on('beforeSubmit', function (e) {
+    var form = $(this);
+    
+    Swal.fire({
+        title: "ยืนยัน?",
+        text: "บันทึกภาระกิจการถใช้รถ!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก!",
+        confirmButtonText: "ใช่, ยืนยัน!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // แสดงข้อมูลในคอนโซลเพื่อดีบัก
+            
+            $.ajax({
+                url: form.attr('action'),
+                type: 'post',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    $('#modal').modal('hide');
+                    console.log('Response:', response);
+                    if (response.status == 'success') {
+                        Swal.fire({
+                            title: "สำเร็จ!",
+                            text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
+                            icon: "success",
+                            timer: 1000
+                        }).then(() => {
+                            window.location.reload();
+                            
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "เกิดข้อผิดพลาด!",
+                            text: response.message || "ไม่สามารถบันทึกข้อมูลได้",
+                            icon: "error"
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                    Swal.fire({
+                        title: "เกิดข้อผิดพลาด!",
+                        text: "ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้",
+                        icon: "error"
+                    });
+                }
+            });
+        }
+    });
+    
+    return false;
+});
+
+JS;
+$this->registerJs($js);
+?>

@@ -56,8 +56,8 @@ class m250405_094239_create_vehicle_table extends Migration
         $sql2 = Yii::$app->db->createCommand("select * from categorise where name = 'refer_type'")->queryAll();
         if(count($sql2) < 1){
             $this->insert('categorise',['name'=>'refer_type','code' =>'normal','title'=>'รับ-ส่ง [ไม่ฉุกเฉิน]','active' => 1]);
-            $this->insert('categorise',['name'=>'refer_type','code' =>'refer','title'=>'EMS','active' => 1]);
-            $this->insert('categorise',['name'=>'refer_type','code' =>'ems','title'=>'REFER','active' => 1]);
+            $this->insert('categorise',['name'=>'refer_type','code' =>'ems','title'=>'EMS','active' => 1]);
+            $this->insert('categorise',['name'=>'refer_type','code' =>'refer','title'=>'REFER','active' => 1]);
         } 
 
         $sql3 = Yii::$app->db->createCommand("select * from categorise where name = 'vehicle_detail_status'")->queryAll();

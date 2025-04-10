@@ -45,115 +45,16 @@ class VehicleController extends Controller
      */
     public function actionDashboard($date = null)
     {
-        // ถ้าไม่มีค่า date ที่ส่งมา ใช้วันที่ปัจจุบัน
-        if ($date === null) {
-            $date = date('Y-m-d');
-        }
-
-        $currentDate = new \DateTime($date);
-
-        // สร้างข้อมูลสำหรับแสดงในตาราง 5 วัน
-        $days = [];
-        for ($i = 0; $i < 7; $i++) {
-            $day = clone $currentDate;
-            $day->modify("+$i day");
-            $days[] = $day->format('Y-m-d');
-        }
-
-        // ดึงข้อมูลรถทั้งหมด
-        $vehicles = Vehicle::find()->all();
-
-        // ดึงข้อมูลการจองในช่วงวันที่แสดง
-        $startDate = $days[0];
-        $endDate = $days[4];
-        // สร้างข้อมูลสำหรับปฏิทิน
-        $previousDate = clone $currentDate;
-        $previousDate->modify('-5 days');
-        $nextDate = clone $currentDate;
-        $nextDate->modify('+5 days');
-        // Get the current date formatted as "MMMM yyyy"
-        $monthYear = Yii::$app->formatter->asDate($currentDate, 'MMMM yyyy');
-        // Split the string to get the month and year separately
-        $parts = explode(' ', $monthYear);
-        $month = $parts[0];
-        $year = (int) $parts[1];
-        // Add 543 to convert to Thai Buddhist year
-        $thaiYear = $year + 543;
-        // Combine the month and Thai year
-        $thaiMonthYear = $month . ' ' . $thaiYear;
-
+       
         $searchModel = new VehicleSearch([
             'status' => 'Pending',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere(['!=', 'car_type_id', 'personal']);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'code', $searchModel->q],
-        ]);
-
-
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
-
-        // search employee department
-         // ค้นหาคามกลุ่มโครงสร้าง
-         $org1 = Organization::findOne($searchModel->q_department);
-         // ถ้ามีกลุ่มย่อย
-         if (isset($org1) && $org1->lvl == 1) {
-             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
-             FROM tree t1
-             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-             WHERE t2.name = :name;';
-             $querys = Yii::$app
-                 ->db
-                 ->createCommand($sql)
-                 ->bindValue(':name', $org1->name)
-                 ->queryAll();
-             $arrDepartment = [];
-             foreach ($querys as $tree) {
-                 $arrDepartment[] = $tree['id'];
-             }
-             if (count($arrDepartment) > 0) {
-                 $dataProvider->query->andWhere(['in', 'employees.department', $arrDepartment]);
-             } else {
-                 $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-             }
-         } else {
-             $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-         }
-         
-
-        
-
-        $searchModelDetail = new VehicleDetailSearch();
-        $dataProviderDetail = $searchModelDetail->search($this->request->queryParams);
-        
-        $dataProviderDetail->query->joinWith('vehicle');
-        $dataProviderDetail->query->andFilterWhere(['vehicle_detail.status' => 'Pass']);
-        $dataProviderDetail->query->andFilterWhere(['!=', 'vehicle.car_type_id', 'personal']);
-
+       
         return $this->render('dashboard', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'dataProviderDetail' => $dataProviderDetail,
-            'days' => $days,
-            'vehicles' => $vehicles,
-            'previousDate' => $previousDate->format('Y-m-d'),
-            'nextDate' => $nextDate->format('Y-m-d'),
-            'currentDate' => $currentDate->format('Y-m-d'),
-            'thaiMonthYear' => $thaiMonthYear,
+          
         ]);
     }
 
@@ -260,7 +161,7 @@ class VehicleController extends Controller
                         'source' => 'vehicle',
                         'extendedProps' => [
                             'title' => $item->reason,
-                            'dateTime' => 'ttttt',
+                            'dateTime' => $item->viewTime(),
                             // 'dateTime' => $item->viewMeetingTime(),
                             'status' => $item->viewStatus()['view'],
                             'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
@@ -314,7 +215,10 @@ class VehicleController extends Controller
     {
         $model = VehicleDetail::findOne($id);
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['work']);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'success',
+            ];
         }
 
         if ($this->request->isAJax) {
@@ -489,6 +393,19 @@ class VehicleController extends Controller
                 'model' => $model,
             ]),
         ];
+    }
+
+    public function actionCancel($id){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ($this->request->isPost) {
+            $model->status = 'Cancel';
+            if ($model->save()) {
+                return [
+                    'status' => 'success'
+                ];
+            }
+        }
     }
 
     /**
