@@ -173,9 +173,10 @@ $js = <<<JS
                             
                             // แปลงกลับเป็นรูปแบบ YYYY-MM-DD
                             const dateEnd = endDateObj.toISOString().split('T')[0];
+                            beforLoadModal();
                                 $.ajax({
                                     type: "get",
-                                    url: '$url'+'create',
+                                    url: '$url'+'/create',
                                     data: {
                                         date_start: dateStart,
                                         date_end: dateEnd,
