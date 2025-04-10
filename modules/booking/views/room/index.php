@@ -56,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
                     <tr>
                         <td class="fw-medium"><?=$item->title?></td>
-                        <td><?=$item->data_json['seat_capacity']?> คน</td>
+                        <td><?=$item->data_json['seat_capacity'] ?? '-'?> คน</td>
                         <td class="d-none d-md-table-cell"><?=$item->data_json['location'] ?? '-';?></td>
                         <td class="d-none d-md-table-cell"><?=$item->showAccessory()?></td>
                         <td>พร้อมใช้งาน</td>

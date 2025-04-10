@@ -21,7 +21,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 ]); ?>
 <div>
 
-<?=$this->render('@app/components/Search',['form' => $form,'model' => $model,'showEmp' => false])?>
+<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model,'showEmp' => false])?>
     
 
 <?php ActiveForm::end(); ?>

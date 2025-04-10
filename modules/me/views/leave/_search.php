@@ -22,7 +22,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 
     <div class="d-flex align-items-center gap-2">
-        <?=$this->render('@app/components/Search',['form' => $form,'model' => $model,'showEmp' => false])?>
+        <?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model,'showEmp' => false])?>
         <?php echo Html::a('<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน',['/me/holidays','title' => '<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน'],['id' => 'calendar-me','class' => 'btn btn-primary open-modal mt-1','data' => ['size' => 'modal-xl']])?>
     </div>
 
