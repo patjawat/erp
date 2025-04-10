@@ -69,7 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <p class="mb-0"><?php echo $item->locationOrg?->title ?? '-'?></p>
                         </td>
                         <td>
-                            <?=$item->viewStatus()?>
+                            <?=$item->viewStatus()['view']?>
                         </td>
                         <td>
                             <?php if($item->status == 'Pending'):?>

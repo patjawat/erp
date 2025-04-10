@@ -138,7 +138,7 @@ class Room extends \yii\db\ActiveRecord
         }
         return implode(', ', $result);
     } catch (\Throwable $th) {
-       return [];
+       return '';
     }
     }
 

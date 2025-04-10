@@ -273,30 +273,8 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
-        switch ($this->status) {
-            case 'None':
-                return '<span class="badge bg-light"><i class="fa-solid fa-circle-exclamation me-1"></i> รอ หน.เห็นชอบ</span>';
-                break;
-                case 'Pending':
-                    return '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half me-1"></i> รออนุมัติ</span>';
-                    break;
-            case 'Approve':
-                return '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>อนุมัติ</span>';
-                break;
-            case 'Reject':
-                return '<span class="badge bg-danger">ไม่อนุมัติ</span>';
-                break;
-            case 'Cancel':
-                return '<span class="badge bg-secondary">ยกเลิก</span>';
-                break;
-            case 'Pass':
-                return '<span class="badge bg-success text-white"><i class="bi bi-check-circle me-1"></i> จัดสรร</span>';
-                break;
-
-            default:
-                // code...
-                break;
-        }
+      return AppHelper::viewStatus($this->status);
+       
     }
 
     // แสดงรายการาถานะ

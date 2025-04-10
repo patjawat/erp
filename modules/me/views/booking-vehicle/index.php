@@ -20,25 +20,26 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php $this->beginBlock('page-action'); ?>
-<?php // echo $this->render('menu') ?>
+<?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 
 
-<div class="container my-4">
+<div class="container-fluid">
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        
+        <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
 
-                <div>
-                    <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
-                            class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span>
-                        รายการ</h6>
-                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-                </div>
+<div>
+    <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
+            class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span>
+        รายการ</h6>
+    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+</div>
 
-            <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-vehicle/create','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
-        </div>
-        <div class="card-body p-0">
+<?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-vehicle/create','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
+</div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
@@ -48,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th>จุดหมาย</th>
                             <th>ประเภทรถ</th>
                             <th>สถานะ</th>
-                            <th>จัดการ</th>
+                            <th class="text-center">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle table-group-divider">
@@ -65,13 +66,16 @@ $this->params['breadcrumbs'][] = $this->title;
                             </td>
                             <td><?php echo $item->locationOrg?->title ?? '-'?></td>
                             <td><?php echo $item->carType?->title ?? '-'?></td>
-                            <td><?php echo $item->viewStatus() ?? '-'?></td>
-                            <td>
+                            <td><?php echo $item->viewStatus()['view'] ?? '-'?></td>
 
-                                <?=Html::a('<i class="bi bi-eye"></i>',['/me/booking-vehicle/view','id' => $item->id,'title' => '<i class="fa-solid fa-circle-info text-primary"></i> แสดงข้อมูลแบบขอใช้รถยนต์'],['class' => 'btn btn-sm btn-outline-primary me-1 open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="bi bi-pencil"></i>',['/me/booking-vehicle/update','id' => $item->id,'title' => '<i class="bi bi-pencil"></i> แก้ไขแบบขอใช้รถยนต์'],['class' => 'btn btn-sm btn-outline-warning me-1 open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="bi bi-trash"></i>',['/me/booking-vehicle/delete','id' => $item->id],['class' => 'btn btn-sm btn-outline-danger delete-item'])?>
-                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-3">
+                                    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-vehicle/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                                    <?php echo Html::a('<i class="fa-solid fa-pen-to-square fa-2x text-warning"></i>',['/me/booking-vehicle/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
+                                    <?php echo Html::a('<i class="fa-regular fa-trash-can fa-2x text-danger"></i>',['/me/booking-vehicle/delete','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'delete-item','data' => ['size' => 'modal-lg']])?>
+                                </div>
+                                </td>
+
                         </tr>
                         <?php endforeach;?>
                     </tbody>

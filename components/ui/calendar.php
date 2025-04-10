@@ -5,21 +5,7 @@ use yii\helpers\Html;
 
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-
-$this->title = 'ระบบขอใช้ห้องประชุม';
-$this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('sub-title'); ?>
-ปฏิทินรวม
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('menu')?>
-<?php $this->endBlock(); ?>
 
 
 <style>
@@ -65,7 +51,8 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <?php
-$eventUrl = Url::to(['/me/booking-meeting/events']);  // Replace with your actual endpoint URL
+
+$eventUrl = Url::to([$url.'events']);  // Replace with your actual endpoint URL
 $js = <<<JS
         \$(document).ready(function() {
 
@@ -135,11 +122,11 @@ $js = <<<JS
 
                         // สร้าง custom DOM element
                         const container = document.createElement('div');
-
+                        container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
                         container.innerHTML = `
                             <div class="mb-0 p-1 d-flex flex-column justify-conten-start gap-1">
-                                <strong>\${room}</strong>
+                                <span>\${room}</span>
                                 <small style="color:#555;">\${dateTime}</small>
                                 <span>\${status}</span>
                             </div>
@@ -153,8 +140,35 @@ $js = <<<JS
                             `<strong>Title:</strong> \${info.event.title}<br>
                             <strong>Description:</strong> \${info.event.extendedProps.description}`;
                         $('#main-modal').modal('show');
+                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                        $(".modal-dialog").addClass('modal-lg');
                         });
                 },
+                select: function(info) {
+                        console.log('Selected from', info.startStr, 'to', info.endStr);
+
+                        const dateStart = info.startStr;
+                        const dateEnd = info.endStr;
+                                $.ajax({
+                                    type: "get",
+                                    url: '$url'+'create',
+                                    data: {
+                                        date_start: dateStart,
+                                        date_end: dateEnd,
+                                    },
+                                    dataType: "json",
+                                    success: function (res) {
+                                        $("#main-modal").modal("show");
+                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                        $(".modal-dialog").addClass("modal-xl");
+                                            $("#main-modal-label").html(res.title);
+                                            $(".modal-body").html(res.content);
+                                            $(".modal-footer").html(res.footer);
+                                    }
+                                });
+                        // หรือถ้าใช้ SweetAlert2:
+                        // Swal.fire('Selected!', `From \${info.startStr} to \${info.endStr}`, 'info');
+                    },
                 drop: function(info) {
                     console.log('drop: ' + info.dateStr);
                     if (\$(checkbox).is(':checked')) {
@@ -175,33 +189,34 @@ $js = <<<JS
                     console.log('New End: ' + formatDate(info.event.end));
                 },
                   // ดับเบิลคลิกที่วันที่เพื่อเปิด modal
-                            dateClick: function(info) {
-                            // const dateParts = info.dateStr.split('-');
-                            const dateParts = info.dateStr;
-                                console.log(dateParts);
-                                $.ajax({
-                                    type: "get",
-                                    url: "/me/booking-meeting/create",
-                                    data: {
-                                        date_start: dateParts,
-                                    },
-                                    dataType: "json",
-                                    success: function (res) {
-                                        $("#main-modal").modal("show");
-                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                                        $(".modal-dialog").addClass("modal-xl");
-                                            $("#main-modal-label").html(res.title);
-                                            $(".modal-body").html(res.content);
-                                            $(".modal-footer").html(res.footer);
-                                    }
-                                });
+                            // dateClick: function(info) {
                                 
-                            },
+                            // // const dateParts = info.dateStr.split('-');
+                            // const dateParts = info.dateStr;
+                            //     console.log(dateParts);
+                            //     $.ajax({
+                            //         type: "get",
+                            //         url: '$url'+'create',
+                            //         data: {
+                            //             date_start: dateParts,
+                            //         },
+                            //         dataType: "json",
+                            //         success: function (res) {
+                            //             $("#main-modal").modal("show");
+                            //             $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                            //             $(".modal-dialog").addClass("modal-xl");
+                            //                 $("#main-modal-label").html(res.title);
+                            //                 $(".modal-body").html(res.content);
+                            //                 $(".modal-footer").html(res.footer);
+                            //         }
+                            //     });
+                                
+                            // },
                 eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
                         let viewHtml = info.event.extendedProps.view;
                         // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
-                        var url = '/me/booking-meeting/view?id=' + info.event.id;
+                        var url = '$url'+'view?id=' + info.event.id;
                         // โหลดเนื้อหามาแสดงใน Modal
                             \$('#main-modal').modal('show')
                             \$("#main-modal-label").html('รายละเอียดการจอง');

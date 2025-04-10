@@ -110,8 +110,8 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
 public function getSummary()
     {
         $sql ="SELECT 
-        (SELECT COALESCE(sum(total_days),0) as total_days FROM `leave` l WHERE l.emp_id = le.emp_id AND l.thai_year = le.thai_year AND l.status = 'Allow' AND l.leave_type_id = 'LT4') as leave_use,
-        (le.days -(SELECT COALESCE(sum(total_days),0) as total_days FROM `leave` l WHERE l.emp_id = le.emp_id AND l.thai_year = le.thai_year AND l.status = 'Allow' AND l.leave_type_id = 'LT4')) as leave_total
+        (SELECT COALESCE(sum(total_days),0) as total_days FROM `leave` l WHERE l.emp_id = le.emp_id AND l.thai_year = le.thai_year AND l.status = 'Approve' AND l.leave_type_id = 'LT4') as leave_use,
+        (le.days -(SELECT COALESCE(sum(total_days),0) as total_days FROM `leave` l WHERE l.emp_id = le.emp_id AND l.thai_year = le.thai_year AND l.status = 'Approve' AND l.leave_type_id = 'LT4')) as leave_total
                 FROM leave_entitlements le
                 WHERE le.emp_id = :emp_id AND le.thai_year = :thai_year";
         $query = Yii::$app->db->createCommand($sql)

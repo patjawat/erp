@@ -6,6 +6,7 @@ use Yii;
 use DateTime;
 use DatePeriod;
 use DateInterval;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Categorise;
@@ -53,8 +54,10 @@ class BookingVehicleController extends Controller
      */
     public function actionIndex()
     {
+        $me = UserHelper::GetEmployee();
         $searchModel = new VehicleSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -65,6 +68,60 @@ class BookingVehicleController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+    public function actionCalendar()
+    {
+        return $this->render('@app/modules/booking/views/vehicle/calendar',['url' => '/me/booking-vehicle/']);
+    }
+    
+    
+
+    public function actionEvents()
+	{
+        $start = $this->request->get('start');
+        $end = $this->request->get('end');
+        
+		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+
+            $bookings = Vehicle::find()
+                // ->andWhere(['<>', 'status', 'Cancel'])
+                ->all();
+                $data = [];
+
+                foreach($bookings as $item)
+                {
+                    $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
+                    $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+                    $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
+                    $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
+                    $data[] = [
+                        'id'               => $item->id,
+                        'title'            => $item->reason,
+                        'start'            => $dateStart,
+                        'end'            => $dateEnd,
+                        // 'display' => 'auto',
+                        'allDay' => true,
+                        'source' => 'vehicle',
+                        'extendedProps' => [
+                            'title' => $item->reason,
+                            'dateTime' => 'ttttt',
+                            // 'dateTime' => $item->viewMeetingTime(),
+                            'status' => $item->viewStatus()['view'],
+                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
+                            'description' => 'คำอธิบาย',
+                        ],
+                         'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
+                        'description' => 'description for All Day Event',
+                        'textColor' => 'black',
+                        'backgroundColor' => '#eee',
+                        'url' => Url::to(['/event/view', 'id' => $item->id]),
+                    ];
+                }
+
+            return  $data;
+       
+	}
 
     /**
      * Displays a single Vehicle model.
@@ -101,7 +158,11 @@ class BookingVehicleController extends Controller
     public function actionCreate()
     {
         $me = UserHelper::GetEmployee();
+        $dateStart = $this->request->get('date_start'); 
+        $dateEnd = $this->request->get('date_end'); 
         $model = new Vehicle([
+            'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
+            'date_end' => $dateStart ? AppHelper::convertToThai($dateEnd) : '',
             // 'time_start' => '08:00',
             // 'time_end' => '16:30',
         ]);
@@ -113,7 +174,7 @@ class BookingVehicleController extends Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                $model->status =  $model->car_type_id == "personal" ? 'Pass' : 'None';
+                $model->status =  $model->car_type_id == "personal" ? 'Pass' : 'Pending';
                 $model->emp_id = $me->id;
                 // $model->code  = CARREQ-20250101-001
                 $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???');
@@ -129,9 +190,12 @@ class BookingVehicleController extends Controller
                         
                         //สร้างการอนุมัติ
                         
-                        $this->createApprove($model);
+                        // $this->createApprove($model);
                         
-                    return $this->redirect(['/me/booking-vehicle/index', 'id' => $model->id]);
+                    // return $this->redirect(['/me/booking-vehicle/index', 'id' => $model->id]);
+                    return [
+                        'status' => 'success',
+                    ];
                 }
             }
         } else {

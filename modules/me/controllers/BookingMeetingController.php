@@ -53,9 +53,10 @@ class BookingMeetingController extends \yii\web\Controller
     
     public function actionIndex()
     { 
+        $me = UserHelper::GetEmployee();
         $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andFilterWhere(['name' => 'conference_room']);
+        $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         return $this->render('index',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -400,24 +401,6 @@ public function actionGetRoom($id)
     }
 
 
-//     public function actionEvents()
-// {
-//     \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-//     return [
-//         [
-//             'title' => 'Meeting',
-//             'start' => '2025-04-10',
-//             'end' => '2025-04-10',
-//         ],
-//         [
-//             'title' => 'Conference',
-//             'start' => '2025-04-12',
-//             'end' => '2025-04-14',
-//         ],
-//     ];
-// }
-
-
     // public function actionEvents($id, $start, $end)
     public function actionEvents()
 	{
@@ -450,13 +433,9 @@ public function actionGetRoom($id)
                         ],
                          'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
                         'description' => 'description for All Day Event',
-                        // 'eventDisplay' => '',
-                        // 'color' => 'danger',   // an option!
-                        'textColor' => 'black', // an option!
-                        //  'rendering' => 'background',
-                        // 'color'=> '#ff9f89',
+                        'textColor' => 'black',
                         'backgroundColor' => '#3aa3e3',
-                        // 'url' => Url::to(['/event/view', 'id' => $item->id]),
+                        'url' => Url::to(['/event/view', 'id' => $item->id]),
                     ];
                 }
 
@@ -466,7 +445,7 @@ public function actionGetRoom($id)
 
     public function actionCalendar()
     {
-        return $this->render('calendar');
+        return $this->render('@app/modules/booking/views/meeting/calendar',['url' => '/me/booking-meeting/']);
     }
     
     

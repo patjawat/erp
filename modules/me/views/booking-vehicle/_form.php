@@ -422,7 +422,8 @@ $js = <<<JS
                             timer: 1000,
                             showConfirmButton: false
                         }).then(() => {
-                            window.location.href = "/me/booking-vehicle";
+                            window.location.reload();
+                            // window.location.href = "/me/booking-vehicle";
                         });
                     }
                 }
