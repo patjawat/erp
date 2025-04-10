@@ -586,6 +586,7 @@ class Vehicle extends \yii\db\ActiveRecord
                 ->from(['v' => Vehicle::tableName()])
                 ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
                 ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
+                ->where(['IN','v.status', ['Approve','Pass','Success']])
                 ->groupBy('d.id');
 
             $result = $query->asArray()->all();
@@ -600,6 +601,7 @@ class Vehicle extends \yii\db\ActiveRecord
                         new Expression('COUNT(id) AS total'),
                     ])
                     ->groupBy('license_plate')
+                    ->where(['IN','status', ['Approve','Pass','Success']])
                     ->asArray()
                     ->all();
 
