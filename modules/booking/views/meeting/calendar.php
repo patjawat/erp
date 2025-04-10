@@ -206,7 +206,58 @@ $js = <<<JS
 
             calendar.render();
         });
-    JS;
+
+
+  $('body').on('click', '.confirm-meeting', function (e) {
+    e.preventDefault();
+
+    var status = $(this).data('status');
+    var id = $(this).data('id');
+    var text = $(this).data('text');
+    Swal.fire({
+      title: "ยืนยัน!",
+      text:text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'ใช่, ยืนยัน!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          type: "post",
+          url: '/me/booking-meeting/confirm',
+          data: {
+            id: id,
+            status: status
+          },
+          dataType: "json",
+          success: function (res) {
+            if (res.status == 'success') {
+              $('.modal').modal('hide');
+              Swal.fire({
+              icon: 'success',
+              title: 'Confirmed!',
+              text: res.message || 'ดำเนินการเรียบร้อยแล้ว',
+              timer: 1000,
+              showConfirmButton: false
+              }).then(() => {
+              location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: res.message || 'Something went wrong.',
+              });
+            }
+          }
+        });
+      }
+    });
+  });
+  JS;
 
 $this->registerJS($js, View::POS_END);
 ?>

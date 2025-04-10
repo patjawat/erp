@@ -183,7 +183,7 @@ class MeetingController extends Controller
 
 
             $bookings = Meeting::find()
-                ->andWhere(['<>', 'status', 'Cancel'])
+                // ->andWhere(['<>', 'status', 'Cancel'])
                 ->all();
                 $data = [];
 
