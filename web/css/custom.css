@@ -11997,7 +11997,7 @@ textarea.form-control-lg {
 [data-bs-theme=purple] .form-label {
   margin-bottom: 0.5rem;
   color: #000;
-  font-weight: 400;
+  font-weight: 400 !important;
 }
 [data-bs-theme=purple] .blank-page {
   background: rgb(111, 129, 218);
@@ -12498,6 +12498,16 @@ a {
 .avatar-xs .contact-status {
   width: 8px;
   height: 8px;
+}
+
+.avatar-form-control {
+  height: 1.5rem;
+  width: 1.5rem;
+  font-size: 1rem;
+}
+.avatar-form-control .contact-status {
+  width: 10px;
+  height: 10px;
 }
 
 .avatar-sm {

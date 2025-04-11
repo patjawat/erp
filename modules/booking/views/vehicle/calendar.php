@@ -131,6 +131,8 @@ $js = <<<JS
                         },
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
+                        const avatar = arg.event.extendedProps.avatar || '';
+                        const code = arg.event.extendedProps.code || '';
                         const title = arg.event.extendedProps.title || '';
                         const dateTime = arg.event.extendedProps.dateTime || '';
                         const status = arg.event.extendedProps.status || '';
@@ -141,17 +143,7 @@ $js = <<<JS
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `
-                        <div class="mb-0 p-2 d-flex flex-column justify-conten-start gap-1">
-                           <div class="avatar-detail">
-                                    <h6 class="mb-0 fs-13">\${viewGoType} : \${title}</h6>
-                                    <p class="text-muted mb-0 fs-13">\${showDateRange} เวลา \${dateTime}</p>
-                                    <span class="mt-3">\${status}</span>
-                                </div>
-                                </div>
-                        `;
-
-
+                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${avatar}</div>`;
                         return { domNodes: [container] };
                     },
                     eventDidMount: function(info) {

@@ -15,20 +15,17 @@ use kartik\widgets\ActiveForm;
         'id' => 'booking-form',
     ]); ?>
     <div>
-        <h4 class="text-center">บันทึกภาระกิจการใช้รถยนต์</h4>
-        <p class="text-center mb-0">เลขที่ <?= $model->vehicle->code ?></p>    
-        <p class="text-center mb-0">วันที่ <?= Yii::$app->thaiDate->toThaiDate($model->date_start, true, true) ?></p>
+        <p class="text-center mb-0">เลขที่ <?= $model->vehicle->code ?> วันที่ <?= Yii::$app->thaiDate->toThaiDate($model->date_start, true, true) ?></p>    
     </div>
 <div class="mb-3 p-3">
-    <h6>ข้อมูลเวลา</h6>
     <div class="row">
         <div class="col-6">
             <div class="d-flex gap-3">
             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาออกเดินทาง') ?>
             <?= $form->field($model, 'time_end')->textInput(['type' => 'time'])->label('เวลากลับ') ?>
             </div>
-            <?= $form->field($model, 'oil_price')->textInput(['maxlength' => true,['type' => 'number']]) ?>
-            <?= $form->field($model, 'oil_liter')->textInput(['maxlength' => true,['type' => 'number']]) ?>
+            <?= $form->field($model, 'oil_price')->textInput(['maxlength' => true,['type' => 'number']])->label('ราคาน้ํามัน/บาท') ?>
+            <?= $form->field($model, 'oil_liter')->textInput(['maxlength' => true,['type' => 'number']])->label('ปริมาณน้ํามัน/ลิตร') ?>
             <?= $form->field($model, 'status')->widget(Select2::classname(), [
             'data' => [
                 'Pass' => ' จัดสรร',
@@ -53,7 +50,10 @@ use kartik\widgets\ActiveForm;
         </div>
     </div>
 </div>
+บิลล์ค่าใช้จ่ายเอกสารต่างๆ
+<?=$model->upload()?>
 
+<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true,['type' => 'number']])->label(false) ?>
 
     <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>

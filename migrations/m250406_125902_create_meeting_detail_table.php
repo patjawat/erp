@@ -14,6 +14,7 @@ class m250406_125902_create_meeting_detail_table extends Migration
     {
         $this->createTable('{{%meeting_detail}}', [
             'id' => $this->primaryKey(),
+            'ref' => $this->string(255),
             'meeting_id' => $this->integer()->notNull()->comment('ID ของการประชุม'),
             'name' => $this->string()->notNull()->comment('ชื่อของการเก็บค่า'),
             'data_json' => $this->json()->comment('json'),

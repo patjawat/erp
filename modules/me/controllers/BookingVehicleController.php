@@ -94,6 +94,7 @@ class BookingVehicleController extends Controller
                     $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
                     $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
+                    $title = 'ขอใช้'.$item->carType->title.' ไป'.($item->locationOrg?->title ?? '-');
                     $data[] = [
                         'id'               => $item->id,
                         'title'            => $item->reason,
@@ -104,6 +105,8 @@ class BookingVehicleController extends Controller
                         'source' => 'vehicle',
                         'extendedProps' => [
                             'title' => $item->reason,
+                            'avatar' => $this->renderAjax('@app/modules/booking/views/vehicle/avatar', ['model' => $item]),
+                            'fullname' => $item->employee?->fullname,
                             'dateTime' => 'ttttt',
                             'dateTime' => $item->viewTime(),
                             'status' => $item->viewStatus()['view'],

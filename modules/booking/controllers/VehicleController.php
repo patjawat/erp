@@ -151,6 +151,7 @@ class VehicleController extends Controller
                     $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
                     $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
+                    $title = 'ขอใช้'.$item->carType->title.' ไป'.($item->locationOrg?->title ?? '-');
                     $data[] = [
                         'id'               => $item->id,
                         'title'            => $item->reason,
@@ -160,7 +161,10 @@ class VehicleController extends Controller
                         'allDay' => false,
                         'source' => 'vehicle',
                         'extendedProps' => [
-                            'title' => $item->reason,
+                            'title' => $title,
+                            // 'avatar' => $item->employee?->getAvatar(false,($title)),
+                            'avatar' => $this->renderAjax('avatar', ['model' => $item]),
+                            'fullname' => $item->employee?->fullname,
                             'dateTime' => $item->viewTime(),
                             // 'dateTime' => $item->viewMeetingTime(),
                             'status' => $item->viewStatus()['view'],
@@ -214,6 +218,10 @@ class VehicleController extends Controller
     public function actionWorkUpdate($id)
     {
         $model = VehicleDetail::findOne($id);
+        if(!$model->ref){
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
+        
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [

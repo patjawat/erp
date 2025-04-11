@@ -14,9 +14,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="mb-3 badge-soft-primary p-3 rounded">
     <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label>
-    <p><?php echo $model->userRequest()['fullname'];?>
+    <p class="mb-0"><?php echo $model->userRequest()['fullname'];?>
         ขอใช้<?php echo $model->carType->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่
         <?php echo $model->showDateRange()?></p>
+        <p class="text-muted mb-0 fs-13">เวลา <?=$model->viewTime()?></p>
        
 
 </div>

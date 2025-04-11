@@ -83,7 +83,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td> <?=$item->driver->getAvatar(false)?></td>
                             <td><?php echo $item->vehicle->getStatus($item->status)['view'] ?? '-'?></td>
                         <td class="text-center">
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['/booking/vehicle/work-update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจ'], ['class' => 'open-modal', 'data' => [ 'size' => 'modal-lg']])?>
+                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['/booking/vehicle/work-update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'open-modal', 'data' => [ 'size' => 'modal-lg']])?>
                         </td>
                     </tr>
                     <?php endforeach;?>

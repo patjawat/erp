@@ -142,7 +142,7 @@ $js = <<<JS
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
                         container.innerHTML = `
-                        <div class="mb-0 p-2 d-flex flex-column justify-conten-start gap-1">
+                        <div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">
                            <div class="avatar-detail">
                                     <h6 class="mb-0 fs-13">\${viewGoType} : \${title}</h6>
                                     <p class="text-muted mb-0 fs-13">\${showDateRange} เวลา \${dateTime}</p>

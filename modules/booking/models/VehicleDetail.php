@@ -10,6 +10,7 @@ use app\modules\am\models\Asset;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use app\modules\booking\models\Vehicle;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "vehicle_detail".
@@ -119,6 +120,14 @@ class VehicleDetail extends \yii\db\ActiveRecord
     {
         return ThaiDateHelper::formatThaiDate($this->date_start);
     }
+
+    public function Upload()
+    {
+        $ref = $this->ref;
+        $name = 'vehicle_bill';
+        return FileManagerHelper::FileUpload($ref, $name);
+    }
+
     
 
     public function ListThaiYear()
