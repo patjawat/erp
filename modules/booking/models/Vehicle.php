@@ -607,6 +607,42 @@ class Vehicle extends \yii\db\ActiveRecord
 
                     return $vehicles;
          }
+
+           // รายงานค่าใช้จ่ายรถ
+           public function getPriceSummary()
+           {
+               // return $name;
+               $arr =  Vehicle::find()
+               ->select([
+                   'thai_year',
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 1 THEN d.oil_price ELSE 0 END) AS m1'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 2 THEN d.oil_price ELSE 0 END) AS m2'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 3 THEN d.oil_price ELSE 0 END) AS m3'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 4 THEN d.oil_price ELSE 0 END) AS m4'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 5 THEN d.oil_price ELSE 0 END) AS m5'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 6 THEN d.oil_price ELSE 0 END) AS m6'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 7 THEN d.oil_price ELSE 0 END) AS m7'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 8 THEN d.oil_price ELSE 0 END) AS m8'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 9 THEN d.oil_price ELSE 0 END) AS m9'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 10 THEN d.oil_price ELSE 0 END) AS m10'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 11 THEN d.oil_price ELSE 0 END) AS m11'),
+                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 12 THEN d.oil_price ELSE 0 END) AS m12'),
+               ])
+               ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
+                   ->where(['d.status' => 'Success'])
+                   ->groupBy('thai_year')
+                   ->asArray()
+                   ->one();
+                   // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+               for ($i = 1; $i <= 12; $i++) {
+                   $key = 'm' . $i;
+                   if (!isset($arr[$key])) {
+                       $arr[$key] = 0;
+                   }
+               }
+               return $arr;
+           }
+           
          
         
 }

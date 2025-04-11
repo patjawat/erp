@@ -30,8 +30,6 @@ Dashboard
 <?php $this->endBlock(); ?>
 
 
-
-
 <div class="d-flex justify-content-between">
     </div>
     
@@ -44,6 +42,9 @@ Dashboard
         <div class="col-6">
             <?=  $this->render('chart_ambulance_type',['searchModel' => $searchModel])?>
             <?= $this->render('chart_car',['searchModel' => $searchModel])?>
+        </div>
+        <div class="col-12">
+            <?= $this->render('chart_price_summary',['searchModel' => $searchModel])?>
         </div>
     </div>
 
