@@ -44,13 +44,14 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
     ]); ?>
 
 <div class="d-flex gap-3">
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label('ค้นหา') ?>
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...','width' => '100'])->label(false)->label('ค้นหา') ?>
 
     <?= $form->field($model, 'asset_group')->widget(Select2::classname(), [
                                         'data' => $listAssetGroup,
                                         'options' => ['placeholder' => 'เลือกกลุ่มทรัพย์สิน'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
+                                        'width' => '180px',
                                         ],
                                     ])->label('กลุ่ม');
                                     
