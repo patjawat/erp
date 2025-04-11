@@ -24,8 +24,8 @@ $queryOfficial = $searchModel->getChartSummary('official');
 $queryPersonal = $searchModel->getChartSummary('personal');
 
 try {
-  $officialSummary = [$queryOfficial['m1'], $queryOfficial['m2'], $queryOfficial['m3'], $queryOfficial['m4'], $queryOfficial['m5'], $queryOfficial['m6'], $queryOfficial['m7'], $queryOfficial['m8'], $queryOfficial['m9'],$queryOfficial['m10'], $queryOfficial['m11'], $queryOfficial['m12'], ];
-  $personalSummary = [$queryPersonal['m1'], $queryPersonal['m2'], $queryPersonal['m3'], $queryPersonal['m4'], $queryPersonal['m5'], $queryPersonal['m6'], $queryPersonal['m7'], $queryPersonal['m8'], $queryPersonal['m9'],$queryPersonal['m10'], $queryPersonal['m11'], $queryPersonal['m12'], ];
+  $officialSummary = [$queryOfficial['m10'], $queryOfficial['m11'], $queryOfficial['m12'], $queryOfficial['m1'], $queryOfficial['m2'], $queryOfficial['m3'], $queryOfficial['m4'], $queryOfficial['m5'], $queryOfficial['m6'], $queryOfficial['m7'], $queryOfficial['m8'], $queryOfficial['m9'] ];
+  $personalSummary = [$queryPersonal['m10'], $queryPersonal['m11'], $queryPersonal['m12'], $queryPersonal['m1'], $queryPersonal['m2'], $queryPersonal['m3'], $queryPersonal['m4'], $queryPersonal['m5'], $queryPersonal['m6'], $queryPersonal['m7'], $queryPersonal['m8'], $queryPersonal['m9']];
 } catch (\Throwable $th) {
   $officialSummary = [];
   $personalSummary = [];
@@ -80,7 +80,7 @@ $js = <<< JS
               colors: ['transparent']
             },
             xaxis: {
-              categories: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.','ต.ต.','พ.ย.','ธ.ค.'],
+              categories: ['ต.ต.','พ.ย.','ธ.ค.','ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'],
               tickPlacement: 'on',
                 labels: { show: true },
                 axisTicks: { show: false },

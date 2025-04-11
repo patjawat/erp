@@ -26,6 +26,9 @@ $queryRefer = $searchModel->getChartSummaryAmbulance('refer');  // REFER
 
 try {
   $normalSummary = [
+    $queryNormal['m10'],
+    $queryNormal['m11'],
+    $queryNormal['m12'],
     $queryNormal['m1'],
     $queryNormal['m2'],
     $queryNormal['m3'],
@@ -35,11 +38,12 @@ try {
     $queryNormal['m7'],
     $queryNormal['m8'],
     $queryNormal['m9'],
-    $queryNormal['m10'],
-    $queryNormal['m11'],
-    $queryNormal['m12'],
+    
   ];
   $emsSummary = [
+    $queryEms['m10'],
+    $queryEms['m11'],
+    $queryEms['m12'],
     $queryEms['m1'],
     $queryEms['m2'],
     $queryEms['m3'],
@@ -49,11 +53,12 @@ try {
     $queryEms['m7'],
     $queryEms['m8'],
     $queryEms['m9'],
-    $queryEms['m10'],
-    $queryEms['m11'],
-    $queryEms['m12'],
+   
   ];
   $referSummary = [
+    $queryRefer['m10'],
+    $queryRefer['m11'],
+    $queryRefer['m12'],
     $queryRefer['m1'],
     $queryRefer['m2'],
     $queryRefer['m3'],
@@ -63,9 +68,7 @@ try {
     $queryRefer['m7'],
     $queryRefer['m8'],
     $queryRefer['m9'],
-    $queryRefer['m10'],
-    $queryRefer['m11'],
-    $queryRefer['m12'],
+  
   ];
 } catch (\Throwable $th) {
   $normalSummary = [];
@@ -125,7 +128,7 @@ $js = <<<JS
               colors: ['transparent']
             },
             xaxis: {
-              categories: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.','ต.ต.','พ.ย.','ธ.ค.'],
+              categories: ['ต.ต.','พ.ย.','ธ.ค.','ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'],
               tickPlacement: 'on',
                 labels: { show: true },
                 axisTicks: { show: false },
