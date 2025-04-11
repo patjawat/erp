@@ -34,88 +34,37 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::end(); ?>
 <?php Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
 
-<div class="asset-index">
 
-    <div class="card">
-        <div
-            class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-            <div class="d-flex justify-content-start gap-3">
-            <?=app\components\AppHelper::Btn([
-                    'title' => '<i class="fa-solid fa-circle-plus"></i> ลงทะเบียน'.$title,
-                    'url' =>['select-type','group' => $group,'title' => $title],
-                    'modal' =>true,
-                    'size' => 'sm',
-            ])?>
-                <?php if($group):?>
-                <?=app\components\AppHelper::Btn([
+<?php if($group):?>
+<?=app\components\AppHelper::Btn([
                     'title' => '<i class="fa-solid fa-circle-plus"></i> ลงทะเบียน'.$title,
                     'url' =>['create','group' => $group,'title' => $title],
                     'model' =>true,
                     'size' => 'lg',
             ])?>
-            <?php else:?>
-    <!-- <a class="btn btn-outline-warning text-primary" href="#" data-pjax="0" onclick="return alert('กรุณาเลือกประเภททรัพย์สินก่อนสร้างรายการใหม่')"><i class="fa-solid fa-circle-exclamation text-danger"></i> เลือกประเภททรัพย์สินเพื่อสร้างรายการ</a> -->
-                <?php endif;?>
+<?php else:?>
 
-                <?=app\components\AppHelper::Btn([
-    'title' => '<i class="fa-solid fa-circle-exclamation"></i> รายการไม่สมบูรณ์',
-    'url' => ['/am/asset/omit'],
-    'modal' => true, 
-    'size' => 'lg',
-    'class' => 'btn btn-danger'
-    ]
-    )?>
+<?php endif;?>
+<div class="card">
+    <div class="card-body">
+        <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
+            รายการ</h6>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <?= $this->render('_search', ['model' => $searchModel]); ?>
+
             </div>
-
-            <div class="d-flex gap-2">
-            <?= $this->render('_search', ['model' => $searchModel]); ?>
-            <span class="filter-asset btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
-        <i class="fa-solid fa-filter"></i>
-    </span>
-    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
-    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-                <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
-            'data' => [
-                'bs-placement' => 'top',
-                'bs-toggle' => 'tooltip',
-                ]])?>
-            </div>
-
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนทรัพย์สิน', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
         </div>
-    </div>
-
-    <?php if(count(($dataProvider->getModels())) == 0):?>
-
-        <div class="row d-flex justify-content-center">
-        <div class="col-6">
-        <div class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
-            <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i> ไม่มีทรัพย์สินที่ได้รับผิดชอบ</h4>
-            <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
-</div>
-        </div>
-        </div>
-
-
-        <div class="">
-        <div class="row d-flex flex-column">
-<div class="col-lg-6 col-md-8 col-sm-12">
-
-</div>
-        </div>
-        </div>
-    <?php endif;?>
-
-
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-    <?php if(SiteHelper::getDisplay() == 'list'):?>
-
-<?=$this->render('show/list', [
-    'searchModel' => $searchModel,
-    'dataProvider' => $dataProvider,
-]);?>
+        <?php if(SiteHelper::getDisplay() == 'list'):?>
+            
+            <?=$this->render('show/list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);?>
 
 <?php else:?>
+    <hr>
 <?=$this->render('show/grid', [
     'searchModel' => $searchModel,
     'dataProvider' => $dataProvider,
@@ -124,8 +73,25 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php endif?>
 
 
+<?php if(count(($dataProvider->getModels())) == 0):?>
+
+<div class="row d-flex justify-content-center">
+    <div class="col-6">
+        <div class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
+            <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i>
+                ไม่มีทรัพย์สินที่ได้รับผิดชอบ</h4>
+            <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
+        </div>
+    </div>
+</div>
+<?php endif;?>
+
+
+    </div>
+</div>
+
     <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-    <?= yii\bootstrap5\LinkPager::widget([
+        <?= yii\bootstrap5\LinkPager::widget([
         'pagination' => $dataProvider->pagination,
         'firstPageLabel' => 'หน้าแรก',
         'lastPageLabel' => 'หน้าสุดท้าย',
@@ -134,7 +100,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'class' => 'pagination-sm',
         ],
     ]); ?>
-</div>
+    </div>
 
 
 </div>
@@ -152,7 +118,59 @@ $('#am-container').on('pjax:success', function() {
     $.pjax.reload({ container:'#title-container', history:false,replace: false});         
 });
 
+
+$('.delete-asset').click(function (e) { 
+    e.preventDefault();
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "ข้อมูลนี้จะถูกลบและไม่สามารถกู้คืนได้!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url: url,
+                dataType: "json",
+                success: function (res) {
+                    if (res.status == 'success') {
+                        Swal.fire({
+                            title: 'ลบข้อมูลสำเร็จ!',
+                            text: 'รายการถูกลบเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 1000, // ตั้งค่าให้ Swal ปิดอัตโนมัติหลัง 1 วินาที
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/am/asset'; // Redirect หลังจาก timer หมด
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            res.message || 'ไม่สามารถลบข้อมูลได้',
+                            'error'
+                        );
+                    }
+                },
+                error: function () {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+});
+
+
 JS;
-$this->registerJS($js)
+$this->registerJS($js);
 
 ?>

@@ -1,12 +1,12 @@
 <?php
 
 use yii\helpers\Html;
-use app\components\AppHelper;
-use yii\bootstrap5\ActiveForm;
-use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use yii\web\JsExpression;
 use app\models\Categorise;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use yii\bootstrap5\ActiveForm;
 use app\modules\hr\models\Employees;
 
 /** @var yii\web\View $this */
@@ -23,8 +23,15 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
 .field-assetsearch-q {
     margin-bottom: 0px !important;
 }
+
 .right-setting {
     width: 500px !important;
+}
+
+.select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.25rem + 2px);
+    line-height: 1.5;
+    padding: 0.375rem 1.5rem 0.375rem 0.5rem !important;
 }
 </style>
 
@@ -37,19 +44,9 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
     ]); ?>
 
 <div class="d-flex gap-3">
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
-</div>
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label('ค้นหา') ?>
 
-<div class="right-setting <?=$model->show?>" id="filter-asset">
-<div class="card mb-0 w-100">
-        <div class="card-header">
-            <h5 class="card-title d-flex justify-content-between">
-                ค้นหาข้อมูล
-                <a href="javascript:void(0)"><i class="bi bi-x-circle filter-asset-close"></i></a>
-            </h5>
-        </div>
-        <div class="card-body">
-        <?= $form->field($model, 'asset_group')->widget(Select2::classname(), [
+    <?= $form->field($model, 'asset_group')->widget(Select2::classname(), [
                                         'data' => $listAssetGroup,
                                         'options' => ['placeholder' => 'เลือกกลุ่มทรัพย์สิน'],
                                         'pluginOptions' => [
@@ -58,16 +55,52 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                     ])->label('กลุ่ม');
                                     
                                     ?>
-                                     <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
+    <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
                                         'data' => $listAssetType,
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
+                                        'width' => '300px',
                                         ],
                                     ])->label('ประเภท');
                                     
                                     ?>
+    <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
+                                        'data' => $listAssetitem,
+                                        'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
+                                        'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'width' => '350px',
+                                        ],
+                                    ])->label('ชื่อครุภัณฑ์');
+                                    
+                                    ?>
 
+
+    <div class="d-flex flex-row align-items-center gap-2 mt-2">
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-light']) ?>
+        <button class="btn btn-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+            aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
+                class="fa-solid fa-filter"></i></button>
+                <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
+            'data' => [
+                'bs-placement' => 'top',
+                'bs-toggle' => 'tooltip',
+                ]])?>
+    </div>
+
+</div>
+
+
+<!-- Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
 
 
         <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
@@ -80,22 +113,18 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
     'asDropdown' => true,
     'multiple' => false,
     'options' => ['disabled' => false],
+'dropdownConfig' => [
+        'input' => [
+            'placeholder' => 'หน่วยงา...',
+        ],
+        'options' => [
+            // 'style' => 'width:300px;' // ✅ กำหนดความกว้างของ dropdown
+        ]
+    ],
 ])->label('หน่วยงานภายในตามโครงสร้าง');?>
-
-
-        <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
-                                        'data' => $listAssetitem,
-                                        'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
-                                        'pluginOptions' => [
-                                        'allowClear' => true,
-                                        ],
-                                    ])->label('ชื่อครุภัณฑ์');
-                                    
-                                    ?>
-              
-              <div class="row">
-                                        <div class="col-6">
-                                        <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
+        <div class="row">
+            <div class="col-6">
+                <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
                                         'data' => $model->ListMethodget(),
                                         'options' => ['placeholder' => 'เลือกวิธีได้มา'],
                                         'pluginOptions' => [
@@ -103,9 +132,9 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                         ],
                                     ])->label('วิธีได้มา');
                                     ?>
-                                        </div>
-                                        <div class="col-6">
-                                        <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
+            </div>
+            <div class="col-6">
+                <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
                                         'data' => $model->ListBudgetdetail(),
                                         'options' => ['placeholder' => 'เลือกประเภทเงิน'],
                                         'pluginOptions' => [
@@ -113,22 +142,24 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                         ],
                                     ])->label('ประเภทเงิน');
                                     ?>
-                                        </div>
-                                        <div class="col-6">
+            </div>
+            <div class="col-6">
 
-                                        <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
+
+                <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
                                         'data' => $model->ListOnYear(),
                                         'options' => ['placeholder' => 'เลือกปีงบประมาณ'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
+                                        'width' => '150px',
                                         ],
                                     ])->label('งบประมาณ');
                                     ?>
-                                        </div>
-                                        <div class="col-6">
+            </div>
+            <div class="col-6">
 
 
-<?php
+                <?php
                         $url = \yii\helpers\Url::to(['/depdrop/employee']);
                         $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
                                 echo $form->field($model, 'owner')->widget(Select2::classname(), [
@@ -158,15 +189,15 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                     ]
                                 ])->label('ผู้รับผิดชอบ');
                         ?>
-                                        </div>
-                                        <div class="col-6">
-                                        <?=$form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
+            </div>
+            <div class="col-6">
+                <?=$form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
         'mask' => '99/99/9999',
     ])->label('วันที่รับเข้า');
                         ?>
-                                        </div>
-                                        <div class="col-6">
-                            <?php
+            </div>
+            <div class="col-6">
+                <?php
                                 echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
                                     'data' => $model->ListAssetStatus(),
                                     'options' => ['placeholder' => 'กรุณาเลือก...'],
@@ -181,39 +212,38 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                     ]
                                 ])->label('สถานะ');
                         ?>
-                        </div>
-                                        
-              </div>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+
+                <?= $form->field($model, 'price1')->textInput(['type' => 'number'])->label('ระบุราคาต่ำสุด') ?>
+            </div>
+            <div class="col-6">
+
+                <?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
+            </div>
+            <div class="col-12">
+                <?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
+            </div>
+        </div>
 
 
 
 
 
-                                    
-
-
-
-<div class="row">
-<div class="col-6">
-
-<?= $form->field($model, 'price1')->textInput(['type' => 'number'])->label('ระบุราคาต่ำสุด') ?>
-</div>
-<div class="col-6">
-
-<?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
-</div>
-<div class="col-12">
-<?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
-</div>
-</div>
-
-                                    
-
-    <div class="form-group">
-    <?=AppHelper::BtnSave('ค้นหา')?>
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light mt-3']);?>
+        <?=app\components\AppHelper::Btn([
+                    'title' => '<i class="fa-solid fa-circle-exclamation"></i> รายการไม่สมบูรณ์',
+                    'url' => ['/am/asset/omit'],
+                    'modal' => true, 
+                    'size' => 'lg',
+                    'class' => 'btn btn-danger mt-3'
+                    ]
+                    )?>
     </div>
-</div>
-</div>
 </div>
 
 <?php ActiveForm::end(); ?>

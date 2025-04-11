@@ -1,11 +1,11 @@
 <?php
-use app\modules\am\models\Asset;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use kartik\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use yii\grid\ActionColumn;
 use app\components\AppHelper;
+use app\modules\am\models\Asset;
 
 ?>
 <div class="card">
@@ -14,25 +14,24 @@ use app\components\AppHelper;
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th scope="col" style="text-align: center;">#</th>
-                        <th scope="col" style="width: 250px;">รายการทรัพย์สิน</th>
-                        <th scope="col"style="width: 350px;" >ผู้รับผิดชอบ</th>
-                        <th scope="col">วิธีการได้มา</th>
-                        <th scope="col">สถานะ/การรับเข้า</th>
+                        <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
+                        <th class="fw-semibold" scope="col">รายการทรัพย์สิน</th>
+                        <th class="fw-semibold" scope="col" style="width: 350px;" >ประจำหน่วยงาน</th>
+                        <th class="fw-semibold" scope="col">วิธีได้มา</th>
+                        <th class="fw-semibold" scope="col">ปีงบประมาณ</th>
+                        <th class="fw-semibold" scope="col">สถานะ</th>
+                        <th class="fw-semibold text-center" scope="col" style="width: 150px;">ดำเนินการ</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="table-group-divider">
                     <?php foreach($dataProvider->getModels() as $key => $model):?>
-                    <tr>
-                        <th scope="row" style="text-align: center;"><?=$key+1?></th>
+                        <tr>
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                         <td class="align-middle">
                             <?=$this->render('item_list',['model' => $model])?>
                         </td>
                         <td class="align-middle">
-
-                         
                             <ul class="list-inline">
-                                <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">ประจำหน่วยงาน</span>
                                 <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
                                     <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
                                     <?php else:?>
@@ -40,46 +39,20 @@ use app\components\AppHelper;
                                         <?php endif;?>
                                     </li>
                                 </ul>
-                                <?=$model->getOwner()?>
                         </td>
                         <td class="align-middle">
-                        <ul class="list-inline">
-                        <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">วิธีได้มา</span> <?=$model->method_get?>
-                                <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">ประเภทเงิน</span> <?=isset($model->data_json['budget_type_text']) ? $model->data_json['budget_type_text'] : ''?>
-                                </li>
-                            <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">การจัดซื้อ</span> <?=$model->purchase_text?>
-                                </li>
-                               
-                      
-                         
-                            </ul>
+                            <?=$model->method_get?>
+                        
                         </td>
                         
-                        <td class="align-middle" align="left">
-                            <ul class="list-inline">
-                            <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">ปีงบประมาณ</span>  <span class="text-danger"><?=$model->on_year?><span>
-                                        
-                                </li>
-                                <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">วันที่ตรวจรับ</span>  <span class="text-danger"><?=Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium')?><span>
-                                </li>
-           
-                              
-                            <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">สถานะ</span> :
-                                    <?=$model->statusName()?>
-                                </li>
-                            </ul>
+                        <td class="align-middle"><?=$model->on_year?></td>
+                        <td><?=$model->statusName()?></td>
+                        <td class="align-middle text-center">
+                            <div class="d-flex gap-3">
+                                <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/am/asset/view','id' => $model->id])?>
+                                <?=Html::a('<i class="fa-solid fa-pen-to-square fa fa-2x text-warning"></i>',['/am/asset/update','id' => $model->id])?>
+                                <?= Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>', ['/am/asset/delete', 'id' => $model->id], ['class' => 'delete-asset']) ?>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
