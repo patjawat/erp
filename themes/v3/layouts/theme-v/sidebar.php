@@ -99,17 +99,7 @@ $moduleId = Yii::$app->controller->module->id;
                     <i class="bi bi-ui-checks fs-5"></i>
                     Menu
                 </li>
-                
-                <li class="">
-                    <a href="<?= Url::to(['/']) ?>" class="side-nav-link" aria-expanded="false">
-                        <i class="fa-solid fa-gauge-high"></i> <span>Main Dashboard</span>
-                        <!-- <span class="menu-arrow"></span> -->
-                    </a>
-                    
-                    
-                    <!-- <li class="side-nav-title side-nav-item menu-title fs-6">
-                        <i class="bi bi-ui-checks fs-5"></i> บริการ
-                    </li> -->
+
 
                 <li>
                     <a class="side-nav-link" href="<?= Url::to(['/me/leave']) ?>">

@@ -102,13 +102,23 @@ $group = Yii::$app->request->get('group');
 <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'asset_group')->hiddenInput(['maxlength' => true])->label(false) ?>
 
-
-<div class="card">
-    <div class="card-body">
-
 <div class="row">
-    <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
 
+    <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="dropdown edit-field-half-left ml-2">
+                    <div class="btn-icon btn-icon-sm btn-icon-soft-primary dropdown-toggle me-0 edit-field-icon"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </div>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a href="#" class="dropdown-item select-photo">
+                            <i class="fa-solid fa-file-image me-2 fs-5"></i>
+                            <span>อัพโหลดภาพ</span>
+                        </a>
+                    </div>
+                </div>
                 <div>
                     <input type="file" id="file" accept="image/*" hidden>
                     <div class="img-area" data-img="">
@@ -117,11 +127,12 @@ $group = Yii::$app->request->get('group');
                         <p>Image size must be less than <span>2MB</span></p>
                         <?php echo Html::img($model->showImg(), ['class' => 'card-img-top']) ?>
                     </div>
-<div class="d-flex justify-content-center mt-2">
-    <span class="select-image btn btn-primary shadow rounded-pill w-50"><i class="fa-solid fa-cloud-arrow-up"></i> เลือกรูปภาพ</span>
-</div>
+
+                    <span class="select-image btn btn-primary shadow rounded-pill w-50"><i
+                            class="fa-solid fa-cloud-arrow-up"></i> เลือกรูปภาพ</span>
                 </div>
-     
+            </div>
+        </div>
     </div>
     <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
         <?= $this->render('_form_detail' . $model->asset_group . '.php', ['model' => $model, 'form' => $form]) ?>
@@ -130,20 +141,14 @@ $group = Yii::$app->request->get('group');
 
 <!-- ถ้าเป็นรถยนต์ -->
 <?php if($model->assetItem?->category_id == 4):?>
+<?php echo $model->assetItem->id?>
 <?= $this->render('asset_item',['model' => $model, 'form' => $form]) ?>
 <?php endif;?>
 
-<div class="form-group mt-4 d-flex justify-content-center gap-3">
-<?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-<?php // Html::a('<i class="fa-solid fa-arrow-left"></i> ย้อนกลับ' , ['/am/asset/view','id' => $model->id], ['class' => 'btn btn-secondary rounded-pill shadow'])?>
-<?= Html::a('ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view','id' => $model->id], ['class' => 'btn btn-secondary rounded-pill shadow']) ?>
+<div class="form-group mt-4 d-flex justify-content-center">
+    <?= Html::button('<i class="fa-solid fa-floppy-disk"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
 </div>
 <?php ActiveForm::end(); ?>
-
-
-</div>
-</div>
-
 
 
 <?php
@@ -154,46 +159,6 @@ $js = <<< JS
 
 
 
-
-
-\$('#form-asset').on('beforeSubmit', function (e) {
-            var form = \$(this);
-            
-            Swal.fire({
-            title: "ยืนยัน?",
-            text: "บันทึกข้อมูล!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "ยกเลิก!",
-            confirmButtonText: "ใช่, ยืนยัน!"
-            }).then((result) => {
-            if (result.isConfirmed) {
-                
-                \$.ajax({
-                    url: form.attr('action'),
-                    type: 'post',
-                    data: form.serialize(),
-                    dataType: 'json',
-                    success: async function (response) {
-                        console.log(response);
-                        
-                        if(response.status == 'success') {
-                            closeModal()
-                            success()
-                             window.location.reload(true);
-                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                        }
-                    }
-                });
-
-            }
-            });
-            return false;
-        });
-
-        
     \$('.select-image').click(function (e) { 
             \$('#file').click();
             

@@ -20,7 +20,7 @@ use app\modules\am\models\Asset;
                         <th class="fw-semibold" scope="col">วิธีได้มา</th>
                         <th class="fw-semibold" scope="col">ปีงบประมาณ</th>
                         <th class="fw-semibold" scope="col">สถานะ</th>
-                        <th class="fw-semibold text-center" scope="col" style="width: 150px;">ดำเนินการ</th>
+                        <th class="fw-semibold text-center" scope="col" style="width: 100px;">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
@@ -47,13 +47,30 @@ use app\modules\am\models\Asset;
                         
                         <td class="align-middle"><?=$model->on_year?></td>
                         <td><?=$model->statusName()?></td>
-                        <td class="align-middle text-center">
+                        <td class="fw-light">
+                        <div class="btn-group">
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/am/asset/update', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                <i class="bi bi-caret-down-fill"></i>
+                            </button>
+
+                            <ul class="dropdown-menu">
+                            <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['/am/asset/view', 'id' => $model->id], ['class' => 'dropdown-item']) ?>
+                                    </ui>
+                                    
+                            
+                        </div>
+
+                    </td>
+                    
+                        <!-- <td class="align-middle text-center">
                             <div class="d-flex gap-3">
                                 <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/am/asset/view','id' => $model->id])?>
                                 <?=Html::a('<i class="fa-solid fa-pen-to-square fa fa-2x text-warning"></i>',['/am/asset/update','id' => $model->id])?>
                                 <?= Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>', ['/am/asset/delete', 'id' => $model->id], ['class' => 'delete-asset']) ?>
                             </div>
-                        </td>
+                        </td> -->
                     </tr>
                     <?php endforeach; ?>
 

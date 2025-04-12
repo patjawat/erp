@@ -1,15 +1,15 @@
 <?php
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use app\components\AppHelper;
-use kartik\select2\Select2;
-use iamsaint\datetimepicker\Datetimepicker;
-use app\components\CategoriseHelper;
-use app\modules\hr\models\Organization;
 use app\models\Categorise;
+use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use yii\widgets\MaskedInput;
+use app\components\AppHelper;
+use yii\bootstrap5\ActiveForm;
+use app\components\CategoriseHelper;
+use app\modules\hr\models\Organization;
+use iamsaint\datetimepicker\Datetimepicker;
 // $assetType = Categorise::find()->where(['name' => 'asset_type','category_id' => $model->category_id])->one();
 // $AssetitemList = Categorise::find()->where(['name' => 'asset_item','asset_group' => 2])->all();
 $Assetitems = Categorise::find()
@@ -30,14 +30,14 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
 ?>
 
 
-<div class="card">   
-<div class="card-body">
+<div class="card">
+    <div class="card-body">
         <div class="asset-form">
             <div class="row">
                 <div class="col-lg-6 col-sm-12">
                     <div class="row">
 
-                    <div class="<?=$model->isNewRecord ? 'col-9' : 'col-12'?>">
+                        <div class="<?=$model->isNewRecord ? 'col-9' : 'col-12'?>">
                             <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
                                         'data' => $listAssetitem,
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
@@ -100,7 +100,7 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                                 <?= $form->field($model, 'fsn_auto')->checkbox(['custom' => true])->label('FSN Auto') ?>
                             </div>
                         </div>
-<?php endif;?>
+                        <?php endif;?>
                         <div class="col-lg-6 col-sm-6">
                             <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขครุภัณฑ์') ?>
                         </div>
@@ -108,19 +108,19 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                         <div class="col-lg-6 col-sm-6">
                             <?= $form->field($model, 'data_json[fsn_old]')->textInput(['maxlength' => true])->label('เลขครุภัณฑ์เดิม') ?>
                         </div>
-                     
 
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
-               
-                </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'data_json[unit]')->textInput()->label('หน่วยนับ') ?>
-               
-                </div>
-               
+
                         <div class="col-6">
-                    <?=$form->field($model, 'receive_date')->widget(Datetimepicker::className(),[
+                            <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
+
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[unit]')->textInput()->label('หน่วยนับ') ?>
+
+                        </div>
+
+                        <div class="col-6">
+                            <?=$form->field($model, 'receive_date')->widget(Datetimepicker::className(),[
                             'options' => [
                                 'timepicker' => false,
                                 'datepicker' => true,
@@ -131,9 +131,9 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                             ],
                             ])->label('วันที่รับเข้า');
                         ?>
-                </div>
+                        </div>
                         <div class="col-6">
-                    <?=$form->field($model, 'data_json[expire_date]')->widget(Datetimepicker::className(),[
+                            <?=$form->field($model, 'data_json[expire_date]')->widget(Datetimepicker::className(),[
                             'options' => [
                                 'timepicker' => false,
                                 'datepicker' => true,
@@ -144,20 +144,20 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                             ],
                             ])->label('วันหมดประกัน');
                         ?>
-                </div>
+                        </div>
                     </div>
                     <!-- End Row Sub  -->
                 </div>
                 <!-- En col-6 main -->
                 <div class="col-6">
                     <div class="row">
-                   
+
                         <?php // print_r(CategoriseHelper::Title('หจก.นอร์ทอีส เมดิคอล ซัพพลาย')->one()->code) ?>
-                        
+
 
                         <div class="col-6">
 
-                    <?php
+                            <?php
                                 echo $form->field($model, 'data_json[method_get]')->widget(Select2::classname(), [
                                     'data' => $model->ListMethodget(),
                                     'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -173,9 +173,9 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                                 ])->label('วิธีได้มา');
                         ?>
 
-            </div>
-                <div class="col-6">
-                    <?php
+                        </div>
+                        <div class="col-6">
+                            <?php
                                 echo $form->field($model, 'data_json[purchase]')->widget(Select2::classname(), [
                                     'data' => $model->ListPurchase(),
                                     'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -191,9 +191,9 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                                         ])->label('การจัดซื้อ');
                                         ?>
 
-                </div>
-                <div class="col-6">
-                    <?php
+                        </div>
+                        <div class="col-6">
+                            <?php
                                 echo $form->field($model, 'data_json[budget_type]')->widget(Select2::classname(), [
                                     'data' => $model->ListBudgetdetail(),
                                     'options' => ['placeholder' => 'กรุณาเลือก'],
@@ -209,17 +209,17 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                                 ])->label('ประเภทเงิน');
                         ?>
 
-                </div>
-               
+                        </div>
 
-                <div class="col-3">
-                    <?= $form->field($model, 'price')->textInput() ?>
-                </div>
-                <div class="col-3">
-                <?= $form->field($model, 'data_json[on_year]')->widget(MaskedInput::className(),['mask'=>'9999'])->label('ปีงบประมาณ') ?>
-                  
-                </div>
-                <div class="col-6">
+
+                        <div class="col-3">
+                            <?= $form->field($model, 'price')->textInput() ?>
+                        </div>
+                        <div class="col-3">
+                            <?= $form->field($model, 'data_json[on_year]')->widget(MaskedInput::className(),['mask'=>'9999'])->label('ปีงบประมาณ') ?>
+
+                        </div>
+                        <div class="col-6">
                             <?php
                                 echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
                                     'data' => $model->ListVendor(),
@@ -238,8 +238,8 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
 
 
                         </div>
-                <div class="col-6">
-                <?php
+                        <div class="col-6">
+                            <?php
                                 echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
                                     'data' => $model->ListAssetStatus(),
                                     'options' => ['placeholder' => 'กรุณาเลือก...'],
@@ -254,22 +254,19 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
                                     ]
                                 ])->label('สถานะ');
                         ?>
-                    </div>
-                
+                        </div>
 
-               
+
+
                     </div>
                 </div>
             </div>
 
-            
-            <div
-                class="alert alert-primary"
-                role="alert"
-            >
+
+            <div class="alert alert-primary" role="alert">
                 <strong>*</strong> รายละเอียดยี่ห้อครุภัณฑ์
             </div>
-            
+
             <div class="col-sm-12">
                 <?= $form->field($model, 'data_json[detail]')->widget(kartik\editors\Summernote::class, [
                     'useKrajeePresets' => true,
@@ -282,7 +279,7 @@ $listAssetitem = ArrayHelper::map($Assetitems,'code','title');
             </div>
 
 
-         
+
 
         </div>
     </div>

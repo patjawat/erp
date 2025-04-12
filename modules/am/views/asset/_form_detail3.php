@@ -17,8 +17,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 ?>
 
-<div class="card">
-    <div class="card-body">
         <div class="asset-form">
             <div class="row">
                 <div class="col-lg-6 col-sm-12">
@@ -280,18 +278,12 @@ use iamsaint\datetimepicker\Datetimepicker;
                                 'multiple' => false,
                                 'options' => ['disabled' => false],
                             ])->label('หน่วยงานภายในตามโครงสร้าง');?>
-                            <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
-                            <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
-                            <?php else:?>
-                            <?php endif;?>
+      
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
 
 <?php
 $js = <<< JS
