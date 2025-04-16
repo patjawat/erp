@@ -40,7 +40,7 @@ class BookingVehicleController extends Controller
                 'verbs' => [
                     'class' => VerbFilter::className(),
                     'actions' => [
-                        'delete' => ['POST'],
+                        'cancel' => ['POST'],
                     ],
                 ],
             ]
@@ -262,11 +262,19 @@ class BookingVehicleController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
+    //ยกเลิกการจอง
+     public function actionCancel($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $model->status = 'Cancel';
+        $model->save(false);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'status' => 'success',
+            'message' => 'ยกเลิกการจองเรียบร้อยแล้ว',
+        ]; 
+        
 
-        return $this->redirect(['index']);
     }
 
     /**

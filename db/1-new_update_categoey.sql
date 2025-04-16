@@ -94,3 +94,6 @@ UPDATE helpdesk h
 LEFT JOIN employees e ON e.user_id = h.created_by
 SET h.emp_id = e.id
 WHERE h.emp_id IS NULL;
+
+
+UPDATE `categorise` set name='committee' WHERE `name` LIKE 'board'

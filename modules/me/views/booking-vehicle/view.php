@@ -13,10 +13,9 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="mb-3 badge-soft-primary p-3 rounded">
-    <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label>
-    <p><?php echo $model->userRequest()['fullname'];?>
-        ขอใช้<?php echo $model->carType->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่
-        <?php echo $model->showDateRange()?></p>
+    <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label> <span><?=$model->viewStatus()['view']?></span>
+    <p><?php echo $model->userRequest()['fullname'];?> ขอใช้<?php echo $model->carType->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่ <?php echo $model->showDateRange()?></p>
+    
        
 
 </div>
@@ -64,7 +63,69 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="form-group">
     <?php echo $model->data_json['remarks'] ?? '-'; ?>
 </div>
+<?php if($model->status == 'Pending'):?>
 <div class="d-flex justify-content-center gap-2">
         <?= Html::a('<i class="bi bi-pencil"></i> แก้ไข', ['/me/booking-vehicle/update','id' => $model->id,'title' => '<i class="bi bi-pencil"></i> แก้ไขแบบขอใช้รถยนต์'],['class' => 'btn btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
-        <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิกการจอง', ['print', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill']) ?>
+        <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิกการจอง', ['/me/booking-vehicle/cancel', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill cancel-booking']) ?>
 </div>
+<?php endif;?>
+
+
+<?php
+$js = <<<JS
+
+$('.cancel-booking').click(function (e) { 
+    e.preventDefault();
+    var url = $(this).attr('href');
+    console.log($(this).attr('href'));
+    
+    Swal.fire({
+        title: 'ยืนยันการยกเลิกการจอง?',
+        text: "คุณต้องการยกเลิกการจองหรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก'
+      }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status == 'success') {
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: response.message,
+                            icon: 'success',
+                            timer: 1000
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: response.message,
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถยกเลิกการจองได้',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+    }); 
+});
+
+
+
+JS;
+$this->registerJs($js);
+?>

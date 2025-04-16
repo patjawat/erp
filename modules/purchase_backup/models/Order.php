@@ -258,7 +258,7 @@ class Order extends \yii\db\ActiveRecord
     // แสดงชื่อคณะกรรมการ
     public function getBoard()
     {
-        return self::find()->where(['category_id' => $this->id, 'name' => 'board'])->all();
+        return self::find()->where(['category_id' => $this->id, 'name' => 'committee'])->all();
     }
 
     // วิธีซื้อหรือจ้าง
@@ -270,7 +270,7 @@ class Order extends \yii\db\ActiveRecord
     // คณะกรรมการ
     public function ListBoard()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'board'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'committee'])->all(), 'code', 'title');
     }
 
     // วิธีจัดหา

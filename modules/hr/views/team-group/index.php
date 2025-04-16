@@ -1,0 +1,48 @@
+<?php
+
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\hr\models\TeamGroup;
+/** @var yii\web\View $this */
+/** @var app\modules\hr\models\TeamGroupSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+
+$this->title = 'กลุ่ม/ทีมประสาน';
+$this->params['breadcrumbs'][] = $this->title;
+?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('@app/modules/hr/views/employees/menu') ?>
+<?php $this->endBlock(); ?>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <h6>
+                <i class="bi bi-ui-checks"></i> ทะเบียน<?=$this->title?> รายการ
+                <span
+                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
+            </h6>
+        </div>
+        <div class="d-flex justify-content-between  align-top align-items-center">
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+            <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title,['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+        </div>
+
+        <?php
+        echo $this->render('list', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider
+        ]);
+        ?>
+
+    </div>
+</div>

@@ -18,12 +18,12 @@ Dashboard
 <?php $this->endBlock(); ?>
 
 
-
-<div class="row">
-    <div class="col-lg-8 col-md-6 col-sm-12">
-        <?= $this->render('employee_summary', [
+<?= $this->render('employee_summary', [
             'dataProvider' => $dataProvider,
         ]) ?>
+<div class="row">
+    <div class="col-lg-8 col-md-6 col-sm-12">
+       
         <?= $this->render('gender_chart', ['dataProviderGender' => $dataProviderGender]) ?>
         
         <?php $this->render('position_name', [

@@ -31,7 +31,7 @@ use yii\helpers\Html;
                 <td><?= $item->getUserReq()['avatar'] ?></td>
                 <td><?= $item->room->title ?></td>
                 <td><?= $item->viewStatus()['view'] ?></td>
-                <td class="text-end">
+                <td class="text-center">
                     <?= Html::a('<i class="fa-solid fa-eye fa-2x"></i>', [$url . 'view', 'id' => $item->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
                     <?php if ($item->status == 'Pending'): ?>
                     <div class="action-icon approve d-inline-flex confirm-meeting" data-id="<?= $item->id ?>"

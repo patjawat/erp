@@ -56,15 +56,15 @@ class m240522_073153_create_order_table extends Migration
             $this->insert('categorise', ['category_id' => '', 'code' => '8', 'name' => 'purchase_condition', 'title' => 'ซ.กรณีอื่นตามที่กำหนดในกฏกระทรวง', 'data_json' => ['comment' => '-'], 'active' => 1]);
         }
 
-        $sqlBoardStatus = Yii::$app->db->createCommand("select * from categorise where name = 'board'")->queryAll();
+        $sqlBoardStatus = Yii::$app->db->createCommand("select * from categorise where name = 'committee'")->queryAll();
         if (count($sqlBoardStatus) < 1) {
             // คณะกรรมการ
-            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'board', 'title' => 'ประธานกรรมการ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'board', 'title' => 'กรรมการ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'board', 'title' => 'กรรมการและเลขานุการ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'board', 'title' => 'เลขานุการ', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'board', 'title' => 'ผู้ควบคุมงาน', 'active' => 1]);
-            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'board', 'title' => 'ผู้ตรวจรับพัสดุหรืองานจ้าง', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '1', 'name' => 'committee', 'title' => 'ประธานกรรมการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '2', 'name' => 'committee', 'title' => 'กรรมการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '3', 'name' => 'committee', 'title' => 'กรรมการและเลขานุการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '4', 'name' => 'committee', 'title' => 'เลขานุการ', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '5', 'name' => 'committee', 'title' => 'ผู้ควบคุมงาน', 'active' => 1]);
+            $this->insert('categorise', ['category_id' => '', 'code' => '6', 'name' => 'committee', 'title' => 'ผู้ตรวจรับพัสดุหรืองานจ้าง', 'active' => 1]);
         }
 
         $sqlOrderStatus = Yii::$app->db->createCommand("select * from categorise where name = 'order_status'")->queryAll();

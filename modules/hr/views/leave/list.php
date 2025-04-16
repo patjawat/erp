@@ -25,7 +25,8 @@ $me = UserHelper::GetEmployee();
     <tbody class="align-middle table-group-divider">
         <?php foreach($dataProvider->getModels() as $key => $item):?>
         <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+        </td>
             <td class="text-truncate" style="max-width: 230px;">
                 <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
                 <?=$item->getAvatar(false)['avatar']?>

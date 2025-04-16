@@ -224,7 +224,7 @@ class StockOut extends \yii\db\ActiveRecord
     // คณะกรรมการ
     public function ListBoard()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'board'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'committee'])->all(), 'code', 'title');
     }
 
 

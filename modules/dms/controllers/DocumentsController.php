@@ -9,10 +9,10 @@ use app\models\Uploads;
 use yii\web\Controller;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
 use app\components\LineMsg;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
+use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
@@ -20,7 +20,7 @@ use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
-use app\modules\filemanager\components\FileManagerHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -64,32 +64,32 @@ class DocumentsController extends Controller
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
             ['like', 'doc_number', $searchModel->q],
         ]);
-        
+
         $dataProvider->setSort(['defaultOrder' => [
             'doc_regis_number' => SORT_DESC,
             'thai_year' => SORT_DESC,
-            ]]);
-            return $this->render('list_receive', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-        
-        public function actionSend()
-        {
-            $searchModel = new DocumentSearch([
-                'thai_year' => (Date('Y') + 543),
-                'document_group' => 'send',
-            ]);
-            $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andFilterWhere(['document_group' => 'send']);
+        ]]);
+        return $this->render('list_receive', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionSend()
+    {
+        $searchModel = new DocumentSearch([
+            'thai_year' => (Date('Y') + 543),
+            'document_group' => 'send',
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['document_group' => 'send']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
             ['like', 'doc_number', $searchModel->q],
         ]);
-        
+
         $dataProvider->setSort(['defaultOrder' => [
             'doc_regis_number' => SORT_DESC,
             'thai_year' => SORT_DESC,
@@ -99,7 +99,59 @@ class DocumentsController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-    
+
+    public function actionAppointment()
+    {
+        $searchModel = new DocumentSearch([
+            'thai_year' => (Date('Y') + 543),
+            'document_group' => 'appointment',
+            'document_type' => 'DT9',
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['document_group' => 'appointment']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
+            ['like', 'doc_number', $searchModel->q],
+        ]);
+
+        $dataProvider->setSort(['defaultOrder' => [
+            'doc_regis_number' => SORT_DESC,
+            'thai_year' => SORT_DESC,
+        ]]);
+        return $this->render('list_appointment', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionAnnounce()
+    {
+        $searchModel = new DocumentSearch([
+            'thai_year' => (Date('Y') + 543),
+            'document_group' => 'announce',
+            'document_type' => 'DT5',
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['document_group' => 'announce']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
+            ['like', 'doc_number', $searchModel->q],
+        ]);
+
+        $dataProvider->setSort(['defaultOrder' => [
+            'doc_regis_number' => SORT_DESC,
+            'thai_year' => SORT_DESC,
+        ]]);
+        return $this->render('list_announce', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     /**
      * Displays a single Documents model.
      * @param int $id ID
@@ -137,7 +189,8 @@ class DocumentsController extends Controller
         // ถ้าเป็นหนังสทือราชการถ้ปีปัจจบัน
         $model = new Documents([
             'thai_year' => (Date('Y') + 543),
-            'document_group' => $this->request->get('document_group')
+            'document_group' => $this->request->get('document_group'),
+            'document_type' => $this->request->get('document_type')
         ]);
         $model->doc_transactions_date = AppHelper::convertToThai(date('Y-m-d'));
         $dateTime = new DateTime();
@@ -148,32 +201,31 @@ class DocumentsController extends Controller
         $model->doc_regis_number = $model->runNumber();
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;    
+                \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                
-                $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-                $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
-                if ($model->doc_expire !== '') {
-                    $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
-                } else {
-                    $model->doc_expire = '';
+                try {
+                    $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+                    $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
+                    if ($model->doc_expire !== '') {
+                        $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
+                    } else {
+                        $model->doc_expire = '';
+                    }
+                } catch (\Throwable $th) {
+                    // throw $th;
                 }
 
-
-            if(!is_numeric($model->document_org)){
-                $model->document_org = $this->UpdateDocOrg($model);
-            }
+                if (!is_numeric($model->document_org)) {
+                    $model->document_org = $this->UpdateDocOrg($model);
+                }
 
                 if ($model->save()) {
                     $model->UpdateDocumentTags();
-                }else{
-                    
+                } else {
                     return $model->getErrors();
                 }
 
-
-
-                return $this->redirect(['view','id' => $model->id]);
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             // $model->loadDefaultValues();
@@ -186,9 +238,6 @@ class DocumentsController extends Controller
         ]);
     }
 
-
-
-    
     /**
      * Updates an existing Documents model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -202,10 +251,13 @@ class DocumentsController extends Controller
         // $model->doc_date = AppHelper::convertToThai($model->doc_date);
         // $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
         $old_json = $model->data_json;
-        $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
-        $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
-
+        try {
+            $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
+            $model->doc_date = AppHelper::convertToThai($model->doc_date);
+            $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -213,24 +265,26 @@ class DocumentsController extends Controller
             // return $model->data_json['send_line'];
 
             // $result = '[' . $model->data_json['tags_department'] . ']'; // เพิ่ม [ และ ] รอบสตริง
-
-            $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-            $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
-            if ($model->doc_expire !== '') {
-                $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
-            } else {
-                $model->doc_expire = '';
+            try {
+                $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+                $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
+                if ($model->doc_expire !== '') {
+                    $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
+                } else {
+                    $model->doc_expire = '';
+                }
+            } catch (\Throwable $th) {
+                // throw $th;
             }
 
-          
-            if(!is_numeric($model->document_org)){
+            if (!is_numeric($model->document_org)) {
                 $model->document_org = $this->UpdateDocOrg($model);
             }
-            
+
             if ($model->save()) {
                 $model->UpdateDocumentTags();
                 return $this->redirect([$model->document_group]);
-            }else{
+            } else {
                 return $model->getErrors();
             }
         } else {
@@ -250,23 +304,21 @@ class DocumentsController extends Controller
         //     return $this->redirect(['view', 'id' => $model->id]);
     }
 
-
     // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
     protected function UpdateDocOrg($model)
     {
         // try {
-            $title = $model->document_org;
-            $check = Categorise::find()->where(['name' => 'document_org','title' => $title])->one();
-            if(!$check){
-                $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
-                $newModel = new Categorise();
-                $newModel->code = ($maxCode+1);
-                $newModel->name = 'document_org';
-                $newModel->title = $title;
-                $newModel->save(false);
-                return $newModel->code;
-
-            }
+        $title = $model->document_org;
+        $check = Categorise::find()->where(['name' => 'document_org', 'title' => $title])->one();
+        if (!$check) {
+            $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
+            $newModel = new Categorise();
+            $newModel->code = ($maxCode + 1);
+            $newModel->name = 'document_org';
+            $newModel->title = $title;
+            $newModel->save(false);
+            return $newModel->code;
+        }
 
         // } catch (\Throwable $th) {
         // }
@@ -285,22 +337,21 @@ class DocumentsController extends Controller
             if (isset($model->doc_transactions_date)) {
                 preg_replace('/\D/', '', $model->doc_transactions_date) == '' ? $model->addError('doc_transactions_date', $requiredName) : null;
             }
-            
+
             // $docRegisNumber = Documents::find()->where(['document_group' => $model->document_group,'doc_regis_number' => $model->doc_regis_number,'thai_year' => $model->thai_year])->one();
             // if($docRegisNumber){
             //     if($docRegisNumber->id !== $model->id){
             //         $model->addError('doc_regis_number', 'เลขทะเบียนซ้ำ');
             //     }
-                
+
             // }
-            
+
             // $docNumber = Documents::find()->where(['document_group' => $model->document_group,'doc_number' => $model->doc_number,'thai_year' => $model->thai_year])->one();
             // if($docNumber){
             //     $model->addError('doc_number', 'เลขทะเบียนซ้ำ');
             // }
 
             //  $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;
-            
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[Html::getInputId($model, $attribute)] = $errors;
@@ -330,7 +381,6 @@ class DocumentsController extends Controller
     // แสดง File และแสดงความเห็น
     public function actionComment($id)
     {
-        
         $emp = UserHelper::GetEmployee();
         $model = new DocumentsDetail([
             'document_id' => $id,
@@ -341,11 +391,9 @@ class DocumentsController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
-            
-            
             if ($model->save()) {
                 $model->UpdateDocumentsDetail();
-                return[
+                return [
                     'status' => 'success'
                 ];
                 // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
@@ -368,7 +416,6 @@ class DocumentsController extends Controller
         }
     }
 
-
     public function actionUpdateComment($id)
     {
         $emp = UserHelper::GetEmployee();
@@ -381,7 +428,7 @@ class DocumentsController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->save()) {
                 $model->UpdateDocumentsDetail();
-                return[
+                return [
                     'status' => 'success'
                 ];
                 // return [

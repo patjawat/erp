@@ -42,12 +42,7 @@ use app\modules\dms\models\Documents;
                                         <?= Html::img('@web/img/krut.png', ['style' => 'width:20px']); ?>
 
                                         <?= isset($item->document) ? Html::encode($item->document->doc_number) : 'ไม่พบเลขที่เอกสาร'; ?>
-                                        <?php
-                                        echo "<pre>";
-                                        print_r($item->document->doc_number);
-                                        echo "</pre>";
-
-                                        ?>
+            
                                     </p>
                                         <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo isset($item->document) ? $item->document->topic : '' ?> <?php echo (isset($item->document) && $item->document->isFile()) ? '<i class="fas fa-paperclip"></i>' : '' ?></p>
                                         </div>

@@ -57,7 +57,7 @@ $msg = 'ขอ';
                             </td>
                             <td><?php echo $item->vehicle->locationOrg?->title ?? '-'?></td>
                             <td><?php echo $item->vehicle->carType?->title ?? '-'?></td>
-                            <td><?php echo $item->vehicle->viewStatus() ?? '-'?></td>
+                            <td><?php echo $item->vehicle->viewStatus()['view'] ?? '-'?></td>
                             <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 

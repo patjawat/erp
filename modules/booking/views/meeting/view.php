@@ -54,14 +54,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-center gap-2 mt-3">
-    <button type="button" class="btn btn-primary confirm-meeting" data-id="<?=$model->id?>" data-status="Pass" data-text="อนุมัติการจอง" data-icon="success">
+    <button type="button" class="btn btn-primary confirm-meeting  rounded-pill" data-id="<?=$model->id?>" data-status="Pass" data-text="อนุมัติการจอง" data-icon="success">
     <i class="fa-regular fa-circle-check"></i> อนุมัติ
     </button>
 
-  <button type="button" class="btn btn-danger confirm-meeting" data-id="<?=$model->id?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
+  <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?=$model->id?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
   <i class="fa-solid fa-xmark"></i> ปฏิเสธ
   </button>
-  <button type="button" class="btn btn-outline-secondary">
-  <i class="fa-solid fa-power-off"></i> ปิด
-  </button>
+
+  <button type="button" class="btn btn-secondary  rounded-pill" data-bs-dismiss="modal"><i
+  class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>

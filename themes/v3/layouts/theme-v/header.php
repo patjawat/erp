@@ -10,7 +10,7 @@ use app\components\UserHelper;
         <div class="d-flex align-items-center h-100">
             <div class="navbar-brand-box">
 
-                <a href="<?=Url::to(['/'])?>" class="logo logo-light">
+                <a href="<?=Url::to(['/me/'])?>" class="logo logo-light">
                     <span class="logo-sm">
                         <i class="bi bi-box fs-2"></i>
                     </span>

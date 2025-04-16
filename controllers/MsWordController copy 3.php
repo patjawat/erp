@@ -290,7 +290,7 @@ class MsWordController extends \yii\web\Controller
         $templateProcessor->setValue('budget_year', 'ปีงบประมาณ');
         $templateProcessor->setValue('budget_amount', number_format($model->SumPo(), 2));
         $templateProcessor->setValue('budget_letter', AppHelper::convertNumberToWords($model->SumPo(), 2));
-        $templateProcessor->setValue('board', 'คณะกรรมการกำหนดรายละเอียด');
+        $templateProcessor->setValue('committee', 'คณะกรรมการกำหนดรายละเอียด');
         $templateProcessor->setValue('emp_name', $model->getUserReq()['fullname']);
         $templateProcessor->setValue('emp_position', $model->getUserReq()['position_name']);
         $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
@@ -473,7 +473,7 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('price', number_format($model->sumPo(), 2));
             $templateProcessor->setValue('price_character', AppHelper::convertNumberToWords($model->SumPo(), 2));
             $templateProcessor->setValue('sup_detailfull', 'รายละเอียดของพัสดุ');
-            $templateProcessor->setValue('board', 'คณะกรรมการตรวจรับพัสดุ');
+            $templateProcessor->setValue('committee', 'คณะกรรมการตรวจรับพัสดุ');
             $templateProcessor->setValue('me_name', $model->getMe()['fullname']);
             $templateProcessor->setValue('me_position', $model->getMe()['position']);
             $templateProcessor->setValue('emphead_name', $this->getInfo()['leader_fullname']);

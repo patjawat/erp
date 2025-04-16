@@ -34,7 +34,6 @@ use app\modules\dms\models\DocumentTags;;
 <?= $form->field($model, 'to_id')->textInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->textInput()->label(false); ?>
 <?= $form->field($model, 'name')->textInput(['value' => 'comment'])->label(false); ?>
-<h1>Hello</h1>
 <?php
 
 echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [

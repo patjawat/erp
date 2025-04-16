@@ -27,6 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="container-fluid">
+    <?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel]) ?>
     <div class="card shadow-sm mb-4">
 
         <div class="card-body">

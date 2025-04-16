@@ -168,10 +168,8 @@ $("body").on("click", ".btn-approve", async function (e) {
                 url: url,
                 data: { id: id, status: status },
                 dataType: "json",
-                beforeSend: function() {
-                   
-                },
                 success: function (response) {
+                    console.log('Response:', response);
                     if (response.status === 'success') {
 
                         Swal.fire({

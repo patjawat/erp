@@ -188,9 +188,31 @@ class Meeting extends \yii\db\ActiveRecord
         return ThaiDateHelper::formatThaiDate($this->date_start).' '.$this->viewMeetingTime();
     }
 
+
     public function viewStatus()
     {
-      return AppHelper::viewStatus($this->status);
+       return $this->getStatus($this->status);
+  
+    }
+    
+
+    public function getStatus($status)
+    {
+    //   return AppHelper::viewStatus($this->status);
+      $title = '';
+      $color = '';
+      $view = '';
+      $count = self::find()->where(['status' => $status])->count();
+      $total = self::find()->count();
+      $data = AppHelper::viewStatus($status);
+      return [
+          'total' => $total,
+          'count' => $count,
+          'percent' => $count / $total * 100,
+          'title' => $data['title'],
+          'color' => $data['color'],
+          'view' => $data['view']
+      ];
        
     }
 

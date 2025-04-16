@@ -18,6 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="container-fluid">
+<?=$this->render('@app/modules/booking/views/meeting/summary',['model' => $searchModel]) ?>
 
     <div class="card">
         <div class="card-body">
@@ -75,7 +76,7 @@ $js = <<< JS
               $('.modal').modal('hide');
               Swal.fire({
               icon: 'success',
-              title: 'Confirmed!',
+              title: 'บันทึกสำเร็จ!',
               text: res.message || 'ดำเนินการเรียบร้อยแล้ว',
               timer: 1000,
               showConfirmButton: false

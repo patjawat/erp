@@ -8,7 +8,9 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\SiteHelper;
 use yii\web\NotFoundHttpException;
+use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
 use app\modules\hr\models\Organization;
 use app\modules\booking\models\VehicleDetail;
@@ -141,7 +143,7 @@ class VehicleController extends Controller
         
 		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $bookings = Vehicle::find()
-                // ->andWhere(['<>', 'status', 'Cancel'])
+                ->andWhere(['<>', 'status', 'Cancel'])
                 ->all();
                 $data = [];
 
@@ -168,14 +170,13 @@ class VehicleController extends Controller
                             'dateTime' => $item->viewTime(),
                             // 'dateTime' => $item->viewMeetingTime(),
                             'status' => $item->viewStatus()['view'],
-                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
+                            'view' => $this->renderAjax('view', ['model' => $item,'action' => true]),
                             'description' => 'คำอธิบาย',
                         ],
                          'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
                         'description' => 'description for All Day Event',
                         'textColor' => 'black',
                         'backgroundColor' => '#eee',
-                        'url' => Url::to(['/event/view', 'id' => $item->id]),
                     ];
                 }
 
@@ -351,6 +352,7 @@ class VehicleController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) {
+            $transaction = Yii::$app->db->beginTransaction();
             $model->status = 'Pass';
             $post = Yii::$app->request->post();
 
@@ -360,14 +362,12 @@ class VehicleController extends Controller
             $dates = Yii::$app->request->post('dates', []);
             $cars = Yii::$app->request->post('cars', []);
             $drivers = Yii::$app->request->post('drivers', []);
-
-            // $transaction = Yii::$app->db->beginTransaction();
-            try {
+            // try {
                 // บันทึกข้อมูลหลักการจอง
                 if (!$model->save()) {
                     throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
                 }
-
+                
                 foreach ($post['vehicleDetails'] as $key => $detail) {
                     $bookingDetail = VehicleDetail::findOne($detail['id']);
                     if ($bookingDetail) {
@@ -375,24 +375,26 @@ class VehicleController extends Controller
                         $bookingDetail->license_plate = $detail['car'];
                         $bookingDetail->status = 'Pass';
                         $bookingDetail->save(false);
-                      
+                        
                     }
-
+                    
                     if (!$bookingDetail->save()) {
                         throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
                     }
                 }
-
-                // $transaction->commit();
+                
+                $transaction->commit();
+                $this->sendApprove($model);
+               
                 
                 return [
                     'status' => 'success'
                 ];
                 // return $this->redirect(['view', 'id' => $model->id]);
-            } catch (\Exception $e) {
-                $transaction->rollBack();
-                Yii::$app->session->setFlash('error', $e->getMessage());
-            }
+            // } catch (\Exception $e) {
+            //     $transaction->rollBack();
+            //     Yii::$app->session->setFlash('error', $e->getMessage());
+            // }
         }
 
         return [
@@ -401,6 +403,31 @@ class VehicleController extends Controller
                 'model' => $model,
             ]),
         ];
+    }
+
+
+    //ส่งการอนุมัติไปยังผู้อำนวยการและแจ้งเตือผู้ขอใช้ยานพาหนะ
+    private function sendApprove($model)
+    {
+        $info = SiteHelper::getInfo();
+        $emp_id = $info['director']->id;
+
+        // Check if an approval already exists for this vehicle and employee
+        $existingApproval = Approve::find()
+            ->where(['from_id' => $model->id, 'emp_id' => $emp_id, 'name' => 'vehicle'])
+            ->one();
+
+        if (!$existingApproval) {   
+            $newApproval = new Approve();
+            $newApproval->from_id = $model->id;
+            $newApproval->title = 'ขออนุมัติใช้รถ';
+            $newApproval->name = 'vehicle';
+            $newApproval->status = 'Pending';
+            $newApproval->emp_id = $emp_id;
+            $newApproval->level = 1;
+            $newApproval->data_json = ['label' => 'อนุมัติ'];
+            $newApproval->save(false);
+        }
     }
 
     public function actionCancel($id){

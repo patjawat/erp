@@ -40,25 +40,25 @@ $msg = 'ขอ';
                 <?php foreach ($dataProvider->getModels() as $item): ?>
                 <tr>
                     <td>
-                        <span class="fw-semibold "><?=$item->purchase->pr_number?></span></td>
-                    <td class="fw-light"> <?= $item->purchase->getUserReq()['avatar'] ?></td>
-                    <td><?=isset( $item->purchase->data_json['order_type_name']) ? $item->purchase->data_json['order_type_name'] : ''?>
+                        <span class="fw-semibold "><?=$item->purchase?->pr_number?></span></td>
+                    <td class="fw-light"> <?= $item->purchase?->getUserReq()['avatar'] ?></td>
+                    <td><?=isset( $item->purchase?->data_json['order_type_name']) ? $item->purchase?->data_json['order_type_name'] : ''?>
                     </td>
 
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
-                            <span class="fw-semibold "><?= $item->purchase->po_number?></span>
-                            <?= isset( $item->purchase->data_json['vendor_name']) ? $item->purchase->data_json['vendor_name'] : '' ?>
+                            <span class="fw-semibold "><?= $item->purchase?->po_number?></span>
+                            <?= isset( $item->purchase?->data_json['vendor_name']) ? $item->purchase?->data_json['vendor_name'] : '' ?>
                         </div>
                     </td>
-                    <td class="fw-light align-middle"><?= $item->purchase->StackComittee() ?></td>
+                    <td class="fw-light align-middle"><?= $item->purchase?->StackComittee() ?></td>
                     <td class="fw-light align-middle text-end">
                         <div class="d-felx flex-column">
                             <div class="fw-semibold ">
-                                <?= number_format( $item->purchase->calculateVAT()['priceAfterVAT'],2)?>
+                                <?= number_format($item->purchase?->calculateVAT() ? $item->purchase?->calculateVAT()['priceAfterVAT'] : 0, 2) ?>
                             </div>
                             <div class="text-primary mb-0 fs-15">
-                                <?=isset( $item->purchase->data_json['pq_budget_type_name']) ? $item->purchase->data_json['pq_budget_type_name'] : ''?>
+                                <?=isset( $item->purchase?->data_json['pq_budget_type_name']) ? $item->purchase?->data_json['pq_budget_type_name'] : ''?>
                             </div>
                         </div>
                     </td>

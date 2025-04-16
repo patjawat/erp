@@ -66,42 +66,54 @@ $this->title = $model->topic;
         <div class="card">
             <div class="card-body">
 
-        <!-- Nav pills -->
-        <div class="d-flex justify-content-between">
-            <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/dms/documents/'.$model->document_group],['class' => 'btn btn-secondary me-2'])?>
-            <ul class="nav nav-pills" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
-                </li>
-            </ul>
+                <!-- Nav pills -->
+                <div class="d-flex justify-content-between">
+                    <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/dms/documents/'.$model->document_group],['class' => 'btn btn-secondary me-2'])?>
+                    <ul class="nav nav-pills" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
+                        </li>
+                        <?php if($model->document_group == 'appointment'):?>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#committee">กลุ่ม/ทีมประสาน</a>
+                        </li>
+                        <?php endif;?>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
+                        </li>
+
+                    </ul>
+                </div>
+
+                <!-- Tab panes -->
+                <div class="tab-content mt-3">
+                    <div id="home" class="container tab-pane active pb-4">
+                        <div class="listComment"></div>
+                        <div class="viewFormComment"></div>
+                    </div>
+                    <div id="menu1" class="container tab-pane fade"><br>
+                        <?php echo $this->render('history',['model' => $model])?>
+                    </div>
+                    <?php if($model->document_group == 'appointment'):?>
+                    <div id="committee" class="container tab-pane  pb-4">
+                        <div class="list_commitee"><?php echo $this->render('list_committee',['model' => $model])?>
+                        </div>
+                    </div>
+                    <?php endif;?>
+                </div>
+
+            </div>
         </div>
 
-        <!-- Tab panes -->
-        <div class="tab-content mt-3">
-            <div id="home" class="container tab-pane active pb-4">
-                <div class="listComment"></div>
-                <div class="viewFormComment"></div>
-            </div>
-            <div id="menu1" class="container tab-pane fade"><br>
-                <?php echo $this->render('history',['model' => $model])?>
-            </div>
-        </div>
-
-        </div>
-        </div>
-        
     </div>
 
 </div>
 
 
-    <?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
+<?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
 
 
-    <?php // echo $this->render('track',['model' => $model])?>
+<?php // echo $this->render('track',['model' => $model])?>
 
 
 <?php

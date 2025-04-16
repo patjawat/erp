@@ -51,7 +51,7 @@ $this->title = 'My DashBoard';
 
                 <?php // echo $this->render('document'); ?>
                 <div id="viewDocument"></div>
-                <?php echo $this->render('team_work'); ?>
+                <?php echo $this->render('list_committee'); ?>
 
             </div>
         </div>

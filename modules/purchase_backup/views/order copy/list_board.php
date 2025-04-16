@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 
 $listBoard = Order::find()
-    ->where(['name' => 'board'])
+    ->where(['name' => 'committee'])
     ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.board') asc"))
     ->all();
 ?>
@@ -15,7 +15,7 @@ $listBoard = Order::find()
 
 <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded mb-3 d-flex justify-content-between">
     <h5><i class="fa-solid fa-circle-info text-primary"></i> กรรมการตรวจรับ</h5>
-    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
 </div>
 
 <table class="table table-primary">
@@ -42,7 +42,7 @@ $listBoard = Order::find()
             </td>
             <td>
 
-                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/sm/order-item/delete', 'id' => $item->id], [
                     'class' => 'btn btn-sm btn-danger delete-item',
                 ]) ?>

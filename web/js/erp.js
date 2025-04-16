@@ -18,6 +18,63 @@ jQuery(document).on("pjax:end", function () {
  
 });
 
+
+
+function handleFormSubmit(formSelector, actionUrl, successCallback) {
+  $(formSelector).on('beforeSubmit', function (e) {
+    var form = $(this);
+    Swal.fire({
+      title: "ยืนยัน?",
+      text: "บันทึกข้อมูล!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      cancelButtonText: "ยกเลิก!",
+      confirmButtonText: "ใช่, ยืนยัน!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'กำลังบันทึก...',
+          text: 'กรุณารอสักครู่',
+          allowOutsideClick: false,
+          didOpen: () => {
+            $('#main-modal').hide();
+            Swal.showLoading();
+            Swal.close();
+            $.ajax({
+              url: actionUrl || form.attr('action'),
+              type: 'post',
+              data: form.serialize(),
+              dataType: 'json',
+              success: async function (response) {
+                form.yiiActiveForm('updateMessages', response, true);
+                if (response.status == 'success') {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                    timer: 1000,
+                    showConfirmButton: false
+                  }).then(() => {
+                    if (typeof successCallback === 'function') {
+                      successCallback(response);
+                    } else {
+                      location.reload();
+                    }
+                  });
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+    return false;
+  });
+}
+
+
 // focus เวลาเปิก select2
 $(document).on("select2:open", () => {
   document

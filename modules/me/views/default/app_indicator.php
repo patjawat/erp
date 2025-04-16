@@ -16,7 +16,7 @@ $items = [
     [
         'title' => 'จองรถ',
         'icon' => 'fa-solid fa-car fs-1',
-        'url' => ['/me/booking-vehicle'],
+        'url' => ['/me/booking-vehicle/calendar'],
     ],
     [
         'title' => 'ห้องประชุม',

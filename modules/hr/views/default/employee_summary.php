@@ -1,6 +1,6 @@
 <?php
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use app\components\EmployeeHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
@@ -15,7 +15,7 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
 
 <div class="row">
 
-    <div class="col-lg-4 col-md-4 col-sm-12 col-sx-12">
+    <div class="col-lg-3 col-md-3 col-sm-12 col-sx-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -61,7 +61,7 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
     </div>
     <!-- End-col -->
 
-    <div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
+    <div class="col-lg-3 col-md-12 col-sm-12 col-sx-12">
         <div class="card" style="height: 103px;">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -100,7 +100,7 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
     <!-- End-col -->
 
     <!-- End-col -->
-    <div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
+    <div class="col-lg-3 col-md-12 col-sm-12 col-sx-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -128,9 +128,6 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
                         </div>
                     </div>
                 </div>
-
-
-
                 <!-- ความสมบรูณ์ของข้อมูล -->
                 <div class="progress progress-animate progress-sm" role="progressbar"
                     aria-valuenow="<?=$queryPositionName;?>" aria-valuemin="0" aria-valuemax="100">
@@ -145,4 +142,37 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
     </div>
     <!-- End-col -->
 
+
+    <!-- End-col -->
+    <div class="col-lg-3 col-md-12 col-sm-12 col-sx-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <?=Html::a(' <span class="text-muted text-uppercase fs-6">กลุ่ม/ทีมประสาน</span>',['/hr/team-group'])?>
+
+                        <h2 class="mb-0 mt-1"><?=Organization::find()->where(['tb_name' => 'position'])->count('id')?>
+                        </h2>
+                    </div>
+                    <div class="text-center" style="position: relative;">
+                        <div id="t-rev" style="min-height: 45px;">
+                                <i class="fa-solid fa-user-group fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="resize-triggers">
+                            <div class="expand-trigger">
+                                <div style="width: 91px; height: 70px;"></div>
+                            </div>
+                            <div class="contract-trigger"></div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+    <!-- End-col -->
+     
 </div>

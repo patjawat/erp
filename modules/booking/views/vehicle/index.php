@@ -25,9 +25,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu')?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'vehicles-container', 'timeout' => 500000]); ?>
 
-
+<?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel]) ?>
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div>
@@ -116,4 +115,3 @@ $this->params['breadcrumbs'][] = $this->title;
             ]); ?>
 
 </div>
-<?php Pjax::end();?>

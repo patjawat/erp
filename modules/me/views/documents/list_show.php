@@ -18,7 +18,7 @@ $me = UserHelper::GetEmployee();
                 รายการ
             </h6>
             <?php if(isset($list)):?>
-            <?=Html::a('ดูทั้งหมด',['/me/documents'],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
+            <?=Html::a('แสดงทั้งหมด',['/me/documents'],['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]])?>
             <?php endif;?>
         </div>
         <?php if(!isset($list)):?>

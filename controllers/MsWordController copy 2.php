@@ -238,7 +238,7 @@ public function actionSetDate()
         $templateProcessor->setValue('budget_year', 'ปีงบประมาณ');
         $templateProcessor->setValue('budget_amount', number_format($model->SumPo(), 2));
         $templateProcessor->setValue('budget_letter', AppHelper::convertNumberToWords($model->SumPo(), 2));
-        $templateProcessor->setValue('board', 'คณะกรรมการกำหนดรายละเอียด');
+        $templateProcessor->setValue('committee', 'คณะกรรมการกำหนดรายละเอียด');
         $templateProcessor->setValue('emp_name', $model->getUserReq()['fullname']);
         $templateProcessor->setValue('emp_position', $model->getUserReq()['position_name']);
         $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
@@ -272,7 +272,7 @@ public function actionSetDate()
         //     'budget_year' => 'ปีงบประมาณ',
         //     'budget_amount' => 'วงเงินงบประมาณ',
         //     'budget_letter' => 'วงเงินงบประมาณเป็นตัวอักษร',
-        //     'board' => 'คณะกรรมการกำหนดรายละเอียด',
+        //     'committee' => 'คณะกรรมการกำหนดรายละเอียด',
         //     'emp_name' => 'เจ้าหน้าที่พนักงาน',
         //     'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
         //     'emphead_name' => 'หัวหน้าเจ้าหน้าที่',
@@ -401,7 +401,7 @@ public function actionSetDate()
                 'price' => number_format($model->sumPo(), 2),
                 'price_character' => AppHelper::convertNumberToWords($model->SumPo(), 2),
                 'sup_detailfull' => 'รายละเอียดของพัสดุ',
-                'board' => 'คณะกรรมการตรวจรับพัสดุ',
+                'committee' => 'คณะกรรมการตรวจรับพัสดุ',
                 'emp_name' => 'เจ้าหน้าที่พนักงาน',
                 'emp_position' => 'ตำแหน่งเจ้าหน้าที่',
                 'emphead_name' => 'หัวหน้าเจ้าหน้าที่',

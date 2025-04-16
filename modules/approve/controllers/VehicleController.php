@@ -30,84 +30,70 @@ class VehicleController extends \yii\web\Controller
         ]);
     }
 
+    
     public function actionUpdate($id)
     {
-        $me = UserHelper::GetEmployee();
-        //ข้อมูลการ Approve
-        $approve = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
-        $old = $approve->data_json;
-        // ข้อมูลการลา
-        $leave = Vehicle::findOne($approve->from_id);
-        
-        if (!$approve) {
-            return [
-                'title' => 'แจ้งเตือน',
-                'content' => '<h6 class="text-center">ไม่อนุญาต</h6>',
-            ];
-        }
-        
-        if ($this->request->isPost && $approve->load($this->request->post())) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            
-            if($approve->status == 'Reject'){
-                $approve->bookCar->status = 'Demo';
-                return $approve->bookCar->save(false);   
-            }
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost) {
+            $me = UserHelper::GetEmployee();
+            $status = $this->request->post('status');
+            $old = $model->data_json;
+
             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-            $approve->data_json = ArrayHelper::merge($old,$approve->data_json, $approveDate);      
-           
-        //     //ถ้าหัวหน้ากลุ่ม Approve
-        //     if($approve->level == 2){
-        //         $leave->status = 'Checking';
-        //         $leave->save();
-        //   }
+            $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+            $model->status = $status;
 
-        //     // ผุ้ตรวจสอบวันลาก่อนส่งให้ ผอ.
-        //     if ($approve->level == 3) {
-        //         $approve->emp_id = $me->id;
-        //     }
-           
+            if ($model->emp_id == '') {
+                $model->emp_id = $me->id;
+            }
 
-        //     if ($approve->save()) {
-        //         $nextApprove = Approve::findOne(['from_id' => $approve->from_id, 'level' => ($approve->level + 1)]);
-        //         if ($nextApprove) {
-        //             $nextApprove->status = 'Pending';
-        //             $nextApprove->save();
-        //         }
-             
+            if ($model->save()) {
+                // ถ้าไม่อนุมัติให้ return ออกเลย
+                if ($model->status == 'Reject') {
+                    $model->vehicle->status = 'Reject';
+                    $model->vehicle->save();
+                    $model->vehicle->MsgReject();
+
+                }else{
+                    $model->vehicle->status = 'Approve';
+                    $model->vehicle->save();
+                }
+
+                    return [
+                        'status' => 'success'
+                    ];
                 
-        //         // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
-        //         if ($approve->level == 4) {
-        //             $leave->status = 'Allow';
-        //             $leave->save();
-        //         } else if ($approve->status == 'Reject') {
-        //             $leave->status = 'Reject';
-        //             $leave->save();
-        //         } else {
-                  
-        //         }
-             
-        //         return [
-        //             'status' => 'success',
-        //             'container' => '#approve',
-        //         ];
-        //     }
+
+            }
         }
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => isset($approve->vehicle) ? $approve->vehicle->userRequest()['avatar'] : '',
+                'title' => 'ขออนุมัติวันลา',
                 'content' => $this->renderAjax('update', [
-                    'model' => $approve,
+                    'model' => $model,
                 ]),
             ];
         } else {
             return $this->render('update', [
-               'model' => $approve,
+                'model' => $model,
             ]);
         }
+        
     }
 
+    protected function findModel($id)
+    {
+        if (($model = Approve::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    
+    
     
 }

@@ -4,6 +4,7 @@ use yii\helpers\Html;
 <div class="d-flex gap-2">
     <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['/hr'],['class' => 'btn btn-light'])?>
     <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> ทะเบียนบุคลากร',['/hr/employees'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-user-group me-1"></i> กลุ่ม/ทีมประสาน',['/hr/team-group'],['class' => 'btn btn-light'])?>
 
     <div class="dropdown  btn btn-light">
         <a href="javascript:void(0)" class="dropdown-toggle me-0" data-bs-toggle="dropdown"

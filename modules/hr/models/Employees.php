@@ -1320,4 +1320,21 @@ class Employees extends Yii\db\ActiveRecord
                     
                     return $emp;
     }
+
+    public function teamGroup()
+    {
+        try {
+            return TeamGroupDetail::find()
+            ->joinWith('teamGroup') // join กับ TeamGroup ผ่านความสัมพันธ์
+            ->where(['team_group_detail.emp_id' => $this->id])
+            ->andWhere(['team_group_detail.name' => 'committee'])
+            ->groupBy('team_group.id')
+            ->orderBy('team_group_detail.thai_year DESC')
+            ->all();
+
+        } catch (\Throwable $th) {
+
+                return [];
+            }
+    }
 }

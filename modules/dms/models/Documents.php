@@ -15,9 +15,9 @@ use yii\web\UploadedFile;
 use app\models\Categorise;
 use kartik\file\FileInput;
 use yii\httpclient\Client;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Employees;
@@ -154,6 +154,12 @@ class Documents extends \yii\db\ActiveRecord
         return $this->hasMany(DocumentTags::class, ['document_id' => 'id']);
     }
 
+    public function getCommittee()
+    {
+        return $this->hasMany(DocumentsDetail::class, ['document_id' => 'id']);
+    }
+    
+
     // คำนวนเลขรับเข้า
     public function runNumber()
     {
@@ -266,6 +272,8 @@ class Documents extends \yii\db\ActiveRecord
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
     }
+
+
 
     // ชั้นความลับ
     public function DocSecret()

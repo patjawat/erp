@@ -5,13 +5,13 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 
 $listBoard = Order::find()
-    ->where(['name' => 'board'])
+    ->where(['name' => 'committee'])
     ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.board') asc"))
     ->all();
 ?>
 <!-- กรรมการตรวจรับ -->
 
-<?php Pjax::begin(['id' => 'board']); ?>
+<?php Pjax::begin(['id' => 'committee']); ?>
 
 
 <table class="table table-primary">
@@ -21,7 +21,7 @@ $listBoard = Order::find()
             <th scope="col">ตำแหน่ง</th>
             <th scope="col" style="width: 120px;"> 
             <div class="d-grid gap-2">    
-            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?></th>
+            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?></th>
 </div>
         </tr>
     </thead>
@@ -40,7 +40,7 @@ $listBoard = Order::find()
                 ?>
             </td>
             <td class="align-middle">
-                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'board', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/purchase/order-item/delete', 'id' => $item->id], [
                     'class' => 'btn btn-sm btn-danger rounded-pill delete-item',
                 ]) ?>

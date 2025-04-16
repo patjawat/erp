@@ -18,5 +18,7 @@ $countSend = $model->CountType('send') ?? 0;
     <?php echo Html::a('<i class="fa-solid fa-chart-simple me-1"></i> Dashboard',['/dms/dashboard'],['class' => 'btn btn-light'])?>
         <?php echo  Html::a('<i class="fa-solid fa-inbox"></i> หนังสือรับ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$countReceive.'</span>',['/dms/documents/receive'],['class' => 'btn btn-light'])?>
         <?php echo  Html::a('<i class="fa-solid fa-paper-plane"></i> หนังสือส่ง <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$countSend.'</span>',['/dms/documents/send'],['class' => 'btn btn-light'])?>
+        <?php echo  Html::a('<i class="fa-solid fa-flag"></i> คำสั่ง <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$countSend.'</span>',['/dms/documents/appointment'],['class' => 'btn btn-light'])?>
+        <?php echo  Html::a('<i class="fa-solid fa-bullhorn"></i> ประกาศ/นโยบาย <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$countSend.'</span>',['/dms/documents/announce'],['class' => 'btn btn-light'])?>
 
 </div>
