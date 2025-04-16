@@ -77,8 +77,11 @@ class TeamGroup extends \yii\db\ActiveRecord
 
     public function teamGroupDetail()
     {
-        $model = teamGroupDetail::find()->where(['name' => 'appointment', 'category_id' => $this->id])->orderBy(['thai_year' => SORT_DESC])->one();
-        return $model;
+        try {
+            return teamGroupDetail::find()->where(['name' => 'appointment', 'category_id' => $this->id])->orderBy(['thai_year' => SORT_DESC])->one();
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 
     public function ListThaiYear()
