@@ -18,7 +18,7 @@ class TeamGroupSearch extends TeamGroup
     {
         return [
             [['id', 'created_by', 'updated_by', 'status', 'deleted_at', 'deleted_by'], 'integer'],
-            [['title', 'description', 'created_at', 'updated_at'], 'safe'],
+            [['title', 'description', 'created_at', 'updated_at','q','thai_year'], 'safe'],
         ];
     }
 

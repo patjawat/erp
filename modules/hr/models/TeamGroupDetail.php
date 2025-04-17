@@ -67,7 +67,7 @@ class TeamGroupDetail extends \yii\db\ActiveRecord
             'thai_year' => 'Thai Year',
             'category_id' => 'Team Group ID',
             'document_id' => 'Document ID',
-            'description' => 'Description',
+            'description' => 'รายละเอียดเพิ่มเติม',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'created_by' => 'Created By',
@@ -96,7 +96,7 @@ class TeamGroupDetail extends \yii\db\ActiveRecord
     //  แสดงหนังสือคำสั่ง
     public function listDocument()
     {
-     $documents = Documents::find()->where(['document_group' => 'appointment'])->all();
+     $documents = Documents::find()->where(['document_group' => 'appointment','thai_year' => (date('Y') + 543)])->all();
      return ArrayHelper::map($documents, 'id', 'topic');
     }
 

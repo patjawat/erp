@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
     class="table-responsive"
 >
     <table
-        class="table table-primary"
+        class="table table-primary mb-5"
     >
         <thead>
             <tr>
@@ -52,9 +52,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td><?=$item->employee->getAvatar(false);?></td>
                 <td><?=$item->data_json['committee_name'] ?? '-';?></td>
                 <td>
-                <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                    <?=Html::a('<i class="fa-solid fa-pen-to-square"></i>',['update-committee','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-light open-modal','data' => ['size' => 'modal-md']])?>
-                
+                    <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                        <?=Html::a('<i class="fa-solid fa-pen-to-square"></i>',['update-committee','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-light open-modal','data' => ['size' => 'modal-md']])?>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="fa-solid fa-sort-down"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><?=Html::a('<i class="fa-solid fa-trash-can me-1"></i> ลบข้อมูล',['delete-committee','id' => $item->id],['class' => 'dropdown-item delete-item'])?>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </td>
             </tr>

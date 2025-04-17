@@ -40,7 +40,7 @@ use yii\widgets\DetailView;
     class="table-responsive"
 >
     <table
-        class="table table-primary"
+        class="table table-primary mb-5"
     >
         <thead>
             <tr>
@@ -69,7 +69,7 @@ use yii\widgets\DetailView;
                         <i class="fa-solid fa-sort-down"></i>
                         </button>
                         <ul class="dropdown-menu">
-                        <li><?=Html::a('<i class="fa-solid fa-trash-can me-1"></i> ลบข้อมูล',['delete','id' => $item->id],['class' => 'dropdown-item delete-item'])?></li>
+                        <li><?=Html::a('<i class="fa-solid fa-trash-can me-1"></i> ลบข้อมูล',['delete-appointment','id' => $item->id],['class' => 'dropdown-item delete-item'])?></li>
                         </ul>
                     </div>
                     </div>

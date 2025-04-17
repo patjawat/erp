@@ -6,6 +6,7 @@ use yii\helpers\Html;
         <thead>
             <tr>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                <th class=" fw-semibold" scope="col" style="width:80px">พ.ศ.</th>
                 <th class=" fw-semibold" scope="col">รายการ</th>
                 <th class=" fw-semibold" scope="col">กรรมการ</th>
                 <th class=" fw-semibold" scope="col" style="width:130px">ดำเนินการ</th>
@@ -16,6 +17,9 @@ use yii\helpers\Html;
             <?php foreach($dataProvider->getModels() as $key => $item):?>
             <tr>
                 <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                <td>
+                    <?= $item->teamGroupDetail()?->thai_year?>
+                </td>
                 <td><?=$item->title;?></td>
                 <td>
                     <?= $item->teamGroupDetail()?->stackComittee()?>

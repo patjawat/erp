@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\TeamGroup;
+use app\modules\hr\models\TeamGroupDetail;
 use app\modules\hr\models\TeamGroupSearch;
 
 /**
@@ -42,7 +43,13 @@ class TeamGroupController extends Controller
     {
         $searchModel = new TeamGroupSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-
+        $dataProvider->query->joinWith('teamGroupDetail');
+        $dataProvider->query->andFilterWhere(['thai_year' => $searchModel->thai_year]); 
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'title', $searchModel->q],
+        ]);
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -143,6 +150,16 @@ class TeamGroupController extends Controller
 
         return $this->redirect(['index']);
     }
+
+    //ลบคำสั่งแต่งตั้ง
+    public function actionDeleteAppointment($id)
+    {
+        $model = TeamGroupDetail::findOne($id);
+        $model->delete();
+        return $this->redirect(['view', 'id' => $model->category_id]);
+    }
+ 
+
 
     /**
      * Finds the TeamGroup model based on its primary key value.

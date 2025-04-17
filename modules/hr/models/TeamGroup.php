@@ -45,7 +45,7 @@ class TeamGroup extends \yii\db\ActiveRecord
             ['title', 'required'],
             [['title', 'description', 'created_at', 'updated_at', 'created_by', 'updated_by', 'status', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['description'], 'string'],
-            [['created_at', 'updated_at'], 'safe'],
+            [['created_at', 'updated_at','q','thai_year'], 'safe'],
             [['created_by', 'updated_by', 'status', 'deleted_at', 'deleted_by'], 'integer'],
             [['title'], 'string', 'max' => 255],
         ];
@@ -59,7 +59,7 @@ class TeamGroup extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'title' => 'ชื่อกลุ่ม/ทีมประสาน',
-            'description' => 'Description',
+            'description' => 'รายละเอียดเพิ่มเติม',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'created_by' => 'Created By',
@@ -86,7 +86,7 @@ class TeamGroup extends \yii\db\ActiveRecord
 
     public function ListThaiYear()
     {
-        $model = self::find()
+        $model = teamGroupDetail::find()
             ->select('thai_year')
             ->groupBy('thai_year')
             ->orderBy(['thai_year' => SORT_DESC])

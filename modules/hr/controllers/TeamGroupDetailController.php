@@ -279,6 +279,16 @@ class TeamGroupDetailController extends Controller
         return $this->redirect(['index']);
     }
 
+
+    public function actionDeleteCommittee($id)
+    {
+        $model = $this->findModel($id);
+        $model->delete();
+
+        return $this->redirect(['view', 'id' => $model->category_id]);
+    }
+
+    
     /**
      * Finds the TeamGroupDetail model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
