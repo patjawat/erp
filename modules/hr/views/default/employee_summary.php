@@ -3,6 +3,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\EmployeeHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\TeamGroup;
 use app\modules\hr\models\Organization;
 
 $sqlPositionName = "SELECT format(COUNT(e.id) * 100 / (SELECT COUNT(id) FROM employees WHERE status = 1 AND id <> 1),2) FROM employees e
