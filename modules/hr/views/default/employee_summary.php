@@ -151,7 +151,7 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
                     <div class="flex-grow-1">
                         <?=Html::a(' <span class="text-muted text-uppercase fs-6">กลุ่ม/ทีมประสาน</span>',['/hr/team-group'])?>
 
-                        <h2 class="mb-0 mt-1"><?=Organization::find()->where(['tb_name' => 'position'])->count('id')?>
+                        <h2 class="mb-0 mt-1"><?=TeamGroup::find()->where(['tb_name' => 'position'])->count('id')?>
                         </h2>
                     </div>
                     <div class="text-center" style="position: relative;">

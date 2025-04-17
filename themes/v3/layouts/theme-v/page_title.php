@@ -29,7 +29,7 @@ use yii\bootstrap5\Breadcrumbs;
 <div class="page-title-box">
     <div class="container-fluid">
         <div class="row align-items-center">
-            <div class="col-sm-5 col-xl-6">
+            <div class="col-sm-5 col-xl-4">
                 <div class="page-title">
                     <div class="d-flex align-items-center">
                         <?php echo $this->blocks['icon'] ?? ''?>
@@ -43,7 +43,7 @@ use yii\bootstrap5\Breadcrumbs;
                     </div>
                 </div>
             </div>
-            <div class="col-sm-7 col-xl-6">
+            <div class="col-sm-7 col-xl-8">
                 <div class="d-flex justify-content-sm-end">
                     <?php if(isset($this->blocks['page-action'])):?>
                     <?=$this->blocks['page-action']?>
