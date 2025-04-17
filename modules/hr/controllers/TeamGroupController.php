@@ -47,7 +47,7 @@ class TeamGroupController extends Controller
         $dataProvider->query->andFilterWhere(['thai_year' => $searchModel->thai_year]); 
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'title', $searchModel->q],
+            ['like', 'team_group_detail.title', $searchModel->q],
         ]);
         
         return $this->render('index', [
