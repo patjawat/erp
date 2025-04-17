@@ -12,6 +12,8 @@ $countAnnounce = $model->CountType('announce') ?? 0;
 } catch (\Throwable $th) {
     $countReceive =  0;
     $countSend =  0;
+    $countAppointment =  0;
+    $countAnnounce =  0;
 }
 
 
