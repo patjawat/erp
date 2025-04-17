@@ -29,6 +29,7 @@ $me = UserHelper::GetEmployee();
                 <thead>
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                        <th class="text-center fw-semibold" style="width:80px">พ.ศ.</th>
                         <th class="fw-semibold" scope="col">รายการกลุ่ม/ทีมประสาน</th>
                         <th class="fw-semibold" scope="col">ตำแหน่งที่ได้รับ</th>
                     </tr>
@@ -39,6 +40,7 @@ $me = UserHelper::GetEmployee();
                         <td class="text-center fw-semibold">
                             <?php echo $key +1?>
                         </td>
+                        <td class="text-center"><?=$item->thai_year?></td>
                         <td scope="row">
                             <?= $item->appointment->teamGroup->title;?>
                         </td>
