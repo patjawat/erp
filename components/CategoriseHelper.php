@@ -4,12 +4,12 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\helpers\ArrayHelper;
+use app\models\Province;
 
 // นำเข้า model ต่างๆ
-use app\modules\hr\models\Organization;
 use app\models\Categorise;
-use app\models\Province;
+use yii\helpers\ArrayHelper;
+use app\modules\hr\models\Organization;
 
 // ใช้ง
 // ใช้งานเกี่ยวกับ user
@@ -162,20 +162,6 @@ class CategoriseHelper extends Component
         return ArrayHelper::map(self::Categorise('rename_type'), 'title', 'title');
     }
 
-    // ประเภทบุคลากร Tree Table
-    // public static function PositionType()
-    // {
-    //     $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.id as position_id,
-    //     t1.name as position_name, 
-    //     t2.id as position_group,
-    //     t2.name as position_group_name 
-    //     FROM tree t1 
-    //     JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1 WHERE t2.name = 'ตำแหน่งสายงาน'";
-    //      $model = Yii::$app->db->createCommand($sql)
-    //     ->queryAll();
-    //     return ArrayHelper::map($model, 'id', 'position_name');
-    // }
-
 
     public static function PositionType()
     {
@@ -309,4 +295,28 @@ class CategoriseHelper extends Component
         ->orderBy(['code' => SORT_DESC])
         ->one();
     }
+
+        // แสดงหน่วยงานภานนอก
+        public static function ListLocationOrg()
+        {
+            $model = Categorise::find()
+                ->where(['name' => 'document_org'])
+                ->asArray()
+                ->all();
+            return ArrayHelper::map($model, 'code', 'title');
+        }
+
+        public static function ListProvinceName()
+        {
+            $model = Province::find()->all();
+            return ArrayHelper::map($model, 'id', 'name_th');
+        }
+
+        public static function DevelopmentType()
+        {
+            $model = Categorise::find()->where(['name' => 'development_type'])->all();
+            return ArrayHelper::map($model, 'code', 'title');
+        }
+
+        
 }

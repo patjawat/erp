@@ -8,8 +8,8 @@ FROM (
         t.code,
         t.title, 
         l.thai_year,
-        IFNULL(SUM(CASE WHEN l.leave_type_id = t.code  AND l.status = 'Allow' AND l.date_start < :date_start THEN l.total_days ELSE 0 END), 0) AS last_days,
-        IFNULL(SUM(CASE WHEN l.leave_type_id = t.code AND l.date_start = :date_start THEN l.total_days ELSE 0 END), 0) AS on_days
+        IFNULL(SUM(CASE WHEN l.leave_type_id = t.code  AND l.status = 'Approve' AND l.date_start < :date_start THEN l.total_days ELSE 0 END), 0) AS last_days,
+        IFNULL(SUM(CASE WHEN l.leave_type_id = t.code  AND l.status = 'Approve' AND l.date_start = :date_start THEN l.total_days ELSE 0 END), 0) AS on_days
     FROM `leave` l
     LEFT JOIN categorise t ON t.code = l.leave_type_id
     WHERE l.emp_id = :emp_id 

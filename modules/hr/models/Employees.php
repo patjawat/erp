@@ -596,13 +596,13 @@ class Employees extends Yii\db\ActiveRecord
                 'subtitle' => 'ลายเซ็น',
                 'count' => 0,
             ],
-            [
-                'title' => 'Line',
-                'icon' => '<i class="fa-solid fa-file-signature avatar-title text-primary"></i> ',
-                'name' => 'line',
-                'subtitle' => 'Line',
-                'count' => 0,
-            ]
+            // [
+            //     'title' => 'Line',
+            //     'icon' => '<i class="fa-solid fa-file-signature avatar-title text-primary"></i> ',
+            //     'name' => 'line',
+            //     'subtitle' => 'Line',
+            //     'count' => 0,
+            // ]
         ];
     }
 

@@ -15,7 +15,6 @@ $items = [
     [
         'title' => 'จองรถ',
         'icon' => 'fa-solid fa-car-side fs-1',
-        // 'url' => ['/me/booking-car/select-type','title' => '<i class="bi bi-ui-checks-grid"></i> เลือกประเภทรถที่ต้องการใช้งาน'],
         'url' => ['/me/booking-vehicle/create','title' => '<i class="bi bi-ui-checks-grid"></i> ขอใช้ยานพาหนะ(จองรถ)'],
         'modal' => true,
         'size' => 'modal-lg'
@@ -23,7 +22,6 @@ $items = [
     [
         'title' => 'จองห้องประชุม',
         'icon' => 'fa-solid fa-person-chalkboard fs-1',
-    //    'url' => ['/me/booking-meeting/dashboard','title' => 'ขอใช้ห้องประชุม'],
        'url' => ['/me/booking-meeting/create','date_start' => date('Y-m-d'),'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-xl']],
         'modal' => true,
         'size' => 'modal-xl'
@@ -39,6 +37,13 @@ $items = [
         'title' => 'ขอซื้อขอจ้าง',
         'icon' => 'fa-solid fa-bag-shopping fs-1',
         'url' => ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มใบขอซื้อ-ขอจ้าง'],
+        'modal' => true,
+        'size' => 'modal-md'
+    ],
+    [
+        'title' => 'ประชุม/อบรม',
+        'icon' => 'fa-solid fa-briefcase fs-1',
+        'url' => ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มประชุม/อบรม'],
         'modal' => true,
         'size' => 'modal-md'
     ],

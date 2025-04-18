@@ -27,6 +27,12 @@ $items = [
         'icon' => 'bi bi-shop fs-2',
         'url' => ['/me/store-v2/set-warehouse'],
         // 'url' => ['/me/store-v2/index'],
+    ],
+    [
+        'title' => 'อบรม/ประชุม/ดูงาน',
+        'icon' => 'fa-solid fa-briefcase fs-1',
+        'url' => ['/me/development'],
+        // 'url' => ['/me/store-v2/index'],
     ]
    
 ];
