@@ -197,7 +197,7 @@ class StockController extends Controller
                 't.order_status' => 'success',
                 'o.order_status' => 'success'
                 ])
-            ->orderBy(['t.created_at' => SORT_ASC, 't.id' => SORT_ASC]);
+            ->orderBy(['t.movement_date' => SORT_ASC, 't.id' => SORT_ASC]);
 
         return $this->render('view_stock_card', [
             'model' => $model,

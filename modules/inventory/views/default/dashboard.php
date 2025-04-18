@@ -92,7 +92,14 @@ $this->title = 'ระบบคลัง';
                             </div>
 
                             <div>
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo  number_format(($searchModel->OutSummary('SUB')+$searchModel->OutSummary('BRANCH')),2); ?>
+                            <?php
+                                    //echo $searchModel->OutSummary('SUB');
+                                // echo $searchModel->OutSummary('BRANCH');
+                                ?>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">
+                                    
+                      
+                                <?php  echo  number_format(($searchModel->OutSummary('SUB')+$searchModel->OutSummary('BRANCH')),2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">

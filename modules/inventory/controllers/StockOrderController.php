@@ -571,6 +571,7 @@ class StockOrderController extends Controller
         $checkBalanced = 0;
         foreach ($model->getItems() as $item) {
             $item->qty =  (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (int)$item->qty) : 0;
+            $item->movement_date = Date('Y-m-d H:i:s');
             $item->save();
             if ($item->SumStockQty() <= 0 && $item->qty > 0) {
                 ++$checkBalanced;
@@ -630,6 +631,7 @@ class StockOrderController extends Controller
                 ];
                 $oriJson = $item->data_json;
                 $item->data_json = ArrayHelper::merge($oriJson,  $logQty);
+                $item->movement_date = Date('Y-m-d H:i:s');
                 $item->save();
                 
                 

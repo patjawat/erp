@@ -1,7 +1,9 @@
 <?php
 
 use yii\helpers\Html;
+use yii\db\Expression;
 use yii\widgets\DetailView;
+use app\modules\inventory\models\StockEvent;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\Stock $model */
@@ -22,8 +24,26 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php
+$stockEvents = StockEvent::find()
+->select([
+    'stock_events.*',
+    new Expression('SUM(qty * unit_price) AS total')
+])
+->where([
+    'asset_item' => 'M7-283',
+    'warehouse_id' => 2,
+    'order_status' => 'success'
+])
+->groupBy('id')
+->orderBy(['movement_date' => SORT_ASC])
+->all();
 
+$balance = 0;
+$balanceQty = 0;
+?>
 
+                    
 <div class="row">
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
@@ -64,7 +84,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php  echo $this->render('_search_stock', ['searchModel' => $searchModel,'model' => $model]); ?>
             </div>
         </div>
-        <table class="table">
+        
+<table class="table">
             <thead>
                 <tr>
                     <th class="fw-semibold" scope="col" style="width:130px">ความเคลื่อนไหว</th>
@@ -81,64 +102,58 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-                <?php foreach($dataProvider->getModels() as $item):?>
+                <?php foreach($stockEvents as $item2):?>
+                    <?php
+                        if ($item2->transaction_type == 'IN') {
+                            $balance += $item2['total'];
+                            $balanceQty += $item2->qty;
+                        } elseif ($item2->transaction_type == 'OUT') {
+                            $balance -= $item2['total'];
+                            $balanceQty -= $item2->qty;
+                        }
+                    ?>
                 <tr>
-                    <th scope="row">
-
-                        <?php if ($item['transaction_type'] == 'IN'): ?>
-                        <div class="badge rounded-pill badge-soft-primary text-primary fs-13"><i
-                                class="fa-solid fa-circle-plus"></i> รับ</div>
-                        <?php else: ?>
-                        <div class="badge rounded-pill badge-soft-danger text-danger fs-13"><i
-                                class="fa-solid fa-circle-minus"></i> จ่าย</div>
-
-                        <?php endif ?>
-
-
-                    <td><?=$item['thai_year']?></td>
+        <td>
+            <?php if ($item2->transaction_type == 'IN'): ?>
+                <div class="badge rounded-pill badge-soft-primary text-primary fs-13"><i
+                        class="fa-solid fa-circle-plus"></i> รับ</div>
+            <?php else: ?>
+                <div class="badge rounded-pill badge-soft-danger text-danger fs-13"><i
+                        class="fa-solid fa-circle-minus"></i> จ่าย</div>
+            <?php endif ?>
+        </td>
+        <td><?=$item2->thai_year?></td>
                     <td>
                         <?php
-        try {
-          // Yii::$app->thaiFormatter->asDateTime($item->, 'short')
-          echo $item->ViewReceiveDate();
-        } catch (\Throwable $th) {
-          //throw $th;
-        }
-      ?>
+                                try {
+                                // Yii::$app->thaiFormatter->asDateTime($item->, 'short')
+                                echo $item2->ViewReceiveDate();
+                                } catch (\Throwable $th) {
+                                //throw $th;
+                                }
+                            ?>
                     </td>
-                    <td><?=$item['lot_number']?></td>
-                    <td>
-                        <?=Html::a($item['code'],['/inventory/stock-in/view','id' =>$item['category_id']],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                    <td><?=$item2->lot_number?></td>
+                    <td class="text-center  fw-semibold">
+                        <?=$item2->transaction_type == 'IN' ? $item2->qty : ''?>
                     </td>
-                    <td><?=$item['warehouse_name']?></td>
-                    <td class="text-end  fw-semibold"><?php
-      try {
-        echo number_format($item['unit_price'],2);
-      } catch (\Throwable $th) {
-        //throw $th;
-      }
-      ?></td>
-
-                    <td class="text-center  fw-semibold"><?=
-      $item['transaction_type'] == 'IN' ? $item['qty'] : ''?></td>
-                    <td class="text-center  fw-semibold"><?php
-      try {
-        echo $item['transaction_type'] == 'OUT' ? -ABS($item['qty']) : '';
-      } catch (\Throwable $th) {
-        //throw $th;
-      }
-      ?></td>
-                    <td class="text-center  fw-semibold"><?=$item['total']?></td>
-                    <td class="text-end fw-semibold">
-                        <?php
-      try {
-         echo number_format(($item['total'] * $item['unit_price']),2);
-      } catch (\Throwable $th) {
-        //throw $th;
-      }
-      ?></td>
-
-                </tr>
+                        <td class="text-center  fw-semibold"><?php
+                        try {
+                            echo $item2->transaction_type == 'OUT' ? -ABS($item2->qty) : '';
+                        } catch (\Throwable $th) {
+                            //throw $th;
+                        }
+                        ?>
+      </td>
+        <td class="fw-semibold text-end"><?=number_format($item2->unit_price, 2)?></td>
+        <td class="fw-semibold text-center"><?=$item2->transaction_type == 'IN' ? $item2->qty : ''?></td>
+        <td class="fw-semibold text-center"><?=$item2->transaction_type == 'OUT' ? -ABS($item2->qty) : ''?></td>
+        <td class="fw-semibold text-center"><?= $balanceQty?></td>
+        <td class="fw-semibold text-end">
+            <?php
+            // echo $item2['total'];
+            echo number_format($balance, 2)?></td>
+    </tr>
                 <?php endforeach;?>
             </tbody>
         </table>
@@ -146,6 +161,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
+
+
+
 
 
 <!-- SELECT 

@@ -1031,6 +1031,7 @@ public function mainOrderSummary($status = null)
          }
          
          $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
+        //  $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->createCommand()->getRawSql();
          return $total;
      }
      
