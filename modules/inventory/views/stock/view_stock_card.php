@@ -31,8 +31,8 @@ $stockEvents = StockEvent::find()
     new Expression('SUM(qty * unit_price) AS total')
 ])
 ->where([
-    'asset_item' => 'M7-283',
-    'warehouse_id' => 2,
+    'asset_item' => $model->asset_item,
+    'warehouse_id' => $warehouse->id,
     'order_status' => 'success'
 ])
 ->groupBy('id')
