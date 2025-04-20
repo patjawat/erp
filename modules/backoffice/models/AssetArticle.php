@@ -55,7 +55,7 @@ use Yii;
  * @property string|null $EXPIRE_DATE
  * @property string|null $EXPIRE_DATE_SUBMIT
  * @property string|null $DATE_DOC
- * @property string|null $CAR_TYPE_ID ประเภทรถ
+ * @property string|null $vehicle_type_id ประเภทรถ
  * @property string|null $CAR_REG
  * @property string|null $UPDATE_PERSON_ID
  * @property string|null $UPDATE_DATE_TIME
@@ -126,7 +126,7 @@ class AssetArticle extends \yii\db\ActiveRecord
             [['ARTICLE_NUM_OLD', 'TYPE_MONEY_COMMENT', 'ROOM_ID', 'LEVEL_ID'], 'string', 'max' => 50],
             [['NUM1', 'NUM3', 'YEAR_ID'], 'string', 'max' => 4],
             [['NUM2'], 'string', 'max' => 3],
-            [['NUM4', 'MODEL_ID', 'SIZE_ID', 'BRAND_ID', 'COLOR_ID', 'STATUS_ID', 'PERSON_ID', 'CAR_TYPE_ID', 'UPDATE_PERSON_ID', 'GROUP_ID', 'CLASS_ID', 'LOCATION_ID', 'BUY_ID', 'LOCATION_LEVEL_ID', 'LEVEL_ROOM_ID', 'DECLINE_ID', 'BUDGET_ID', 'PM_TYPE_ID', 'CAL_TYPE_ID', 'RISK_TYPE_ID'], 'string', 'max' => 10],
+            [['NUM4', 'MODEL_ID', 'SIZE_ID', 'BRAND_ID', 'COLOR_ID', 'STATUS_ID', 'PERSON_ID', 'vehicle_type_id', 'UPDATE_PERSON_ID', 'GROUP_ID', 'CLASS_ID', 'LOCATION_ID', 'BUY_ID', 'LOCATION_LEVEL_ID', 'LEVEL_ROOM_ID', 'DECLINE_ID', 'BUDGET_ID', 'PM_TYPE_ID', 'CAL_TYPE_ID', 'RISK_TYPE_ID'], 'string', 'max' => 10],
             [['SERIAL_NO', 'DOC_NO_NUM', 'DOC_NO_FILE', 'CODE_REF'], 'string', 'max' => 30],
             [['SUPPLIER_ID', 'SALE_ID', 'COUNTRY_ID', 'TYPE_ID', 'TYPE_SUB_ID', 'TYPE_MONEY_ID', 'METHOD_ID', 'DEPARTMENT_SUB_ID', 'VENDOR_ID', 'DEP_ID', 'SUP_FSN'], 'string', 'max' => 20],
             [['NOTES', 'LOCATEDIVISION', 'LOCATEDEPT', 'LOCATESECTION', 'WAY_NAME', 'CHANGE', 'SALER'], 'string', 'max' => 254],
@@ -189,7 +189,7 @@ class AssetArticle extends \yii\db\ActiveRecord
             'EXPIRE_DATE' => 'Expire Date',
             'EXPIRE_DATE_SUBMIT' => 'Expire Date Submit',
             'DATE_DOC' => 'Date Doc',
-            'CAR_TYPE_ID' => 'ประเภทรถ',
+            'vehicle_type_id' => 'ประเภทรถ',
             'CAR_REG' => 'Car Reg',
             'UPDATE_PERSON_ID' => 'Update Person ID',
             'UPDATE_DATE_TIME' => 'Update Date Time',

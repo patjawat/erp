@@ -17,7 +17,7 @@ class m250405_094239_create_vehicle_table extends Migration
             'ref' => $this->string(255),
             'code' => $this->string(255)->notNull()->comment('รหัส'),
             'thai_year' => $this->integer(255)->notNull()->comment('ปีงบประมาณ'),
-            'car_type_id' => $this->string()->notNull()->comment('ประเภทของรถ general หรือ ambulance'),
+            'vehicle_type_id' => $this->string()->notNull()->comment('ประเภทของรถ general หรือ ambulance'),
             'refer_type' => $this->string()->notNull()->comment('ประเภทของการ refer รถพยาบาล refer,ems,normal'),
             'go_type' => $this->integer()->notNull()->comment('ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน'),
             'oil_price' => $this->double(255)->comment('น้ำมันที่เติม'),
@@ -66,6 +66,20 @@ class m250405_094239_create_vehicle_table extends Migration
             $this->insert('categorise',['name'=>'vehicle_detail_status','code' =>'Success','title'=>'สําเร็จ','active' => 1]);
         } 
 
+        $sql4 = Yii::$app->db->createCommand("select * from categorise where name = 'vehicle_type'")->queryAll();
+        if(count($sql4) < 1){
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'official','title'=>'รถยนต์ราชการ','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'personal','title'=>'รถยนต์ส่วนตัว','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'ambulance','title'=>'รถพยาบาล','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'charter_vehicle','title'=>'รถจ้างเหมา','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'airplane','title'=>'เครื่องบิน','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'train','title'=>'รถไฟ','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'boat','title'=>'เรือ','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'other','title'=>'อื่นๆ','active' => 1]);
+        } 
+        
+
+        
 
     }
 

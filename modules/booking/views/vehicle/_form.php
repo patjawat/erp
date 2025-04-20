@@ -24,7 +24,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'oil_liter')->textInput() ?>
 
-    <?= $form->field($model, 'car_type_id')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'vehicle_type_id')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'document_id')->textInput() ?>
 

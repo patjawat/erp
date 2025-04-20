@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentSearch;
@@ -72,21 +73,37 @@ class DevelopmentController extends Controller
         $model = new Development();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
+
+                try {
+                    $model->date_start = AppHelper::convertToGregorian($model->date_start);
+                    $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                    $model->vehicle_date_start = AppHelper::convertToGregorian($model->vehicle_date_start);
+                    $model->vehicle_date_end = AppHelper::convertToGregorian($model->vehicle_date_end);
+                } catch (\Throwable $th) {
+                }
+                $model->save();
+
                 return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'success' => false,
+                    'errors' => $model->getErrors(),
+                ];
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        if($this->request->isAjax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', ['model' => $model])
+                'content' => $this->renderAjax('create', ['model' => $model]),
             ];
-        }else{
+        } else {
             return $this->render('create', [
                 'model' => $model,
             ]);
@@ -104,13 +121,50 @@ class DevelopmentController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        try {
+            $model->date_start = AppHelper::convertToThai($model->date_start);
+            $model->date_end = AppHelper::convertToThai($model->date_end);
+            $model->vehicle_date_start = AppHelper::convertToThai($model->vehicle_date_start);
+            $model->vehicle_date_end = AppHelper::convertToThai($model->vehicle_date_end);
+        } catch (\Throwable $th) {
+        }
+        
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+
+                try {
+                    $model->date_start = AppHelper::convertToGregorian($model->date_start);
+                    $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                    $model->vehicle_date_start = AppHelper::convertToGregorian($model->vehicle_date_start);
+                    $model->vehicle_date_end = AppHelper::convertToGregorian($model->vehicle_date_end);
+                } catch (\Throwable $th) {
+                }
+                $model->save();
+
+                return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'success' => false,
+                    'errors' => $model->getErrors(),
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', ['model' => $model]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

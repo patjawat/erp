@@ -25,7 +25,7 @@ use app\modules\booking\models\BookingCarItems;
  * @property string|null $ref
  * @property string $code รหัส
  * @property int $thai_year ปีงบประมาณ
- * @property string $car_type_id ประเภทของรถ general หรือ ambulance
+ * @property string $vehicle_type_id ประเภทของรถ general หรือ ambulance
  * @property int $go_type ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน
  * @property float|null $oil_price น้ำมันที่เติม
  * @property float|null $oil_liter ปริมาณน้ำมัน
@@ -69,11 +69,11 @@ class Vehicle extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['code', 'thai_year', 'car_type_id', 'go_type', 'urgent', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'leader_id', 'emp_id'], 'required', 'message' => 'ต้องระบุ'],
+            [['code', 'thai_year', 'vehicle_type_id', 'go_type', 'urgent', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'leader_id', 'emp_id'], 'required', 'message' => 'ต้องระบุ'],
             [['thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['oil_price', 'oil_liter'], 'number'],
             [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
-            [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
+            [['ref', 'code', 'vehicle_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -87,7 +87,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'ref' => 'Ref',
             'code' => 'รหัส',
             'thai_year' => 'ปีงบประมาณ',
-            'car_type_id' => 'ประเภทของรถ general หรือ ambulance',
+            'vehicle_type_id' => 'ประเภทของรถ general หรือ ambulance',
             'go_type' => 'ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน',
             'oil_price' => 'น้ำมันที่เติม',
             'oil_liter' => 'ปริมาณน้ำมัน',
@@ -141,7 +141,7 @@ class Vehicle extends \yii\db\ActiveRecord
     // ประเภทของการจองรถ
     public function getCarType()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'car_type_id']);
+        return $this->hasOne(Categorise::class, ['code' => 'vehicle_type_id']);
     }
 
     // สถานะ

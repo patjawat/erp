@@ -1,17 +1,32 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\Development $model */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Developments', 'url' => ['index']];
+
+use yii\widgets\DetailView;
+/** @var yii\web\View $this */
+$this->title = 'อบรม/ประชุม/ดูงาน';
+$this->title = $model->topic;
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="development-view">
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-briefcase fs-1 text-white"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('sub-title'); ?>
+<?=$this->title?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?=$this->render('menu')?>
+<?php $this->endBlock(); ?>
+
+<div class="card">
+    <div class="card-body">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -26,37 +41,18 @@ $this->params['breadcrumbs'][] = $this->title;
         ]) ?>
     </p>
 
+
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
             'id',
-            'document_id',
-            'development_type_id',
-            'topic',
-            'description:ntext',
-            'location',
-            'location_org',
-            'province_name',
-            'status',
-            'vehicle_type',
-            'claim_type',
-            'time_slot',
-            'date_start',
-            'time_start',
-            'date_end',
-            'time_end',
-            'driver_id',
-            'leader_id',
-            'assigned_to',
-            'emp_id',
-            'data_json',
-            'created_at',
-            'updated_at',
-            'created_by',
-            'updated_by',
-            'deleted_at',
-            'deleted_by',
+          
         ],
     ]) ?>
+    </div>
+</div>
+
+<div class="development-view">
+
 
 </div>

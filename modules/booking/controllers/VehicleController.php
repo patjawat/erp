@@ -67,7 +67,7 @@ class VehicleController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere(['!=', 'car_type_id', 'personal']);
+        $dataProvider->query->andFilterWhere(['!=', 'vehicle_type_id', 'personal']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -122,7 +122,7 @@ class VehicleController extends Controller
         
         $dataProviderDetail->query->joinWith('vehicle');
         $dataProviderDetail->query->andFilterWhere(['vehicle_detail.status' => 'Pass']);
-        $dataProviderDetail->query->andFilterWhere(['!=', 'vehicle.car_type_id', 'personal']);
+        $dataProviderDetail->query->andFilterWhere(['!=', 'vehicle.vehicle_type_id', 'personal']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

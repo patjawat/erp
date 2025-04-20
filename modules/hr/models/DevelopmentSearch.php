@@ -18,7 +18,7 @@ class DevelopmentSearch extends Development
     {
         return [
             [['id', 'document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['development_type_id', 'topic', 'description', 'location', 'location_org', 'province_name', 'status', 'vehicle_type', 'claim_type', 'time_slot', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['development_type_id', 'topic', 'description', 'location', 'location_org', 'province_name', 'status', 'vehicle_type_id', 'claim_type', 'time_slot', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
         ];
     }
 
@@ -61,7 +61,6 @@ class DevelopmentSearch extends Development
         $query->andFilterWhere([
             'id' => $this->id,
             'document_id' => $this->document_id,
-            'time_slot' => $this->time_slot,
             'date_start' => $this->date_start,
             'date_end' => $this->date_end,
             'assigned_to' => $this->assigned_to,
@@ -73,15 +72,9 @@ class DevelopmentSearch extends Development
             'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'development_type_id', $this->development_type_id])
-            ->andFilterWhere(['like', 'topic', $this->topic])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'location', $this->location])
-            ->andFilterWhere(['like', 'location_org', $this->location_org])
-            ->andFilterWhere(['like', 'province_name', $this->province_name])
+
+            $query->andFilterWhere(['like', 'topic', $this->topic])
             ->andFilterWhere(['like', 'status', $this->status])
-            ->andFilterWhere(['like', 'vehicle_type', $this->vehicle_type])
-            ->andFilterWhere(['like', 'claim_type', $this->claim_type])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])

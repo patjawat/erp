@@ -15,25 +15,21 @@ class m250418_051009_create_development_table extends Migration
         $this->createTable('{{%development}}', [
             'id' => $this->primaryKey(),
             'document_id' => $this->integer()->comment('ตามหนังสือ'),
-            'development_type_id' => $this->string()->notNull()->comment('ประเภทการพัฒนา'),
             'topic' => $this->string()->notNull()->comment('หัวข้อ'),
-            'description' => $this->text(),
-            'location' => $this->string()->notNull()->comment('สถานที่ไป'),
-            'location_org' => $this->string()->notNull()->comment('หน่วยงานที่จัด'),
-            'province_name' => $this->string()->notNull()->comment('จังหวัด'),
             'status' => $this->string()->notNull()->notNull()->comment('สถานะ'),
-            'vehicle_type' => $this->string()->notNull()->comment('พาหนะเดินทาง'),
-            'claim_type' => $this->string()->notNull()->comment('การเบิกเงิน'),
-            'time_slot' => $this->time()->comment('ช่วงเวลา'),
-            'date_start' => $this->date()->notNull()->comment('ออกเดินทาง'),
+            'thai_year' => $this->integer()->notNull()->comment('ปีงบประมาณ'),
+            'date_start' => $this->date()->notNull()->comment('วันที่เริ่ม'),
             'time_start' => $this->string()->comment('เริ่มเวลา'),
             'date_end' => $this->date()->notNull()->comment('ถึงวันที่'),
             'time_end' => $this->string()->comment('ถึงเวลา'),
+            'vehicle_type_id' => $this->string()->comment('ยานพาหนะ'),
+            'vehicle_date_start' => $this->date()->notNull()->comment('วันออกเดินทาง'),
+            'vehicle_date_end' => $this->date()->notNull()->comment('วันกลับ'),
             'driver_id' => $this->string()->comment('พนักงานขับ'),
             'leader_id' => $this->string()->notNull()->comment('หัวหน้าฝ่าย'),
             'assigned_to' => $this->integer()->notNull()->comment('มอบหมายงานให้'),
             'emp_id' => $this->string()->notNull()->notNull()->comment('ผู้ขอ'),
-            'data_json' => $this->json()->comment('ยานพาหนะ'),
+            'data_json' => $this->json()->comment('JSON'),
             'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
             'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
             'created_by' => $this->integer()->comment('ผู้สร้าง'),
@@ -51,6 +47,30 @@ class m250418_051009_create_development_table extends Migration
             $this->insert('categorise',['name'=>'development_type','code' =>'dev5','title'=>'เพื่อศึกษาดูงาน','active' => 1]);
             $this->insert('categorise',['name'=>'development_type','code' =>'dev6','title'=>'อื่นๆ','active' => 1]);
         } 
+        $sql1 = Yii::$app->db->createCommand("select * from categorise where name = 'development_level'")->queryAll();
+        if(count($sql1) < 1){
+            $this->insert('categorise',['name'=>'development_level','code' =>'dev_height','title'=>'ผู้บริหารระดับสูง','active' => 1]);
+            $this->insert('categorise',['name'=>'development_level','code' =>'dev_medium','title'=>'ผู้บริหารระดับกลาง','active' => 1]);
+            $this->insert('categorise',['name'=>'development_level','code' =>'dev_low','title'=>'ผู้บริหาระดับต้น','active' => 1]);
+            $this->insert('categorise',['name'=>'development_level','code' =>'dev_none','title'=>'ไม่ระบุ','active' => 1]);
+        } 
+
+        $sql2 = Yii::$app->db->createCommand("select * from categorise where name = 'development_go_type'")->queryAll();
+        if(count($sql2) < 1){
+            $this->insert('categorise',['name'=>'development_go_type','code' =>'devgo1','title'=>'ขอไปเองผ่านการอนุมัติ','active' => 1]);
+            $this->insert('categorise',['name'=>'development_go_type','code' =>'devgo2','title'=>'ไปตามแผนโรงพยาบาล','active' => 1]);
+            $this->insert('categorise',['name'=>'development_go_type','code' =>'devgo3','title'=>'แผนกระทรวง เขต จังหวัด','active' => 1]);
+        }
+
+        $sql3 = Yii::$app->db->createCommand("select * from categorise where name = 'development_claim_type'")->queryAll();
+        if(count($sql3) < 1){
+            $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type1','title'=>'ไม่ประสงค์เบิกค่าใช้จ่าย','active' => 1]);
+            $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type2','title'=>'เบิกจากเงินงบประมาณ','active' => 1]);
+            $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type3','title'=>'เบิกจากผู้จัด','active' => 1]);
+
+        }
+
+        
 
     }
 

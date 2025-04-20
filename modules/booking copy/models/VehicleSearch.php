@@ -18,7 +18,7 @@ class VehicleSearch extends Vehicle
     {
         return [
             [['id', 'thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['ref', 'code', 'vehicle_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['oil_price', 'oil_liter'], 'number'],
         ];
     }
@@ -78,7 +78,7 @@ class VehicleSearch extends Vehicle
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'car_type_id', $this->car_type_id])
+            ->andFilterWhere(['like', 'vehicle_type_id', $this->vehicle_type_id])
             ->andFilterWhere(['like', 'urgent', $this->urgent])
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
             ->andFilterWhere(['like', 'location', $this->location])

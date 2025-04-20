@@ -3,7 +3,7 @@ use yii\helpers\Html;
 use app\modules\am\models\Asset;
 $listCars = Asset::find()
 ->andWhere(['IS NOT', 'license_plate', null])
-->andWhere(['car_type' => $model->car_type_id])
+->andWhere(['car_type' => $model->vehicle_type_id])
 ->all();
 ?>
 <h6>เลือกรถหากต้องการ</h6>

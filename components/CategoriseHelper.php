@@ -297,13 +297,13 @@ class CategoriseHelper extends Component
     }
 
         // แสดงหน่วยงานภานนอก
-        public static function ListLocationOrg()
+        public static function ListLocationOrg($title = false)
         {
             $model = Categorise::find()
                 ->where(['name' => 'document_org'])
                 ->asArray()
                 ->all();
-            return ArrayHelper::map($model, 'code', 'title');
+            return ArrayHelper::map($model, ($title ? 'title' : 'code'), 'title');
         }
 
         public static function ListProvinceName()
@@ -312,11 +312,46 @@ class CategoriseHelper extends Component
             return ArrayHelper::map($model, 'id', 'name_th');
         }
 
-        public static function DevelopmentType()
+        
+
+        //ประเภทของยานพาหนะการเดินทาง
+        public static function VehicleType($title = false)
+        {
+            $model = Categorise::find()->where(['name' => 'vehicle_type'])->all();
+            return ArrayHelper::map($model, ($title ? 'title' : 'code'), 'title');
+        }
+        public static function DevelopmentType($title = false)
         {
             $model = Categorise::find()->where(['name' => 'development_type'])->all();
-            return ArrayHelper::map($model, 'code', 'title');
+            return ArrayHelper::map($model, ($title ? 'title' : 'code'), 'title');
         }
+
+        //ระดับของการพัฒนา
+        public static function DevelopmentLevel($title = false)
+        {
+            $model = Categorise::find()->where(['name' => 'development_level'])->all();
+            return ArrayHelper::map($model, ($title ? 'title' : 'code'), 'title');
+        }
+
+
+        // ลักษณะการไป
+        public static function DevelopmentGoType($title = false)
+        {
+            $model = Categorise::find()->where(['name' => 'development_go_type'])->all();
+            return ArrayHelper::map($model, ($title ? 'title' : 'code'), 'title');
+        }
+
+
+        public static function DevelopmentClaimType($title = false)
+        {
+            $model = Categorise::find()->where(['name' => 'development_claim_type'])->all();
+            return ArrayHelper::map($model, ($title ? 'title' : 'code'), 'title');
+        }
+
+        
+
+        
+        
 
         
 }

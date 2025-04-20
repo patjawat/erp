@@ -71,7 +71,7 @@ $resultsJs = <<<JS
         <?= $form->field($model, 'time_end')->textInput(['type' => 'time'])->label('เวลากลับ') ?>
     </div>
     <div class="col-6">
-        <?= $form->field($model, 'car_type_id')->widget(Select2::classname(), [
+        <?= $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
             'data' => [
             'official' => 'รถยนต์ราชการ',
             'personal' => 'รถยนต์ส่วนตัว',
@@ -299,7 +299,7 @@ $resultsJs = <<<JS
 
 
 
-        <?php if ($model->car_type_id == 'ambulance'): ?>
+        <?php if ($model->vehicle_type_id == 'ambulance'): ?>
 
 
         <!-- <div class="card border border-1">
@@ -323,7 +323,7 @@ $resultsJs = <<<JS
     </div>
 </div>
 
-<?php if ($model->car_type_id == 'ambulance'): ?>
+<?php if ($model->vehicle_type_id == 'ambulance'): ?>
 <div class="card mb-2 border-2 border-primary" style="border-style:dashed">
     <div class="card-body">
 
@@ -346,7 +346,7 @@ $resultsJs = <<<JS
 </div>
 <?php endif; ?>
 
-<?php if ($model->car_type_id == 'general'): ?>
+<?php if ($model->vehicle_type_id == 'general'): ?>
 <?php
     echo $form->field($model, 'document_id')->widget(Select2::classname(), [
         'data' => $list,
@@ -414,10 +414,10 @@ $js = <<<JS
     thaiDatepicker('#vehicle-date_start,#vehicle-date_end')
 
     \$(document).ready(function () {
-    if(\$('#vehicle-car_type_id').val() == ''){
+    if(\$('#vehicle-vehicle_type_id').val() == ''){
             \$('.field-vehicle-refer_type').hide();
       }
-        if(\$('#vehicle-car_type_id').val() == 'ambulance'){
+        if(\$('#vehicle-vehicle_type_id').val() == 'ambulance'){
             $(".field-vehicle-go_type").hide();
         }else{
             $(".field-vehicle-go_type").show();
@@ -498,7 +498,7 @@ $js = <<<JS
         type: "get",
         url: "/me/booking-vehicle/list-cars",
         data: {
-            car_type_id: \$('#vehicle-car_type_id').val(),
+            vehicle_type_id: \$('#vehicle-vehicle_type_id').val(),
         },
         dataType: "json",
         success: function (res) {

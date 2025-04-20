@@ -176,7 +176,7 @@ class BookingVehicleController extends Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                $model->status =  $model->car_type_id == "personal" ? 'Pass' : 'Pending';
+                $model->status =  $model->vehicle_type_id == "personal" ? 'Pass' : 'Pending';
                 $model->emp_id = $me->id;
                 // $model->code  = CARREQ-20250101-001
                 $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???');
@@ -343,7 +343,7 @@ class BookingVehicleController extends Controller
         $interval = new DateInterval('P1D');  // ระยะห่าง 1 วัน
         $period = new DatePeriod($startDate, $interval, $endDate);
         //ถ้าเป็นรถยนต์ส่วนตัว
-        if($model->car_type_id == "personal"){
+        if($model->vehicle_type_id == "personal"){
             $me = UserHelper::GetEmployee();
             if($model->go_type == "1"){
                 $dates = [];
@@ -424,7 +424,7 @@ class BookingVehicleController extends Controller
     // เลือกประเภทของการใช้งานรถ
     public function actionListCars()
     {
-        $carType = $this->request->get('car_type_id');
+        $carType = $this->request->get('vehicle_type_id');
 
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);

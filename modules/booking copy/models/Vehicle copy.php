@@ -26,7 +26,7 @@ use app\modules\booking\models\BookingCarItems;
  * @property int $go_type ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน
  * @property float|null $oil_price น้ำมันที่เติม
  * @property float|null $oil_liter ปริมาณน้ำมัน
- * @property string|null $car_type_id ประเภทของรถ general หรือ ambulance
+ * @property string|null $vehicle_type_id ประเภทของรถ general หรือ ambulance
  * @property int|null $document_id ตามหนังสือ
  * @property int|null $owner_id ผู้ดูแลห้องประชุม
  * @property string|null $urgent ความเร่งด่วน
@@ -69,7 +69,7 @@ class Vehicle extends \yii\db\ActiveRecord
             [['thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['oil_price', 'oil_liter'], 'number'],
             [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['ref', 'code', 'car_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
+            [['ref', 'code', 'vehicle_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -86,7 +86,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'go_type' => 'ประเภทการเดินทาง 1 = ไปกลับ, 2 = ค้างคืน',
             'oil_price' => 'น้ำมันที่เติม',
             'oil_liter' => 'ปริมาณน้ำมัน',
-            'car_type_id' => 'ประเภทของรถ general หรือ ambulance',
+            'vehicle_type_id' => 'ประเภทของรถ general หรือ ambulance',
             'document_id' => 'ตามหนังสือ',
             'owner_id' => 'ผู้ดูแลห้องประชุม',
             'urgent' => 'ความเร่งด่วน',

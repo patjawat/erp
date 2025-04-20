@@ -1,5 +1,5 @@
 <?php
-
+use yii\web\View;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -17,66 +17,29 @@ use yii\widgets\ActiveForm;
             'data-pjax' => 1
         ],
     ]); ?>
-
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'document_id') ?>
-
-    <?= $form->field($model, 'development_type_id') ?>
-
-    <?= $form->field($model, 'topic') ?>
-
-    <?= $form->field($model, 'description') ?>
-
-    <?php // echo $form->field($model, 'location') ?>
-
-    <?php // echo $form->field($model, 'location_org') ?>
-
-    <?php // echo $form->field($model, 'province_name') ?>
-
-    <?php // echo $form->field($model, 'status') ?>
-
-    <?php // echo $form->field($model, 'vehicle_type') ?>
-
-    <?php // echo $form->field($model, 'claim_type') ?>
-
-    <?php // echo $form->field($model, 'time_slot') ?>
-
-    <?php // echo $form->field($model, 'date_start') ?>
-
-    <?php // echo $form->field($model, 'time_start') ?>
-
-    <?php // echo $form->field($model, 'date_end') ?>
-
-    <?php // echo $form->field($model, 'time_end') ?>
-
-    <?php // echo $form->field($model, 'driver_id') ?>
-
-    <?php // echo $form->field($model, 'leader_id') ?>
-
-    <?php // echo $form->field($model, 'assigned_to') ?>
-
-    <?php // echo $form->field($model, 'emp_id') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <?php // echo $form->field($model, 'deleted_at') ?>
-
-    <?php // echo $form->field($model, 'deleted_by') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
-    </div>
+<div class="d-flex justify-content-between align-items-center gap-2">
+<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
+</div>
 
     <?php ActiveForm::end(); ?>
 
 </div>
+<?php
+
+$js = <<< JS
+
+    thaiDatepicker('#developmentsearch-date_start,#developmentsearch-date_end')
+    $("#developmentsearch-date_start").on('change', function() {
+            $('#developmentsearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
+    $("#developmentsearch-date_end").on('change', function() {
+            $('#developmentsearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
+
+
+    JS;
+$this->registerJS($js, View::POS_END);
+
+?>

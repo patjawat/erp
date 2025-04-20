@@ -3,31 +3,29 @@
 namespace app\modules\hr\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\ThaiDateHelper;
 
 /**
  * This is the model class for table "development".
  *
  * @property int $id
  * @property int|null $document_id ตามหนังสือ
- * @property string $development_type_id ประเภทการพัฒนา
  * @property string $topic หัวข้อ
- * @property string|null $description
- * @property string $location สถานที่ไป
- * @property string $location_org หน่วยงานที่จัด
- * @property string $province_name จังหวัด
  * @property string $status สถานะ
- * @property string $vehicle_type พาหนะเดินทาง
- * @property string $claim_type การเบิกเงิน
- * @property string|null $time_slot ช่วงเวลา
- * @property string $date_start ออกเดินทาง
+ * @property string $date_start วันที่เริ่ม
  * @property string|null $time_start เริ่มเวลา
  * @property string $date_end ถึงวันที่
  * @property string|null $time_end ถึงเวลา
+ * @property string|null $vehicle_type_id ยานพาหนะ
+ * @property string $vehicle_date_start วันออกเดินทาง
+ * @property string $vehicle_date_end วันกลับ
  * @property string|null $driver_id พนักงานขับ
  * @property string $leader_id หัวหน้าฝ่าย
  * @property int $assigned_to มอบหมายงานให้
  * @property string $emp_id ผู้ขอ
- * @property string|null $data_json ยานพาหนะ
+ * @property string|null $data_json JSON
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
@@ -42,6 +40,7 @@ class Development extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $q;
     public static function tableName()
     {
         return 'development';
@@ -53,12 +52,11 @@ class Development extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['document_id', 'description', 'time_slot', 'time_start', 'time_end', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
-            [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['development_type_id', 'topic', 'location', 'location_org', 'province_name', 'status', 'vehicle_type', 'claim_type', 'date_start', 'date_end', 'leader_id', 'assigned_to', 'emp_id'], 'required'],
-            [['description'], 'string'],
-            [['time_slot', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['development_type_id', 'topic', 'location', 'location_org', 'province_name', 'status', 'vehicle_type', 'claim_type', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
+            [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
+            [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
+            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id'], 'required'],
+            [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -70,25 +68,20 @@ class Development extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'document_id' => 'ตามหนังสือ',
-            'development_type_id' => 'ประเภทการพัฒนา',
             'topic' => 'หัวข้อ',
-            'description' => 'Description',
-            'location' => 'สถานที่ไป',
-            'location_org' => 'หน่วยงานที่จัด',
-            'province_name' => 'จังหวัด',
             'status' => 'สถานะ',
-            'vehicle_type' => 'พาหนะเดินทาง',
-            'claim_type' => 'การเบิกเงิน',
-            'time_slot' => 'ช่วงเวลา',
-            'date_start' => 'ออกเดินทาง',
+            'date_start' => 'วันที่เริ่ม',
             'time_start' => 'เริ่มเวลา',
             'date_end' => 'ถึงวันที่',
             'time_end' => 'ถึงเวลา',
+            'vehicle_type_id' => 'ยานพาหนะ',
+            'vehicle_date_start' => 'วันออกเดินทาง',
+            'vehicle_date_end' => 'วันกลับ',
             'driver_id' => 'พนักงานขับ',
             'leader_id' => 'หัวหน้าฝ่าย',
             'assigned_to' => 'มอบหมายงานให้',
             'emp_id' => 'ผู้ขอ',
-            'data_json' => 'ยานพาหนะ',
+            'data_json' => 'JSON',
             'created_at' => 'วันที่สร้าง',
             'updated_at' => 'วันที่แก้ไข',
             'created_by' => 'ผู้สร้าง',
@@ -98,8 +91,26 @@ class Development extends \yii\db\ActiveRecord
         ];
     }
 
-    public function listDevelopmentType()
+    public function showDateRange()
     {
-        return ArrayHelper::map(DevelopmentType::find()->asArray()->all(), 'id', 'name');
+        return ThaiDateHelper::formatThaiDateRange($this->date_start, $this->date_end, 'long', 'short');
     }
+
+    public function ListThaiYear()
+    {
+        $model = self::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
+
+
 }
