@@ -10,6 +10,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\sm\models\Product;
 use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockOut;
@@ -961,6 +962,52 @@ class StockOrderController extends Controller
         }
     }
 
+
+    // public function actionCopyItem()
+    // {
+    //     $id = $this->request->get('id');
+    //     $model = StockEvent::findOne($id);
+    //     \Yii::$app->response->format = Response::FORMAT_JSON;
+    //     $stock = Stock::find()
+    //         ->where(['warehouse_id' => $model->warehouse_id])
+    //         ->andWhere(['>=', 'qty', 1])
+    //         ->andWhere(['like', 'asset_item', $model->asset_item, false]) // false เพื่อให้เป็น exact match (LIKE 'M1-69')
+    //         ->andWhere(['>', 'lot_number', $model->lot_number])
+    //         ->one();
+    //         if($stock){
+    //         $newItem = new StockEvent([
+    //             'name' => 'order_item',
+    //             'category_id' => $model->category_id,
+    //             'transaction_type' => 'OUT',
+    //             'lot_number' => $stock->lot_number,
+    //             'warehouse_id' => $model->warehouse_id,
+    //             'order_status' => 'pending',
+    //             'thai_year' => $model->thai_year,
+    //             'unit_price' => $stock->unit_price,
+    //             'asset_item' => $stock->asset_item,
+    //             'qty' => 0,
+    //             'data_json' => [
+    //                 'req_qty' => 0,
+    //             ],
+    //         ]);
+
+    //         if ($newItem->save(false)) {
+    //             return [
+    //                 'status' => 'success',
+    //                 'container' => '#inventory-container',
+    //             ];
+
+    //                 } else {
+    //         return [
+    //             'status' => 'error',
+    //             'massage' => 'เกิดข้อผิดพลาด',
+    //             'container' => '#inventory-container',
+    //         ];
+    //     }
+    //         }
+    // }
+
+
     public function actionCopyItem()
     {
         $id = $this->request->get('id');
@@ -1022,6 +1069,20 @@ class StockOrderController extends Controller
                 'container' => '#inventory-container',
             ];
         }
+    }
+
+    public function actionShowStock($asset_item,$lot_number)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $product = Product::findOne(['code' => $asset_item]);
+        return [
+            'title' => $product->Avatar(),
+            'content' => $this->renderAjax('show_stock', [
+                'asset_item' => $asset_item,
+                'lot_number' => $lot_number
+            ])
+        ];
+        
     }
 
     // public function actionCopyItem()
@@ -1097,6 +1158,7 @@ class StockOrderController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model->delete();
 
+        return $this->redirect(['/inventory/stock-order/view','id' => $model->category_id]);
         return [
             'status' => 'success',
             'container' => '#inventory-container',

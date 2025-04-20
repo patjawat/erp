@@ -58,10 +58,17 @@ use app\modules\inventory\models\StockEvent;
                             <td class="text-center"><?=$item->viewstatus()?></td>
                             <td>
 
-                            <div class="btn-group" role="group" aria-label="Basic outlined example">
-                            <?= Html::a('<i class="fa-solid fa-print me-1"></i>', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'btn btn-outline-primary open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
-                            <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/inventory/stock-order/view','id' => $item->id],['class'=> 'btn btn-outline-primary'])?>
-                                </div>
+                            <div class="btn-group">
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-order/view','id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
+                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+
+                                <ul class="dropdown-menu">
+                                <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
+                                </ui>
+                            </div>
 
                             </td>
                         </tr>

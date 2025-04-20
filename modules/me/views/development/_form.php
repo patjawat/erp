@@ -138,7 +138,7 @@ use app\components\CategoriseHelper;
 
     <?= $form->field($model, 'assigned_to')->textInput() ?>
 
-    <?= $form->field($model, 'emp_id')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true])->label(false) ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>

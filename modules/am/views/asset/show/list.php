@@ -16,7 +16,7 @@ use app\modules\am\models\Asset;
                     <tr>
                         <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
                         <th class="fw-semibold" scope="col">รายการทรัพย์สิน</th>
-                        <th class="fw-semibold" scope="col" style="width: 350px;" >ประจำหน่วยงาน</th>
+                        <th class="fw-semibold" scope="col" style="width: 350px;">ประจำหน่วยงาน</th>
                         <th class="fw-semibold" scope="col">วิธีได้มา</th>
                         <th class="fw-semibold" scope="col">ปีงบประมาณ</th>
                         <th class="fw-semibold" scope="col">สถานะ</th>
@@ -25,45 +25,44 @@ use app\modules\am\models\Asset;
                 </thead>
                 <tbody class="table-group-divider">
                     <?php foreach($dataProvider->getModels() as $key => $model):?>
-                        <tr>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <tr>
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+                        </td>
                         <td class="align-middle">
                             <?=$this->render('item_list',['model' => $model])?>
                         </td>
                         <td class="align-middle">
                             <ul class="list-inline">
                                 <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
-                                    <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
-                                    <?php else:?>
-                                        <?= isset($model->data_json['department_name']) ?  $model->data_json['department_name'] : ''?>
-                                        <?php endif;?>
-                                    </li>
-                                </ul>
+                                <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
+                                <?php else:?>
+                                <?= isset($model->data_json['department_name']) ?  $model->data_json['department_name'] : ''?>
+                                <?php endif;?>
+                                </li>
+                            </ul>
                         </td>
                         <td class="align-middle">
                             <?=$model->method_get?>
-                        
+
                         </td>
-                        
+
                         <td class="align-middle"><?=$model->on_year?></td>
                         <td><?=$model->statusName()?></td>
                         <td class="fw-light">
-                        <div class="btn-group">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/am/asset/update', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
-                            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                <i class="bi bi-caret-down-fill"></i>
-                            </button>
+                            <div class="btn-group">
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/am/asset/update', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
+                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
 
-                            <ul class="dropdown-menu">
-                            <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['/am/asset/view', 'id' => $model->id], ['class' => 'dropdown-item']) ?>
-                                    </ui>
-                                    
-                            
-                        </div>
+                                <ul class="dropdown-menu">
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['/am/asset/view', 'id' => $model->id], ['class' => 'dropdown-item']) ?>
+                                </ui>
+                            </div>
 
-                    </td>
-                    
+                        </td>
+
                         <!-- <td class="align-middle text-center">
                             <div class="d-flex gap-3">
                                 <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/am/asset/view','id' => $model->id])?>

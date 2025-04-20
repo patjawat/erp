@@ -43,6 +43,13 @@ $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(
 $emp = UserHelper::GetEmployee();
 
 ?>
+ <?php $balanced=0;foreach ($model->getItems() as $item):?>
+                        <?php
+                        if($item->qty > $item->SumlotQty()){
+                            $balanced +=1;
+                        }
+                                ?>
+<?php endforeach; ?>
 <div class="row">
 
     <div class="col-8">
@@ -152,10 +159,10 @@ $emp = UserHelper::GetEmployee();
                             <?php }?>
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse->id)): ?>
                             
-                            <?php  // if($balanced == 0):?>
+                            <?php   if($balanced == 0):?>
                             <?php echo (!in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
 
-                            <?php //  endif;?>
+                            <?php  endif;?>
                             <?php else:?>
 
                             <?php endif;?>
@@ -415,23 +422,22 @@ $('.confirm-order').click(async function (e) {
   $("body").on("click", ".copy-item", function (e) {
     e.preventDefault();
 
-        //  Swal.fire({
-        //     title: "ยืนยัน?",
-        //     text: "บันทึกสั่งจ่ายรายการนี้!",
-        //     icon: "warning",
-        //     showCancelButton: true,
-        //     confirmButtonColor: "#3085d6",
-        //     cancelButtonColor: "#d33",
-        //     confirmButtonText: "ใช่, ยืนยัน!",
-        //     cancelButtonText: "ยกเลิก",
-        // }).then( (result) => {
-        //     if (result.value == true) {
+         Swal.fire({
+            title: "ยืนยัน?",
+            text: "ต้องการเพิ่มรายการล็อตจากล็อตใหม่!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "ใช่, ยืนยัน!",
+            cancelButtonText: "ยกเลิก",
+        }).then( (result) => {
+            if (result.value == true) {
              $.ajax({
                 type: "get",
                 url: $(this).attr('href'),
                 dataType: "json",
                 success: function (res) {
-                    console.log(res);
                     
                     if (res.status == "error") {
                             Swal.fire({
@@ -449,8 +455,8 @@ $('.confirm-order').click(async function (e) {
                   }
                 },
             });
-            // }
-        // });
+            }
+        });
 
   });
 
