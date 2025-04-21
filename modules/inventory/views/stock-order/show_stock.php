@@ -5,10 +5,6 @@ use yii\widgets\DetailView;
 use app\modules\inventory\models\Stock;
 $warehouse = Yii::$app->session->get('warehouse');
 $stockEvents = Stock::find()
-->select([
-    'stock.*',
-    new Expression('SUM(qty * unit_price) AS total')
-])
 ->andWhere([
     'asset_item' => $asset_item,
     'warehouse_id' => $warehouse->id,
@@ -35,7 +31,7 @@ $balanceQty = 0;
     </thead>
     <tbody class="align-middle table-group-divider">
         <?php foreach($stockEvents as $item2):?>
-        <tr class="<?=$lot_number == $item2->lot_number ? 'table-active' : ''?>">
+        <tr class="">
             <td><?=$item2->lot_number?></td>
             <td class="fw-semibold text-center"><?=$item2->qty?></td>
         </tr>

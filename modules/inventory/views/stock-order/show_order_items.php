@@ -1,11 +1,12 @@
 <?php
 use yii\web\View;
+
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\db\Expression;
 use yii\widgets\DetailView;
 use app\components\UserHelper;
-use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\Stock;
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
 // $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
@@ -19,9 +20,9 @@ $emp = UserHelper::GetEmployee();
             <th>รายการ</th>
             <th class="text-end">มูลค่า</th>
             <th class="text-start">ล็อตผลิต</th>
-            <th class="text-end">คงเหลือ</th>
-            <th class="text-center">หน่วย</th>
             <th class="text-center">ขอเบิก</th>
+            <th class="text-center">หน่วย</th>
+            <th class="text-end">คงเหลือ</th>
             <!-- <th class="text-center">คงเหลือ</th> -->
             <th class="text-center">อนุมัติจ่าย</th>
             <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
@@ -35,17 +36,26 @@ $emp = UserHelper::GetEmployee();
                             $balanced +=1;
                         }
                                 ?>
-        <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
+        <tr class="<?=$item->SumlotQty() == 0 ? 'table-danger' : ''?> ">
             <td class="align-middle"><?php echo $item->product?->Avatar();?></td>
 
-            <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
-            <td class="align-middle text-start"><?php echo $item->lot_number; ?></td>
-            <td class="text-center fw-semibold"><?=$item->SumlotQty();?></td>
-            <td class="align-middle text-center">
-                <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
+            <td class="align-middle text-end"><?php echo $item->unit_price !== null ? number_format($item->unit_price, 2) : '-'; ?></td>
+            <td class="align-middle text-start">
+                <?php // echo $item->lot_number; ?>
+            <?php
+            $checkStock = Stock::find()
+                        ->andWhere(['warehouse_id' => $model->warehouse_id, 'asset_item' => $item->asset_item])
+                        ->andWhere(['>', 'qty', 0])->one();
+            if ($checkStock) {
+                echo $checkStock->lot_number;
+            }
+            
+            
+            ?>
             </td>
-            <td class="align-middle text-center fw-semibold">
-                <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
+            <td class="align-middle text-center fw-semibold"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
+            <td class="align-middle text-center"><?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?></td>
+            <td class="text-center fw-semibold"><?=$item->SumlotQty();?></td>
             <td class="text-center">
                 <?php // if ($model->OrderApprove() && Yii::$app->user->can('warehouse') && $item->SumLotQty() > 0 && $office ?? false && !in_array($model->order_status, ['cancel'])): ?>
                 <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &&($item->SumLotQty() > 0) && ($office ?? false) && !in_array($model->order_status, ['success','cancel'])): ?>
@@ -108,7 +118,7 @@ $emp = UserHelper::GetEmployee();
                         <?php endif;?>
                         <?php if(!in_array($model->order_status, ['success','cancel']) && $userid == $item->created_by):?>
                         <li>
-                            <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash me-1"></i> ลบรายการ', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']); ?>
+                            <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-circle-minus me-1"></i> ยกเลิกรายการ', ['/inventory/stock-order/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-item']); ?>
                         </li>
                         <?php endif?>
                         </ui>
@@ -130,3 +140,36 @@ $emp = UserHelper::GetEmployee();
 
     </tbody>
 </table>
+<?php
+
+$js = <<< JS
+$("body").on("click", ".cancel-item", function (e) {
+    e.preventDefault();
+    let url = $(this).attr('href'); // Get the URL from the button/link
+
+    Swal.fire({
+        title: 'ยืนยันการยกเลิก?',
+        text: "คุณแน่ใจหรือไม่!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ยืนยัน!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+           $.ajax({
+            type: "post",
+            url: $().attr('href'),
+            dataType: "json",
+            success: function (res) {
+                if(res.status == 'success'){
+                    location.reload();
+                }
+            }
+           });
+        }
+    });
+});
+JS;
+$this->registerJs($js, yii\web\View::POS_END);
+?>

@@ -154,6 +154,21 @@ class StockOrderController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = StockEvent::findOne($id);
         $btnSave = false;
+
+
+
+        foreach ($model->getItems() as $stockItem)
+        {
+            $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
+            if($checkStock){
+                $stockItem->lot_number = $checkStock->lot_number;
+                $stockItem->save();
+            }else{
+                $stockItem->qty=0;
+                $stockItem->save();
+            }
+        }
+
         if($model->checkBalance()  == 0 && !in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0){
             $btnSave = true;
         }else{
@@ -1103,15 +1118,15 @@ class StockOrderController extends Controller
         }
     }
 
-    public function actionShowStock($asset_item,$lot_number)
+    public function actionShowStock($asset_item)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $product = Product::findOne(['code' => $asset_item]);
+        $product = Product::find()->where(['code' => $asset_item])->one();
         return [
             'title' => $product->Avatar(),
             'content' => $this->renderAjax('show_stock', [
                 'asset_item' => $asset_item,
-                'lot_number' => $lot_number
+                // 'lot_number' => $lot_number
             ])
         ];
         

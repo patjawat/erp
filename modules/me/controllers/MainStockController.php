@@ -88,8 +88,8 @@ class MainStockController extends Controller
                             'warehouse_id' => $model->warehouse_id,
                             'from_warehouse_id' => $model->from_warehouse_id,
                             'asset_item' => $item->asset_item,
-                            'lot_number' => $item->lot_number,
-                            'unit_price' => $item->unit_price,
+                            // 'lot_number' => $item->lot_number,
+                            // 'unit_price' => $item->unit_price,
                             'qty' => 0,
                             'qty' => $item->getQuantity(), //ระบุจำนวนจริงตาม lot ที่เหลือ
                             'data_json' => [
