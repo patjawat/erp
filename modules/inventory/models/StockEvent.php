@@ -781,6 +781,18 @@ public function mainOrderSummary($status = null)
         ];
     }
 
+
+     // ตรวจสอบว่ามีพอให้เบิกหรือไม่
+    public function checkBalance()
+    {
+                $balanced=0;
+                foreach ($this->getItems() as $item){
+                    if($item->qty > $item->SumlotQty()){
+                        $balanced +=1;
+                    }
+                }
+            return $balanced;
+    }
     // รวมเงินทั้งหมด
     public function SummaryTotal($status = true)
     {
@@ -1104,6 +1116,8 @@ public function mainOrderSummary($status = null)
         return $chartSummary;
     }
 
+
+    
     // ข้อมูล  chart summary แบบรายเดือนและปี
 
     public function SummaryChart($warehouseType = null)

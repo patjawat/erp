@@ -49,7 +49,6 @@ class StoreV2Controller extends \yii\web\Controller
         $emp = UserHelper::GetEmployee();
         $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
 
-        // $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
         $item = $warehouse->data_json['item_type'];
         $searchModel = new StockSearch([
             'warehouse_id' => $warehouse->id
@@ -60,7 +59,7 @@ class StoreV2Controller extends \yii\web\Controller
         $dataProvider->query->leftJoin('warehouses w', 'w.id=stock.warehouse_id');
         $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
-        $dataProvider->query->andFilterWhere(['w.department' => $emp->department]);
+        $dataProvider->query->andFilterWhere(['w.id' => $warehouse->id]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_item', $searchModel->q],

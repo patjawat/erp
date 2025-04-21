@@ -9,7 +9,7 @@ use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('warehouse');
-// $this->registerJsFile($this->render('stock-order.js'), ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerJsFile($this->render('stock-order.js'), ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 /* @var yii\web\View $this */
 /* @var app\modules\inventory\models\StockEvent $model */
@@ -69,8 +69,7 @@ $emp = UserHelper::GetEmployee();
                 </div>
                 <!-- รายละเอียดรายการขอเบิก -->
                 <?php // echo $this->render('order_items',['model' => $model,'office' => $office])?>
-                <?php // echo $this->render('list_items',['model' => $model])?>
-                <div id="showOrderItem"></div>
+                <?php echo $this->render('list_items',['model' => $model])?>
             </div>
         </div>
 
@@ -128,10 +127,7 @@ $emp = UserHelper::GetEmployee();
                         [
                             'label' => 'มูลค่า',
                             'format' => 'html',
-                            'value' => function($model){
-                                return '<span>'.number_format($model->getTotalOrderPrice(),2).'</span>';
-                            },
-                            'contentOptions' => ['id' => 'sumPrice','class' => 'fw-semibold']
+                            'value' => number_format($model->getTotalOrderPrice(),2),
                         ],
                         [
                             'label' => 'พิมพ์เอกสาร',
@@ -163,10 +159,10 @@ $emp = UserHelper::GetEmployee();
                             <?php }?>
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse->id)): ?>
                             
-                            <?php   //if($balanced == 0):?>
-                            <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout','id' => 'btnSave']); ?>
+                            <?php   if($balanced == 0):?>
+                            <?php echo (!in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
 
-                            <?php  //endif;?>
+                            <?php  endif;?>
                             <?php else:?>
 
                             <?php endif;?>
@@ -218,47 +214,16 @@ $emp = UserHelper::GetEmployee();
 
 
 <?php
-$id = isset($model->id) ? $model->id : null;
+
 $js = <<< JS
-
-
-    showOrderItem();
-
-//โหลดรายการวัสดุที่ขอเบิก
-async function showOrderItem() {
-    try {
-        if ($id !== null) {
-            var id = $id;
-        let res = await $.ajax({
-            type: "get",
-            url: "/inventory/stock-order/show-order-item",
-            data: { id: id }
-        });
-        $("#showOrderItem").html(res.content);
-        $("#sumPrice").html(res.sumPrice);
-        if(res.btnSave == true){
-            $('#btnSave').show();
-        }else{
-            $('#btnSave').hide();
-        }
-        $("#checkout").html(res.sumPrice);
-        console.log('balance',res.sumPrice)
-    }
-    } catch (error) {
-        console.error("Error fetching order item:", error);
-    }
-}
-
-
-
 // ฟังก์ชันอัปเดตค่าจำนวนสินค้า
 async function updateQuantity(id, qty, quantityField) {
     let res = await $.getJSON("/inventory/stock-order/update-qty", { id, qty });
-    // if (res.status === "error") {
-    //     Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
-    // } else {
-    //     quantityField.val(qty);
-    // }
+    if (res.status === "error") {
+        Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
+    } else {
+        quantityField.val(qty);
+    }
 }
 
 // ฟังก์ชันแจ้งเตือนเมื่อเกินจำนวน
@@ -272,9 +237,8 @@ async function handleQuantityChange(button, isIncrement) {
     let setVal = parseInt(quantityField.val()) + (isIncrement ? 1 : -1);
     let lotQty = button.data('lot_qty'), id = button.data('id');
 
-    // if (setVal > lotQty) return showLimitWarning();
+    if (setVal > lotQty) return showLimitWarning();
     await updateQuantity(id, setVal, quantityField);
-    await showOrderItem();
 }
 
 // ตรวจสอบค่าที่กรอกใน input
@@ -282,7 +246,6 @@ $("body").on("input", ".qty", function () {
     const maxlot = $(this).data('maxlot');
     this.value = this.value.replace(/\D/g, '');
     if (parseInt(this.value) > maxlot) $(this).val(maxlot);
-    
 });
 
 // จัดการปุ่มลดจำนวน
@@ -341,8 +304,6 @@ $("body").on("keypress", ".qty", function (e) {
     let id = $(this).attr("id");
     let qty = $(this).val();
     let td = $(this).closest("td");
-    console.log('qty', qty);
-    
 
     if (e.which == 13) { // เมื่อกด Enter
         updateQuantity(id, qty, $(this)).then(() => {

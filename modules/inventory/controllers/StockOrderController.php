@@ -148,6 +148,29 @@ class StockOrderController extends Controller
         }
     }
 
+
+    public function actionShowOrderItem($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = StockEvent::findOne($id);
+        $btnSave = false;
+        if($model->checkBalance()  == 0 && !in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0){
+            $btnSave = true;
+        }else{
+            $btnSave = false;
+        }
+
+                                    
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('show_order_items',[
+                'model' => $model,
+            ]),
+                'balance' => $model->checkBalance(),
+                'sumPrice' => number_format($model->getTotalOrderPrice(),2),
+                'btnSave' => $btnSave
+        ];
+    }
     public function actionViewCode($id)
     {
         $model = StockEvent::findOne(['code' => $id, 'name' => 'order']);
@@ -449,11 +472,20 @@ class StockOrderController extends Controller
         }
 
         if ($qty > $checkStock->qty) {
-            return [
-                'status' => 'error',
-                'container' => '#inventory-container',
-                'code' => '$qty > $checkStock->qty',
-            ];
+            // return [
+            //     'status' => 'error',
+            //     'container' => '#inventory-container',
+            //     'code' => '$qty > $checkStock->qty',
+            // ];
+            // $model->qty = 0;
+            $model->save(false);
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                    'container' => '#inventory-container',
+                    'data' => $model,
+                ];
+            
         } else {
             $model->qty = $qty;
             if ($qty >= 0 && $model->save(false)) {

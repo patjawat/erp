@@ -2,6 +2,7 @@
 <!-- https://spruko.com/demo/tailwind/xintra/dist/html/index13.html -->
 <?php
 use yii\helpers\Html;
+use app\components\UserHelper;
 $warehouse = Yii::$app->session->get('sub-warehouse');
 
 $this->title = 'คลัง'.$warehouse->warehouse_name;
@@ -18,7 +19,6 @@ $products = $cart->getItems();
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
-
 
 <div class="row">
     <div class="col-8">

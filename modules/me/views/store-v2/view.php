@@ -40,9 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 class="table table-striped table-hover align-middle"
             >
                 <thead class="">
-                    <caption>
-                        Table Name
-                    </caption>
+    
                     <tr>
                         <th class="text-center" style="width: 30px;">#</th>
                         <th>รายการ</th>

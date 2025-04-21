@@ -81,7 +81,7 @@ $products = $cart->getItems();
                             </div>
                                 <?php
                                                 try {
-                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/main-stock/add-to-cart', 'id' => $model->asset_item], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
+                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
                                                 } catch (Throwable $th) {
                                                     // throw $th;
                                                 }

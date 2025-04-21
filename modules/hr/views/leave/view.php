@@ -48,14 +48,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php  echo $this->render('timeline_approve', ['model' => $model]) ?>
 
-
 <div class="d-flex justify-content-center gap-3">
     <?php echo ($model->status == 'ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
     <?php if ($me->user_id == $model->created_by): ?>
         <?= $model->status !== 'ReqCancel' ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
             'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
         ]) : '' ?>
-    <?php echo ($model->status !== 'Allow' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
+    <?php echo $model->levelStatusCount() == 0 ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
     <?php endif; ?>
     <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
     <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]); ?>

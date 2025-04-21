@@ -11,6 +11,7 @@ use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\sm\models\Product;
 use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\Warehouse;

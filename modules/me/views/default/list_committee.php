@@ -42,7 +42,7 @@ $me = UserHelper::GetEmployee();
                         </td>
                         <td class="text-center"><?=$item->thai_year?></td>
                         <td scope="row">
-                            <?= $item->appointment->teamGroup->title;?>
+                            <?= $item->appointment?->teamGroup?->title;?>
                         </td>
                         <td><?=  $item->data_json['committee_name'] ?? '-'?></td>
                     </tr>

@@ -719,6 +719,11 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
+
+    public function levelStatusCount()
+    {
+        return  Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->count();
+    }
     public function showLeaveDate()
     {
         return ThaiDateHelper::formatThaiDateRange($this->date_start, $this->date_end, 'long', 'short');

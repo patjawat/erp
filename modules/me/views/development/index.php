@@ -18,11 +18,11 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
 
 <div class="card">
     <div class="card-body">
-        <h6><i class="bi bi-ui-checks"></i> <?=$this->title?></h6>
         <div class="d-flex justify-content-between">
+        <h6><i class="bi bi-ui-checks"></i> <?=$this->title?></h6>
+        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title,['/me/development/create','title' => '<i class="fa-solid fa-circle-plus"></i> เพิ่มอบรม/ประชุม/ดูงาน'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+    </div>
            <?=$this->render('_search', ['model' => $searchModel,'type' => 'development'])?>
-            <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title,['/me/development/create','title' => '<i class="fa-solid fa-circle-plus"></i> เพิ่มอบรม/ประชุม/ดูงาน'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
-        </div>
 
         <div class="table-responsive pb-5">
             <table class="table table-primary">

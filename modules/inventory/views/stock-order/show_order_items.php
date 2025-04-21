@@ -8,9 +8,11 @@ use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
-$office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
+// $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
+$office = 1;
 $emp = UserHelper::GetEmployee();
 ?>
+
 <table class="table table-striped mt-3">
     <thead class="table-primary">
         <tr>

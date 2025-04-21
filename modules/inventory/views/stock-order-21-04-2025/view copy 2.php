@@ -9,7 +9,7 @@ use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('warehouse');
-// $this->registerJsFile($this->render('stock-order.js'), ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerJsFile($this->render('stock-order.js'), ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 /* @var yii\web\View $this */
 /* @var app\modules\inventory\models\StockEvent $model */
@@ -43,13 +43,6 @@ $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(
 $emp = UserHelper::GetEmployee();
 
 ?>
- <?php $balanced=0;foreach ($model->getItems() as $item):?>
-                        <?php
-                        if($item->qty > $item->SumlotQty()){
-                            $balanced +=1;
-                        }
-                                ?>
-<?php endforeach; ?>
 <div class="row">
 
     <div class="col-8">
@@ -69,8 +62,7 @@ $emp = UserHelper::GetEmployee();
                 </div>
                 <!-- รายละเอียดรายการขอเบิก -->
                 <?php // echo $this->render('order_items',['model' => $model,'office' => $office])?>
-                <?php // echo $this->render('list_items',['model' => $model])?>
-                <div id="showOrderItem"></div>
+                <?php echo $this->render('list_items',['model' => $model])?>
             </div>
         </div>
 
@@ -128,10 +120,7 @@ $emp = UserHelper::GetEmployee();
                         [
                             'label' => 'มูลค่า',
                             'format' => 'html',
-                            'value' => function($model){
-                                return '<span>'.number_format($model->getTotalOrderPrice(),2).'</span>';
-                            },
-                            'contentOptions' => ['id' => 'sumPrice','class' => 'fw-semibold']
+                            'value' => number_format($model->getTotalOrderPrice(),2),
                         ],
                         [
                             'label' => 'พิมพ์เอกสาร',
@@ -163,10 +152,10 @@ $emp = UserHelper::GetEmployee();
                             <?php }?>
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse->id)): ?>
                             
-                            <?php   //if($balanced == 0):?>
-                            <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout','id' => 'btnSave']); ?>
+                            <?php  // if($balanced == 0):?>
+                            <?php echo (!in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout']) : ''; ?>
 
-                            <?php  //endif;?>
+                            <?php //  endif;?>
                             <?php else:?>
 
                             <?php endif;?>
@@ -218,139 +207,136 @@ $emp = UserHelper::GetEmployee();
 
 
 <?php
-$id = isset($model->id) ? $model->id : null;
+
 $js = <<< JS
 
+$("body").on("input", ".qty", function (e) {
+    const maxlot = parseInt($(this).data('maxlot')); 
+    // ลบตัวอักษรที่ไม่ใช่ตัวเลขออก
+    // this.value.replace(/[^0-9]/g, '');
+    this.value = this.value.replace(/[^0-9]/g, '');
+    let = value = $(this).val();
 
-    showOrderItem();
+      if (parseInt($(this).val()) > maxlot) {
+        $(this).val(maxlot);
+      }
+});
 
-//โหลดรายการวัสดุที่ขอเบิก
-async function showOrderItem() {
-    try {
-        if ($id !== null) {
-            var id = $id;
-        let res = await $.ajax({
-            type: "get",
-            url: "/inventory/stock-order/show-order-item",
-            data: { id: id }
-        });
-        $("#showOrderItem").html(res.content);
-        $("#sumPrice").html(res.sumPrice);
-        if(res.btnSave == true){
-            $('#btnSave').show();
-        }else{
-            $('#btnSave').hide();
+$("body").on("click", ".minus", async function (e) {
+    quantityField = $(this).next();
+    var lotQty = $(this).data('lot_qty');
+    var id = $(this).data('id');
+    console.log(id);
+  
+  if (quantityField.val() != 0) {
+    var setVal = parseInt(quantityField.val(), 10) - 1;
+            if(setVal > lotQty){
+                Swal.fire({icon: "warning",title: "เกินจำนวน",showConfirmButton: false,timer: 1500});
+            }else{
+               await quantityField.val(parseInt(setVal));   
+               await $.ajax({
+                    type: "get",
+                    url: "/inventory/stock-order/update-qty",
+                    data: {
+                        id:id,
+                        qty:setVal
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        if(res.status == 'error'){
+                            Swal.fire({
+                            icon: "warning",
+                            title: "เกินจำนวน",
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
+                        
+                        }
+                        if(res.status == 'success')
+                        {
+                           
+                        }
+                    }
+                });
+            }   
         }
-        $("#checkout").html(res.sumPrice);
-        console.log('balance',res.sumPrice)
-    }
-    } catch (error) {
-        console.error("Error fetching order item:", error);
-    }
-}
+  
+});
 
-
-
-// ฟังก์ชันอัปเดตค่าจำนวนสินค้า
-async function updateQuantity(id, qty, quantityField) {
-    let res = await $.getJSON("/inventory/stock-order/update-qty", { id, qty });
-    // if (res.status === "error") {
-    //     Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
-    // } else {
-    //     quantityField.val(qty);
-    // }
-}
-
-// ฟังก์ชันแจ้งเตือนเมื่อเกินจำนวน
-function showLimitWarning() {
-    Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
-}
-
-// ฟังก์ชันจัดการการเพิ่ม/ลดจำนวนสินค้า
-async function handleQuantityChange(button, isIncrement) {
-    let quantityField = isIncrement ? button.prev() : button.next();
-    let setVal = parseInt(quantityField.val()) + (isIncrement ? 1 : -1);
-    let lotQty = button.data('lot_qty'), id = button.data('id');
-
-    // if (setVal > lotQty) return showLimitWarning();
-    await updateQuantity(id, setVal, quantityField);
-    await showOrderItem();
-}
-
-// ตรวจสอบค่าที่กรอกใน input
-$("body").on("input", ".qty", function () {
-    const maxlot = $(this).data('maxlot');
-    this.value = this.value.replace(/\D/g, '');
-    if (parseInt(this.value) > maxlot) $(this).val(maxlot);
+$("body").on("click", ".plus", async function (e) {
+    quantityField = $(this).prev();
+    var lotQty = $(this).data('lot_qty');
+    var total = $(this).data('total');
+    console.log(total);
     
-});
-
-// จัดการปุ่มลดจำนวน
-$("body").on("click", ".minus", function () {
-    handleQuantityChange($(this), false);
-});
-
-// จัดการปุ่มเพิ่มจำนวน
-$("body").on("click", ".plus", function () {
-    handleQuantityChange($(this), true);
-});
-
-// กด Enter เพื่ออัปเดตจำนวน
-// $("body").on("keypress", ".qty", function (e) {
-//     if (e.which == 13) {
-//         let id = $(this).attr("id"), qty = $(this).val();
-//         updateQuantity(id, qty, $(this)).then(() => location.reload());
-//     }
-// });
-
-
-// เมื่อกด Tab ให้ focus ที่ช่องถัดไป และ select ข้อความ
-$("body").on("keydown", ".qty", function (e) {
-    if (e.which == 9) { // กด Tab
-        e.preventDefault(); 
-        let id = $(this).attr("id");
-        let qty = $(this).val();
-        let inputs = $(".qty"); 
-        let index = inputs.index(this);
-        let nextInput = inputs.eq(index + 1);
-        
-        if (nextInput.length) {
-            updateQuantity(id, qty, $(this)).then(() => {
-                Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title: "อัปเดตจำนวนสำเร็จ",
-                showConfirmButton: false,
-                timer: 1500
-            });
-            });
-            nextInput.focus().select(); // โฟกัส + เลือกข้อความ
-        } else {
-            inputs.eq(0).focus().select(); // วนกลับไปช่องแรก
-        }
+    var id = $(this).data('id');
+    var setVal = parseInt(quantityField.val(), 10) + 1;
+    if(setVal > lotQty){
+        Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+    }else{
+       await quantityField.val(parseInt(setVal)); 
+       await $.ajax({
+            type: "get",
+            url: "/inventory/stock-order/update-qty",
+            data: {
+                id:id,
+                qty:setVal
+            },
+            dataType: "json",
+            success: function (res) {
+                if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                if(res.status == 'success')
+                {
+                     
+                }
+            }
+        });
     }
 });
 
-// เมื่อคลิกที่ช่อง ให้ select ข้อความทั้งหมด
-$("body").on("focus", ".qty", function () {
-    $(this).select();
-});
 
 $("body").on("keypress", ".qty", function (e) {
-    let id = $(this).attr("id");
-    let qty = $(this).val();
-    let td = $(this).closest("td");
-    console.log('qty', qty);
-    
-
-    if (e.which == 13) { // เมื่อกด Enter
-        updateQuantity(id, qty, $(this)).then(() => {
-            // td.removeClass("bg-secondary"); // ลบสี bg-warning เมื่ออัปเดตเสร็จ
-            location.reload();
+    var keycode = e.keyCode ? e.keyCode : e.which;
+    if (keycode == 13) {
+        let qty = $(this).val()
+        let id = $(this).attr('id')
+        console.log(qty);
+        $.ajax({
+            type: "get",
+            url: "/inventory/stock-order/update-qty",
+            data: {
+                'id':id,
+                'qty':qty 
+            },
+            dataType: "json",
+            success: function (res) {
+                if(res.status == 'error'){
+                    Swal.fire({
+                    icon: "warning",
+                    title: "เกินจำนวน",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+                }
+                location.reload();
+                //   $.pjax.reload({container:res.container, history:false});
+            }
         });
     }
 });
+
 
 // $("body").on("click", ".update-qty", function (e) {
 //         e.preventDefault();
@@ -461,22 +447,23 @@ $('.confirm-order').click(async function (e) {
   $("body").on("click", ".copy-item", function (e) {
     e.preventDefault();
 
-         Swal.fire({
-            title: "ยืนยัน?",
-            text: "ต้องการเพิ่มรายการล็อตจากล็อตใหม่!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "ใช่, ยืนยัน!",
-            cancelButtonText: "ยกเลิก",
-        }).then( (result) => {
-            if (result.value == true) {
+        //  Swal.fire({
+        //     title: "ยืนยัน?",
+        //     text: "บันทึกสั่งจ่ายรายการนี้!",
+        //     icon: "warning",
+        //     showCancelButton: true,
+        //     confirmButtonColor: "#3085d6",
+        //     cancelButtonColor: "#d33",
+        //     confirmButtonText: "ใช่, ยืนยัน!",
+        //     cancelButtonText: "ยกเลิก",
+        // }).then( (result) => {
+        //     if (result.value == true) {
              $.ajax({
                 type: "get",
                 url: $(this).attr('href'),
                 dataType: "json",
                 success: function (res) {
+                    console.log(res);
                     
                     if (res.status == "error") {
                             Swal.fire({
@@ -494,8 +481,8 @@ $('.confirm-order').click(async function (e) {
                   }
                 },
             });
-            }
-        });
+            // }
+        // });
 
   });
 
