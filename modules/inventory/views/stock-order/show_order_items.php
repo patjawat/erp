@@ -105,12 +105,7 @@ $emp = UserHelper::GetEmployee();
             </td>
 
             <td class="text-center">
-                <?php
-                print_r($model->OrderApprove());
-                print_r($office);
-                print_r($item->SumStockQty());
-                
-                ?>
+
                 <div class="btn-group">
                     <?= Html::a('<i class="bi bi-ui-checks"></i>', ['//inventory/stock-order/show-stock','asset_item' => $item->asset_item,'lot_number' => $item->lot_number,'category_id' => $item->category_id], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-md']]) ?>
                     <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
