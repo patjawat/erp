@@ -236,7 +236,8 @@ async function showOrderItem() {
         });
         $("#showOrderItem").html(res.content);
         $("#sumPrice").html(res.sumPrice);
-        if(res.btnSave == true){
+        
+        if(res.balance == 0){
             $('#btnSave').show();
         }else{
             $('#btnSave').hide();

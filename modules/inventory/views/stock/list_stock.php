@@ -66,7 +66,7 @@ $balanceQty = 0;
 
 
                     </td>
-                    <td class="fw-semibold text-end"><?=number_format($item2->unit_price, 2)?></td>
+                    <td class="fw-semibold text-end"><?= $item2->unit_price !== null ? number_format($item2->unit_price, 2) : '-' ?></td>
                     <td class="fw-semibold text-center"><?=$item2->transaction_type == 'IN' ? $item2->qty : ''?></td>
                     <td class="fw-semibold text-center"><?=$item2->transaction_type == 'OUT' ? -ABS($item2->qty) : ''?>
                     </td>

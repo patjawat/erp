@@ -790,6 +790,9 @@ public function mainOrderSummary($status = null)
                     if($item->qty > $item->SumlotQty()){
                         $balanced +=1;
                     }
+                    // if($item->qty == 0 && $item->SumlotQty() == 0){
+                    //     $balanced -=1;
+                    // }
                 }
             return $balanced;
     }

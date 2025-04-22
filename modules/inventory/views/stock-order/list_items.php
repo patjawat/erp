@@ -33,8 +33,10 @@ $emp = UserHelper::GetEmployee();
                             $balanced +=1;
                         }
                                 ?>
-        <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?> <?php echo $item->order_status == 'await' ? 'bg-warning-subtle' : ''; ?>">
-            <td class="align-middle"><?php echo $item->product?->Avatar();?></td>
+        <tr class="<?=$item->qty > $item->SumlotQty() ? 'bg-warning' : null?>">
+            <td class="align-middle"><?php echo $item->product?->Avatar();?>
+  
+        </td>
 
             <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
             <td class="align-middle text-start"><?php echo $item->lot_number; ?></td>

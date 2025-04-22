@@ -1,4 +1,5 @@
 <?php
+use yii\web\View;
 use yii\helpers\Html;
 use yii\db\Expression;
 use yii\widgets\DetailView;
@@ -41,3 +42,55 @@ $balanceQty = 0;
 <?php else:?>
 <h3 class="text-center">หมด</h3>
 <?php endif;?>
+<?php
+$js = <<< JS
+
+$('body').on('click', '.add-item-lot', function(e) {
+    e.preventDefault();
+    let id = $(this).attr('data-id');
+    let category_id = $(this).attr('data-category-id');
+    // let url = '/inventory/stock-order/add-to-cart?id=' + id + '&category_id=' + category_id;
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'ยืนยันการเพิ่มสินค้า?',
+        text: "คุณต้องการเพิ่มสินค้านี้ลงในตะกร้าหรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, เพิ่มเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "get",
+                url: url,
+                data: {},
+                dataType: "json",
+                success: function(data) {
+                    Swal.fire(
+                        'สำเร็จ!',
+                        'สินค้าได้ถูกเพิ่มลงในตะกร้าแล้ว.',
+                        'success'
+                    ).then(() => {
+                        window.location.href = '/inventory/stock-order';
+                    });
+                },
+                error: function(data) {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถเพิ่มสินค้าได้.',
+                        'error'
+                    );
+                    console.log(data);
+                }
+            });
+        }
+    });
+});
+
+JS;
+$this->registerJS($js,View::POS_END);
+
+?>
