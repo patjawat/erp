@@ -157,7 +157,6 @@ class StockOrderController extends Controller
         $checkBalanced = 0;
 
 
-$data = [];
         foreach ($model->getItems() as $stockItem)
         {
             $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
@@ -166,12 +165,12 @@ $data = [];
                 $stockItem->lot_number = $checkStock->lot_number;
                 $stockItem->unit_price = $checkStock->unit_price;
                 if(!isset($stockItem->data_json['copy'])){
-                    // $stockItem->save();
+                    $stockItem->save();
                 }
             }else{
                 $stockItem->order_status ='cancel';
                 $stockItem->qty=0;
-                // $stockItem->save();
+                $stockItem->save();
             }
             // if($stockItem->SumlotQty() !==0 && $stockItem->qty > $stockItem->SumlotQty()){
             //     $checkBalanced +=1;
