@@ -27,7 +27,7 @@ $emp = UserHelper::GetEmployee();
             <th class="text-end">คงเหลือ</th>
             <!-- <th class="text-center">คงเหลือ</th> -->
             <th class="text-center">อนุมัติจ่าย</th>
-            <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
+            <th class="text-center" scope="col" style="width:180px;">ดำเนินการ</th>
         </tr>
     </thead>
 
@@ -49,15 +49,22 @@ $emp = UserHelper::GetEmployee();
                         if($item->qty > $item->SumlotQty()){
                             $balanced +=1;
                         }
-                                ?>
+                        ?>
         <tr class="<?=$trColor?> ">
             <td class="align-middle"><?php echo $item->product?->Avatar();?></td>
-
+            
             <td class="align-middle text-end"><?php echo $item->unit_price !== null ? number_format($item->unit_price, 2) : '-'; ?></td>
             <td class="align-middle text-start"><?=$item->lot_number; ?></td>
             <td class="align-middle text-center fw-semibold"><?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
             <td class="align-middle text-center"><?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?></td>
-            <td class="text-center fw-semibold"><?=$item->SumlotQty() == 0 ? '<span class="text-danger">หมด</span>' : $item->SumlotQty();?></td>
+            <td class="text-center fw-semibold">
+                <?php if(!in_array($model->order_status, ['success','cancel'])):?>
+                    <?=$item->SumlotQty() == 0 ? '<span class="text-danger">หมด</span>' : $item->SumlotQty();?>
+
+                <?php else:?>
+                <?=$item->data_json['balance'] !== null ? $item->data_json['balance'] : '-';?>
+                <?php endif;?>
+            </td>
             <td class="text-center">
                 <?php // if ($model->OrderApprove() && Yii::$app->user->can('warehouse') && $item->SumLotQty() > 0 && $office ?? false && !in_array($model->order_status, ['cancel'])): ?>
                 <?php if ($model->OrderApprove() && Yii::$app->user->can('warehouse') &&($item->SumLotQty() > 0) && ($office ?? false) && !in_array($model->order_status, ['success','cancel'])): ?>
@@ -70,7 +77,7 @@ $emp = UserHelper::GetEmployee();
                     </span>
                     <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2" value="<?php echo $item->qty; ?>"
                         class="form-control qty" data-maxlot="<?=$item->SumLotQty()?>"
-                        style="width: 55px;font-weight: 500;">
+                        style="width:100px;font-weight: 500;">
 
                     <span type="button" class="plus btn btn-sm btn-light" id="plus"
                         data-lot_qty="<?php echo $item->SumLotQty();?>" data-id="<?php echo $item->id;?>"
@@ -80,32 +87,13 @@ $emp = UserHelper::GetEmployee();
                     </span>
                 </div>
                 <?php else:?>
-                <?php  // echo  $model->order_status == 'success' ? $item->qty : '-' ?>
-
-                <div class="d-flex justify-content-center align-items-center gap-1">
-                    <span type="button" class="minus btn btn-sm btn-light" id="min"
-                        data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id;?>"
-                        data-total="<?php echo $item->SumStockQty();?>">
-                        <!-- <i class="fa-regular fa-square-minus fs-3"></i> -->
-                        <i class="fa-solid fa-minus"></i>
-                    </span>
-                    <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2" value="<?php echo $item->qty; ?>"
-                        class="form-control qty" data-maxlot="<?=$item->SumLotQty()?>"
-                        style="width: 55px;font-weight: 500;">
-
-                    <span type="button" class="plus btn btn-sm btn-light" id="plus"
-                        data-lot_qty="<?php echo $item->SumLotQty();?>" data-id="<?php echo $item->id;?>"
-                        data-total="<?php echo $item->SumStockQty();?>">
-                        <i class="fa-solid fa-plus"></i>
-                        <!-- <i class="fa-regular fa-square-plus fs-3"></i> -->
-                    </span>
-                </div>
-                
+                <?=$item->qty;?>
                 <?php endif;?>
             </td>
 
             <td class="text-center">
 
+<?php if(!in_array($model->order_status, ['success','cancel'])):?>
                 <div class="btn-group">
                     <?= Html::a('<i class="bi bi-ui-checks"></i>', ['//inventory/stock-order/show-stock','asset_item' => $item->asset_item,'lot_number' => $item->lot_number,'category_id' => $item->category_id], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-md']]) ?>
                     <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
@@ -114,6 +102,7 @@ $emp = UserHelper::GetEmployee();
                     </button>
 
                     <ul class="dropdown-menu">
+                        
                         <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
                         <li>
                             <?php echo $item->data_json['req_qty'] > $item->SumlotQty() ? in_array($model->order_status, ['success','cancel']) ? '' : Html::a('<i class="fa-solid fa-copy me-1"></i> เพิ่มล๊อตจ่าย', ['/inventory/stock-order/copy-item', 'id' => $item->id], ['class' => 'dropdown-item copy-item']) : ''; ?>
@@ -126,6 +115,9 @@ $emp = UserHelper::GetEmployee();
                         <?php endif?>
                         </ui>
                 </div>
+                <?php else:?>
+                    <?=$item->viewStatus()?>
+                <?php endif;?>
 
 
 

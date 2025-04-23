@@ -155,27 +155,29 @@ class StockOrderController extends Controller
         $model = StockEvent::findOne($id);
         $btnSave = false;
         $checkBalanced = 0;
+        //ถ้ายังไม่บันทึกจ่ายและยกเลิกให้ updatelot ที่จะจ่าย
+        // if(!in_array($model->order_status, ['success','cancel'])){
 
+        $data = [];
+            foreach ($model->getItems() as $stockItem)
+            {
+                $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
+                if($checkStock){
+                    if(!isset($stockItem->data_json['copy'])){
+                    $stockItem->lot_number = $checkStock->lot_number;
+                    $stockItem->unit_price = $checkStock->unit_price;
+                }
 
-        foreach ($model->getItems() as $stockItem)
-        {
-            $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
-            
-            if($checkStock){
-                $stockItem->lot_number = $checkStock->lot_number;
-                $stockItem->unit_price = $checkStock->unit_price;
-                if(!isset($stockItem->data_json['copy'])){
+                        $stockItem->save();
+                }else{
+                    $stockItem->order_status ='cancel';
+                    $stockItem->qty=0;
                     $stockItem->save();
                 }
-            }else{
-                $stockItem->order_status ='cancel';
-                $stockItem->qty=0;
-                $stockItem->save();
             }
-            // if($stockItem->SumlotQty() !==0 && $stockItem->qty > $stockItem->SumlotQty()){
-            //     $checkBalanced +=1;
-            // }
-        }
+
+
+        // }
 
         // if($model->checkBalance()  == 0 && $stockItem->qty ==0 && !in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0){
         // if($model->checkBalance()  == 0 && $stockItem->qty ==0 && !in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0){
@@ -1121,13 +1123,14 @@ class StockOrderController extends Controller
         
         // $order = StockEvent::findOne($id);
         $order = StockEvent::findOne($id);
-        $lastLotNumber = Stock::find()->where(['>', 'lot_number', $order->lot_number])->orderBy(['lot_number' => SORT_ASC])->one();
-        // return [
-        //     'check' => $order,
-        //     'lastLotNumber' => $lastLotNumber->lot_number
-        // ];
+        $lastLotNumber = Stock::find()
+            ->where(['>', 'lot_number', $order->lot_number])
+            ->andWhere(['warehouse_id' => $order->warehouse_id,'asset_item' => $order->asset_item])
+            ->orderBy(['lot_number' => SORT_ASC])
+            ->one();
+
         if ($lastLotNumber) {
-        $qty = ($order->data_json['req_qty'] - $order->qty);
+        $qty = ($order->data_json['req_qty'] - $order->SumlotQty());
             $model = new StockEvent([
                 'name' => 'order_item',
                 'category_id' => $order->category_id,
