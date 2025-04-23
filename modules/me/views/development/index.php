@@ -20,7 +20,7 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
     <div class="card-body">
         <div class="d-flex justify-content-between">
         <h6><i class="bi bi-ui-checks"></i> <?=$this->title?></h6>
-        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title,['/me/development/create','title' => '<i class="fa-solid fa-circle-plus"></i> เพิ่มอบรม/ประชุม/ดูงาน'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title,['/me/development/create','title' => '<i class="fa-solid fa-circle-plus"></i> เพิ่มอบรม/ประชุม/ดูงาน'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
     </div>
            <?=$this->render('_search', ['model' => $searchModel,'type' => 'development'])?>
 
@@ -61,7 +61,7 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                         <td>-</td>
                         <td style="width:120px">
                             <div class="btn-group">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>

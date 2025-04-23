@@ -12,292 +12,208 @@ use app\components\CategoriseHelper;
 ?>
 
 <div class="development-form">
-
     <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
 
-    <?php
-    echo $form->field($model, 'document_id')->widget(Select2::classname(), [
-        'data' => [],
-        'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
+    <div class="row">
+                <div class="col-2">
+                    <?= $form->field($model, 'thai_year')->textInput() ?>
+                </div>
+                <div class="col-10">
+                    <?php
+                    echo $form->field($model, 'document_id')->widget(Select2::classname(), [
+                        'data' => [],
+                        'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                        ],
+                    ])->label('หนังสืออ้างอิง');
+                    ?>
+                </div>
+            </div>
+            
+    <div class="row">
+        <div class="col-6">
+
+            <?= $form->field($model, 'topic')->textInput(['maxlength' => true]) ?>
+            <div class="row">
+                <div class="col-6">
+                    <?= $form->field($model, 'date_start')->textInput() ?>
+                    <?php
+            echo $form->field($model, 'data_json[development_type_name]')->widget(Select2::classname(), [
+                'data' => CategoriseHelper::DevelopmentType(true),
+                'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
+                'pluginOptions' => [
+                    'dropdownParent' => '#main-modal',
+                    'allowClear' => true,
+                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                    // 'width' => '370px',
+                ],
+
+            ])->label('ประเภทการพัฒนา');
+            ?>
+                    <?php
+            echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+                'data' => CategoriseHelper::ListLocationOrg(true),
+                'options' => ['placeholder' => 'เลือกสถานที่ไป'],
+                'pluginOptions' => [
+                    'dropdownParent' => '#main-modal',
+                    'allowClear' => true,
+                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                    // 'width' => '370px',
+                ],
+            ])->label('สถานที่ไป');
+            ?>
+            <?= $form->field($model, 'data_json[location_org_type]')->radioList([
+                'ในจังหวัด' => 'ในจังหวัด',
+                'ต่างจังหวัด' => 'ต่างจังหวัด',
+                'ต่างประเทศ' => 'ต่างประเทศ',
+            ], [
+                'itemOptions' => ['class' => 'form-check-input'], // Optional: Add Bootstrap classes for styling
+            ])->label('ประเภทสถานที่ประชุม'); ?>
+
+
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'date_end')->textInput() ?>
+                    <?php
+            echo $form->field($model, 'data_json[development_level_name]')->widget(Select2::classname(), [
+                'data' => CategoriseHelper::DevelopmentLevel(true),
+                'options' => ['placeholder' => 'เลือกระดับการพัฒนา'],
+                'pluginOptions' => [
+                    'dropdownParent' => '#main-modal',
+                    'allowClear' => true,
+                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                    // 'width' => '370px',
+                ],
+
+            ])->label('ระดับการพัฒนา');
+            ?>
+
+                    <?php
+            echo $form->field($model, 'data_json[province_name]')->widget(Select2::classname(), [
+                'data' => CategoriseHelper::ListProvinceName(),
+                'options' => ['placeholder' => 'เลือกจังหวัด'],
+                'pluginOptions' => [
+                    'dropdownParent' => '#main-modal',
+                    'allowClear' => true,
+                    // 'width' => '370px',
+                ],
+
+            ])->label('จังหวัด');
+            ?>
+                    <?php
+            echo $form->field($model, 'data_json[location_org]')->widget(Select2::classname(), [
+                'data' => CategoriseHelper::ListLocationOrg(),
+                'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                'pluginOptions' => [
+                    'dropdownParent' => '#main-modal',
+                    'allowClear' => true,
+                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                    // 'width' => '370px',
+                ],
+            ])->label('หน่วยงานที่จัด');
+            ?>
+                </div>
+            </div>
+            <?= $this->render('@app/components/ui/input_emp', ['model' => $model, 'form' => $form, 'fieldName' => 'leader_id', 'label' => 'หัวหน้า', 'modal' => true]) ?>
+
+        </div>
+        <div class="col-6">
+<div class="row">
+<div class="col-6">
+
+<?= $form->field($model, 'vehicle_date_start')->textInput() ?>
+
+
+<?php
+    echo $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
+        'data' => CategoriseHelper::DevelopmentGoType(true),
+        'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
         'pluginOptions' => [
-            'allowClear' => true,
             'dropdownParent' => '#main-modal',
+            'allowClear' => true,
+            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+            // 'width' => '370px',
         ],
-    ])->label('หนังสืออ้างอิง');
-?>
-<?= $form->field($model, 'topic')->textInput(['maxlength' => true]) ?>
-
-<div class="row">
-<div class="col-6">
-    <?= $form->field($model, 'date_start')->textInput() ?>
-</div>
-<div class="col-6">
-    <?= $form->field($model, 'date_end')->textInput() ?>
-</div>
-</div>
-
-
-
-<div class="row">
-<div class="col-6">
+    ])->label('พาหนะเดินทาง');
+    ?>
+    
 <?php
-                                        echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::ListLocationOrg(true),
-                                            'options' => ['placeholder' => 'เลือกสถานที่ไป'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
+                        echo $form->field($model, 'data_json[development_go_type_name]')->widget(Select2::classname(), [
+                            'data' => CategoriseHelper::DevelopmentGoType(true),
+                            'options' => ['placeholder' => 'เลือกลักษณะ'],
+                            'pluginOptions' => [
+                                'dropdownParent' => '#main-modal',
+                                'allowClear' => true,
+                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                                // 'width' => '370px',
+                            ],
+                        ])->label('ลักษณะ');
+                        ?>
 
-                                                            }',
-                                            ]
-                                        ])->label('สถานที่ไป');
-                                        ?>
 </div>
 <div class="col-6">
+<?= $form->field($model, 'vehicle_date_end')->textInput() ?>
 <?php
-                                        echo $form->field($model, 'data_json[province_name]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::ListProvinceName(),
-                                            'options' => ['placeholder' => 'เลือกจังหวัด'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
+                        echo $form->field($model, 'data_json[claim_type_name]')->widget(Select2::classname(), [
+                            'data' => CategoriseHelper::DevelopmentClaimType(true),
+                            'options' => ['placeholder' => 'เลือกการเบิกเงิน'],
+                            'pluginOptions' => [
+                                'dropdownParent' => '#main-modal',
+                                'allowClear' => true,
+                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                                // 'width' => '370px',
+                            ],
 
-                                                            }',
-                                            ]
-                                        ])->label('จังหวัด');
-                                        ?>
- </div>
-<div class="col-12">
-    <?php
-                                        echo $form->field($model, 'data_json[location_org]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::ListLocationOrg(),
-                                            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('หน่วยงานที่จัด');
-                                        ?>
-
-<?php
-                                        echo $form->field($model, 'data_json[location_org_type]')->widget(Select2::classname(), [
-                                            'data' => [
-                                                'ในจังหวัด' => 'ในจังหวัด',
-                                                'ต่างจังหวัด' => 'ต่างจังหวัด',
-                                                'ต่างประเทศ' => 'ต่างประเทศ',
-                                            ],
-                                            'options' => ['placeholder' => 'เลือกประเภทสถานที่ประชุม'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('ประเภทสถานที่ประชุม');
-                                        ?>
-
-</div>
+                        ])->label('การเบิกเงิน');
+                        ?>
+                 
+                 <?php
+                echo $form->field($model, 'data_json[vehicle_type_name]')->widget(Select2::classname(), [
+                    'data' => CategoriseHelper::VehicleType(true),
+                    'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
+                    'pluginOptions' => [
+                        'dropdownParent' => '#main-modal',
+                        'allowClear' => true,
+                        'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                        // 'width' => '370px',
+                    ],
+                ])->label('พาหนะเดินทาง');
+                ?>
 </div>
 
-<?php
-                                        echo $form->field($model, 'data_json[development_type_name]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::DevelopmentType(true),
-                                            'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('ประเภทการพัฒนา');
-                                        ?>
-
-   
-
-<?php
-                                        echo $form->field($model, 'data_json[vehicle_type_name]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::VehicleType(true),
-                                            'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('พาหนะเดินทาง');
-                                        ?>
-                                        
-                                        <div class="row">
-<div class="col-6">
-    <?= $form->field($model, 'vehicle_date_start')->textInput() ?>
+                  
+                    <?php
+                        echo $form->field($model, 'data_json[time_slot]')->widget(Select2::classname(), [
+                            'data' => [
+                                'เต็มวัน' => 'เต็มวัน',
+                                'ครั้งวันเช้า' => 'ครั้งวันเช้า',
+                                'ครั้งวันบ่าย' => 'ครั้งวันบ่าย',
+                            ],
+                            'options' => ['placeholder' => 'เลือกประเภท'],
+                            'pluginOptions' => [
+                                'dropdownParent' => '#main-modal',
+                                'allowClear' => true,
+                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                                // 'width' => '370px',
+                            ],
+                        ])->label('ประเภท');
+                        ?>
+                         <?= $this->render('@app/components/ui/input_emp', ['model' => $model, 'form' => $form, 'fieldName' => 'assigned_to', 'label' => 'ผู้ปฏิบัติหน้าที่แทน', 'modal' => true]) ?>
 </div>
-<div class="col-6">
-    <?= $form->field($model, 'vehicle_date_end')->textInput() ?>
-</div>
-</div>
-
-
-
-                                        <?php
-                                        echo $form->field($model, 'data_json[claim_type_name]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::DevelopmentClaimType(true),
-                                            'options' => ['placeholder' => 'เลือกการเบิกเงิน'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('การเบิกเงิน');
-                                        ?>
-                                        
-
-                                        <?php
-                                        echo $form->field($model, 'data_json[development_level_name]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::DevelopmentLevel(true),
-                                            'options' => ['placeholder' => 'เลือกระดับการพัฒนา'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('ระดับการพัฒนา');
-                                        ?>
-                                        
-                                           <?php
-                                        echo $form->field($model, 'data_json[development_go_type_name]')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::DevelopmentGoType(true),
-                                            'options' => ['placeholder' => 'เลือกลักษณะการไป'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('ลักษณะการไป');
-                                        ?>
- <?php
-                                        echo $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
-                                            'data' => CategoriseHelper::DevelopmentGoType(true),
-                                            'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('พาหนะเดินทาง');
-                                        ?>
-
-<?php
-                                        echo $form->field($model, 'data_json[time_slot]')->widget(Select2::classname(), [
-                                            'data' => [
-                                                'เต็มวัน' => 'เต็มวัน',
-                                                'ครั้งวันเช้า' => 'ครั้งวันเช้า',
-                                                'ครั้งวันบ่าย' => 'ครั้งวันบ่าย',
-                                            ],
-                                            'options' => ['placeholder' => 'เลือกประเภท'],
-                                            'pluginOptions' => [
-                                                'dropdownParent' => '#main-modal',
-                                                'allowClear' => true,
-                                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
-                                            ],
-                                            'pluginEvents' => [
-                                                'select2:select' => 'function(result) { 
-                                                            }',
-                                                'select2:unselecting' => 'function() {
-
-                                                            }',
-                                            ]
-                                        ])->label('ประเภท');
-                                        ?>
-                                        
-
-
-    <?= $form->field($model, 'leader_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'assigned_to')->textInput() ?>
-    <?= $form->field($model, 'thai_year')->textInput() ?>
-
-    <?= $form->field($model, 'status')->hiddenInput(['maxlength' => true,'value' => 'Pending'])->label(false) ?>
-    <?= $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true,'value' => 1])->label(false) ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        </div>
     </div>
+
+
+    <?= $form->field($model, 'status')->hiddenInput(['maxlength' => true, 'value' => 'Pending'])->label(false) ?>
+    <?= $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true, 'value' => 1])->label(false) ?>
+
+    <div class="form-group mt-3 d-flex justify-content-center gap-3">
+    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
+            class="fa-regular fa-circle-xmark"></i> ปิด</button>
+</div>
 
     <?php ActiveForm::end(); ?>
 

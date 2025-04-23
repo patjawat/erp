@@ -59,6 +59,7 @@ $label = $label ?? 'บุคลากร';
                 // 'size' => Select2::,
                 'options' => ['placeholder' => 'เลือกบุคลากร ...'],
                 'pluginOptions'=>[
+                    'dropdownParent' => (isset($modal) ? '#main-modal' : false),
                     'width' => '350px',
                     'allowClear'=>true,
                     'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
@@ -71,10 +72,10 @@ $label = $label ?? 'บุคลากร';
                     'templateResult' => new JsExpression('function(emp) { return emp && emp.text ? emp.text : "กำลังค้นหา..."; }'),
                     'templateSelection'=>new JsExpression('function(emp) {return emp.text;}'),
                 ],
-                'pluginEvents' => [
-                    'select2:select' => new JsExpression('function() { $(this).closest("form").submit(); }'),
-                    'select2:unselecting' => new JsExpression('function() { $(this).closest("form").submit(); }'),
-                    ]
+                'pluginEvents' => isset($modal) ? [] : [
+                    'select2:select' =>  new JsExpression('function() { $(this).closest("form").submit(); }'),
+                    'select2:unselecting' =>  new JsExpression('function() { $(this).closest("form").submit(); }'),
+                ],
                     ])->label($label ?? 'บุคลากร');
                     ?>       
        </div>

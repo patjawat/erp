@@ -67,6 +67,7 @@ class Development extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'thai_year' => 'ปีงบประมาณ',
             'document_id' => 'ตามหนังสือ',
             'topic' => 'หัวข้อ',
             'status' => 'สถานะ',
