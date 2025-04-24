@@ -157,10 +157,13 @@ class Development extends \yii\db\ActiveRecord
     }
 
     
-    public static function ListVehicleType()
+    public function ListVehicleType()
     {
-        $model = Categorise::find()->where(['name' => 'vehicle_type'])->where(['<>','code','ambulance'])->all();
-        return ArrayHelper::map($model, 'title','code');
+        $model = Categorise::find()
+            ->where(['name' => 'vehicle_type'])
+            ->andWhere(['!=', 'code', 'ambulance'])
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
     }
     public function ListThaiYear()
     {
