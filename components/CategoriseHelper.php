@@ -309,7 +309,7 @@ class CategoriseHelper extends Component
         public static function ListProvinceName()
         {
             $model = Province::find()->all();
-            return ArrayHelper::map($model, 'id', 'name_th');
+            return ArrayHelper::map($model, 'name_th', 'name_th');
         }
 
         

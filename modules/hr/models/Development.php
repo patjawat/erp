@@ -3,9 +3,12 @@
 namespace app\modules\hr\models;
 
 use Yii;
+use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\DevelopmentDetail;
 
 /**
  * This is the model class for table "development".
@@ -92,11 +95,67 @@ class Development extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getLeader()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+    
+    public function getAssignedTo()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+    
+
+
+     //  ภาพทีมคณะกรรมการ
+     public function StackMember()
+     {
+         // try {
+         $data = '';
+         $data .= '<div class="avatar-stack">';
+         foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
+             $emp = Employees::findOne(['id' => $item->emp_id]);
+             $data .= Html::a(
+                 Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                     'data' => [
+                         'expand' => '-20',
+                         'sizes' => 'auto',
+                         'src' => $emp->showAvatar()
+                     ]]),
+                 ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                 [
+                     'class' => 'open-modal',
+                     'data' => [
+                         'size' => 'modal-md',
+                         'bs-trigger' => 'hover focus',
+                         'bs-toggle' => 'popover',
+                         'bs-placement' => 'top',
+                         'bs-title' => 'คณะเดินทาง',
+                         'bs-html' => 'true',
+                         'bs-content' => $emp->fullname . '<br>' . $emp->positionName()
+                     ]
+                 ]
+             );
+         }
+         $data .= '</div>';
+         return $data;
+         // } catch (\Throwable $th) {
+         // }
+     }
+     
+    //วันที่เอกสาร
     public function showDateRange()
     {
         return ThaiDateHelper::formatThaiDateRange($this->date_start, $this->date_end, 'long', 'short');
     }
 
+    //วันที่ออกเดินทาง
+    public function showVehicleDateRange()
+    {
+        return ThaiDateHelper::formatThaiDateRange($this->vehicle_date_start, $this->vehicle_date_end, 'long', 'short');
+    }
+
+    
     public function ListThaiYear()
     {
         $model = self::find()

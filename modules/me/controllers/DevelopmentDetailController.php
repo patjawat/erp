@@ -1,12 +1,13 @@
 <?php
 
 namespace app\modules\me\controllers;
-
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentDetailSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * DevelopmentDetailController implements the CRUD actions for DevelopmentDetail model.
@@ -65,23 +66,39 @@ class DevelopmentDetailController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
+
+    public function actionAddMember()
     {
-        $model = new DevelopmentDetail();
+        $model = new DevelopmentDetail([
+            'name' => 'development_member',
+            'development_id' => $this->request->get('development_id'),
+        ]);        
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                ];
             }
         } else {
             $model->loadDefaultValues();
         }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_member', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_member', [
+                'model' => $model,
+            ]);
+        }
     }
-
     /**
      * Updates an existing DevelopmentDetail model.
      * If update is successful, the browser will be redirected to the 'view' page.

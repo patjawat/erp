@@ -10,9 +10,8 @@ use Yii;
  * @property int $id
  * @property int $development_id ID ของการพัฒนา
  * @property string $name ชื่อของการเก็บข้อมูล
- * @property string $items_id รหัสรายการ
  * @property string $emp_id รหัสบุคลากร
- * @property int $qty จํานวน
+ * @property int|null $qty จํานวน
  * @property float|null $price ราคา
  * @property string|null $data_json ยานพาหนะ
  * @property string|null $created_at วันที่สร้าง
@@ -40,12 +39,12 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['price', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
-            [['development_id', 'name', 'items_id', 'emp_id', 'qty'], 'required'],
+            [['qty', 'price', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
+            [['development_id', 'name', 'emp_id'], 'required'],
             [['development_id', 'qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['price'], 'number'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['name', 'items_id', 'emp_id'], 'string', 'max' => 255],
+            [['name', 'emp_id'], 'string', 'max' => 255],
         ];
     }
 
@@ -58,7 +57,6 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
             'id' => 'ID',
             'development_id' => 'ID ของการพัฒนา',
             'name' => 'ชื่อของการเก็บข้อมูล',
-            'items_id' => 'รหัสรายการ',
             'emp_id' => 'รหัสบุคลากร',
             'qty' => 'จํานวน',
             'price' => 'ราคา',
@@ -71,5 +69,7 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
             'deleted_by' => 'ผู้ลบ',
         ];
     }
+
+
 
 }
