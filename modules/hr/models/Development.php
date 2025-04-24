@@ -4,6 +4,7 @@ namespace app\modules\hr\models;
 
 use Yii;
 use yii\helpers\Html;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
@@ -156,6 +157,11 @@ class Development extends \yii\db\ActiveRecord
     }
 
     
+    public static function ListVehicleType()
+    {
+        $model = Categorise::find()->where(['name' => 'vehicle_type'])->where(['<>','code','ambulance'])->all();
+        return ArrayHelper::map($model, 'title','code');
+    }
     public function ListThaiYear()
     {
         $model = self::find()

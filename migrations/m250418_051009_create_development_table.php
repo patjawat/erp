@@ -70,6 +70,19 @@ class m250418_051009_create_development_table extends Migration
 
         }
 
+        $sql4 = Yii::$app->db->createCommand("select * from categorise where name = 'vehicle_type'")->queryAll();
+        if(count($sql4) < 1){
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'official','title'=>'รถยนต์ราชการ','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'personal','title'=>'รถยนต์ส่วนตัว','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'ambulance','title'=>'รถพยาบาล','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'charter_vehicle','title'=>'รถจ้างเหมา','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'airplane','title'=>'เครื่องบิน','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'train','title'=>'รถไฟ','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'boat','title'=>'เรือ','active' => 1]);
+            $this->insert('categorise',['name'=>'vehicle_type','code' =>'other','title'=>'อื่นๆ','active' => 1]);
+        } 
+        
+
         
 
     }

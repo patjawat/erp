@@ -252,7 +252,7 @@ use app\components\CategoriseHelper;
                         <div class="form-group">
                             <?php
                             echo $form->field($model, 'data_json[vehicle_type_name]')->widget(Select2::classname(), [
-                                'data' => CategoriseHelper::VehicleType(true),
+                                'data' => $model->ListVehicleType(),
                                 'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
                                 'pluginOptions' => [
                                     'dropdownParent' => '#main-modal',
