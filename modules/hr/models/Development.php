@@ -122,7 +122,7 @@ class Development extends \yii\db\ActiveRecord
                          'sizes' => 'auto',
                          'src' => $emp->showAvatar()
                      ]]),
-                 ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                 ['/me/development-detail/update-member', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
                  [
                      'class' => 'open-modal',
                      'data' => [

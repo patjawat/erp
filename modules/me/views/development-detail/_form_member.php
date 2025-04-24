@@ -100,7 +100,7 @@ $resultsJs = <<< JS
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-member',
-    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    // 'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
     // 'validationUrl' => ['/dms/committee/validator'],
 ]); ?>
 <div class="avatar-form">
@@ -151,8 +151,9 @@ $resultsJs = <<< JS
     <?= $form->field($model, 'development_id')->hiddenInput(['maxlength' => true])->label(false) ?>
    
     
-    <div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+    <div class="form-group mt-3 d-flex justify-content-center gap-3">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill', 'id' => 'summit']) ?>
+    <?=Html::a('<i class="fa-solid fa-trash-can"></i> ลบ',['/me/development-detail/delete-member','id' => $model->id],['class' => 'btn btn-danger rounded-pill delete-item'])?>
 </div>
 
     <?php ActiveForm::end(); ?>

@@ -326,7 +326,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div> -->
 
             <!-- ปุ่มดำเนินการ -->
-            <div class="row mt-4">
+            <!-- <div class="row mt-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-center gap-2">
                         <?php if ($model->status == 'Pending'): ?>
@@ -368,7 +368,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
   
         </div>
 <!-- 

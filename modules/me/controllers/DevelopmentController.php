@@ -7,8 +7,10 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Development;
+use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSearch;
 
 /**
@@ -83,7 +85,15 @@ class DevelopmentController extends Controller
                     $model->vehicle_date_end = AppHelper::convertToGregorian($model->vehicle_date_end);
                 } catch (\Throwable $th) {
                 }
-                $model->save();
+                if($model->save()){
+                    $me = UserHelper::GetEmployee();
+                    $addMember = new DevelopmentDetail();
+                    $addMember->development_id = $model->id;
+                    $addMember->name = 'member';
+                    $addMember->emp_id = $me->id;
+                    $addMember->save(false);
+                }
+                
 
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {

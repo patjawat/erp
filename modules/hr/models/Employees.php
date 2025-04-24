@@ -1213,6 +1213,12 @@ class Employees extends Yii\db\ActiveRecord
     {
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'position_manage']);
     }
+    //ทะเบียนอบรม/ประชุม/ดูงาน
+    public function getDevelopmentMenber()
+    {
+        return $this->hasMany(DevelopmentDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'member']);
+    }
+
 
     // End Relationships
 

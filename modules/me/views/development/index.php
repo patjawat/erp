@@ -58,7 +58,7 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                                 <p class="fw-semibold mb-0"><?=$item->data_json['location'] ?? '-'?></p>
                             </div>
                         </td>
-                        <td>-</td>
+                        <td>  <?=$item->StackMember()?></td>
                         <td style="width:120px">
                             <div class="btn-group">
                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>

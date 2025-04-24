@@ -70,6 +70,9 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
         ];
     }
 
-
+    public function getDevelopment()
+    {
+        return $this->hasOne(Development::class, ['id' => 'development_id']);
+    }
 
 }

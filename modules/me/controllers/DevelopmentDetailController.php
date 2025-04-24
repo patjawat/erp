@@ -70,7 +70,7 @@ class DevelopmentDetailController extends Controller
     public function actionAddMember()
     {
         $model = new DevelopmentDetail([
-            'name' => 'development_member',
+            'name' => 'member',
             'development_id' => $this->request->get('development_id'),
         ]);        
 
@@ -99,6 +99,45 @@ class DevelopmentDetailController extends Controller
             ]);
         }
     }
+
+    public function actionUpdateMember($id)
+    {
+        $model =  DevelopmentDetail::findOne($id);        
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_member', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_member', [
+                'model' => $model,
+            ]);
+        }
+    }
+    
+    public function actionDeleteMember($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->delete();
+        return $this->redirect(['/me/development/view', 'id' => $model->development_id]);
+    }
+
     /**
      * Updates an existing DevelopmentDetail model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -118,6 +157,8 @@ class DevelopmentDetailController extends Controller
             'model' => $model,
         ]);
     }
+
+    
 
     /**
      * Deletes an existing DevelopmentDetail model.
