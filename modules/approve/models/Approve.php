@@ -61,7 +61,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         return [
             [['title', 'comment'], 'string'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at','q','thai_year','date_start','date_end','q_department','leave_type_id','approve_emp_id'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at','q','thai_year','date_start','date_end','q_department','leave_type_id','approve_emp_id','q'], 'safe'],
             [['emp_id', 'level', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['from_id', 'name', 'status'], 'string', 'max' => 255],
         ];

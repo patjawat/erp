@@ -4,6 +4,7 @@ namespace app\modules\approve\controllers;
 
 use Yii;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -19,15 +20,18 @@ class LeaveController extends \yii\web\Controller
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
-        $searchModel = new ApproveSearch([
-            'status' => 'Pending',
-            'approve_emp_id' => $me->id
-        ]);
+        $searchModel = new ApproveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('leave');
+        $dataProvider->query->andWhere(['leave.status' => 'Pending']);
         $dataProvider->query->andFilterWhere(['name' => 'leave']);
-        // $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
+        $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
+        $dataProvider->query->andFilterWhere(['approve.status' => 'Pending']);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+        ]);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [

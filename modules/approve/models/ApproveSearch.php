@@ -18,7 +18,7 @@ class ApproveSearch extends Approve
     {
         return [
             [['id', 'emp_id', 'level', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['from_id', 'name', 'title', 'data_json', 'status', 'comment', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['from_id', 'name', 'title', 'data_json', 'status', 'comment', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
         ];
     }
 
