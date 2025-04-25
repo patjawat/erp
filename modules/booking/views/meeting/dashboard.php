@@ -29,7 +29,7 @@ Dashboard
 <div class="container-fluid">
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-    <?=$this->render('summary', ['searchModel' => $searchModel])?>
+    <?=$this->render('summary', ['model' => $searchModel])?>
 
     <div class="row">
         <div class="col-7">

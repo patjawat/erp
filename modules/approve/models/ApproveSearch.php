@@ -59,7 +59,7 @@ class ApproveSearch extends Approve
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'emp_id' => $this->emp_id,
+            'approve.emp_id' => $this->approve_emp_id,
             'level' => $this->level,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
@@ -73,7 +73,7 @@ class ApproveSearch extends Approve
             ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])
             ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'status', $this->status])
+            ->andFilterWhere(['like', 'approve.status', $this->status])
             ->andFilterWhere(['like', 'comment', $this->comment]);
 
         return $dataProvider;

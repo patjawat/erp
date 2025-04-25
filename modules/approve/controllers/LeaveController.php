@@ -19,9 +19,15 @@ class LeaveController extends \yii\web\Controller
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
-        $searchModel = new ApproveSearch();
+        $searchModel = new ApproveSearch([
+            'status' => 'Pending',
+            'approve_emp_id' => $me->id
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending']);
+        $dataProvider->query->joinWith('leave');
+        $dataProvider->query->andFilterWhere(['name' => 'leave']);
+        // $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
+        $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [

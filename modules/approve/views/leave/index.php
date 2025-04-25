@@ -16,25 +16,31 @@ $msg = 'ขอ';
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php if($dataProvider->getTotalCount() > 0):?>
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-primary rounded-pill shadow approve-all']);?>
+        <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+        <?php echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-primary rounded-pill shadow approve-all']);?>
+    </div>
+        <div class="d-flex justify-content-between  align-top align-items-center">
+            <div class="d-flex flex-column">
+                <div class="d-flex justify-content-between">
+                </div>
+                <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+            </div>
         </div>
+        
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th scope="col">ปีงบประมาณ</th>
-                    <th scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="text-center" scope="col">วัน</th>
-                    <th scope="col">จากวันที่</th>
-                    <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
-                    <!-- <th scope="col">มอบหมาย</th> -->
-                    <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-                    <th class="text-center">ดำเนินการ</th>
+                    <th class="fw-semibold" style="width:100px" scope="col">ปีงบประมาณ</th>
+                    <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
+                    <th class="fw-semibold" scope="col">เหตุผล/วันที่</th>
+                    <th class="fw-semibold text-center" scope="col">วัน</th>
+                    <th class="text-start fw-semibold" scope="col">หนวยงาน</th>
+                    <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+                    <th class="text-start fw-semibold" scope="col">สถานะ</th>
+                    <th class="fw-semibold text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -47,23 +53,24 @@ $msg = 'ขอ';
                             <?=$item->leave->getAvatar(false)['avatar']?>
                         </a>
                     </td>
-                    <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_start, 'medium')?></td>
-                    <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_end, 'medium')?></td>
-                    <td class="text-start text-truncate" style="max-width:150px;">
-                        <?=$item->leave->getAvatar(false)['department']?>
-
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span><?=$item->leave->reason?></span>
+                            <span class="fw-semibold"><?=$item->leave->showLeaveDate()?></span>
+                        </div>
                     </td>
+                    <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
+                    <td class="text-start text-truncate" style="max-width:150px;"><?=$item->leave->getAvatar(false)['department']?></td>
                     </td>
                     <td><?php echo $item->leave->stackChecker()?>
-                        <?php
+                    <?php
                     try {
                         $data =  $item->leave->checkerName(1)['employee'];
                     } catch (\Throwable $th) {
                     }
-            ?>
+                    ?>
                     </td>
-
+                    <td><?=$item->leave->viewStatus();?></td>
 
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
@@ -90,9 +97,7 @@ $msg = 'ขอ';
 
     </div>
 </div>
-<?php else:?>
-    <h5 class="text-center">ไม่มีรายการ</h5>
-<?php endif?>
+
 <?php // Pjax::end(); ?>
 
 

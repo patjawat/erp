@@ -58,7 +58,7 @@ class Development extends \yii\db\ActiveRecord
         return [
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
-            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id'], 'required'],
+            // [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id'], 'required'],
             [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
