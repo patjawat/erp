@@ -306,10 +306,14 @@ class Vehicle extends \yii\db\ActiveRecord
         $count = self::find()->where(['status' => $status])->count();
         $total = self::find()->count();
         $data = AppHelper::viewStatus($status);
+
+        // Prevent division by zero
+        $percent = $total > 0 ? ($count / $total * 100) : 0;
+
         return [
             'total' => $total,
             'count' => $count,
-            'percent' => $count / $total * 100,
+            'percent' => $percent,
             'title' => $data['title'],
             'color' => $data['color'],
             'view' => $data['view']
