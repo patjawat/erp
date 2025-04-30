@@ -141,6 +141,11 @@ class Approve extends \yii\db\ActiveRecord
             return ArrayHelper::map(Categorise::find()->where(['name' => 'leave_status'])->all(), 'code', 'title');
         }
         
+        public function viewStatus()
+        {
+                return AppHelper::viewStatus($this->status);
+        }
+        
         public function listLeaveType()
         {
             $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();

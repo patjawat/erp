@@ -20,7 +20,7 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
     <div class="card-body">
         <div class="d-flex justify-content-between">
         <h6><i class="bi bi-ui-checks"></i> <?=$this->title?></h6>
-        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title,['/me/development/create','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']])?>
+        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title,['/me/development/create','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
     </div>
            <?=$this->render('_search', ['model' => $searchModel,'type' => 'development'])?>
 

@@ -174,12 +174,20 @@ class Vehicle extends \yii\db\ActiveRecord
     // ผู้ขอบริการ
     public function userRequest()
     {
-        $emp = Employees::findOne(['user_id' => $this->created_by]);
+        try {
+            $emp = Employees::findOne(['user_id' => $this->created_by]);
         $msg = $emp->departmentName();
         return [
             'avatar' => $emp->getAvatar(false, $msg),
             'fullname' => $emp->fullname
         ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'fullname' => ''
+            ];
+        }
+        
     }
 
     // กรณีแสดงช่วงวันที่

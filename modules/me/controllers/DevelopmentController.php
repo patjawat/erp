@@ -72,7 +72,9 @@ class DevelopmentController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Development();
+        $model = new Development([
+            'thai_year' => AppHelper::YearBudget()
+        ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {

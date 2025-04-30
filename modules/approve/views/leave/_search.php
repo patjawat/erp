@@ -65,13 +65,13 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 $js = <<< JS
 
-    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
-    $("#leavesearch-date_start").on('change', function() {
+    thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
+    $("#approvesearch-date_start").on('change', function() {
             $('#leavesearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
+    $("#approvesearch-date_end").on('change', function() {
+            $('#approvesearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
 

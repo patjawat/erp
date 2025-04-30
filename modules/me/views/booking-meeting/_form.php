@@ -56,7 +56,7 @@ try {
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
-                            // 'dropdownParent' => '#main-modal',
+                            'dropdownParent' => '#main-modal',
                             // 'width' => '150px',
                         ],
                         'pluginEvents' => [
@@ -71,8 +71,8 @@ try {
                     ?>
 
 
-<div class="row">
-    <div class="col-6">
+    <div class="row">
+        <div class="col-6">
                             <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('ตั้งแต่วันที่') ?>
                             
                             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาเริ่มต้น') ?>
@@ -90,7 +90,7 @@ try {
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
-                            // 'dropdownParent' => '#main-modal',
+                            'dropdownParent' => '#main-modal',
                             // 'width' => '150px',
                         ],
                         'pluginEvents' => [
@@ -112,14 +112,12 @@ try {
                         'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
                         'pluginOptions' => [
                             'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
                             // 'width' => '370px',
                         ],
                         'pluginEvents' => [
-                            'select2:select' => 'function(result) { 
-                                            }',
-                            'select2:unselecting' => 'function() {
-
-                                            }',
+                            'select2:select' => 'function(result) {}',
+                            'select2:unselecting' => 'function() {}',
                         ]
                     ]) ?>
 </dv>
@@ -209,7 +207,6 @@ try {
                         </div>
                     </div>
                     <hr>
-
                     <div>
                         <h4 class="fw-medium mb-2">กฎระเบียบการใช้ห้องประชุม</h4>
                         <ul class="small ps-3 mb-0">
@@ -219,11 +216,6 @@ try {
                             <li>ผู้จองต้องเป็นผู้รับผิดชอบความเสียหายที่เกิดขึ้น</li>
                         </ul>
                     </div>
-
-
-
-
-
                 </div>
             </div>
         </div>

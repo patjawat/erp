@@ -1,15 +1,59 @@
 <?php
 
 use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\web\JsExpression;
 use kartik\select2\Select2;
+use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
+use Yiisoft\Arrays\ArrayHelper;
 use app\components\CategoriseHelper;
+use app\modules\hr\models\Employees;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\Development $model */
 /** @var yii\widgets\ActiveForm $form */
+$emp = UserHelper::GetEmployee();
+$listDocumentMe  = $emp->listDocumentMe();
+
+$listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
 ?>
+
+
+
+<style>
+:not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
+:not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.875rem + 2px);
+    padding: 4px;
+    font-size: 1.0rem;
+    line-height: 1.5;
+    border-radius: .3rem;
+}
+
+.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #e5e5e5;
+    color: #000;
+}
+
+.avatar-form .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.25rem + 2px);
+    line-height: 1.5;
+    padding: 6px;
+}
+
+.avatar-form .avatar {
+    height: 1.9rem !important;
+    width: 1.9rem !important;
+}
+
+.avatar-form .select2-container--krajee-bs5 .select2-selection--single {
+    height: calc(2.25rem + 2px);
+    line-height: 1.5;
+    padding: 0.1rem 0.1rem 0.5rem 0.1rem;
+}
+</style>
 
         <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
 
@@ -26,12 +70,19 @@ use app\components\CategoriseHelper;
                     <div class="col-md-9 col-sm-12">
                         <?php
                         echo $form->field($model, 'document_id')->widget(Select2::classname(), [
-                            'data' => [],
+                            'data' => $listDocumentData,
                             'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
+                                // 'dropdownParent' => '#main-modal',
                             ],
+                            'pluginEvents' => [
+                                'select2:select' =>  new JsExpression("function() {
+                                   var data = $(this).select2('data')[0]
+                                    $('#development-topic').val(data.text)
+                                }"),
+
+                            ]
                         ])->label('หนังสืออ้างอิง');
                         ?>
                     </div>
@@ -73,9 +124,8 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::DevelopmentType(true),
                                 'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('ประเภทการพัฒนา');
                             ?>
@@ -87,9 +137,8 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::DevelopmentLevel(true),
                                 'options' => ['placeholder' => 'เลือกระดับการพัฒนา'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('ระดับการพัฒนา');
                             ?>
@@ -105,9 +154,8 @@ use app\components\CategoriseHelper;
                                 ],
                                 'options' => ['placeholder' => 'เลือกช่วงเวลา'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('ช่วงเวลา');
                             ?>
@@ -122,9 +170,8 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::DevelopmentGoType(true),
                                 'options' => ['placeholder' => 'เลือกลักษณะ'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('ลักษณะการเข้าร่วม');
                             ?>
@@ -136,20 +183,74 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::DevelopmentClaimType(true),
                                 'options' => ['placeholder' => 'เลือกการเบิกเงิน'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('การเบิกเงิน');
                             ?>
                         </div>
 
-                        <div class="form-group mt-2">
-                            <?= $this->render('@app/components/ui/input_emp', ['model' => $model, 'form' => $form, 'fieldName' => 'leader_id', 'label' => 'หัวหน้า', 'modal' => true]) ?>
+                        <div class="form-group mt-2 avatar-form">
+
+
+<?php
+            $url = Url::to(['/depdrop/employee-by-id']);
+            $employee = Employees::find()->where(['id' => $model->leader_id])->one();
+            $initEmployee = empty($model->leader_id) ? '' : Employees::findOne($model->leader_id)->getAvatar(false);//กำหนดค่าเริ่มต้น
+            
+            echo $form->field($model,'leader_id')->widget(Select2::classname(), [
+                'initValueText' => $initEmployee,
+                // 'size' => Select2::,
+                'options' => ['placeholder' => 'เลือกบุคลากร ...'],
+                'pluginOptions'=>[
+                    // 'dropdownParent' => '#main-modal',
+                    'width' => '350px',
+                    'allowClear'=>true,
+                    'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
+                    'ajax'=>[
+                        'url'=>$url,
+                        'dataType'=>'json',//รูปแบบการอ่านคือ json
+                        'data'=>new JsExpression('function(params) { return {q:params.term};}')
+                    ],
+                    'escapeMarkup'=>new JsExpression('function(markup) { return markup;}'),
+                    'templateResult' => new JsExpression('function(emp) { return emp && emp.text ? emp.text : "กำลังค้นหา..."; }'),
+                    'templateSelection'=>new JsExpression('function(emp) {return emp.text;}'),
+                ],
+
+                    ])->label('หัวหน้า');
+                    ?>   
+
                         </div>
 
-                        <div class="form-group mt-2">
-                            <?= $this->render('@app/components/ui/input_emp', ['model' => $model, 'form' => $form, 'fieldName' => 'assigned_to', 'label' => 'ผู้ปฏิบัติหน้าที่แทน', 'modal' => true]) ?>
+                        <div class="form-group mt-2 avatar-form">
+
+
+<?php
+            $url = Url::to(['/depdrop/employee-by-id']);
+            $employeeAssignedTo = Employees::find()->where(['id' => $model->assigned_to])->one();
+            $initEmployeeAssignedTo = empty($model->assigned_to) ? '' : Employees::findOne($model->assigned_to)->getAvatar(false);//กำหนดค่าเริ่มต้น
+            
+            echo $form->field($model,'assigned_to')->widget(Select2::classname(), [
+                'initValueText' => $initEmployeeAssignedTo,
+                // 'size' => Select2::,
+                'options' => ['placeholder' => 'เลือกบุคลากร ...'],
+                'pluginOptions'=>[
+                    // 'dropdownParent' => '#main-modal',
+                    'width' => '350px',
+                    'allowClear'=>true,
+                    'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
+                    'ajax'=>[
+                        'url'=>$url,
+                        'dataType'=>'json',//รูปแบบการอ่านคือ json
+                        'data'=>new JsExpression('function(params) { return {q:params.term};}')
+                    ],
+                    'escapeMarkup'=>new JsExpression('function(markup) { return markup;}'),
+                    'templateResult' => new JsExpression('function(emp) { return emp && emp.text ? emp.text : "กำลังค้นหา..."; }'),
+                    'templateSelection'=>new JsExpression('function(emp) {return emp.text;}'),
+                ],
+
+                    ])->label('ผู้ปฏิบัติหน้าที่แทน');
+                    ?>   
                         </div>
                     </div>
                 </div>
@@ -170,9 +271,8 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::ListLocationOrg(true),
                                 'options' => ['placeholder' => 'เลือกสถานที่'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('สถานที่จัดงาน');
                             ?>
@@ -184,8 +284,7 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::ListProvinceName(true),
                                 'options' => ['placeholder' => 'เลือกจังหวัด'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
-                                    'allowClear' => true,
+                                    // 'dropdownParent' => '#main-modal',
                                 ],
                             ])->label('จังหวัด');
                             ?>
@@ -199,9 +298,8 @@ use app\components\CategoriseHelper;
                                 'data' => CategoriseHelper::ListLocationOrg(true),
                                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('หน่วยงานที่จัด');
                             ?>
@@ -238,31 +336,41 @@ use app\components\CategoriseHelper;
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                                    <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันไป') ?>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                                    <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันกลับ') ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group">
+                                <div class="row">
+                                    <div class="col-6">
+                                    <div class="form-group">
                             <?php
                             echo $form->field($model, 'data_json[vehicle_type_name]')->widget(Select2::classname(), [
                                 'data' => $model->ListVehicleType(),
                                 'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
                                 'pluginOptions' => [
-                                    'dropdownParent' => '#main-modal',
+                                    // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
-                                    'tags' => true,
                                 ],
                             ])->label('พาหนะเดินทาง');
                             ?>
                         </div>
+                                    </div>
+                                    <div class="col-6">
+
+<?= $form->field($model, 'data_json[license_plate]')->textInput(['placeholder' => 'ระบุทะเบียนพาหนะเดินทาง'])->label('ทะเบียนพาหนะเดินทาง') ?>
+
+                                    </div>
+                                </div>
+
                     </div>
+                    
                 </div>
             </div>
         </div>

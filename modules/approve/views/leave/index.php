@@ -70,7 +70,7 @@ $msg = 'ขอ';
                     }
                     ?>
                     </td>
-                    <td><?=$item->leave->viewStatus();?></td>
+                    <td><?=$item->viewStatus()['view'];?></td>
 
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">

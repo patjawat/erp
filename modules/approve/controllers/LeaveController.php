@@ -8,6 +8,7 @@ use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
@@ -20,19 +21,36 @@ class LeaveController extends \yii\web\Controller
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
-        $searchModel = new ApproveSearch();
+        $searchModel = new ApproveSearch([
+            'status' => ['Pending']
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('leave');
-        $dataProvider->query->andWhere(['leave.status' => 'Pending']);
+        $dataProvider->query->andFilterWhere(['leave.leave_type_id' =>$searchModel->leave_type_id]);
         $dataProvider->query->andFilterWhere(['name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['approve.status' => 'Pending']);
+        $dataProvider->query->andFilterWhere(['NOT IN', 'approve.status',['None']]);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
         ]);
-        $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+        try {
+         
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+           
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
+    
+        $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

@@ -7,6 +7,7 @@ use yii\db\Expression;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\EmployeeHelper;
 use app\components\CategoriseHelper;
 use app\modules\usermanager\models\User;
@@ -1341,4 +1342,32 @@ class Employees extends Yii\db\ActiveRecord
                 return [];
             }
     }
+
+        //หนังสือที่ส่งถึงฉัน
+        public function listDocumentMe()
+        {
+            // $emp = UserHelper::GetEmployee();
+            // $department = $emp->department;
+            $emp = $this->id;
+            $department = $this->department;
+    
+            $sql = "SELECT `documents`.id,thai_year, TRIM(doc_number) AS doc_number,topic 
+            FROM `documents_detail` 
+            LEFT JOIN `documents` ON `documents_detail`.`document_id` = `documents`.`id` 
+            WHERE (`to_id` = :department) AND (`name` = 'department')
+            
+            UNION
+            
+            SELECT  `documents`.id,thai_year, TRIM(doc_number) AS doc_number,topic  
+            FROM `documents_detail` 
+            LEFT JOIN `documents` ON `documents_detail`.`document_id` = `documents`.`id` 
+            WHERE (`to_id` = :emp) AND (`name` = 'tags')";
+    
+            $querys = Yii::$app->db->createCommand($sql)
+            ->bindValue(':department', $department)
+            ->bindValue(':emp', $emp)
+            ->queryAll();
+            return $querys;
+        }
+        
 }

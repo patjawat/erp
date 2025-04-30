@@ -598,8 +598,4 @@ class Documents extends \yii\db\ActiveRecord
             ->all();
     }
 
-    // public function Upload($refData = null)
-    // {
-
-    // }
 }
