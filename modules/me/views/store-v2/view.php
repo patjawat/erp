@@ -67,7 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="avatar-detail">
                                 <h6 class="mb-1"><?php echo $item->product->title?></h6>
                                 <p class="text-muted mb-0">
-                              คงเหลือ  <span class="fw-semibold text-primary"><?php echo $item->stock?->SumQty() ?></span>  <?php echo $item->product->unit_name?>
+                              คงเหลือ  <span class="fw-semibold text-primary"><?php echo $item->stock?->SumQty() ?></span>  <?php echo $item->product?->unit_name?>
                             </p>
                                 </div>
                             </div>
