@@ -73,7 +73,7 @@ class ImportVehicleController extends Controller
             ])->one();
 
             $model = $check ?? new Vehicle();
-            $check ?? ($model->code  =   \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???'));
+            $check ?? ($model->code  =   \mdm\autonumber\AutoNumber::generate('CAR' .date('ymd') . '-???'));
             $model->thai_year = AppHelper::YearBudget($item['RESERVE_BEGIN_DATE']);
             $model->reason = $item['RESERVE_NAME'];
             $model->vehicle_type_id = 'car';

@@ -43,8 +43,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <thead class="table-light">
                         <tr>
                             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                            <th>เลขที่/ขอใช้รถ</th>
-                            <th>จุดหมาย/วันที่ขอใช้</th>
+                            <th style="width: 145px;">เลขที่/ขอใช้รถ</th>
+                            <th style="width: 350px;">จุดหมาย/วันที่ขอใช้</th>
                             <th>วัตถุประสงค์/ความเร่งด่วน</th>
                             <th>ผู้ขอ</th>
                             <th>สถานะ</th>

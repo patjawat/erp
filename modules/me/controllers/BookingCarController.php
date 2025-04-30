@@ -307,7 +307,7 @@ class BookingCarController extends \yii\web\Controller
                 $model->status = 'Pending';
                 $model->emp_id = $me->id;
                 // $model->code  = CARREQ-20250101-001
-                $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???');
+                $model->code  = \mdm\autonumber\AutoNumber::generate('CAR' .date('ymd') . '-???');
                 if ($model->save(false)) {
                     // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
                     // $this->checkLocation($model);
