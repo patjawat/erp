@@ -36,15 +36,15 @@ Dashboard
     <div class="row">
         <div class="col-6">
            <?= $this->render('chart_general_type',['searchModel' => $searchModel])?>
-           <?= $this->render('chart_department',['searchModel' => $searchModel])?>
+           <?=  $this->render('chart_ambulance_type',['searchModel' => $searchModel])?>
+           <?= $this->render('chart_car',['searchModel' => $searchModel])?>
            
         </div>
         <div class="col-6">
-            <?=  $this->render('chart_ambulance_type',['searchModel' => $searchModel])?>
-            <?= $this->render('chart_car',['searchModel' => $searchModel])?>
+            <?= $this->render('chart_department',['searchModel' => $searchModel])?>
+            <?= $this->render('chart_price_summary',['searchModel' => $searchModel])?>
         </div>
         <div class="col-12">
-            <?= $this->render('chart_price_summary',['searchModel' => $searchModel])?>
         </div>
     </div>
 

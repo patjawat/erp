@@ -631,7 +631,8 @@ class Vehicle extends \yii\db\ActiveRecord
                 ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
                 ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
                 ->where(['IN','v.status', ['Approve','Pass','Success']])
-                ->groupBy('d.id');
+                ->groupBy('d.id')
+                ->orderBy(['total' => SORT_ASC]);
 
             $result = $query->asArray()->all();
             return $result;

@@ -97,7 +97,7 @@ $js = <<<JS
     ],
               chart: {
               type: 'bar',
-              height: 300,
+              height: 350,
               fontFamily: "Prompt, sans-serif",
               parentHeightOffset: 0,
                 toolbar: { show: false }
