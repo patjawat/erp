@@ -52,28 +52,11 @@ class ImportVehicleController extends Controller
         $querys = Yii::$app->db2->createCommand('SELECT 
         p.HR_FNAME, 
         p.HR_LNAME, 
-        v.RESERVE_NAME,
-        v.RESERVE_BEGIN_DATE,
-        v.RESERVE_BEGIN_TIME,
-        v.RESERVE_END_DATE,
-        v.RESERVE_END_TIME,
-        v.STATUS,
-        v.RESERVE_DATE_TIME,
-        v.RESERVE_PERSON_ID,
-        v.RESERVE_PERSON_NAME,
-        v.LEADER_PERSON_ID,
         pr.PRIORITY_NAME,
-        v.CAR_DRIVER_ID,
-        v.CAR_DRIVER_SET_ID,
         i.CAR_REG,
-        v.CAR_REQUEST_ID,
-        v.CAR_NUMBER_BEGIN,
-        v.CAR_NUMBER_BACK,
         car_req.CAR_REG as car_req,
         d.PERSON_ID as driver_id,
-        v.OIL_PRICE_PER_LIT,
-        v.OIL_IN_BATH,
-        v.OIL_IN_LIT,
+        l.LOCATION_ORG_NAME,
         v.*
     FROM 
         vehicle_car_reserve v
@@ -85,6 +68,8 @@ class ImportVehicleController extends Controller
          vehicle_car_index car_req  ON car_req.CAR_ID = v.CAR_REQUEST_ID
     LEFT JOIN 
          vehicle_car_driver d  ON d.DRIVER_ID = v.CAR_DRIVER_SET_ID
+    LEFT JOIN 
+    	 grecord_org_location l ON l.LOCATION_ID = v.RESERVE_LOCATION_ID
     LEFT JOIN 
     	vehicle_car_priority pr ON CAST(pr.PRIORITY_ID AS UNSIGNED) = v.PRIORITY_ID ORDER BY v.RESERVE_END_DATE ASC;')
         ->queryAll();
@@ -113,7 +98,7 @@ class ImportVehicleController extends Controller
             $model->vehicle_type_id = 'official';
             $model->go_type = 1;
             $model->urgent = $item['PRIORITY_NAME'];
-            $model->location = 1;
+            $model->location = $this->checkLocation($item['LOCATION_ORG_NAME']);
             $model->status = $this->Status($item['STATUS']);
             $model->leader_id =$this->Person($item['LEADER_PERSON_ID'])?->id;
             $model->date_start = $item['RESERVE_BEGIN_DATE'] ?? date('Y-m-d');
@@ -143,6 +128,8 @@ class ImportVehicleController extends Controller
         return ExitCode::OK;
     }
 
+
+    
     protected function createDetail($model,$item)
     {
         if($model->date_start && $model->date_end){
@@ -256,9 +243,10 @@ class ImportVehicleController extends Controller
 
     public function actionRefer()
     {
-        $sql = "SELECT rt.REFER_TYPE_NAME,c.CAR_REG,r.* FROM `vehicle_car_refer` r
+        $sql = "SELECT rt.REFER_TYPE_NAME,c.CAR_REG,l.LOCATION_ORG_NAME,r.* FROM `vehicle_car_refer` r
         LEFT JOIN vehicle_car_index c ON c.CAR_ID = r.CAR_ID
-        LEFT JOIN vehicle_car_refer_type rt ON rt.REFER_TYPE_ID = r.REFER_TYPE_ID WHERE r.OUT_DATE IS NOT NULL;";
+        LEFT JOIN grecord_org_location l ON l.LOCATION_ID = r.REFER_LOCATION_GO_ID
+        LEFT JOIN vehicle_car_refer_type rt ON rt.REFER_TYPE_ID = r.REFER_TYPE_ID WHERE r.OUT_DATE IS NOT NULL;;";
         // นำวันลา
         $querys = Yii::$app->db2->createCommand($sql)
         ->queryAll();
@@ -286,7 +274,7 @@ class ImportVehicleController extends Controller
             $model->refer_type = $this->referType($item['REFER_TYPE_NAME']);
             $model->go_type = 1;
             $model->urgent = 'ปกติ';
-            $model->location = 1;
+            $model->location = $this->checkLocation($item['LOCATION_ORG_NAME']);
             $model->status = $this->Status($item['STATUS']) ?? 'None';
             $model->leader_id = 0;
             $model->date_start = $item['OUT_DATE'];
@@ -370,6 +358,26 @@ class ImportVehicleController extends Controller
         }
     }
 
+
+    protected function checkLocation($locationName)
+    {
+     $location = Categorise::findOne(['name' => 'document_org','title' => $locationName]);  
+     if(!$location){
+        $maxCode = Categorise::find()
+    ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
+    ->where(['like', 'name', 'document_org'])
+    ->scalar();
+        $newLocation = new Categorise;
+        $newLocation->code = ($maxCode+1);
+        $newLocation->title = $locationName;
+        $newLocation->name = 'document_org';
+        $newLocation->save(false);
+        return $newLocation->code;
+     }else{
+        return $location->code;
+     } 
+    }
+    
     public static function Person($id) {
         $person = Yii::$app->db2->createCommand('SELECT * FROM `hrd_person` WHERE ID = :id')
         ->bindValue(':id',$id)->queryOne();

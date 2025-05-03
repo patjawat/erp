@@ -51,7 +51,7 @@ class VehicleController extends Controller
        
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
-            'status' => 'Pending',
+            // 'status' => 'Pending',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
        
