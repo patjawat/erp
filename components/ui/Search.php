@@ -12,7 +12,7 @@ use app\modules\hr\models\Organization;
 <div class="d-flex gap-2">
     <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label('คำค้นหา') ?>
 
-<?=$this->render('@app/components/ui/input_emp',['model' => $model,'form' => $form,'fieldName' => 'emp_id'])?>
+<?=$this->render('@app/components/ui/input_emp',['model' => $model,'form' => $form,'fieldName' => 'emp_id','label' => $label ?? 'บุคลากร'])?>
 
     <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
@@ -30,17 +30,20 @@ use app\modules\hr\models\Organization;
                              $(this).submit()
                             $('#leavesearch-date_start').val('');
                             $('#leavesearch-date_end').val('');
+                            $('#vehiclesearch-date_start').val('');
+                            $('#vehiclesearch-date_end').val('');
+                            
                         }",
             ]
         ])->label('ปีงบประมาณ');
         ?>
 
-    <div class="d-flex justify-content-between gap-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control'])->label('ตั้งแต่วันที่');?>
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control'])->label('ถึงวันที่');?>
+    <div class="d-flex justify-content-between gap-2" style="width: 285px;">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label('ตั้งแต่วันที่');?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label('ถึงวันที่');?>
     </div>
 
-    <div class="d-flex flex-row align-items-center gap-2 mt-4">
+    <div class="d-flex flex-row align-items-center gap-2 mt-2">
         <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-light']) ?>
         <button class="btn btn-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i class="fa-solid fa-filter"></i></button>
     </div>

@@ -11,12 +11,18 @@ use kartik\widgets\ActiveForm;
 
 $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 ?>
+<?php
+// echo "<pre>";
+// print_r($model->vehicleDetails);
+// echo "</pre>";
+
+?>
 
 <?php $form = ActiveForm::begin(['id' => 'booking-form']); ?>
     <div class="mb-3">
         <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label>
         <p><?php echo $model->userRequest()['fullname'];?>
-            ขอใช้<?php echo $model->carType->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่
+            ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่
             <?php echo $model->showDateRange()?> </p>
 
     </div>

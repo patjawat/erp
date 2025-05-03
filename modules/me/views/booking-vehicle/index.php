@@ -47,12 +47,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <thead class="table-light">
                         <tr>
                             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                            <th>เลขที่/ขอใช้รถ</th>
+                            <th style="width: 150px;">เลขที่/ขอใช้รถ</th>
                             <th>จุดหมาย/วันที่ขอใช้</th>
                             <th>วัตถุประสงค์/ความเร่งด่วน</th>
                             <th>ผู้ขอ</th>
                             <th>สถานะ</th>
-                            <th class="text-center" style="width:180px;">จัดการ</th>
+                            <th class="text-center" style="width:150px;">ดำเนินการ</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle table-group-divider">
@@ -88,13 +88,30 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td> <?=$item->userRequest()['avatar']?></td>
                             <td><?php echo $item->viewStatus()['view'] ?? '-'?></td>
 
-                            <td class="text-center">
+
+                            <td class="fw-light text-center">
+                                <div class="btn-group">
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/me/booking-vehicle/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-lg']]) ?>
+                                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                        <i class="bi bi-caret-down-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><?php echo Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงข้อมูล',['/me/booking-vehicle/view','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                                        </li>
+                                        <li><?php echo Html::a('<i class="fa-regular fa-trash-can me-1"></i> ลบข้อมูล',['/me/booking-vehicle/delete','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'dropdown-item delete-item','data' => ['size' => 'modal-lg']])?>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+
+                            <!-- <td class="text-center">
                                 <div class="d-flex justify-content-center gap-3">
                                     <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-vehicle/view','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                                     <?php echo Html::a('<i class="fa-solid fa-pen-to-square fa-2x text-warning"></i>',['/me/booking-vehicle/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขข้มูลขอใช้รถ'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
                                     <?php echo Html::a('<i class="fa-regular fa-trash-can fa-2x text-danger"></i>',['/me/booking-vehicle/delete','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'delete-item','data' => ['size' => 'modal-lg']])?>
                                 </div>
-                            </td>
+                            </td> -->
 
                         </tr>
                         <?php endforeach;?>
@@ -104,4 +121,16 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
+</div>
+
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+    <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
 </div>

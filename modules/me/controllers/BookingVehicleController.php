@@ -63,6 +63,7 @@ class BookingVehicleController extends Controller
             ['like', 'reason', $searchModel->q],
             ['like', 'code', $searchModel->q],
         ]);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -84,7 +85,8 @@ class BookingVehicleController extends Controller
         
 		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $bookings = Vehicle::find()
-                // ->andWhere(['<>', 'status', 'Cancel'])
+                ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
+                ->orderBy(['id' => SORT_DESC])
                 ->all();
                 $data = [];
 
@@ -94,7 +96,7 @@ class BookingVehicleController extends Controller
                     $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
                     $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
-                    $title = 'ขอใช้'.$item->carType->title.' ไป'.($item->locationOrg?->title ?? '-');
+                    $title = 'ขอใช้'.$item->carType?->title.' ไป'.($item->locationOrg?->title ?? '-');
                     $data[] = [
                         'id'               => $item->id,
                         'title'            => $item->reason,

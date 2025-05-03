@@ -306,16 +306,16 @@ class Vehicle extends \yii\db\ActiveRecord
   
     }
 
-    public static function getStatus($status)
+    public  function getStatus($status)
     {
         $title = '';
         $color = '';
         $view = '';
-        $count = self::find()->where(['status' => $status])->count();
+        $count = self::find()
+            ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
+            ->andWhere(['status' => $status])->count();
         $total = self::find()->count();
         $data = AppHelper::viewStatus($status);
-
-        // Prevent division by zero
         $percent = $total > 0 ? ($count / $total * 100) : 0;
 
         return [
@@ -567,7 +567,9 @@ class Vehicle extends \yii\db\ActiveRecord
             ])
             ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
                 // ->where(['thai_year' => $this->thai_year, 'vehicle_type_id' => $name])
-                ->where(['d.status' => 'Success','vehicle_type_id' => $name])
+                ->where(['vehicle_type_id' => $name])
+                ->andWhere(['IN','d.status',['Approve']])
+                ->andFilterWhere(['thai_year' => $this->thai_year])
                 ->groupBy('thai_year')
                 ->asArray()
                 ->one();
@@ -587,22 +589,27 @@ class Vehicle extends \yii\db\ActiveRecord
              $arr =  Vehicle::find()
              ->select([
                  'thai_year',
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 1 THEN 1 END) AS m1'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 2 THEN 1 END) AS m2'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 3 THEN 1 END) AS m3'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 4 THEN 1 END) AS m4'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 5 THEN 1 END) AS m5'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 6 THEN 1 END) AS m6'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 7 THEN 1 END) AS m7'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 8 THEN 1 END) AS m8'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 9 THEN 1 END) AS m9'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 10 THEN 1 END) AS m10'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 11 THEN 1 END) AS m11'),
-                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 12 THEN 1 END) AS m12'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 1 THEN 1 END) AS m1'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 2 THEN 1 END) AS m2'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 3 THEN 1 END) AS m3'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 4 THEN 1 END) AS m4'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 5 THEN 1 END) AS m5'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 6 THEN 1 END) AS m6'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 7 THEN 1 END) AS m7'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 8 THEN 1 END) AS m8'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 9 THEN 1 END) AS m9'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 10 THEN 1 END) AS m10'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 11 THEN 1 END) AS m11'),
+                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 12 THEN 1 END) AS m12'),
              ])
-             ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
+            //  ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
                  // ->where(['thai_year' => $this->thai_year, 'vehicle_type_id' => $name])
-                 ->where(['d.status' => 'Success','vehicle_type_id' => 'ambulance', 'refer_type' => $ambulanceType])
+
+                 ->andWhere(['vehicle_type_id' => 'ambulance'])
+                 ->andWhere(['refer_type' => $ambulanceType])
+                //  ->where(['vehicle_type_id' => 'ambulance'])
+                //  ->andWhere(['IN','d.status',['Approve']])
+                 ->andFilterWhere(['thai_year' => $this->thai_year])
                  ->groupBy('thai_year')
                  ->asArray()
                  ->one();
@@ -649,28 +656,30 @@ class Vehicle extends \yii\db\ActiveRecord
            public function getPriceSummary()
            {
                // return $name;
-               $arr =  Vehicle::find()
-               ->select([
-                   'thai_year',
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 1 THEN d.oil_price ELSE 0 END) AS m1'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 2 THEN d.oil_price ELSE 0 END) AS m2'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 3 THEN d.oil_price ELSE 0 END) AS m3'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 4 THEN d.oil_price ELSE 0 END) AS m4'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 5 THEN d.oil_price ELSE 0 END) AS m5'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 6 THEN d.oil_price ELSE 0 END) AS m6'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 7 THEN d.oil_price ELSE 0 END) AS m7'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 8 THEN d.oil_price ELSE 0 END) AS m8'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 9 THEN d.oil_price ELSE 0 END) AS m9'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 10 THEN d.oil_price ELSE 0 END) AS m10'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 11 THEN d.oil_price ELSE 0 END) AS m11'),
-                   new Expression('SUM(CASE WHEN MONTH(d.date_start) = 12 THEN d.oil_price ELSE 0 END) AS m12'),
-               ])
-               ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
-                   ->where(['d.status' => 'Success'])
+               $arr = Vehicle::find()
+                   ->select([
+                       'thai_year',
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 1 THEN d.oil_price ELSE 0 END) AS m1'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 2 THEN d.oil_price ELSE 0 END) AS m2'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 3 THEN d.oil_price ELSE 0 END) AS m3'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 4 THEN d.oil_price ELSE 0 END) AS m4'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 5 THEN d.oil_price ELSE 0 END) AS m5'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 6 THEN d.oil_price ELSE 0 END) AS m6'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 7 THEN d.oil_price ELSE 0 END) AS m7'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 8 THEN d.oil_price ELSE 0 END) AS m8'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 9 THEN d.oil_price ELSE 0 END) AS m9'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 10 THEN d.oil_price ELSE 0 END) AS m10'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 11 THEN d.oil_price ELSE 0 END) AS m11'),
+                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 12 THEN d.oil_price ELSE 0 END) AS m12'),
+                   ])
+                   ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
+                   ->andWhere(['NOT IN', 'vehicle.status', ['Pending', 'Cancel']])
+                   ->andFilterWhere(['vehicle.thai_year' => $this->thai_year])
                    ->groupBy('thai_year')
                    ->asArray()
                    ->one();
-                   // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+                   
+               // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
                for ($i = 1; $i <= 12; $i++) {
                    $key = 'm' . $i;
                    if (!isset($arr[$key])) {

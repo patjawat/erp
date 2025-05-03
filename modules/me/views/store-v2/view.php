@@ -65,14 +65,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php echo Html::img($item->product->ShowImg(),['class' => 'img-fluid object-fit-cover rounded-1','style' => 'width:60px'])?>
 
                                 <div class="avatar-detail">
-                                <h6 class="mb-1"><?php echo $item->product->title?></h6>
+                                <h6 class="mb-1"><?php echo $item->product?->title?></h6>
                                 <p class="text-muted mb-0">
                               คงเหลือ  <span class="fw-semibold text-primary"><?php echo $item->stock?->SumQty() ?></span>  <?php echo $item->product?->unit_name?>
                             </p>
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center"><?php echo $item->product->unit_name?></td>
+                        <td class="text-center"><?php echo $item->product?->unit_name?></td>
                         <td><div class="d-flex align-items-center gap-1">
                             <?php if($model->order_status == 'none'):?>
                                 <button class="btn btn-sm btn-light"

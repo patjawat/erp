@@ -418,6 +418,45 @@ $("body").on("click", ".select-employee", function (e) {
   });
 });
 
+$(document).on('click', '.cancel-order', function(e) {
+  e.preventDefault();
+  let url = $(this).attr('href');
+  Swal.fire({
+      title: 'คุณแน่ใจหรือไม่?',
+      text: "คุณต้องการยกเลิกคำขอนี้หรือไม่?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'ใช่, ยกเลิก!',
+      cancelButtonText: 'ยกเลิก'
+  }).then((result) => {
+      if (result.isConfirmed) {
+          $.ajax({
+              url: url,
+              type: 'POST',
+              success: function(response) {
+                  Swal.fire(
+                      'ยกเลิกสำเร็จ!',
+                      'คำขอของคุณถูกยกเลิกแล้ว.',
+                      'success'
+                  ).then(() => {
+                      location.reload(); // Reload the page to reflect changes
+                  });
+              },
+              error: function() {
+                  Swal.fire(
+                      'เกิดข้อผิดพลาด!',
+                      'ไม่สามารถยกเลิกคำขอได้.',
+                      'error'
+                  );
+              }
+          });
+      }
+  });
+});
+
+
 $(".show-setting").on("click", function () {
   $(".right-setting").addClass("show");
 });

@@ -109,8 +109,8 @@ $js = <<<JS
                 editable: true,
                 selectable: true,
                 droppable: true,
-                events: function(fetchInfo, successCallback, failureCallback) {
-                    \$.ajax({
+                events: async function(fetchInfo, successCallback, failureCallback) {
+                    await $.ajax({
                         url: '$url'+'/events',
                         type: 'GET',
                         dataType: 'json',

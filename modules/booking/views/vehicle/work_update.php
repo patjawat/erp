@@ -30,8 +30,9 @@ use kartik\widgets\ActiveForm;
             'data' => [
                 'Pass' => ' จัดสรร',
                 'Success' => 'เสร็จสิ้นภาระกิจ',
+                'Cancel' => 'ยกเลิก',
             ],
-            'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
+            'options' => ['placeholder' => 'เลือกสถานะ'],
             'pluginOptions' => [
                 'allowClear' => true,
                 // 'width' => '370px',

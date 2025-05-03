@@ -15,10 +15,8 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-
-
 <?php $form = ActiveForm::begin([
-    'action' => ['index'],
+    'action' => isset($action) && $action ? $action : ['index'],
     'method' => 'get',
     'options' => [
         'data-pjax' => 1
@@ -56,7 +54,6 @@ $js = <<< JS
     });
 
 
-    JS;
+JS;
 $this->registerJS($js, View::POS_END);
-
 ?>

@@ -7,18 +7,22 @@ use yii\widgets\DetailView;
 use app\modules\inventory\models\StockEvent;
 $warehouse = Yii::$app->session->get('warehouse');
 $stockEvents = StockEvent::find()
-->select([
-    'stock_events.*',
-    new Expression('SUM(qty * unit_price) AS total')
-])
-->where([
-    'asset_item' => $asset_item,
-    'warehouse_id' => $warehouse->id,
-    'order_status' => 'success'
-])
-->groupBy('id')
-->orderBy(['movement_date' => SORT_ASC])
-->all();
+    ->select([
+        'stock_events.*',
+        new Expression('SUM(qty * unit_price) AS total')
+    ])
+    ->where([
+        'asset_item' => $asset_item,
+        'warehouse_id' => $warehouse->id,
+        'order_status' => 'success'
+    ])
+    ->groupBy('id')
+    ->orderBy(['movement_date' => SORT_ASC]);
+
+// Debug raw SQL
+echo $stockEvents->createCommand()->getRawSql();
+
+$stockEvents = $stockEvents->all();
 
 $balance = 0;
 $balanceQty = 0;

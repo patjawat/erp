@@ -246,7 +246,7 @@ public function actionConfirm()
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-MEETING' .date('ymd') . '-???');
+                $model->code  = \mdm\autonumber\AutoNumber::generate('MEETING' .date('ymd') . '-???');
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 // $model->date_end = AppHelper::convertToGregorian($model->date_end);
@@ -413,8 +413,10 @@ public function actionGetRoom($id)
 
 
             $bookings = Meeting::find()
-                ->andWhere(['<>', 'status', 'Cancel'])
-                ->all();
+            ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
+            ->orderBy(['id' => SORT_DESC])
+            ->limit(10)
+            ->all();
                 $data = [];
 
                 foreach($bookings as $item)
@@ -430,14 +432,14 @@ public function actionGetRoom($id)
                             'title' => $item->title,
                             'dateTime' => $item->viewMeetingTime(),
                             'status' => $item->viewStatus()['view'],
-                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
+                            // 'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
                             'description' => 'คำอธิบาย',
                         ],
                          'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
                         'description' => 'description for All Day Event',
                         'textColor' => 'black',
                         'backgroundColor' => '#3aa3e3',
-                        'url' => Url::to(['/event/view', 'id' => $item->id]),
+                        // 'url' => Url::to(['/event/view', 'id' => $item->id]),
                     ];
                 }
 

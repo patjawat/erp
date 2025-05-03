@@ -207,6 +207,7 @@ $resultsJs = <<<JS
 
         <div class="col-md-6">
             <?php
+            
             echo $form->field($model, 'license_plate', [
                 'addon' => [
                     'append' => [
@@ -231,7 +232,7 @@ $resultsJs = <<<JS
                     'allowClear' => true,
                     'dropdownParent' => '#main-modal',
                 ]
-            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>)');
+            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) '.$model->license_plate);
             ?>
         </div>
     </div>

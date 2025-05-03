@@ -2,7 +2,7 @@
     <div class="card-body">
     <div class="d-flex justify-content-between">
                     <h6><i class="fa-solid fa-chart-simple"></i> สรุปสถิติการลารายปี</h6>
-                      
+                    <?php echo $this->render('_search_year', ['model' => $searchModel]); ?>
                 </div>
         <div id="chartSummaryYear"></div>
     </div>

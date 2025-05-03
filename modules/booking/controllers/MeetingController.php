@@ -58,9 +58,9 @@ class MeetingController extends Controller
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new MeetingSearch([
             'thai_year' => AppHelper::YearBudget(),
-            // 'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            // 'date_end' => AppHelper::convertToThai($lastDay),
-            // 'status' => 'Pending'
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
@@ -72,7 +72,7 @@ class MeetingController extends Controller
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         // $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
+        // $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
            
     } catch (\Throwable $th) {
         //throw $th;
@@ -175,45 +175,49 @@ class MeetingController extends Controller
     
 
     public function actionEvents()
-	{
+    {
         $start = $this->request->get('start');
         $end = $this->request->get('end');
+
+        // Convert start and end dates to the desired format
+        $start = (new DateTime($start))->format('Y-m-d');
+        $end = (new DateTime($end))->format('Y-m-d');
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $query = Meeting::find()
+            ->andWhere(['between', 'date_start', $start, $end])
+            ->orderBy(['id' => SORT_DESC]);
+
+        $bookings = $query->all();
+        $data = [];
+
+        foreach ($bookings as $item) {
+            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $item->time_start), "php:Y-m-d\TH:i:s");
+            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
+            $data[] = [
+                'id' => $item->id,
+                'title' => $item->room->title,
+                'start' => $dateStart,
+                'end' => $dateStart,
+                'extendedProps' => [
+                    'title' => $item->title,
+                    'dateTime' => $item->viewMeetingTime(),
+                    'status' => $item->viewStatus()['view'],
+                    'view' => $this->renderAjax('view', ['model' => $item, 'action' => false]),
+                    'description' => 'คำอธิบาย',
+                ],
+                'className' => 'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
+                'description' => 'description for All Day Event',
+                'textColor' => 'black',
+                'backgroundColor' => '#3aa3e3',
+                'url' => Url::to(['/event/view', 'id' => $item->id]),
+            ];
+        }
+
+        return $data;
+    }
         
-		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-
-            $bookings = Meeting::find()
-                // ->andWhere(['<>', 'status', 'Cancel'])
-                ->all();
-                $data = [];
-
-                foreach($bookings as $item)
-                {
-                    $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$item->time_start), "php:Y-m-d\TH:i:s");
-                    $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$item->time_end), "php:Y-m-d\TH:i:s");
-                    $data[] = [
-                        'id'               => $item->id,
-                        'title'            => $item->room->title,
-                        'start'            => $dateStart,
-                        'end'            => $dateStart,
-                        'extendedProps' => [
-                            'title' => $item->title,
-                            'dateTime' => $item->viewMeetingTime(),
-                            'status' => $item->viewStatus()['view'],
-                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
-                            'description' => 'คำอธิบาย',
-                        ],
-                         'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
-                        'description' => 'description for All Day Event',
-                        'textColor' => 'black',
-                        'backgroundColor' => '#3aa3e3',
-                        'url' => Url::to(['/event/view', 'id' => $item->id]),
-                    ];
-                }
-
-            return  $data;
-       
-	}
 
 
     /**

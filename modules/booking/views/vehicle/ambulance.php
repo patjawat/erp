@@ -16,23 +16,23 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<i class="fa-solid fa-truck-medical"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
 <?php $this->beginBlock('sub-title'); ?>
-ทะเบียนใช้รถยนต์ทั่วไป
+ทะเบียนใช้รถพยาบาล
 <?php $this->endBlock(); ?>
 <?php echo $this->render('menu')?>
 <?php $this->endBlock(); ?>
 
 
-<?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel,'vehicleType' => 'officail']) ?>
+<?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel]) ?>
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div>
             <h6><i class="bi bi-ui-checks me-1"></i> คำขอรอจัดสรร <span
                     class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+            <?php echo $this->render('_search', ['model' => $searchModel,'action' => 'ambulance']); ?>
         </div>
     </div>
     <div class="card-body p-0">
@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" style="width: 180px;">เลขที่/ความเร่งด่วน</th>
                         <th class="fw-semibold">เหตุผล/จุดหมาย</th>
                         <th class="fw-semibold" style="width: 400px;">เหตุผล/วันที่ขอใช้</th>
-                        <th class="fw-semibold">พขร.</th>
+                        <th class="fw-semibold">ผู้ขอ</th>
                         <th class="fw-semibold">สถานะ</th>
                         <th class="fw-semibold text-center" style="width:150px;">ดำเนินการ</th>
                     </tr>
@@ -79,11 +79,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="btn-group">
                                 <?php echo Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'btn btn-light w-100 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                <i class="bi bi-caret-down-fill"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                    <li><?php echo Html::a('<i class="fa-solid fa-user-tag me-1"></i> จัดสรร', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
                                     <li><?php echo Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?></li>
                                 </ul>
                             </div>
@@ -111,43 +110,43 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php
 $js = <<< JS
-$(document).on('click', '.cancel-order', function(e) {
-    e.preventDefault();
-    let url = $(this).attr('href');
-    Swal.fire({
-        title: 'คุณแน่ใจหรือไม่?',
-        text: "คุณต้องการยกเลิกคำขอนี้หรือไม่?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, ยกเลิก!',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: url,
-                type: 'POST',
-                success: function(response) {
-                    Swal.fire(
-                        'ยกเลิกสำเร็จ!',
-                        'คำขอของคุณถูกยกเลิกแล้ว.',
-                        'success'
-                    ).then(() => {
-                        location.reload(); // Reload the page to reflect changes
-                    });
-                },
-                error: function() {
-                    Swal.fire(
-                        'เกิดข้อผิดพลาด!',
-                        'ไม่สามารถยกเลิกคำขอได้.',
-                        'error'
-                    );
-                }
-            });
-        }
-    });
-});
+// $(document).on('click', '.cancel-order', function(e) {
+//     e.preventDefault();
+//     let url = $(this).attr('href');
+//     Swal.fire({
+//         title: 'คุณแน่ใจหรือไม่?',
+//         text: "คุณต้องการยกเลิกคำขอนี้หรือไม่?",
+//         icon: 'warning',
+//         showCancelButton: true,
+//         confirmButtonColor: '#3085d6',
+//         cancelButtonColor: '#d33',
+//         confirmButtonText: 'ใช่, ยกเลิก!',
+//         cancelButtonText: 'ยกเลิก'
+//     }).then((result) => {
+//         if (result.isConfirmed) {
+//             $.ajax({
+//                 url: url,
+//                 type: 'POST',
+//                 success: function(response) {
+//                     Swal.fire(
+//                         'ยกเลิกสำเร็จ!',
+//                         'คำขอของคุณถูกยกเลิกแล้ว.',
+//                         'success'
+//                     ).then(() => {
+//                         location.reload(); // Reload the page to reflect changes
+//                     });
+//                 },
+//                 error: function() {
+//                     Swal.fire(
+//                         'เกิดข้อผิดพลาด!',
+//                         'ไม่สามารถยกเลิกคำขอได้.',
+//                         'error'
+//                     );
+//                 }
+//             });
+//         }
+//     });
+// });
 JS;
 $this->registerJS($js, \yii\web\View::POS_END);
 ?>

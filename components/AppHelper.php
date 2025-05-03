@@ -52,14 +52,15 @@ class AppHelper extends Component
         // หากไม่มีคอมม่าหรือจุดทศนิยม ให้แสดงผลตามค่าเดิม
         return $input;
     }
-    //แปลงรูปแบบ format 'Y-m-d'
+
+    // แปลงรูปแบบ format 'Y-m-d'
     public static function convertToYMD($date)
     {
         // แยกวันที่ออกเป็นวัน เดือน ปี
-        $dateParts = explode("/", $date);
+        $dateParts = explode('/', $date);
         // ตรวจสอบรูปแบบวันที่
         if (count($dateParts) !== 3) {
-            return 'Invalid date format.'.$date;
+            return 'Invalid date format.' . $date;
         }
         $day = $dateParts[0];
         $month = $dateParts[1];
@@ -87,8 +88,8 @@ class AppHelper extends Component
                         SELECT count(date) as count_days FROM date_range
                         WHERE DAYNAME(date) IN('Saturday','Sunday');";
 
-// นับจำนวนวันเสาร์-อาทิตย์
-$sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบเสาร์-อาทิตย์
+        // นับจำนวนวันเสาร์-อาทิตย์
+        $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบเสาร์-อาทิตย์
                         - CASE 
                             WHEN DAYOFWEEK(:date_start) = 7 THEN 1 -- ถ้าวันแรกเป็นเสาร์ ให้ลบ 1
                             WHEN DAYOFWEEK(:date_end) = 7 THEN 1 -- ถ้าวันสุดท้ายเป็นเสาร์ ให้ลบ 1
@@ -98,21 +99,23 @@ $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบ�
                             WHEN DAYOFWEEK(:date_end) = 1 THEN 1 -- ถ้าวันสุดท้ายเป็นอาทิตย์ ให้ลบอีก 1
                             ELSE 0
                             END AS date_count;';
-                            
-                            // หาจำนวนวันหยุด
-                            $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
-                            // ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
-                             $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND date_start BETWEEN :date_start AND :date_end";
-                             //นับวัน Off
-                             $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND MONTH(date_end) = MONTH(:date_end);";
-                             $countDayOff = Yii::$app->db->createCommand($sqlDayOff)
-                             ->bindValue(':emp_id', $me->id)
-                             ->bindValue(':date_end', $dateEnd)
-                             ->queryScalar();
-                            
-                            // นับจำนวนวันทั้งหมด
-                            $sqlAllDays = "WITH RECURSIVE date_range AS (SELECT :date_start AS date UNION ALL SELECT DATE_ADD(date, INTERVAL 1 DAY) FROM date_range WHERE date < :date_end ) SELECT count(date) as count_days FROM date_range;"; 
-                            $countAllDays = Yii::$app->db->createCommand($sqlAllDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
+
+        // หาจำนวนวันหยุด
+        $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
+        // ตารางปฏิทินวันหยุดกรณีที่เป็นพยาบาลหรือมีขึ้นเวร
+        $sqlHolidayMe = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND date_start BETWEEN :date_start AND :date_end";
+        // นับวัน Off
+        $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND MONTH(date_end) = MONTH(:date_end);";
+        $countDayOff = Yii::$app
+            ->db
+            ->createCommand($sqlDayOff)
+            ->bindValue(':emp_id', $me->id)
+            ->bindValue(':date_end', $dateEnd)
+            ->queryScalar();
+
+        // นับจำนวนวันทั้งหมด
+        $sqlAllDays = 'WITH RECURSIVE date_range AS (SELECT :date_start AS date UNION ALL SELECT DATE_ADD(date, INTERVAL 1 DAY) FROM date_range WHERE date < :date_end ) SELECT count(date) as count_days FROM date_range;';
+        $countAllDays = Yii::$app->db->createCommand($sqlAllDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
         $satsunDays = Yii::$app->db->createCommand($sqlsatsunDays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
         // $sunDay = Yii::$app->db->createCommand($sqlSundays)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
         $holiday = Yii::$app->db->createCommand($sqlHoliday)->bindValue(':date_start', $dateStart)->bindValue(':date_end', $dateEnd)->queryScalar();
@@ -814,6 +817,12 @@ $sqlSundays = 'SELECT (WEEK(:date_end, 1) - WEEK(:date_start, 1)) * 2 -- ลบ�
                 $color = 'secondary';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-stop"></i> ' . $title . '</span>';
                 break;
+            case 'Success':
+                $title = 'เสร็จสิ้น';
+                $color = 'success';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-circle-check"></i> ' . $title . '</span>';
+                break;
+
             default:
                 $title = 'ไม่ระบุ';
                 $color = 'light';

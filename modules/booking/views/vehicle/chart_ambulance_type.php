@@ -20,11 +20,13 @@ use app\modules\booking\models\Vehicle;
        
 <?php
 
-$queryNormal = $searchModel->getChartSummaryAmbulance('normal');  // รับ-ส่ง [ไม่ฉุกเฉิน]
-$queryEms = $searchModel->getChartSummaryAmbulance('ems');  // EMS
-$queryRefer = $searchModel->getChartSummaryAmbulance('refer');  // REFER
 
-try {
+
+$queryNormal = $searchModel->getChartSummaryAmbulance('NORMAL');  // รับ-ส่ง [ไม่ฉุกเฉิน]
+$queryEms = $searchModel->getChartSummaryAmbulance('EMS');  // EMS
+$queryRefer = $searchModel->getChartSummaryAmbulance('REFER');  // REFER
+
+// try {
   $normalSummary = [
     $queryNormal['m10'],
     $queryNormal['m11'],
@@ -70,11 +72,11 @@ try {
     $queryRefer['m9'],
   
   ];
-} catch (\Throwable $th) {
-  $normalSummary = [];
-  $emsSummary = [];
-  $referSummary = [];
-}
+// } catch (\Throwable $th) {
+//   $normalSummary = [];
+//   $emsSummary = [];
+//   $referSummary = [];
+// }
 
 $dataNormal = Json::encode($normalSummary);
 $dataEms = Json::encode($emsSummary);
@@ -100,7 +102,7 @@ $js = <<<JS
               parentHeightOffset: 0,
                 toolbar: { show: false }
             },
-            colors: ['#0866ad', '#ff9800','#ffa73e'],
+            colors: ['#0866ad', '#ff5722','#ffa73e'],
             plotOptions: {
                 bar: {
                 borderRadius: 4,

@@ -73,7 +73,7 @@ try {
 
     <div class="row">
         <div class="col-6">
-                            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('ตั้งแต่วันที่') ?>
+                            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('วันที่') ?>
                             
                             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาเริ่มต้น') ?>
                         </div>

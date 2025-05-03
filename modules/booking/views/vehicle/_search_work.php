@@ -24,7 +24,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         'data-pjax' => 1
     ],
 ]); ?>
-<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
+<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model,'label' => 'พขร.'])?>
 
 <!-- Offcanvas -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">

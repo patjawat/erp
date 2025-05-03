@@ -13,8 +13,11 @@ use app\modules\booking\models\Vehicle;
 ?>
 <div class="card">
                 <div class="card-body">
-                <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> จำนวนการใช้งานรถทั่วไป</h6>
-                <div id="ChartVehicle"></div>
+                  <div class="d-flex justify-content-between">
+                    <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> จำนวนการใช้งานรถทั่วไป</h6>
+                    <?php echo $this->render('_search_year', ['model' => $searchModel]); ?>
+                  </div>
+                    <div id="ChartVehicle"></div>
             </div>
         </div>
 
@@ -23,13 +26,13 @@ use app\modules\booking\models\Vehicle;
 $queryOfficial = $searchModel->getChartSummary('official');
 $queryPersonal = $searchModel->getChartSummary('personal');
 
-try {
+// try {
   $officialSummary = [$queryOfficial['m10'], $queryOfficial['m11'], $queryOfficial['m12'], $queryOfficial['m1'], $queryOfficial['m2'], $queryOfficial['m3'], $queryOfficial['m4'], $queryOfficial['m5'], $queryOfficial['m6'], $queryOfficial['m7'], $queryOfficial['m8'], $queryOfficial['m9'] ];
   $personalSummary = [$queryPersonal['m10'], $queryPersonal['m11'], $queryPersonal['m12'], $queryPersonal['m1'], $queryPersonal['m2'], $queryPersonal['m3'], $queryPersonal['m4'], $queryPersonal['m5'], $queryPersonal['m6'], $queryPersonal['m7'], $queryPersonal['m8'], $queryPersonal['m9']];
-} catch (\Throwable $th) {
-  $officialSummary = [];
-  $personalSummary = [];
-}
+// } catch (\Throwable $th) {
+//   $officialSummary = [];
+//   $personalSummary = [];
+// }
 
 $dataOfficial = Json::encode($officialSummary);
 $dataPersonal = Json::encode($personalSummary);

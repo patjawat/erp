@@ -2,11 +2,15 @@
 
 namespace app\modules\booking\controllers;
 
+use Yii;
+use DateTime;
+use yii\web\Response;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use app\components\AppHelper;
+use yii\web\NotFoundHttpException;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleDetailSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * VehicleDetailController implements the CRUD actions for VehicleDetail model.
@@ -38,9 +42,27 @@ class VehicleDetailController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new VehicleDetailSearch();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new VehicleDetailSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending']
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
 
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -116,6 +138,19 @@ class VehicleDetailController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function actionCancel($id){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ($this->request->isPost) {
+            $model->status = 'Cancel';
+            if ($model->save()) {
+                return [
+                    'status' => 'success'
+                ];
+            }
+        }
+    }
+    
     /**
      * Finds the VehicleDetail model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

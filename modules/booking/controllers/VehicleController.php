@@ -3,6 +3,7 @@
 namespace app\modules\booking\controllers;
 
 use Yii;
+use DateTime;
 use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\Controller;
@@ -62,12 +63,17 @@ class VehicleController extends Controller
 
     public function actionIndex()
     {
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
         $searchModel = new VehicleSearch([
-            'status' => 'Pending',
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending'],
+            'vehicle_type_id' => 'official'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere(['!=', 'vehicle_type_id', 'personal']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -89,47 +95,110 @@ class VehicleController extends Controller
 
         // search employee department
          // ค้นหาคามกลุ่มโครงสร้าง
-         $org1 = Organization::findOne($searchModel->q_department);
-         // ถ้ามีกลุ่มย่อย
-         if (isset($org1) && $org1->lvl == 1) {
-             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
-             FROM tree t1
-             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-             WHERE t2.name = :name;';
-             $querys = Yii::$app
-                 ->db
-                 ->createCommand($sql)
-                 ->bindValue(':name', $org1->name)
-                 ->queryAll();
-             $arrDepartment = [];
-             foreach ($querys as $tree) {
-                 $arrDepartment[] = $tree['id'];
-             }
-             if (count($arrDepartment) > 0) {
-                 $dataProvider->query->andWhere(['in', 'employees.department', $arrDepartment]);
-             } else {
-                 $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-             }
-         } else {
-             $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-         }
+        //  $org1 = Organization::findOne($searchModel->q_department);
+        //  // ถ้ามีกลุ่มย่อย
+        //  if (isset($org1) && $org1->lvl == 1) {
+        //      $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        //      FROM tree t1
+        //      JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+        //      WHERE t2.name = :name;';
+        //      $querys = Yii::$app
+        //          ->db
+        //          ->createCommand($sql)
+        //          ->bindValue(':name', $org1->name)
+        //          ->queryAll();
+        //      $arrDepartment = [];
+        //      foreach ($querys as $tree) {
+        //          $arrDepartment[] = $tree['id'];
+        //      }
+        //      if (count($arrDepartment) > 0) {
+        //          $dataProvider->query->andWhere(['in', 'employees.department', $arrDepartment]);
+        //      } else {
+        //          $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
+        //      }
+        //  } else {
+        //      $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
+        //  }
          
-
-        
-
-        $searchModelDetail = new VehicleDetailSearch();
-        $dataProviderDetail = $searchModelDetail->search($this->request->queryParams);
-        
-        $dataProviderDetail->query->joinWith('vehicle');
-        $dataProviderDetail->query->andFilterWhere(['vehicle_detail.status' => 'Pass']);
-        $dataProviderDetail->query->andFilterWhere(['!=', 'vehicle.vehicle_type_id', 'personal']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'dataProviderDetail' => $dataProviderDetail,
+            // 'dataProviderDetail' => $dataProviderDetail,
         ]);
     }
+
+
+
+    public function actionAmbulance()
+    {
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new VehicleSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending'],
+            'vehicle_type_id' => 'ambulance'
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        // $dataProvider->query->andFilterWhere(['!=', 'vehicle_type_id', 'personal']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+        ]);
+
+
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
+
+        // search employee department
+         // ค้นหาคามกลุ่มโครงสร้าง
+        //  $org1 = Organization::findOne($searchModel->q_department);
+        //  // ถ้ามีกลุ่มย่อย
+        //  if (isset($org1) && $org1->lvl == 1) {
+        //      $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        //      FROM tree t1
+        //      JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+        //      WHERE t2.name = :name;';
+        //      $querys = Yii::$app
+        //          ->db
+        //          ->createCommand($sql)
+        //          ->bindValue(':name', $org1->name)
+        //          ->queryAll();
+        //      $arrDepartment = [];
+        //      foreach ($querys as $tree) {
+        //          $arrDepartment[] = $tree['id'];
+        //      }
+        //      if (count($arrDepartment) > 0) {
+        //          $dataProvider->query->andWhere(['in', 'employees.department', $arrDepartment]);
+        //      } else {
+        //          $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
+        //      }
+        //  } else {
+        //      $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
+        //  }
+         
+
+        return $this->render('ambulance', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            // 'dataProviderDetail' => $dataProviderDetail,
+        ]);
+    }
+
+    
 
     public function actionCalendar()
     {
@@ -144,6 +213,8 @@ class VehicleController extends Controller
 		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $bookings = Vehicle::find()
                 ->andWhere(['<>', 'status', 'Cancel'])
+                ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
+                ->orderBy(['id' => SORT_DESC])
                 ->all();
                 $data = [];
 
@@ -153,7 +224,7 @@ class VehicleController extends Controller
                     $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
                     $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
                     $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
-                    $title = 'ขอใช้'.$item->carType->title.' ไป'.($item->locationOrg?->title ?? '-');
+                    $title = 'ขอใช้'.$item->carType?->title.' ไป'.($item->locationOrg?->title ?? '-');
                     $data[] = [
                         'id'               => $item->id,
                         'title'            => $item->reason,
@@ -165,12 +236,12 @@ class VehicleController extends Controller
                         'extendedProps' => [
                             'title' => $title,
                             // 'avatar' => $item->employee?->getAvatar(false,($title)),
-                            'avatar' => $this->renderAjax('avatar', ['model' => $item]),
+                            'avatar' => $this->renderAjax('@app/modules/booking/views/vehicle/avatar', ['model' => $item]),
                             'fullname' => $item->employee?->fullname,
                             'dateTime' => $item->viewTime(),
                             // 'dateTime' => $item->viewMeetingTime(),
                             'status' => $item->viewStatus()['view'],
-                            'view' => $this->renderAjax('view', ['model' => $item,'action' => true]),
+                            'view' => $this->renderAjax('@app/modules/booking/views/vehicle/view', ['model' => $item,'action' => true]),
                             'description' => 'คำอธิบาย',
                         ],
                          'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
@@ -187,28 +258,37 @@ class VehicleController extends Controller
 
     public function actionWork()
     {
-        $searchModel = new VehicleDetailSearch();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new VehicleDetailSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            // 'status' =>   $status ? [$status] : ['Pending']
+        ]);
+      
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle.status' => 'Pass']);
+        $dataProvider->query->andFilterWhere(['vehicle_detail.driver_id' => $searchModel->emp_id]);
+        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
         // $dataProvider->query->joinWith('vehicle');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'vehicle.code', $searchModel->q],
+            ['like', 'reason', $searchModel->q],
         ]);
 
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
+        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
 
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', $dateStart])->andFilterWhere(['<=', 'vehicle_detail.date_end', $dateEnd]);
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
+        // try {
+        //     $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        //     $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        //     $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', $dateStart])->andFilterWhere(['<=', 'vehicle_detail.date_end', $dateEnd]);
+        // } catch (\Throwable $th) {
+        //     // throw $th;
+        // }
         
         return $this->render('work', [
             'searchModel' => $searchModel,
@@ -348,10 +428,11 @@ class VehicleController extends Controller
 
     public function actionApprove($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+     
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
             $transaction = Yii::$app->db->beginTransaction();
             $model->status = 'Pass';
             $post = Yii::$app->request->post();
@@ -396,13 +477,19 @@ class VehicleController extends Controller
             //     Yii::$app->session->setFlash('error', $e->getMessage());
             // }
         }
-
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('_form_approve', [
+        if($this->request->isAjax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_approve', [
+                    'model' => $model,
+                ]),
+            ];
+        }else{
+            return $this->render('_form_approve', [
                 'model' => $model,
-            ]),
-        ];
+            ]);
+        }
     }
 
 
@@ -410,7 +497,7 @@ class VehicleController extends Controller
     private function sendApprove($model)
     {
         $info = SiteHelper::getInfo();
-        $emp_id = $info['director']->id;
+        $emp_id = $info['director']?->id ?? 0;
 
         // Check if an approval already exists for this vehicle and employee
         $existingApproval = Approve::find()
@@ -442,7 +529,7 @@ class VehicleController extends Controller
             }
         }
     }
-
+    
     /**
      * Finds the Vehicle model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

@@ -128,7 +128,23 @@ class VehicleDetail extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($ref, $name);
     }
 
-    
+    public function showDriver($msg = null)
+    {
+        try {
+            $emp = Employees::findOne(['id' => $this->driver_id]);
+        // $msg = $emp->departmentName();
+        return [
+            'avatar' => $emp->getAvatar(false, $msg),
+            'fullname' => $emp->fullname
+        ];
+        } catch (\Throwable $th) {
+            return [
+                'avatar' => '',
+                'fullname' => ''
+            ];
+        }
+        
+    }
 
     public function ListThaiYear()
     {

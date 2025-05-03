@@ -164,13 +164,23 @@ class Meeting extends \yii\db\ActiveRecord
 
  public function getUserReq()
     {
-        $emp = $this->employee;
+        try {
+            $emp = $this->employee;
         
-        return [
-            'avatar' => $emp->getAvatar(false,$emp->departmentName()),
-            'fullname' => $emp->fullname,
-            'department' => $emp->departmentName(),
-        ];
+            return [
+                'avatar' => $emp->getAvatar(false,$emp->departmentName()),
+                'fullname' => $emp->fullname,
+                'department' => $emp->departmentName(),
+            ];
+        } catch (\Throwable $th) {
+        
+            return [
+                'avatar' => '',
+                'fullname' => '',
+                'department' => '',
+            ];
+        }
+
     }
 
     public function viewMeetingDate()
