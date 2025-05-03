@@ -610,6 +610,7 @@ class Vehicle extends \yii\db\ActiveRecord
                 //  ->where(['vehicle_type_id' => 'ambulance'])
                 //  ->andWhere(['IN','d.status',['Approve']])
                  ->andFilterWhere(['thai_year' => $this->thai_year])
+                 
                  ->groupBy('thai_year')
                  ->asArray()
                  ->one();
@@ -631,6 +632,7 @@ class Vehicle extends \yii\db\ActiveRecord
                 ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
                 ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
                 ->where(['IN','v.status', ['Approve','Pass','Success']])
+                ->andFilterWhere(['thai_year' => $this->thai_year])
                 ->groupBy('d.id')
                 ->orderBy(['total' => SORT_ASC]);
 
