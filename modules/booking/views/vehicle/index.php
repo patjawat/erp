@@ -44,8 +44,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                         <th class="fw-semibold" style="width: 180px;">เลขที่/ความเร่งด่วน</th>
+                        <th class="fw-semibold">ผู้ขอ</th>
                         <th class="fw-semibold">เหตุผล/จุดหมาย</th>
-                        <th class="fw-semibold" style="width: 400px;">เหตุผล/วันที่ขอใช้</th>
                         <th class="fw-semibold">พขร.</th>
                         <th class="fw-semibold">สถานะ</th>
                         <th class="fw-semibold text-center" style="width:150px;">ดำเนินการ</th>
@@ -59,20 +59,15 @@ $this->params['breadcrumbs'][] = $this->title;
                             <p class="text-muted mb-0 fs-13"><?php echo $item->viewUrgent()?></p>
                             <p class="mb-0 fw-semibold fs-13"><?=$item->code?></p>
                         </td>
+                        <td> <?=$item->userRequest()['avatar']?></td>
                         <td>
                             <div class="avatar-detail text-truncate">
-                                <p class="fs-13 mb-0"><?php echo $item->viewGoType() ?> : <?php echo $item->locationOrg?->title ?? '-' ?></p>
+                                <p class="fs-13 mb-0"><i class="fa-solid fa-calendar-day"></i> <?php echo $item->showDateRange()?> เวลา <?php echo $item->viewTime()?> <?php echo $item->viewGoType() ?> : <?php echo $item->locationOrg?->title ?? '-' ?></p>
                                 <h6 class="text-muted mb-0 fs-13"><i class="fa-solid fa-circle-info text-primary"></i> <?= $item->reason; ?></h6>
                               
                             </div>
                         </td>
-                        <td>
-                            <div class="avatar-detail">
-                                <p class="mb-0 fw-semibold fs-13"><i class="fa-solid fa-calendar-day"></i> <?php echo $item->showDateRange()?></p>
-                                <p class="mb-0 fw-semibold fs-13"> เวลา <?php echo $item->viewTime()?></p>
-                            </div>
-                        </td>
-                        <td> <?=$item->userRequest()['avatar']?></td>
+                        <td><?=$item->StackDriver()?></td>
                         <td><?php echo $item->viewStatus()['view'] ?? '-'?></td>
 
                         <td class="fw-light text-center">

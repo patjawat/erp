@@ -5,6 +5,7 @@ namespace app\modules\booking\models;
 use Yii;
 use DateTime;
 use yii\db\Expression;
+use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
@@ -443,6 +444,28 @@ class Vehicle extends \yii\db\ActiveRecord
     {
         return $this->urgent;
     }
+
+
+         //  ภาพทีมคณะกรรมการ
+         public function StackDriver()
+         {
+             // try {
+             $data = '';
+             $data .= '<div class="avatar-stack">';
+             foreach (VehicleDetail::find()->where(['vehicle_id' => $this->id])->all() as $key => $item) {
+                 $emp = Employees::findOne(['id' => $item->driver_id]);
+                    $data .= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                         'data' => [
+                             'expand' => '-20',
+                             'sizes' => 'auto',
+                             'src' => $emp->showAvatar()
+                         ]]);
+             }
+             $data .= '</div>';
+             return $data;
+             // } catch (\Throwable $th) {
+             // }
+         }
 
     public function listDocument()
     {
