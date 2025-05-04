@@ -62,7 +62,7 @@ class Development extends \yii\db\ActiveRecord
         return [
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
-            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year'], 'required'],
+            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year'], 'required'],
             [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
@@ -123,6 +123,12 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id']);
     }
 
+    public function getExpenses()
+    {
+        return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id'])->andOnCondition(['name' => 'expense_type']);
+    }
+
+    
     public function getCreatedBy()
     {
         return $this->hasOne(User::class, ['id' => 'created_by']);
@@ -166,14 +172,15 @@ class Development extends \yii\db\ActiveRecord
          $data .= '<div class="avatar-stack">';
          foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
              $emp = Employees::findOne(['id' => $item->emp_id]);
-                $data .= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
-                     'data' => [
-                         'expand' => '-20',
-                         'sizes' => 'auto',
-                         'src' => $emp->showAvatar()
-                     ]]);
-         }
-         $data .= '</div>';
+             $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
+                'size' => 'model-md',
+                'bs-toggle' => 'tooltip',
+                'bs-placement' => 'top',
+                'bs-title' => $emp->fullname
+            ]]);
+        }
+        $data .= '</div>';
+
          return $data;
          // } catch (\Throwable $th) {
          // }

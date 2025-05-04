@@ -61,6 +61,71 @@ class DevelopmentDetailController extends Controller
         ]);
     }
 
+    
+    public function actionCreate()
+    {
+        $name = $this->request->get('name');
+        $model = new DevelopmentDetail([
+            'name' => $name,
+            'development_id' => $this->request->get('development_id'),
+        ]);        
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_'.$name, [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_'.$name, [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    public function actionUpdate($id)
+    {
+        $model =  $this->findModel($id);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_'.$model->name, [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('_form_'.$model->name, [
+                'model' => $model,
+            ]);
+        }
+    }
+    
     /**
      * Creates a new DevelopmentDetail model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -145,20 +210,6 @@ class DevelopmentDetailController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
-    }
-
-    
 
     /**
      * Deletes an existing DevelopmentDetail model.
@@ -169,9 +220,11 @@ class DevelopmentDetailController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        // Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->delete();
+        return $this->redirect(['/me/development/view', 'id' => $model->development_id]);
+       
     }
 
     /**

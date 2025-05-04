@@ -23,6 +23,7 @@ use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
 use app\modules\hr\models\Development;
 use app\modules\filemanager\models\Uploads;
+use app\modules\hr\models\DevelopmentDetail;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -51,6 +52,8 @@ public function actionIndex(){
     $querys = Yii::$app->db2->createCommand($sql)->queryAll();
     
     if (BaseConsole::confirm('การพัฒนา '.count($querys).' รายการ ยืนยัน ??')) {
+        $num = 1;
+        $total = count($querys);
             foreach ($querys as $item) {
                 $checkModel = Development::findOne(['topic' => $item['RECORD_HEAD_USE']]);
                 if (!$checkModel) {
@@ -63,18 +66,39 @@ public function actionIndex(){
                     $model->topic = $item['RECORD_HEAD_USE'] ?? '-';
                     $model->date_start = $item['DATE_GO'];
                     $model->date_end = $item['DATE_BACK'];
-                    // $model->vehicle_date_start = $item['DATE_TRAVEL_GO'] ?? '0000-00-00';
-                    // $model->vehicle_date_end = $item['DATE_TRAVEL_BACK'] ?? '0000-00-00';
+                    $model->vehicle_date_start = $item['DATE_TRAVEL_GO'] ?? NULL;
+                    $model->vehicle_date_end = $item['DATE_TRAVEL_BACK'] ?? NULL;
                     $model->status = 'Pending';
                     $model->thai_year = AppHelper::YearBudget($item['DATE_GO']);
                     $model->leader_id = 1;
                     $model->assigned_to = 1;
                     $model->emp_id = 1;
                     // $model->vehicle = $item['RECORD_VEHICLE_NAME'];
-                    $model->save(false);
+                    $this->creteDetailMember($model);
+                    if($model->save(false)){
+                        $percentage = (($num++) / $total) * 100;
+                        // $this->createDetailRefer($model,$item);
+                        echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
+                    }
+                }
                 }
             }
-        }
 
     }
+
+    //นำเข้าส่วนของคณะที่ไปด้วยกัน
+    protected function creteDetailMember($data)
+    {
+            $check = DevelopmentDetail::findOne(['development_id' => $data->id]);
+            if(!$check){
+                $model = new DevelopmentDetail();
+                
+            }else{
+                $model = $check;
+            }
+            $model->development_id = $data->id;
+            $model->name = 'member';
+            $model->emp_id = $data->emp_id;
+            $model->save(false);
+    } 
 }

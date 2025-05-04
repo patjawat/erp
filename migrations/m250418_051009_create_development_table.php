@@ -83,6 +83,18 @@ class m250418_051009_create_development_table extends Migration
         } 
         
 
+        //ประเภทของค่าใช้จ่าย
+        $sql5 = Yii::$app->db->createCommand("select * from categorise where name = 'expense_type'")->queryAll();
+        if(count($sql5) < 1){
+            $this->insert('categorise',['name'=>'expense_type','code' =>'ET1','title'=>'ค่าเบี้ยเลี้ยง','active' => 1]);
+            $this->insert('categorise',['name'=>'expense_type','code' =>'ET2','title'=>'ค่าที่พัก','active' => 1]);
+            $this->insert('categorise',['name'=>'expense_type','code' =>'ET3','title'=>'ค่ายานพาหนะ','active' => 1]);
+            $this->insert('categorise',['name'=>'expense_type','code' =>'ET4','title'=>'ค่าลงทะเบียน','active' => 1]);
+            $this->insert('categorise',['name'=>'expense_type','code' =>'ET5','title'=>'ค่าอาหารและอาหารว่าง','active' => 1]);
+            $this->insert('categorise',['name'=>'expense_type','code' =>'ET6','title'=>'ค่าวิทยากร','active' => 1]);
+        } 
+
+
         
 
     }

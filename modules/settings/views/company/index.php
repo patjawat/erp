@@ -10,6 +10,7 @@ use yii\widgets\MaskedInput;
 use app\components\AppHelper;
 use kartik\widgets\Typeahead;
 use app\components\SiteHelper;
+use kartik\editors\Summernote;
 use app\modules\hr\models\Employees;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -236,8 +237,12 @@ $resultsJs = <<< JS
 
             <div class="col-8">
                 <?= $form->field($model, 'data_json[address]')->textArea(['style' => 'height:100px'])->label('ที่อยู่') ?>
+                <?= $form->field($model, 'data_json[conditions]')->widget(Summernote::class, [
+    'useKrajeePresets' => true,
+    // other widget settings
+])->label('เงื่อนไขการให้บริการ') ?>
             </div>
-
+            
         </div>
 
         <div class="form-group d-flex justify-content-center">

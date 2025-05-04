@@ -20,12 +20,13 @@ use app\widgets\FlatpickrWidget;
 use app\modules\hr\models\Employees;
 use iamsaint\datetimepicker\Datetimepicker;
 use app\widgets\Flatpickr\FlatpickrBuddhistWidget;
+
 $director = SiteHelper::viewDirector();
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\Leave $model */
 /** @var yii\widgets\ActiveForm $form */
-$formatJs = <<< 'JS'
+$formatJs = <<<'JS'
     var formatRepo = function (repo) {
         if (repo.loading) {
             return repo.avatar;
@@ -51,7 +52,7 @@ $formatJs = <<< 'JS'
 $this->registerJs($formatJs, View::POS_HEAD);
 
 // script to parse the results into the format expected by Select2
-$resultsJs = <<< JS
+$resultsJs = <<<JS
     function (data, params) {
         params.page = params.page || 1;
         return {
@@ -62,7 +63,6 @@ $resultsJs = <<< JS
         };
     }
     JS;
-
 
 ?>
 <style>
@@ -101,27 +101,27 @@ $resultsJs = <<< JS
                     </div>
                     <div class="w-50">
                         <?php
-                    echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
-                        'data' => [
-                            '0' => 'เต็มวัน',
-                            '0.5' => 'ครึงวัน',
-                        ],
-                        // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
-                            'width' => '100%',
-                        ],
-                        'pluginEvents' => [
-                            'select2:unselect' => 'function() {
+                        echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
+                            'data' => [
+                                '0' => 'เต็มวัน',
+                                '0.5' => 'ครึงวัน',
+                            ],
+                            // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                                'width' => '100%',
+                            ],
+                            'pluginEvents' => [
+                                'select2:unselect' => 'function() {
                                     calDays();
                                     }',
-                            'select2:select' => 'function() {
+                                'select2:select' => 'function() {
                                         calDays();
                                     }',
-                        ],
-                    ])->label('ประเภท');
-                    ?>
+                            ],
+                        ])->label('ประเภท');
+                        ?>
 
                         <?php
                         echo $form->field($model, 'data_json[date_end_type]')->widget(Select2::classname(), [
@@ -162,45 +162,53 @@ $resultsJs = <<< JS
                 ])->label('ประเภท');
                 ?>
 
-               
 
-              
-               
-                
+
+
+
+
 
             </div>
-       
-                <div class="col-6">
 
-                    <div
-                    class="bg-primary bg-opacity-10 p-3 rounded mb-3">
+            <div class="col-6">
+
+                <div class="bg-primary bg-opacity-10 p-3 rounded mb-3">
                     <div>
                         <!-- <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6> -->
-                                    <table class="table table-hover">
-                                        <tbody>
-                                            <tr class="">
-                                                <td scope="row"><span class="fw-bolder">วันเสาร์-อาทิตย์</span></td>
-                                                <td class="text-center"><span clas="f-wsemibold" id="satsunDays"><?php echo $model->data_json['sat_sun_days'] ?? 0?></span></td>
-                                            </tr>
-                                            <tr class="">
-                                                <td scope="row">
-                                                <span class="fw-bolder">วันหยุดนักขัตฤกษ์</span></td><td class="text-center"> <span clas="f-wsemibold" id="holiday"><?php echo $model->data_json['holidays'] ?? 0?></span></td>
-                                            </tr>
-                                            <tr class="">
-                                                <td scope="row">
-                                                <span class="fw-bolder">วัน Off</span></td>
-                                                <td class="text-center"> <span clas="f-wsemibold" id="dayOff"><?php echo $model->data_json['off_days'] ?? 0?></span></td>
-                                            </tr>
-                                            <tr class="">
-                                                <td scope="row">
-                                                <span class="fw-bolder">สรุปวันลา</span></td>
-                                                <td class="text-center"> <span clas="f-wsemibold" id="summaryDay"><?php echo $model->total_days?></span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <p class="text-danger p-0">
-                                        (หากมีวัน Off จะไม่นับวันหยุดและเสาร์-อาทิตย์) *
-                                    </p>
+                        <table class="table table-hover">
+                            <tbody>
+                                <tr class="">
+                                    <td scope="row"><span class="fw-bolder">วันเสาร์-อาทิตย์</span></td>
+                                    <td class="text-center"><span clas="f-wsemibold"
+                                            id="satsunDays"><?php echo $model->data_json['sat_sun_days'] ?? 0 ?></span>
+                                    </td>
+                                </tr>
+                                <tr class="">
+                                    <td scope="row">
+                                        <span class="fw-bolder">วันหยุดนักขัตฤกษ์</span>
+                                    </td>
+                                    <td class="text-center"> <span clas="f-wsemibold"
+                                            id="holiday"><?php echo $model->data_json['holidays'] ?? 0 ?></span></td>
+                                </tr>
+                                <tr class="">
+                                    <td scope="row">
+                                        <span class="fw-bolder">วัน Off</span>
+                                    </td>
+                                    <td class="text-center"> <span clas="f-wsemibold"
+                                            id="dayOff"><?php echo $model->data_json['off_days'] ?? 0 ?></span></td>
+                                </tr>
+                                <tr class="">
+                                    <td scope="row">
+                                        <span class="fw-bolder">สรุปวันลา</span>
+                                    </td>
+                                    <td class="text-center"> <span clas="f-wsemibold"
+                                            id="summaryDay"><?php echo $model->total_days ?></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="text-danger p-0">
+                            (หากมีวัน Off จะไม่นับวันหยุดและเสาร์-อาทิตย์) *
+                        </p>
 
                         <!-- <ul>
                             <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
@@ -209,54 +217,59 @@ $resultsJs = <<< JS
                         </ul> -->
                     </div>
                 </div>
-                
-                
-                     
+
+
+
             </div>
         </div>
 
         <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">รายละเอียดเพิ่มเติม</button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
-  </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
+                    type="button" role="tab" aria-controls="pills-home"
+                    aria-selected="true">รายละเอียดเพิ่มเติม</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
+                    type="button" role="tab" aria-controls="pills-profile"
+                    aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
+            </li>
 
-</ul>
-<div class="tab-content" id="pills-tabContent">
-  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
-    <!-- Start row -->
-<div class="row">
-<div class="col-6">
-<div class="d-flex gap-3">
-    <div class="w-50">
-        
-        <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
-    </div>
-    <div class="w-50">
-        <?php
-                    echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
-                    'data' => [
-                        'ภายในจังหวัด' => 'ภายในจังหวัด',
-                        'ต่างจังหวัด' => 'ต่างจังหวัด',
-                        'ต่างประเทศ' => 'ต่างประเทศ',
-                    ],
-                    'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                        'width' => '100%',
-                    ],
-                    ])->label('สถานที่ไป');
-                    ?>
-                </div>
-                </div>
-<?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
-</div>
-<div class="col-6">
+        </ul>
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab"
+                tabindex="0">
+                <!-- Start row -->
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex gap-3">
+                            <div class="w-50">
 
-<?php
+                                <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
+                            </div>
+                            <div class="w-50">
+                                <?php
+                                echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+                                    'data' => [
+                                        'ภายในจังหวัด' => 'ภายในจังหวัด',
+                                        'ต่างจังหวัด' => 'ต่างจังหวัด',
+                                        'ต่างประเทศ' => 'ต่างประเทศ',
+                                    ],
+                                    'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'dropdownParent' => '#main-modal',
+                                        'width' => '100%',
+                                    ],
+                                ])->label('สถานที่ไป');
+                                ?>
+                            </div>
+                        </div>
+                        <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
+                    </div>
+                    <div class="col-6">
+
+                        <?php
                         try {
                             $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
                         } catch (\Throwable $th) {
@@ -293,26 +306,21 @@ $resultsJs = <<< JS
                             ],
                         ])->label('มอบหมายงานให้')
                         ?>
-                <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
-                
+                        <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
 
-</div>
-</div>
-<?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
-  <!-- End Row -->
-  </div>
-  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
-    <?php echo $model->Upload('leave_file')?>
-  </div>
 
-</div>
-
-        
-        <div class="row">
-        <div class="col-12">
-           
+                    </div>
                 </div>
+                <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+                <!-- End Row -->
+            </div>
+            <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab"
+                tabindex="0">
+                <?php echo $model->Upload('leave_file') ?>
+            </div>
+
         </div>
+
     </div>
 </div>
 
@@ -341,25 +349,25 @@ $resultsJs = <<< JS
 <?php ActiveForm::end(); ?>
 <?php
 $calDaysUrl = Url::to(['/hr/leave/cal-days']);
-$js = <<< JS
+$js = <<<JS
 
 
       thaiDatepicker('#leave-date_start,#leave-date_end')
 
 
         function toggleDateEndType() {
-            let dateStart = $('#leave-date_start').val();
-            let dateEnd = $('#leave-date_end').val();
+            let dateStart = \$('#leave-date_start').val();
+            let dateEnd = \$('#leave-date_end').val();
 
             if (dateStart && dateEnd && dateStart === dateEnd) {
-                $('#leave-data_json-date_end_type').prop('disabled', true);
+                \$('#leave-data_json-date_end_type').prop('disabled', true);
             } else {
-                $('#leave-data_json-date_end_type').prop('disabled', false);
+                \$('#leave-data_json-date_end_type').prop('disabled', false);
             }
         }
 
         // เรียกใช้เมื่อค่าเปลี่ยนแปลง
-        $('#leave-date_start, #leave-date_end').on('change', function () {
+        \$('#leave-date_start, #leave-date_end').on('change', function () {
             toggleDateEndType();
         });
 
@@ -371,7 +379,7 @@ $js = <<< JS
         var form = \$(this);
         
         
-        let totalDays = parseInt($('#leave-total_days').val(), 10);
+        let totalDays = parseInt(\$('#leave-total_days').val(), 10);
        
         if (totalDays < 0) {
             Swal.fire({
@@ -415,17 +423,17 @@ $js = <<< JS
         return false;
     });
 
-        $('#leave-date_start').on('change', function() {
-            var selectedDate = $(this).val();
-            calDays(selectedDate);
-        });
-
-        $('#leave-date_end').on('change', function() {
+        \$('#leave-date_start').on('change', function() {
             var selectedDate = \$(this).val();
             calDays(selectedDate);
         });
 
-        $("#leave-data_json-auto").change(function() {
+        \$('#leave-date_end').on('change', function() {
+            var selectedDate = \$(this).val();
+            calDays(selectedDate);
+        });
+
+        \$("#leave-data_json-auto").change(function() {
             //ไม่รวมวันหยุด Auto
             if(this.checked) {
                 calDays()
@@ -437,10 +445,10 @@ $js = <<< JS
         // \$("#leave-on_holidays").change(function() {
         //     //ไม่รวมวันหยุด Auto
         //     if(this.checked) {
-        //         $(this).val(1)
+        //         \$(this).val(1)
         //         calDays()
         //     }else{
-        //         $(this).val(0)
+        //         \$(this).val(0)
         //         calDays()
         //     }
         // });
@@ -456,7 +464,7 @@ $js = <<< JS
                     date_end:\$('#leave-date_end').val(),
                     date_start_type:\$('#leave-data_json-date_start_type').val(),
                     date_end_type:\$('#leave-data_json-date_end_type').val(),
-                    on_holidays:$('#leave-on_holidays').val()
+                    on_holidays:\$('#leave-on_holidays').val()
                     
                 },
                 dataType: "json",
@@ -464,25 +472,25 @@ $js = <<< JS
                     console.log(\$('#leave-data_json-date_start_type').val());
                     console.log(res.satsunDays);
                     
-                    $('#satsunDays').html(res.satsunDays)
-                    $('#leave-data_json-sat_sun_days').val(res.satsunDays)
+                    \$('#satsunDays').html(res.satsunDays)
+                    \$('#leave-data_json-sat_sun_days').val(res.satsunDays)
                     
-                    $('#dayOff').html(res.isDayOff)
-                    $('#leave-data_json-off_days').val(res.isDayOff)
+                    \$('#dayOff').html(res.isDayOff)
+                    \$('#leave-data_json-off_days').val(res.isDayOff)
                     
-                    $('#holiday').html(res.holiday)
-                   $('#leave-data_json-holidays').val(res.holiday)
+                    \$('#holiday').html(res.holiday)
+                   \$('#leave-data_json-holidays').val(res.holiday)
                    
-                   $('#summaryDay').html(res.total)
-                   $('#leave-total_days').val(res.total)
+                   \$('#summaryDay').html(res.total)
+                   \$('#leave-total_days').val(res.total)
                    if(res.isDayOff >= 1){
-                    $('.day_normal').hide()
-                    $('.day_off').show()
+                    \$('.day_normal').hide()
+                    \$('.day_off').show()
                 }
                 
                 if(res.isDayOff == 0){
-                    $('.day_off').hide()
-                    $('.day_normal').show()
+                    \$('.day_off').hide()
+                    \$('.day_normal').show()
                    }
                     
                 }

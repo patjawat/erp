@@ -3,6 +3,12 @@
 namespace app\modules\hr\models;
 
 use Yii;
+use yii\db\Expression;
+use app\models\Categorise;
+use Yiisoft\Arrays\ArrayHelper;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\hr\models\Development;
 
 /**
  * This is the model class for table "development_detail".
@@ -40,10 +46,10 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
     {
         return [
             [['qty', 'price', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
-            [['development_id', 'name', 'emp_id'], 'required'],
+            [['development_id', 'name'], 'required'],
             [['development_id', 'qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['price'], 'number'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at','category_id'], 'safe'],
             [['name', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -60,6 +66,7 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
             'emp_id' => 'รหัสบุคลากร',
             'qty' => 'จํานวน',
             'price' => 'ราคา',
+            'category_id' => 'รหัสหมวดหมู่ของ name',
             'data_json' => 'ยานพาหนะ',
             'created_at' => 'วันที่สร้าง',
             'updated_at' => 'วันที่แก้ไข',
@@ -70,9 +77,37 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
         ];
     }
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+    
+
     public function getDevelopment()
     {
         return $this->hasOne(Development::class, ['id' => 'development_id']);
     }
 
+    public function getExpenseType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'expense_type']);
+    }
+    
+    public function listExpenseType()
+    {
+        $data = Categorise::find()->where(['name' => 'expense_type'])->all();
+        return \yii\helpers\ArrayHelper::map($data, 'code', 'title');
+    }
 }

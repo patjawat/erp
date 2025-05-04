@@ -15,8 +15,9 @@ class m250418_053735_create_development_detail_table extends Migration
         $this->createTable('{{%development_detail}}', [
             'id' => $this->primaryKey(),
             'development_id' => $this->integer()->notNull()->comment('ID ของการพัฒนา'),
+            'category_id' => $this->string()->comment('รหัสหมวดหมู่ของ name'),
             'name' => $this->string()->notNull()->comment('ชื่อของการเก็บข้อมูล'),
-            'emp_id' => $this->string()->notNull()->notNull()->comment('รหัสบุคลากร'),
+            'emp_id' => $this->string()->comment('รหัสบุคลากร'),
             'qty' => $this->integer()->comment('จํานวน'),
             'price' => $this->double()->comment('ราคา'),
             'data_json' => $this->json()->comment('ยานพาหนะ'),

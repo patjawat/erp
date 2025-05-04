@@ -346,13 +346,13 @@ $("body").on("click", ".delete-item", async function (e) {
         dataType: "json",
         success: function (response) {
           if (response.status == "success") {
-            // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            $.pjax.reload({
-              container: response.container,
-              history: false,
-              url: response.url,
-            });
-            success("ดำเนินการลบสำเร็จ!.");
+              $.pjax.reload({
+                container: response.container,
+                history: false,
+                url: response.url,
+              });
+
+              success("ดำเนินการลบสำเร็จ!.");
             if (response.close) {
               $("#main-modal").modal("hide");
             }
@@ -444,6 +444,10 @@ $(document).on('click', '.cancel-order', function(e) {
                       location.reload(); // Reload the page to reflect changes
                   });
               },
+/*************  ✨ Windsurf Command ⭐  *************/
+        /**
+         * If the request fails, show an error message in a modal.
+/*******  eff9be3f-c24a-493d-816a-4f934d6757f2  *******/
               error: function() {
                   Swal.fire(
                       'เกิดข้อผิดพลาด!',
