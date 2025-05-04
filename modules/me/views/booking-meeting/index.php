@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </h6>
             </div>
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <div class="table-responsive">
+            <div class="table-responsive pb-5">
                 <table class="table table-striped table-hover">
                 <thead class="table-light">
                         <tr>
@@ -60,11 +60,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?=$item->getUserReq()['avatar']?></td>
                             <td><?=$item->room->title?></td>
                             <td><?=$item->viewStatus()['view']?></td>
-                            <td class="text-center" style="width: 180px;">
-                                <div class="d-flex justify-content-center gap-3">
-                                    <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/booking-meeting/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
-                                    <?=Html::a('<i class="fa-solid fa-pen-to-square fa-2x text-warning"></i>', ['/me/booking-meeting/update', 'id' => $item->id,'title' => 'แก้ไข'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']])?>
-                                    <?=Html::a('<i class="fa-regular fa-trash-can fa-2x text-danger"></i>', ['/me/booking-meeting/delete', 'id' => $item->id], ['class' => 'delete-item'])?>
+                            <td class="fw-light text-center">
+                                <div class="btn-group">
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/me/booking-meeting/update', 'id' => $item->id,'title' => 'แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
+                                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                        <i class="bi bi-caret-down-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><?php echo Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงข้อมูล',['/me/booking-meeting/view','id' => $item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                                        </li>
+                                        <li><?php echo Html::a('<i class="fa-solid fa-circle-xmark me-1"></i> ยกเลิก',['/me/booking-meeting/cancel','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?>
+                                        </li>
+                                    </ul>
                                 </div>
                             </td>
                         </tr>

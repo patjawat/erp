@@ -25,6 +25,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <style>
+.fc-daygrid-event-harness{
+    width: 220px !important;
+}
+.fc-daygrid-event-harness{
+    margin-bottom: 4px;
+}
     /* ปรับสีพื้นหลังของ header */
 .fc .fc-toolbar-title {
     color: #007bff; /* สีฟ้า */
@@ -136,20 +142,13 @@ $js = <<<JS
                         const status = arg.event.extendedProps.status || '';
                         const viewGoType = arg.event.extendedProps.viewGoType || '';
                         const showDateRange = arg.event.extendedProps.showDateRange || '';
+                        let cotnentHtml = arg.event.extendedProps.calendar_content;
 
                         // สร้าง custom DOM element
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `
-                        <div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">
-                           <div class="avatar-detail">
-                                    <h6 class="mb-0 fs-13">\${viewGoType} : \${title}</h6>
-                                    <p class="text-muted mb-0 fs-13">\${showDateRange} เวลา \${dateTime}</p>
-                                    <span class="mt-3">\${status}</span>
-                                </div>
-                                </div>
-                        `;
+                        container.innerHTML = cotnentHtml;
 
 
                         return { domNodes: [container] };

@@ -82,12 +82,15 @@ class ImportMeetingController extends Controller
             $model->time_end = $item['TIME_END'];
             $model->urgent = 'ปกติ';
             $model->status = 'Pass';
+            $model->data_json = [
+                'old_data' => $item  
+            ];
             if($model->save(false)){
                 $percentage = (($num++) / $total) * 100;
                 echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
             }
         } catch (\Throwable $th) {
-            echo 'เกิดข้อผิดพลาด : ' .$item['ID']."%\n";
+            echo 'เกิดข้อผิดพลาด : ' . $item['ID'] . " - " . $th->getMessage() . "\n";
         }
         }
         return ExitCode::OK;

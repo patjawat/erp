@@ -54,12 +54,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-center gap-2 mt-3">
+<?php if($model->status == 'Pending'):?>
     <button type="button" class="btn btn-primary confirm-meeting  rounded-pill" data-id="<?=$model->id?>" data-status="Pass" data-text="อนุมัติการจอง" data-icon="success">
     <i class="fa-regular fa-circle-check"></i> อนุมัติ
     </button>
+    <?php endif;?>
 
   <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?=$model->id?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
-  <i class="fa-solid fa-xmark"></i> ปฏิเสธ
+  <i class="fa-solid fa-xmark"></i> ยกเลิก
   </button>
 
   <button type="button" class="btn btn-secondary  rounded-pill" data-bs-dismiss="modal"><i

@@ -2,6 +2,7 @@
 
 namespace app\modules\me\controllers;
 use Yii;
+use DateTime;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
@@ -11,6 +12,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use mdm\autonumber\AutoNumber;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
@@ -54,8 +56,29 @@ class BookingMeetingController extends \yii\web\Controller
     public function actionIndex()
     { 
         $me = UserHelper::GetEmployee();
-        $searchModel = new MeetingSearch();
+
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $searchModel = new MeetingSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' => ['Pending']
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+        try {
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        // $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        // $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
+           
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
         $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         return $this->render('index',[
             'searchModel' => $searchModel,
@@ -195,6 +218,21 @@ public function actionConfirm()
         $model = BookingDetail::findOne($id);
         $model->delete();
         return $this->redirect(['view', 'id' => $model->booking_id]);
+    }
+
+
+    public function actionCancel($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = $this->findModel($id);
+            $model->status = 'Cancel';
+            if($model->save(false)){
+                return [
+                    'status' => 'success'
+                ];
+            }
+            
+       
     }
 
     public function actionCancelOrder($id)

@@ -30,37 +30,21 @@ use yii\helpers\Html;
                 </td>
                 <td><?= $item->getUserReq()['avatar'] ?></td>
                 <td><?= $item->room->title ?></td>
-                <td><?= $item->viewStatus()['view'] ?></td>
+                <td><?= $item->viewStatus()['view'] ?>
+            </td>
 
                 <td class="fw-light text-center">
                             <div class="btn-group">
-                                <?php echo Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'btn btn-light w-100 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
+                            <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', [$url . 'view', 'id' => $item->id], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                 data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                 <i class="bi bi-caret-down-fill"></i>
                             </button>
                             <ul class="dropdown-menu">
-                                    <li><?= Html::a('<i class="fa-solid fa-user-tag me-1"></i> อนุมัติ', [$url . 'view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
                                     <li><?php echo Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?></li>
                                 </ul>
                             </div>
                         </td>
-
-                <td class="text-center">
-                    <?= Html::a('<i class="fa-solid fa-eye fa-2x"></i>', [$url . 'view', 'id' => $item->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                    <?php if ($item->status == 'Pending'): ?>
-                    <div class="action-icon approve d-inline-flex confirm-meeting" data-id="<?= $item->id ?>"
-                        data-status="Pass" data-text="อนุมัติการจอง">
-                        <i class="fa-solid fa-circle-check fa-2x"></i>
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($item->status == 'Pending'): ?>
-                    <div class="action-icon reject d-inline-flex confirm-meeting" data-id="<?= $item->id ?>"
-                        data-status="Cancel" data-text="ยกเลิกการจอง">
-                        <i class="fa-solid fa-circle-xmark fa-2x"></i>
-                    </div>
-                    <?php endif; ?>
-                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>

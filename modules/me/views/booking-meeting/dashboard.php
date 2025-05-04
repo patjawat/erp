@@ -48,7 +48,7 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 <?php $this->endBlock(); ?>
 
     <div class="container-fluid">
-        <?=$this->render('@app/modules/booking/views/meeting/summary', ['searchModel' => $searchModel])?>
+        <?=$this->render('@app/modules/booking/views/meeting/summary', ['model' => $searchModel])?>
         
         <!-- <p class="text-muted">ยินดีต้อนรับกลับมา, คุณสามารถจัดการการจองห้องประชุมได้ที่นี่</p> -->
         <!-- Upcoming Bookings and Available Rooms -->
@@ -65,14 +65,13 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
                                 <h6 class="fw-semibold mb-0"><?=$item->room->title?></h6>
                                 <?=$item->viewStatus()['view'];?>
                             </div>
+                            <i class="fa-solid fa-circle-info text-primary"></i>  <?=$item->title;?>
                             <div class="d-flex align-items-center text-muted">
                                 <i class="bi bi-calendar me-2"></i>
-                                <span><?=$item->viewMeetingDate()?></span>
+                                <span><?=$item->viewMeetingDate()?>  <i class="bi bi-clock me-2"></i>
+                                <span><?=$item->viewMeetingTime()?></span></span>
                             </div>
-                            <div class="d-flex align-items-center text-muted mt-1">
-                                <i class="bi bi-clock me-2"></i>
-                                <span><?=$item->viewMeetingTime()?></span>
-                            </div>
+
                         </div>
                     <?php endforeach;?>
                     </div>

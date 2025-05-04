@@ -187,6 +187,7 @@ class MeetingController extends Controller
 
         $query = Meeting::find()
             ->andWhere(['between', 'date_start', $start, $end])
+            ->andWhere(['or', ['status' => 'Pending'], ['status' => 'Pass']])
             ->orderBy(['id' => SORT_DESC]);
 
         $bookings = $query->all();
@@ -204,14 +205,14 @@ class MeetingController extends Controller
                     'title' => $item->title,
                     'dateTime' => $item->viewMeetingTime(),
                     'status' => $item->viewStatus()['view'],
+                    'calendar_content' => $this->renderAjax('calendar_content', ['model' => $item, 'action' => false]),
                     'view' => $this->renderAjax('view', ['model' => $item, 'action' => false]),
                     'description' => 'คำอธิบาย',
                 ],
-                'className' => 'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
+                'className' => 'text-truncate px-2 border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
                 'description' => 'description for All Day Event',
                 'textColor' => 'black',
                 'backgroundColor' => '#3aa3e3',
-                'url' => Url::to(['/event/view', 'id' => $item->id]),
             ];
         }
 
