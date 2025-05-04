@@ -449,7 +449,7 @@ class Vehicle extends \yii\db\ActiveRecord
          //  ภาพทีมคณะกรรมการ
          public function StackDriver()
          {
-             // try {
+             try {
              $data = '';
              $data .= '<div class="avatar-stack">';
              foreach (VehicleDetail::find()->where(['vehicle_id' => $this->id])->all() as $key => $item) {
@@ -463,8 +463,8 @@ class Vehicle extends \yii\db\ActiveRecord
              }
              $data .= '</div>';
              return $data;
-             // } catch (\Throwable $th) {
-             // }
+             } catch (\Throwable $th) {
+             }
          }
 
     public function listDocument()
