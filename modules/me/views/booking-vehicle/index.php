@@ -97,10 +97,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <i class="bi bi-caret-down-fill"></i>
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><?php echo Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงข้อมูล',['/me/booking-vehicle/view','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
-                                        </li>
-                                        <li><?php echo Html::a('<i class="fa-regular fa-trash-can me-1"></i> ลบข้อมูล',['/me/booking-vehicle/delete','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'dropdown-item delete-item','data' => ['size' => 'modal-lg']])?>
-                                        </li>
+                                        <li><?php echo Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงข้อมูล',['/me/booking-vehicle/view','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
+                                        <li><?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',['/me/booking-vehicle/print','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
+                                        <li><?php echo Html::a('<i class="fa-regular fa-trash-can me-1"></i> ลบข้อมูล',['/me/booking-vehicle/delete','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'dropdown-item delete-item','data' => ['size' => 'modal-lg']])?></li>
                                     </ul>
                                 </div>
                             </td>

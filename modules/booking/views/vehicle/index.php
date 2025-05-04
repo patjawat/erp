@@ -84,6 +84,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </button>
                             <ul class="dropdown-menu">
                                     <li><?php echo Html::a('<i class="fa-solid fa-user-tag me-1"></i> จัดสรร', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
+                                    <li><?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',['/me/booking-vehicle/print','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
                                     <li><?php echo Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?></li>
                                 </ul>
                             </div>

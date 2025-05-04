@@ -3,6 +3,7 @@
 namespace app\modules\me\controllers;
 
 use Yii;
+use DateTime;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -12,6 +13,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSearch;
+use app\modules\hr\models\DevelopmentDetailSearch;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -43,8 +45,33 @@ class DevelopmentController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new DevelopmentSearch();
+        $me = UserHelper::GetEmployee();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $searchModel = new DevelopmentSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+        ]);
+        // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('developmentDetail');
+        $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $me->id]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+        ]);
+        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        } catch (\Throwable $th) {
+        }
+        $dataProvider->query->groupBy('development_detail.id');
 
         return $this->render('index', [
             'searchModel' => $searchModel,

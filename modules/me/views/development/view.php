@@ -35,11 +35,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="card h-100 bg-light">
                         <div class="card-body text-center">
                             <div class="avatar-circle mb-3 mx-auto">
-                                <i class="bi bi-person-fill fs-1"></i>
+                                <?=Html::img($model->createdByEmp->showAvatar(),['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload','data' => ['sizes' => 'auto','src' => $model->createdByEmp->showAvatar()]])//$model->createdByEmp->showAvatar()?>
                             </div>
-                            <h5><?= $model->emp->fullname ?? 'ไม่ระบุ' ?></h5>
-                            <p class="text-muted mb-1"><?= $model->emp->position->name ?? 'ไม่ระบุตำแหน่ง' ?></p>
-                            <p class="text-muted"><?= $model->emp->department->name ?? 'ไม่ระบุแผนก' ?></p>
+                            <h5><?= $model->createdByEmp->fullname ?? 'ไม่ระบุ' ?></h5>
+                            <p class="text-muted mb-1"><?= $model->createdByEmp->position->name ?? 'ไม่ระบุตำแหน่ง' ?></p>
+                            <p class="text-muted"><?= $model->createdByEmp->department->name ?? 'ไม่ระบุแผนก' ?></p>
+                            <p>ผู้บันทึกข้อมูล <?=$model->viewCreated()?></p>
                         </div>
                     </div>
                 </div>

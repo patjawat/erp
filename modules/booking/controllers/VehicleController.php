@@ -10,6 +10,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\SiteHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
@@ -259,6 +260,7 @@ class VehicleController extends Controller
 
     public function actionWork()
     {
+        $me = UserHelper::GetEmployee();
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
         $searchModel = new VehicleDetailSearch([
@@ -270,6 +272,7 @@ class VehicleController extends Controller
       
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('vehicle');
+        $dataProvider->query->andFilterWhere(['vehicle_detail.driver_id' => $me->id]);
         $dataProvider->query->andFilterWhere(['vehicle_detail.driver_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
         // $dataProvider->query->joinWith('vehicle');
@@ -457,6 +460,7 @@ class VehicleController extends Controller
                         $bookingDetail->license_plate = $detail['car'];
                         $bookingDetail->status = 'Pass';
                         $bookingDetail->save(false);
+                        $this->sendMessage($model);
                         
                     }
                     
@@ -493,6 +497,22 @@ class VehicleController extends Controller
         }
     }
 
+    //ส่งข้อความหาพนักงานขับรถที่จัดสรร
+    public function sendMessage($model)
+    {
+        $message = 'ภาระกิจไป'.($model->locationOrg?->title ?? '-').($model->showDateRange().' '.$model->viewTime()) ."\n ผู้ขอ".$model->userRequest()['fullname'];
+        $data = [];
+        if (isset($this->listMembers) && is_array($this->listMembers)) {
+            foreach ($this->listMembers as $item) {
+                if (isset($item->driver, $item->driver->employee, $item->driver->employee->user, $item->driver->employee->user->line_id)) {
+                    $lineId = $item->driver->employee->user->line_id;
+                    LineMsg::sendMsg($lineId, $message);
+                }
+            }
+        }
+        return $data;
+    }
+    
 
     //ส่งการอนุมัติไปยังผู้อำนวยการและแจ้งเตือผู้ขอใช้ยานพาหนะ
     private function sendApprove($model)

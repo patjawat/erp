@@ -22,8 +22,7 @@ $title = '<i class="fa-solid fa-person-walking-luggage"></i> ทะเบีย�
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                         <th class="text-center fw-semibold" style="width:30px">ปีงบประมาณ</th>
 
-                        <th scope="col">ประเภท/เรื่อง</th>
-                        <th scope="col">วัน/สถานที่</th>
+                        <th scope="col">เรื่อง/วัน/สถานที่</th>
                         <th scope="col">คณะเดินทาง</th>
                         <!-- <th class="fw-semibold text-center">ดำเนินการ</th> -->
                     </tr>
@@ -37,16 +36,8 @@ $title = '<i class="fa-solid fa-person-walking-luggage"></i> ทะเบีย�
                         <td><?=$item->development->thai_year;?></td>
                         <td>
                             <div>
-                                <p class="text-muted mb-0 fs-13"><?=$item->development->data_json['development_type_name'] ?? '-'?>
-                                </p>
                                 <p class="fw-semibold mb-0"><?=$item->development->topic?></p>
-                            </div>
-
-                        </td>
-                        <td>
-                            <div>
-                                <p class="text-muted mb-0 fs-13"><?=$item->development->showDateRange()?></p>
-                                <p class="fw-semibold mb-0"><?=$item->development->data_json['location'] ?? '-'?></p>
+                                สถานที่ <?=$item->development->data_json['location'] ?? '-'?>  <?=$item->development->showDateRange()?>
                             </div>
                         </td>
                         <td>  <?=$item->development->StackMember()?></td>

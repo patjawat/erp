@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Html;
+use app\components\UserHelper;
 /** @var yii\web\View $this */
 $this->title = 'อบรม/ประชุม/ดูงาน';
 ?>
@@ -14,7 +15,6 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('menu')?>
 <?php $this->endBlock(); ?>
-
 
 <div class="card">
     <div class="card-body">
@@ -31,9 +31,8 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                         <th class="text-center fw-semibold" style="width:30px">ปีงบประมาณ</th>
 
-                        <th scope="col">ประเภท/เรื่อง</th>
-                        <th scope="col">วัน/สถานที่</th>
-                        <th scope="col">คณะเดินทาง</th>
+                        <th class="fw-semibold" scope="col">เรื่อง/วัน/สถานที่</th>
+                        <th class="fw-semibold"  scope="col">คณะเดินทาง</th>
                         <th class="fw-semibold text-center">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -46,18 +45,11 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                         <td><?=$item->thai_year;?></td>
                         <td>
                             <div>
-                                <p class="text-muted mb-0 fs-13"><?=$item->data_json['development_type_name'] ?? '-'?>
-                                </p>
                                 <p class="fw-semibold mb-0"><?=$item->topic?></p>
+                                สถานที่ <?=$item->data_json['location'] ?? '-'?>  <?=$item->showDateRange()?>
                             </div>
+                        </td>
 
-                        </td>
-                        <td>
-                            <div>
-                                <p class="text-muted mb-0 fs-13"><?=$item->showDateRange()?></p>
-                                <p class="fw-semibold mb-0"><?=$item->data_json['location'] ?? '-'?></p>
-                            </div>
-                        </td>
                         <td>  <?=$item->StackMember()?></td>
                         <td style="width:120px">
                             <div class="btn-group">

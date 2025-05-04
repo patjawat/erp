@@ -4,11 +4,15 @@ namespace app\modules\hr\models;
 
 use Yii;
 use yii\helpers\Html;
+use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\usermanager\models\User;
 use app\modules\hr\models\DevelopmentDetail;
 
 /**
@@ -59,7 +63,7 @@ class Development extends \yii\db\ActiveRecord
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
             [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year'], 'required'],
-            [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -96,7 +100,53 @@ class Development extends \yii\db\ActiveRecord
         ];
     }
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+    
+
+    public function getDevelopmentDetail()
+    {
+        return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id']);
+    }
+
+    public function getCreatedBy()
+    {
+        return $this->hasOne(User::class, ['id' => 'created_by']);
+    }
+
+    public function getCreatedByEmp()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+    
+       // แสดงวันที่สร้าง
+       public function viewCreated()
+       {
+           // return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
+           return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+       }
+    
+
     public function getLeader()
+    /**
+     * Gets query for [[Leader]].
+     *
+     * @return yii\db\ActiveQuery
+     */
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
@@ -116,27 +166,12 @@ class Development extends \yii\db\ActiveRecord
          $data .= '<div class="avatar-stack">';
          foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
              $emp = Employees::findOne(['id' => $item->emp_id]);
-             $data .= Html::a(
-                 Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                $data .= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
                      'data' => [
                          'expand' => '-20',
                          'sizes' => 'auto',
                          'src' => $emp->showAvatar()
-                     ]]),
-                 ['/me/development-detail/update-member', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
-                 [
-                     'class' => 'open-modal',
-                     'data' => [
-                         'size' => 'modal-md',
-                         'bs-trigger' => 'hover focus',
-                         'bs-toggle' => 'popover',
-                         'bs-placement' => 'top',
-                         'bs-title' => 'คณะเดินทาง',
-                         'bs-html' => 'true',
-                         'bs-content' => $emp->fullname . '<br>' . $emp->positionName()
-                     ]
-                 ]
-             );
+                     ]]);
          }
          $data .= '</div>';
          return $data;

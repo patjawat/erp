@@ -18,7 +18,7 @@ class DevelopmentSearch extends Development
     {
         return [
             [['id', 'document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['development_type_id', 'topic', 'description', 'location', 'location_org', 'province_name', 'status', 'vehicle_type_id', 'claim_type', 'time_slot', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['thai_year','development_type_id', 'topic', 'description', 'location', 'location_org', 'province_name', 'status', 'vehicle_type_id', 'claim_type', 'time_slot', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
         ];
     }
 
@@ -61,8 +61,6 @@ class DevelopmentSearch extends Development
         $query->andFilterWhere([
             'id' => $this->id,
             'document_id' => $this->document_id,
-            'date_start' => $this->date_start,
-            'date_end' => $this->date_end,
             'assigned_to' => $this->assigned_to,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
