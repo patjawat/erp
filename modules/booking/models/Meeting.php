@@ -208,7 +208,6 @@ class Meeting extends \yii\db\ActiveRecord
 
     public function getStatus($status)
     {
-    //   return AppHelper::viewStatus($this->status);
       $title = '';
       $color = '';
       $view = '';
@@ -218,7 +217,7 @@ class Meeting extends \yii\db\ActiveRecord
       return [
           'total' => $total,
           'count' => $count,
-          'percent' => $count / $total * 100,
+          'percent' => $total > 0 ? ($count / $total * 100) : 0,
           'title' => $data['title'],
           'color' => $data['color'],
           'view' => $data['view']
