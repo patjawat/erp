@@ -34,9 +34,3 @@ $me = UserHelper::GetEmployee();
         </div>
     </div>
 </div>
-
-<?php
-                  echo "<pre>";
-                  print_r($me->pdpa);
-                  echo "</pre>";
-                  ?>
