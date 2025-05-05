@@ -10,10 +10,12 @@ use yii\web\Controller;
 use app\models\LoginForm;
 use app\models\SignupForm;
 use yii\filters\VerbFilter;
+use app\components\UserHelper;
 use yii\filters\AccessControl;
 use app\modules\hr\models\Employees;
 use app\models\PasswordResetRequestForm;
 use app\modules\usermanager\models\User;
+use app\modules\hr\models\EmployeeDetail;
 
 class SiteController extends Controller
 {
@@ -163,20 +165,47 @@ class SiteController extends Controller
             return $this->asJson(['validation' => $result]);
         }
 
-        return $this->render('signup', [
-            'model' => $model,
-        ]);
+        if(!Yii::$app->session->get('accept_condition')){
+            return $this->redirect(['site/conditions-register']);
+        }else{
+            return $this->render('signup', [
+                'model' => $model,
+            ]);
+        }
     }
 
     public function actionConditionsRegister()
     {
-        // $this->layout = 'blank';
-        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $this->layout = 'blank';
+        // \Yii::$app->response->format = Response::FORMAT_JSON;
+        return $this->render('conditions_register');
+        // return [
+        //     'title' => 'ข้อกำหนดและเงื่อนไข',
+        //     'content' => $this->renderAjax('conditions_register'),
+        // ];
+    }
 
-        return [
-            'title' => 'ข้อกำหนดและเงื่อนไข',
-            'content' => $this->renderAjax('conditions_register'),
-        ];
+    public function actionAcceptCondition()
+    {
+        Yii::$app->session->set('accept_condition', [
+            'date' => date('Y-m-d H:i:s'),
+            'ip' => $_SERVER['REMOTE_ADDR'],
+        ]);
+
+        if (!Yii::$app->user->isGuest) {
+            $me = UserHelper::GetEmployee();
+            $createPdpa = new EmployeeDetail();
+            $createPdpa->emp_id =  $me->id;
+            $createPdpa->name = 'pdpa';
+            $createPdpa->data_json = Yii::$app->session->get('accept_condition');
+            $createPdpa->save(false);
+            return $this->redirect(['/me']);
+        }else{
+            return $this->redirect(['/site/sign-up']);
+        }
+        
+        // Yii::$app->session->remove('accept_condition');
+        
     }
 
     // public function actionSuccess(){

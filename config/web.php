@@ -282,6 +282,7 @@ $config = [
             'site/conditions-register',
             'site/forgot-password',
             'site/reset-password',
+            'site/accept-condition',
             'datecontrol/parse/convert',
             'depdrop/*',
             'auth/*',

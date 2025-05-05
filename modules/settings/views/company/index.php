@@ -237,10 +237,13 @@ $resultsJs = <<< JS
 
             <div class="col-8">
                 <?= $form->field($model, 'data_json[address]')->textArea(['style' => 'height:100px'])->label('ที่อยู่') ?>
-                <?= $form->field($model, 'data_json[conditions]')->widget(Summernote::class, [
-    'useKrajeePresets' => true,
-    // other widget settings
-])->label('เงื่อนไขการให้บริการ') ?>
+                <?= $form->field($model, 'data_json[pdpa_url]')->textInput()->label('เงื่อนไขการให้บริการ') ?>
+                <?= $form->field($model, 'data_json[active_pdpa]')->checkbox([
+                    'custom' => true, 
+                    'switch' => true,
+                    'checked' => (isset($model->data_json['active_pdpa']) && $model->data_json['active_pdpa'] == "1" ? true : false)
+                ])->label('เปิดใช้เงื่อนไขการให้บริการ');?>
+
             </div>
             
         </div>

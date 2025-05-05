@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between align-items-center mb-4">
                   <div>
                     <h3>กรุณายืนยันตัวตน</h3>
-                    <p>ยังไม่มีบัญชี ? <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน',['/site/sign-up'],['class' => 'text-primary'])?></p>
+                    <p>ยังไม่มีบัญชี ? <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน',['/site/conditions-register'],['class' => 'text-primary'])?></p>
                   </div>
                   <div>
                   <?php echo Html::img($site->logo(),['class' => 'object-fit-cover rounded mt-0','style' =>'margin-top: 25px;max-width: 110px;max-height: 110px;    width: 100%;height: 100%;']) ?>

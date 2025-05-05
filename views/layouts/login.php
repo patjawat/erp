@@ -12,14 +12,10 @@ use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
 use yii\bootstrap5\Breadcrumbs;
 use app\assets\BootstapIconAsset;
-use dominus77\sweetalert2\assets\SweetAlert2Asset;
 
 AppAsset::register($this);
 BootstapIconAsset::register($this);
 
-
-
-SweetAlert2Asset::register($this);
 $site = Categorise::findOne(['name' => 'site']);
 $color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';

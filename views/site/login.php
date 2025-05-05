@@ -1,8 +1,8 @@
 <?php
-use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
 use yii\web\View;
+use yii\bootstrap5\Html;
 use app\models\Categorise;
+use yii\bootstrap5\ActiveForm;
 $site = Categorise::findOne(['name' => 'site']);
 $color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';

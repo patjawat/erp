@@ -2,6 +2,9 @@
 
 namespace app\modules\me;
 
+use app\components\SiteHelper;
+use app\components\UserHelper;
+
 /**
  * me module definition class
  */
@@ -18,7 +21,11 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
-
-        // custom initialization code goes here
+        $me = UserHelper::GetEmployee();
+        $info = SiteHelper::getInfo();
+        if(!$me->pdpa && $info['active_pdpa'] == 1){
+            \Yii::$app->response->redirect(['/site/conditions-register'])->send();
+            return;
+        }
     }
 }

@@ -2,10 +2,11 @@
 
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\components\ApproveHelper;
 $totalNotification = ApproveHelper::Info()['total'];
-
+$me = UserHelper::GetEmployee();
 ?>
 
 
@@ -13,10 +14,10 @@ $totalNotification = ApproveHelper::Info()['total'];
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <div class="welcome-content">
-                <h6>สวัสดี, <?=UserHelper::GetEmployee()->fullname?></h6>
+                <h6>สวัสดี, <?=$me->fullname?></h6>
               </div>
               <div class="welcome-img">
-                <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'avatar border border-white'])?>
+                <?=Html::img($me->ShowAvatar(), ['class' => 'avatar border border-white'])?>
               </div>
             </div>
             <div class="welcome-btn d-flex justify-content-between align-items-center align-self-center">
@@ -30,6 +31,14 @@ $totalNotification = ApproveHelper::Info()['total'];
                   คุณมี <span class="badge rounded-pill text-bg-danger"><?php echo $totalNotification?></span> กิจกรรมที่ต้องทำ
                 </p>
                   <?php endif;?>
+                  
         </div>
     </div>
 </div>
+
+<?php
+$info = SiteHelper::getInfo();
+                  echo "<pre>";
+                  print_r($info['active_pdpa']);
+                  echo "</pre>";
+                  ?>

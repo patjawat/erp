@@ -2,10 +2,11 @@
 
 namespace app\models;
 
-use app\modules\hr\models\Employees;
 use Yii;
 use yii\base\Model;
+use app\modules\hr\models\Employees;
 use app\modules\usermanager\models\User;
+use app\modules\hr\models\EmployeeDetail;
 
 /**
  * Signup form
@@ -106,6 +107,13 @@ class SignupForm extends Model {
                 // $emp->phone = $this->phone;
                 $emp->email = $this->email;
                 $emp->save(false);
+
+                $createPdpa = new EmployeeDetail();
+                $createPdpa->emp_id =  $emp->id;
+                $createPdpa->name = 'pdpa';
+                $createPdpa->data_json = Yii::$app->session->get('accept_condition');
+                $createPdpa->save(false);
+                
                 
                 $user->assignment();
                 $transaction->commit();

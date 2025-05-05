@@ -31,6 +31,11 @@ input::placeholder {
 
     <div id="signup-container" class="row justify-content-center">
             <h3 class=""><?=$this->title?></h3>
+
+            <?php
+            print_r(Yii::$app->session->get('accept_condition'));
+            
+            ?>
             <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
             <div class="row justify-content-center">
                 <div class="col-lg-12 col-md-12 col-sm-12">
@@ -41,10 +46,7 @@ input::placeholder {
                         <div class="d-flex justify-content-between">
 
                             <div class="custom-control custom-checkbox d-inline-block mt-2 pt-1">
-                                <input type="checkbox" class="custom-control-input" id="customCheck1" disabled="true">
-                                <label class="custom-control-label for=" customCheck1">ฉันยอมรับ |
-                                    <?=Html::a('ข้อกำหนดและเงื่อนไข',['/site/conditions-register'],['class' => 'open-modal']);?>
-                                </label>
+                                    <?=Html::a('ข้อกำหนดและเงื่อนไข',['/site/conditions-register']);?>
                             </div>
 
                             <div class="sign-info mt-2">
@@ -87,47 +89,66 @@ $js = <<< JS
 //     $('#btn-regster,#customCheck1').prop('disabled', true)
 // }); 
 
-
 $('#blank-form').on('beforeSubmit', function () {
 
-    var ischecked= $('#customCheck1').is(':checked');
-    console.log(ischecked);
-    if(!ischecked){
-        alert('คุณไม่ได้ยอมรับข้อกำหนดและเงื่อนไข')
-        return false;
-    }else{
-
     var yiiform = $(this);
-    $('#btn-regster').hide();
-    $('#btn-loading').show();
-    $.ajax({
-            type: yiiform.attr('method'),
-            url: yiiform.attr('action'),
-            data: yiiform.serializeArray(),
-        }
-    )
-        .done(function(data) {
-            if(data.success) {
-                // data is saved
-                $('#success-container').html(data.content);
-                $('#signup-container').hide();
-                success()
-            } else if (data.validation) {
-                // server validation failed
-                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
-                $('#btn-regster').show();
-                $('#btn-loading').hide();
-            } else {
-                // incorrect server response
-            }
-        })
-        .fail(function () {
-            // request failed
-        })
 
-    }
+    Swal.fire({
+        title: 'ยืนยันการลงทะเบียน?',
+        text: "คุณต้องการลงทะเบียนใช่หรือไม่!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ลงทะเบียน!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $('#btn-regster').hide();
+            $('#btn-loading').show();
+            $.ajax({
+                    type: yiiform.attr('method'),
+                    url: yiiform.attr('action'),
+                    data: yiiform.serializeArray(),
+                }
+            )
+                .done(function(data) {
+                    if(data.success) {
+                        // data is saved
+                        $('#success-container').html(data.content);
+                        $('#signup-container').hide();
+                        Swal.fire(
+                            'สำเร็จ!',
+                            'การลงทะเบียนเสร็จสมบูรณ์.',
+                            'success'
+                        );
+                    } else if (data.validation) {
+                        // server validation failed
+                        yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
+                        $('#btn-regster').show();
+                        $('#btn-loading').hide();
+                    } else {
+                        // incorrect server response
+                        Swal.fire(
+                            'ข้อผิดพลาด!',
+                            'เกิดข้อผิดพลาดในการลงทะเบียน.',
+                            'error'
+                        );
+                    }
+                })
+                .fail(function () {
+                    // request failed
+                    Swal.fire(
+                        'ข้อผิดพลาด!',
+                        'ไม่สามารถส่งคำขอลงทะเบียนได้.',
+                        'error'
+                    );
+                });
+        }
+    });
+
     return false; // prevent default form submission
-})
+});
 
 
 

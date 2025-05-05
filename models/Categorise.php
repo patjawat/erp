@@ -78,9 +78,9 @@ class Categorise extends \yii\db\ActiveRecord
         // }
     }
 
-    public function Upload($ref, $name)
+    public function Upload($name)
     {
-        return FileManagerHelper::FileUpload($ref, $name);
+        return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
 

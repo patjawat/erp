@@ -48,6 +48,8 @@ class SiteHelper extends Component
                         'line_liff_register' => isset($model->data_json['line_liff_register']) ? $model->data_json['line_liff_register'] : null,
                         'line_liff_user_connect' => isset($model->data_json['line_liff_user_connect']) ? $model->data_json['line_liff_user_connect'] : null,
                         'line_qrcode' => isset($model->data_json['line_qrcode']) ? $model->data_json['line_qrcode'] : null,
+                        'pdpa_url' => isset($model->data_json['pdpa_url']) ? $model->data_json['pdpa_url'] : null,
+                        'active_pdpa' => isset($model->data_json['active_pdpa']) ? $model->data_json['active_pdpa'] : 0,
                 ];
 
 

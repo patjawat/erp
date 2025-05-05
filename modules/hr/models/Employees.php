@@ -239,6 +239,7 @@ class Employees extends Yii\db\ActiveRecord
         parent::afterFind();
     }
 
+
     public function Upload($ref, $name)
     {
         return FileManagerHelper::FileUpload($ref, $name);
@@ -951,6 +952,10 @@ class Employees extends Yii\db\ActiveRecord
         return $this->hasOne(District::class, ['id' => 'district']);
     }
 
+    public function getPdpa()
+    {
+        return $this->hasOne(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'pdpa']);
+    }
     // แสดงสถานะ
     //      public function statusName()
     //      {

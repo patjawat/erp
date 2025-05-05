@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\helpdesk\models\Helpdesk;
@@ -18,7 +19,8 @@ class DefaultController extends Controller
 {
     public function actionIndex()
     {
-        $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        // $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        $model = UserHelper::GetEmployee();
 
         $searchModel = new LeaveSearch([
             'thai_year' => AppHelper::YearBudget(),
