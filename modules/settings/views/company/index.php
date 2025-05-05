@@ -242,7 +242,7 @@ $resultsJs = <<< JS
                     'custom' => true, 
                     'switch' => true,
                     'checked' => (isset($model->data_json['active_pdpa']) && $model->data_json['active_pdpa'] == "1" ? true : false)
-                ])->label('เปิดใช้เงื่อนไขการให้บริการ');?>
+                ])->label('เปิดใช้งาน PDPA');?>
 
             </div>
             
