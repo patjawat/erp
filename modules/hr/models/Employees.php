@@ -956,6 +956,17 @@ class Employees extends Yii\db\ActiveRecord
     {
         return $this->hasOne(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'pdpa']);
     }
+
+    public function viewPdpaData()
+    {
+        try {
+            $pdpaDate = $this->pdpa?->data_json['date'];
+            return Yii::$app->thaiDate->toThaiDate($pdpaDate, true, false);
+        } catch (\Throwable $th) {
+            return '-';
+        }
+
+    }
     // แสดงสถานะ
     //      public function statusName()
     //      {

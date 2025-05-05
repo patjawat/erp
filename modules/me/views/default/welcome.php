@@ -2,7 +2,6 @@
 
 use yii\helpers\Url;
 use yii\helpers\Html;
-use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\components\ApproveHelper;
 $totalNotification = ApproveHelper::Info()['total'];
@@ -37,8 +36,7 @@ $me = UserHelper::GetEmployee();
 </div>
 
 <?php
-$info = SiteHelper::getInfo();
                   echo "<pre>";
-                  print_r($info['active_pdpa']);
+                  print_r($me->pdpa);
                   echo "</pre>";
                   ?>
