@@ -23,7 +23,7 @@ class Module extends \yii\base\Module
         parent::init();
         $me = UserHelper::GetEmployee();
         $info = SiteHelper::getInfo();
-        if(!$me->pdpa && $info['active_pdpa'] == 1){
+        if ($me && !$me->pdpa && $info['active_pdpa'] == 1) {
             \Yii::$app->response->redirect(['/site/conditions-register'])->send();
             return;
         }
