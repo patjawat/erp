@@ -5,9 +5,9 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
-use Yiisoft\Arrays\ArrayHelper;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 

@@ -5,7 +5,7 @@ namespace app\modules\hr\models;
 use Yii;
 use yii\db\Expression;
 use app\models\Categorise;
-use Yiisoft\Arrays\ArrayHelper;
+use yii\helpers\ArrayHelper;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Development;
