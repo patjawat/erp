@@ -1,36 +1,28 @@
 <?php
+
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\web\JsExpression;
-use kartik\widgets\Select2;
-use kartik\widgets\ActiveForm;
-use app\widgets\FlatpickrWidget;
-use app\modules\hr\models\Employees;
+use yii\widgets\ActiveForm;
+use kartik\tree\TreeViewInput;
 use app\modules\hr\models\Organization;
-use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
-/** @var app\modules\lm\models\LeaveSearch $model */
+/** @var app\modules\hr\models\DevelopmentSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<style>
-.offcanvas-footer {
-    padding: 1rem 1rem;
-    border-top: 1px solid #dee2e6;
-}
-</style>
-<?php $form = ActiveForm::begin([
-    'action' => ['index'],
-    'method' => 'get',
-    'options' => [
-        'data-pjax' => 1
-    ],
-]); ?>
 
-<div class="d-flex justify-content-between align-items-center gap-2">
-<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
-</div>
+
+    <?php $form = ActiveForm::begin([
+        'action' => ['index'],
+        'method' => 'get',
+        'options' => [
+            'data-pjax' => 1
+        ],
+    ]); ?>
+
+    <div class="d-flex justify-content-between align-items-center gap-2">
+        <?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
+    </div>
     <!-- Offcanvas -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
         <div class="offcanvas-header">
@@ -56,8 +48,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 
             <div class="d-flex flex-row gap-4">
-                <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
-                <?php echo $form->field($model, 'leave_type_id')->checkboxList($model->listLeaveType(),['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
+                <?php // echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
             </div>
 
             <div class="offcanvas-footer">
@@ -75,20 +66,20 @@ use iamsaint\datetimepicker\Datetimepicker;
         </div>
     </div>
 
-<?php ActiveForm::end(); ?>
+    <?php ActiveForm::end(); ?>
 
 
-<?php
+    <?php
 
 $js = <<< JS
 
-    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
-    $("#leavesearch-date_start").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
+    thaiDatepicker('#developmentsearch-date_start,#developmentsearch-date_end')
+    $("#developmentsearch-date_start").on('change', function() {
+            $('#developmentsearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
+    $("#developmentsearch-date_end").on('change', function() {
+            $('#developmentsearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
 

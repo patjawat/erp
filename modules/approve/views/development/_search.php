@@ -27,7 +27,6 @@ use iamsaint\datetimepicker\Datetimepicker;
         'data-pjax' => 1
     ],
 ]); ?>
-
 <div class="d-flex justify-content-between align-items-center gap-2">
 <?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 </div>
@@ -38,26 +37,9 @@ use iamsaint\datetimepicker\Datetimepicker;
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                    'name' => 'department',
-                    'id' => 'treeID',
-                    'query' => Organization::find()->addOrderBy('root, lft'),
-                    'value' => 1,
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
-                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
-
 
             <div class="d-flex flex-row gap-4">
-                <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
-                <?php echo $form->field($model, 'leave_type_id')->checkboxList($model->listLeaveType(),['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
+                <?php echo $form->field($model, 'status')->checkboxList(['Pending' => 'รออนุมัติ', 'Pass' => 'อนุมัติ'], ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
             </div>
 
             <div class="offcanvas-footer">
@@ -82,13 +64,13 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 $js = <<< JS
 
-    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
-    $("#leavesearch-date_start").on('change', function() {
+    thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
+    $("#approvesearch-date_start").on('change', function() {
             $('#leavesearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
+    $("#approvesearch-date_end").on('change', function() {
+            $('#approvesearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
 

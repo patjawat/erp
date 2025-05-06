@@ -105,6 +105,15 @@ $items = [
         'show' => Yii::$app->user->can('finance') ? true : false,
         // 'show' => true
     ],
+    [
+        'title' => 'อบรม/ประชุม',
+        'icon' => 'fa-solid fa-briefcase fs-1',
+        'url' => ['/hr/development'],
+        'padding' => 'p-3',
+        'show' => Yii::$app->user->can('hr') ? true : false,
+        'show' => true
+    ],
+    
     
 
     

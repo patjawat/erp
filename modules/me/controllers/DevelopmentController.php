@@ -51,6 +51,7 @@ class DevelopmentController extends Controller
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
+            'status' => ['Pending']
         ]);
         // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -87,7 +88,7 @@ class DevelopmentController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
+        return $this->render('@app/modules/hr/views/development/view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -108,10 +109,10 @@ class DevelopmentController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
 
                 try {
-                    $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                    $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                    $model->vehicle_date_start = AppHelper::convertToGregorian($model->vehicle_date_start);
-                    $model->vehicle_date_end = AppHelper::convertToGregorian($model->vehicle_date_end);
+                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
                 }
                 if($model->save()){
@@ -121,6 +122,7 @@ class DevelopmentController extends Controller
                     $addMember->name = 'member';
                     $addMember->emp_id = $me->id;
                     $addMember->save(false);
+                    $model->createApprove();
                 }
                 
 

@@ -6,6 +6,7 @@ $totalLeave = $notify['leave']['total'];
 $totalBookingCar = $notify['booking_car']['total'];
 $totalPurchase = $notify['purchase']['total'];
 $totalStock = $notify['stock']['total'];
+$totalDevelopment= $notify['development']['total'];
 $this->title = "รายการที่ต้องอนุมัติและตรวจสอบ";
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -17,75 +18,60 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 <?php $this->endBlock(); ?>
 
 
+<?php
+$items = [
+    [
+        'label' => 'ขออนุมัติวันลา',
+        'url' => ['/approve/leave'],
+        'icon' => '<i class="fa-solid fa-calendar-day fs-1 text-white"></i>',
+        'count' => $totalLeave,
+    ],
+    [
+        'label' => 'ขออนุญาตใช้รถ',
+        'url' => ['/approve/vehicle'],
+        'icon' => '<i class="fa-solid fa-car fs-1 text-white"></i>',
+        'count' => $totalBookingCar,
+    ],
+    [
+        'label' => 'ขออนุมัติจัดซื้อจัดจ้าง',
+        'url' => ['/approve/approve','name' => 'purchase'],
+        'icon' => '<i class="fa-solid fa-shopping-cart fs-1 text-white"></i>',
+        'count' => $totalPurchase,
+    ],
+    [
+        'label' => 'ขออนุมัติเบิกวัสดุ',
+        'url' => ['/approve/main-stock'],
+        'icon' => '<i class="fa-solid fa-box fs-1 text-white"></i>',
+        'count' => $totalStock,
+    ],
+    [
+        'label' => 'อบรม/ประชุม/ดูงาน',
+        'url' => ['/approve/development'],
+        'icon' => '<i class="fa-solid fa-briefcase fs-1 text-white"></i>',
+        'count' => $totalDevelopment,
+    ]
+    
+];
+?>
 <div class="container">
 
     <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
+        <?php foreach($items as $item):?>
         <div class="col">
-            <a href="<?php echo Url::to(['/approve/leave'])?>">
+            <a href="<?php echo Url::to($item['url'])?>">
                 <div class="card border-0 shadow-sm hover-card position-relative">
-                <?php if($totalLeave >=1):?>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalLeave?></span>
+                <?php if($item['count'] >=1):?>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $item['count']?></span>
                     <?php endif;?>
                     <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
-                        <i class="fa-solid fa-calendar-day fs-1 text-white"></i>
+                       <?=$item['icon']?>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">ขออนุมัติวันลา</h6>
+                        <h6 class="text-center"><?=$item['label']?></h6>
                     </div>
                 </div>
             </a>
         </div>
-
-        <div class="col">
-            <!-- <a href="<?php echo Url::to(['/me/booking-car/'])?>"> -->
-            <a href="<?php echo Url::to(['/approve/vehicle'])?>">
-            <div class="card border-0 shadow-sm hover-card position-relative">
-                <?php if($totalBookingCar >=1):?>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalBookingCar?></span>
-            <?php endif;?>
-                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
-                        <i class="fa-solid fa-calendar-day fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">ขออนุญาตใช้รถ</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col">
-            <!-- <a href="<?php echo Url::to(['/approve-purchase'])?>"> -->
-            <a href="<?php echo Url::to(['/approve/approve','name' => 'purchase'])?>">
-            <div class="card border-0 shadow-sm hover-card position-relative">
-                <?php if($totalPurchase >=1):?>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalPurchase?></span>
-            <?php endif;?>
-                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
-                        <i class="fa-solid fa-calendar-day fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">ขออนุมัติจัดซื้อจัดจ้าง</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col">
-            <a href="<?php echo Url::to(['/approve/main-stock'])?>">
-            <div class="card border-0 shadow-sm hover-card position-relative">
-                <?php if($totalStock >=1):?>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"><?php echo $totalStock?></span>
-            <?php endif;?>
-                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
-                        <i class="fa-solid fa-calendar-day fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center">ขออนุมัติเบิกวัสดุ</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        
+<?php endforeach;?>
     </div>
 </div>

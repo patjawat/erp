@@ -18,7 +18,7 @@ class DevelopmentDetailSearch extends DevelopmentDetail
     {
         return [
             [['id', 'development_id', 'qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['name', 'items_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['category_id', 'name', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['price'], 'number'],
         ];
     }
@@ -72,8 +72,8 @@ class DevelopmentDetailSearch extends DevelopmentDetail
             'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'items_id', $this->items_id])
+        $query->andFilterWhere(['like', 'category_id', $this->category_id])
+            ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 

@@ -27,6 +27,7 @@ class m250418_051009_create_development_table extends Migration
             'vehicle_date_end' => $this->date()->comment('วันกลับ'),
             'driver_id' => $this->string()->comment('พนักงานขับ'),
             'leader_id' => $this->string()->notNull()->comment('หัวหน้าฝ่าย'),
+            'leader_group_id' => $this->string()->comment('หัวหน้ากลุ่มงาน'),
             'assigned_to' => $this->integer()->notNull()->comment('มอบหมายงานให้'),
             'emp_id' => $this->string()->notNull()->notNull()->comment('ผู้ขอ'),
             'data_json' => $this->json()->comment('JSON'),

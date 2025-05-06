@@ -6,12 +6,15 @@ use Yii;
 use yii\helpers\Html;
 use yii\db\Expression;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\SiteHelper;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\approve\models\Approve;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\DevelopmentDetail;
 
@@ -49,6 +52,7 @@ class Development extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $q;
+    public $q_department;
     public static function tableName()
     {
         return 'development';
@@ -62,8 +66,8 @@ class Development extends \yii\db\ActiveRecord
         return [
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
-            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year'], 'required'],
-            [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year','leader_group_id'], 'required'],
+            [['date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -88,6 +92,7 @@ class Development extends \yii\db\ActiveRecord
             'vehicle_date_end' => 'วันกลับ',
             'driver_id' => 'พนักงานขับ',
             'leader_id' => 'หัวหน้าฝ่าย',
+            'leader_group_id' => 'หัวหน้ากลุ่มงาน',
             'assigned_to' => 'มอบหมายงานให้',
             'emp_id' => 'ผู้ขอ',
             'data_json' => 'JSON',
@@ -100,22 +105,22 @@ class Development extends \yii\db\ActiveRecord
         ];
     }
 
-    public function behaviors()
-    {
-        return [
-            [
-                'class' => BlameableBehavior::className(),
-                'createdByAttribute' => 'created_by',
-                'updatedByAttribute' => 'updated_by',
-            ],
-            [
-                'class' => TimestampBehavior::className(),
-                'createdAtAttribute' => 'created_at',
-                'updatedAtAttribute' => ['updated_at'],
-                'value' => new Expression('NOW()'),
-            ],
-        ];
-    }
+    // public function behaviors()
+    // {
+    //     return [
+    //         [
+    //             'class' => BlameableBehavior::className(),
+    //             'createdByAttribute' => 'created_by',
+    //             'updatedByAttribute' => 'updated_by',
+    //         ],
+    //         [
+    //             'class' => TimestampBehavior::className(),
+    //             'createdAtAttribute' => 'created_at',
+    //             'updatedAtAttribute' => ['updated_at'],
+    //             'value' => new Expression('NOW()'),
+    //         ],
+    //     ];
+    // }
     
 
     public function getDevelopmentDetail()
@@ -162,8 +167,95 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
     
+    
+    // สร้างการอนุมัติ
+    public function createApprove()
+    {
+    // หัวหน้างาน
+        $developmentStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'development']);
+        try {
+            if (!$developmentStep1Check) {
+                $developmentStep1 = $developmentStep1Check ? $developmentStep1Check : new Approve();
+                $developmentStep1->from_id = $this->id;
+                $developmentStep1->name = 'development';
+                $developmentStep1->emp_id = $this->leader_id;
+                $developmentStep1->title = 'เห็นชอบ';
+                $developmentStep1->data_json = ['label' => 'เห็นชอบ'];
+                $developmentStep1->level = 1;
+                $developmentStep1->status = 'Pending';
+                $developmentStep1->save(false);
+                // try {
+                    // ส่ง msg ให้ Approve
+                    $toUserId = $developmentStep1->employee->user->line_id;
+                    $msg = 'ขออนุมัติ';
+                    $msg .= "\n" . 'หัวข้อ : ' . $this->topic;
+                    $msg .= "\n" . 'วันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short');
+                    $msg .= "\n" . 'ถึงวันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short');
+                    $msg .= "\n" . 'ผู้ขอ : ' . $this->createdByEmp->fullname;
+                    LineMsg::sendMsg($toUserId,$msg);
+                // } catch (\Throwable $th) {
 
+                // }
+            }
+        } catch (\Throwable $th) {
 
+        }
+
+        try {
+             //หัวหน้ากลุ่มงานเห็นชอบ
+            $developmentStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'development']);
+            if (!$developmentStep2Check) {
+                $developmentStep2 = $developmentStep2Check ? $developmentStep2Check : new Approve();
+                $developmentStep2->from_id = $this->id;
+                $developmentStep2->name = 'development';
+                $developmentStep2->emp_id = $this->leader_group_id;
+                $developmentStep2->title = 'เห็นชอบ';
+                $developmentStep2->data_json = ['label' => 'เห็นชอบ'];
+                $developmentStep2->level = 2;
+                $developmentStep2->status = 'None';
+                $developmentStep2->save(false);
+            }
+        } catch (\Throwable $th) {
+        }
+
+        try {
+            //ผู้ตรวจสอบ
+            $developmentStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'development']);
+            if (!$developmentStep3Check) {
+                $developmentStep3 = $developmentStep3Check ? $developmentStep3Check : new Approve();
+                $developmentStep3->from_id = $this->id;
+                $developmentStep3->name = 'development';
+                $developmentStep3->title = 'ตรวจสอบ';
+                // $developmentStep3->emp_id = $this->data_json['approve_3'];
+                $developmentStep3->data_json = ['label' => 'ผ่าน'];
+                $developmentStep3->level = 3;
+                $developmentStep3->status = 'None';
+               $developmentStep3->save(false);
+            }
+        } catch (\Throwable $th) {
+        }
+
+        //ผู้อำนวยการอนุมัติ
+        $director = SiteHelper::viewDirector();
+        $developmentStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'development']);
+        // try {
+            if (!$developmentStep4Check) {
+            
+                $developmentStep4 = $developmentStep4Check ? $developmentStep4Check : new Approve();
+                $developmentStep4->from_id = $this->id;
+                $developmentStep4->name = 'development';
+                $developmentStep4->emp_id = $director['id'];
+                $developmentStep4->title = 'อนุมัติ';
+                $developmentStep4->data_json = ['label' => 'อนุมัติ'];
+                $developmentStep4->level = 4;
+                $developmentStep4->status = 'None';
+                $developmentStep4->save(false);
+            }
+            // code...
+        // } catch (\Throwable $th) {
+        // }
+    }
+    
      //  ภาพทีมคณะกรรมการ
      public function StackMember()
      {
@@ -224,4 +316,33 @@ class Development extends \yii\db\ActiveRecord
     }
 
 
+
+    public function viewStatus()
+    {
+       return $this->getStatus($this->status);
+  
+    }
+
+    public  function getStatus($status)
+    {
+        $title = '';
+        $color = '';
+        $view = '';
+        $count = self::find()
+            // ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
+            ->andWhere(['status' => $status])->count();
+        $total = self::find()->count();
+        $data = AppHelper::viewStatus($status);
+        $percent = $total > 0 ? ($count / $total * 100) : 0;
+
+        return [
+            'total' => $total,
+            'count' => $count,
+            'percent' => $percent,
+            'title' => $data['title'],
+            'color' => $data['color'],
+            'view' => $data['view']
+        ];
+    }
+    
 }

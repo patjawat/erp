@@ -17,8 +17,8 @@ class DevelopmentSearch extends Development
     public function rules()
     {
         return [
-            [['id', 'document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['thai_year','development_type_id', 'topic', 'description', 'location', 'location_org', 'province_name', 'status', 'vehicle_type_id', 'claim_type', 'time_slot', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['id', 'document_id', 'thai_year', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['topic', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'vehicle_type_id', 'vehicle_date_start', 'vehicle_date_end', 'driver_id', 'leader_id', 'leader_group_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q_department'], 'safe'],
         ];
     }
 
@@ -61,6 +61,11 @@ class DevelopmentSearch extends Development
         $query->andFilterWhere([
             'id' => $this->id,
             'document_id' => $this->document_id,
+            'thai_year' => $this->thai_year,
+            'date_start' => $this->date_start,
+            'date_end' => $this->date_end,
+            'vehicle_date_start' => $this->vehicle_date_start,
+            'vehicle_date_end' => $this->vehicle_date_end,
             'assigned_to' => $this->assigned_to,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
@@ -70,13 +75,14 @@ class DevelopmentSearch extends Development
             'deleted_by' => $this->deleted_by,
         ]);
 
-
-            $query->andFilterWhere(['like', 'topic', $this->topic])
+        $query->andFilterWhere(['like', 'topic', $this->topic])
             ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
+            ->andFilterWhere(['like', 'vehicle_type_id', $this->vehicle_type_id])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])
             ->andFilterWhere(['like', 'leader_id', $this->leader_id])
+            ->andFilterWhere(['like', 'leader_group_id', $this->leader_group_id])
             ->andFilterWhere(['like', 'emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 

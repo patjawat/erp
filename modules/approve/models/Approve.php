@@ -11,6 +11,7 @@ use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveType;
+use app\modules\hr\models\Development;
 use app\modules\purchase\models\Order;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Booking;
@@ -118,6 +119,10 @@ class Approve extends \yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['id' => 'from_id']);
     }
     
+    public function getDevelopment()
+    {
+        return $this->hasOne(Development::class, ['id' => 'from_id']);
+    }
     
 
         // แสดงปีงบประมานทั้งหมด

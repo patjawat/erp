@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
+use app\components\SiteHelper;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
 use app\components\CategoriseHelper;
@@ -56,7 +57,6 @@ $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
 </style>
 
         <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
-
         <!-- ข้อมูลอ้างอิงเอกสาร -->
         <div class="card mb-3">
             <div class="card-header bg-light p-2">
@@ -190,8 +190,7 @@ $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
                             ?>
                         </div>
 
-                        <div class="form-group mt-2 avatar-form">
-
+                        <div class="form-group mt-2 avatar-form d-flex justify-content-between">
 
 <?php
             $url = Url::to(['/depdrop/employee-by-id']);
@@ -217,9 +216,37 @@ $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
                     'templateSelection'=>new JsExpression('function(emp) {return emp.text;}'),
                 ],
 
-                    ])->label('หัวหน้า');
+                    ])->label('หัวหน้าฝ่าย/ผู้บังคับบัญชา');
                     ?>   
 
+
+<?php
+            $url = Url::to(['/depdrop/employee-by-id']);
+            $employee = Employees::find()->where(['id' => $model->leader_group_id])->one();
+            $initEmployee = empty($model->leader_group_id) ? '' : Employees::findOne($model->leader_group_id)->getAvatar(false);//กำหนดค่าเริ่มต้น
+            
+            echo $form->field($model,'leader_group_id')->widget(Select2::classname(), [
+                'initValueText' => $initEmployee,
+                // 'size' => Select2::,
+                'options' => ['placeholder' => 'เลือกบุคลากร ...'],
+                'pluginOptions'=>[
+                    // 'dropdownParent' => '#main-modal',
+                    'width' => '350px',
+                    'allowClear'=>true,
+                    'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
+                    'ajax'=>[
+                        'url'=>$url,
+                        'dataType'=>'json',//รูปแบบการอ่านคือ json
+                        'data'=>new JsExpression('function(params) { return {q:params.term};}')
+                    ],
+                    'escapeMarkup'=>new JsExpression('function(markup) { return markup;}'),
+                    'templateResult' => new JsExpression('function(emp) { return emp && emp.text ? emp.text : "กำลังค้นหา..."; }'),
+                    'templateSelection'=>new JsExpression('function(emp) {return emp.text;}'),
+                ],
+
+                    ])->label('หัวหน้ากลุ่มงาน');
+                    ?>   
+                    
                         </div>
 
                         <div class="form-group mt-2 avatar-form">
@@ -251,6 +278,7 @@ $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
 
                     ])->label('ผู้ปฏิบัติหน้าที่แทน');
                     ?>   
+
                         </div>
                     </div>
                 </div>
