@@ -43,8 +43,8 @@ $items = [
     [
         'title' => 'ประชุม/อบรม',
         'icon' => 'fa-solid fa-briefcase fs-1',
-        'url' => ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> เพิ่มประชุม/อบรม'],
-        'modal' => true,
+        'url' => ['/me/development/create','title' => '<i class="bi bi-plus-circle"></i> เพิ่มประชุม/อบรม'],
+        'modal' => false,
         'size' => 'modal-md'
     ],
 ];

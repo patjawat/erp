@@ -33,6 +33,7 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
 
                         <th class="fw-semibold" scope="col">เรื่อง/วัน/สถานที่</th>
                         <th class="fw-semibold"  scope="col">คณะเดินทาง</th>
+                        <th class="fw-semibold text-center">สถานะ</th>
                         <th class="fw-semibold text-center">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -50,7 +51,8 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                             </div>
                         </td>
 
-                        <td>  <?=$item->StackMember()?></td>
+                        <td><?=$item->StackMember()?></td>
+                        <td class="text-center"><?=$item->getStatus($item->status)['view'] ?? '-'?></td>
                         <td style="width:120px">
                             <div class="btn-group">
                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
