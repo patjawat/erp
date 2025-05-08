@@ -142,10 +142,10 @@ class DevelopmentController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('create', ['model' => $model]),
+                'content' => $this->renderAjax('@app/modules/hr/views/development/_form', ['model' => $model]),
             ];
         } else {
-            return $this->render('create', [
+            return $this->render('@app/modules/hr/views/development/_form', [
                 'model' => $model,
             ]);
         }
@@ -199,10 +199,10 @@ class DevelopmentController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', ['model' => $model]),
+                'content' => $this->renderAjax('@app/modules/hr/views/development/_form', ['model' => $model]),
             ];
         } else {
-            return $this->render('update', [
+            return $this->render('@app/modules/hr/views/development/_form', [
                 'model' => $model,
             ]);
         }
@@ -215,12 +215,25 @@ class DevelopmentController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+    public function actionCancel($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->status = 'Cancel';
+        $model->save(false);
+        return [
+            'success' => 'success',
+        ];
+
+    }
+
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
     }
+    
 
     /**
      * Finds the Development model based on its primary key value.

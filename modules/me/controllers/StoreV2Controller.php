@@ -7,8 +7,10 @@ use yii\helpers\Url;
 use yii\web\Response;
 use yii\db\Expression;
 use app\components\LineMsg;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use mdm\autonumber\AutoNumber;
 use yii\web\NotFoundHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\approve\models\Approve;
@@ -375,7 +377,14 @@ class StoreV2Controller extends \yii\web\Controller
             throw new NotFoundHttpException('ไม่พบสินค้าในตะกร้า');
         }
         // อัปเดตจำนวนสินค้า
+        $oldObj = $cartItem->data_json;
         $cartItem->qty = $qty;
+        $newData = [
+            'req_qty' =>   $qty,
+        ];
+        $cartItem->data_json =  ArrayHelper::merge($oldObj, $cartItem->data_json, $newData);
+
+        
         if ($cartItem->save(false)) {
             return ['status' => 'success', 'message' => 'อัปเดตจำนวนสินค้าสำเร็จ'];
         }

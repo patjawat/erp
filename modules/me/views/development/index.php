@@ -24,7 +24,6 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
     </div>
            <?=$this->render('_search', ['model' => $searchModel,'type' => 'development'])?>
 
-        <div class="table-responsive pb-5">
             <table class="table table-primary">
                 <thead>
                     <tr>
@@ -55,21 +54,24 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                         <td class="text-center"><?=$item->getStatus($item->status)['view'] ?? '-'?></td>
                         <td style="width:120px">
                             <div class="btn-group">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100','data' => ['size' => 'modal-xl']]) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view','id' => $item->id], ['class' => 'dropdown-item']) ?></li>
-                                    </ui>
+                            <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-1"></i> ยกเลิก', ['cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order']) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขออนุญาต', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบตอบรับเป็นวิทยากร', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            </ui>
                             </div>
                         </td>
                     </tr>
                     <?php endforeach;?>
                 </tbody>
             </table>
-        </div>
-
     </div>
 </div>

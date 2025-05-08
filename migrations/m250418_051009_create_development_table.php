@@ -17,6 +17,7 @@ class m250418_051009_create_development_table extends Migration
             'document_id' => $this->integer()->comment('ตามหนังสือ'),
             'topic' => $this->string()->notNull()->comment('หัวข้อ'),
             'status' => $this->string()->notNull()->notNull()->comment('สถานะ'),
+            'response_status' => $this->string()->comment('การตอบรับเป็นวิทยากร'),
             'thai_year' => $this->integer()->notNull()->comment('ปีงบประมาณ'),
             'date_start' => $this->date()->comment('วันที่เริ่ม'),
             'time_start' => $this->string()->comment('เริ่มเวลา'),

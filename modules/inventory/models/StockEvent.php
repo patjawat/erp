@@ -451,7 +451,7 @@ class StockEvent extends Yii\db\ActiveRecord
     // แสดงรายการย่อยของ stock
     public function getItems()
     {
-        return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->orderBy(['asset_item' => SORT_ASC])->all();
+        return self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->orderBy(['id' => SORT_ASC])->all();
     }
 
     // แสดงรายกาผู้ขาย/ผู้บริจาค
@@ -471,6 +471,7 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return self::find()
             ->where(['name' => 'order_item', 'category_id' => $this->id])
+            ->orderBy(['id' => SORT_ASC])
             ->all();
     }
     

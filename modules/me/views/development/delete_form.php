@@ -19,7 +19,19 @@ $emp = UserHelper::GetEmployee();
 $listDocumentMe  = $emp->listDocumentMe();
 
 $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
+$this->title = 'อบรม/ประชุม/ดูงาน';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-briefcase fs-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php echo $this->render('@app/modules/hr/views/development/menu') ?>
+<?php $this->endBlock(); ?>
 
 
 

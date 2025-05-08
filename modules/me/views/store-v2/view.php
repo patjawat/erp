@@ -80,14 +80,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <i class="fa-solid fa-minus"></i>
                                 </button>
                                 <input type="number" class="form-control quantity-input"
-                                    id="qty-<?php echo $item->id; ?>" value="<?php echo $item->qty?>" min="1"
+                                    id="qty-<?php echo $item->id; ?>" value="<?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : 0 ?>" min="1"
                                     data-item-id="<?php echo $item->id; ?>">
                                 <button class="btn btn-sm btn-light"
                                     onclick="updateQuantity(<?php echo $item->id; ?>, 1)">
                                     <i class="fa-solid fa-plus"></i>
                                 </button>
                                 <?php else:?>
-                                    <input type="number" class="form-control quantity-input" value="<?php echo $item->qty?>" disabled>
+                                    <input type="number" class="form-control quantity-input" value="<?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : 0 ?>" disabled>
                                 <?php endif;?>
                             </div></td>
                             <td>

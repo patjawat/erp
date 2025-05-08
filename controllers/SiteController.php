@@ -3,11 +3,14 @@
 namespace app\controllers;
 
 use Yii;
+use Google\Client;
 use yii\filters\Cors;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
+use Google\Service\Docs;
 use app\models\LoginForm;
+use Google\Service\Drive;
 use app\models\SignupForm;
 use yii\filters\VerbFilter;
 use app\components\UserHelper;
@@ -248,4 +251,9 @@ class SiteController extends Controller
             return $this->render('reset_false');
         }
     }
+
+
+
 }
+
+

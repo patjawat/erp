@@ -315,12 +315,21 @@ class Development extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-
+public function listStatus()
+{
+    return [
+        'Pending' => 'รออนุมัติ',
+        'Pass' => 'ตรวจสอบผ่าน',
+        'Approve' => 'อนุมัติ',
+        'Reject' => 'ไม่อนุมัติ',
+        'Cancel' => 'ยกเลิก',
+        'Complete' => 'เสร็จสิ้น',
+    ];
+}
 
     public function viewStatus()
     {
        return $this->getStatus($this->status);
-  
     }
 
     public  function getStatus($status)

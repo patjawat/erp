@@ -54,9 +54,32 @@ use app\modules\hr\models\Organization;
 
     <div class="d-flex flex-row align-items-center gap-2 mt-2">
         <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-light']) ?>
-        <!-- <button class="btn btn-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i class="fa-solid fa-filter"></i></button> -->
+        <button class="btn btn-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i class="fa-solid fa-filter"></i></button>
     </div>
 </div>
+
+  <!-- Offcanvas -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+        <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
+        <div class="offcanvas-footer">
+                <?php echo Html::submitButton(
+                        '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
+                        [
+                            'class' => 'btn btn-light',
+                            'data-bs-backdrop' => 'static',
+                            'tabindex' => '-1',
+                            'id' => 'offcanvasExample',
+                            'aria-labelledby' => 'offcanvasExampleLabel',
+                        ]
+                    ); ?>
+            </div>
+        </div>
+    </div>
 
     <?php ActiveForm::end(); ?>
 
