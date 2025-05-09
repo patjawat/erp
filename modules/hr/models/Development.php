@@ -143,6 +143,10 @@ class Development extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+    public function getVehicleType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'vehicle_type_id']);
+    }
     
        // แสดงวันที่สร้าง
        public function viewCreated()
@@ -164,10 +168,18 @@ class Development extends \yii\db\ActiveRecord
     
     public function getAssignedTo()
     {
-        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+        return $this->hasOne(Employees::class, ['id' => 'assigned_to']);
     }
     
-    
+
+    public function VehicleTypeName()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'vehicle_type'])
+            ->andWhere(['code' => $this->data_json['vehicle_type']])
+            ->one();
+        return $model ? $model->title : '-';
+    }
     // สร้างการอนุมัติ
     public function createApprove()
     {

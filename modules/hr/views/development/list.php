@@ -40,7 +40,7 @@ use yii\helpers\Html;
                         </button>
                         <ul class="dropdown-menu">
                             <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']]) ?></li>
                             <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-1"></i> แจ้งยกเลิก', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
                             <li><?= Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขออนุญาต', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>

@@ -391,7 +391,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="col-6">
                                     <div class="form-group">
                             <?php
-                            echo $form->field($model, 'data_json[vehicle_type_name]')->widget(Select2::classname(), [
+                            echo $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
                                 'data' => $model->ListVehicleType(),
                                 'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
                                 'pluginOptions' => [
@@ -406,8 +406,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?= $form->field($model, 'data_json[license_plate]')->textInput(['placeholder' => 'ระบุทะเบียนพาหนะเดินทาง'])->label('ทะเบียนพาหนะเดินทาง') ?>
 
-                                    </div>
-                                </div>
+</div>
+</div>
+<?= $form->field($model, 'data_json[distance]')->textInput(['placeholder' => 'ระบุระยะทาง'])->label('ระยะทาง/กิโลเมตร') ?>
 
                     </div>
                     
