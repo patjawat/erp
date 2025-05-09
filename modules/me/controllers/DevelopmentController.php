@@ -372,7 +372,7 @@ class DevelopmentController extends Controller
         }
 
         if ($folderName != null) {
-            $basePath = Yii::getAlias('@app') . '/web/msword/results/';
+            $basePath = Yii::getAlias('@app') . '/web/msword/results/development';
             BaseFileHelper::createDirectory($basePath . $folderName, 0777);
         }
         return;
