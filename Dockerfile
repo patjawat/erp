@@ -46,7 +46,7 @@ COPY ./ /app/
 RUN rm -rf /app/web/assets/*
 
 # Step 5: ตั้งค่าให้โฟลเดอร์ runtime และ web/assets สามารถเขียนได้
-RUN mkdir -p /app/web/downloads /app/web/msword/results/leave /app/web/import-csv /app/runtime/cache && \
+RUN mkdir -p /app/web/downloads /app/web/msword/results/leave /app/web/msword/results/development /app/web/import-csv /app/runtime/cache && \
     chmod -R 777 /app/runtime /app/runtime/cache /app/web/assets /app/web/import-csv /app/web/downloads /app/web/msword /app/web/msword/results && \
     chown -R www-data:www-data /app/modules/filemanager && \
     chown -R www-data:www-data /app/web/msword
