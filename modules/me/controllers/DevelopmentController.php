@@ -285,7 +285,7 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
         $templateProcessor->setValue('date_go', ThaiDateHelper::formatThaiDate($model->vehicle_date_start));
         $templateProcessor->setValue('date_back', ThaiDateHelper::formatThaiDate($model->vehicle_date_end));
-        $templateProcessor->setValue('v_type', $model->vehicleType->title . ' ทะเบียน ' . $model->data_json['license_plate']);
+        $templateProcessor->setValue('v_type', $model->vehicleType?->title . ' ทะเบียน ' . $model->data_json['license_plate']);
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
 
