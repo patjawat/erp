@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6>
-                <i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา
+                <i class="bi bi-ui-checks"></i> ทะเบียน<?=$this->title?>
                 <span
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
             </h6>
