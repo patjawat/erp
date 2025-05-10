@@ -10,8 +10,8 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
+use app\modules\hr\models\development;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
 
@@ -78,9 +78,9 @@ class DevelopmentController extends \yii\web\Controller
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 // ถ้าไม่อนุมัติให้ return ออกเลย
                 if ($model->status == 'Reject') {
-                    $model->leave->status = 'Reject';
-                    $model->leave->save();
-                    $model->leave->MsgReject();
+                    $model->development->status = 'Reject';
+                    $model->development->save();
+                    $model->development->MsgReject();
 
                     // return [
                     //     'status' => 'success'
@@ -88,22 +88,22 @@ class DevelopmentController extends \yii\web\Controller
                 }
                 //ถ้าเป็น level สุดท้ายให้ Approve
                 if ($model->maxLevel() && $model->status == 'Pass') {
-                    $model->leave->status = 'Approve';
-                    $model->leave->save();
-                    $model->leave->MsgApprove();
+                    $model->development->status = 'Approve';
+                    $model->development->save();
+                    $model->development->MsgApprove();
                     // return [
                     //     'status' => 'success'
                     // ];
                 }
 
 
-                $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
+                $nextApprove = Approve::findOne(['from_id' => $model->from_id,'name' => 'development', 'level' => ($model->level + 1)]);
                     // เงื่อนไขระบบลา
                     if($nextApprove){
 
                         if ($model->level == 1 && $model->status == 'Pass') {
-                            $model->leave->status = 'Checking';
-                            $model->leave->save();
+                            $model->development->status = 'Checking';
+                            $model->development->save();
                             
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
@@ -112,8 +112,8 @@ class DevelopmentController extends \yii\web\Controller
 
 
                         if ($model->level == 2 && $model->status == 'Pass') {
-                            $model->leave->status = 'Checking';
-                            $model->leave->save();
+                            $model->development->status = 'Checking';
+                            $model->development->save();
                             
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
@@ -121,8 +121,8 @@ class DevelopmentController extends \yii\web\Controller
                         }
                         
                         if ($model->level == 3 && $model->status == 'Pass') {
-                            $model->leave->status = 'Verify';
-                            $model->leave->save();
+                            $model->development->status = 'Verify';
+                            $model->development->save();
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
                            
@@ -158,7 +158,7 @@ class DevelopmentController extends \yii\web\Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
-        $approves = Approve::find()->where(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending'])->all();
+        $approves = Approve::find()->where(['name' => 'development', 'emp_id' => $me->id, 'status' => 'Pending'])->all();
         foreach ($approves as $item) {
             $model = Approve::findOne($item->id);
             $model->status = 'Pass';
@@ -168,14 +168,14 @@ class DevelopmentController extends \yii\web\Controller
                 $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
                 if ($nextApprove && $model->status !== 'Reject') {
                     // เงื่อนไขระบบลา
-                    if ($model->name == 'leave') {
+                    if ($model->name == 'development') {
                         if ($model->level == 2) {
-                            $model->leave->status = 'Checking';
-                            $model->leave->save();
+                            $model->development->status = 'Checking';
+                            $model->development->save();
                         }
                         if ($model->level == 3) {
-                            $model->leave->status = 'Verify';
-                            $model->leave->save();
+                            $model->development->status = 'Verify';
+                            $model->development->save();
                         } else {
                         }
                     }
@@ -184,16 +184,16 @@ class DevelopmentController extends \yii\web\Controller
                     $nextApprove->save();
                 }
 
-                if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'leave') {
-                    $model->leave->status = 'Approve';
-                    $model->leave->save();
-                    $model->leave->MsgApprove();
+                if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'development') {
+                    $model->development->status = 'Approve';
+                    $model->development->save();
+                    $model->development->MsgApprove();
                 }
 
                 if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'purchase') {
                     $model->purchase->status = 2;
                     $model->purchase->save();
-                    // $model->leave->MsgApprove();
+                    // $model->development->MsgApprove();
                 }
             }
         }
@@ -221,16 +221,16 @@ class DevelopmentController extends \yii\web\Controller
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending']);
+        $dataProvider->query->andFilterWhere(['name' => 'development', 'emp_id' => $me->id, 'status' => 'Pending']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
         
         $result = [];
         foreach ($dataProvider->getModels() as $event) {
             $result[] = [
                 'id' => $event->id,
-                'title' => $event->leave->data_json['reason'] ?? '-',
-                'start' => $event->leave->date_start. ' 08:00',
-                'end' => $event->leave->date_end. ' 16:00',
+                'title' => $event->development->data_json['reason'] ?? '-',
+                'start' => $event->development->date_start. ' 08:00',
+                'end' => $event->development->date_end. ' 16:00',
                 // 'start' => $event->date_start . ' ' . $event->start_time,
                 // 'end' => $event->date_end . ' ' . $event->end_time,
                 // 'description' => $event->description,

@@ -59,9 +59,9 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
 </style>
 
 
-            <div class="alert alert-primary" role="alert">
-                <h5 class="font-weight-bold text-center">การอนุมัติเห็นชอบ</h5>
-            </div>
+<div class="alert alert-primary" role="alert">
+    <h5 class="font-weight-bold text-center">การอนุมัติเห็นชอบ</h5>
+</div>
 
 <div class="container mb-5">
     <div class="timeline">
@@ -69,9 +69,11 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
         <?php foreach ($listApprove as $item): ?>
         <div class="timeline-item">
             <div class="circle">
-                <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?></div>
+                <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?>
+            </div>
             <div class="year">
                 <?php
+                echo $item->status;
                 try {
 
                                                 if ($item->status == 'None') {
@@ -105,8 +107,8 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
             <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
             -
             <?php else:?>
-                <?php if($item->emp_id == $me->id && $item->status =="Pending"):?>
-                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['label'] ?? ''),
+            <?php if($item->emp_id == $me->id && $item->status =="Pending"):?>
+            <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['label'] ?? ''),
                     ['update','id' => $item->id],
                     [
                         'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
@@ -117,7 +119,7 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
                             ]
                     
                     ])?>
-                    <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> ไม่'.($item->data_json['label'] ?? ''),
+            <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> ไม่'.($item->data_json['label'] ?? ''),
                     ['update','id' => $item->id],
                     [
                         'class' => 'btn btn-sm btn-danger rounded-pill shadow btn-approve',
@@ -129,10 +131,10 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
                     
                     ])?>
 
-                <?php endif?>
+            <?php endif?>
             <?php endif?>
         </div>
-        
+
         <?php endforeach ?>
 
     </div>

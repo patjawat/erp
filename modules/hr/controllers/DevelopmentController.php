@@ -2,11 +2,19 @@
 
 namespace app\modules\hr\controllers;
 
+use Yii;
+use DateTime;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
+use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentSearch;
+use app\modules\hr\models\DevelopmentDetailSearch;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -38,8 +46,33 @@ class DevelopmentController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new DevelopmentSearch();
+       $me = UserHelper::GetEmployee();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $searchModel = new DevelopmentSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' => ['Pending']
+        ]);
+        // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('developmentDetail');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+        ]);
+        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
+
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        } catch (\Throwable $th) {
+        }
+        $dataProvider->query->groupBy('development_detail.id');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -60,9 +93,20 @@ class DevelopmentController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        }else{
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -107,6 +151,29 @@ class DevelopmentController extends Controller
         ]);
     }
 
+        public function actionCheck($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+         if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('check', [
+                    'model' => $model,
+                ]),
+            ];
+        }else{
+            return $this->render('check', [
+                'model' => $model,
+            ]);
+        }
+    }
+    
     /**
      * Deletes an existing Development model.
      * If deletion is successful, the browser will be redirected to the 'index' page.

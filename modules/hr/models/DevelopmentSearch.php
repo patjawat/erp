@@ -18,7 +18,7 @@ class DevelopmentSearch extends Development
     {
         return [
             [['id', 'document_id', 'thai_year', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['topic', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'vehicle_type_id', 'vehicle_date_start', 'vehicle_date_end', 'driver_id', 'leader_id', 'leader_group_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q_department'], 'safe'],
+            [['topic', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'vehicle_type_id', 'vehicle_date_start', 'vehicle_date_end', 'driver_id', 'leader_id', 'leader_group_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
         ];
     }
 

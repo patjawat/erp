@@ -285,7 +285,7 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
         $templateProcessor->setValue('date_go', ThaiDateHelper::formatThaiDate($model->vehicle_date_start));
         $templateProcessor->setValue('date_back', ThaiDateHelper::formatThaiDate($model->vehicle_date_end));
-        $templateProcessor->setValue('v_type', $model->vehicleType?->title . ' ทะเบียน ' . $model->data_json['license_plate']);
+        $templateProcessor->setValue('v_type', ($model->vehicleType?->title ?? '-') . ' ทะเบียน ' . ($model->data_json['license_plate'] ?? '-'));
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
 
@@ -296,9 +296,11 @@ class DevelopmentController extends Controller
             $templateProcessor->setValue('emp_sign', '.......................................');
         }
 
-        $templateProcessor->setValue('sign_to', $model->assignedTo->fullname . ' ตำแหน่ง ' . $model->assignedTo->positionName() . ' ปฏิบัติงานแทน');
-        $templateProcessor->setValue('sign_to_name', $model->assignedTo->fullname);
-        $templateProcessor->setValue('sign_to_position', $model->assignedTo->positionName());
+        $signToFullname = $model->assignedTo?->fullname ?? '-';
+        $signToPosition = $model->assignedTo?->positionName() ?? '-';
+        $templateProcessor->setValue('sign_to', $signToFullname . ' ตำแหน่ง ' . $signToPosition . ' ปฏิบัติงานแทน');
+        $templateProcessor->setValue('sign_to_name', $signToFullname);
+        $templateProcessor->setValue('sign_to_position', $signToPosition);
         // ลสยมือผู้ปฏิบัติงานแทน
         try {
             $templateProcessor->setImg('sign_to_sign', ['src' => $model->assignedTo->signature(), 'size' => [150, 50]]);
@@ -324,9 +326,9 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
         try {
-            $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
+            $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
-            $templateProcessor->setValue('direc_sign', '');
+            $templateProcessor->setValue('direc_sign', '...........................................');
         }
 
         $filePath = Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name;
@@ -377,10 +379,10 @@ class DevelopmentController extends Controller
         $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
         $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
-        try {
-            $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
+       try {
+            $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
-            $templateProcessor->setValue('direc_sign', '');
+            $templateProcessor->setValue('direc_sign', '...........................................');
         }
 
         if ($model->status == 'Approve') {
@@ -435,21 +437,19 @@ class DevelopmentController extends Controller
         try {
             $templateProcessor->setImg('emp_sign', ['src' => $model->createdByEmp->signature(), 'size' => [150, 50]]);
         } catch (\Throwable $th) {
-            $templateProcessor->setValue('emp_sign', '');
+            $templateProcessor->setValue('emp_sign', '........................................');
         }
         
         // ผู้อำนวยการ
         $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
         $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
-        try {
-            // ลายมือผู้ตรวจสอบ
-            if ($model->checkerName(4)['employee']->signature() != null) {
-                $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);
-            }
+       try {
+            $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
-            // throw new \yii\web\NotFoundHttpException('The file does not
+            $templateProcessor->setValue('direc_sign', '...........................................');
         }
+
         $filePath = Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name;
         $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
         if (file_exists($filePath)) {
@@ -475,6 +475,7 @@ class DevelopmentController extends Controller
             'address' => $info['address'],  // ที่อยู่
             'phone' => $info['phone'],  // โทรศัพท์
             'province' => $info['province'],  // ที่อยู่
+            'director' => $info['director'],
             'director_name' => $info['director_name'],  // ชื่อผู้บริหาร ผอ.
             'director_fullname' => SiteHelper::viewDirector()['fullname'],  // ชื่อผู้บริหาร ผอ.
             'director_position' => $info['director_position'],  // ตำแหน่งของ ผอ.

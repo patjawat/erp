@@ -154,12 +154,28 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'vehicle_type_id']);
     }
     
+
+        public function listApprove()
+    {
+        return Approve::find()->where(['name' => 'development','from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
+    }
+
+    
        // แสดงวันที่สร้าง
        public function viewCreated()
        {
            // return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
            return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
        }
+    
+           //ส่ง Msg เมื่อผ่านการอนุมัติ
+    public function MsgApprove()
+    {
+        $message = $this->topic."ได้รับการอนุมัติแล้ว";
+        $lineId = $this->createdByEmp->user->line_id;
+        LineMsg::sendMsg($lineId,$message);
+    }
+    
     
 
     public function getLeader()

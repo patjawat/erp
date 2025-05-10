@@ -11,7 +11,7 @@ use yii\helpers\Html;
 
                 <th class="fw-semibold" scope="col">เรื่อง/วัน/สถานที่</th>
                 <th class="fw-semibold" scope="col">คณะเดินทาง</th>
-                <th class="fw-semibold" scope="col">สถานะ</th>
+                <th class="fw-semibold text-center" scope="col">สถานะ</th>
                 <th class="fw-semibold text-center">ดำเนินการ</th>
             </tr>
         </thead>
@@ -30,10 +30,10 @@ use yii\helpers\Html;
                 </td>
 
                 <td> <?= $item->StackMember() ?></td>
-                <td> <?php //  $item->getStatus() ?></td>
+                   <td class="text-center"><?=$item->getStatus($item->status)['view'] ?? '-'?></td>
                 <td style="width:120px">
                     <div class="btn-group">
-                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                             data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                             <i class="bi bi-caret-down-fill"></i>

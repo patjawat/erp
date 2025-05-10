@@ -48,6 +48,7 @@ use app\modules\hr\models\Organization;
 
 
             <div class="d-flex flex-row gap-4">
+                 <?php echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
                 <?php // echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
             </div>
 

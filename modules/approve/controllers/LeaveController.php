@@ -99,7 +99,7 @@ class LeaveController extends \yii\web\Controller
                 }
 
 
-                $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
+                $nextApprove = Approve::findOne(['from_id' => $model->from_id,'name' => 'leave',  'level' => ($model->level + 1)]);
                     // เงื่อนไขระบบลา
                     if($nextApprove){
 

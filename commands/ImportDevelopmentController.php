@@ -35,7 +35,7 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class ImportEmpDevController extends Controller{
+class ImportDevelopmentController extends Controller{
 
 public function actionIndex(){
     
