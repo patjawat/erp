@@ -291,9 +291,17 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('v_type', $model->vehicleType->title.' ทะเบียน '.$model->data_json['license_plate']);
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
+        
         $templateProcessor->setValue('sign_to', $model->assignedTo->fullname.' ตำแหน่ง '.$model->assignedTo->positionName().' ปฏิบัติงานแทน');
         $templateProcessor->setValue('sign_to_name', $model->assignedTo->fullname);
         $templateProcessor->setValue('sign_to_position', $model->assignedTo->positionName());
+        //ลสยมือผู้ปฏิบัติงานแทน
+        try {
+            $templateProcessor->setImg('sign_to_sig', ['src' => $model->assignedTo->signature(), 'size' => [150, 50]]);
+        } catch (\Throwable $th) {
+            $templateProcessor->setValue('sign_to_sig', '');
+        }
+        
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
         $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
@@ -306,16 +314,6 @@ class DevelopmentController extends Controller
             $status = 'รอการอนุมัติ';
         }
         $templateProcessor->setValue('status', $status);
-
-
-        // ชื่อผู้ขอลา
-        // $templateProcessor->setValue('emp_fullname', $model->employee->fullname);
-        // $templateProcessor->setValue('emp_position', 'ตำแหน่ง' . $model->employee->positionName());
-        // try {
-        //     $templateProcessor->setImg('emp_sign', ['src' => $model->employee->signature(), 'size' => [150, 50]]);  // ลายมือผู้ขอลา
-        // } catch (\Throwable $th) {
-        //     $templateProcessor->setValue('emp_sign', '');  // ลายมือผู้ขอลา
-        // }
 
 
         // ผู้อำนวยการ
