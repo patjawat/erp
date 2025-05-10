@@ -14,6 +14,7 @@ use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\dms\models\Documents;
 use app\modules\approve\models\Approve;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\DevelopmentDetail;
@@ -128,6 +129,11 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id']);
     }
 
+    public function getDocument()
+    {
+        return $this->hasOne(Documents::class, ['id' => 'document_id']);
+    }
+    
     public function getExpenses()
     {
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id'])->andOnCondition(['name' => 'expense_type']);
@@ -289,6 +295,23 @@ class Development extends \yii\db\ActiveRecord
          // } catch (\Throwable $th) {
          // }
      }
+
+    //  แสดงรายชื่อคณะเดินทาง
+    public function memberText()
+    {
+        $data = [];
+        foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
+           $emp = Employees::findOne(['id' => $item->emp_id]);
+           if ($emp) {
+              $data[] = $emp->fullname;
+           }
+        }
+        return [
+            'data' => $data,
+            'count' => count($data),
+            'text' => implode(',', $data)
+        ];
+    }
      
     //วันที่เอกสาร
     public function showDateRange()

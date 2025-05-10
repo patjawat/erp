@@ -18,7 +18,7 @@ use app\modules\hr\models\Employees;
 $emp = UserHelper::GetEmployee();
 $listDocumentMe  = $emp->listDocumentMe();
 
-$listDocumentData = ArrayHelper::map($listDocumentMe, 'id', 'topic');
+          
 $this->title = 'อบรม/ประชุม/ดูงาน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -78,22 +78,30 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="row">
                     <div class="col-md-3 col-sm-12">
                         <?= $form->field($model, 'thai_year')->textInput(['class' => 'form-control form-control-sm']) ?>
+                        <?= $form->field($model, 'data_json[doc_number]')->textInput(['class' => 'form-control form-control-sm'])->label('เลขที่หนังสือ') ?>
                     </div>
                     <div class="col-md-9 col-sm-12">
-                        <?php
+                      <?php
+
+                    $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', function($model) {
+                        return [
+                            'text' => $model['topic'] ?? null,
+                            'doc_number' => $model['doc_number'] ?? null,
+                        ];
+                    });
+
                         echo $form->field($model, 'document_id')->widget(Select2::classname(), [
-                            'data' => $listDocumentData,
+                            'data' => ArrayHelper::map($listDocumentMe, 'id', 'topic'),
                             'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
                             'pluginOptions' => [
                                 'allowClear' => true,
                                 // 'dropdownParent' => '#main-modal',
                             ],
                             'pluginEvents' => [
-                                'select2:select' =>  new JsExpression("function() {
-                                   var data = $(this).select2('data')[0]
-                                    $('#development-topic').val(data.text)
+                                'select2:select' =>  new JsExpression("function(e) {
+                                   var data = e.params.data;
+                                    $('#development-topic').val(data.text);
                                 }"),
-
                             ]
                         ])->label('หนังสืออ้างอิง');
                         ?>

@@ -121,7 +121,7 @@ class DevelopmentController extends Controller
                     $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
                 }
-                if($model->save()){
+                if ($model->save()) {
                     $me = UserHelper::GetEmployee();
                     $addMember = new DevelopmentDetail();
                     $addMember->development_id = $model->id;
@@ -130,7 +130,6 @@ class DevelopmentController extends Controller
                     $addMember->save(false);
                     $model->createApprove();
                 }
-                
 
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -175,7 +174,7 @@ class DevelopmentController extends Controller
             $model->vehicle_date_end = AppHelper::convertToThai($model->vehicle_date_end);
         } catch (\Throwable $th) {
         }
-        
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -230,7 +229,6 @@ class DevelopmentController extends Controller
         return [
             'success' => 'success',
         ];
-
     }
 
     public function actionDelete($id)
@@ -239,7 +237,6 @@ class DevelopmentController extends Controller
 
         return $this->redirect(['index']);
     }
-    
 
     /**
      * Finds the Development model based on its primary key value.
@@ -257,8 +254,7 @@ class DevelopmentController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    //แบบฟอร์มเดินทางไปราชการ
-    
+    // แบบฟอร์มเดินทางไปราชการ
     public function actionFormOfficial($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -282,44 +278,44 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
         $templateProcessor->setValue('position', $model->createdByEmp?->positionName() ?? '-');
         $templateProcessor->setValue('topic', $model->topic);
+        $templateProcessor->setValue('member', $model->memberText()['count'] > 1 ? 'พร้อมด้วย ' . $model->memberText()['text'] : '');
         $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');
         $templateProcessor->setValue('distance', $model->data_json['distance'] ?? '-');
         $templateProcessor->setValue('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d')));
-        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start,$model->date_end));
+        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
         $templateProcessor->setValue('date_go', ThaiDateHelper::formatThaiDate($model->vehicle_date_start));
         $templateProcessor->setValue('date_back', ThaiDateHelper::formatThaiDate($model->vehicle_date_end));
-        $templateProcessor->setValue('v_type', $model->vehicleType->title.' ทะเบียน '.$model->data_json['license_plate']);
+        $templateProcessor->setValue('v_type', $model->vehicleType->title . ' ทะเบียน ' . $model->data_json['license_plate']);
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
-        
-        $templateProcessor->setValue('sign_to', $model->assignedTo->fullname.' ตำแหน่ง '.$model->assignedTo->positionName().' ปฏิบัติงานแทน');
+
+        $templateProcessor->setValue('sign_to', $model->assignedTo->fullname . ' ตำแหน่ง ' . $model->assignedTo->positionName() . ' ปฏิบัติงานแทน');
         $templateProcessor->setValue('sign_to_name', $model->assignedTo->fullname);
         $templateProcessor->setValue('sign_to_position', $model->assignedTo->positionName());
-        //ลสยมือผู้ปฏิบัติงานแทน
+        // ลสยมือผู้ปฏิบัติงานแทน
         try {
-            $templateProcessor->setImg('sign_to_sig', ['src' => $model->assignedTo->signature(), 'size' => [150, 50]]);
+            $templateProcessor->setImg('sign_to_sign', ['src' => $model->assignedTo->signature(), 'size' => [150, 50]]);
         } catch (\Throwable $th) {
-            $templateProcessor->setValue('sign_to_sig', '');
+            $templateProcessor->setValue('sign_to_sign', '');
         }
-        
+
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
         $templateProcessor->setValue('director', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('createDate', Yii::$app->thaiFormatter->asDate($model->created_at, 'long'));
 
-        if($model->status == 'Approve'){
-           $status = 'อนุมัติ';
-        }else if($model->status == 'Reject'){
+        if ($model->status == 'Approve') {
+            $status = 'อนุมัติ';
+        } else if ($model->status == 'Reject') {
             $status = 'ไม่อนุมัติ';
-        }else{
+        } else {
             $status = 'รอการอนุมัติ';
         }
         $templateProcessor->setValue('status', $status);
 
-
         // ผู้อำนวยการ
         $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
         $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
-        $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'].$dicrectorType);
+        $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
         try {
             $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
@@ -339,16 +335,134 @@ class DevelopmentController extends Controller
         // return $this->Show($result_name);
     }
 
-    // ดึงค่ากน่วยงาน
+    // ใบขออนุญาตเดินทางไปราชการ
+    public function actionPermitRequest($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
+        $model = $this->findModel($id);
+        $title = 'แบบฟอร์มขออนุญาต';
+        $result_name = $title . '-' . $model->id . '.docx';
+        $word_name = $title . '.docx';
+
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/development/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+
+        // return $model->checkerName(1)['employee']->signature();
+        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
+        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
+
+        $templateProcessor->setValue('org_fullname', $this->GetInfo()['org_fullname']);
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('address', $this->GetInfo()['address']);
+        $templateProcessor->setValue('phone', $this->GetInfo()['phone']);
+        $templateProcessor->setValue('doc_number', $this->GetInfo()['doc_number']);
+        $templateProcessor->setValue('document_number', $model->document?->doc_number ?? '-');
+        $templateProcessor->setValue('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d')));
+        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
+        $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');
+        $templateProcessor->setValue('governor', $this->GetInfo()['governor']);
+        $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
+        $templateProcessor->setValue('position', $model->createdByEmp?->positionName() ?? '-');
+        $templateProcessor->setValue('department', $model->createdByEmp?->departmentName() ?? '-');
+        $templateProcessor->setValue('topic', $model->topic);
+        // ผู้อำนวยการ
+        $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
+        $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
+        $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
+        try {
+            $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
+        } catch (\Throwable $th) {
+            $templateProcessor->setValue('direc_sign', '');
+        }
+
+        if ($model->status == 'Approve') {
+            $status = 'อนุมัติ';
+        } else if ($model->status == 'Reject') {
+            $status = 'ไม่อนุมัติ';
+        } else {
+            $status = 'รอการอนุมัติ';
+        }
+        $templateProcessor->setValue('status', $status);
+
+        $filePath = Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name;
+        $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if (file_exists($filePath)) {
+            return $this->Show($result_name);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
+    }
+
+    // ใบตอบรับเป็นวิทยากร
+    public function actionFormAcademic($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = $this->findModel($id);
+        $title = 'แบบฟอร์มตอบรับวิทยากร';
+        $result_name = $title . '-' . $model->id . '.docx';
+        $word_name = $title . '.docx';
+
+        @unlink(Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name);
+        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/development/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
+
+        $templateProcessor->setValue('org_fullname', $this->GetInfo()['org_fullname']);
+        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
+        $templateProcessor->setValue('address', $this->GetInfo()['address']);
+        $templateProcessor->setValue('phone', $this->GetInfo()['phone']);
+        $templateProcessor->setValue('doc_number', $this->GetInfo()['doc_number']);
+        $templateProcessor->setValue('document_number', $model->document?->doc_number ?? '-');
+        $templateProcessor->setValue('document_date', ThaiDateHelper::formatThaiDate($model->document?->doc_date) ?? '-');
+        $templateProcessor->setValue('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d')));
+        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
+        $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');
+        $templateProcessor->setValue('governor', $this->GetInfo()['governor']);
+        $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
+        $templateProcessor->setValue('position', $model->createdByEmp?->positionName() ?? '-');
+        $templateProcessor->setValue('department', $model->createdByEmp?->departmentName() ?? '-');
+        $templateProcessor->setValue('topic', $model->topic);
+
+            // ลสยมือผู้ปฏิบัติงานแทน
+        try {
+            $templateProcessor->setImg('emp_sign', ['src' => $model->createdByEmp->signature(), 'size' => [150, 50]]);
+        } catch (\Throwable $th) {
+            $templateProcessor->setValue('emp_sign', '');
+        }
+        
+        // ผู้อำนวยการ
+        $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
+        $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
+        $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
+        try {
+            // ลายมือผู้ตรวจสอบ
+            if ($model->checkerName(4)['employee']->signature() != null) {
+                $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);
+            }
+        } catch (\Throwable $th) {
+            // throw new \yii\web\NotFoundHttpException('The file does not
+        }
+        $filePath = Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name;
+        $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+        if (file_exists($filePath)) {
+            return $this->Show($result_name);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
+    }
+
+    // ดึงค่ากน่วยงาน
     protected function GetInfo()
     {
         $info = SiteHelper::getInfo();
         return [
             'org_fullname' => $info['company_name'] . ' ' . $info['address'],  // ที่อยู่
             'company_name' => $info['company_name'],  // ชื่อหน่วยงาน
+            'phone' => $info['phone'],  // ชื่อหน่วยงาน
             'doc_number' => $info['doc_number'],  // ชื่อหน่วยงาน
-            'governor' => 'ผู้ว่าราชการจังหวัด'.$info['province'],  // ผุ้ว่าราชการ
+            'governor' => 'ผู้ว่าราชการจังหวัด' . $info['province'],  // ผุ้ว่าราชการ
             'leader_fullname' => $info['leader_fullname'],  //
             'leader_position' => $info['leader_position'],  //
             'address' => $info['address'],  // ที่อยู่
