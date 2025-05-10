@@ -289,6 +289,13 @@ class DevelopmentController extends Controller
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
 
+               //ผู้ขออนุญาต
+        try {
+            $templateProcessor->setImg('emp_sign', ['src' => $model->createdByEmp->signature(), 'size' => [150, 50]]);
+        } catch (\Throwable $th) {
+            $templateProcessor->setValue('emp_sign', '.......................................');
+        }
+
         $templateProcessor->setValue('sign_to', $model->assignedTo->fullname . ' ตำแหน่ง ' . $model->assignedTo->positionName() . ' ปฏิบัติงานแทน');
         $templateProcessor->setValue('sign_to_name', $model->assignedTo->fullname);
         $templateProcessor->setValue('sign_to_position', $model->assignedTo->positionName());
@@ -296,7 +303,7 @@ class DevelopmentController extends Controller
         try {
             $templateProcessor->setImg('sign_to_sign', ['src' => $model->assignedTo->signature(), 'size' => [150, 50]]);
         } catch (\Throwable $th) {
-            $templateProcessor->setValue('sign_to_sign', '');
+            $templateProcessor->setValue('sign_to_sign', '........................................');
         }
 
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
