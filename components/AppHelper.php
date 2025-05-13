@@ -181,10 +181,13 @@ class AppHelper extends Component
     // แปลง พ.ศ. เป็น ค.ศ.
     public static function convertToGregorian($date)
     {
-        if ($date !== null || $date !== '__/__/____') {
-            list($day, $month, $year) = explode('/', $date);
-            $y = ($year - 543);
-            return "{$y}-{$month}-{$day}";
+        if ($date !== null && $date !== '__/__/____') {
+            $dateParts = explode('/', $date);
+            if (count($dateParts) === 3) {
+                list($day, $month, $year) = $dateParts;
+                $y = ($year - 543);
+                return "{$y}-{$month}-{$day}";
+            }
         }
         return null;
     }

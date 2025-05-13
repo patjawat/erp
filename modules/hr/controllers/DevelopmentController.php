@@ -48,12 +48,20 @@ class DevelopmentController extends Controller
     {
        $me = UserHelper::GetEmployee();
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
         $searchModel = new DevelopmentSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
-            'status' => ['Pending']
+            'status' =>   $status ? [$status] : ['Pending']
         ]);
+        // $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        // $searchModel = new DevelopmentSearch([
+        //     'thai_year' => AppHelper::YearBudget(),
+        //     'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+        //     'date_end' => AppHelper::convertToThai($lastDay),
+        //     'status' => ['Pending']
+        // ]);
         // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
@@ -66,11 +74,18 @@ class DevelopmentController extends Controller
         //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         // }
 
+       if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
         try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        } catch (\Throwable $th) {
+         
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        } catch (\Exception $e) {
+            // Yii::error('Error converting date: ' . $e->getMessage());
         }
         $dataProvider->query->groupBy('development_detail.id');
 

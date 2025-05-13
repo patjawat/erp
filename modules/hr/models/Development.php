@@ -426,12 +426,17 @@ public function viewResponseStatus()
 
     public  function getStatus($status)
     {
+        $dateStart = AppHelper::convertToGregorian($this->date_start);
+        $dateEnd = AppHelper::convertToGregorian($this->date_end);
         $title = '';
         $color = '';
         $view = '';
         $count = self::find()
             // ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
-            ->andWhere(['status' => $status])->count();
+        ->andFilterWhere(['status' => $status])
+        ->andFilterWhere(['>=', 'date_start', $dateStart])
+        ->andFilterWhere(['<=', 'date_end', $dateEnd])
+        ->count();
         $total = self::find()->count();
         $data = AppHelper::viewStatus($status);
         $percent = $total > 0 ? ($count / $total * 100) : 0;
