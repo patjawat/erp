@@ -35,23 +35,23 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class ImportDevelopmentController extends Controller{
-
-public function actionIndex(){
-    
-    
-    $sql = "SELECT go.RECORD_GO_NAME,l.LOCATION_ORG_NAME,
+class ImportDevelopmentController extends Controller
+{
+    public function actionIndex()
+    {
+        $sql = 'SELECT go.RECORD_GO_NAME,l.LOCATION_ORG_NAME,
     v.RECORD_VEHICLE_NAME,
     i.*
     FROM `grecord_index` i
     LEFT JOIN grecord_go go ON go.RECORD_GO_ID = i.RECORD_GO_ID
     LEFT JOIN grecord_org_location l ON l.LOCATION_ID = i.RECORD_LOCATION_ID
-    LEFT JOIN grecord_vehicle v ON v.RECORD_VEHICLE_ID = i.RECORD_VEHICLE_ID;;";
-    $querys = Yii::$app->db2->createCommand($sql)->queryAll();
-    
-    if (BaseConsole::confirm('การพัฒนา '.count($querys).' รายการ ยืนยัน ??')) {
-        $num = 1;
-        $total = count($querys);
+    LEFT JOIN grecord_vehicle v ON v.RECORD_VEHICLE_ID = i.RECORD_VEHICLE_ID
+    LEFT JOIN grecord_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID;';
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+
+        if (BaseConsole::confirm('การพัฒนา ' . count($querys) . ' รายการ ยืนยัน ??')) {
+            $num = 1;
+            $total = count($querys);
             foreach ($querys as $item) {
                 $checkModel = Development::findOne(['topic' => $item['RECORD_HEAD_USE']]);
                 if (!$checkModel) {
@@ -59,8 +59,8 @@ public function actionIndex(){
                 } else {
                     $model = $checkModel;
                 }
-               
-                if($item['RECORD_HEAD_USE']){
+
+                if ($item['RECORD_HEAD_USE']) {
                     $model->topic = $item['RECORD_HEAD_USE'] ?? '-';
                     $model->date_start = $item['DATE_GO'];
                     $model->date_end = $item['DATE_BACK'];
@@ -68,36 +68,38 @@ public function actionIndex(){
                     $model->vehicle_date_end = $item['DATE_TRAVEL_BACK'] ?? NULL;
                     $model->status = $this->getStatus($item['STATUS']);
                     $model->thai_year = AppHelper::YearBudget($item['DATE_GO']);
-                    $model->assigned_to = $this->Person($item['OFFER_WORK_HR_ID'])?->id  ?? 0;
+                    $model->assigned_to = $this->Person($item['OFFER_WORK_HR_ID'])?->id ?? 0;
                     $model->emp_id = $this->Person($item['HR_ID'])?->id ?? 0;
-            
+                    $model->development_type_id = $this->getDevType($item['RECORD_TYPE_ID']);
+
                     $model->leader_id = $this->Person($item['LEADER_HR_ID'])?->id;
                     $model->data_json = $item;
                     // $model->vehicle = $item['RECORD_VEHICLE_NAME'];
-                    if($model->save(false)){
+                    if ($model->save(false)) {
                         $this->creteDetailMember($model);
                         $this->creteApprove($model);
                         $percentage = (($num++) / $total) * 100;
                         // $this->createDetailRefer($model,$item);
                         echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
                     }
-
-                }
                 }
             }
-
+        }
     }
 
-
-    public static function Person($id) {
-        $person = Yii::$app->db2->createCommand('SELECT * FROM `hrd_person` WHERE ID = :id')
-        ->bindValue(':id',$id)->queryOne();
-        if($person){
+    public static function Person($id)
+    {
+        $person = Yii::$app
+            ->db2
+            ->createCommand('SELECT * FROM `hrd_person` WHERE ID = :id')
+            ->bindValue(':id', $id)
+            ->queryOne();
+        if ($person) {
             $emp = Employees::findOne(['cid' => $person['HR_CID']]);
             return $emp;
         }
     }
-    
+
     private function getStatus($data)
     {
         switch ($data) {
@@ -115,44 +117,62 @@ public function actionIndex(){
                 return 'Unknown';
         }
     }
-    
-    
-    //นำเข้าส่วนของคณะที่ไปด้วยกัน
+
+    public function getDevType($data)
+    {
+        switch ($data) {
+            case '1':
+                return 'dev1';
+            case '2':
+                return 'dev2';
+            case '3':
+                return 'dev3';
+            case '4':
+                return 'dev4';
+            case '5':
+                return 'dev5';
+            case '6':
+                return 'dev6';
+            default:
+                return 'Unknown';
+        }
+    }
+
+    // นำเข้าส่วนของคณะที่ไปด้วยกัน
     protected function creteDetailMember($data)
     {
-            $check = DevelopmentDetail::findOne(['development_id' => $data->id]);
-            if(!$check){
-                $model = new DevelopmentDetail();
-                
-            }else{
-                $model = $check;
-            }
-            $model->development_id = $data->id;
-            $model->name = 'member';
-            $model->emp_id = $data->emp_id;
-            $model->save(false);
-    } 
+        $check = DevelopmentDetail::findOne(['development_id' => $data->id]);
+        if (!$check) {
+            $model = new DevelopmentDetail();
+        } else {
+            $model = $check;
+        }
+        $model->development_id = $data->id;
+        $model->name = 'member';
+        $model->emp_id = $data->emp_id;
+        $model->save(false);
+    }
+
     protected function creteApprove($model)
     {
-        $checkApprove1 = Approve::findOne(['from_id' => $model->id, 'name' => 'development','emp_id' => $model->leader_id,'level' => 1]);
-        if($checkApprove1){
+        $checkApprove1 = Approve::findOne(['from_id' => $model->id, 'name' => 'development', 'emp_id' => $model->leader_id, 'level' => 1]);
+        if ($checkApprove1) {
             $approve1 = $checkApprove1;
-        }else{
+        } else {
             $approve1 = new Approve();
         }
-            $approve1->name = 'development';
-            $approve1->from_id = $model->id;
-            $approve1->level = 1;
-            $approve1->emp_id = $model->leader_id;
-            $approve1->title = "เห็นชอบ";
-            $approve1->data_json = [
-                "topic" => "เห็นชอบ",
-                "approve_date" => null
-            ];   
+        $approve1->name = 'development';
+        $approve1->from_id = $model->id;
+        $approve1->level = 1;
+        $approve1->emp_id = $model->leader_id;
+        $approve1->title = 'เห็นชอบ';
+        $approve1->data_json = [
+            'topic' => 'เห็นชอบ',
+            'approve_date' => null
+        ];
         $approve1->status = $model->status;
-        if($approve1->save(false)){
-            echo 'Create Approve : '.$approve1->id."\n";
-            
+        if ($approve1->save(false)) {
+            echo 'Create Approve : ' . $approve1->id . "\n";
         }
     }
 }
