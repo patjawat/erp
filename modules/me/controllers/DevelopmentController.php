@@ -231,7 +231,7 @@ class DevelopmentController extends Controller
         $model = $this->findModel($id);
         $oldData = $model->data_json;
 
-         if ($this->request->isPost) {
+        if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->data_json = ArrayHelper::merge($oldData, $model->data_json);

@@ -68,7 +68,7 @@ class Development extends \yii\db\ActiveRecord
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
             [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year','leader_group_id'], 'required'],
-            [['development_type_id','date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
+            [['development_type_id','date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department','response_status'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -82,6 +82,7 @@ class Development extends \yii\db\ActiveRecord
             'id' => 'ID',
             'thai_year' => 'ปีงบประมาณ',
             'document_id' => 'ตามหนังสือ',
+            'response_status' => 'ตอบรับเป็นวิทยากร',
             'topic' => 'หัวข้อ',
             'status' => 'สถานะ',
             'date_start' => 'วันที่เริ่ม',
@@ -382,6 +383,40 @@ public function listStatus()
     ];
 }
 
+//การตอบรับเป็นวิทยากร
+public function viewResponseStatus()
+
+{
+ switch ($this->response_status) {
+        case 'Accept':
+            return [
+                'title' => 'ตอบรับ',
+                'color' => 'success',
+                'view' => '<span class="badge bg-success text-white"><i class="fa-solid fa-circle-check"></i> ตอบรับ</span>'
+            ];
+            break;
+        case 'Reject':
+            return [
+                'title' => 'ไม่ตอบรับ',
+                'color' => 'danger',
+                'view' => '<span class="badge bg-danger">ไม่ตอบรับ</span>'
+            ];
+            break;
+        case 'None':
+            return [
+                'title' => 'ยังไม่ตอบรับ',
+                'color' => 'warning',
+                'view' => '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half"></i> ยังไม่ตอบรับ</span>'
+            ];
+            break;
+        default:
+          return [
+                'title' => 'ยังไม่ตอบรับ',
+                'color' => 'warning',
+                'view' => '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half"></i> ยังไม่ตอบรับ</span>'
+            ];
+    }
+}
     public function viewStatus()
     {
        return $this->getStatus($this->status);

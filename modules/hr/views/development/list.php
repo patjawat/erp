@@ -29,7 +29,8 @@ use yii\helpers\Html;
                 </td>
                 <td>
                     <div>
-                        <p class="fw-semibold mb-0"><?= $item->topic ?></p>
+                       
+                        <p class="fw-semibold mb-0"> <?=$item->viewResponseStatus()['view'] ?? '';?> <?= $item->topic ?></p>
                         สถานที่ <?= $item->data_json['location'] ?? '-' ?> <?= $item->showDateRange() ?>
                     </div>
                 </td>
