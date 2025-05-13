@@ -57,6 +57,25 @@ class DevelopmentController extends \yii\web\Controller
         ]);
     }
 
+
+    public function actionView($id)
+    {
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'ขออนุมัติอบรม/ประชุม/ดูงาน',
+                'content' => $this->renderAjax('@app/modules/hr/views/development/view', [
+                    'model' => $model->development,
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/hr/views/development/view', [
+                'model' => $model->development,
+            ]);
+        }
+    }
+    
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);

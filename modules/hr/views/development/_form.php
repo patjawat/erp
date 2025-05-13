@@ -140,8 +140,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
                         <div class="form-group mt-2">
                             <?php
-                            echo $form->field($model, 'data_json[development_type_name]')->widget(Select2::classname(), [
-                                'data' => CategoriseHelper::DevelopmentType(true),
+                            echo $form->field($model, 'development_type_id')->widget(Select2::classname(), [
+                                'data' => CategoriseHelper::DevelopmentType(),
                                 'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
                                 'pluginOptions' => [
                                     // 'dropdownParent' => '#main-modal',

@@ -17,19 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="container-fluid">
 
     <!-- สถานะการพัฒนา -->
-    <!-- <div class="mb-3 text-center">
-                <?php
-                $statusClass = [
-                    'Pending' => 'bg-warning',
-                    'Approved' => 'bg-success',
-                    'Rejected' => 'bg-danger',
-                    'Completed' => 'bg-info',
-                ][$model->status] ?? 'bg-secondary';
-                ?>
-                <span class="badge <?= $statusClass ?> fs-6 px-4 py-2 shadow-sm">
-                    <i class="bi bi-tag-fill me-2"></i>สถานะ: <?= $model->status ?>
-                </span>
-            </div> -->
+
 
     <!-- ข้อมูลทั่วไป -->
     <div class="row">
@@ -37,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card h-100 bg-light">
                 <div class="card-body text-center">
                     <div class="avatar-circle mb-3 mx-auto">
-                        <?=Html::img($model->createdByEmp->showAvatar(),['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload','data' => ['sizes' => 'auto','src' => $model->createdByEmp->showAvatar()]])//$model->createdByEmp->showAvatar()?>
+                        <?= isset($model->createdByEmp) ? Html::img($model->createdByEmp->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload', 'data' => ['sizes' => 'auto', 'src' => $model->createdByEmp->showAvatar()]]) : Html::img('/path/to/default/avatar.png', ['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload']) ?>
                     </div>
                     <h5><?= $model->createdByEmp->fullname ?? 'ไม่ระบุ' ?></h5>
                     <p class="text-muted mb-1"><?= $model->createdByEmp->position->name ?? 'ไม่ระบุตำแหน่ง' ?></p>

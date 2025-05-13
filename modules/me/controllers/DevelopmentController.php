@@ -9,6 +9,7 @@ use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
@@ -94,9 +95,19 @@ class DevelopmentController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('@app/modules/hr/views/development/view', [
-            'model' => $this->findModel($id),
-        ]);
+        if($this->request->isAjax){
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/hr/views/development/view', [
+                    'model' => $this->findModel($id),
+                ]),
+            ];
+        }else{
+            return $this->render('@app/modules/hr/views/development/view', [
+                'model' => $this->findModel($id),
+            ]);
+        }
     }
 
     /**
@@ -180,10 +191,10 @@ class DevelopmentController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
 
                 try {
-                    $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                    $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                    $model->vehicle_date_start = AppHelper::convertToGregorian($model->vehicle_date_start);
-                    $model->vehicle_date_end = AppHelper::convertToGregorian($model->vehicle_date_end);
+                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
                 }
                 $model->save();
@@ -213,6 +224,32 @@ class DevelopmentController extends Controller
         }
     }
 
+
+    //การตอบรับเป็นวิทบาการ
+    public function actionResponseDev($id)
+    {
+        $model = $this->findModel($id);
+        $oldData = $model->data_json;
+
+         if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $model->data_json = ArrayHelper::merge($oldData, $model->data_json);
+                $model->save(false);
+                 return [
+            'status' => 'success',
+        ];
+            }
+        }
+         if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('@app/modules/hr/views/development/_form_response_dev', ['model' => $model]),
+            ];
+        }
+       
+    }
     /**
      * Deletes an existing Development model.
      * If deletion is successful, the browser will be redirected to the 'index' page.

@@ -73,7 +73,6 @@ $listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])
             </div>
             <div class="year">
                 <?php
-                echo $item->status;
                 try {
 
                                                 if ($item->status == 'None') {

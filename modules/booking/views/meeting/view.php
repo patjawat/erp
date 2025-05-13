@@ -11,6 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Booking Cars', 'url' => ['index']]
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+
 <div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">หัวข้อการประชุม:</label>
     <div class="col-sm-8"><?=$model->title;?></div>

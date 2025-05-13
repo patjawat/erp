@@ -7,7 +7,7 @@ use yii\helpers\Html;
         <thead>
             <tr>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                <th class="text-center fw-semibold" style="width:30px">ปีงบประมาณ</th>
+                <th class="text-center fw-semibold" style="width:180px">ปีงบประมาณ</th>
 
                 <th class="fw-semibold" scope="col">เรื่อง/วัน/สถานที่</th>
                 <th class="fw-semibold" scope="col">คณะเดินทาง</th>
@@ -21,7 +21,12 @@ use yii\helpers\Html;
                 <td class="text-center fw-semibold">
                     <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                 </td>
-                <td><?= $item->thai_year; ?></td>
+                <td>
+                    <p class="fw-semibold mb-0">
+                        <?= $item->thai_year; ?>
+                    </p>
+                    <?= $item->developmentType?->title; ?>
+                </td>
                 <td>
                     <div>
                         <p class="fw-semibold mb-0"><?= $item->topic ?></p>
@@ -40,11 +45,11 @@ use yii\helpers\Html;
                         </button>
                         <ul class="dropdown-menu">
                             <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                            <li><?=$item->development_type_id == 'dev3' ? Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['/me/development/response-dev', 'id' => $item->id,'title' => '<i class="fa-solid fa-user-check"></i> การตอบรับเป็นวิทยากร'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) : ''?></li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']]) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-1"></i> แจ้งยกเลิก', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['/me/development/view', 'id' => $item->id], ['class' => 'dropdown-item open-modal-x','data' => ['size' => 'modal-xl']])?></li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขออนุญาต', ['/me/development/permit-request', 'id' => $item->id], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบตอบรับเป็นวิทยากร', ['/me/development/form-academic', 'id' => $item->id], ['class' => 'dropdown-item  open-modal','data' => ['size' => 'modal-xl']]) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-1"></i> แจ้งยกเลิก', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
                             </ui>
                     </div>
                 </td>

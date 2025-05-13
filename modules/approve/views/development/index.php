@@ -58,18 +58,19 @@ $msg = 'ขอ';
                         </td>
 
                         <td>  <?=$item->development->StackMember()?></td>
-                        <td><?=$item->viewStatus()['view'] ?></td>
+                        <td><?=$item->viewStatus()['view'] ?>
+                    </td>
                         
-                        <td style="width:120px">
+                        <td class="text-center" style="width:120px">
                             <div class="btn-group">
                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                <!-- <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view','id' => $item->development->id], ['class' => 'dropdown-item']) ?></li>
-                                    </ui>
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view','id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                    </ui> -->
                             </div>
                         </td>
                     </tr>

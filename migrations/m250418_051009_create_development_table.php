@@ -23,6 +23,7 @@ class m250418_051009_create_development_table extends Migration
             'time_start' => $this->string()->comment('เริ่มเวลา'),
             'date_end' => $this->date()->comment('ถึงวันที่'),
             'time_end' => $this->string()->comment('ถึงเวลา'),
+            'development_type_id' => $this->string()->comment('ประเภทการพัฒนา'),
             'vehicle_type_id' => $this->string()->comment('ยานพาหนะ'),
             'vehicle_date_start' => $this->date()->comment('วันออกเดินทาง'),
             'vehicle_date_end' => $this->date()->comment('วันกลับ'),
