@@ -69,7 +69,11 @@ public function actionIndex(){
                     $model->status = $this->getStatus($item['STATUS']);
                     $model->thai_year = AppHelper::YearBudget($item['DATE_GO']);
                     $model->assigned_to = $this->Person($item['OFFER_WORK_HR_ID'])?->id  ?? 0;
-                    $model->emp_id = $this->Person($item['HR_ID'])?->id;
+                    try {
+                        $model->emp_id = $this->Person($item['HR_ID'])?->id;
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
                     $model->leader_id = $this->Person($item['LEADER_HR_ID'])?->id;
                     $model->data_json = $item;
                     // $model->vehicle = $item['RECORD_VEHICLE_NAME'];
