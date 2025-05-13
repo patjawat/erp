@@ -303,14 +303,16 @@ class Development extends \yii\db\ActiveRecord
          $data .= '<div class="avatar-stack">';
          foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
              $emp = Employees::findOne(['id' => $item->emp_id]);
-             $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
-                'size' => 'model-md',
-                'bs-toggle' => 'tooltip',
-                'bs-placement' => 'top',
-                'bs-title' => $emp->fullname
-            ]]);
-        }
-        $data .= '</div>';
+             if ($emp) {
+                 $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
+                    'size' => 'model-md',
+                    'bs-toggle' => 'tooltip',
+                    'bs-placement' => 'top',
+                    'bs-title' => $emp->fullname
+                ]]);
+             }
+         }
+         $data .= '</div>';
 
          return $data;
          // } catch (\Throwable $th) {
