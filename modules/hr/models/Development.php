@@ -167,12 +167,87 @@ class Development extends \yii\db\ActiveRecord
             ->groupBy(['thai_year'])
             ->orderBy(['thai_year' => SORT_DESC])
             ->all();
-        return ArrayHelper::map($year, 'thai_year', 'thai_year');
+        return ArrayHelper::map($year, 'thai_year',function ($model) {
+            return 'ปีงบประมาณ '.$model->thai_year;
+        });
+    }
+
+// สรุปข้อมูลการอบรม/ประชุม/ดูงาน
+    public function getSummary()
+    {
+        return [
+            'listSummaryMonth' => $this->listSummaryMonth(),
+            'activityType' => $this->activityType(),
+            'monthlyTrend' => $this->monthlyTrend(),
+        ];
+    }
+    
+    // แนวโน้มการอบรม/ประชุม/ดูงานรายเดือน
+    public function monthlyTrend()
+    {
+        $list = $this->listSummaryMonth();
+        $series = [];
+        foreach ($list as $item) {
+            $series[] = [
+                'name' => $item['title'],
+                'data' => [
+                    (int)$item['m1'],
+                    (int)$item['m2'],
+                    (int)$item['m3'],
+                    (int)$item['m4'],
+                    (int)$item['m5'],
+                    (int)$item['m6'],
+                    (int)$item['m7'],
+                    (int)$item['m8'],
+                    (int)$item['m9'],
+                    (int)$item['m10'],
+                    (int)$item['m11'],
+                    (int)$item['m12']
+                ]
+            ];
+        }
+        return [
+            'series' => $series,
+            'categories' => [
+                'ม.ค.',
+                'ก.พ.',
+                'มี.ค.',
+                'เม.ย.',
+                'พ.ค.',
+                'มิ.ย.',
+                'ก.ค.',
+                'ส.ค.',
+                'ก.ย.',
+                'ต.ค.',
+                'พ.ย.',
+                'ธ.ค.'
+            ]
+        ];
+    }
+    // จำนวนการอบรม/ประชุม/ดูงานทั้งหมด
+    public function activityType()
+    {
+        $sql = "SELECT 
+            c.code,
+            c.title,
+            count(d.id) as total
+            FROM categorise c
+            LEFT JOIN development d 
+                ON d.development_type_id = c.code AND d.thai_year = :thai_year
+            WHERE c.name = 'development_type'
+            GROUP BY c.code, c.title;";
+        $data = Yii::$app->db->createCommand($sql)->bindValue(':thai_year', $this->thai_year)->queryAll();
+
+        $series = [];
+        foreach ($data as $item) {
+            $series[] = (int)$item['total'];
+        }
+
+        return ['series' => $series,'labels' => array_column($data, 'title')];
     }
     
     public function listSummaryMonth()
     {
-        $thaiYear = 2560;
 
         $sql = "
                 SELECT 
@@ -204,6 +279,7 @@ class Development extends \yii\db\ActiveRecord
         $data = $command->queryAll();
         return $data;
     }
+
 
     public function listApprove()
     {
