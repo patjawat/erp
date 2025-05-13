@@ -61,7 +61,6 @@ public function actionIndex(){
                 }
                
                 if($item['RECORD_HEAD_USE']){
-                    try {
                     $model->topic = $item['RECORD_HEAD_USE'] ?? '-';
                     $model->date_start = $item['DATE_GO'];
                     $model->date_end = $item['DATE_BACK'];
@@ -70,7 +69,7 @@ public function actionIndex(){
                     $model->status = $this->getStatus($item['STATUS']);
                     $model->thai_year = AppHelper::YearBudget($item['DATE_GO']);
                     $model->assigned_to = $this->Person($item['OFFER_WORK_HR_ID'])?->id  ?? 0;
-                        $model->emp_id = $this->Person($item['HR_ID'])?->id;
+                    $model->emp_id = $this->Person($item['HR_ID'])?->id ?? 0;
             
                     $model->leader_id = $this->Person($item['LEADER_HR_ID'])?->id;
                     $model->data_json = $item;
@@ -82,9 +81,7 @@ public function actionIndex(){
                         // $this->createDetailRefer($model,$item);
                         echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
                     }
-                            } catch (\Throwable $th) {
-                        //throw $th;
-                    }
+
                 }
                 }
             }
