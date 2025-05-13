@@ -47,13 +47,13 @@ use app\modules\hr\models\DevelopmentDetail;
  */
 class Development extends \yii\db\ActiveRecord
 {
-
-
     /**
      * {@inheritdoc}
      */
     public $q;
+
     public $q_department;
+
     public static function tableName()
     {
         return 'development';
@@ -66,9 +66,9 @@ class Development extends \yii\db\ActiveRecord
     {
         return [
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
-            [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by','thai_year'], 'integer'],
-            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id','thai_year','leader_group_id'], 'required'],
-            [['development_type_id','date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department','response_status'], 'safe'],
+            [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by', 'thai_year'], 'integer'],
+            [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id', 'thai_year', 'leader_group_id'], 'required'],
+            [['development_type_id', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'response_status'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -123,12 +123,12 @@ class Development extends \yii\db\ActiveRecord
     //         ],
     //     ];
     // }
-    
 
     public function getDevelopmentType()
     {
         return $this->hasOne(Categorise::class, ['code' => 'development_type_id'])->andOnCondition(['name' => 'development_type']);
     }
+
     public function getDevelopmentDetail()
     {
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id']);
@@ -138,13 +138,12 @@ class Development extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
-    
+
     public function getExpenses()
     {
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id'])->andOnCondition(['name' => 'expense_type']);
     }
 
-    
     public function getCreatedBy()
     {
         return $this->hasOne(User::class, ['id' => 'created_by']);
@@ -154,34 +153,78 @@ class Development extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
     public function getVehicleType()
     {
         return $this->hasOne(Categorise::class, ['code' => 'vehicle_type_id']);
     }
-    
 
-        public function listApprove()
+
+        public function groupYear()
     {
-        return Approve::find()->where(['name' => 'development','from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
+        $year = self::find()
+            ->andWhere(['IS NOT', 'thai_year', null])
+            ->groupBy(['thai_year'])
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->all();
+        return ArrayHelper::map($year, 'thai_year', 'thai_year');
+    }
+    
+    public function listSummaryMonth()
+    {
+        $thaiYear = 2560;
+
+        $sql = "
+                SELECT 
+                    c.code,
+                    c.title,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 1 THEN 1 END) AS m1,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 2 THEN 1 END) AS m2,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 3 THEN 1 END) AS m3,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 4 THEN 1 END) AS m4,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 5 THEN 1 END) AS m5,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 6 THEN 1 END) AS m6,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 7 THEN 1 END) AS m7,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 8 THEN 1 END) AS m8,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 9 THEN 1 END) AS m9,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 10 THEN 1 END) AS m10,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 11 THEN 1 END) AS m11,
+                    COUNT(CASE WHEN MONTH(d.date_start) = 12 THEN 1 END) AS m12
+                FROM categorise c
+                LEFT JOIN development d 
+                    ON d.development_type_id = c.code AND d.thai_year = :thaiYear
+                WHERE c.name = 'development_type'
+                GROUP BY c.code, c.title
+                ORDER BY c.code
+                ";
+
+        $command = Yii::$app->db->createCommand($sql);
+        $command->bindValue(':thaiYear', $this->thai_year);
+
+        $data = $command->queryAll();
+        return $data;
     }
 
-    
-       // แสดงวันที่สร้าง
-       public function viewCreated()
-       {
-           // return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
-           return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
-       }
-    
-           //ส่ง Msg เมื่อผ่านการอนุมัติ
+    public function listApprove()
+    {
+        return Approve::find()->where(['name' => 'development', 'from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
+    }
+
+    // แสดงวันที่สร้าง
+    public function viewCreated()
+    {
+        // return Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
+        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+    }
+
+    // ส่ง Msg เมื่อผ่านการอนุมัติ
+
     public function MsgApprove()
     {
-        $message = $this->topic."ได้รับการอนุมัติแล้ว";
+        $message = $this->topic . 'ได้รับการอนุมัติแล้ว';
         $lineId = $this->createdByEmp->user->line_id;
-        LineMsg::sendMsg($lineId,$message);
+        LineMsg::sendMsg($lineId, $message);
     }
-    
-    
 
     public function getLeader()
     /**
@@ -192,12 +235,11 @@ class Development extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
-    
+
     public function getAssignedTo()
     {
         return $this->hasOne(Employees::class, ['id' => 'assigned_to']);
     }
-    
 
     public function VehicleTypeName()
     {
@@ -207,10 +249,11 @@ class Development extends \yii\db\ActiveRecord
             ->one();
         return $model ? $model->title : '-';
     }
+
     // สร้างการอนุมัติ
     public function createApprove()
     {
-    // หัวหน้างาน
+        // หัวหน้างาน
         $developmentStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'development']);
         try {
             if (!$developmentStep1Check) {
@@ -224,24 +267,23 @@ class Development extends \yii\db\ActiveRecord
                 $developmentStep1->status = 'Pending';
                 $developmentStep1->save(false);
                 // try {
-                    // ส่ง msg ให้ Approve
-                    $toUserId = $developmentStep1->employee->user->line_id;
-                    $msg = 'ขออนุมัติ';
-                    $msg .= "\n" . 'หัวข้อ : ' . $this->topic;
-                    $msg .= "\n" . 'วันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short');
-                    $msg .= "\n" . 'ถึงวันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short');
-                    $msg .= "\n" . 'ผู้ขอ : ' . $this->createdByEmp->fullname;
-                    LineMsg::sendMsg($toUserId,$msg);
+                // ส่ง msg ให้ Approve
+                $toUserId = $developmentStep1->employee->user->line_id;
+                $msg = 'ขออนุมัติ';
+                $msg .= "\n" . 'หัวข้อ : ' . $this->topic;
+                $msg .= "\n" . 'วันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short');
+                $msg .= "\n" . 'ถึงวันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short');
+                $msg .= "\n" . 'ผู้ขอ : ' . $this->createdByEmp->fullname;
+                LineMsg::sendMsg($toUserId, $msg);
                 // } catch (\Throwable $th) {
 
                 // }
             }
         } catch (\Throwable $th) {
-
         }
 
         try {
-             //หัวหน้ากลุ่มงานเห็นชอบ
+            // หัวหน้ากลุ่มงานเห็นชอบ
             $developmentStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'development']);
             if (!$developmentStep2Check) {
                 $developmentStep2 = $developmentStep2Check ? $developmentStep2Check : new Approve();
@@ -258,7 +300,7 @@ class Development extends \yii\db\ActiveRecord
         }
 
         try {
-            //ผู้ตรวจสอบ
+            // ผู้ตรวจสอบ
             $developmentStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'development']);
             if (!$developmentStep3Check) {
                 $developmentStep3 = $developmentStep3Check ? $developmentStep3Check : new Approve();
@@ -269,65 +311,64 @@ class Development extends \yii\db\ActiveRecord
                 $developmentStep3->data_json = ['label' => 'ผ่าน'];
                 $developmentStep3->level = 3;
                 $developmentStep3->status = 'None';
-               $developmentStep3->save(false);
+                $developmentStep3->save(false);
             }
         } catch (\Throwable $th) {
         }
 
-        //ผู้อำนวยการอนุมัติ
+        // ผู้อำนวยการอนุมัติ
         $director = SiteHelper::viewDirector();
         $developmentStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'development']);
         // try {
-            if (!$developmentStep4Check) {
-            
-                $developmentStep4 = $developmentStep4Check ? $developmentStep4Check : new Approve();
-                $developmentStep4->from_id = $this->id;
-                $developmentStep4->name = 'development';
-                $developmentStep4->emp_id = $director['id'];
-                $developmentStep4->title = 'อนุมัติ';
-                $developmentStep4->data_json = ['label' => 'อนุมัติ'];
-                $developmentStep4->level = 4;
-                $developmentStep4->status = 'None';
-                $developmentStep4->save(false);
-            }
-            // code...
+        if (!$developmentStep4Check) {
+            $developmentStep4 = $developmentStep4Check ? $developmentStep4Check : new Approve();
+            $developmentStep4->from_id = $this->id;
+            $developmentStep4->name = 'development';
+            $developmentStep4->emp_id = $director['id'];
+            $developmentStep4->title = 'อนุมัติ';
+            $developmentStep4->data_json = ['label' => 'อนุมัติ'];
+            $developmentStep4->level = 4;
+            $developmentStep4->status = 'None';
+            $developmentStep4->save(false);
+        }
+        // code...
         // } catch (\Throwable $th) {
         // }
     }
-    
-     //  ภาพทีมคณะกรรมการ
-     public function StackMember()
-     {
-         // try {
-         $data = '';
-         $data .= '<div class="avatar-stack">';
-         foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
-             $emp = Employees::findOne(['id' => $item->emp_id]);
-             if ($emp) {
-                 $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
+
+    //  ภาพทีมคณะกรรมการ
+    public function StackMember()
+    {
+        // try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
+            $emp = Employees::findOne(['id' => $item->emp_id]);
+            if ($emp) {
+                $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
                     'size' => 'model-md',
                     'bs-toggle' => 'tooltip',
                     'bs-placement' => 'top',
                     'bs-title' => $emp->fullname
                 ]]);
-             }
-         }
-         $data .= '</div>';
+            }
+        }
+        $data .= '</div>';
 
-         return $data;
-         // } catch (\Throwable $th) {
-         // }
-     }
+        return $data;
+        // } catch (\Throwable $th) {
+        // }
+    }
 
     //  แสดงรายชื่อคณะเดินทาง
     public function memberText()
     {
         $data = [];
         foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
-           $emp = Employees::findOne(['id' => $item->emp_id]);
-           if ($emp) {
-              $data[] = $emp->fullname;
-           }
+            $emp = Employees::findOne(['id' => $item->emp_id]);
+            if ($emp) {
+                $data[] = $emp->fullname;
+            }
         }
         return [
             'data' => $data,
@@ -335,20 +376,19 @@ class Development extends \yii\db\ActiveRecord
             'text' => implode(',', $data)
         ];
     }
-     
-    //วันที่เอกสาร
+
+    // วันที่เอกสาร
     public function showDateRange()
     {
         return ThaiDateHelper::formatThaiDateRange($this->date_start, $this->date_end, 'long', 'short');
     }
 
-    //วันที่ออกเดินทาง
+    // วันที่ออกเดินทาง
     public function showVehicleDateRange()
     {
         return ThaiDateHelper::formatThaiDateRange($this->vehicle_date_start, $this->vehicle_date_end, 'long', 'short');
     }
 
-    
     public function ListVehicleType()
     {
         $model = Categorise::find()
@@ -357,6 +397,7 @@ class Development extends \yii\db\ActiveRecord
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
     }
+
     public function ListThaiYear()
     {
         $model = self::find()
@@ -373,58 +414,58 @@ class Development extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-public function listStatus()
-{
-    return [
-        'Pending' => 'รออนุมัติ',
-        'Pass' => 'ตรวจสอบผ่าน',
-        'Approve' => 'อนุมัติ',
-        'Reject' => 'ไม่อนุมัติ',
-        'Cancel' => 'ยกเลิก',
-        'Complete' => 'เสร็จสิ้น',
-    ];
-}
-
-//การตอบรับเป็นวิทยากร
-public function viewResponseStatus()
-
-{
- switch ($this->response_status) {
-        case 'Accept':
-            return [
-                'title' => 'ตอบรับ',
-                'color' => 'success',
-                'view' => '<span class="badge bg-success text-white"><i class="fa-solid fa-circle-check"></i> ตอบรับ</span>'
-            ];
-            break;
-        case 'Reject':
-            return [
-                'title' => 'ไม่ตอบรับ',
-                'color' => 'danger',
-                'view' => '<span class="badge bg-danger">ไม่ตอบรับ</span>'
-            ];
-            break;
-        case 'None':
-            return [
-                'title' => 'ยังไม่ตอบรับ',
-                'color' => 'warning',
-                'view' => '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half"></i> ยังไม่ตอบรับ</span>'
-            ];
-            break;
-        default:
-          return [
-                'title' => 'ยังไม่ตอบรับ',
-                'color' => 'warning',
-                'view' => '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half"></i> ยังไม่ตอบรับ</span>'
-            ];
+    public function listStatus()
+    {
+        return [
+            'Pending' => 'รออนุมัติ',
+            'Pass' => 'ตรวจสอบผ่าน',
+            'Approve' => 'อนุมัติ',
+            'Reject' => 'ไม่อนุมัติ',
+            'Cancel' => 'ยกเลิก',
+            'Complete' => 'เสร็จสิ้น',
+        ];
     }
-}
+
+    // การตอบรับเป็นวิทยากร
+    public function viewResponseStatus()
+    {
+        switch ($this->response_status) {
+            case 'Accept':
+                return [
+                    'title' => 'ตอบรับ',
+                    'color' => 'success',
+                    'view' => '<span class="badge bg-success text-white"><i class="fa-solid fa-circle-check"></i> ตอบรับ</span>'
+                ];
+                break;
+            case 'Reject':
+                return [
+                    'title' => 'ไม่ตอบรับ',
+                    'color' => 'danger',
+                    'view' => '<span class="badge bg-danger">ไม่ตอบรับ</span>'
+                ];
+                break;
+            case 'None':
+                return [
+                    'title' => 'ยังไม่ตอบรับ',
+                    'color' => 'warning',
+                    'view' => '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half"></i> ยังไม่ตอบรับ</span>'
+                ];
+                break;
+            default:
+                return [
+                    'title' => 'ยังไม่ตอบรับ',
+                    'color' => 'warning',
+                    'view' => '<span class="badge bg-warning"><i class="fa-regular fa-hourglass-half"></i> ยังไม่ตอบรับ</span>'
+                ];
+        }
+    }
+
     public function viewStatus()
     {
-       return $this->getStatus($this->status);
+        return $this->getStatus($this->status);
     }
 
-    public  function getStatus($status)
+    public function getStatus($status)
     {
         $dateStart = AppHelper::convertToGregorian($this->date_start);
         $dateEnd = AppHelper::convertToGregorian($this->date_end);
@@ -433,10 +474,10 @@ public function viewResponseStatus()
         $view = '';
         $count = self::find()
             // ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
-        ->andFilterWhere(['status' => $status])
-        ->andFilterWhere(['>=', 'date_start', $dateStart])
-        ->andFilterWhere(['<=', 'date_end', $dateEnd])
-        ->count();
+            ->andFilterWhere(['status' => $status])
+            ->andFilterWhere(['>=', 'date_start', $dateStart])
+            ->andFilterWhere(['<=', 'date_end', $dateEnd])
+            ->count();
         $total = self::find()->count();
         $data = AppHelper::viewStatus($status);
         $percent = $total > 0 ? ($count / $total * 100) : 0;
@@ -450,5 +491,4 @@ public function viewResponseStatus()
             'view' => $data['view']
         ];
     }
-    
 }

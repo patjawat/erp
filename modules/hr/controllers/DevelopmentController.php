@@ -97,7 +97,19 @@ class DevelopmentController extends Controller
 
     public function actionDashboard()
     {
-        return $this->render('dashboard');
+         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new DevelopmentSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending']
+        ]);
+         $dataProvider = $searchModel->search($this->request->queryParams);
+        return $this->render('dashboard',[
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }   
 
     /**

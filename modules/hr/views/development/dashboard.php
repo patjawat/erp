@@ -27,7 +27,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <h4 class="card-title">สรุปข้อมูลการอบรมประจำปีงบประมาณ 2568</h4>
+        <div class="d-flex justify-content-between">
+            <h4 class="card-title">สรุปข้อมูลการอบรมประจำปีงบประมาณ 2568</h4>
+            <?php echo $this->render('_search_year',['model' => $searchModel])?>
+        </div>
 
         <div
             class="table-responsive"
@@ -37,22 +40,40 @@ $this->params['breadcrumbs'][] = $this->title;
             >
                 <thead>
                     <tr>
-                        <th scope="col">ประเภทการอบรม</th>
-                        <th scope="col">Column 2</th>
-                        <th scope="col">Column 3</th>
+                        <th class="text-start fw-semibold" scope="col">ประเภทการอบรม</th>
+                        <th class="text-center fw-semibold" scope="col">ต.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">พ.ย.</th>
+                        <th class="text-center fw-semibold" scope="col">ธ.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">ม.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">ก.พ.</th>
+                        <th class="text-center fw-semibold" scope="col">มี.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">เม.ย.</th>
+                        <th class="text-center fw-semibold" scope="col">พ.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">มิ.ย.</th>
+                        <th class="text-center fw-semibold" scope="col">ก.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">ส.ค.</th>
+                        <th class="text-center fw-semibold" scope="col">ก.ย.</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php foreach($searchModel->listSummaryMonth() as $item):?>
                     <tr class="">
-                        <td scope="row">R1C1</td>
-                        <td>R1C2</td>
-                        <td>R1C3</td>
+                        <td scope="row"><?=$item['title']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m10']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m11']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m12']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m1']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m2']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m3']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m4']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m5']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m6']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m7']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m8']?></td>
+                        <td class="text-center fw-semibold"><?=$item['m9']?></td>
+                    
                     </tr>
-                    <tr class="">
-                        <td scope="row">Item</td>
-                        <td>Item</td>
-                        <td>Item</td>
-                    </tr>
+                    <?php endforeach;?>
                 </tbody>
             </table>
         </div>
