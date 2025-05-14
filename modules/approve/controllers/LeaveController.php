@@ -3,6 +3,7 @@
 namespace app\modules\approve\controllers;
 
 use Yii;
+use DateTime;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
@@ -20,10 +21,18 @@ class LeaveController extends \yii\web\Controller
     public function actionIndex()
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
+         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
         $me = UserHelper::GetEmployee();
+        
         $searchModel = new ApproveSearch([
-            'status' => ['Pending']
+            'thai_year' => AppHelper::YearBudget(),
+          'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending']
         ]);
+
+        
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('leave');
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' =>$searchModel->leave_type_id]);
@@ -47,7 +56,7 @@ class LeaveController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
            
     } catch (\Throwable $th) {
-        //throw $th;
+
     }
     
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
