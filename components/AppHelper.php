@@ -825,7 +825,11 @@ class AppHelper extends Component
                 $color = 'success';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-circle-check"></i> ' . $title . '</span>';
                 break;
-
+            case 'None':
+                $title = 'รอตรวจสอบ';
+                $color = 'secondary';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-hourglass-half"></i> ' . $title . '</span>';
+                break;
             default:
                 $title = 'ไม่ระบุ';
                 $color = 'light';

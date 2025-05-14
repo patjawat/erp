@@ -358,6 +358,8 @@ $('.approve-all').click(function (e) {
                 url: url,
                 dataType: "json",
                 success: function (res) {
+                    console.log(res);
+                    
                     if (res.status == 'success') {
                         Swal.fire({
                         title: 'กำลังบันทึกข้อมูล...',

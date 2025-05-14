@@ -40,6 +40,9 @@ class UpdateLeaveDirectorController extends Controller
      */
     public function actionIndex()
     {
+
+        // update approve leave ที่เป็นค่า null
+        $sql = "UPDATE `approve` SET emp_id = 19 WHERE `name` LIKE 'leave' AND `emp_id` IS NULL AND `level` = 4";
         $querys = Leave::find()->all();
         if (BaseConsole::confirm('การพัฒนา ' . count($querys) . ' รายการ ยืนยัน ??')) {
             $num = 1;

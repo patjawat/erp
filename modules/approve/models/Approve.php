@@ -114,6 +114,15 @@ class Approve extends \yii\db\ActiveRecord
         return $this->hasOne(Vehicle::class, ['id' => 'from_id']);
     }
 
+/*************  ✨ Windsurf Command ⭐  *************/
+    /**
+     * Establishes a relationship with the StockEvent model
+     * based on the foreign key 'from_id'.
+     *
+     * @return \yii\db\ActiveQuery
+     */
+
+/*******  d89483bd-f223-47e9-9c96-a9679ae1625c  *******/
     public function getStock()
     {
         return $this->hasOne(StockEvent::class, ['id' => 'from_id']);

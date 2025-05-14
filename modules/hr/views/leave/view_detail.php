@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <td>ระหว่างวันที่ : </td>
                     <td>
-                    <i class="fa-solid fa-calendar-check"></i> <?php echo AppHelper::convertToThai($model->date_start ?? '') ?> ถึงวันที่ <i class="fa-solid fa-calendar-check"></i> <?php echo AppHelper::convertToThai($model->date_end ?? '') ?>
+                    <i class="fa-solid fa-calendar-check"></i> <?php echo $model->showLeaveDate() ?>
                     </td>
 
                     <td>เป็นเวลา : </td>

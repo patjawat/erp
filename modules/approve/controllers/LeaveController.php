@@ -38,7 +38,7 @@ class LeaveController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' =>$searchModel->leave_type_id]);
         $dataProvider->query->andFilterWhere(['name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'approve.status',['None']]);
+        // $dataProvider->query->andFilterWhere(['NOT IN', 'approve.status',['None']]);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -201,11 +201,11 @@ class LeaveController extends \yii\web\Controller
                     $model->leave->MsgApprove();
                 }
 
-                if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'purchase') {
-                    $model->purchase->status = 2;
-                    $model->purchase->save();
-                    // $model->leave->MsgApprove();
-                }
+                // if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'purchase') {
+                //     $model->purchase->status = 2;
+                //     $model->purchase->save();
+                //     // $model->leave->MsgApprove();
+                // }
             }
         }
         return [
