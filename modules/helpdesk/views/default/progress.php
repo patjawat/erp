@@ -3,9 +3,18 @@ use yii\web\View;
 use yii\helpers\Url;
 use app\modules\helpdesk\models\Helpdesk;
 
-$total = Helpdesk::find()->where(['in','status',[1,2,3,4]])->andWhere(['repair_group' => $repair_group])->count();
-$status2 = Helpdesk::find()->where(['in','status',[1,2,3]])->andWhere(['repair_group' => $repair_group])->count();
-$status4 = Helpdesk::find()->where(['status' => 4])->andWhere(['repair_group' => $repair_group])->count();
+$total = Helpdesk::find()->where(['in','status',[1,2,3,4]])
+->andFilterWhere(['repair_group' => $model->repair_group])
+->andFilterWhere(['thai_year' => $model->thai_year])
+->count();
+$status2 = Helpdesk::find()->where(['in','status',[1,2,3]])
+->andFilterWhere(['repair_group' => $model->repair_group])
+->andFilterWhere(['thai_year' => $model->thai_year])
+->count();
+$status4 = Helpdesk::find()->where(['status' => 4])
+->andFilterWhere(['repair_group' => $model->repair_group])
+->andFilterWhere(['thai_year' => $model->thai_year])
+->count();
 try {
     $percen = ROUND(((($total - $status2) / $total)* 100),0);
 } catch (\Throwable $th) {
@@ -22,7 +31,7 @@ try {
                     <div class="position-relative">
                         <div class="d-flex flex-column">
                             <span class="h5">อยู่ในกระบวนการ</span>
-                            <span class="text-center text-muted mb-0"><?=$status2;?></span>
+                            <span class="text-center text-muted mb-0"><?=number_format($status2,0);?></span>
                         </div>
                     </div>
                 </div>
@@ -32,7 +41,7 @@ try {
                     <div class="position-relative">
                         <div class="d-flex flex-column">
                             <span class="h5">เสร็จสิ้น</span>
-                            <span class="text-muted mb-0 text-center"><?=$status4;?></span>
+                            <span class="text-muted mb-0 text-center"><?=number_format($status4,0);?></span>
                         </div>
                     </div>
                 </div>

@@ -39,6 +39,7 @@ services:
     command:
       [
         "mysqld",
+        "--max_allowed_packet=1G",
         "--innodb-buffer-pool-size=1G",
         "--innodb-log-file-size=256M",
         "--innodb-flush-log-at-trx-commit=2",

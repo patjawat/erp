@@ -1,10 +1,33 @@
 <?php
-use app\modules\helpdesk\models\Helpdesk;
 use app\components\AppHelper;
-$sql = "select x2.*,ROUND(((rating /total) * 100),0) as p FROM (SELECT x1.*,(SELECT count(id) FROM helpdesk where repair_group = :repair_group) as total FROM(SELECT c.title,c.code,count(h.rating) as rating FROM categorise c
-LEFT JOIN helpdesk h ON h.rating = c.code AND h.name = 'repair' AND h.repair_group = :repair_group
-WHERE c.name = 'rating'
-GROUP BY c.code ORDER BY c.code DESC) as x1) as x2;";
+use app\modules\helpdesk\models\Helpdesk;
+$sql = "SELECT 
+    x2.*, 
+    ROUND(((rating / total) * 100), 0) AS p
+FROM (
+    SELECT 
+        x1.*, 
+        (
+            SELECT SUM(rating)
+            FROM helpdesk 
+            WHERE repair_group = :repair_group
+        ) AS total
+    FROM (
+        SELECT 
+            c.title,
+            c.code,
+            COUNT(h.rating) AS rating
+        FROM categorise c
+        LEFT JOIN helpdesk h 
+            ON h.rating = c.code 
+            AND h.name = 'repair' 
+            AND h.repair_group = :repair_group
+        WHERE c.name = 'rating'
+        GROUP BY c.code, c.title
+        ORDER BY c.code DESC
+    ) AS x1
+) AS x2;
+;";
 $querys  = Yii::$app->db->createCommand($sql)
 ->bindValue('repair_group',$repair_group)
 ->queryAll();

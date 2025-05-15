@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-8">
         <?php echo $this->render('@app/modules/helpdesk/views/repair/_chart_summary',[ 'searchModel' => $searchModel,])?>
     </div>
-    <div class="col-4"> <?php echo  $this->render('../default/progress', ['repair_group' => $searchModel->repair_group]) ?></div>
+    <div class="col-4"> <?php echo  $this->render('../default/progress', ['model' => $searchModel]) ?></div>
 </div>
 <?php // echo $this->render('@app/modules/helpdesk/views/repair/list_order', ['searchModel' => $searchModel,'dataProvider' => $dataProvider])?>
 <div class="row">
