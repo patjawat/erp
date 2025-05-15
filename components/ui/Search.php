@@ -36,6 +36,8 @@ use app\modules\hr\models\Organization;
                             $('#developmentsearch-date_end').val('');
                             $('#approvesearch-date_start').val('');
                             $('#approvesearch-date_end').val('');
+                            $('#helpdesksearch-date_start').val('');
+                            $('#helpdesksearch-date_end').val('');
                             
                         }",
             ]

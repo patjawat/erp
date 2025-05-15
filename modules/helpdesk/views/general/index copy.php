@@ -40,11 +40,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold" scope="col" style="width:500px">รายละเอียด</th>
-                    <th class="fw-semibold" scope="col" style="width:300px">ผู้แจ้ง</th>
+                    <th class="fw-semibold" scope="col">รายละเอียด</th>
+                    <th class="fw-semibold" scope="col">ผู้แจ้งซ่อม</th>
                     <!-- <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th> -->
                     <th class="fw-semibold text-center" style="width:150px">สถานะ</th>
-                    <th style="width:150px">ความสำคัญ</th>
                     <th class="fw-semibold text-center" style="width:150px">ดำเนินการ</th>
                 </tr>
             </thead>
@@ -55,8 +54,14 @@ $this->params['breadcrumbs'][] = $this->title;
             <td>
                         <div class="d-flex">
                             <?php // echo $item->RepairType()['image']?>
-                            <div style="width:500px" class="">
-                                <p class="fw-semibold fs-6 mb-0 text-truncate ">
+                            <div class="avatar-detail">
+                                <p class="text-primary fw-semibold fs-13 mb-0">
+                                    <span class="badge text-bg-primary fs-13">
+                                        <!-- <i class="fa-solid fa-circle-exclamation"></i> -->
+                                        <?php // echo $item->RepairType()['title']?>
+                                    </span>
+                                </p>
+                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
                                     <?php echo $item->title?></p>
                                 <p class="text-primary fs-13 mb-0">
                                     <?php echo $item->viewCreateDateTime()?>
@@ -67,7 +72,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td> <?= $item->showAvatarCreate(); ?></td>
                     <!-- <td><?php //  $item->StackTeam() ?></td> -->
                     <td class="text-center"> <?= $item->viewStatus() ?></td>
-                    <td><?=$item->viewUrgency()?></td>
                     <td class="text-center">
                         <?php if($item->status == 1):?>
                         <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $item->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>

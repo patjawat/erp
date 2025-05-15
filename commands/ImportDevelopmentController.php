@@ -78,9 +78,10 @@ class ImportDevelopmentController extends Controller
                     if ($model->save(false)) {
                         $this->creteDetailMember($model);
                         $this->creteApprove($model);
+                        $this->createExpenseType($model,$item);
                         $percentage = (($num++) / $total) * 100;
                         // $this->createDetailRefer($model,$item);
-                        echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
+                        // echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
                     }
                 }
             }
@@ -138,6 +139,45 @@ class ImportDevelopmentController extends Controller
         }
     }
 
+    public function actionCreateMoney()
+    {
+
+        $sql = 'SELECT i.RECORD_HEAD_USE,m.MONEY_ID,m.SUMMONEY FROM `grecord_index_money` m LEFT JOIN grecord_index i ON i.ID = m.RECORD_ID WHERE `SUMMONEY` IS NOT NULL;';
+        $querys = Yii::$app->db2->createCommand($sql)
+        ->queryAll();
+
+       
+        if (count($querys) > 0) {
+            foreach ($querys as $item) {
+
+                // try {
+ 
+                $checkModel = Development::findOne(['topic' => $item['RECORD_HEAD_USE']]);
+                //  echo 'Create Expense Type : ' . $checkModel->topic . "\n";
+                $checkDetail = DevelopmentDetail::findOne(['development_id' => $checkModel->id, 'name' => 'expense_type', 'category_id' => 'ET'.$item['MONEY_ID']]);
+                if (!$checkDetail) {
+                    $model = new DevelopmentDetail();
+                } else {
+                    $model = $checkDetail;
+                }
+                $model->development_id = $checkModel->id;
+                $model->category_id = 'ET'.$item['MONEY_ID'];
+                $model->name = 'expense_type';
+                $model->price = $item['SUMMONEY'];
+                $model->data_json = [
+                    'old_data' => $item,
+                ];
+                if ($model->save(false)) {
+                    echo 'Create Expense Type : ' . $model->id . "\n";
+                }
+                                   //code...
+                // } catch (\Throwable $th) {
+                //     //throw $th;
+                // }
+            }
+        }
+ 
+    }
     // นำเข้าส่วนของคณะที่ไปด้วยกัน
     protected function creteDetailMember($data)
     {
@@ -172,7 +212,7 @@ class ImportDevelopmentController extends Controller
         ];
         $approve1->status = $model->status;
         if ($approve1->save(false)) {
-            echo 'Create Approve : ' . $approve1->id . "\n";
+            // echo 'Create Approve : ' . $approve1->id . "\n";
         }
     }
 }

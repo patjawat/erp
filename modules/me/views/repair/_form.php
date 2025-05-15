@@ -44,7 +44,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
     <div class="row">
         <div class="col-8">
-            <?= $form->field($model, 'data_json[title]')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('<i class="fa-solid fa-exclamation"></i> ระบุอาการเสีย/ความต้องการ') ?>
+            <?= $form->field($model, 'title')->textInput(['placeholder' => 'ระบุอาการเสีย...'])->label('<i class="fa-solid fa-exclamation"></i> ระบุอาการเสีย/ความต้องการ') ?>
         </div>
         <div class="col-4">
             <div class="mb-3 highlight-addon field-helpdesk-data_json-location has-success">

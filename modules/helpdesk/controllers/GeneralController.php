@@ -25,35 +25,35 @@ class GeneralController extends \yii\web\Controller
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
             'repair_group' => 1,
-            'auth_item' => 'technician',
-            'status' => [1,2,3]
+            // 'auth_item' => 'technician',
+            // 'status' => [1,2,3]
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
+            ['like', 'title', $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
 
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
+        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
         
-        try {
+        // try {
          
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['between', 'created_at', ($dateStart.' 00:00:00'), ($dateEnd.' 23:59:59')]);
-        } catch (\Exception $e) {
-            Yii::error("Error converting date: " . $e->getMessage());
-        }
-        $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
-        $dataProvider->pagination->pageSize = 15;
+        // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        // $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        // $dataProvider->query->andFilterWhere(['between', 'created_at', ($dateStart.' 00:00:00'), ($dateEnd.' 23:59:59')]);
+        // } catch (\Exception $e) {
+        //     Yii::error("Error converting date: " . $e->getMessage());
+        // }
+        // $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
+        // $dataProvider->pagination->pageSize = 15;
 
             return $this->render('index', [
                 'title' => 'ศูนย์งานซ่อมบำรุง',

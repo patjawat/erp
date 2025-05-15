@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif;?>
             
                             </div>
-                            <span class="fw-semibold"><?php echo $model->data_json['title']?></span>
+                            <span class="fw-semibold"><?php echo $model->title?></span>
                         </div>
                     </div>
 

@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?= $model->viewUrgency() ?>
                                 <?php echo $model->viewCreateDateTime()?>
                             </p>
-                            <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->data_json['title']?></p>
+                            <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $model->title?></p>
                         </div>
                     </div>
                     </td>

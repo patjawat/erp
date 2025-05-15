@@ -9,9 +9,11 @@
 
 namespace app\commands;
 
-use app\modules\helpdesk\models\Helpdesk;
-use yii\console\Controller;
 use Yii;
+use yii\console\Controller;
+use yii\helpers\BaseConsole;
+use app\modules\hr\models\Employees;
+use app\modules\helpdesk\models\Helpdesk;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -31,85 +33,185 @@ class ImportHelpdeskController extends Controller
      */
     public function actionIndex()
     {
-        $sql = "SELECT
-                a.ARTICLE_NUM as code,
-                ('repair') as name,
-                i.YEAR_ID as thai_year,
-                CAST(e.id as UNSIGNED) as empoyee_id,
-                concat(e.fname,' ',e.lname) as create_name,
-                person.HR_CID,i.DATE_TIME_REQUEST,i.YEAR_ID,
-                IF(a.ARTICLE_NUM > 1, 'asset','general') as send_type,
-                i.SYMPTOM as title,
-                i.REPAIR_COMMENT as repair_note,
-                i.TECH_RECEIVE_ID,
-                i.TECH_RECEIVE_NAME as accept_name,
-                concat(i.TECH_RECEIVE_DATE,' ',i.TECH_RECEIVE_TIME) as accept_time,
-                concat(i.REPAIR_DATE,' ',i.REPAIR_TIME) as repair_date,
-                i.DEPARTMENT_SUB_ID,
-                dep.HR_DEPARTMENT_SUB_SUB_NAME as location,
-                i.STATUS,
-                IF(i.REPAIR_SCORE IS NULL,1,i.REPAIR_SCORE) as urgency 
-                FROM backoffice.informrepair_index i
-
-                LEFT JOIN backoffice.asset_article a ON a.ARTICLE_ID = i.ARTICLE_ID
-                LEFT JOIN backoffice.hrd_person person ON person.ID = i.USER_REQUEST_ID
-                LEFT JOIN backoffice.hrd_department_sub_sub dep ON dep.HR_DEPARTMENT_SUB_SUB_ID = i.DEPARTMENT_SUB_ID
-                LEFT JOIN employees e ON e.cid = backoffice.person.HR_CID
-                WHERE a.ARTICLE_NUM IS NOT NULL
-                AND i.STATUS = 'SUCCESS'
-                LIMIT 100000";
+        $sql = '';
 
         $querys = Yii::$app->db->createCommand($sql)->queryAll();
 
         foreach ($querys as $item) {
-            // ตรวจสอบว่าเป็นครุภัณ์หรืแไม่
-            $sqlCheckAssetType = "SELECT asset_item.title,asset_type.title,asset_type.code FROM asset a INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item' INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type' WHERE a.code = :code;";
-            $checkAssetType = Yii::$app
-                ->db
-                ->createCommand($sqlCheckAssetType)
-                ->bindValue(':code', $item['code'])
-                ->queryOne();
-
-            try {
-                if (isset($checkAssetType) && $checkAssetType['code'] == 11) {
-                    $repair_group = 3;
-                } elseif ($checkAssetType['code'] == 12) {
-                    $repair_group = 2;
-                } else {
-                    $repair_group = 1;
-                }
-
-                $model = new Helpdesk();
-                $model->code = $item['code'];
-                $model->name = 'repair';
-                $model->thai_year = $item['thai_year'];
-                $model->status = 4;
-                $model->repair_group = $repair_group;
-                $model->created_by = $item['empoyee_id'];
-                $model->data_json = [
-                    'note' => 'เพิ่มเติม',
-                    'price' => '10000',
-                    'title' => $item['title'],
-                    'end_job' => '1',
-                    'urgency' => $item['urgency'] == 5 ? 1 : $item['urgency'],
-                    'location' => $item['location'],
-                    'send_type' => 'asset',
-                    'start_job' => '1',
-                    'accept_name' => $item['accept_name'],
-                    'accept_time' => $item['accept_time'],
-                    'create_name' => $item['create_name'],
-                    'repair_note' => $item['repair_note'],
-                    'repair_type' => 'ซ่อมภายใน',
-                    'end_job_date' => '21/05/2024 14:34:42',
-                    'start_job_date' => '09/05/2024 14:34:36'
-                ];
-
-                $model->save(false);
-                // code...
-            } catch (\Throwable $th) {
-                $repair_group = '';
-            }
         }
         echo "Hello Inpoert \n";
+    }
+
+    // งานซ่อมบำรุง
+    public function actionGeneral()
+    {
+
+
+        $sql = 'SELECT 
+ r.ID,
+  REPAIR_ID,
+  YEAR_ID,
+  REPAIR_NAME,
+  ARTICLE_ID,
+  OTHER_ID,
+  OTHER_NAME,
+  USER_REQUEST_ID,
+  USRE_REQUEST_NAME,
+  DATE_TIME_REQUEST,
+  SYMPTOM,
+  REPAIR_DATE,
+  REPAIR_TIME,
+  LOCATION_SEE_ID,
+  LOCATIONLEVEL_SEE_ID,
+  LOCATIONLEVELROOM_SEE_ID,
+  DEPARTMENT_SUB_ID,
+  DEPARTMENT_ID,
+  DATE_SAVE,
+  REPAIR_STATUS,
+  STATUS,
+  PRIORITY_ID,
+  TECH_RECEIVE_ID,
+  TECH_RECEIVE_NAME,
+  TECH_RECEIVE_DATE,
+  TECH_RECEIVE_TIME,
+  TECH_RECEIVE_COMMENT,
+  TECH_REPAIR_DATE,
+  TECH_REPAIR_TIME,
+  TECH_REPAIR_ID,
+  TECH_REPAIR_NAME,
+  TECH_SUCCESS_DATE,
+  TECH_SUCCESS_TIME,
+  REPAIR_IMG,
+  REPAIR_SUCCESS_IMG,
+  REPAIR_SUCCESS_REMARK,
+  IS_ARTICLE,
+  REPAIR_SCORE,
+  REPAIR_ASSESSMENT,
+  REPAIR_COMMENT,
+  DEPAIR_DEP_SUB_SUB_ID,
+  BOOK_SUB_SUB_NUM,
+  IMAGES,
+  APP_TYPE_SAVE,
+  TECH_WANT_ID,
+  TECH_WANT_NAME,
+  FANCINESS_SCORE,
+  FANCINESS_REMARK,
+  FANCINESS_PERSON_ID,
+  FANCINESS_DATE,
+  CANCEL_COMMENT,
+  CANCEL_USER_EDIT_ID,
+  CANCEL_MANAGER_EDIT_ID,
+  OUTSIDE_ACTIVE,
+  OUTSIDE_COMMENT,
+  OUTSIDE_TOOL,
+  OUTSIDE_SHOP,
+  OUTSIDE_EMP,
+  DEAL_ACTIVE,
+  DEAL_COMMENT,
+  GETBACK_ACTIVE,
+  GETBACK_DATE,
+  GETBACK_PERSON,
+  REPAIR_SYSTEM,s.*,t.* FROM `informrepair_index` r
+                LEFT JOIN informrepair_status s ON s.STATUS_ID = r.STATUS
+                LEFT JOIN `informrepair_tech` t ON t.REPAIRTECH_ID = r.TECH_RECEIVE_ID';
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+         if (BaseConsole::confirm('งานซ่อมบำรุง ' . count($querys) . ' รายการ ยืนยัน ??')) {
+              $num = 1;
+            $total = count($querys);
+        foreach ($querys as $item) {
+            try {
+                
+                $emp = $this->Person($item['USER_REQUEST_ID']);
+            $checkModel = Helpdesk::findOne(['title' => $item['SYMPTOM']]);
+            if (!$checkModel) {
+                $model = new Helpdesk();
+            } else {
+                $model = $checkModel;
+            }
+            $model->repair_group = 1;
+            $model->name = 'repair';
+            $model->emp_id = $emp->id;
+            $model->thai_year = $item['YEAR_ID'];
+            $model->title = $item['SYMPTOM'];
+            $model->created_by = $emp->user_id;
+            $model->status = $item['STATUS_ID'];
+            $model->created_at = $item['DATE_TIME_REQUEST'];
+            $model->date_start = $item['REPAIR_DATE'];
+            $model->date_end = $item['TECH_REPAIR_DATE'];
+            $model->data_json = [
+                    'time_start' => $item['REPAIR_TIME'],
+                    'end_start' => $item['TECH_REPAIR_TIME'],
+                    'status' => $item['STATUS_ID'],
+                    'status_name' => $item['STATUS_NAME_TH'],
+                    "note" => "",
+                    "phone" => "",
+                    "urgency" => "1",
+                    "location" => "งานซ่อมบำรุง",
+                    "send_type" => "general",
+                    'accept_emp_id' => "",
+                    "accept_name" => "",
+                    "accept_time" => $item['TECH_RECEIVE_DATE'].' ' . $item['TECH_RECEIVE_TIME'],
+                    "create_name" => $emp->fullname,
+                    "status_name" => "ร้องขอ",
+                    "location_other" => "",
+                    "technician_req" => "0",
+                    "technician_name" => "",
+            
+            ];
+            if ($model->save(false)) {
+                $this->TechRepair($model->id, $item['TECH_REPAIR_ID']);
+                 $percentage = (($num++) / $total) * 100;
+                echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
+            } else {
+                echo "Save Error \n";
+                print_r($model->getErrors());
+            }
+                            //code...
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+        }
+        
+    }
+  
+    }
+
+
+    public function TechRepair($id, $person_id)
+    {
+        try {
+  
+        $emp = $this->Person($person_id);
+        $checkModel = Helpdesk::findOne(['name' => 'repair_team','category_id' => $id]);
+        if(!$checkModel){
+            $model = new Helpdesk();
+        } else {
+            $model = $checkModel;
+        }
+        $model->emp_id = $emp->id;
+        $model->name = 'repair_team';
+        $model->category_id = $id;
+        $model->data_json = [
+            'tech_fullname' => $emp->fullname,
+            'tech_position' => $emp->positionName(),
+            'tech_department' => $emp->departmentName(),
+        ];
+        $model->save(false);
+                  //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+    public static function Person($id)
+    {
+        $person = Yii::$app
+            ->db2
+            ->createCommand('SELECT * FROM `hrd_person` WHERE ID = :id')
+            ->bindValue(':id', $id)
+            ->queryOne();
+        if ($person) {
+            $emp = Employees::findOne(['cid' => $person['HR_CID']]);
+            return $emp;
+        }
     }
 }

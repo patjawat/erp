@@ -36,7 +36,6 @@ class PurchaseController extends \yii\web\Controller
     {
         $me = UserHelper::GetEmployee();
         $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
-        \Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
             $status = $this->request->post('status');
              // ระบบอนุมัติเบิกคลัง
@@ -47,19 +46,15 @@ class PurchaseController extends \yii\web\Controller
              //ถ้าบันทุกเรียบร้อย
              if($model->save(false))
              {
-                
+                \Yii::$app->response->format = Response::FORMAT_JSON;
                 if($model->maxLevel() && $model->status == 'Pass'){
                     $model->purchase->status = 2;
                     $model->purchase->save();
                 }
-
-                
-                return [
-                    'status' => 'success'
-                ];
-                
+                return ['status' => 'success'];       
         }
         
+    }
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -73,7 +68,6 @@ class PurchaseController extends \yii\web\Controller
                 'model' => $model,
             ]);
         }
-    }
     }
 
     

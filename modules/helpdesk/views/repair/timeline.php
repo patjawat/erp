@@ -150,7 +150,7 @@ $this->registerCssFile('@web/css/timeline.css');
                                         <h6 class="card-subtitle text-dark py-2">ร้องขอ</h6>
                                         <div class="col-12 text-truncate px-2">
                                             <p class="text-muted mb-0">
-                                                <i class="bi bi-check2-circle text-primary me-1"></i><?=$model->data_json['title']?>
+                                                <i class="bi bi-check2-circle text-primary me-1"></i><?=$model->title?>
                                             </p>
                                         </div>
                                     </div>

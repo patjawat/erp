@@ -382,7 +382,7 @@ class RepairController extends Controller
 
                 $tecReq =  Employees::find()->where(['id' => $model->data_json['technician_req']])->one();
                 $lineId = $tecReq->user->line_id;
-                $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->data_json['title'] . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
+                $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->title . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
             } catch (\Throwable $th) {
                 //throw $th;
             }
@@ -490,7 +490,8 @@ class RepairController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $requiredName = 'ต้องระบุ';
-            $model->data_json['title'] == '' ? $model->addError('data_json[title]', 'ต้องระบุอาการ...') : null;
+            // $model->data_json['title'] == '' ? $model->addError('data_json[title]', 'ต้องระบุอาการ...') : null;
+            $model->title == '' ? $model->addError('title', 'ต้องระบุอาการ...') : null;
             $model->data_json['urgency'] == '' ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
             $model->data_json['location'] == '' ? $model->addError('data_json[location]', 'ต้องระบุสถานะที่...') : null;
             $model->data_json['technician_req'] == '' ? $model->addError('data_json[technician_req]', 'ต้องระบุช่างเพื่อรับการแจ้งเตือน...') : null;
@@ -608,10 +609,11 @@ class RepairController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        $user = UserHelper::GetEmployee();
+        $emp = UserHelper::GetEmployee();
         $model->updated_by = $user->id;
         $newObj = [
-            'accept_name' => $user->fullname,
+            'accept_emp_id' => $emp->id,
+            'accept_name' => $emp->fullname,
             'accept_time' => date('Y-m-d H:i:s'),
         ];
         $model->data_json = ArrayHelper::merge(

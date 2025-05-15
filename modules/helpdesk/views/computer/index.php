@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?php echo $item->RepairType()['title']?>
                                 </span>
                             </p>
-                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->data_json['title']?></p>
+                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->title?></p>
                                 <p class="text-primary fs-13 mb-0">
                                     <?php echo $item->viewCreateDateTime()?>
                                 </p>

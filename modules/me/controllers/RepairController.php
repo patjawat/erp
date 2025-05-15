@@ -21,11 +21,11 @@ class RepairController extends Controller
         $userId = \Yii::$app->user->id;
         $searchModel = new HelpdeskSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
+        // $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
         $dataProvider->query->andFilterWhere(['in', 'status', [1, 2, 3]]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', new Expression("JSON_EXTRACT(data_json, '\$.title')"), $searchModel->q],
+            ['like', 'title', $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '\$.repair_note')"), $searchModel->q],
         ]);
         // $dataProvider->query->andFilterWhere(['between', 'created_at', '2024-01-01', '2024-01-03']);
@@ -44,10 +44,17 @@ class RepairController extends Controller
         $model = $this->findModel($id);
         $asset = Asset::findOne(['code' => $model->code]);
         if ($model->code && isset($asset)) {
-            return $this->render('view', [
-                'model' => $model,
-                'asset' => $asset
-            ]);
+             if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'title' => '<i class="fa-solid fa-screwdriver-wrench"></i> ข้อมูลแจ้งซ่อม',
+                    'content' => $this->renderAjax('view', [
+                        'model' => $model,
+                        'asset' => $asset
+                    ]),
+                ];
+            }
+
         } else {
 
             if ($this->request->isAJax) {

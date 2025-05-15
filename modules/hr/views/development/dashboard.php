@@ -241,7 +241,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-            <h4 class="card-title">สรุปข้อมูลการอบรมประจำปีงบประมาณ 2568</h4>
+            <h4 class="card-title">สรุปข้อมูลการอบรมประจำปีงบประมาณ <?=$searchModel->thai_year?></h4>
             <?php echo $this->render('_search_year', ['model' => $searchModel]) ?>
         </div>
 

@@ -20,7 +20,7 @@ use app\modules\hr\models\Employees;
         <span class="fw-semibold">อาการแจ้งซ่อม : </span>
     </td>
     <td colspan="3">
-        <span class="text-danger"><?= $model->data_json['title'] ?></span>
+        <span class="text-danger"><?= $model->title ?></span>
     </td>
 
 

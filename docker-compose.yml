@@ -16,16 +16,11 @@ services:
       - mysqlDB:db
     env_file:
       - ./.env
-    depends_on:
-      - redis
+
      # ใช้ custom command เพื่อเปิดใช้งาน calendar extension
     command: >
       bash -c "docker-php-ext-install calendar && apache2-foreground"
 
-  redis:
-    image: redis:alpine
-    ports:
-      - "${REDIS_PORT}:6379"
 
   mysqlDB:
     image: mysql:8.0
@@ -68,22 +63,6 @@ services:
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  dbBackup:
-    image: fradelg/mysql-cron-backup
-    depends_on:
-      - mysqlDB
-    restart: always
-    volumes:
-      - ./db-backup:/backup
-    environment:
-      - MYSQL_USER=root
-      - MYSQL_PASS=docker
-      # - MYSQL_DB='dansai'
-      - CRON_TIME=0 0 1 * *
-      - MYSQL_HOST=mysqlDB
-      - MYSQL_PORT=3306
-      - TIMEOUT=10s
-      - INIT_BACKUP=1
 
   phpmyadmin_mysql:
     image: phpmyadmin

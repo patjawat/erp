@@ -9,6 +9,7 @@ use app\models\Categorise;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\components\EmployeeHelper;
+use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\usermanager\models\User;
 use app\modules\filemanager\models\Uploads;
@@ -297,7 +298,7 @@ class Employees extends Yii\db\ActiveRecord
             data-bs-title="ดูเพิ่มเติม...">'
                 .$this->fullname.'
             </h6>
-            <p class="text-muted mb-0 fs-13">'.$this->positionName().' <code>('.$this->positionTypeName().')</code></p>
+            <p class="text-muted mb-0 fs-13">'.$this->departmentName().'</p>
             '.($showAge ? '<p class="text-muted mb-0 fs-13">อายุ '.$this->age.'</p>' : '').'
         </div>
     </div>';
@@ -364,11 +365,12 @@ class Employees extends Yii\db\ActiveRecord
         try {
             $sql = '';
 
-            return \Yii::$app
+            $date =  \Yii::$app
                 ->db
                 ->createCommand('SELECT DATE_ADD(:date, INTERVAL 60 YEAR)')
                 ->bindValue('date', AppHelper::DateToDb($this->birthday))
                 ->queryScalar();
+            return ThaiDateHelper::formatThaiDate($date);
 
             // $date = explode('-', AppHelper::DateToDb($this->birthday));
             // return Yii::$app->thaiFormatter->asDate(($date[0] + 60) . '-' . $date[1] . '-' . $date[2], 'medium');
