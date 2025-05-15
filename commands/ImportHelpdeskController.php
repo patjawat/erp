@@ -147,6 +147,7 @@ class ImportHelpdeskController extends Controller
                     "phone" => "",
                     "urgency" => "1",
                     "location" => "งานซ่อมบำรุง",
+                    "repair_type" => $item['OUTSIDE_ACTIVE'] == true ? 'ซ่อมภายนอก' : 'ซ่อมภายใน',
                     "send_type" => "general",
                     'accept_emp_id' => "",
                     "accept_name" => "",
@@ -156,10 +157,12 @@ class ImportHelpdeskController extends Controller
                     "location_other" => "",
                     "technician_req" => "0",
                     "technician_name" => "",
+                    "old_data" => $item
             
             ];
             if ($model->save(false)) {
                 $this->TechRepair($model->id, $item['TECH_REPAIR_ID']);
+                $this->serviceItems($model,$item);
                  $percentage = (($num++) / $total) * 100;
                 echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
             } else {
@@ -180,7 +183,6 @@ class ImportHelpdeskController extends Controller
     public function TechRepair($id, $person_id)
     {
         try {
-  
         $emp = $this->Person($person_id);
         $checkModel = Helpdesk::findOne(['name' => 'repair_team','category_id' => $id]);
         if(!$checkModel){
@@ -201,6 +203,30 @@ class ImportHelpdeskController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
         }
+    }
+
+    // งานบริการซ่อมบำรุง
+    public function serviceItems($model,$item)
+    {
+
+        $sql = "SELECT * FROM `informrepair_service` WHERE REPAIR_INDEX_ID = :id";
+        $querys = Yii::$app->db2->createCommand($sql)->bindValue(':id', $item['REPAIR_INDEX_ID'])->queryAll();
+
+        foreach ($querys as $data) 
+        {
+            $check  = Helpdesk::findOne(['name' => 'service_items','category_id' => $model->id,'title' => $data['REPAIR_SERVICE_NAME']]);
+            if(!$check){
+                $model = new Helpdesk();
+            } else {
+                $model = $check;
+            }
+            $model->category_id = $model->id;
+            $model->title = $data['REPAIR_SERVICE_NAME'];
+            $model->name = 'service_items';
+            $model->save(false);
+
+        }
+    
     }
     public static function Person($id)
     {

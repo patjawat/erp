@@ -78,7 +78,6 @@ class ImportDevelopmentController extends Controller
                     if ($model->save(false)) {
                         $this->creteDetailMember($model);
                         $this->creteApprove($model);
-                        $this->createExpenseType($model,$item);
                         $percentage = (($num++) / $total) * 100;
                         // $this->createDetailRefer($model,$item);
                         // echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
@@ -145,8 +144,7 @@ class ImportDevelopmentController extends Controller
         $sql = 'SELECT i.RECORD_HEAD_USE,m.MONEY_ID,m.SUMMONEY FROM `grecord_index_money` m LEFT JOIN grecord_index i ON i.ID = m.RECORD_ID WHERE `SUMMONEY` IS NOT NULL;';
         $querys = Yii::$app->db2->createCommand($sql)
         ->queryAll();
-
-       
+        
         if (count($querys) > 0) {
             foreach ($querys as $item) {
 
