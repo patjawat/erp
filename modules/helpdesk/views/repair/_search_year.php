@@ -12,7 +12,7 @@ use yii\widgets\ActiveForm;
 <div class="product-type-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['index'],
+        'action' => ['dashboard'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1
@@ -21,8 +21,8 @@ use yii\widgets\ActiveForm;
 
 <?php
 echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
-    // 'data' => $model->ListGroupYear(),
-    'data' => ['2567' => '2567','2568' => '2568'],
+    'data' => $model->ListThaiYear(),
+    // 'data' => ['2567' => '2567','2568' => '2568'],
     'options' => ['placeholder' => 'ปีงบประมาณ'],
     'pluginOptions' => [
         'allowClear' => true,

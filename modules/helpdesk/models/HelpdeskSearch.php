@@ -62,6 +62,7 @@ class HelpdeskSearch extends Helpdesk
             'emp_id' => $this->emp_id,
             'repair_group' => $this->repair_group,
             'status' => $this->status,
+            'thai_year' => $this->thai_year,
             // 'date_start' => $this->date_start,
             // 'date_end' => $this->date_end,
             'created_at' => $this->created_at,

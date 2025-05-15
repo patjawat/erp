@@ -98,7 +98,7 @@ class Helpdesk extends Yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
-        $this->thai_year = AppHelper::YearBudget();
+        // $this->thai_year = AppHelper::YearBudget();
 
         return parent::beforeSave($insert);
     }
@@ -281,6 +281,7 @@ class Helpdesk extends Yii\db\ActiveRecord
             ->all();
         return ArrayHelper::map($list, 'code', 'title');
     }
+    // แสดงปีงบประมานทั้งหมด
     public function ListThaiYear()
     {
         $model = self::find()
@@ -508,17 +509,41 @@ class Helpdesk extends Yii\db\ActiveRecord
 
     public function listUserJob()
     {
-        $sql = "SELECT x3.*,ROUND(((x3.rating_user/ x3.total_user) * 100),0) as p FROM ( SELECT x1.*,
-            (SELECT (count(h.id)) FROM helpdesk h  WHERE h.name = 'repair' AND h.repair_group = :repair_group AND JSON_CONTAINS(h.data_json->'\$.join',CONCAT('" . '"' . "',x1.user_id,'" . '"' . "'))) as rating_user
-            FROM (SELECT DISTINCT e.user_id, concat(e.fname,' ',e.lname) as fullname,
-            (SELECT count(DISTINCT id) FROM employees e INNER JOIN auth_assignment a ON a.user_id = e.user_id) as total_user
-            FROM employees e
-            INNER JOIN auth_assignment a ON a.user_id = e.user_id  where a.item_name = :auth_item) as x1
-            GROUP BY x1.user_id) as x3;";
+        $sql = "SELECT 
+    x3.*, 
+    ROUND(((x3.rating_user / x3.total_user) * 100), 0) AS p
+FROM (
+    SELECT 
+        x1.*,
+        (
+            SELECT COUNT(h.id)
+            FROM helpdesk h
+            WHERE 
+                h.name = 'repair_team'
+             	AND h.emp_id = x1.emp_id
+
+        ) AS rating_user
+    FROM (
+        SELECT 
+            DISTINCT e.user_id, 
+            e.id AS emp_id,
+            CONCAT(e.fname, ' ', e.lname) AS fullname,
+            (
+                SELECT COUNT(DISTINCT e2.id)
+                FROM employees e2
+                INNER JOIN auth_assignment a2 ON a2.user_id = e2.user_id
+            ) AS total_user
+        FROM employees e
+        INNER JOIN auth_assignment a ON a.user_id = e.user_id
+        WHERE a.item_name = :auth_item
+    ) AS x1
+    GROUP BY x1.user_id
+) AS x3 ORDER BY p DESC;
+                    ";             
         return Yii::$app
             ->db
             ->createCommand($sql)
-            ->bindValue(':repair_group', $this->repair_group)
+            // ->bindValue(':repair_group', $this->repair_group)
             ->bindValue(':auth_item', $this->auth_item)
             ->queryAll();
     }
