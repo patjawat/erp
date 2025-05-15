@@ -161,10 +161,10 @@ class ImportHelpdeskController extends Controller
             
             ];
             if ($model->save(false)) {
+                $percentage = (($num++) / $total) * 100;
+                echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
                 $this->TechRepair($model->id, $item['TECH_REPAIR_ID']);
                 $this->serviceItems($model,$item);
-                 $percentage = (($num++) / $total) * 100;
-                echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
             } else {
                 echo "Save Error \n";
                 print_r($model->getErrors());
@@ -206,26 +206,57 @@ class ImportHelpdeskController extends Controller
     }
 
     // งานบริการซ่อมบำรุง
-    public function serviceItems($model,$item)
+    public function actionUpdateServiceItems()
     {
 
-        $sql = "SELECT * FROM `informrepair_service` WHERE REPAIR_INDEX_ID = :id";
-        $querys = Yii::$app->db2->createCommand($sql)->bindValue(':id', $item['REPAIR_INDEX_ID'])->queryAll();
-
-        foreach ($querys as $data) 
-        {
-            $check  = Helpdesk::findOne(['name' => 'service_items','category_id' => $model->id,'title' => $data['REPAIR_SERVICE_NAME']]);
-            if(!$check){
-                $model = new Helpdesk();
-            } else {
-                $model = $check;
+        $helpdesk = Helpdesk::find()->where(['name' => 'repair'])->all();
+        foreach($helpdesk as $item){
+            // echo 'ID : ' . $item->data_json['old_data']['ID'] . "\n";
+            $sql = "SELECT * FROM `informrepair_service` WHERE REPAIR_INDEX_ID = :id";
+            $id = $item->data_json['old_data']['ID'];
+            $querys = Yii::$app->db2->createCommand($sql)->bindValue(':id', $id)->queryAll();
+            foreach($querys as $data){
+                // echo 'Service Items : ' . $data['REPAIR_SERVICE_NAME'] . "\n";
+                $check  = Helpdesk::findOne(['name' => 'service_items','category_id' => $item->id,'title' => $data['REPAIR_SERVICE_NAME']]);
+                if(!$check){
+                    $model = new Helpdesk();
+                } else {
+                    $model = $check;
+                }
+                $model->category_id = $item->id;
+                $model->title = $data['REPAIR_SERVICE_NAME'];
+                $model->name = 'service_items';
+                $model->data_json = [
+                    'old_data' => $data,
+                    'unit_price' => $data['REPAIR_SUM_PRICE'],
+                ];
+                if ($model->save(false)) {
+                    echo 'Service Items : ' . $model->title . "\n";
+                } else {
+                    echo "Save Error \n";
+                    print_r($model->getErrors());
+                }
+                
             }
-            $model->category_id = $model->id;
-            $model->title = $data['REPAIR_SERVICE_NAME'];
-            $model->name = 'service_items';
-            $model->save(false);
-
+            
         }
+
+        // foreach ($querys as $data) 
+        // {
+        //     $check  = Helpdesk::findOne(['name' => 'service_items','category_id' => $model->id,'title' => $data['REPAIR_SERVICE_NAME']]);
+        //     if(!$check){
+        //         $model = new Helpdesk();
+        //     } else {
+        //         $model = $check;
+        //     }
+        //     $model->category_id = $model->id;
+        //     $model->title = $data['REPAIR_SERVICE_NAME'];
+        //     $model->name = 'service_items';
+        //     $model->data_json = $data;
+        //     $model->save(false);
+        //     echo 'Service Items : ' . $model->id . "\n";
+
+        // }
     
     }
     public static function Person($id)
