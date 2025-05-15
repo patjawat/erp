@@ -79,8 +79,7 @@ class ImportDevelopmentController extends Controller
                         $this->creteDetailMember($model);
                         $this->creteApprove($model);
                         $percentage = (($num++) / $total) * 100;
-                        // $this->createDetailRefer($model,$item);
-                        // echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
+                        echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
                     }
                 }
             }
