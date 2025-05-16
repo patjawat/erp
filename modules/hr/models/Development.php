@@ -280,6 +280,87 @@ class Development extends \yii\db\ActiveRecord
         return $data;
     }
 
+// เปรียบเทียบข้อมูลการพัฒนารายปี
+    public  function getYearlyDevelopmentSummary()
+{
+
+      // ดึงจำนวนบุคลากรทั้งหมด
+    $totalEmployees = Employees::find()
+        ->where(['status' => 1])
+        ->count();
+        
+    $sql = "
+        SELECT 
+            thai_year,
+            total_price,
+            total_count,
+            unique_emp_count,
+
+            -- ความต่างจำนวนครั้ง
+            IFNULL(total_count - LAG(total_count) OVER (ORDER BY thai_year), 0) AS count_difference,
+
+            -- สถานะ (ดูจากจำนวนครั้ง)
+            CASE
+                WHEN LAG(total_count) OVER (ORDER BY thai_year) IS NULL THEN 'N/A'
+                WHEN total_count > LAG(total_count) OVER (ORDER BY thai_year) THEN 'เพิ่มขึ้น'
+                WHEN total_count < LAG(total_count) OVER (ORDER BY thai_year) THEN 'ลดลง'
+                ELSE 'เท่าเดิม'
+            END AS count_status,
+
+            -- % เปลี่ยนจำนวนครั้ง
+            CASE
+                WHEN LAG(total_count) OVER (ORDER BY thai_year) IS NULL THEN 0
+                WHEN LAG(total_count) OVER (ORDER BY thai_year) = 0 THEN 0
+                ELSE ROUND(
+                    ((total_count - LAG(total_count) OVER (ORDER BY thai_year)) / LAG(total_count) OVER (ORDER BY thai_year)) * 100,
+                    2
+                )
+            END AS count_percent_change,
+
+            -- % บุคลากรที่เข้าร่วมกิจกรรม
+            ROUND((unique_emp_count / :totalEmployees) * 100, 2) AS emp_percent
+
+        FROM (
+            SELECT 
+                d.thai_year, 
+                SUM(t.price) AS total_price,
+                COUNT(t.id) AS total_count,
+                COUNT(DISTINCT d.emp_id) AS unique_emp_count
+            FROM development d
+            LEFT JOIN development_detail t ON t.development_id = d.id
+            WHERE t.price IS NOT NULL
+            AND d.thai_year IN (:last_year, :current_year)
+            GROUP BY d.thai_year
+        ) AS yearly;
+            ";
+              
+
+    $lastYear = $this->thai_year - 1;
+    $currentYear = $this->thai_year;
+    $data =  Yii::$app->db->createCommand($sql)
+    ->bindValue(':last_year', $lastYear)
+    ->bindValue(':current_year', $currentYear)
+    ->bindValue(':totalEmployees', $totalEmployees)
+    ->queryAll();
+    return [
+        'total_count' => $data[1]['total_count'] ?? 0,
+        'total_price' => $data[1]['total_price'] ?? 0,
+        'emp_count' => $data[1]['unique_emp_count'] ?? 0,
+        'emp_percent' => $data[1]['emp_percent'] ?? 0,
+        'price_percent_change' => $data[1]['price_percent_change'] ?? 0,
+        'count_percent_change' => $data[1]['count_percent_change'] ?? 0,
+        'year' => $data[1]['thai_year'] ?? 0,
+        'price_status' => (isset($data[1]['count_status']) 
+            ? ($data[1]['count_status'] == 'เพิ่มขึ้น' 
+                ? '<span class="text-success"><i class="fa-solid fa-caret-up"></i> เพิ่มขึ้น</span>' 
+                : '<span class="text-danger"><i class="fa-solid fa-caret-down"></i> ลดลง</span>') 
+            : '-'),
+    
+        
+    ];
+}
+
+
 
     public function listApprove()
     {

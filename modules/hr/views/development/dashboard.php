@@ -48,8 +48,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="card-body d-flex justify-content-between border-start border-4 border-primary rounded-start pb-0">
                             <div>
                                 <p class="mb-0">จำนวนการอบรม/ประชุม/ดูงานทั้งหมด</p>
-                                <h3 class="fs-2 fw-semibold mt-2">247</h3>
-                                <p class="mt-2 mb-0">เพิ่มขึ้น 12% จากปีที่แล้ว</p>
+                                <h3 class="fs-2 fw-semibold mt-2"><?=$searchModel->getYearlyDevelopmentSummary()['total_count']?></h3>
+                                <p class="mt-2 mb-0">
+                                    
+                                    <?=$searchModel->getYearlyDevelopmentSummary()['price_status']?>
+                                     <?=$searchModel->getYearlyDevelopmentSummary()['count_percent_change']?>% จากปีที่แล้ว</p>
                             </div>
                             <div class="icon-box align-self-start">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,8 +67,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="card-body d-flex justify-content-between border-start border-4 border-primary rounded-start pb-0">
                             <div>
                                 <p class="mb-0">งบประมาณที่ใช้</p>
-                                <h3 class="fs-2 fw-semibold mt-2">฿1,458,750</h3>
-                                <p class="mt-2 ">คิดเป็น 78% ของงบประมาณทั้งหมด</p>
+                                <h3 class="fs-2 fw-semibold mt-2"><?=number_format($searchModel->getYearlyDevelopmentSummary()['total_price'],2)?></h3>
+                                <p class="mt-2 ">คิดเป็น <?=$searchModel->getYearlyDevelopmentSummary()['price_percent_change']?>% ของงบประมาณปีที่แล้ว</p>
                             </div>
                             <div class="icon-box align-self-start">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,8 +83,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="card-body d-flex justify-content-between border-start border-4 border-primary rounded-start pb-0">
                             <div>
                                 <p class="mb-0">บุคลากรที่ได้รับการพัฒนา</p>
-                                <h3 class="fs-2 fw-semibold mt-2">189</h3>
-                                <p class="mt-2 ">คิดเป็น 94% ของบุคลากรทั้งหมด</p>
+                                <h3 class="fs-2 fw-semibold mt-2"><?=$searchModel->getYearlyDevelopmentSummary()['emp_count']?></h3>
+                                <p class="mt-2 ">คิดเป็น <?=$searchModel->getYearlyDevelopmentSummary()['emp_percent']?>% ของบุคลากรทั้งหมด</p>
                             </div>
                             <div class="icon-box align-self-start">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
