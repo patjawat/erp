@@ -2,7 +2,9 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\components\SiteHelper;
 use app\components\UserHelper;
+$info = SiteHelper::getInfo();
 ?>
 <header class="topbar-header">
     <!-- navbar-header -->
@@ -50,11 +52,15 @@ use app\components\UserHelper;
                 </div>
             </div>
 
+            <div class="d-none d-lg-inline-flex">
+                <?=$info['manual'] ? Html::a('<i class="fa-solid fa-book"></i>', $info['manual'], ['class' => 'btn header-item notify-icon', 'target' => '_blank']) : ''?>
+</div>
             <?=$this->render('app_service')?>
             <?=$this->render('app_manage')?>
             <?php // $this->render('notification');?>
-
+            
             <div class="d-none d-lg-inline-flex">
+
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
                 </button>

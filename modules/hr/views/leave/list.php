@@ -78,7 +78,7 @@ $me = UserHelper::GetEmployee();
                                 'size' => 'modal-xl',
                                 'filename' => $item->leaveType->title.'-'.$item->employee->fullname
                             ]]) ?>
-                        <?php  Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
                             [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'download-leave','data' => [
                                 'filename' => $item->leaveType->title.'-'.$item->employee->fullname

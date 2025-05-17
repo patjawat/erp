@@ -50,6 +50,7 @@ class SiteHelper extends Component
                         'line_qrcode' => isset($model->data_json['line_qrcode']) ? $model->data_json['line_qrcode'] : null,
                         'pdpa_url' => isset($model->data_json['pdpa_url']) ? $model->data_json['pdpa_url'] : null,
                         'active_pdpa' => isset($model->data_json['active_pdpa']) ? $model->data_json['active_pdpa'] : 0,
+                        'manual' => isset($model->data_json['manual']) ? $model->data_json['manual'] : 0,
                 ];
 
 
