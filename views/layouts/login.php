@@ -50,10 +50,15 @@ $style = 2;
       <div class="col-12 col-md-6 col-xl-7">
         <div class="d-flex justify-content-center text-bg-primary">
           <div class="col-12 col-xl-9">
+            <div class="text-center">
+              
+              <?=Html::img('@web/images/logo_new.png',['width' => 400])?>
+            </div>
             <h1 class="text-white text-center">
+              
                 <!-- <i class="fa-solid fa-code fs-1"></i> ERP Hospital -->
 
-                <i class="bi bi-box"></i> ERP Hospital
+                <!-- <i class="bi bi-box"></i> ERP Hospital -->
                 <!-- ERP  <i class="fa-solid fa-code fs-1"></i> Hospital -->
             </h1>
                 <!-- <img class="img-fluid rounded mb-4" loading="lazy" src="./assets/img/bsb-logo-light.svg" width="245" height="80" alt="BootstrapBrain Logo"> -->

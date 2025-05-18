@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?= app\components\AppHelper::Btn([
                 'url' => ['create'],
                 'modal' => true,
-                'size' => 'lg',
+                'size' => 'xl',
             ]) ?>
         </div>
         <div>
