@@ -17,7 +17,8 @@ $info = SiteHelper::getInfo();
                         <i class="bi bi-box fs-2"></i>
                     </span>
                     <span class="logo-lg fs-1">
-                        <i class="bi bi-box"></i>ERP
+                        <!-- <i class="bi bi-box"></i>ERP -->
+                         <?=Html::img('@web/images/logo_new_bg_white.jpg',['width' => 160])?>
                     </span>
                 </a>
             </div>
