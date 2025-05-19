@@ -112,8 +112,8 @@ class Employees extends Yii\db\ActiveRecord
             [['gender', 'prefix'], 'string', 'max' => 20],
             [['phone'], 'string', 'max' => 20],
             [['fname', 'lname', 'fname_en', 'lname_en'], 'string', 'max' => 200],
-             ['phone', 'unique', 'targetClass' => 'app\modules\employees\models\Employees', 'message' => 'เบอร์โทรศัพท์ถูกใช้แล้ว'],
-            // [['cid'], 'validateIdCard'],
+             ['phone', 'unique', 'targetClass' => 'app\modules\hr\models\Employees', 'message' => 'เบอร์โทรศัพท์ถูกใช้แล้ว'],
+            [['cid'], 'validateIdCard'],
         ];
     }
 

@@ -21,6 +21,9 @@ use app\modules\filemanager\components\FileManagerHelper;
         'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
         'validationUrl' => ['/hr/employees/create-validator'],
         ]); ?>
+  
+        
+    <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 
     <div class="row">
@@ -453,25 +456,31 @@ $('#my_file').change(function (e) {
     }
  });
  
- $('#form-employee').on('beforeSubmit', function (e) {
-    var form = $(this);
-    console.log('Submit');
-    $.ajax({
-        url: form.attr('action'),
-        type: 'post',
-        data: form.serialize(),
-        dataType: 'json',
-        success: async function (response) {
-            form.yiiActiveForm('updateMessages', response, true);
-            if(response.status == 'success') {
-                closeModal()
-                // success()
-                await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-            }
-        }
-    });
-    return false;
+
+ // เรียกใช้ function handleFormSubmit
+handleFormSubmit('#form-employee', null, function(response) {
+  location.reload();
 });
+
+
+//  $('#form-employee').on('beforeSubmit', function (e) {
+//     var form = $(this);
+//     console.log('Submit');
+//     $.ajax({
+//         url: form.attr('action'),
+//         type: 'post',
+//         data: form.serialize(),
+//         dataType: 'json',
+//         success: async function (response) {
+//             form.yiiActiveForm('updateMessages', response, true);
+//             if(response.status == 'success') {
+//                 closeModal()
+//                 await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+//             }
+//         }
+//     });
+//     return false;
+// });
 
 
 

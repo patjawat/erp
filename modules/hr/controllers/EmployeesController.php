@@ -206,14 +206,15 @@ class EmployeesController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $requiredName = 'ต้องระบุ';
+
             $model->validateIdCard();
              $model->email == '' ? $model->addError('email', $requiredName) : null;
             
             $cid = str_replace('-', '', $model->cid);
-            $checkCid = Employees::findOne(['cid' => $cid]);
+            $checkCid = Employees::find()->andWhere(['cid' => $cid])->andWhere(['<>','ref',$model->ref])->one();
             $checkCid  ? $model->addError('cid', 'เลขบัตรประชาขนซ้ำ '.$checkCid->fullname) : null;
             
-            $checkPhone = Employees::findOne(['phone' => $model->phone]);
+            $checkPhone = Employees::find()->andWhere(['phone' => $model->phone])->andWhere(['<>','ref',$model->ref])->one();
             $checkPhone  ? $model->addError('phone', 'ซ้ำกับ '.$checkPhone->fullname) : null;
            
 
@@ -226,6 +227,7 @@ class EmployeesController extends Controller
             }
         }
     }
+
 
 
     
