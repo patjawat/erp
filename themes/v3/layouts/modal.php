@@ -6,6 +6,9 @@ use yii\bootstrap5\Modal;
             'id' => 'main-modal',
             // 'tabindex' => false // important for Select2 to work properly
         ],
+         'dialogOptions' => [
+        'class' => 'modal-dialog modal-dialog-scrollable',
+    ],
             'title' => '',
             // 'size' => 'modal-sm',
             'footer' => '',
