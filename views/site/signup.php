@@ -31,11 +31,6 @@ input::placeholder {
 
     <div id="signup-container" class="row justify-content-center">
             <h3 class=""><?=$this->title?></h3>
-
-            <?php
-            print_r(Yii::$app->session->get('accept_condition'));
-            
-            ?>
             <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
             <div class="row justify-content-center">
                 <div class="col-lg-12 col-md-12 col-sm-12">

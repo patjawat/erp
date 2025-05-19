@@ -6,10 +6,10 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LineMsg;
 use app\components\SiteHelper;
 use ruskid\csvimporter\CSVReader;
 use yii\validators\DateValidator;
@@ -206,11 +206,17 @@ class EmployeesController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $requiredName = 'ต้องระบุ';
-            return str_split(str_replace('-', '', $model->cid));
-            $checkCid = Employees::findOne(['cid' => str_split(str_replace('-', '', $model->cid))]);
-            return $checkCid;
+            $model->validateIdCard();
+             $model->email == '' ? $model->addError('email', $requiredName) : null;
+            
+            $cid = str_replace('-', '', $model->cid);
+            $checkCid = Employees::findOne(['cid' => $cid]);
+            $checkCid  ? $model->addError('cid', 'เลขบัตรประชาขนซ้ำ '.$checkCid->fullname) : null;
+            
+            $checkPhone = Employees::findOne(['phone' => $model->phone]);
+            $checkPhone  ? $model->addError('phone', 'ซ้ำกับ '.$checkPhone->fullname) : null;
+           
 
-            // $checkCid  ? $model->addError('cid', 'เลขบัตรประชาขนซ้ำ...') : null;
 
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
@@ -220,6 +226,7 @@ class EmployeesController extends Controller
             }
         }
     }
+
 
     
     /**

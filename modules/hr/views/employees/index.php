@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php Pjax::end(); ?>
 
-<?php Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
+<?php // Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
 
 <div class="card">
     <div
@@ -156,4 +156,4 @@ $js = <<< JS
     $this->registerJS($js,View::POS_END)
 
 ?>
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>
