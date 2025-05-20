@@ -19,10 +19,14 @@ class RepairController extends Controller
     public function actionIndex()
     {
         $userId = \Yii::$app->user->id;
-        $searchModel = new HelpdeskSearch();
+         $emp = UserHelper::GetEmployee();
+        $searchModel = new HelpdeskSearch([
+            // 'created_by' => $userId,
+            // 'emp_id' => $emp->id
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
-        $dataProvider->query->andFilterWhere(['in', 'status', [1, 2, 3]]);
+        // $dataProvider->query->andFilterWhere(['in', 'status', [1, 2, 3]]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'title', $searchModel->q],
