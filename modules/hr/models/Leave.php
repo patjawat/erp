@@ -435,16 +435,26 @@ class Leave extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['id' => $this->emp_id])->one();
-            $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เขียนเมื่อ' . $this->viewCreated();
-            $msg = 'เขียน '. $this->viewCreated();
-            return [
-                'avatar' => $employee->getAvatar(false, $msg),
-                // 'avatar' => $employee->getAvatar(false,$this->viewLeaveType()),
-                'department' => $employee->departmentName(),
-                'fullname' => $employee->fullname,
-                'position_name' => $employee->positionName(),
-                // 'product_type_name' => $this->data_json['product_type_name']
-            ];
+            if ($employee) {
+                $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . ($this->leaveType->title ?? '') . '</span> เขียนเมื่อ' . $this->viewCreated();
+                $msg = 'เขียน ' . $this->viewCreated();
+                return [
+                    'avatar' => $employee->getAvatar(false, $msg),
+                    // 'avatar' => $employee->getAvatar(false,$this->viewLeaveType()),
+                    'department' => $employee->departmentName(),
+                    'fullname' => $employee->fullname,
+                    'position_name' => $employee->positionName(),
+                    // 'product_type_name' => $this->data_json['product_type_name']
+                ];
+            } else {
+                return [
+                    'avatar' => '',
+                    'department' => '',
+                    'fullname' => '',
+                    'position_name' => '',
+                    'product_type_name' => ''
+                ];
+            }
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
@@ -647,23 +657,23 @@ class Leave extends \yii\db\ActiveRecord
             return [
                 'approve_1' => isset($query['t1_leader']) ? [
                     'id' => $query['t1_leader'],
-                    'avatar' => isset($leader) ? $leader->getAvatar(false) : '',
-                    'fullname' => isset($leader) ? $leader->fullname : '',
-                    'position' => isset($leader) ? $leader->positionName() : '',
+                    'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
+                    'fullname' => isset($leader) && $leader ? $leader->fullname : '',
+                    'position' => isset($leader) && $leader ? $leader->positionName() : '',
                     'title' => 'หัวหน้างาน'
                 ] : [],
                 'approve_2' => [
                     'id' => $query['t2_leader'],
-                    'avatar' => isset($leaderGroup) ? $leaderGroup->getAvatar(false)  : '',
-                    'fullname' => isset($leaderGroup) ?  $leaderGroup->fullname  : '',
-                    'position' => isset($leaderGroup) ?  $leaderGroup->positionName() : '',
+                    'avatar' => isset($leaderGroup) && $leaderGroup ? $leaderGroup->getAvatar(false)  : '',
+                    'fullname' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->fullname  : '',
+                    'position' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->positionName() : '',
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ],
                 'approve_3' => [
                     'id' => $query['t3_leader'],
-                    'avatar' => $director->getAvatar(false),
-                    'fullname' => $director->fullname,
-                    'position' => $director->positionName(),
+                    'avatar' => isset($director) && $director ? $director->getAvatar(false) : '',
+                    'fullname' => isset($director) && $director ? $director->fullname : '',
+                    'position' => isset($director) && $director ? $director->positionName() : '',
                     'title' => 'ผู้อำนวยการ'
                 ]
             ];
