@@ -26,7 +26,7 @@ class GeneralController extends \yii\web\Controller
             'date_end' => AppHelper::convertToThai($lastDay),
             'repair_group' => 1,
             // 'auth_item' => 'technician',
-            // 'status' => [1,2,3]
+            'status' => [1,2,3]
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);

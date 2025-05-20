@@ -21,7 +21,8 @@ class MedicalController extends \yii\web\Controller
         $searchModel = new HelpdeskSearch([
             'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 3,
-            'auth_item' => 'medical'
+            // 'auth_item' => 'medical',
+            'status' => [1,2,3]
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
