@@ -133,7 +133,7 @@ class DevelopmentController extends Controller
                     $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
                 }
-                if ($model->save()) {
+                if ($model->save(false)) {
                     
                     $addMember = new DevelopmentDetail();
                     $addMember->development_id = $model->id;
