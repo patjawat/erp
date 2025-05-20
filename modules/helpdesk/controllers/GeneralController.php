@@ -39,19 +39,19 @@ class GeneralController extends \yii\web\Controller
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
 
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
+        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
         
-        try {
+        // try {
          
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['between', 'created_at', ($dateStart.' 00:00:00'), ($dateEnd.' 23:59:59')]);
-        } catch (\Exception $e) {
-            Yii::error("Error converting date: " . $e->getMessage());
-        }
+        // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        // $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        // $dataProvider->query->andFilterWhere(['between', 'created_at', ($dateStart.' 00:00:00'), ($dateEnd.' 23:59:59')]);
+        // } catch (\Exception $e) {
+        //     Yii::error("Error converting date: " . $e->getMessage());
+        // }
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
