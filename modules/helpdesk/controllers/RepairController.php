@@ -610,7 +610,7 @@ class RepairController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
         $emp = UserHelper::GetEmployee();
-        $model->updated_by = $user->id;
+        $model->updated_by = $emp->id;
         $newObj = [
             'accept_emp_id' => $emp->id,
             'accept_name' => $emp->fullname,
