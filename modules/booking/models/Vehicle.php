@@ -518,52 +518,60 @@ class Vehicle extends \yii\db\ActiveRecord
             $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
 
             return [
-                'approve_1' => isset($query['t1_leader']) ? [
+                'approve_1' => (isset($query['t1_leader']) && $leader) ? [
                     'id' => $query['t1_leader'],
-                    'avatar' => $leader->getAvatar(false),
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
+                    'avatar' => $leader ? $leader->getAvatar(false) : '',
+                    'fullname' => $leader ? $leader->fullname : '',
+                    'position' => $leader ? $leader->positionName() : '',
                     'title' => 'หัวหน้างาน'
                 ] : [],
-                'approve_2' => [
+                'approve_2' => ($leaderGroup) ? [
                     'id' => $query['t2_leader'],
-                    'avatar' => $leader->getAvatar(false),
-                    'fullname' => $leaderGroup->fullname,
-                    'position' => $leaderGroup->positionName(),
+                    'avatar' => $leaderGroup ? $leaderGroup->getAvatar(false) : '',
+                    'fullname' => $leaderGroup ? $leaderGroup->fullname : '',
+                    'position' => $leaderGroup ? $leaderGroup->positionName() : '',
                     'title' => 'หัวหน้ากลุ่มงาน'
-                ],
-                'approve_3' => [
+                ] : [],
+                'approve_3' => ($director) ? [
                     'id' => $query['t3_leader'],
-                    'avatar' => $director->getAvatar(false),
-                    'fullname' => $director->fullname,
-                    'position' => $director->positionName(),
+                    'avatar' => $director ? $director->getAvatar(false) : '',
+                    'fullname' => $director ? $director->fullname : '',
+                    'position' => $director ? $director->positionName() : '',
                     'title' => 'ผู้อำนวยการ'
-                ]
+                ] : []
             ];
         } else {
             // ถ้าเป็นหัวหน้าลาเอง
             $leader = Employees::find()->where(['id' => $emp->id])->one();
-            return [
-                'approve_1' => [
-                    'id' => $leader->id,
-                    'avatar' => $leader->getAvatar(false),
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
-                    'title' => 'หัวหน้างาน'
-                ],
-                'approve_2' => [
-                    'id' => $leader->id,
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
-                    'title' => 'หัวหน้ากลุ่มงาน'
-                ],
-                'approve_3' => [
-                    'id' => $leader->id,
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
-                    'title' => 'ผู้อำนวยการ'
-                ]
-            ];
+            if ($leader) {
+                return [
+                    'approve_1' => [
+                        'id' => $leader->id,
+                        'avatar' => $leader->getAvatar(false),
+                        'fullname' => $leader->fullname,
+                        'position' => $leader->positionName(),
+                        'title' => 'หัวหน้างาน'
+                    ],
+                    'approve_2' => [
+                        'id' => $leader->id,
+                        'fullname' => $leader->fullname,
+                        'position' => $leader->positionName(),
+                        'title' => 'หัวหน้ากลุ่มงาน'
+                    ],
+                    'approve_3' => [
+                        'id' => $leader->id,
+                        'fullname' => $leader->fullname,
+                        'position' => $leader->positionName(),
+                        'title' => 'ผู้อำนวยการ'
+                    ]
+                ];
+            } else {
+                return [
+                    'approve_1' => [],
+                    'approve_2' => [],
+                    'approve_3' => []
+                ];
+            }
         }
     }
 
