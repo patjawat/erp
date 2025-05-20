@@ -425,7 +425,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
         <?= $form->field($model, 'status')->hiddenInput(['maxlength' => true, 'value' => 'Pending'])->label(false) ?>
-        <?= $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true, 'value' => 1])->label(false) ?>
+        <?php //  $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true, 'value' => 1])->label(false) ?>
 
         <div class="form-group text-center mt-4">
             <?php echo Html::submitButton('<i class="bi bi-check2-circle me-2"></i> บันทึกข้อมูล', ['class' => 'btn btn-primary rounded-pill px-4 py-2 shadow me-2', 'id' => 'summit']) ?>

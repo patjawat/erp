@@ -123,8 +123,9 @@ class DevelopmentController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                $me = UserHelper::GetEmployee();
                 Yii::$app->response->format = Response::FORMAT_JSON;
-
+                $model->emp_id = $me->id;
                 try {
                     $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
                     $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
@@ -133,7 +134,7 @@ class DevelopmentController extends Controller
                 } catch (\Throwable $th) {
                 }
                 if ($model->save()) {
-                    $me = UserHelper::GetEmployee();
+                    
                     $addMember = new DevelopmentDetail();
                     $addMember->development_id = $model->id;
                     $addMember->name = 'member';
