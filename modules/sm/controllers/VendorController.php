@@ -2,22 +2,22 @@
 
 namespace app\modules\sm\controllers;
 
-use app\components\AppHelper;
-use app\models\Categorise;
-use app\modules\hr\models\UploadCsv;
-use app\modules\sm\models\Vendor;
-use app\modules\sm\models\VendorSearch;
-use ruskid\csvimporter\CSVImporter;
-use ruskid\csvimporter\CSVReader;
-use ruskid\csvimporter\MultipleImportStrategy;
-use yii\filters\VerbFilter;
-use yii\helpers\Json;
-use yii\validators\DateValidator;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use yii\web\UploadedFile;
 use Yii;
+use yii\helpers\Json;
+use yii\web\Response;
+use yii\web\Controller;
+use yii\web\UploadedFile;
+use app\models\Categorise;
+use yii\filters\VerbFilter;
+use app\components\AppHelper;
+use app\modules\sm\models\Vendor;
+use ruskid\csvimporter\CSVReader;
+use yii\validators\DateValidator;
+use yii\web\NotFoundHttpException;
+use ruskid\csvimporter\CSVImporter;
+use app\modules\hr\models\UploadCsv;
+use app\modules\sm\models\VendorSearch;
+use ruskid\csvimporter\MultipleImportStrategy;
 
 /**
  * VendorController implements the CRUD actions for Vendor model.
@@ -226,15 +226,15 @@ class VendorController extends Controller
             for ($x = 1; $x <= count($importer->getData()); $x++) {
                 $data_check_error = $importer->getData()[$x][0];
                 $data_check_error = explode(',', $data_check_error);
-                if (count($data_check_error) != 13) {
-                    array_push($error, 'ข้อมูลไม่ครบถ้วน');
-                }
+                // if (count($data_check_error) != 13) {
+                //     array_push($error, 'ข้อมูลไม่ครบถ้วน');
+                // }
                 if (null != Vendor::findOne(['code' => $data_check_error[0]])) {
                     array_push($error, 'มีเลขประจำตัวผู้เสียภาษี ' . $data_check_error[0] . ' อยู่ในระบบแล้ว');
                 }
-                if (strlen($data_check_error[2]) != 10) {
-                    array_push($error, 'เบอร์โทรศัพท์ ' . $data_check_error[2] . ' ไม่ถูกต้อง (ต้องมี 10 หลัก)');
-                }
+                // if (strlen($data_check_error[2]) != 10) {
+                //     array_push($error, 'เบอร์โทรศัพท์ ' . $data_check_error[2] . ' ไม่ถูกต้อง (ต้องมี 10 หลัก)');
+                // }
             }
             if (empty($error)) {
                 $numberRowsAffected = $importer->import(new MultipleImportStrategy([
@@ -272,14 +272,14 @@ class VendorController extends Controller
                             'value' => function ($data) {
                                 $data = explode(',', $data[0]);
                                 $jsonData = [
-                                    'fax' => $data[7],
-                                    'phone' => $data[2],
-                                    'email' => $data[3],
-                                    'address' => $data[4],
-                                    'bank_name' => $data[10],
-                                    'account_name' => $data[8],
-                                    'contact_name' => $data[6],
-                                    'account_number' => $data[9],
+                                    'fax' => isset($data[7]) ? $data[7] : '',
+                                    'phone' => isset($data[2]) ? $data[2] : '',
+                                    'email' => isset($data[3]) ? $data[3] : '',
+                                    'address' => isset($data[4]) ? $data[4] : '',
+                                    'bank_name' => isset($data[10]) ? $data[10] : '',
+                                    'account_name' => isset($data[8]) ? $data[8] : '',
+                                    'contact_name' => isset($data[6]) ? $data[6] : '',
+                                    'account_number' => isset($data[9]) ? $data[9] : '',
                                 ];
 
                                 return Json::encode($jsonData);

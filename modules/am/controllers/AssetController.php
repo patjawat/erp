@@ -536,31 +536,47 @@ class AssetController extends Controller
                 }
 
                 // ตรวจสอบว่ามีข้อมูลในฐานข้อมูลหรือไม่ ถ้าไม่มีให้เพิ่มข้อมูลลงไป
-                $assetItem = AssetHelper::CheckAssetItem($data[0], $data[2], $data[1]);
+                $assetType = isset($data[0]) ? $data[0] : null;
+                $assetItemName = isset($data[1]) ? $data[1] : null;
+                $assetCode = isset($data[2]) ? $data[2] : null;
+                $vendorName = isset($data[4]) ? $data[4] : null;
+                $methodGet = isset($data[9]) ? $data[9] : null;
+                $purchaseText = isset($data[10]) ? $data[10] : null;
+                $budgetType = isset($data[11]) ? $data[11] : null;
+                $departmentName = isset($data[7]) ? $data[7] : null;
+                $onYear = isset($data[8]) ? $data[8] : null;
+                $price = isset($data[12]) ? $data[12] : null;
+                $receiveDate = isset($data[6]) ? $data[6] : null;
+                $assetStatus = isset($data[17]) ? $data[17] : null;
 
-                $checkAsset = Asset::find()->where(['code' => $data[2]])->one();
+                $assetItem = AssetHelper::CheckAssetItem($assetType, $assetCode, $assetItemName);
+
+                $checkAsset = $assetCode ? Asset::find()->where(['code' => $assetCode])->one() : null;
 
                 // สมมติว่าคุณมี Model ชื่อ YourModel
                 $model = $checkAsset ?? new Asset();
                 $model->asset_group = 3;
-                $model->asset_item = $assetItem->code;
-                $model->code = $data[2];
+                $model->asset_item = isset($assetItem->code) ? $assetItem->code : null;
+                $model->code = $assetCode;
                 $model->data_json = [
-                    'vendor_id' => AssetHelper::findByName('vendor', $data[4]),
-                    'method_get' => AssetHelper::findByName('method_get', $data[9]),
-                    'budget_type' => AssetHelper::findByName('budget_type', $data[11]),
-                    'asset_type_text' => $data[0],
-                    'method_get_text' => $data[9],
-                    'purchase_text' => $data[10],
-                    'budget_type_text' => $data[11],
-                    'department_name' => $data[7],
+                    'vendor_id' => $vendorName ? AssetHelper::findByName('vendor', $vendorName) : null,
+                    'method_get' => $methodGet ? AssetHelper::findByName('method_get', $methodGet) : null,
+                    'budget_type' => $budgetType ? AssetHelper::findByName('budget_type', $budgetType) : null,
+                    'asset_type_text' => $assetType,
+                    'method_get_text' => $methodGet,
+                    'purchase_text' => $purchaseText,
+                    'budget_type_text' => $budgetType,
+                    'department_name' => $departmentName,
                 ];
-                $model->purchase = AssetHelper::findByName('purchase', $data[10]);  // วิธีการได้มา
-                $model->on_year = $data[8];
-                $model->price = AppHelper::formatNumber($data[12]);  // ราคา
-                $model->receive_date = AppHelper::convertToYMD($data[6]);  // วันที่รับเข้า
-                $model->asset_status = AssetHelper::findByName('asset_status', $data[17]);  // วิธีการได้มา
-                $model->department = Organization::find()->where(['name' => $data[7]])->one()->id ?? 0;  // หน่วยงานภายในตามโครงสร้าง
+                $model->purchase = $purchaseText ? AssetHelper::findByName('purchase', $purchaseText) : null;  // วิธีการได้มา
+                $model->on_year = $onYear;
+                $model->price = $price ? AppHelper::formatNumber($price) : 0;  // ราคา
+                $model->receive_date = $receiveDate ? AppHelper::convertToYMD($receiveDate) : null;  // วันที่รับเข้า
+                $model->asset_status = $assetStatus ? AssetHelper::findByName('asset_status', $assetStatus) : null;  // วิธีการได้มา
+
+                $org = $departmentName ? Organization::find()->where(['name' => $departmentName])->one() : null;
+                $model->department = $org && isset($org->id) ? $org->id : 0;  // หน่วยงานภายในตามโครงสร้าง
+
                 // เพิ่มคอลัมน์ตามไฟล์ CSV
                 $model->save(false);
             }
