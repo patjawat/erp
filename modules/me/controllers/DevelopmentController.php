@@ -95,7 +95,7 @@ class DevelopmentController extends Controller
      */
     public function actionView($id)
     {
-        if($this->request->isAjax){
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -103,7 +103,7 @@ class DevelopmentController extends Controller
                     'model' => $this->findModel($id),
                 ]),
             ];
-        }else{
+        } else {
             return $this->render('@app/modules/hr/views/development/view', [
                 'model' => $this->findModel($id),
             ]);
@@ -134,7 +134,8 @@ class DevelopmentController extends Controller
                 } catch (\Throwable $th) {
                 }
                 if ($model->save(false)) {
-                    
+                    AppHelper::checkLocation($model->data_json['location']);
+                    AppHelper::checkLocation($model->data_json['location_org']);
                     $addMember = new DevelopmentDetail();
                     $addMember->development_id = $model->id;
                     $addMember->name = 'member';
@@ -199,6 +200,8 @@ class DevelopmentController extends Controller
                 } catch (\Throwable $th) {
                 }
                 $model->save();
+                AppHelper::checkLocation($model->data_json['location']);
+                AppHelper::checkLocation($model->data_json['location_org']);
 
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -225,8 +228,7 @@ class DevelopmentController extends Controller
         }
     }
 
-
-    //การตอบรับเป็นวิทบาการ
+    // การตอบรับเป็นวิทบาการ
     public function actionResponseDev($id)
     {
         $model = $this->findModel($id);
@@ -237,20 +239,20 @@ class DevelopmentController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->data_json = ArrayHelper::merge($oldData, $model->data_json);
                 $model->save(false);
-                 return [
-            'status' => 'success',
-        ];
+                return [
+                    'status' => 'success',
+                ];
             }
         }
-         if ($this->request->isAjax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('@app/modules/hr/views/development/_form_response_dev', ['model' => $model]),
             ];
         }
-       
     }
+
     /**
      * Deletes an existing Development model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -327,7 +329,7 @@ class DevelopmentController extends Controller
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
 
-               //ผู้ขออนุญาต
+        // ผู้ขออนุญาต
         try {
             $templateProcessor->setImg('emp_sign', ['src' => $model->createdByEmp->signature(), 'size' => [150, 50]]);
         } catch (\Throwable $th) {
@@ -417,7 +419,7 @@ class DevelopmentController extends Controller
         $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
         $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
-       try {
+        try {
             $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
             $templateProcessor->setValue('direc_sign', '...........................................');
@@ -471,18 +473,18 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('department', $model->createdByEmp?->departmentName() ?? '-');
         $templateProcessor->setValue('topic', $model->topic);
 
-            // ลสยมือผู้ปฏิบัติงานแทน
+        // ลสยมือผู้ปฏิบัติงานแทน
         try {
             $templateProcessor->setImg('emp_sign', ['src' => $model->createdByEmp->signature(), 'size' => [150, 50]]);
         } catch (\Throwable $th) {
             $templateProcessor->setValue('emp_sign', '........................................');
         }
-        
+
         // ผู้อำนวยการ
         $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
         $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
         $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
-       try {
+        try {
             $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
             $templateProcessor->setValue('direc_sign', '...........................................');

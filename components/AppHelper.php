@@ -842,4 +842,22 @@ class AppHelper extends Component
             'view' => $view
         ];
     }
+
+//ตรวจสอบชื่อสถานที่ถ้าไม่มีให้ create
+ public static function checkLocation($locationName)
+    {
+        $location = Categorise::findOne(['title' => $locationName]);
+        if (!$location) {
+            $maxCode = Categorise::find()
+                ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
+                ->where(['like', 'name', 'document_org'])
+                ->scalar();
+            $newLocation = new Categorise;
+            $newLocation->code = ($maxCode + 1);
+            $newLocation->title = $locationName;
+            $newLocation->name = 'document_org';
+            $newLocation->save(false);
+        }
+    }
+
 }
