@@ -11,9 +11,9 @@ $me = UserHelper::GetEmployee();
         <thead>
         <tr>
         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+        <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
             <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
             <th class="fw-semibold">การลา</th>
-            <th class="fw-semibold" scope="col">ปีงบประมาณ</th>
             <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
             <!-- <th class="fw-semibold" scope="col">มอบหมาย</th> -->
             <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
@@ -24,9 +24,10 @@ $me = UserHelper::GetEmployee();
     </thead>
     <tbody class="align-middle table-group-divider">
         <?php foreach($dataProvider->getModels() as $key => $item):?>
-        <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
-        </td>
+            <tr>
+                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+            </td>
+            <td class="text-center fw-semibold "><?php echo $item->thai_year?></td>
             <td class="text-truncate" style="max-width: 230px;">
                 <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
                 <?=$item->getAvatar(false)['avatar']?>
@@ -43,7 +44,6 @@ $me = UserHelper::GetEmployee();
             <!-- <td class="text-center fw-semibold"><?php echo $item->total_days?></td> -->
             <!-- <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td> -->
-            <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$item->getAvatar(false)['department']?>
             </td>
             <!-- <td><?php // echo $item->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td> -->
@@ -78,11 +78,7 @@ $me = UserHelper::GetEmployee();
                                 'size' => 'modal-xl',
                                 'filename' => $item->leaveType->title.'-'.$item->employee->fullname
                             ]]) ?>
-                        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
-                            [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
-                            ['class' => 'download-leave','data' => [
-                                'filename' => $item->leaveType->title.'-'.$item->employee->fullname
-                            ]]) ?>
+                        
                             <?php else:?>
                                 <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
                             <?php endif;?>

@@ -9,7 +9,8 @@ use yii\helpers\Html;
 <?php // Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/'.$filename.'.docx'), ['class' => 'btn btn-primary text-center mb-3','target' => '_blank','onclick' =>'return closeModal()']) ?>
 <!-- <iframe src='https://view.officeapps.live.com/op/embed.aspx?src=<?= Url::to(Yii::getAlias('@web') . '/msword/results/' . $filename, true); ?>' width='100%' height='1000px' frameborder='0'>
 </iframe> -->
-    <iframe src="https://docs.google.com/gview?url=<?= Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename, true); ?>&embedded=true" width='100%' height='1000px frameborder="0"></iframe>
+    <!-- <iframe src="https://docs.google.com/gview?url=<?= Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename, true); ?>&embedded=true" width='100%' height='1000px frameborder="0"></iframe> -->
+  <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=<?= Url::to(Yii::getAlias('@web') . '/msword/results/leave/' . $filename . '?t=' . time(), true); ?>" width='100%' height='1000px' frameborder="0"></iframe>
 
         
 <?php

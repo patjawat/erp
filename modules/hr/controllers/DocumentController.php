@@ -80,6 +80,7 @@ class DocumentController extends \yii\web\Controller
         // ชื่อผู้ขอลา
         $templateProcessor->setValue('emp_fullname', $model->employee->fullname);
         $templateProcessor->setValue('emp_position', 'ตำแหน่ง' . $model->employee->positionName());
+        $templateProcessor->setValue('phone', $model->employee?->phone ?? '-');
         try {
             $templateProcessor->setImg('emp_sign', ['src' => $model->employee->signature(), 'size' => [150, 50]]);  // ลายมือผู้ขอลา
         } catch (\Throwable $th) {
