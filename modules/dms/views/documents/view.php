@@ -73,11 +73,6 @@ $this->title = $model->topic;
                         <li class="nav-item">
                             <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
                         </li>
-                        <?php if($model->document_group == 'appointment'):?>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="pill" href="#committee">กลุ่ม/ทีมประสาน</a>
-                        </li>
-                        <?php endif;?>
                         <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
                         </li>
@@ -94,12 +89,7 @@ $this->title = $model->topic;
                     <div id="menu1" class="container tab-pane fade"><br>
                         <?php echo $this->render('history',['model' => $model])?>
                     </div>
-                    <?php if($model->document_group == 'appointment'):?>
-                    <div id="committee" class="container tab-pane  pb-4">
-                        <div class="list_commitee"><?php echo $this->render('list_committee',['model' => $model])?>
-                        </div>
-                    </div>
-                    <?php endif;?>
+                
                 </div>
 
             </div>
