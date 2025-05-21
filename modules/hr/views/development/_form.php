@@ -314,16 +314,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <?php
+
+
+                        <?php
                             echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::ListLocationOrg(true),
                                 'options' => ['placeholder' => 'เลือกสถานที่'],
-                                'pluginOptions' => [
-                                    // 'dropdownParent' => '#main-modal',
-                                    'allowClear' => true,
-                                ],
-                            ])->label('สถานที่จัดงาน');
-                            ?>
+                        'pluginOptions' => [
+                            'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                            'allowClear' => true,
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => 'function(result) { 
+                                            }',
+                            'select2:unselecting' => 'function() {
+
+                                            }',
+                        ],
+                
+                    ])->label('สถานที่จัดงาน');?>
+                    
                         </div>
 
                         <div class="form-group mt-2">
@@ -346,6 +356,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'data' => CategoriseHelper::ListLocationOrg(true),
                                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                                 'pluginOptions' => [
+                                      'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                                     // 'dropdownParent' => '#main-modal',
                                     'allowClear' => true,
                                 ],

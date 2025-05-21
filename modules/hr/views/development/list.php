@@ -35,11 +35,7 @@ use yii\helpers\Html;
                     </div>
                 </td>
 
-                <td>
-                   <?php
-                   echo $item->createdByEmp->data_json['position_name_text'];
-                   
-                   ?>     
+                <td>  
                 <?= $item->StackMember() ?></td>
                    <td class="text-center">
                 
