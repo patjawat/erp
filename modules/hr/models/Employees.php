@@ -996,7 +996,8 @@ class Employees extends Yii\db\ActiveRecord
             $isIcon = null;
         }
 
-        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon.$this->data_json['position_name_text'].' '.$level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
+        // return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon.$this->data_json['position_name_text'].' '.$level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
+        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon.$this->data_json['position_name_text'].' '.$level : '-';
 
         //     if ($this->position_level) {
         //         $level = ' (ระดับ' . $this->positionLevelName() . ')';

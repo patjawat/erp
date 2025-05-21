@@ -314,7 +314,7 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('doc_number', $this->GetInfo()['doc_number']);
         $templateProcessor->setValue('governor', $this->GetInfo()['governor']);
         $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
-        $templateProcessor->setValue('position', $model->createdByEmp?->positionName() ?? '-');
+        $templateProcessor->setValue('position', $model->createdByEmp?->positionName());
         $templateProcessor->setValue('topic', $model->topic);
         $templateProcessor->setValue('member', $model->memberText()['count'] > 1 ? 'พร้อมด้วย ' . $model->memberText()['text'] : '');
         $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');

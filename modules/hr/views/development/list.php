@@ -35,8 +35,15 @@ use yii\helpers\Html;
                     </div>
                 </td>
 
-                <td> <?= $item->StackMember() ?></td>
-                   <td class="text-center"><?=$item->getStatus($item->status)['view'] ?? '-'?></td>
+                <td>
+                   <?php
+                   echo $item->createdByEmp->data_json['position_name_text'];
+                   
+                   ?>     
+                <?= $item->StackMember() ?></td>
+                   <td class="text-center">
+                
+                   <?=$item->getStatus($item->status)['view'] ?? '-'?></td>
                 <td style="width:120px">
                     <div class="btn-group">
                         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
