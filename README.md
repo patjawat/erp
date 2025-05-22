@@ -105,3 +105,11 @@ docker images
  รัน Docker Image บนเครื่องใหม่
  docker run -d -p 8080:80 yii2-app:latest
 
+ # การนำเข้าข้อมูลหนังสือสารบรรณ
+ yii import-document
+ yii import-document/upload-file
+
+# ระบบลา
+
+yii import-leave
+

@@ -73,92 +73,90 @@ class ImportDocumentController extends Controller
 
         $num = 1;
         $total = count($querys);
-         echo 'นำเข้า : ';
-        if (BaseConsole::confirm('เอกสาร '.count($querys).' รายการ ยืนยัน ??')) {
-        foreach ($querys as $key => $item) {
-            $checkDoc = Documents::findOne([
-                'document_group' => 'receive',
-                'topic' => $item['BOOK_NAME'],
-                'doc_regis_number' => $item['BOOK_NUM_IN'],
-                'doc_number' => $item['BOOK_NUMBER'],
-                'thai_year' => $item['BOOK_YEAR_ID'],
-                'doc_date' => $item['BOOK_DATE'],
-                'doc_transactions_date' => $item['DATE_SAVE'],
-                'document_org' => $item['RECORD_ORG_ID'],
-                
-            ]);
-            $percentage = (($num++) / $total) * 100;
-            if ($checkDoc) {
-                $model = $checkDoc;
-                echo 'update : ' . number_format($percentage, 2) . '% =>' . $item['BOOK_NUMBER'] . "\n";
-            } else {
-                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-                $model = new Documents([
-                    'ref' => $ref
+        echo 'นำเข้า : ';
+        if (BaseConsole::confirm('เอกสาร ' . count($querys) . ' รายการ ยืนยัน ??')) {
+            foreach ($querys as $key => $item) {
+                $checkDoc = Documents::findOne([
+                    'document_group' => 'receive',
+                    'topic' => $item['BOOK_NAME'],
+                    'doc_regis_number' => $item['BOOK_NUM_IN'],
+                    'doc_number' => $item['BOOK_NUMBER'],
+                    'thai_year' => $item['BOOK_YEAR_ID'],
+                    'doc_date' => $item['BOOK_DATE'],
+                    'doc_transactions_date' => $item['DATE_SAVE'],
+                    'document_org' => $item['RECORD_ORG_ID'],
                 ]);
+                $percentage = (($num++) / $total) * 100;
+                if ($checkDoc) {
+                    $model = $checkDoc;
+                    echo 'update : ' . number_format($percentage, 2) . '% =>' . $item['BOOK_NUMBER'] . "\n";
+                } else {
+                    $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                    $model = new Documents([
+                        'ref' => $ref
+                    ]);
 
-                echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
+                    echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
+                }
+
+                switch ($item['BOOK_URGENT_ID']) {
+                    case '01':
+                        $docSpeed = 'ปกติ';
+                        break;
+                    case '02':
+                        $docSpeed = 'ด่วน';
+                        break;
+                    case '03':
+                        $docSpeed = 'ด่วนมาก';
+                        break;
+                    case '04':
+                        $docSpeed = 'ด่วนที่สุด';
+                        break;
+                    default:
+                        $docSpeed = '';
+                        break;
+                }
+
+                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model->ref = $ref;
+                $model->document_group = 'receive';
+                $model->doc_speed = $docSpeed;
+                $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
+                $model->doc_number = $item['BOOK_NUMBER'];
+                $model->doc_regis_number = $item['BOOK_NUM_IN'];
+                $model->topic = $item['BOOK_NAME'];
+                $model->doc_transactions_date = $item['DATE_SAVE'];
+                $model->doc_time = $item['TIME_SAVE'];
+                $model->doc_date = $item['BOOK_DATE'];
+                $model->thai_year = $item['BOOK_YEAR_ID'];
+                $model->document_org = $item['RECORD_ORG_ID'];
+                $model->secret = $item['BOOK_SECRET_NAME'] ?? '-';
+                $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+
+                try {
+                    $model->save(false);
+                } catch (\Throwable $th) {
+                    echo 'นำเข้าใหม่ => ' . $item['BOOK_NUM_IN'] . ' => ' . $th . "\n";
+                }
+
+                // หน่วงานที่รับส่งหนังสือ
+                $code = $item['RECORD_ORG_ID'];
+                $title = $item['RECORD_ORG_NAME'];
+
+                $categorise = Categorise::findOne(['name' => 'document_org', 'code' => $code, 'title' => $title]);
+                if ($categorise) {
+                    $org = $categorise;
+                } else {
+                    $org = new Categorise();
+                }
+                $org->name = 'document_org';
+                $org->code = $code;
+                $org->title = $title;
+                $org->save(false);
+
+                // End หน่วงานที่รับส่งหนังสือ
             }
-
-            switch ($item['BOOK_URGENT_ID']) {
-                case '01':
-                    $docSpeed = 'ปกติ';
-                    break;
-                case '02':
-                    $docSpeed = 'ด่วน';
-                    break;
-                case '03':
-                    $docSpeed = 'ด่วนมาก';
-                    break;
-                case '04':
-                    $docSpeed = 'ด่วนที่สุด';
-                    break;
-                default:
-                $docSpeed = '';
-                    break;
-            }
-
-            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-            $model->ref = $ref;
-            $model->document_group = 'receive';
-            $model->doc_speed =  $docSpeed;
-            $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
-            $model->doc_number = $item['BOOK_NUMBER'];
-            $model->doc_regis_number = $item['BOOK_NUM_IN'];
-            $model->topic = $item['BOOK_NAME'];
-            $model->doc_transactions_date = $item['DATE_SAVE'];
-            $model->doc_time = $item['TIME_SAVE'];
-            $model->doc_date = $item['BOOK_DATE'];
-            $model->thai_year = $item['BOOK_YEAR_ID'];
-            $model->document_org = $item['RECORD_ORG_ID'];
-            $model->secret = $item['BOOK_SECRET_NAME'] ?? '-';
-            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
-            
-
-            try {
-                $model->save(false);
-            } catch (\Throwable $th) {
-                echo 'นำเข้าใหม่ => ' . $item['BOOK_NUM_IN'] . ' => ' . $th . "\n";
-            }
-
-            // หน่วงานที่รับส่งหนังสือ
-            $code = $item['RECORD_ORG_ID'];
-            $title = $item['RECORD_ORG_NAME'];
-
-            $categorise = Categorise::findOne(['name' => 'document_org', 'code' => $code, 'title' => $title]);
-            if ($categorise) {
-                $org = $categorise;
-            } else {
-                $org = new Categorise();
-            }
-            $org->name = 'document_org';
-            $org->code = $code;
-            $org->title = $title;
-            $org->save(false);
-
-            // End หน่วงานที่รับส่งหนังสือ
         }
-    }
         return ExitCode::OK;
     }
 
@@ -190,88 +188,87 @@ class ImportDocumentController extends Controller
 
         $num = 1;
         $total = count($querys);
-        if (BaseConsole::confirm('เอกสารส่ง '.count($querys).' รายการ ยืนยัน ??')) {
-        foreach ($querys as $key => $item) {
-            $checkDoc = Documents::findOne([
-                // 'ref' => $ref,
-                'document_group' => 'send',
-                'topic' => $item['BOOK_NAME'],
-                'doc_regis_number' => $item['BOOK_NUM_IN'],
-                'doc_number' => $item['BOOK_NUMBER'],
-                'thai_year' => $item['BOOK_YEAR_ID'],
-                'doc_date' => $item['BOOK_DATE'],
-                'doc_transactions_date' => $item['DATE_SAVE'],
-                'document_org' => $item['RECORD_ORG_ID'],
-            ]);
-            $percentage = (($num++) / $total) * 100;
-            if ($checkDoc) {
-                $model = $checkDoc;
-                echo 'update : ' . number_format($percentage, 2) . '% =>' . $item['BOOK_NUMBER'] . "\n";
-            } else {
-                $model = new Documents();
+        if (BaseConsole::confirm('เอกสารส่ง ' . count($querys) . ' รายการ ยืนยัน ??')) {
+            foreach ($querys as $key => $item) {
+                $checkDoc = Documents::findOne([
+                    // 'ref' => $ref,
+                    'document_group' => 'send',
+                    'topic' => $item['BOOK_NAME'],
+                    'doc_regis_number' => $item['BOOK_NUM_IN'],
+                    'doc_number' => $item['BOOK_NUMBER'],
+                    'thai_year' => $item['BOOK_YEAR_ID'],
+                    'doc_date' => $item['BOOK_DATE'],
+                    'doc_transactions_date' => $item['DATE_SAVE'],
+                    'document_org' => $item['RECORD_ORG_ID'],
+                ]);
+                $percentage = (($num++) / $total) * 100;
+                if ($checkDoc) {
+                    $model = $checkDoc;
+                    echo 'update : ' . number_format($percentage, 2) . '% =>' . $item['BOOK_NUMBER'] . "\n";
+                } else {
+                    $model = new Documents();
 
-                echo 'นำเข้าเอกสารส่ง : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
-            }
+                    echo 'นำเข้าเอกสารส่ง : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
+                }
 
-            switch ($item['BOOK_URGENT_ID']) {
-                case '01':
-                    $docSpeed = 'ปกติ';
-                    break;
-                case '02':
-                    $docSpeed = 'ด่วน';
-                    break;
-                case '03':
-                    $docSpeed = 'ด่วนมาก';
-                    break;
-                case '04':
-                    $docSpeed = 'ด่วนที่สุด';
-                    break;
-                default:
-                $docSpeed = '';
-                    break;
-            }
-            
-            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-            $model->ref = $ref;
-            $model->document_group = 'send';
-            $model->doc_speed =  $docSpeed;
-            $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
-            $model->doc_number = $item['BOOK_NUMBER'];
-            $model->doc_regis_number = $item['BOOK_NUM_IN'];
-            $model->topic = $item['BOOK_NAME'];
-            $model->doc_transactions_date = $item['DATE_SAVE'];
-            $model->doc_time = $item['TIME_SAVE'];
-            $model->doc_date = $item['BOOK_DATE'];
-            $model->thai_year = $item['BOOK_YEAR_ID'];
-            $model->document_org = $item['RECORD_ORG_ID'];
-            $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
-            // $mdoel->secret = $item['BOOK_SECRET_NAME'] ?? '-';
-            $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
-            // self::UploadFile($fileName,$item['BOOK_ID']);
-            try {
-                // กำหนดพาธของไดเรกทอรี
-                $model->save(false);
+                switch ($item['BOOK_URGENT_ID']) {
+                    case '01':
+                        $docSpeed = 'ปกติ';
+                        break;
+                    case '02':
+                        $docSpeed = 'ด่วน';
+                        break;
+                    case '03':
+                        $docSpeed = 'ด่วนมาก';
+                        break;
+                    case '04':
+                        $docSpeed = 'ด่วนที่สุด';
+                        break;
+                    default:
+                        $docSpeed = '';
+                        break;
+                }
 
-            } catch (\Throwable $th) {
-                echo 'นำเข้าใหม่ => ' . $item['BOOK_NUM_IN'] . ' => ' . $th . "\n";
-            }
+                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model->ref = $ref;
+                $model->document_group = 'send';
+                $model->doc_speed = $docSpeed;
+                $model->document_type = 'DT' . $item['BOOK_TYPE_ID'];
+                $model->doc_number = $item['BOOK_NUMBER'];
+                $model->doc_regis_number = $item['BOOK_NUM_IN'];
+                $model->topic = $item['BOOK_NAME'];
+                $model->doc_transactions_date = $item['DATE_SAVE'];
+                $model->doc_time = $item['TIME_SAVE'];
+                $model->doc_date = $item['BOOK_DATE'];
+                $model->thai_year = $item['BOOK_YEAR_ID'];
+                $model->document_org = $item['RECORD_ORG_ID'];
+                $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+                // $mdoel->secret = $item['BOOK_SECRET_NAME'] ?? '-';
+                $fileName = $item['BOOK_FILE_NAME'];  // ชื่อไฟล์ที่ต้องการตรวจสอบ
+                // self::UploadFile($fileName,$item['BOOK_ID']);
+                try {
+                    // กำหนดพาธของไดเรกทอรี
+                    $model->save(false);
+                } catch (\Throwable $th) {
+                    echo 'นำเข้าใหม่ => ' . $item['BOOK_NUM_IN'] . ' => ' . $th . "\n";
+                }
 
-            // หน่วงานที่รับส่งหนังสือ
-            $code = $item['RECORD_ORG_ID'];
-            $title = $item['RECORD_ORG_NAME'];
+                // หน่วงานที่รับส่งหนังสือ
+                $code = $item['RECORD_ORG_ID'];
+                $title = $item['RECORD_ORG_NAME'];
 
-            $categorise = Categorise::findOne(['name' => 'document_org', 'code' => $code, 'title' => $title]);
-            if ($categorise) {
-                $org = $categorise;
-            } else {
-                $org = new Categorise();
-            }
-            $org->name = 'document_org';
-            $org->code = $code;
-            $org->title = $title;
-            $org->save(false);
+                $categorise = Categorise::findOne(['name' => 'document_org', 'code' => $code, 'title' => $title]);
+                if ($categorise) {
+                    $org = $categorise;
+                } else {
+                    $org = new Categorise();
+                }
+                $org->name = 'document_org';
+                $org->code = $code;
+                $org->title = $title;
+                $org->save(false);
 
-            // End หน่วงานที่รับส่งหนังสือ
+                // End หน่วงานที่รับส่งหนังสือ
             }
         }
         return ExitCode::OK;
@@ -280,40 +277,39 @@ class ImportDocumentController extends Controller
     public function actionUploadFile()
     {
         if (BaseConsole::confirm('ยืนยันการนำเข้าไฟล์ ??')) {
-      
-        $directory = Yii::getAlias('@app/bookpdf/');
+            $directory = Yii::getAlias('@app/bookpdf/');
 
-        foreach (Documents::find()->all() as $document) {
-            echo 'update => ' . $document->doc_number . "\n";
-            $ref = $document->ref;
-            $checkFileUpload = Uploads::findOne(['ref' => $ref]);
-            if (!$checkFileUpload) {
-                $fileName = $document->data_json['filename'];
-                $filePath = $directory . $fileName;
+            foreach (Documents::find()->all() as $document) {
+                echo 'update => ' . $document->doc_number . "\n";
+                $ref = $document->ref;
+                $checkFileUpload = Uploads::findOne(['ref' => $ref]);
+                if (!$checkFileUpload) {
+                    $fileName = $document->data_json['filename'];
+                    $filePath = $directory . $fileName;
 
-                // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
-                if (file_exists($filePath) && is_file($filePath)) {
-                    $this->CreateDir($ref);
+                    // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+                    if (file_exists($filePath) && is_file($filePath)) {
+                        $this->CreateDir($ref);
 
-                    $name = $fileName;
-                    $destinationPath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $fileName;
+                        $name = $fileName;
+                        $destinationPath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $fileName;
 
-                    if (copy($filePath, $destinationPath)) {
-                        $upload = new Uploads();
-                        $upload->ref = $ref;
-                        $upload->name = 'document';
-                        $upload->file_name = $name;
-                        $upload->real_filename = $name;
-                        $upload->type = 'pdf';
-                        $upload->save(false);
-                        echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf" . "\n";
+                        if (copy($filePath, $destinationPath)) {
+                            $upload = new Uploads();
+                            $upload->ref = $ref;
+                            $upload->name = 'document';
+                            $upload->file_name = $name;
+                            $upload->real_filename = $name;
+                            $upload->type = 'pdf';
+                            $upload->save(false);
+                            echo "ไฟล์ $fileName มีอยู่ในไดเรกทอรี app/bookpdf" . "\n";
+                        }
+                    } else {
+                        echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=" . $fileName . "\n";
                     }
-                } else {
-                    echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=" . $fileName . "\n";
                 }
             }
         }
-    }
         // $filePath = $directory . $fileName;
 
         // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
@@ -348,30 +344,58 @@ class ImportDocumentController extends Controller
         return;
     }
 
+    public function actionClear()
+    {
+        if (BaseConsole::confirm('ยืนยันการลบไฟล์ ??')) {
+            $docFiles = Documents::find()->all();
+            $num = 1;
+            $total = count($docFiles);
+            foreach ($docFiles as $docFile) {
+                $ref = $docFile->ref;
+                $upload = Uploads::findOne(['ref' => $ref]);
+                $percentage = (($num++) / $total) * 100;
+                if ($upload) {
+                    $upload->delete();
+                    $docFile->delete();
+                    $deleteDoc = Documents::findOne($docFile->id);
+                    $deleteDoc->delete();
+                    // try {
+                    FileManagerHelper::removeUploadDir($ref);
+                    echo 'ลบ' . $ref . number_format($percentage, 2) . '%' . "\n";
+                    // } catch (\Throwable $th) {
+                    //     echo "ผิดพลาด ! ".$ref. number_format($percentage, 2) . '%'."\n";
+                    //     //throw $th;
+                    // }
+                } else {
+                    echo 'ไม่พบ uploads' . number_format($percentage, 2) . '%' . "\n";
+                }
+            }
+        }
+    }
+
     public function actionDeleteFile()
     {
         if (BaseConsole::confirm('ยืนยันการลบไฟล์ ??')) {
-        $docFiles = Documents::find()->all();
-        $num = 1;
-        $total = count($docFiles);
-        foreach($docFiles as $docFile){
-            $ref = $docFile->ref;
-            $upload = Uploads::findOne(['ref' => $ref]);
-            $percentage = (($num++) / $total) * 100;
-            if($upload){
-                $upload->delete();
-                // try {
+            $docFiles = Documents::find()->all();
+            $num = 1;
+            $total = count($docFiles);
+            foreach ($docFiles as $docFile) {
+                $ref = $docFile->ref;
+                $upload = Uploads::findOne(['ref' => $ref]);
+                $percentage = (($num++) / $total) * 100;
+                if ($upload) {
+                    $upload->delete();
+                    // try {
                     FileManagerHelper::removeUploadDir($ref);
-                    echo "ลบ".$ref. number_format($percentage, 2) . '%'."\n";
-                // } catch (\Throwable $th) {
-                //     echo "ผิดพลาด ! ".$ref. number_format($percentage, 2) . '%'."\n";
-                //     //throw $th;
-                // }
-            }else{
-                echo "ไม่พบ uploads". number_format($percentage, 2) . '%'."\n";
+                    echo 'ลบ' . $ref . number_format($percentage, 2) . '%' . "\n";
+                    // } catch (\Throwable $th) {
+                    //     echo "ผิดพลาด ! ".$ref. number_format($percentage, 2) . '%'."\n";
+                    //     //throw $th;
+                    // }
+                } else {
+                    echo 'ไม่พบ uploads' . number_format($percentage, 2) . '%' . "\n";
+                }
             }
-            
         }
-    }
     }
 }

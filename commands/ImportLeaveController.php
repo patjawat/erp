@@ -39,12 +39,12 @@ class ImportLeaveController extends Controller
      */
     public function actionIndex()
     {
-        echo "วันลา \n";
+       $this->Leave();
     }
 
-    public function actionLeave()
+    public function Leave()
     {
-        // นำวันลา
+          // นำวันลา
         $querys = Yii::$app->db2->createCommand('SELECT 
                     LEAVE_YEAR_ID,
                     LEAVE_BECAUSE,

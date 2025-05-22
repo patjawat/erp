@@ -271,7 +271,7 @@ class ImportVehicleController extends Controller
             $model->thai_year = AppHelper::YearBudget($item['OUT_DATE']);
             $model->reason = $item['REFER_TYPE_NAME'] ?? '-';
             $model->vehicle_type_id = 'ambulance'; //รถพยาบาล
-            $model->refer_type = $this->referType($item['REFER_TYPE_NAME']);
+            $model->refer_type = $this->referType($item['REFER_TYPE_NAME']) ?? '-';
             $model->go_type = 1;
             $model->urgent = 'ปกติ';
             $model->location = $this->checkLocation($item['LOCATION_ORG_NAME']);

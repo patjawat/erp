@@ -32,6 +32,8 @@ use app\modules\hr\models\Organization;
                             $('#leavesearch-date_end').val('');
                             $('#vehiclesearch-date_start').val('');
                             $('#vehiclesearch-date_end').val('');
+                            $('#meetingsearch-date_start').val('');
+                            $('#meetingsearch-date_end').val('');
                             $('#developmentsearch-date_start').val('');
                             $('#developmentsearch-date_end').val('');
                             $('#approvesearch-date_start').val('');
