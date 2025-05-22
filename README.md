@@ -106,10 +106,9 @@ docker images
  docker run -d -p 8080:80 yii2-app:latest
 
  # การนำเข้าข้อมูลหนังสือสารบรรณ
- yii import-document
- yii import-document/upload-file
-
-# ระบบลา
-
+yii import-document
+yii import-document/upload-file
 yii import-leave
+yii import-meeting
+yii import-vehicle
 
