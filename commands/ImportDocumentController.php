@@ -73,8 +73,7 @@ class ImportDocumentController extends Controller
 
         $num = 1;
         $total = count($querys);
-        echo 'นำเข้า : ';
-        if (BaseConsole::confirm('เอกสาร ' . count($querys) . ' รายการ ยืนยัน ??')) {
+        // if (BaseConsole::confirm('เอกสาร ' . count($querys) . ' รายการ ยืนยัน ??')) {
             foreach ($querys as $key => $item) {
                 $checkDoc = Documents::findOne([
                     'document_group' => 'receive',
@@ -96,7 +95,7 @@ class ImportDocumentController extends Controller
                         'ref' => $ref
                     ]);
 
-                    echo 'นำเข้า : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
+                    echo 'นำเข้าหนังสือรับ : ' . number_format($percentage, 2) . '% => ' . $item['BOOK_NUMBER'] . "\n";
                 }
 
                 switch ($item['BOOK_URGENT_ID']) {
@@ -156,7 +155,7 @@ class ImportDocumentController extends Controller
 
                 // End หน่วงานที่รับส่งหนังสือ
             }
-        }
+        // }
         return ExitCode::OK;
     }
 

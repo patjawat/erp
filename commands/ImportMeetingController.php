@@ -48,7 +48,10 @@ class ImportMeetingController extends Controller
      */
     public function actionIndex()
     {
-        $sql = "SELECT r.ROOM_ID,r.ROOM_NAME,s.* FROM `meetingroom_service` s LEFT JOIN meetingroom_index r ON r.ROOM_ID = s.ROOM_ID ORDER BY s.DATE_TIME_REQUEST ASC";
+        $sql = "SELECT r.ROOM_ID,r.ROOM_NAME,s.* FROM `meetingroom_service` s 
+        LEFT JOIN meetingroom_index r ON r.ROOM_ID = s.ROOM_ID 
+        WHERE `DATE_BEGIN` BETWEEN '2025-05-22' AND '2025-05-22'
+        ORDER BY s.DATE_TIME_REQUEST ASC";
         $querys = Yii::$app->db2->createCommand($sql)
         ->queryAll();
         
@@ -81,7 +84,7 @@ class ImportMeetingController extends Controller
             $model->time_start = $item['TIME_BEGIN'];
             $model->time_end = $item['TIME_END'];
             $model->urgent = 'ปกติ';
-            $model->status = 'Pass';
+            $model->status = $this->Status($item['STATUS']);
             $model->data_json = [
                 'old_data' => $item  
             ];
@@ -99,7 +102,7 @@ class ImportMeetingController extends Controller
     public static function Status($status) {
         if($status == 'LASTAPP'){
             return 'Approve';
-        }else if($status == 'Cancel'){
+        }else if($status == 'CANCEL'){
             return 'Cancel';
         }else if($status == 'RECERVE'){
             return 'Pending';

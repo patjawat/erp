@@ -49,7 +49,7 @@ class ImportDevelopmentController extends Controller
     LEFT JOIN grecord_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID;';
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
 
-        if (BaseConsole::confirm('การพัฒนา ' . count($querys) . ' รายการ ยืนยัน ??')) {
+        // if (BaseConsole::confirm('การพัฒนา ' . count($querys) . ' รายการ ยืนยัน ??')) {
             $num = 1;
             $total = count($querys);
             foreach ($querys as $item) {
@@ -83,7 +83,7 @@ class ImportDevelopmentController extends Controller
                     }
                 }
             }
-        }
+        // }
     }
 
     public static function Person($id)

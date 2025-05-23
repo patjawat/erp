@@ -112,3 +112,5 @@ yii import-leave
 yii import-meeting
 yii import-vehicle
 
+
+yii import-leave && yii import-document && yii import-meeting && yii import-vehicle && yii import-development

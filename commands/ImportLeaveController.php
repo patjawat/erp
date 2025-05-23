@@ -39,14 +39,20 @@ class ImportLeaveController extends Controller
      */
     public function actionIndex()
     {
-       $this->Leave();
+        $querys = Yii::$app->db2->createCommand("SELECT LEAVE_YEAR_ID FROM gleave_register GROUP BY LEAVE_YEAR_ID")->queryAll();
+        foreach ($querys as $item) {
+            $this->Leave($item['LEAVE_YEAR_ID']);
+        }
     }
 
-    public function Leave()
+    public function Leave($year)
     {
-          // นำวันลา
         $querys = Yii::$app->db2->createCommand('SELECT 
+                    gleave_register.ID,
                     LEAVE_YEAR_ID,
+                    LEAVE_TYPE_CODE,
+                    LEAVE_TYPE_ID,
+                    LEAVE_TYPE_NAME,
                     LEAVE_BECAUSE,
                     LEAVE_DATE_BEGIN,
                     LEAVE_DATE_END,
@@ -55,7 +61,6 @@ class ImportLeaveController extends Controller
                     DAY_TYPE_NAME,
                     LEAVE_CONTACT,
                     LEAVE_DATETIME_REGIS,
-                    LEAVE_TYPE_CODE,
                     LEAVE_PERSON_ID,
                     LEAVE_PERSON_CODE,
                     LEAVE_PERSON_FULLNAME,
@@ -66,8 +71,6 @@ class ImportLeaveController extends Controller
                     LEADER_PERSON_ID,
                     LEADER_PERSON_NAME,
                     LEADER_PERSON_POSITION,
-                    LEAVE_TYPE_ID,
-                    LEAVE_TYPE_NAME,
                     USER_CONFIRM_CHECK_ID,
                     STATUS_CODE,
                     STATUS_NAME,
@@ -78,7 +81,12 @@ class ImportLeaveController extends Controller
                     LEFT JOIN gleave_status ON gleave_register.LEAVE_STATUS_CODE = gleave_status.STATUS_CODE
                     LEFT JOIN gleave_location ON gleave_register.LOCATION_ID = gleave_location.LOCATION_ID
                     LEFT JOIN gleave_day_type ON gleave_day_type.DAY_TYPE_ID = gleave_register.DAY_TYPE_ID
-                    ORDER BY gleave_register.ID DESC;')->queryAll();
+                    WHERE LEAVE_YEAR_ID = :year_id 
+                    -- AND `LEAVE_TYPE_ID` = "04"
+                    -- AND `STATUS_CODE` = "Allow"
+                    ORDER BY gleave_register.ID DESC;')
+                    ->bindValue('year_id',$year)
+                    ->queryAll();
         $num = 1;
         $total = count($querys);
         foreach ($querys as $key => $item) {
@@ -95,6 +103,7 @@ class ImportLeaveController extends Controller
                 'date_start' => $item['LEAVE_DATE_BEGIN'],
                 'date_end' => $item['LEAVE_DATE_END'],
             ])->andWhere(['json_extract(data_json, "$.cid")' => $item['LEAVE_PERSON_CODE']])->one();
+            
             $leaveType = Categorise::findOne(['name' => 'leave_type', 'title' => $item['LEAVE_TYPE_NAME']]);
 
             $leave = $checkLeave ?? new Leave();
@@ -105,6 +114,7 @@ class ImportLeaveController extends Controller
             $leave->date_start = $item['LEAVE_DATE_BEGIN'];
             $leave->date_end = $item['LEAVE_DATE_END'];
             $leave->status = $item['STATUS_CODE'];
+            
             if($item['DAY_TYPE_ID'] == 2){
                 $leave->date_start_type = 0.5;
                 $leave->date_end_type = 0;
@@ -121,6 +131,7 @@ class ImportLeaveController extends Controller
             
             
             $leave->data_json = [
+                'id' => $item['ID'],
                 'cid' => $item['LEAVE_PERSON_CODE'],
                 'fullname' => $item['LEAVE_PERSON_FULLNAME'],
                 'leave_type_id' => $item['LEAVE_TYPE_ID'],
@@ -148,19 +159,19 @@ class ImportLeaveController extends Controller
                 'leader_person_position' => $item['LEADER_PERSON_POSITION'],
             ];
 
-            if($leave->save()){
-                $this->UpdateStatus();
-                $leave->createApprove();
+            if($leave->save(false)){
+                // $this->UpdateStatus();
+                // $leave->createApprove();
                 // $leave->createLeaveStep();
                 $percentage = (($num++) / $total) * 100;
-                echo 'ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
+                echo 'ข้อมูลการลา ปี '. $leave->thai_year.' =>  ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
             }
 
         }
         return ExitCode::OK;
     }
 
-        public function UpdateStatus()
+        public function actionUpdateStatus()
         {
             // อัปเดตสถานะ leave จาก 'Allow' เป็น 'Approve' เฉพาะที่มี thai_year
             $count = Yii::$app->db->createCommand("UPDATE `leave` SET status = 'Approve' WHERE `thai_year` IS NOT NULL AND status = 'Allow'")->execute();
