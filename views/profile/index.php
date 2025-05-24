@@ -1,8 +1,8 @@
 <?php
-use app\components\UserHelper;
-use yii\bootstrap5\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use yii\bootstrap5\Html;
+use app\components\UserHelper;
 
 $this->title = 'โปรไฟล์';
 

@@ -2,11 +2,11 @@
 
 namespace app\modules\dms\controllers;
 
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentsDetailSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * DocumentsDetailController implements the CRUD actions for DocumentsDetail model.

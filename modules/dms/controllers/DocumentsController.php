@@ -190,8 +190,17 @@ class DocumentsController extends Controller
         $model = new Documents([
             'thai_year' => (Date('Y') + 543),
             'document_group' => $this->request->get('document_group'),
-            'document_type' => $this->request->get('document_type')
+            'document_type' => $this->request->get('document_type'),
+            'doc_number' => $this->request->get('doc_number'),
+            'doc_speed' => $this->request->get('doc_speed'),
+            'secret' => $this->request->get('secret'),
+            'document_org' => $this->request->get('document_org'),
+            'topic' => $this->request->get('topic'),
+            'data_json' => [
+                'file_name' => $this->request->get('file_name')
+            ]
         ]);
+       
         $model->doc_transactions_date = AppHelper::convertToThai(date('Y-m-d'));
         $dateTime = new DateTime();
         $time = $dateTime->format('H:i');
@@ -220,6 +229,7 @@ class DocumentsController extends Controller
                 }
 
                 if ($model->save()) {
+                    $this->moveFile($model);
                     $model->UpdateDocumentTags();
                 } else {
                     return $model->getErrors();
@@ -234,10 +244,75 @@ class DocumentsController extends Controller
         }
 
         return $this->render('create', [
-            'model' => $model,
+            'model' => $model
         ]);
     }
+    //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
+    public function moveFile($model)
+    {
+        $filename  = $model->data_json['file_name'];
+        $newUpload = new Uploads();
+        $newUpload->ref = $model->ref;
+        $newUpload->name = 'document';
+        $newUpload->type = 'pdf';
+        $newUpload->filename = '';
+        $newUpload->file_name = $filename;
+        $newUpload->real_filename = $filename;
+        $newUpload->save(false);
+        FileManagerHelper::CreateDir($model->ref);
 
+        $sourcePath = Yii::getAlias('@app/doc_receive/'.$filename);
+        $targetDir = Yii::getAlias('@app/modules/filemanager/fileupload/'.$model->ref.'/');
+        $targetPath = $targetDir . $filename;
+
+        // ตรวจสอบว่าปลายทางมีไดเรกทอรีหรือยัง ถ้ายังไม่มีให้สร้าง
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0775, true);
+        }
+
+        // ย้ายไฟล์
+        if (file_exists($sourcePath)) {
+            if (rename($sourcePath, $targetPath)) {
+            // ลบ json object ที่ topic = $model->topic ในไฟล์ @app/doc_receive/data.json
+            $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
+            $doc_number = $model->doc_number;
+            if (file_exists($jsonFile)) {
+                $jsonData = file_get_contents($jsonFile);
+                $dataArr = json_decode($jsonData, true);
+                if (is_array($dataArr)) {
+                // ค้นหาและลบ object ที่ topic ตรงกับ $model->topic
+                $dataArr = array_values(array_filter($dataArr, function($item) use ($doc_number) {
+                    return isset($item['doc_number']) && $item['doc_number'] !== $doc_number;
+                }));
+                file_put_contents($jsonFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                }
+            }
+            } else {
+            // echo "Failed to move file.";
+            }
+        } else {
+            // echo "Source file does not exist.";
+        }
+
+    }
+
+    public function actionTest()
+    {
+        $name = 'ให้ข้าราชการปฏิบัติราชการ';
+            $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
+            if (file_exists($jsonFile)) {
+                $jsonData = file_get_contents($jsonFile);
+                $dataArr = json_decode($jsonData, true);
+                if (is_array($dataArr)) {
+                // ค้นหาและลบ object ที่ topic ตรงกับ $model->topic
+                $dataArr = array_values(array_filter($dataArr, function($item) use ($name) {
+                    return isset($item['topic']) && $item['topic'] !== $name;
+                }));
+                file_put_contents($jsonFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                }
+            }
+          
+    }
     /**
      * Updates an existing Documents model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -516,17 +591,21 @@ class DocumentsController extends Controller
         // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
             $id = Yii::$app->request->get('id');
+            $file_name = Yii::$app->request->get('file_name');
             $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
-            if (!$fileUpload) {
+
+            if($file_name){
+                 $filepath = Yii::getAlias('@app') . '/doc_receive/'.$file_name;
+            }else if (!$fileUpload) {
+                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
+             }else if (!$fileUpload && !file_exists($filepath)) {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             } else {
                 $filename = $fileUpload->real_filename;
                 $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
             }
-            if (!$fileUpload && !file_exists($filepath)) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-            }
+            
 
             $this->setHttpHeaders($type);
             \Yii::$app->response->data = file_get_contents($filepath);

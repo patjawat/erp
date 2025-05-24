@@ -49,7 +49,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
                 <div>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+                    
+                    <?= Html::a('หนังสือรอรับ', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-primary shadow rounded-pill']) ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
                 </div>
             </div>
 

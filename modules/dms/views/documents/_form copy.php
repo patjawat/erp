@@ -24,9 +24,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php $form = ActiveForm::begin(); ?>
 <div class="card">
     <div class="card-body">
-
         <div class="row">
-
             <div class="col-6">
                 <div class="row">
                     <div class="col-6">

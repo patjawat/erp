@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/dms/menu') ?>
-<?php $this->endBlock(); ?>
+<?php $this->endBlock();?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-document',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -52,6 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ]); ?>
 
 <?= $form->field($model, 'document_group')->hiddenInput(['maxlength' => 50])->label(false); ?>
+<?= $form->field($model, 'data_json[file_name]')->textInput(['maxlength' => 50])->label(false); ?>
 <div class="card">
     <div class="card-body">
 
@@ -69,6 +70,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php Pjax::begin(['id' => 'showDocument']); ?>
                 <!-- <iframe src="<?php //  Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true" width='100%'
                     height='1000px' frameborder="0"></iframe> -->
+                <!-- <iframe id="myIframe" width="100%" height="1000px" frameborder="0"></iframe> -->
                 <iframe id="myIframe" width="100%" height="1000px" frameborder="0"></iframe>
                 <?php Pjax::end(); ?>
             </div>
@@ -337,8 +339,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php ActiveForm::end(); ?>
 
 <?php
+$file = Yii::$app->request->get('file_name');
 $url = Url::to(['/dms/documents/get-items']);
-$showPdfUrl = Url::to(['/dms/documents/show?ref='.$model->ref]);
+$showPdfUrl = Url::to(['/dms/documents/show','ref' => $model->ref,'file_name' => $file]);
 $js = <<< JS
     loadPdf()
 

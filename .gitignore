@@ -41,3 +41,4 @@ web/downloads/*
 web/import-csv/*
 .env
 db-backup
+doc_receive/*
