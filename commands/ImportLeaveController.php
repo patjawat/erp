@@ -160,7 +160,7 @@ class ImportLeaveController extends Controller
             ];
 
             if($leave->save(false)){
-                // $this->UpdateStatus();
+                $this->UpdateStatus();
                 // $leave->createApprove();
                 // $leave->createLeaveStep();
                 $percentage = (($num++) / $total) * 100;
@@ -171,7 +171,7 @@ class ImportLeaveController extends Controller
         return ExitCode::OK;
     }
 
-        public function actionUpdateStatus()
+        public function UpdateStatus()
         {
             // อัปเดตสถานะ leave จาก 'Allow' เป็น 'Approve' เฉพาะที่มี thai_year
             $count = Yii::$app->db->createCommand("UPDATE `leave` SET status = 'Approve' WHERE `thai_year` IS NOT NULL AND status = 'Allow'")->execute();
