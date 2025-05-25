@@ -47,7 +47,7 @@ $this->title = 'หนังสือสำนักงานสาธารณ�
                 'doc_number' => $item['doc_number'],
                 'doc_speed' => 'ปกติ',
                 'secret' => 'ปกติ',
-                'document_org' => 'สำนักงานสาธารณสุขจังหวัดเลย',
+                'document_org' => $item['org_name'],
                 'file_name' => $item['downloaded_file'],
                 'topic' => $item['topic']
                 ])?></td>

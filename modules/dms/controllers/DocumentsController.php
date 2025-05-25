@@ -228,7 +228,7 @@ class DocumentsController extends Controller
                     $model->document_org = $this->UpdateDocOrg($model);
                 }
 
-                if ($model->save()) {
+                if ($model->save(false)) {
                     $this->moveFile($model);
                     $model->UpdateDocumentTags();
                 } else {

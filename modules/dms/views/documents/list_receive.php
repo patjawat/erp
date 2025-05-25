@@ -14,6 +14,16 @@ use app\modules\dms\models\Documents;
 $this->title = 'หนังสือรับ';
 
 $this->params['breadcrumbs'][] = $this->title;
+
+$dataFile = Yii::getAlias('@app/doc_receive/data.json');
+$jsonCount = 0;
+if (file_exists($dataFile)) {
+    $jsonData = file_get_contents($dataFile);
+    $jsonArray = json_decode($jsonData, true);
+    if (is_array($jsonArray)) {
+        $jsonCount = count($jsonArray);
+    }
+}
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <?php if($searchModel->document_group == 'receive'):?>
@@ -50,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
                 <div>
                     
-                    <?= Html::a('หนังสือรอรับ', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-primary shadow rounded-pill']) ?>
+                    <?= $jsonCount > 0 ? Html::a('<i class="fa-regular fa-hourglass-half"></i> หนังสือรอรับ <span class="badge rounded-pill badge-secondary text-primary fs-13 fw-semibold">'.$jsonCount.'</span>', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-warning shadow rounded-pill']) : '' ?>
                     <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
                 </div>
             </div>

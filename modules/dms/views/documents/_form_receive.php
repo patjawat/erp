@@ -180,6 +180,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
                             <div class="col-12">
+                    
                                 <?php
                                         echo $form->field($model, 'document_org')->widget(Select2::classname(), [
                                             'data' => $model->ListDocumentOrg(),
@@ -187,7 +188,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'pluginOptions' => [
                                                 'allowClear' => true,
                                                 'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                                // 'width' => '370px',
                                             ],
                                             'pluginEvents' => [
                                                 'select2:select' => 'function(result) { 
