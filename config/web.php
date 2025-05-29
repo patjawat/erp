@@ -32,6 +32,10 @@ $config = [
         'thaiFormatter' => [
             'class' => 'dixonsatit\thaiYearFormatter\ThaiYearFormatter',
         ],
+         'telegram' => [
+        'class' => 'app\components\Telegram',
+        // ไม่ต้องใส่ botToken เพราะดึงจาก DB
+    ],
         'thaiDate' => [
         'class' => 'app\components\ThaiDate',
     ],

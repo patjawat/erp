@@ -43,6 +43,7 @@ class ImportDocumentController extends Controller
     {
         $this->Receive();
         $this->Send();
+        $this->UploadFile();
     }
 
     // หนังสือับ
@@ -273,9 +274,9 @@ class ImportDocumentController extends Controller
         return ExitCode::OK;
     }
 
-    public function actionUploadFile()
+    public function UploadFile()
     {
-        if (BaseConsole::confirm('ยืนยันการนำเข้าไฟล์ ??')) {
+        // if (BaseConsole::confirm('ยืนยันการนำเข้าไฟล์ ??')) {
             $directory = Yii::getAlias('@app/bookpdf/');
 
             foreach (Documents::find()->all() as $document) {
@@ -307,7 +308,7 @@ class ImportDocumentController extends Controller
                         echo "ไฟล์ $fileName ไม่พบในไดเรกทอรี app/bookpdf ID=" . $fileName . "\n";
                     }
                 }
-            }
+            // }
         }
         // $filePath = $directory . $fileName;
 

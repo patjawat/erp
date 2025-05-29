@@ -56,23 +56,23 @@ class RepairController extends Controller
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.title')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.repair_note')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.note')"), $searchModel->q],
         ]);
-        if($searchModel->date_between){
+        if ($searchModel->date_between) {
             try {
-               $dataProvider->query->andFilterWhere([
-                   'between', 
-                   new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),  
-                   AppHelper::convertToGregorian($searchModel->date_start), 
-                   AppHelper::convertToGregorian($searchModel->date_end), 
+                $dataProvider->query->andFilterWhere([
+                    'between',
+                    new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'\$.\"{$searchModel->date_between}\"'))"),
+                    AppHelper::convertToGregorian($searchModel->date_start),
+                    AppHelper::convertToGregorian($searchModel->date_end),
                 ]);
-                            //code...
+                // code...
             } catch (\Throwable $th) {
-                //throw $th;
+                // throw $th;
             }
-            }
+        }
         // $dataProvider->query->andFilterWhere(['status' => 1]);
 
         if ($this->request->isAjax) {
@@ -375,25 +375,14 @@ class RepairController extends Controller
                 $model->save();
                 $this->changAssetStatus($model->code);
 
-                // template message
-                $emp = Yii::$app->employee::GetEmployee();
+                $this->sendMsg($model);
 
-            try {
-
-                $tecReq =  Employees::find()->where(['id' => $model->data_json['technician_req']])->one();
-                $lineId = $tecReq->user->line_id;
-                $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->title . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
-            } catch (\Throwable $th) {
-                //throw $th;
-            }
-                // try {
-                    $response = LineMsg::sendMsg($lineId, $message);
-                    return $this->redirect(['/me/repair']);
-                    // return [
-                    //     'status' => 'success',
-                    //     'container' => '#helpdesk-container',
-                    //     'response' => $response
-                    // ];
+                return $this->redirect(['/me/repair']);
+                // return [
+                //     'status' => 'success',
+                //     'container' => '#helpdesk-container',
+                //     'response' => $response
+                // ];
                 // } catch (\Exception $e) {
                 //     return [
                 //         'status' => false,
@@ -412,6 +401,44 @@ class RepairController extends Controller
                 'model' => $model,
             ]),
         ];
+    }
+
+    // ส่งข้อความแจ้งเตือน
+    protected function sendMsg($model)
+    {
+        // template message
+        $emp = Yii::$app->employee::GetEmployee();
+        $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location_other'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $code : '') . "\nอาการ : " . $model->title . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
+
+        try {
+            $tecReq = Employees::find()->where(['id' => $model->data_json['technician_req']])->one();
+            $lineId = $tecReq->user->line_id;
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
+
+        try {
+            // ส่ง Line
+            $response = LineMsg::sendMsg($lineId, $message);
+        } catch (\Exception $e) {
+        }
+        
+        // try {
+            if($model->repair_group == 1){
+            $sendTo = 'repair';
+            } else if($model->repair_group == 2){
+            $sendTo = 'computer_service';
+            } else if($model->repair_group == 3){
+            $sendTo = 'medical_service';
+            } else {
+            $sendTo = '';
+            }
+            $response = Yii::$app->telegram->sendMessage($sendTo, $message, [
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true,
+            ]);
+        // } catch (\Exception $e) {
+        // }
     }
 
     /**
@@ -444,8 +471,8 @@ class RepairController extends Controller
                     'repair_type_date' => $model->data_json['repair_type_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['repair_type_date']) : '',
                     'end_job_date' => $model->data_json['end_job_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['end_job_date']) : '',
                 ];
-                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json, $convertDate);
-               $model->save();
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $convertDate);
+                $model->save();
 
                 return [
                     'status' => 'success',
@@ -453,20 +480,18 @@ class RepairController extends Controller
                 ];
             }
         } else {
-
             $model->loadDefaultValues();
             try {
-            $model->data_json = [
-                'start_job_date' => $model->data_json['start_job_date'] !== "" ? AppHelper::convertToThai($model->data_json['start_job_date']) : '__/__/____',
-                'repair_type_date' => $model->data_json['repair_type_date'] !== "" ? AppHelper::convertToThai($model->data_json['repair_type_date']) : '__/__/____',
-                'end_job_date' => $model->data_json['end_job_date'] !== "" ?  AppHelper::convertToThai($model->data_json['end_job_date']) : '__/__/____',
-            ];
-            
-            $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $model->data_json = [
+                    'start_job_date' => $model->data_json['start_job_date'] !== '' ? AppHelper::convertToThai($model->data_json['start_job_date']) : '__/__/____',
+                    'repair_type_date' => $model->data_json['repair_type_date'] !== '' ? AppHelper::convertToThai($model->data_json['repair_type_date']) : '__/__/____',
+                    'end_job_date' => $model->data_json['end_job_date'] !== '' ? AppHelper::convertToThai($model->data_json['end_job_date']) : '__/__/____',
+                ];
 
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
         }
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -494,7 +519,7 @@ class RepairController extends Controller
             $model->title == '' ? $model->addError('title', 'ต้องระบุอาการ...') : null;
             $model->data_json['urgency'] == '' ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
             $model->data_json['location'] == '' ? $model->addError('data_json[location]', 'ต้องระบุสถานะที่...') : null;
-            $model->data_json['technician_req'] == '' ? $model->addError('data_json[technician_req]', 'ต้องระบุช่างเพื่อรับการแจ้งเตือน...') : null;
+            // $model->data_json['technician_req'] == '' ? $model->addError('data_json[technician_req]', 'ต้องระบุช่างเพื่อรับการแจ้งเตือน...') : null;
             $model->repair_group == '' ? $model->addError('repair_group', 'ต้องระบุ...') : null;
 
             foreach ($model->getErrors() as $attribute => $errors) {
@@ -636,7 +661,7 @@ class RepairController extends Controller
         // } else {
 
         // }
-        
+
         return [
             'status' => 'success',
             'container' => '#helpdesk-container',
@@ -677,47 +702,43 @@ class RepairController extends Controller
         }
     }
 
-
     public function actionTechnicianList()
-{
-    Yii::$app->response->format = Response::FORMAT_JSON;
-    $q = Yii::$app->request->get('q');
-    $group = $this->request->get('repair_group');
-    $item_name = '';
-    // ซ่อมบำรุง
-    if ($group == 1) {
-        $item_name = 'technician';
-        // 2 คือศูนย์คอมพิวเตอร์
-    } elseif ($group == 2) {
-        $item_name = 'computer';
-        // 3 คือศูนย์เครื่องมือแพทย์
-    } elseif ($group == 3) {
-        $item_name = 'medical';
-    } else {
-        $item_name = 'technician';
-    }
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $q = Yii::$app->request->get('q');
+        $group = $this->request->get('repair_group');
+        $item_name = '';
+        // ซ่อมบำรุง
+        if ($group == 1) {
+            $item_name = 'technician';
+            // 2 คือศูนย์คอมพิวเตอร์
+        } elseif ($group == 2) {
+            $item_name = 'computer';
+            // 3 คือศูนย์เครื่องมือแพทย์
+        } elseif ($group == 3) {
+            $item_name = 'medical';
+        } else {
+            $item_name = 'technician';
+        }
 
-
-    if ($q == '') {
-        $querys = Employees::find()
-            ->from('employees e')
-            ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
-            ->where(['a.item_name' => $item_name])
-            ->all();
-    } else {
-        $querys = Employees::find()
-            ->from('employees e')
-            ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
-            ->where(['a.item_name' => $item_name])
-            ->andWhere([
-                'or',
-                ['LIKE', 'fname', $q],
-                ['LIKE', 'lname', $q],
-            ])
-            ->all();
-    }
-
-      
+        if ($q == '') {
+            $querys = Employees::find()
+                ->from('employees e')
+                ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+                ->where(['a.item_name' => $item_name])
+                ->all();
+        } else {
+            $querys = Employees::find()
+                ->from('employees e')
+                ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+                ->where(['a.item_name' => $item_name])
+                ->andWhere([
+                    'or',
+                    ['LIKE', 'fname', $q],
+                    ['LIKE', 'lname', $q],
+                ])
+                ->all();
+        }
 
         $data = [['id' => '', 'text' => '']];
         foreach ($querys as $model) {
@@ -739,9 +760,7 @@ class RepairController extends Controller
             'items' => $model ?? [],
             'group' => $group
         ];
-        
-}
-
+    }
 
     /**
      * Deletes an existing Repair model.
