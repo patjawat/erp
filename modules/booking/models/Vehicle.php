@@ -723,6 +723,26 @@ class Vehicle extends \yii\db\ActiveRecord
                return $arr;
            }
            
+
+           public function sendMessageTelegram()
+           {
+              //ส่งการแจ้งเตือนทาง Telegram
+
+                 $message = <<<MSG
+                        📌 <b>{$this->reason}</b>\n
+                        🧑‍💼 <b>ผู้ขอ:</b> นายสมชาย ใจดี\n
+                        📍 <b>สถานที่:</b> ศาลากลางจังหวัด\n
+                        📅 <b>วันที่:</b> 1 มิ.ย. 2567\n
+                        🕒 <b>เวลา:</b> 08:30 - 16:00 น.\n
+                        🚗 <b>ประเภทรถ:</b> รถตู้\n
+                        // 🔗 <a href="https://your-app.com/booking/{$id}">ดูรายละเอียด</a>
+                        MSG;
+    
+                         $response = Yii::$app->telegram->sendMessage('book_vehicle', $message, [
+                        'parse_mode' => 'HTML',
+                        'disable_web_page_preview' => true,
+                        ]);
+           }
          
         
 }

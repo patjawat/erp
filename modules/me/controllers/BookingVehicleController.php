@@ -191,7 +191,7 @@ class BookingVehicleController extends Controller
                    
                         $this->createDetail($model);
                         
-                        
+                      
                         //สร้างการอนุมัติ
                         
                         // $this->createApprove($model);

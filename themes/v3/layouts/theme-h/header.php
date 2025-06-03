@@ -1,104 +1,321 @@
-<?php
-use yii\web\View;
-use yii\helpers\Url;
-use yii\helpers\Html;
-use app\components\UserHelper;
-?>
-<header class="topbar-header px-5">
-    <!-- navbar-header -->
-    <div class="d-flex align-items-center justify-content-between" style="height: 70px;">
-        <div class="d-flex align-items-center h-100">
-            
-        <div class="navbar-brand-h">
-
-<a href="<?=Url::to(['/'])?>" class="logo logo-light">
-    <span class="logo-sm">
-        <i class="bi bi-box fs-2"></i>
-    </span>
-    <span class="logo-lg-h fs-1 text-white ms-4">
-        <i class="bi bi-box"></i>ERP
-    </span>
-</a>
-</div>
-
-        </div>
-        <div class="">
-            <div class="d-inline-flex ms-0 ms-sm-2 d-lg-none dropdown">
-                <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-search-dropdown"
-                    aria-expanded="false" class="btn header-item notify-icon">
-                    <i class="bx bx-search"></i>
-                </button>
-                <div aria-labelledby="page-header-search-dropdown"
-                    class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu">
-                    <form class="p-3">
-                        <div class="search-box">
-                            <div class="position-relative">
-                                <input type="text" placeholder="Search..." class="form-control">
-                                <i class="bx bx-search icon"></i>
-                            </div>
+     <!-- Begin Header -->
+      <!-- Begin Header -->
+      <header id="page-topbar" class="topbar-header">
+         <div class="navbar-header">
+            <div class="left-bar">
+               <div class="navbar-brand-box">
+                  <a href="index.html" class="logo logo-dark">
+                     <span class="logo-sm"><img src="assets/images/logo.png" alt="Lettstart Admin"></span>
+                     <span class="logo-lg"><img src="assets/images/logo.png" alt="Lettstart Admin"></span>
+                  </a>
+                  <a href="index.html" class="logo logo-light">
+                     <span class="logo-sm"><img src="assets/images/logo-white-sm.png" alt="Lettstart Admin"></span>
+                     <span class="logo-lg"><img src="assets/images/logo-white.png" alt="Lettstart Admin"></span>
+                  </a>
+               </div>
+               <a class="navbar-toggle collapsed" href="javascript:void(0)" data-bs-toggle="collapse"
+                  data-bs-target="#topnav-menu-content" aria-expanded="false">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+               </a>
+               <div class="dropdown-mega dropdown d-none d-lg-block ms-2">
+                  <a href="javascript:void(0)" data-bs-toggle="dropdown" id="mega-dropdown" aria-haspopup="true"
+                     aria-expanded="false" class="btn header-item">
+                     Mega Menu <i class="bx bx-chevron-down"></i>
+                  </a>
+                  <div class="dropdown-megamenu dropdown-menu" aria-labelledby="mega-dropdown">
+                     <div class="row">
+                        <div class="col-sm-8">
+                           <div class="row">
+                              <div class="col-md-4">
+                                 <h5 class="fs-14 fw-semibold">UI Components</h5>
+                                 <ul class="list-unstyled megamenu-list">
+                                    <li><a href="javascript:void(0);">Lightbox</a></li>
+                                    <li><a href="javascript:void(0);">Range Slider</a></li>
+                                    <li><a href="javascript:void(0);">Sweet Alert</a></li>
+                                    <li><a href="javascript:void(0);">Rating</a></li>
+                                    <li><a href="javascript:void(0);">Forms</a></li>
+                                    <li><a href="javascript:void(0);">Tables</a></li>
+                                    <li><a href="javascript:void(0);">Charts</a></li>
+                                 </ul>
+                              </div>
+                              <div class="col-md-4">
+                                 <h5 class="fs-14 fw-semibold">Applications</h5>
+                                 <ul class="list-unstyled megamenu-list">
+                                    <li><a href="javascript:void(0);">Ecommerce</a></li>
+                                    <li><a href="javascript:void(0);">Calendar</a></li>
+                                    <li><a href="javascript:void(0);">Email</a></li>
+                                    <li><a href="javascript:void(0);">Projects</a></li>
+                                    <li><a href="javascript:void(0);">Tasks</a></li>
+                                    <li><a href="javascript:void(0);">Contacts</a></li>
+                                 </ul>
+                              </div>
+                              <div class="col-md-4">
+                                 <h5 class="fs-14 fw-semibold">Extra Pages</h5>
+                                 <ul class="list-unstyled megamenu-list">
+                                    <li><a href="javascript:void(0);">Light Sidebar</a></li>
+                                    <li><a href="javascript:void(0);">Compact Sidebar</a></li>
+                                    <li><a href="javascript:void(0);">Horizontal layout</a></li>
+                                    <li><a href="javascript:void(0);">Maintenance</a></li>
+                                    <li><a href="javascript:void(0);">Coming Soon</a></li>
+                                    <li><a href="javascript:void(0);">Timeline</a></li>
+                                    <li><a href="javascript:void(0);">FAQs</a></li>
+                                 </ul>
+                              </div>
+                           </div>
                         </div>
-                    </form>
-                </div>
+                        <div class="col-sm-4">
+                           <div class="row align-items-center">
+                              <div class="col-sm-6">
+                                 <h5 class="fs-14 fw-semibold">UI Components</h5>
+                                 <ul class="list-unstyled megamenu-list">
+                                    <li><a href="javascript:void(0);">Lightbox</a></li>
+                                    <li><a href="javascript:void(0);">Range Slider</a></li>
+                                    <li><a href="javascript:void(0);">Sweet Alert</a></li>
+                                    <li><a href="javascript:void(0);">Rating</a></li>
+                                    <li><a href="javascript:void(0);">Forms</a></li>
+                                    <li><a href="javascript:void(0);">Tables</a></li>
+                                    <li><a href="javascript:void(0);">Charts</a></li>
+                                 </ul>
+                              </div>
+                              <div class="col-sm-6">
+                                 <div class="mega-dd-slider">
+                                    <div class="owl-carousel">
+                                       <div class="item">
+                                          <img src="assets/images/megamenu-img.svg" alt="Lettstart Admin" class="img-fluid mx-auto d-block">
+                                       </div>
+                                       <div class="item">
+                                          <img src="assets/images/megamenu-img2.svg" alt="Lettstart Admin" class="img-fluid mx-auto d-block">
+                                       </div>
+                                       <div class="item">
+                                          <img src="assets/images/megamenu-img3.svg" alt="Lettstart Admin" class="img-fluid mx-auto d-block">
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </div>
- 
-            <?=$this->render('../theme-v/app_service')?>
-            <?=$this->render('../theme-v/app_manage')?>
-            <?=$this->render('../theme-v/notification');?>
-
-            <div class="d-none d-lg-inline-flex">
-                <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
-                    <i class="fa-solid fa-expand"></i>
-                </button>
-
-                <?php echo Yii::$app->user->can('meeting')  ? Html::a('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings fs-4 me-2">
-                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>',['/settings'],['class' => 'btn header-item notify-icon']) : ''?>
-
-
-                <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
-                    <?php if(!Yii::$app->user->isGuest):?>
-                    <button data-bs-toggle="dropdown" aria-haspopup="true" type="button"
-                        id="page-header-profile-dropdown" aria-expanded="false" class="btn header-item">
-                        <?php if(UserHelper::GetEmployee()):?>
-                        <?=Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'avatar avatar-xs me-0'])?>
-                        <span class="d-none d-xl-inline-block ms-1"><?=UserHelper::GetEmployee()->fullname?></span>
-                        <?php endif;?>
-                        <i class="bx bx-chevron-down d-none d-xl-inline-block"></i>
-                    </button>
-                    <?php endif;?>
-                    <div aria-labelledby="page-header-profile-dropdown" class="dropdown-menu-right dropdown-menu">
-                        <a href="<?=Url::to('/profile')?>" class="dropdown-item">
-                            <i class="fa-solid fa-clipboard-user fs-4 me-3"></i> โปรไฟล์
-                        </a>
-                        <a href="<?=Url::to('/profile/setting')?>" class="dropdown-item">
-                            <i class="fa-solid fa-user-gear fs-4 me-3"></i> ตั้งค่า
-                        </a>
-                        <a href="<?=Url::to('/profile/line-connect')?>" class="dropdown-item">
-                            <i class="fa-brands fa-line fs-4 me-3 text-success"></i> เชื่อม LineID
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <?php if(!Yii::$app->user->isGuest):?>
-                        <?php
-                     echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
-                     . Html::submitButton(
-                         '<i class="bx bx-power-off me-2"></i> ออกจากระบบ (' . Yii::$app->user->identity->username . ')',
-                         ['class' => 'dropdown-item']
-                     )
-                     . Html::endForm();
-                    ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
+            <div class="right-bar">
+               <form class="app-search me-2 d-none d-lg-block">
+                  <div class="search-box position-relative">
+                     <input type="text" placeholder="Search..." class="form-control">
+                     <span class="bx bx-search"></span>
+                  </div>
+               </form>
+               <div class="d-inline-flex ms-0 ms-sm-2 d-lg-none dropdown">
+                  <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-search-dropdown"
+                     aria-expanded="false" class="btn header-item notify-icon">
+                     <i class="bx bx-search"></i>
+                  </button>
+                  <div aria-labelledby="page-header-search-dropdown"
+                     class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu">
+                     <form class="p-3">
+                        <div class="search-box">
+                           <div class="position-relative">
+                              <input type="text" placeholder="Search..." class="form-control">
+                              <i class="bx bx-search icon"></i>
+                           </div>
+                        </div>
+                     </form>
+                  </div>
+               </div>
+               <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
+                  <button aria-haspopup="true" data-bs-toggle="dropdown" type="button" id="page-header-country-dropdown"
+                     aria-expanded="false" class="btn header-item">
+                     <img src="assets/images/flags/us.svg" class="mh-16" alt="USA">
+                     <span class="ms-2 d-none d-sm-inline-block">EN</span>
+                  </button>
+                  <div aria-labelledby="page-header-country-dropdown" id="countries"
+                     class="dropdown-menu-right dropdown-menu">
+                     <a href="javascript:void(0);" class="dropdown-item">
+                        <img class="me-1 mh-12" src="assets/images/flags/us.svg" alt="USA">
+                        <span class="align-middle" data-lang="en">USA</span>
+                     </a>
+                     <a href="javascript:void(0);" class="dropdown-item">
+                        <img class="me-1 mh-12" src="assets/images/flags/ge.svg" alt="German">
+                        <span class="align-middle" data-lang="ge">German</span>
+                     </a>
+                     <a href="javascript:void(0);" class="dropdown-item">
+                        <img class="me-1 mh-12" src="assets/images/flags/ru.svg" alt="Russia">
+                        <span class="align-middle" data-lang="ru">Russia</span>
+                     </a>
+                     <a href="javascript:void(0);" class="dropdown-item">
+                        <img class="me-1 mh-12" src="assets/images/flags/in.svg" alt="India">
+                        <span class="align-middle" data-lang="in">India</span>
+                     </a>
+                  </div>
+               </div>
+               <div class="d-none d-lg-inline-flex ms-2 dropdown">
+                  <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-app-dropdown"
+                     aria-expanded="false" class="btn header-item notify-icon">
+                     <i class="bx bx-customize"></i>
+                  </button>
+                  <div aria-labelledby="page-header-app-dropdown" class="dropdown-menu-lg dropdown-menu-right dropdown-menu">
+                     <div class="px-lg-2">
+                        <div class="row g-0">
+                           <div class="col">
+                              <a href="javascript: void(0);" class="dropdown-icon-item">
+                                 <img src="assets/images/brands/github.png" alt="Github">
+                                 <span>GitHub</span>
+                              </a>
+                           </div>
+                           <div class="col">
+                              <a href="javascript: void(0);" class="dropdown-icon-item">
+                                 <img src="assets/images/brands/bitbucket.png" alt="bitbucket">
+                                 <span>Bitbucket</span>
+                              </a>
+                           </div>
+                           <div class="col">
+                              <a href="javascript: void(0);" class="dropdown-icon-item">
+                                 <img src="assets/images/brands/dribbble.png" alt="dribbble">
+                                 <span>Dribbble</span>
+                              </a>
+                           </div>
+                        </div>
+                        <div class="row g-0">
+                           <div class="col">
+                              <a href="javascript: void(0);" class="dropdown-icon-item">
+                                 <img src="assets/images/brands/dropbox.png" alt="dropbox">
+                                 <span>Dropbox</span>
+                              </a>
+                           </div>
+                           <div class="col">
+                              <a href="javascript: void(0);" class="dropdown-icon-item">
+                                 <img src="assets/images/brands/mail_chimp.png" alt="mail_chimp">
+                                 <span>Mail Chimp</span>
+                              </a>
+                           </div>
+                           <div class="col">
+                              <a href="javascript: void(0);" class="dropdown-icon-item">
+                                 <img src="assets/images/brands/slack.png" alt="slack">
+                                 <span>Slack</span>
+                              </a>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="d-none d-lg-inline-flex ms-2">
+                  <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
+                     <i class="bx bx-fullscreen"></i>
+                  </button>
+               </div>
+               <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
+                  <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-notification-dropdown"
+                     aria-expanded="false" class="btn header-item notify-icon position-relative">
+                     <i class="bx bx-bell bx-tada"></i>
+                     <span class="badge bg-danger badge-pill notify-icon-badge">3</span>
+                  </button>
+                  <div aria-labelledby="page-header-notification-dropdown"
+                     class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu">
+                     <div class="notify-title p-3">
+                        <h5 class="fs-14 fw-semibold mb-0">
+                           <span>Notification</span>
+                           <a class="text-primary" href="javascript: void(0);">
+                              <small>Clear All</small>
+                           </a>
+                        </h5>
+                     </div>
+                     <div class="notify-scroll">
+                        <div class="scroll-content" id="notify-scrollbar">
+                           <div class="scroll-content">
+                              <a href="javascript:void(0);" class="dropdown-item notification-item">
+                                 <div class="media">
+                                    <div class="avatar avatar-xs bg-primary">
+                                       <i class="bx bx-user-plus"></i>
+                                    </div>
+                                    <p class="media-body">
+                                       New user registered.
+                                       <small class="text-muted">5 hours ago</small></p>
+                                 </div>
+                              </a>
+                              <a href="javascript:void(0);" class="dropdown-item notification-item">
+                                 <div class="media">
+                                    <div class="avatar avatar-xs">
+                                       <img alt="Lettstart Admin" class="img-fluid rounded-circle" src="assets/images/users/avatar-1.jpg">
+                                    </div>
+                                    <p class="media-body">
+                                       John likes your photo
+                                       <small class="text-muted">5 hours ago</small>
+                                    </p>
+                                 </div>
+                              </a><a href="javascript:void(0);" class="dropdown-item notification-item">
+                                 <div class="media">
+                                    <div class="avatar avatar-xs">
+                                       <img alt="Lettstart Admin" class="img-fluid rounded-circle" src="assets/images/users/avatar-2.jpg">
+                                    </div>
+                                    <p class="media-body">
+                                       Johnson
+                                       <small class="text-muted">Wow! admin looks good</small>
+                                    </p>
+                                 </div>
+                              </a><a href="javascript:void(0);" class="dropdown-item notification-item">
+                                 <div class="media">
+                                    <div class="avatar avatar-xs bg-danger">
+                                       <i class="bx bx-server"></i>
+                                    </div>
+                                    <p class="media-body">
+                                       Server getting down
+                                       <small class="text-muted">1 min ago</small>
+                                    </p>
+                                 </div>
+                              </a><a href="javascript:void(0);" class="dropdown-item notification-item">
+                                 <div class="media">
+                                    <div class="avatar avatar-xs bg-info">
+                                       <i class="bx bx-tag"></i>
+                                    </div>
+                                    <p class="media-body">
+                                       Someone tag you
+                                       <small class="text-muted">2 hours ago</small></p>
+                                 </div>
+                              </a>
+                           </div>
+                        </div>
+                        <div class="notify-all">
+                           <a href="javascript: void(0);" class="text-primary text-center p-3">
+                              <small>View All</small>
+                           </a>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
+                  <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-profile-dropdown"
+                     aria-expanded="false" class="btn header-item">
+                     <img src="assets/images/users/avatar-1.jpg" alt="Header Avatar" class="avatar avatar-xs me-0">
+                     <span class="d-none d-xl-inline-block ms-1">Henry</span>
+                     <i class="bx bx-chevron-down d-none d-xl-inline-block"></i>
+                  </button>
+                  <div aria-labelledby="page-header-profile-dropdown" class="dropdown-menu-right dropdown-menu">
+                     <a href="javascript: void(0);" class="dropdown-item">
+                        <i class="bx bx-user me-1"></i> Profile
+                     </a>
+                     <a href="javascript: void(0);" class="dropdown-item">
+                        <i class="bx bx-wrench me-1"></i> Settings
+                     </a>
+                     <a href="javascript: void(0);" class="dropdown-item">
+                        <i class="bx bx-wallet me-1"></i> My Wallet
+                     </a>
+                     <a href="javascript: void(0);" class="dropdown-item">
+                        <i class="bx bx-lock me-1"></i> Lock screen
+                     </a>
+                     <div class="dropdown-divider"></div>
+                     <a href="javascript: void(0);" class="text-danger dropdown-item">
+                        <i class="bx bx-log-in me-1 text-danger"></i> Logout
+                     </a>
+                  </div>
+               </div>
+               <div class="d-inline-flex">
+                  <button type="button" id="layout" class="btn header-item notify-icon">
+                     <i class="bx bx-cog bx-spin"></i>
+                  </button>
+               </div>
             </div>
-
-           
-            <?php // echo $this->render('app_cart')?>
-
-            <div class="d-inline-flex">
-                <?=Html::a('  <i class="fa-solid fa-sliders fs-6"></i>',['/setting'],['class' => 'btn header-item notify-icon']);?>
-            </div>
-        </div>
-    </div>
-</header>
+         </div>
+      </header>
+      <!-- Header End -->

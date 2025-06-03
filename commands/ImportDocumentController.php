@@ -19,8 +19,8 @@ use yii\helpers\BaseConsole;
 use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\hr\models\Leave;
+use app\commands\models\Documents;
 use app\modules\hr\models\Employees;
-use app\modules\dms\models\Documents;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -47,7 +47,7 @@ class ImportDocumentController extends Controller
     }
 
     // หนังสือับ
-    public static function Receive()
+    public function Receive()
     {
         $querys = Yii::$app->db2->createCommand("SELECT 
                             BOOK_NAME,
@@ -62,7 +62,9 @@ class ImportDocumentController extends Controller
                             BOOK_FILE_NAME,
                             BOOK_SECRET_NAME,
                             RECORD_ORG_NAME, gbook_index.`DATE_SAVE`,
-                            gbook_index.`TIME_SAVE`
+                            gbook_index.`TIME_SAVE`,
+                            gbook_index.PERSON_SAVE_ID,
+                            gbook_index.DATE_TIME_SAVE
                         FROM gbook_index
                         LEFT JOIN grecord_org ON gbook_index.BOOK_ORG_ID = grecord_org.RECORD_ORG_ID
                         LEFT JOIN hrd_person ON gbook_index.PERSON_SAVE_ID = hrd_person.ID
@@ -126,12 +128,16 @@ class ImportDocumentController extends Controller
                 $model->doc_regis_number = $item['BOOK_NUM_IN'];
                 $model->topic = $item['BOOK_NAME'];
                 $model->doc_transactions_date = $item['DATE_SAVE'];
-                $model->doc_time = $item['TIME_SAVE'];
+                $model->doc_time =Yii::$app->formatter->asDate($item['DATE_TIME_SAVE'], 'php:H:i:s');
                 $model->doc_date = $item['BOOK_DATE'];
                 $model->thai_year = $item['BOOK_YEAR_ID'];
                 $model->document_org = $item['RECORD_ORG_ID'];
                 $model->secret = $item['BOOK_SECRET_NAME'] ?? '-';
+                $model->doc_transactions_date = Yii::$app->formatter->asDate($item['DATE_TIME_SAVE'], 'php:Y-m-d');
+                $model->created_at= $item['DATE_TIME_SAVE'];
+                $model->created_by = $this->Person($item['PERSON_SAVE_ID'])->user_id ?? 0;
                 $model->data_json = ['filename' => $item['BOOK_FILE_NAME']];
+                //  echo $this->Person($item['PERSON_SAVE_ID']);
 
                 try {
                     $model->save(false);
@@ -359,13 +365,13 @@ class ImportDocumentController extends Controller
                     $docFile->delete();
                     $deleteDoc = Documents::findOne($docFile->id);
                     $deleteDoc->delete();
-                    // try {
+                    try {
                     FileManagerHelper::removeUploadDir($ref);
                     echo 'ลบ' . $ref . number_format($percentage, 2) . '%' . "\n";
-                    // } catch (\Throwable $th) {
-                    //     echo "ผิดพลาด ! ".$ref. number_format($percentage, 2) . '%'."\n";
-                    //     //throw $th;
-                    // }
+                    } catch (\Throwable $th) {
+                        echo "ผิดพลาด ! ".$ref. number_format($percentage, 2) . '%'."\n";
+                        //throw $th;
+                    }
                 } else {
                     echo 'ไม่พบ uploads' . number_format($percentage, 2) . '%' . "\n";
                 }
