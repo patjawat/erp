@@ -56,8 +56,8 @@ $info = SiteHelper::getInfo();
             <div class="d-none d-lg-inline-flex">
                 <?=$info['manual'] ? Html::a('<i class="fa-solid fa-book"></i>', $info['manual'], ['class' => 'btn header-item notify-icon', 'target' => '_blank']) : ''?>
 </div>
-            <?=$this->render('app_service')?>
-            <?=$this->render('app_manage')?>
+            <?=$this->render('../app_service')?>
+            <?=$this->render('../app_manage')?>
             <?php // $this->render('notification');?>
             
             <div class="d-none d-lg-inline-flex">

@@ -35,7 +35,7 @@ $me = UserHelper::GetEmployee();
             </td>
             <td>
                 <div class="d-flex flex-column justofy-content-start align-items-start">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType->title ?> <code><?php echo $item->total_days?> </code> วัน</span>
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType?->title ?? '-' ?> <code><?php echo $item->total_days?> </code> วัน</span>
                     <div>
                        <?=$item->showLeaveDate()?>
                     </div>
@@ -76,7 +76,7 @@ $me = UserHelper::GetEmployee();
                             [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'open-modal','data' => [
                                 'size' => 'modal-xl',
-                                'filename' => $item->leaveType->title.'-'.$item->employee->fullname
+                                'filename' => $item->leaveType?->title ?? '-'.'-'.$item->employee->fullname
                             ]]) ?>
                         
                             <?php else:?>

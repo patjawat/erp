@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <thead>
                         <tr>
                             <th style="width:150px;" class="fw-semibold">เลขส่ง</th>
-                            <th class="fw-semibold">เรื่อง</th>
+                            <th class="fw-semibold">ชื่อเรื่อง</th>
                             <th class="fw-semibold" style="width:650px;">ลงความเห็น</th>
                             <th class="fw-semibold" style="width:1000px;">วันที่ส่ง</th>
                             <th class="fw-semibold text-center" style="width:400px;">สถานะ</th>
