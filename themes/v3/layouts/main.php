@@ -1,11 +1,12 @@
 <?php
 use app\models\Categorise;
-$model = Categorise::findOne(['name' => 'site']);
-$layout = isset($model->data_json['layout']) ? $model->data_json['layout'] : '';
+use app\components\SiteHelper;
 
-// if($layout == 1){
+$layout = app\components\SiteHelper::getInfo()['layout'];
+
+if($layout == 'horizontal'){
    echo $this->render('./theme-h/main',['content' => $content]);
-// }else {
-      // echo $this->render('./theme-v/main',['content' => $content]);
-// }
+}else {
+echo $this->render('./theme-v/main',['content' => $content]);
+}
 ?>

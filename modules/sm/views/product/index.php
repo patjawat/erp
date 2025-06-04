@@ -29,25 +29,27 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(['id' => 'sm-container', 'timeout' => 3000]); ?>
 
 <div class="row">
 
     <div class="col-12">
         <div class="card">
-            <div class="card-body d-flex justify-content-between">
-                <div>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                </div>
+            <div class="card-body d-flex justify-content-between align-items-center">
+                  <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 <div class="w-50">
                     <div class="d-flex justify-content-end gap-2 align-items-start">
 
-                        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                       
                         <div class="dropdown float-end btn btn-sm btn-outline-primary">
                             <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
                             <i class="fa-solid fa-gear fs-5"></i>
-                            
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="bi bi-grid-fill me-1"></i>  ประเภทวัสดุ', ['/sm/product-type', 'title' => '<i class="bi bi-grid-fill"></i> ประเภทวัสดุ'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md','pjax' => false]]) ?>
@@ -62,8 +64,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="card">
             <div class="card-body">
-            <h6><i class="bi bi-ui-checks"></i> ทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6><i class="bi bi-ui-checks"></i> ทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                </div>
                     <table class="table table-striped custom-table">
                         <thead>
                         <th class="fw-semibold" style="width:500px">รายการ</th>

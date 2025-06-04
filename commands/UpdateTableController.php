@@ -476,6 +476,18 @@ class UpdateTableController extends Controller
 
         // ALTER TABLE `documents_detail` ADD `bookmark` VARCHAR(1) NOT NULL DEFAULT 'N' AFTER `from_type`;
 
-        
+    }
+
+    public function actionTelegram()
+    {
+        $check = Yii::$app->db->createCommand("select * from categorise where name ='telegram'")->queryAll();
+        if (count($check) == 0) {
+            $sql = "INSERT INTO `categorise` (`code`,`name`, `title`) VALUES
+                    ('repair','telegram', 'ซ่อมบำรุง'),
+                    ('meeting','telegram', 'จองห้องประชุม'),
+                    ('computer_service','telegram', 'งานซ่อมคอมพิวเตอร์'),
+                    ('medical_service','telegram', 'ซ่อมเครื่องมือแพทย์');";
+            Yii::$app->db->createCommand($sql)->execute();
+    }
     }
 }

@@ -132,3 +132,7 @@ https://www.canva.com/ai/code/thread/a1329017-9e7f-4b54-a2b5-dd10c5acf3bd
 
 profile
 https://www.canva.com/ai/code/thread/62a18386-9c98-4c12-b680-bd113446d996
+
+ห้องปชุม
+
+https://www.canva.com/ai/code/thread/e120d73e-48a8-4022-a500-b613578ebfad

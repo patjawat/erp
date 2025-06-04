@@ -1,10 +1,10 @@
 <?php
 /** @var yii\web\View $this */
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 use kartik\grid\GridView;
 use app\models\Categorise;
 use app\modules\am\models\AssetDetail;
-use yii\widgets\Pjax;
 
 $this->title = 'รายงานค่าเสื่อม';
 $this->params['breadcrumbs'][] = ['label' => 'บริหารทรัพย์สิน', 'url' => ['/am']];
@@ -18,6 +18,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock()?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'report'])?>
+<?php $this->endBlock(); ?>
+
 
 <style>
     .kv-page-summary-container{

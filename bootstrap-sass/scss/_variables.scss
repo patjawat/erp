@@ -18,7 +18,7 @@ $yellow:#ffc107;
 // $blue:$primary;
 
 // $primary:#7859f4;
-$body-color:#505d69;
+$body-color:#f0f6ff;
 $headings-color:#4b4b5a;;
 $input-color:#686a6d;
 $font-size-root: 1rem;
@@ -50,6 +50,11 @@ $colors: (
 
 );
 
+
+// เปลี่ยนน้ำหนัก font ของ fw-bold
+$font-weight-bold: 600; // เปลี่ยนจาก 700 เป็น 800 หรือค่าอื่นตามต้องการ
+
 // Add a custom color to $theme-colors
+
 
 

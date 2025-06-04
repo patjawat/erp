@@ -12,6 +12,11 @@ $this->title = 'Dashboard DMS'
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'dashboard']) ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="row">
     <div class="col-3">
         <div class="card">

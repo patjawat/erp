@@ -40,28 +40,38 @@ if (file_exists($dataFile)) {
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'receive']) ?>
+<?php $this->endBlock(); ?>
+
 <?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
+<div class="card">
+    <div class="card-body  align-top align-items-center">
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+    </div>
+</div>
 <div class="documents-index">
 
     <div class="card">
         <div class="card-body">
 
-            <div class="d-flex justify-content-between align-top align-items-center">
-                <h6>
-                    <i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?>
-                    <span
-                        class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-                    รายการ
-                </h6>
+            <div class="d-flex justify-content-between">
+
+                    <h6> <i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?>
+                        <span
+                            class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+                    </h6>
+                    <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
             </div>
             <div class="d-flex justify-content-between align-top align-items-center">
 
-                <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
+
                 <div>
-                    
+
+
                     <?= $jsonCount > 0 ? Html::a('<i class="fa-regular fa-hourglass-half"></i> หนังสือรอรับ <span class="badge rounded-pill badge-secondary text-primary fs-13 fw-semibold">'.$jsonCount.'</span>', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-warning shadow rounded-pill']) : '' ?>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+
                 </div>
             </div>
 
@@ -87,36 +97,39 @@ if (file_exists($dataFile)) {
                            
                             </td> -->
                             <td class="fw-light align-middle">
-                                <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"class="text-dark open-modal-fullscree-xn">
-                                        <div>
+                                <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
+                                    class="text-dark open-modal-fullscree-xn">
+                                    <div>
                                         <p class="text-primary fw-semibold fs-13 mb-0">
-                                        <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
-                                                    <span class="badge text-bg-danger fs-13">
-                                                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
-                                                    </span>
-                                                    <?php endif;?>
-                                                    
-                                                    <?php if($item->secret == 'ลับที่สุด'):?>
-                                                        <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
-                                                        ลับที่สุด
-                                                    </span>
-                                                    <?php endif;?>
-                                                    <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
+                                            <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                            <span class="badge text-bg-danger fs-13">
+                                                <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                                            </span>
+                                            <?php endif;?>
+
+                                            <?php if($item->secret == 'ลับที่สุด'):?>
+                                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                                ลับที่สุด
+                                            </span>
+                                            <?php endif;?>
+                                            <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                                             <?php echo $item->doc_number?>
                                         </p>
-                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->topic?> <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
-                                        </div>
-                                    </a>
-                                    <span class="text-primary fw-normal fs-13">
-                                        <i class="fa-solid fa-inbox"></i>
-                                            <?php  echo $item->documentOrg->title ?? '-';?>
-                                        <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
-                                            <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
-                                        </span>
+                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                            <?php echo $item->topic?>
+                                            <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
+                                    </div>
+                                </a>
+                                <span class="text-primary fw-normal fs-13">
+                                    <i class="fa-solid fa-inbox"></i>
+                                    <?php  echo $item->documentOrg->title ?? '-';?>
+                                    <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                                        <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                     </span>
-                                   
-                                                <?php if($item->countStackDocumentTags() >= 1):?>
-                                                    <?php
+                                </span>
+
+                                <?php if($item->countStackDocumentTags() >= 1):?>
+                                <?php
                                                         echo Html::a('<i class="fa-solid fa-tags"></i> '.$item->countStackDocumentTags(),
                                                             ['/dms/documents/list-comment', 'id' => $item->id,'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
                                                             [
@@ -133,10 +146,10 @@ if (file_exists($dataFile)) {
                                                             ]
                                                         );
                                                         ?>
-                                
-                                        <?php endif?>
-                                     
-                              
+
+                                <?php endif?>
+
+
                             </td>
                             <td>
                                 <?php echo $item->StackDocumentTags('comment')?>
@@ -162,14 +175,14 @@ if (file_exists($dataFile)) {
                             <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
                             </td>
                             <!-- <td> -->
-                                <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
+                            <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
                             <!-- </td> -->
                         </tr>
                         <?php endforeach;?>
 
                     </tbody>
                 </table>
-                </div>
+            </div>
 
         </div>
     </div>

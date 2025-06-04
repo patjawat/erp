@@ -36,7 +36,7 @@ use kartik\widgets\ActiveForm;
                                 ])->label('ประเภทคลัง');
                         ?>
     <div class="form-group mt-4">
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-1']) ?>
     </div>
 </div>
 

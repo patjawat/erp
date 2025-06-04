@@ -7,7 +7,8 @@ use yii\db\Expression;
 use app\models\Categorise;
 use app\modules\am\models\Asset;
 
-$this->title = 'บริหารทรัพย์สิน';
+$this->title = 'Dashboard';
+$this->params['breadcrumbs'][] = ['label' => 'บริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
@@ -21,6 +22,10 @@ Dashboard
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('menu')?>
 <?php $this->endBlock();?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
 
 <?php
 $querys = Yii::$app->db->createCommand("SELECT data_json->'$.asset_name',on_year FROM `asset` WHERE asset_group = 3

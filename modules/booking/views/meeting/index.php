@@ -1,23 +1,24 @@
 <?php
 use yii\web\View;
 use yii\helpers\Html;
-$this->title = 'ระบบจัดการห้องประชุม(ผู้ดูแลระบบ)';
-$this->params['breadcrumbs'][] = $this->title;
+$this->title = 'ทะเบียนขอใช้ห้องประชุม';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบจัดการห้องประชุม', 'url' => ['/booking/meeting/index']];
+$this->params['breadcrumbs'][] = '<i class="bi bi-ui-checks me-1"></i>'.$this->title;
 ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<i class="bi bi-ui-checks"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-ทะเบียนการจอง
-<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
 
-<div class="container-fluid">
+
+
 <?=$this->render('@app/modules/booking/views/meeting/summary',['model' => $searchModel]) ?>
 
     <div class="card">
@@ -29,10 +30,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                     รายการ
                 </h6>
+                <div class="d-flex justify-content-end">
+                  <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                </div>
             </div>
-            <div class="d-flex justify-content-between  align-top align-items-center mt-2">
-                <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            </div>
+   
             <?= $this->render('list',[
                   'searchModel' => $searchModel,
                   'dataProvider' => $dataProvider,
@@ -41,7 +43,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
-</div>
 
 <?php
 $js = <<< JS

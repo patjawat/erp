@@ -28,6 +28,11 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'stock_in'])?>
+<?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <?php
     // นับจำนวน order ที่รอรับเข้าคลัง

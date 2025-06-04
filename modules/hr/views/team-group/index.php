@@ -23,6 +23,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/modules/hr/views/employees/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'team-group'])?>
+<?php $this->endBlock(); ?>
+
+
+
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">

@@ -36,6 +36,10 @@ class MeetingController extends Controller
         );
     }
 
+    public function actionExample()
+    {
+        return $this->render('example');
+    }
     /**
      * Lists all Meeting models.
      *

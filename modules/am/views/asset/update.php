@@ -9,7 +9,6 @@ use yii\widgets\Pjax;
 
 $this->title = 'แก้ไขทรัพย์สิน';
 $this->params['breadcrumbs'][] = ['label' => 'บริหารทรัพย์สิน', 'url' => ['/am']];
-$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนทรัพย์สิน', 'url' => ['/am/asset']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php // Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
@@ -18,6 +17,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?php $this->endBlock(); ?>
+
 
     <?= $this->render('_form', [
         'model' => $model

@@ -17,6 +17,12 @@ Dashboard
 <?= $this->render('@app/modules/hr/views/employees/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'dashboard'])?>
+<?php $this->endBlock(); ?>
+
+
+
 
 <?= $this->render('employee_summary', [
             'dataProvider' => $dataProvider,

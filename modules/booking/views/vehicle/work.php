@@ -8,13 +8,14 @@ use yii\grid\ActionColumn;
 use app\components\ThaiDateHelper;
 use app\modules\booking\models\Vehicle;
 
-$this->title = 'ERP - ภาระกิจ';
+$this->title = 'ภาระกิจ';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<i class="fa-solid fa-user-tag fs-1x me-2"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 ทะเบียนจัดสรรรถยนต์
@@ -24,11 +25,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu',['active' => 'work'])?>
+<?php $this->endBlock(); ?>
+
 
 <?php Pjax::begin(['id' => 'vehicles-container', 'timeout' => 500000]); ?>
 <div class="card shadow-sm">
 <div class="card-header bg-white">
-        <div>
+       <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks me-1"></i> คำขอรอจัดสรร <span
                     class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
             <?php echo $this->render('_search_work', ['model' => $searchModel]); ?>

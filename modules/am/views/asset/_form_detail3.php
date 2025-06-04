@@ -64,13 +64,10 @@ use iamsaint\datetimepicker\Datetimepicker;
                                                 //         'pjax' => false
                                                 //     ],
                                                 // ]),
-                                                'content' => Html::a('<i class="fa-solid fa-gear"></i>',['/am/asset-item','group'=> 2,'title'=>'ครุภัณฑ์'],[
-                                                    'class' => 'btn btn-primary',
-                                                 
-                                                     
-                                                        // 'pjax' => false
-                                                
-                                                ]),
+                                                // 'content' => Html::a('<i class="fa-solid fa-gear"></i>',['/am/asset-item','group'=> 2,'title'=>'ครุภัณฑ์'],[
+                                                //     'class' => 'btn btn-primary',
+
+                                                // ]),
                                                 'asButton' => true
                                             ]
                                             ],

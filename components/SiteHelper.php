@@ -26,8 +26,18 @@ class SiteHelper extends Component
                 
                 }
 
+                
+                try {
+                        $layout = Categorise::findOne(['name' => 'layout']);
+                        $_layout = isset($layout->data_json['layout']) ? $layout->data_json['layout'] : 'vertical';
+
+                } catch (\Throwable $th) {
+                        $_layout = 'vertical';
+                }
+
 
                 return [
+                        'layout' => $_layout,
                         'director' => $director,
                         'logo' => $model->logo() ?? null,
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,

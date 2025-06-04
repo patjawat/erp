@@ -13,6 +13,16 @@ $this->title = 'รายงานระบบลา';
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'report'])?>
+<?php $this->endBlock(); ?>
+
+<div class="card">
+    <div class="card-body">
+<span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
+    </div>
+</div>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
@@ -22,15 +32,8 @@ $this->title = 'รายงานระบบลา';
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                 รายการ
             </h6>
+            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
         </div>
-
-        <div class="d-flex justify-content-between align-items-center mt-2">
-           <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
-            <span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
-        </div>
-
-
-
 
         <table class="table table-bordered table-striped table-hover">
             <thead class="">

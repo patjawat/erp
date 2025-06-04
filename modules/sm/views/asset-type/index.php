@@ -1,14 +1,14 @@
 <?php
 
-use app\modules\sm\models\AssetType;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use kartik\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use app\models\Categorise;
+use yii\grid\ActionColumn;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
-use app\models\Categorise;
+use app\modules\sm\models\AssetType;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\AssetTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -16,6 +16,11 @@ use app\models\Categorise;
 $this->title = 'Asset Types';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
 
 <div class="asset-type-index">
 <div class="card">

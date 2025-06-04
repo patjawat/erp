@@ -44,6 +44,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/dms/menu') ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$model,'active' => 'send']) ?>
+<?php $this->endBlock(); ?>
+
+
+
 </h1>
 <?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin([

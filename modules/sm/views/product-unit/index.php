@@ -1,11 +1,11 @@
 <?php
 
-use app\modules\sm\models\ProductType;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\sm\models\ProductType;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -13,6 +13,12 @@ use yii\widgets\Pjax;
 $this->title = 'Product Types';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
+
 <div class="product-unit-index">
 
     <?php Pjax::begin(['enablePushState' => false]); ?>

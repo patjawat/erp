@@ -11,7 +11,8 @@ use app\modules\booking\models\Vehicle;
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ERP - ระบบจัดการรถยนต์';
+$this->title = 'ทะเบียนใช้รถพยาบาล';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -25,11 +26,14 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu')?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu',['active' => 'ambulance'])?>
+<?php $this->endBlock(); ?>
 
 <?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel]) ?>
 <div class="card shadow-sm">
     <div class="card-header bg-white">
-        <div>
+        <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks me-1"></i> คำขอรอจัดสรร <span
                     class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
             <?php echo $this->render('_search', ['model' => $searchModel,'action' => 'ambulance']); ?>
@@ -48,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" style="width: 400px;">เหตุผล/วันที่ขอใช้</th>
                         <th class="fw-semibold">ผู้ขอ</th>
                         <th class="fw-semibold">สถานะ</th>
-                        <th class="fw-semibold text-center" style="width:150px;">ดำเนินการ</th>
+                        <th class="fw-semibold text-end" style="width:150px;">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
@@ -75,7 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td> <?=$item->userRequest()['avatar']?></td>
                         <td><?php echo $item->viewStatus()['view'] ?? '-'?></td>
 
-                        <td class="fw-light text-center">
+                        <td class="fw-light text-end">
                             <div class="btn-group">
                                 <?php echo Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'btn btn-light w-100 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"

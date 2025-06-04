@@ -25,7 +25,17 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'announce']) ?>
+<?php $this->endBlock(); ?>
+
 <?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
+
+<div class="card">
+    <div class="card-body  align-top align-items-center">
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group,'document_type' => $searchModel->document_type, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+    </div>
+</div>
 
 <div class="documents-index">
 
@@ -39,13 +49,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                     รายการ
                 </h6>
-            </div>
-            <div class="d-flex justify-content-between align-top align-items-center">
                 <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group,'document_type' => $searchModel->document_type, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
             </div>
-
-
 
             <div class="table-responsive">
 

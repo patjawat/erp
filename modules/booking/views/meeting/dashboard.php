@@ -10,7 +10,8 @@ use app\modules\booking\models\Meeting;
 /** @var app\modules\booking\models\MeetingSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ระบบจัดการห้องประชุม(ผู้ดูแลระบบ)';
+$this->title = 'Dashboard';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบห้องประชุม', 'url' => ['/booking/meeting/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -24,9 +25,10 @@ Dashboard
 <?= $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu',['active' => 'dashboard'])?>
+<?php $this->endBlock(); ?>
 
-
-<div class="container-fluid">
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
     <?=$this->render('summary', ['model' => $searchModel])?>
@@ -101,13 +103,9 @@ Dashboard
 <?php endforeach;?>
                 </div>
             </div>
-
         </div>
     </div>
-
     <?php Pjax::end(); ?>
-
-</div>
 
 
 <?php

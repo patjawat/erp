@@ -11,7 +11,8 @@ use app\modules\sm\models\Order;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'ระบบขอซื้อ';
+$this->title = 'ทะเบียนประวัติ';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบขอซื้อ', 'url' => ['/sm']];
 $this->params['breadcrumbs'][] = $this->title;
 $betwenTitle = '';
 if($searchModel->date_between == 'pr_create_date'){
@@ -40,26 +41,36 @@ if($searchModel->date_between == 'pr_create_date'){
 <?php echo $this->render('@app/modules/sm/views/default/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'order'])?>
+<?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'purchase-container','enablePushState' => true,'timeout' => 88888888]); ?>
 
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex gap-3">
-                <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ </h6>
-                <?php if($searchModel->date_between):?>
-                <div><?=$betwenTitle?> ช่วงวันที่ <span class="fw-semibold"><?=$searchModel->date_start?></span> ถึงวันที่ <span class="fw-semibold"><?=$searchModel->date_end?></span></div>
-                <?php endif;?>
-                มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
-            </div>
             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างคำขอซื้อ/ขอจ้าง ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div class="d-flex flex-column gap-3">
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+                <div>
+                    มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
+                </div>
+            </div>
+            <?=$this->render('_search', ['model' => $searchModel])?>
         </div>
         <div>
 
         </div>
 
-        <?=$this->render('_search', ['model' => $searchModel])?>
+
         <table class="table table-striped table-hover">
             <thead>
                 <tr>

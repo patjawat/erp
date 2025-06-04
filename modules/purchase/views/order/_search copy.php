@@ -17,7 +17,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 }
 </style>
 <div class="d-flex justify-content-between align-items-center">
-
+    
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
@@ -27,12 +27,12 @@ use iamsaint\datetimepicker\Datetimepicker;
         ],
     ]); ?>
 
-    <div class="d-flex justify-content-start gap-3 align-items-center align-middle">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
-        <?=$form->field($model, 'date_start')->textInput(['style' => 'width:150px'])->label('ช่วงวันที่');?>
-        <?=$form->field($model, 'date_end')->textInput(['style' => 'width:150px'])->label('ถึงวันที่');?>
-
-        <?=$form->field($model, 'order_type_name')->widget(Select2::classname(), [
+<div class="d-flex justify-content-start gap-3 align-items-center align-middle">
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+    <?=$form->field($model, 'date_start')->textInput(['style' => 'width:150px'])->label('ช่วงวันที่');?>
+    <?=$form->field($model, 'date_end')->textInput(['style' => 'width:150px'])->label('ถึงวันที่');?>
+    
+    <?=$form->field($model, 'order_type_name')->widget(Select2::classname(), [
         'data' => ArrayHelper::map($model->ListItemTypeOrder(),'id','name'),
         'options' => ['placeholder' => 'เลือกประเภท'],
         'pluginOptions' => [
@@ -50,7 +50,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                                                 ]
                                                 ])->label('ประเภท');
                                                 ?>
-        <?=$form->field($model, 'status')->widget(Select2::classname(), [
+    <?=$form->field($model, 'status')->widget(Select2::classname(), [
         'data' => ArrayHelper::map($model->ListStatus(),'code','title'),
         'options' => ['placeholder' => 'เลือกสถานะ'],
         'pluginOptions' => [
@@ -68,20 +68,18 @@ use iamsaint\datetimepicker\Datetimepicker;
                                                 ]
                                                 ])->label('สถานะ');
                                                 ?>
-                                                  <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-4']);?>
-                                                  
 
-        <div class="right-setting" id="filter-emp">
-            <div class="card mb-0 w-100">
-                <div class="card-header">
-                    <h5 class="card-title d-flex justify-content-between">
-                        ค้นหาข้อมูล
-                        <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
-                    </h5>
-                </div>
-                <div class="p-2">
+<div class="right-setting" id="filter-emp">
+    <div class="card mb-0 w-100">
+        <div class="card-header">
+            <h5 class="card-title d-flex justify-content-between">
+                ค้นหาข้อมูล
+                <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
+            </h5>
+        </div>
+        <div class="p-2">
 
-                    <?php
+            <?php
                 
                 echo $form->field($model, 'date_between')->widget(Select2::classname(), [
                     'data' => [
@@ -101,20 +99,20 @@ use iamsaint\datetimepicker\Datetimepicker;
                             ])->label('ประเภท');
                             ?>
 
-                    <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
+<?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
 
-                </div>
-            </div>
-        </div>
+</div>
+</div>
+</div>
 
 
-        <span class="filter-emp btn btn-primary mt-4" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
-            <i class="fa-solid fa-filter"></i>
-        </span>
+<span class="filter-emp btn btn-outline-primary mt-4" data-bs-toggle="tooltip" data-bs-placement="top"
+data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
+<i class="fa-solid fa-filter"></i>
+</span>
 
-    </div>
-    <?php ActiveForm::end(); ?>
+</div>
+<?php ActiveForm::end(); ?>
 
 </div>
 <?php

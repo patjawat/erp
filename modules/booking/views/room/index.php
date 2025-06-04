@@ -11,7 +11,8 @@ use app\modules\booking\models\Room;
 /** @var app\modules\booking\models\RoomSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ห้องประชุม(ผู้ดูแลระบบ)';
+$this->title = 'ตั้งค่าห้องประชุม';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบจัดการห้องประชุม', 'url' => ['/booking/meeting/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -24,22 +25,20 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('@app/modules/booking/views/meeting/menu') ?>
 <?php $this->endBlock(); ?>
-
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../meeting/menu',['active' => 'room'])?>
+<?php $this->endBlock(); ?>
 
 <div class="card mb-4">
     <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6>
-                <i class="bi bi-ui-checks"></i> ทะเบียนห้องประชุม
-                <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-                รายการ
-            </h6>
-        </div>
-        <div class="d-flex justify-content-between align-items-center mb-3">    
+        <div class="d-flex justify-content-between mb-3">
+            <h6><i class="bi bi-ui-checks"></i> ทะเบียนห้องประชุม <span class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
+         <div class="d-flex justify-content-between align-items-center gap-3">    
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม', ['/booking/room/create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม', ['/booking/room/create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม'], ['class' => 'btn btn-primary rounded-pill mt-3 shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
         </div>
+        </div>
+       
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -60,14 +59,19 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="d-none d-md-table-cell"><?=$item->data_json['location'] ?? '-';?></td>
                         <td class="d-none d-md-table-cell"><?=$item->showAccessory()?></td>
                         <td>พร้อมใช้งาน</td>
-                        <td class="text-end">
-                            <div class="d-flex gap-2 justify-content-end">
-                                <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/booking/room/view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> ดู'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="fa-solid fa-pen-to-square fa-2x text-warning"></i>',['/booking/room/update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>',['/booking/room/delete','id' => $item->id,'title' => '<i class="fa-solid fa-trash"></i> ลบ'],['class' => 'delete-item'])?>
-                            </div>
-                        </td>
-                    </tr>
+                <td class="fw-light text-end">
+                <div class="btn-group">
+                    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['update', 'id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                        <i class="bi bi-caret-down-fill"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item'])?>
+                        </li>
+                    </ul>
+                </div>
+            </td>
                     <?php endforeach;?>
 
                 </tbody>

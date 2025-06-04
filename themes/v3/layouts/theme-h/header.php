@@ -29,7 +29,7 @@ use app\components\UserHelper;
                </a>
                
             </div>
-            <div class="right-bar">
+            <div class="right-bar d-flex gap-3">
                <!-- <form class="app-search me-2 d-none d-lg-block">
                   <div class="search-box position-relative">
                      <input type="text" placeholder="Search..." class="form-control">
@@ -56,7 +56,10 @@ use app\components\UserHelper;
                 <?=$this->render('../app_service')?>
             <?=$this->render('../app_manage')?>
                
-               <div class="d-none d-lg-inline-flex">
+
+
+            
+               <div class="d-none d-lg-inline-flex gap-2">
 
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>

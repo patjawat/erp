@@ -4,11 +4,12 @@
  * @var yii\web\View $this
  */
 
-use yii\helpers\Html;
+use yii\web\View;
 use yii\helpers\Url;
-use yii\widgets\Pjax;
+use yii\helpers\Html;
 
-$this->title = 'บริหารพัสดุ';
+$this->title = 'Dashboard';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบขอซื้อ', 'url' => ['/sm']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -21,6 +22,14 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu',['active' => 'dashboard'])?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php // Pjax::begin(['id' => 'purchase-container']); ?>
 <div class="row">
     <div class="col-9">
@@ -62,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php
-use yii\web\View;
+use yii\widgets\Pjax;
 
 $PrOrderListUrl = Url::to(['/sm/default/pr-order']);
 $PrAcceptOrderListUrl = Url::to(['/sm/default/accept-pr-order']);

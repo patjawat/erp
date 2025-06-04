@@ -10,6 +10,8 @@ use yii\bootstrap5\LinkPager;
 use app\modules\inventory\models\Warehouse;
 
 $this->title = 'ตั้งค่าระบบคลัง';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
@@ -23,15 +25,21 @@ $this->title = 'ตั้งค่าระบบคลัง';
 <?php echo $this->render('@app/modules/inventory/views/default/menu_dashbroad') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu_dashbroad',['active' => 'warehouse'])?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php Pjax::begin(['id' => 'inventory']); ?>
 
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center align-middle">
+        <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> จำนวนคลัง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?></span> รายการ</h6>
             <div class="d-flex flex-row align-items-center gap-3">
                 <?= $this->render('_search', ['model' => $searchModel]); ?>
-                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่', ['/inventory/warehouse/create', 'title' => '<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่'], ['id' => 'addWarehouse', 'class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่', ['/inventory/warehouse/create', 'title' => '<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่'], ['id' => 'addWarehouse', 'class' => 'btn btn-primary open-modal mt-2', 'data' => ['size' => 'modal-xl']]); ?>
             </div>
         </div>
         <table class="table table-striped">

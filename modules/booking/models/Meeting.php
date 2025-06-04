@@ -276,10 +276,32 @@ return $data;
     // ส่งข้ความไปยังผู้ดูแลห้องประชุม
     public function SendMeeting()
     {
-        $ownerRoom = Room::find()->where(['name' => 'meeting_room', 'code' => $this->room_id])->one();
+        //ส่ง lie msg
+        try {
+           $ownerRoom = Room::find()->where(['name' => 'meeting_room', 'code' => $this->room_id])->one();
         $id = $ownerRoom->data_json['owner'] ?? 0;
         $emp = Employees::findOne($id);
         $lineId = $emp->user->line_id;
         LineMsg::BookMeeting($this->id, $lineId);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        // ส่ง telegram
+        try {
+             $room = 'ขอใช้'.$this->room->title; // ข้อความสำรอง
+            $message = $room." วันที่ " . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . 
+            " เวลา " . $this->time_start . "-" . $this->time_end . "\n" .
+            "ผู้ติดต่อ " . $this->employee->fullname . "\n" . 
+            "โทรศัพท์ " . $this->data_json['phone'];
+        
+             $response = Yii::$app->telegram->sendMessage('meeting', $message, [
+                'parse_mode' => 'HTML',
+                'disable_web_page_preview' => true,
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+       
+            
     }
 }

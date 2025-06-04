@@ -1,7 +1,7 @@
 <?php
-use yii\widgets\ActiveForm;
-use yii\bootstrap4\Toast;
 use yii\helpers\Html;
+use yii\bootstrap4\Toast;
+use yii\widgets\ActiveForm;
 $this->title = 'นำเข้าข้อมูล';
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -12,6 +12,11 @@ $this->title = 'นำเข้าข้อมูล';
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
 
 <div class="d-flex justify-content-center" style="width: 100%">
   <div class="card" style="width: 25%; margin-right:10px;">

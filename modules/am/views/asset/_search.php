@@ -61,7 +61,7 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
-                                        'width' => '300px',
+                                        'width' => '500px',
                                         ],
                                     ])->label('ประเภท');
                                     
@@ -78,18 +78,18 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
                                     ?>
 
 
-    <div class="d-flex flex-row align-items-center gap-2 mt-2">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-light']) ?>
-        <button class="btn btn-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+    <div class="d-flex flex-row align-items-center gap-2 mt-3">
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-primary']) ?>
+        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
             aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
                 class="fa-solid fa-filter"></i></button>
-                <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <!-- <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
                 <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
                 <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
             'data' => [
                 'bs-placement' => 'top',
                 'bs-toggle' => 'tooltip',
-                ]])?>
+                ]])?> -->
     </div>
 
 </div>

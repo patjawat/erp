@@ -45,6 +45,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock();?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$model,'active' => 'receive']) ?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php $form = ActiveForm::begin([
     'id' => 'form-document',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -52,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ]); ?>
 
 <?= $form->field($model, 'document_group')->hiddenInput(['maxlength' => 50])->label(false); ?>
-<?= $form->field($model, 'data_json[file_name]')->textInput(['maxlength' => 50])->label(false); ?>
+<?= $form->field($model, 'data_json[file_name]')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <div class="card">
     <div class="card-body">
 

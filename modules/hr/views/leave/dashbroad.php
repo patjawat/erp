@@ -24,6 +24,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
+
+
 
 <div class="card">
     <div class="card-body">

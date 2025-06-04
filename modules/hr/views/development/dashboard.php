@@ -28,9 +28,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
     <div class="min-vh-100">
-
-        <!-- Main Content -->
-        <div class="container py-4">
             <!-- Filter Section -->
             <div class="card mb-4">
                 <div class="card-body">
@@ -293,8 +290,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tbody>
             </table>
         </div>
-        
-    </div>
+
 </div>
 
 <?php

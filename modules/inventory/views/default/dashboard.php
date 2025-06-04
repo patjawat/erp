@@ -11,7 +11,9 @@ use yii\db\Expression;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 
-$this->title = 'ระบบคลัง';
+$this->title = 'Dashboard';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
@@ -24,6 +26,12 @@ $this->title = 'ระบบคลัง';
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('../default/menu_dashbroad'); ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('menu_dashbroad',['active' => 'dashboard'])?>
+<?php $this->endBlock(); ?>
+
+
 
 <div class="row">
     <div class="col-xl-6">

@@ -22,6 +22,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(); ?>
 <div class="card">
     <div class="card-body">

@@ -10,6 +10,10 @@ use app\components\UserHelper;
 $this->title = 'My DashBoard';
 ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+menu
+
+<?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-clipboard-user fs-1"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>

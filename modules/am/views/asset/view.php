@@ -22,6 +22,10 @@ $group = Yii::$app->request->get('group');
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?php $this->endBlock(); ?>
 <style>
 .field-asset-q {
     margin-bottom: 0px !important;

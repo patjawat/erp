@@ -25,6 +25,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
+
+
+
 <style>
 .hover-card-under {
 
@@ -132,10 +138,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <span
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
             </h6>
-        </div>
-        <div class="d-flex justify-content-between  align-top align-items-center">
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
         </div>
+
 
         <?php
         echo $this->render('list', [

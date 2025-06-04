@@ -4,7 +4,9 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\AppHelper;
-$this->title = 'ระบบคลัง';
+$this->title = 'สรุปรายงานวัสดุคงคลัง';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
@@ -17,6 +19,10 @@ $this->title = 'ระบบคลัง';
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('../default/menu_dashbroad'); ?>
 <?php $this->endBlock(); ?>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu_dashbroad',['active' => 'report'])?>
+<?php $this->endBlock(); ?>
+
 
 <?php Pjax::begin(['timeout' => 88888888]); ?>
 

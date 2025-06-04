@@ -11,6 +11,12 @@ $this->title = 'Dashboard';
 <?= $this->render('../menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
+
+
+
 <div class="row">
     <div class="col-6">
     <?php echo $this->render('leave_summary_year', [

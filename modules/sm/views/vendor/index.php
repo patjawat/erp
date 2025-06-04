@@ -1,9 +1,9 @@
 <?php
-use app\modules\sm\models\SupVendor;
-use kartik\grid\GridView;
-use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use yii\bootstrap5\LinkPager;
+use app\modules\sm\models\SupVendor;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\SupVendorSearch $searchModel */
@@ -21,18 +21,18 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
 <?php Pjax::begin(['id' => 'sm-container']); ?>
 
 <div class="card">
     <div
         class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
         <div class="d-flex justify-content-start">
-            <?= app\components\AppHelper::Btn([
-                'url' => ['create'],
-                'modal' => true,
-                'size' => 'lg',
-            ]) ?>
-
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'name' => 'order', 'title' => ''], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
         <div class="d-flex gap-2">
             <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary',

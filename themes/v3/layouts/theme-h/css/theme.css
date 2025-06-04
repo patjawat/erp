@@ -2997,7 +2997,7 @@ table.dataTable>tbody>tr.child ul.dtr-details>li .avatar:last-child {
 .select2-container .select2-selection--single .select2-selection__rendered {
     padding-left: 12px;
     color: var(--bs-gray-700);
-    line-height: 40px
+    /* line-height: 40px */
 }
 
 .select2-container .select2-selection--single .select2-selection__arrow {

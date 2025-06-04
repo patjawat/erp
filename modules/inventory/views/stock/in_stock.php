@@ -24,6 +24,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'warehouse'])?>
+<?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(['id' => 'inventory-container','timeout' => 88888888]); ?>
 <?php
 $cart = Yii::$app->cartSub;

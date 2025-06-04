@@ -31,8 +31,18 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+ <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนทรัพย์สิน', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+<?php $this->endBlock(); ?>
+
+
 <?php Pjax::end(); ?>
-<?php Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
+<?php // Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
 
 
 <?php if($group):?>
@@ -47,51 +57,47 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php endif;?>
 <div class="card">
     <div class="card-body">
-        <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-            รายการ</h6>
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
+        <div class="d-flex justify-content-between">
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
+             <div class="d-flex justify-content-between align-items-center">
                 <?= $this->render('_search', ['model' => $searchModel]); ?>
-
+               
             </div>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนทรัพย์สิน', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
         </div>
         <?php if(SiteHelper::getDisplay() == 'list'):?>
-            
-            <?=$this->render('show/list', [
+
+        <?=$this->render('show/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);?>
 
-<?php else:?>
-    <hr>
-<?=$this->render('show/grid', [
-    'searchModel' => $searchModel,
-    'dataProvider' => $dataProvider,
-]);?>
+        <?php else:?>
+        <hr>
+        <?=$this->render('show/grid', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);?>
 
-<?php endif?>
+        <?php endif?>
 
-
-<?php if(count(($dataProvider->getModels())) == 0):?>
-
-<div class="row d-flex justify-content-center">
-    <div class="col-6">
-        <div class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
-            <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i>
-                ไม่มีทรัพย์สินที่ได้รับผิดชอบ</h4>
-            <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
+        <?php if(count(($dataProvider->getModels())) == 0):?>
+        <div class="row d-flex justify-content-center">
+            <div class="col-6">
+                <div
+                    class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
+                    <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i>
+                        ไม่มีทรัพย์สินที่ได้รับผิดชอบ</h4>
+                    <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-<?php endif;?>
-
+        <?php endif;?>
 
     </div>
 </div>
 
-    <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-        <?= yii\bootstrap5\LinkPager::widget([
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+    <?= yii\bootstrap5\LinkPager::widget([
         'pagination' => $dataProvider->pagination,
         'firstPageLabel' => 'หน้าแรก',
         'lastPageLabel' => 'หน้าสุดท้าย',
@@ -100,13 +106,13 @@ $this->params['breadcrumbs'][] = $this->title;
             'class' => 'pagination-sm',
         ],
     ]); ?>
-    </div>
+</div>
 
 
 </div>
 <span id="totalCount" class="d-none"><?=$dataProvider->getTotalCount();?></span>
 
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>
 
 <?php
 $js = <<< JS
