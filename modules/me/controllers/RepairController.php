@@ -21,8 +21,8 @@ class RepairController extends Controller
         $userId = \Yii::$app->user->id;
          $emp = UserHelper::GetEmployee();
         $searchModel = new HelpdeskSearch([
-            // 'created_by' => $userId,
-            // 'emp_id' => $emp->id
+            'created_by' => $userId,
+            'emp_id' => $emp->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);

@@ -15,6 +15,22 @@ $this->title = 'ทะเบียนหนังสือ';
 <?php $this->endBlock(); ?>
 
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'document']) ?>
+<?php $this->endBlock(); ?>
+<?php if(!isset($list)):?>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-top align-items-center">
+            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+              
+
+        </div>
+    </div>
+</div>
+<?php endif;?>
+
+
 
 <div class="card">
     <div class="card-body">
@@ -28,43 +44,33 @@ $this->title = 'ทะเบียนหนังสือ';
             <?php if(isset($list)):?>
             <?=Html::a('แสดงทั้งหมด',['/me/documents'],['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]])?>
             <?php endif;?>
-        </div>
-        <?php if(!isset($list)):?>
-        <div class="d-flex justify-content-between align-top align-items-center">
-            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
 
-        </div>
-        <?php endif;?>
-
-
-        <!-- Nav tabs -->
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#home"><span
+              <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#home"><span
                         class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderTags->getTotalCount()?></span>
-                    ถึง<?=UserHelper::GetEmployee()->fullname?></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span
+                        ถึง<?=UserHelper::GetEmployee()->fullname?></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span
                         class="badge rounded-pill text-bg-danger"><?php echo $dataProviderDepartment->getTotalCount()?></span>
-                    ถึงหน่วยงาน</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#bookmark"><span
+                        ถึงหน่วยงาน</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#bookmark"><span
                         class="badge rounded-pill text-bg-danger"><?php echo $dataProviderBookmark->getTotalCount()?></span>
-                    บันทึก</a>
-            </li>
-
-        </ul>
-
+                        บันทึก</a>
+                    </li>
+                </ul>  
+        </div>
         <!-- Tab panes -->
         <div class="tab-content">
             <div id="home" class="tab-pane active"><br>
-                <?php
-echo $this->render('list_document',[
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProviderTags
-        ])
+                <?= $this->render('list_document',[
+                            'searchModel' => $searchModel,
+                            'dataProvider' => $dataProviderTags
+                        ])
         ?>
             </div>
             <div id="menu1" class="tab-pane fade"><br>

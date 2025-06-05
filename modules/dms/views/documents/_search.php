@@ -18,12 +18,12 @@ use yii\widgets\ActiveForm;
     ],
 ]); ?>
 
-<div class="d-flex justify-content-between align-top align-items-center gap-1">
-    <?= $form->field($model, 'q')->label('คำค้นหา...') ?>
+<div class="d-flex justify-content-between align-top align-items-center gap-2">
+    <?= $form->field($model, 'q')->textInput(['placeholder' =>'คำค้นหา...'])->label(false) ?>
     <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'เลือก พ.ศ.'],
+            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
             'pluginOptions' => [
                 'allowClear' => true,
                 'width' => '130px',
@@ -36,16 +36,16 @@ use yii\widgets\ActiveForm;
                             $(this).submit()
                         }',
             ]
-        ])->label('ปี พ.ศ.');
+        ])->label(false);
         ?>
 
 <?php
                     echo $form->field($model, 'status')->widget(Select2::classname(), [
                         'data' => $model->listStatus(),
-                        'options' => ['placeholder' => 'เลือกสถานะ'],
+                        'options' => ['placeholder' => 'สถานะทั้งหมด'],
                         'pluginOptions' => [
                             'allowClear' => true,
-                            'width' => '130px',
+                            'width' => '170px',
                         ],
                         'pluginEvents' => [
                 'select2:select' => 'function(result) { 
@@ -55,11 +55,11 @@ use yii\widgets\ActiveForm;
                             $(this).submit()
                         }',
             ]
-                    ])->label('สถานะ');
+                    ])->label(false);
                     ?>
                     
     <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
-        <?= Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-light mt-4']) ?>
+        <?= Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

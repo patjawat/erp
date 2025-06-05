@@ -10,15 +10,17 @@ use app\modules\dms\models\Documents;
 <table class="table table-striped table-fixed">
             <thead>
                 <tr>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th style="width:80px;" class="fw-semibold">เลขรับ</th>
                     <th class="fw-semibold" style="width:900px;">เรื่อง</th>
+                    <th style="width:80px;" class="fw-semibold">วันที่ส่ง</th>
                     <th class="fw-semibold" style="width:150px;">ลงความเห็น</th>
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
-                <?php foreach ($dataProvider->getModels() as $item): ?>
-                <?php // if($item->viewCount()['reading'] <= 0): ?>
-                <tr class="" style="max-width:200px">
+                <?php foreach ($dataProvider->getModels() as $key => $item):?>
+                    <tr class="" style="max-width:200px">
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td class="fw-semibold">
                         <?php echo $item->document?->doc_regis_number ?? '-' ?>
                     </td>
@@ -56,6 +58,7 @@ use app\modules\dms\models\Documents;
                             <?php echo Html::a(($item->bookmark() == 'Y' ? '<i class="fa-solid fa-star text-warning"></i>' : '<i class="fa-regular fa-star"></i>'), ['/me/documents/bookmark', 'id' => $item->id], ['class' => 'bookmark', 'id' => 'bookmark-' . $item->id]) ?>
                         </a>
                     </td>
+                    <td></td>
                     <td>
                         <?php echo isset($item->document) ? $item->document->StackDocumentTags('comment') : '' ?>
                     </td>

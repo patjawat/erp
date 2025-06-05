@@ -19,12 +19,28 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(['id' => 'leave']); ?>
 
 
+<div class="card">
+    <div class="card-body">
+
+                <div class="d-flex justify-content-between  align-top align-items-center">
+                    <div class="d-flex gap-2">
+                        <?= Html::a('<i class="bi bi-plus-circle-fill"></i> กำหนดสิทธิรายบุคคล', ['create','title' => 'กำหนดสิทธิลาพักผ่อน'], ['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-md']]) ?>
+                        <?= Html::a('<i class="fa-solid fa-user-clock"></i> กำหนดสิทธิทั้งหมด', ['create-all','title' => 'กำหนดสิทธิลาพักผ่อนทั้งหมด'], ['class' => 'btn btn-warning create-all  rounded-pill shadow','data' => ['size' => 'modal-md']]) ?>
+                    </div>
+                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        </div>
+
+        
+    </div>
+</div>
 <div class="card">
     <div class="card-body">
 
@@ -36,13 +52,6 @@ $this->params['breadcrumbs'][] = $this->title;
             </h6>
         </div>
         
-        <div class="d-flex justify-content-between  align-top align-items-center">
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <div class="d-flex gap-2">
-                <?= Html::a('<i class="bi bi-plus-circle-fill"></i> กำหนดสิทธิรายบุคคล', ['create','title' => 'กำหนดสิทธิลาพักผ่อน'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-md']]) ?>
-                <?= Html::a('<i class="fa-solid fa-user-clock"></i> กำหนดสิทธิทั้งหมด', ['create-all','title' => 'กำหนดสิทธิลาพักผ่อนทั้งหมด'], ['class' => 'btn btn-warning create-all','data' => ['size' => 'modal-md']]) ?>
-            </div>
-        </div>
 
         <table class="table table-striped table-hover">
                 <thead>

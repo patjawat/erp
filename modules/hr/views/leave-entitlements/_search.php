@@ -27,6 +27,7 @@ use app\modules\hr\models\Organization;
         'options' => [
             'data-pjax' => 1
         ],
+          'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
     <div class="d-flex gap-2">
@@ -34,7 +35,7 @@ use app\modules\hr\models\Organization;
         <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ปีงบประมาณ'],
+            'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
             'pluginOptions' => [
                 'allowClear' => true,
                 'width' => '120px',
@@ -47,7 +48,7 @@ use app\modules\hr\models\Organization;
                             $(this).submit()
                         }',
             ]
-        ])->label('ปีงบประมาณ');
+        ])->label(false);
         ?>
         <?php
         $url = Url::to(['/depdrop/employee-by-id']);
@@ -89,7 +90,7 @@ use app\modules\hr\models\Organization;
                     $(this).submit()
                 }',
             ]
-        ])->label('บุคลากร');
+        ])->label(false);
         ?>
 <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
     'name' => 'department',
@@ -102,18 +103,20 @@ use app\modules\hr\models\Organization;
     'asDropdown' => true,
     'multiple' => false,
     'options' => [
+        'placeholder' => 'หน่วยงานทั้งหมด...',
         'disabled' => false,
         'allowClear' => true,
     ],
     'pluginOptions' => [
         'allowClear' => true
     ],
-])->label('หน่วยงานภายในตามโครงสร้าง');?>
+     'dropdownConfig' => [
+        'input' => [
+            'placeholder' => 'หน่วยงานทั้งหมด...', // อีกจุดที่สามารถกำหนด placeholder ได้เช่นกัน
+        ],
+    ],
+])->label(false);?>
 
-
-
-        <div class="d-flex flex-row mb-3 mt-4">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
-        </div>
     </div>
         <?php ActiveForm::end(); ?>

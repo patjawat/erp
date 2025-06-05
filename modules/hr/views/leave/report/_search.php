@@ -29,8 +29,8 @@ use iamsaint\datetimepicker\Datetimepicker;
 
     <?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 
-    <button class="btn btn-light mt-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
-        aria-controls="offcanvasExample"><i class="fa-solid fa-filter"></i></button>
+    <!-- <button class="btn btn-light mt-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+        aria-controls="offcanvasExample"><i class="fa-solid fa-filter"></i></button> -->
 </div>
 
 <!-- Offcanvas -->
@@ -59,7 +59,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
         <div class="offcanvas-footer">
             <?php echo Html::submitButton(
-                        '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
+                        '<i class="fa-solid fa-magnifying-glass"></i>',
                         [
                             'class' => 'btn btn-primary',
                             'data-bs-backdrop' => 'static',

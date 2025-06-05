@@ -20,7 +20,14 @@ $this->title = 'รายงานระบบลา';
 
 <div class="card">
     <div class="card-body">
-<span class="btn btn-success rounded-pill shadow export-leave"><i class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
+        <div class="d-flex justify-content-between align-items-center">
+
+            <span class="btn btn-success rounded-pill shadow export-leave"><i
+                    class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
+
+                    <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+                    
+        </div>
     </div>
 </div>
 <div class="card">
@@ -32,7 +39,7 @@ $this->title = 'รายงานระบบลา';
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                 รายการ
             </h6>
-            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+            
         </div>
 
         <table class="table table-bordered table-striped table-hover">

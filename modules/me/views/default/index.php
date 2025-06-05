@@ -7,13 +7,13 @@ use app\components\UserHelper;
 // $this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [yii\web\JqueryAsset::className()]]);
 // $this->registerCssFile('@web/owl/owl.carousel.min.css');
 
-$this->title = 'My DashBoard';
-$this->params['breadcrumbs'][] = ['label' => 'My DashBoard', 'url' => ['/me']];
+$this->title = 'MyDashboard';
+$this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 ?>
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-clipboard-user fs-1"></i> <?php echo $this->title; ?>
+<i class="fa-solid fa-gauge fs-1 text-primaryr"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>

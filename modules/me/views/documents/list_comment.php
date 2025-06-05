@@ -13,10 +13,10 @@ use app\components\AppHelper
                 <?php  echo $item->getAvatar('xx',false)['avatar']?>
                 <div class="d-flex align-items-start">
                     <?php
-             $dateTime = $item->created_at;
-             $createdAt = Yii::$app->thaiFormatter->asDate($dateTime, 'medium');
-             $time = explode(' ', $dateTime)[1]; // แยกเวลาจากวันที่
-            ?>
+                            $dateTime = $item->created_at;
+                            $createdAt = Yii::$app->thaiFormatter->asDate($dateTime, 'medium');
+                            $time = explode(' ', $dateTime)[1]; // แยกเวลาจากวันที่
+                            ?>
                     <?php if($item->created_by == Yii::$app->user->id):?>
                     <?php if(isset($item->data_json['employee_tag']) && $item->data_json['employee_tag'] !==""):?>
                     <span class="badge bg-secondary text-white me-1"><i class="fa-solid fa-tag"></i>

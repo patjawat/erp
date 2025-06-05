@@ -28,12 +28,6 @@ $menus = [
     'url' => ['/hr/leave/report'],
     'icon' => '<i class="fa-solid fa-chart-simple text-primary me-1"></i>'
     ],
-        [
-    'title' => 'ตั้งค่า',
-    'active' => 'setting',
-    'url' => ['/hr/leave-policies'],
-    'icon' => '<i class="fa-solid fa-gear text-primary me-1"></i>'
-    ]
 ];
 ?>
 <?php if($layout == 'horizontal'):?>
@@ -43,7 +37,21 @@ $menus = [
 </li>
 <?php endforeach;?>
 
+<li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-gear me-1"></i> การตั้งค่า
+                           <i class="bx bx-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+                              <?=Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> นโยบายการลา',['/hr/leave-policies'],['class' => 'dropdown-item'])?>
+                            <?=Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดสิทธิลาพักผ่อน',['/hr/leave-entitlements'],['class' => 'dropdown-item'])?>
+                            <?=Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> วันหยุด',['/hr/holiday'],['class' => 'dropdown-item'])?>
+                        </div>
+                     </li>
+                     
 
+
+    
 <?php else:?>
 <div class="d-flex gap-2">
     <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['/hr/leave/dashboard'],['class' => 'btn btn-light'])?>

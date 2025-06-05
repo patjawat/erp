@@ -23,20 +23,29 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
 
 
 <?php
-$this->title = 'Calendar';
+$this->title = 'กำหนดวันหยุด';
 ?>
+
 
 <?php Pjax::begin(['id' => 'leave']); ?>
 
-<div class="row d-flex justify-content-center">
-
-    <div class="col-xl-8 col-lg-6 col-md-8 col-sm-12">
+<div class="card">
+    <div class="card-body">
+ <div class="d-flex justify-content-between">
+    <div>
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มวันหยุด', ['/hr/holiday/create', 'title' => '<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด'], ['class' => 'btn btn-primary open-modal rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
+        <?= Html::a('<i class="fa-solid fa-cloud"></i> โหลดวันหยุดอัตโนมัติ', ['/hr/holiday/sync-date'], ['class' => 'btn btn-secondary rounded-pill shadow sync-date text-white']) ?>
+    </div>
+      <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+    </div>
+</div>
 
         <div class="card">
             <div class="card-body">
@@ -46,21 +55,21 @@ $this->title = 'Calendar';
 
                     <div class="btn-group">
                         <span class="btn btn-light">
-                            <?= Html::a('<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด', ['/hr/holiday/create', 'title' => '<i class="bi bi-calendar2-plus"></i> เพิ่มวันหยุด'], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            
                         </span>
                         <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
                             data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                             <i class="bi bi-caret-down-fill"></i>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><?= Html::a('<i class="bi bi-database-fill-check me-1 fs-6"></i> การซิงค์ข้อมูลวันหยุด', ['/hr/holiday/sync-date'], ['class' => 'dropdown-item sync-date']) ?>
+                            <li>
 
                             </li>
                         </ul>
                     </div>
 
                 </div>
-                <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+              
 
                 <table class="table table-striped">
                     <thead>
@@ -71,7 +80,7 @@ $this->title = 'Calendar';
                             <th scope="col" class="text-center" style="width:120px">ดำเนินการ</th>
                         </tr>
                     </thead>
-                    <tbody>
+                   <tbody class="align-middle table-group-divider">
                         <?php foreach ($dataProvider->getModels() as $model): ?>
                             <tr class="">
                                 <td scope="row"><?= Yii::$app->thaiFormatter->asDate($model->date_start, 'long') ?>
@@ -103,12 +112,7 @@ $this->title = 'Calendar';
 
             </div>
         </div>
-    </div>
-</div>
 
-<div class="d-flex justify-content-center">
-    <?= Html::a('<i class="bi bi-arrow-left-circle"></i> ย้อนกลับ', ['/hr/leave-policies'], ['class' => 'btn btn-primary shadow rounded-pill text-center']) ?>
-</div>
 <?php Pjax::end(); ?>
 
 <?php
