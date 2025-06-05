@@ -37,40 +37,38 @@ $style = 2;
 <body>
 <style>
     body {
-        background-color: rgba(var(--bs-primary-rgb)) !important;
+      background: linear-gradient(153deg, #858585 0%, #0d47a1 100%) !important;
+    }
+    .text-gradient{
+      background: linear-gradient(90deg, #d0f0ff, #c1ab8a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     }
 </style>
     <?php $this->beginBody() ?>
     <?=$this->render('@app/themes/v3/layouts/modal')?>
 
 <!-- Login 9 - Bootstrap Brain Component -->
-<section class="bg-primary py-3 py-md-5 py-xl-8 h-screen-100">
+<section class="py-3 py-md-5 py-xl-8 h-screen-100">
   <div class="container">
     <div class="row gy-4 align-items-center">
       <div class="col-12 col-md-6 col-xl-7">
-        <div class="d-flex justify-content-center text-bg-primary">
+        <div class="d-flex justify-content-center">
           <div class="col-12 col-xl-9">
             <div class="text-center">
               
               <?=Html::img('@web/images/logo_new.png',['width' => 400])?>
             </div>
-            <h1 class="text-white text-center">
-              
-                <!-- <i class="fa-solid fa-code fs-1"></i> ERP Hospital -->
-
-                <!-- <i class="bi bi-box"></i> ERP Hospital -->
-                <!-- ERP  <i class="fa-solid fa-code fs-1"></i> Hospital -->
-            </h1>
-                <!-- <img class="img-fluid rounded mb-4" loading="lazy" src="./assets/img/bsb-logo-light.svg" width="245" height="80" alt="BootstrapBrain Logo"> -->
             <hr class="border-primary-subtle mb-2">
             <div class="d-flex justify-content-center mb-4 mt-0 fs-3 gap-2">
-            
-            <?=SiteHelper::getInfo()['company_name'] !='' ?  (SiteHelper::getInfo()['company_name']) : ''?>
+            <h2 class="text-gradient">
+              <?=SiteHelper::getInfo()['company_name'] !='' ?  (SiteHelper::getInfo()['company_name']) : ''?>
+            </h2>
 
     </div>
     
     <div class="text-endx">
-                <p class="text-center fw-light">ผู้ให้การสนับสนุน</p>
+                <p class="text-center fw-light text-gradient">ผู้ให้การสนับสนุน</p>
             <div class="d-flex justify-content-center align-items-center gap-5 mt-4">
 
               <?=Html::img('@web/banner/banner2.png',['style'=> 'width:70px;height:70px'])?>
