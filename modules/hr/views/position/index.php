@@ -1,10 +1,10 @@
 <?php
-use app\models\Categorise;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use kartik\grid\ActionColumn;
-use kartik\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use app\models\Categorise;
+use kartik\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
 use app\components\CategoriseHelper;
 $this->title = 'ตั้งค่ากำหนดตำแหน่ง';
@@ -17,6 +17,12 @@ $this->title = 'ตั้งค่ากำหนดตำแหน่ง';
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('../employees/menu')?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
+
 
 <div class="card">
     <div

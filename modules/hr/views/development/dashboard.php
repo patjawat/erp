@@ -25,6 +25,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/hr/views/development/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/hr/views/development/menu',['active' => 'dashboard']) ?>
+<?php $this->endBlock(); ?>
+
 
 
     <div class="min-vh-100">

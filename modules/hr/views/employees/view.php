@@ -21,14 +21,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('menu')?>
-
 <?php $this->endBlock(); ?>
 
-<style>
-.shadow {
-    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .2), 0 2px 10px 0 rgba(0, 0, 0, .1) !important;
-}
-</style>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
+<?php $this->endBlock(); ?>
+
+
 
 <div class="row d-flex flex-sm-row-reverse">
 

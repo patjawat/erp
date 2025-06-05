@@ -21,6 +21,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'color']) ?>
+<?php $this->endBlock(); ?>
+
+
 <style>
 .menu-box>li {
     width: 150px;

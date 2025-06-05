@@ -7,7 +7,7 @@ use yii\bootstrap5\Breadcrumbs;
                <div class="container-fluid mt-4">
                   <div class="d-flex justify-content-between">
                      <div>
-                        <div class="page-title">
+                        <div class="page-title"  data-aos="fade-left">
                            <h3 class="mb-1 fw-light text-dark"><?=isset($this->blocks['page-title']) ? $this->blocks['page-title'] : 'ERP';?></h3>
                           
                         </div>

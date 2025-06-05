@@ -22,6 +22,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php // Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 
 <div class="card">

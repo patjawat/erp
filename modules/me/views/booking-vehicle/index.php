@@ -10,7 +10,7 @@ use app\modules\booking\models\Vehicle;
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ระบบขอใช้ยานพาหนะ';
+$this->title = 'ระบบขอใช้ยานพาหนะ/ทะเบียนประวัติ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -21,13 +21,25 @@ $this->params['breadcrumbs'][] = $this->title;
 ทะเบียนขอใช้รถยนต์
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('menu')?>
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/me//menu',['active' => 'vehicle']) ?>
 <?php $this->endBlock(); ?>
 
 
-<div class="container-fluid">
+
     <?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel]) ?>
+
+    <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-vehicle/create','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+            
+        </div>
+    </div>
     <div class="card shadow-sm mb-4">
 
         <div class="card-body">
@@ -37,10 +49,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span
                             class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span>
                         รายการ</h6>
-                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
                 </div>
 
-                <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',['/me/booking-vehicle/create','title' => 'แบบขอใช้รถยนต์'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-lg']])?>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -119,9 +129,6 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
-
-</div>
-
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([
                 'pagination' => $dataProvider->pagination,

@@ -1,11 +1,11 @@
 <?php
 
-use app\models\Categorise;
-use yii\helpers\Html;
 use yii\helpers\Url;
-use kartik\grid\ActionColumn;
-use kartik\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use app\models\Categorise;
+use kartik\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
 $name = Yii::$app->request->get('name');
 $title = Yii::$app->request->get('title');
@@ -36,6 +36,13 @@ $items = [
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-people-fill"></i> <?=$this->title;?>
 <?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'employee']) ?>
+<?php $this->endBlock(); ?>
+
+
 
 <?php if(!$name):?>
 

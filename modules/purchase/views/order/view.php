@@ -24,6 +24,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/sm/views/default/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'order'])?>
+<?php $this->endBlock(); ?>
+
+
 
 <?php if($model->status == 7):?>
     <div class="row d-flex justify-content-center">

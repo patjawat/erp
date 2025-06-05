@@ -17,6 +17,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('menu',['active' => 'dashboard']) ?>
+<?php $this->endBlock(); ?>
+
+
 
 <?= $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]) ?>
 

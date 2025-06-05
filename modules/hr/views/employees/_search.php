@@ -2,10 +2,10 @@
 
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use kartik\form\ActiveForm;
 use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use yii\bootstrap5\ActiveForm;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 
@@ -23,6 +23,11 @@ use app\modules\hr\models\Organization;
 .right-setting {
     width: 500px !important;
 }
+
+.field-employeessearch-position_name {
+    width: 300px !important;
+}
+
 </style>
 
 <?php $form = ActiveForm::begin([
@@ -32,16 +37,38 @@ use app\modules\hr\models\Organization;
     'options' => [
         'data-pjax' => 1
     ],
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
 
-<div class="d-flex gap-3">
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label(false) ?>
-    <button class="btn btn-primary mt-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
-    aria-controls="offcanvasExample">
-            <i class="fa-solid fa-filter"></i> เพิ่มเติม
-        </button>
-    </div>
+<div class="d-flex gap-2  align-items-center">
+
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
+
+    <?= $form->field($model, 'position_name')->widget(Select2::classname(), [
+        'data' => $model->ListPositionName(),
+        'options' => ['placeholder' => 'ตำแหน่งทั้งหมด ...',
+        ],
+        'pluginOptions' => [
+            'allowClear' => true
+        ],
+          'pluginEvents' => [
+        'select2:select' => 'function() { $(this).closest("form").submit(); }',
+        'select2:clear' => 'function() { $(this).closest("form").submit(); }'
+    ]
+        ])->label(false) ?>
+ 
+
+
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+        <i class="fa-solid fa-filter"></i>
+    </button>
+
+      <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
+                   <button id="download-button" class="btn btn-success shadow"><i class="fa-solid fa-file-export me-1"></i>ส่งออกข้อมูลบุคลากร</button>
+</div>
+    
         
 
 <!-- Offcanvas -->
@@ -64,15 +91,7 @@ use app\modules\hr\models\Organization;
                     ],
             ])->label('เพศ') ?>
 
-            <?= $form->field($model, 'position_name')->widget(Select2::classname(), [
-                'data' => $model->ListPositionName(),
-                'options' => ['placeholder' => 'เลือก ...'],
-                'pluginOptions' => [
-                    'dropdownParent' => '#offcanvasExample',
-                    'allowClear' => true
-                ],
-                ])->label('ตำแหน่ง') ?>
-
+          
             <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
                     'data' => $model->ListPositionType(),
                     'options' => ['placeholder' => 'เลือก ...'],

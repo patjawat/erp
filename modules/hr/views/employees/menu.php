@@ -33,6 +33,18 @@ $menus = [
 
 <?php endforeach;?>
 
+<li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-gear me-1"></i> การตั้งค่า
+                           <i class="bx bx-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+                            <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> การตั้งค่าบุคลากร',['/hr/categorise','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal dropdown-item','data' => ['size' => 'modal-md']])?>
+                            <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> การกำหนดตำแหน่ง',['/hr/position','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal-x dropdown-item','data' => ['size' => 'modal-md']])?>
+                            <?=Html::a('<i class="fa-solid fa-file-import me-1"></i> นำเข้า CSV',['/hr/employees/import-csv'],['class' => 'dropdown-item btn btn-outline-primary'])?>
+                        </div>
+                     </li>
+
 
 <?php else:?>
     

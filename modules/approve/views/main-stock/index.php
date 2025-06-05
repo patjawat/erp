@@ -15,6 +15,12 @@ $msg = 'ขอ';
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
+<?php $this->endBlock(); ?>
+
+
 <?php if($dataProvider->getTotalCount() > 0):?>
 <div class="card">
     <div class="card-body">

@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = ['label' => 'ระบบขอซื้อ', '
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-box-seam"></i> <?= $this->title; ?>
+<i class="fa-solid fa-gauge-high me-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>

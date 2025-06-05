@@ -9,19 +9,23 @@ use yii\helpers\Html;
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
-$this->title = 'ปฏิทินการใช้ห้องประชุม';
+$this->title = 'ห้องประชุม/ปฏิทิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
+<i class="fa-solid fa-handshake fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
 ปฏิทินการใช้ห้องประชุม
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('menu')?>
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('menu',['active' => 'calendar'])?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/me//menu',['active' => 'meeting']) ?>
 <?php $this->endBlock(); ?>
 
 <style>

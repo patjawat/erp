@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 ?>
 <div class="table-responsive">
-    <table class="table table-primary mb-5">
+    <table class="table table-striped table-hover mb-5">
         <thead>
             <tr>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>

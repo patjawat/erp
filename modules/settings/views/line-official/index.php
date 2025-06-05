@@ -19,6 +19,13 @@ $this->title = 'ตั้งค่าองค์กร';
 
 ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'line']) ?>
+<?php $this->endBlock(); ?>
+
+
+
+
 
 <!-- <h1 class="text-center"><i class="bi bi-building-fill-check fs-1"></i> ข้อมูลองค์กร</h1> -->
 

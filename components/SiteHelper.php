@@ -29,7 +29,7 @@ class SiteHelper extends Component
                 
                 try {
                         $layout = Categorise::findOne(['name' => 'layout']);
-                        $_layout = isset($layout->data_json['layout']) ? $layout->data_json['layout'] : 'vertical';
+                        $_layout = isset($layout->data_json['layout']) ? $layout->data_json['layout'] : 'horizontal';
 
                 } catch (\Throwable $th) {
                         $_layout = 'vertical';

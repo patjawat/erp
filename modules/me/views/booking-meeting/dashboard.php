@@ -6,7 +6,7 @@ use yii\widgets\Pjax;
 use app\components\AppHelper;
 use app\components\UserHelper;
 
-$this->title = 'ระบบขอใช้ห้องประชุม';
+$this->title = 'ห้องประชุม/Dashboard';
 $this->params['breadcrumbs'][] = $this->title;
 
 $me = UserHelper::getEmployee();
@@ -36,18 +36,21 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
+<i class="fa-solid fa-handshake fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
 <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('menu')?>
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('menu',['active' => 'dashboard'])?>
 <?php $this->endBlock(); ?>
 
-    <div class="container-fluid">
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/me//menu',['active' => 'meeting']) ?>
+<?php $this->endBlock(); ?>
+
         <?=$this->render('@app/modules/booking/views/meeting/summary', ['model' => $searchModel])?>
         
         <!-- <p class="text-muted">ยินดีต้อนรับกลับมา, คุณสามารถจัดการการจองห้องประชุมได้ที่นี่</p> -->
@@ -112,7 +115,6 @@ $dayInThai = $days[$dayInEnglish]; // แปลงเป็นภาษาไท
 
             </div>
         </div>
-    </div>
 
     <div class="d-flex justify-content-center align-items-center">
         <?=Html::a('จองห้องประชุม',['/me/booking-meeting/create','date_start' => $searchModel->date_start,'title' => '<i class="fa-solid fa-calendar-plus"></i> ขอให้ห้องประชุม'],['class' => 'btn btn-primary shadow rounded-pill open-modal','data' => ['size' => 'modal-xl']])?>

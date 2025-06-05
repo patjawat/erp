@@ -13,6 +13,11 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+
 <style>
 #ath_tabs_accordion .tab-style3 .nav-tabs .nav-item a.active {
     border-bottom-color: #4f30f9;

@@ -8,12 +8,10 @@ use app\components\UserHelper;
 // $this->registerCssFile('@web/owl/owl.carousel.min.css');
 
 $this->title = 'My DashBoard';
+$this->params['breadcrumbs'][] = ['label' => 'My DashBoard', 'url' => ['/me']];
 ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-menu
 
-<?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-clipboard-user fs-1"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
@@ -23,6 +21,12 @@ menu
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'dashboard']) ?>
+<?php $this->endBlock(); ?>
+
+
 
 <?php // Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
 <style>
@@ -36,7 +40,7 @@ menu
 
 ?>
 <div class="row">
-    <div class="col-8">
+    <div class="col-12">
         <div class="row">
             <div class="col-6">
                 <?php echo $this->render('welcome'); ?>
@@ -64,16 +68,14 @@ menu
         </div>
     </div>
 
-    <div class="col-4">
+    <!-- <div class="col-4">
         <div class="card" style="height: 620px;">
             <div class="card-body">
                 <h6><i class="bi bi-app-indicator"></i> บริการ</h6>
-                <?php echo $this->render('app_indicator'); ?>
+                <?php // echo $this->render('app_indicator'); ?>
             </div>
         </div>
-
-
-    </div>
+    </div> -->
 </div>
 <div class="row">
 

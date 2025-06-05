@@ -1,12 +1,12 @@
 <?php
 
 namespace app\modules\me\controllers;
+use Yii;
 use app\components\AppHelper;
-use app\components\UserHelper;
 use app\components\SiteHelper;
+use app\components\UserHelper;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
-use Yii;
 class PurchaseController extends \yii\web\Controller
 {
     public function actionIndex()
@@ -21,7 +21,7 @@ class PurchaseController extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/purchase/views/order/index', [
+                'content' => $this->renderAjax('index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                     'isAjax' => $this->request->isAjax
@@ -29,7 +29,7 @@ class PurchaseController extends \yii\web\Controller
             ];
         } else {
 
-            return $this->render('@app/modules/purchase/views/order/index', [
+            return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 'isAjax' => true

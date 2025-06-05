@@ -23,9 +23,19 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+
 <?php  Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 <?php // echo $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]);?>
 
+<div class="card">
+    <div class="card-body">
+        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+    </div>
+</div>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
@@ -33,13 +43,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span
                         class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
                 </h6>
-                <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+
             </div>
         </div>
         <table class="table table-striped">
             <thead>
                 <tr>
-                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold" scope="col" style="width:500px">รายละเอียด</th>
                     <th class="fw-semibold" scope="col" style="width:300px">ผู้แจ้ง</th>
                     <!-- <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th> -->
@@ -49,10 +59,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody>
-            <?php foreach($dataProvider->getModels() as $key => $item):?>
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr class="align-middle">
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-            <td>
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td>
                         <div class="d-flex">
                             <?php // echo $item->RepairType()['image']?>
                             <div style="width:500px" class="">

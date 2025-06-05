@@ -18,6 +18,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('../default/navlink')?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'user']) ?>
+<?php $this->endBlock(); ?>
+
+
 
 
 <style>

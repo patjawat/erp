@@ -16,7 +16,7 @@ use app\modules\hr\models\Organization;
 </style>
 <div class="row">
     <div class="col-4">
-        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label('คำค้นหา') ?>
+        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
     </div>
 
     <!-- <div class="col-3"> -->
@@ -53,20 +53,20 @@ use app\modules\hr\models\Organization;
                         
                         }",
                         ]
-                        ])->label('ปีงบประมาณ');
+                        ])->label(false);
                         ?>
 
     </div>
     <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label('ตั้งแต่วันที่');?>
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
     </div>
         <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label('ถึงวันที่');?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
     </div>
     <div class="col-2">
-        <div class="d-flex flex-row align-items-center gap-2 mt-1">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-primary mt-4']) ?>
-            <button class="btn btn-primary mt-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
                 aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
                     class="fa-solid fa-filter"></i></button>
         </div>

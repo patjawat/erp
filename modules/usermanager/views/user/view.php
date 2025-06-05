@@ -10,6 +10,10 @@ $this->params['breadcrumbs'][] = ['label' => 'Users', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'user']) ?>
+<?php $this->endBlock(); ?>
+
 
 
 

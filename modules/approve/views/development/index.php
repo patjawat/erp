@@ -16,6 +16,11 @@ $msg = 'ขอ';
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">

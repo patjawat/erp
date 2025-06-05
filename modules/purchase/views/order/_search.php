@@ -27,16 +27,16 @@ use iamsaint\datetimepicker\Datetimepicker;
         ],
     ]); ?>
 
-    <div class="d-flex justify-content-start gap-3 align-items-center align-middle">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
-        <?=$form->field($model, 'date_start')->textInput(['style' => 'width:150px'])->label('ช่วงวันที่');?>
-        <?=$form->field($model, 'date_end')->textInput(['style' => 'width:150px'])->label('ถึงวันที่');?>
+    <div class="d-flex justify-content-start gap-2 align-items-center align-middle">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
+        <?=$form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกช่วงวันที่','style' => 'width:150px'])->label(false);?>
+        <?=$form->field($model, 'date_end')->textInput(['placeholder' => 'ถึงวันที่','style' => 'width:150px'])->label(false);?>
 
         <?=$form->field($model, 'order_type_name')->widget(Select2::classname(), [
         'data' => ArrayHelper::map($model->ListItemTypeOrder(),'id','name'),
-        'options' => ['placeholder' => 'เลือกประเภท'],
+        'options' => ['placeholder' => 'ประเภททั้งหมด'],
         'pluginOptions' => [
-                                        'width' => '200px',
+                                        'width' => '400px',
                                         'allowClear' => true,
                                     ],
                                     'pluginEvents' => [
@@ -48,13 +48,13 @@ use iamsaint\datetimepicker\Datetimepicker;
                                                 }",
                                                 
                                                 ]
-                                                ])->label('ประเภท');
+                                                ])->label(false);
                                                 ?>
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
         'data' => ArrayHelper::map($model->ListStatus(),'code','title'),
-        'options' => ['placeholder' => 'เลือกสถานะ'],
+        'options' => ['placeholder' => 'สถานะทั้งหมด'],
         'pluginOptions' => [
-            'width' => '200px',
+            'width' => '400px',
                                     'allowClear' => true,
                                     ],
                                     'pluginEvents' => [
@@ -66,9 +66,9 @@ use iamsaint\datetimepicker\Datetimepicker;
                                                 }",
                                                 
                                                 ]
-                                                ])->label('สถานะ');
+                                                ])->label(false);
                                                 ?>
-                                                  <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-4']);?>
+                                                  <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']);?>
                                                   
 
         <div class="right-setting" id="filter-emp">
@@ -108,7 +108,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         </div>
 
 
-        <span class="filter-emp btn btn-primary mt-4" data-bs-toggle="tooltip" data-bs-placement="top"
+        <span class="filter-emp btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
             <i class="fa-solid fa-filter"></i>
         </span>

@@ -2,23 +2,34 @@
 use yii\web\View;
 use yii\helpers\Html;
 
-$this->title = 'ระบบขอใช้ห้องประชุม';
+$this->title = 'ระบบขอใช้ห้องประชุม/ทะเบียนประวัติ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-person-chalkboard fs-1 text-white"></i> <?= $this->title; ?>
+<i class="fa-solid fa-handshake fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
 ทะเบียนขอใช้ห้องประชุม
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('menu')?>
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/me/menu',['active' => 'meeting'])?>
 <?php $this->endBlock(); ?>
 
 
-<div class="container-fluid">
+    <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างใหม่',['/me/booking-meeting/create','title' => 'แบบขอใช้ห้องประชุม'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-xl']])?>
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+            
+        </div>
+    </div>
+    
 
     <div class="card">
         <div class="card-body">
@@ -30,7 +41,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     รายการ
                 </h6>
             </div>
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
             <div class="table-responsive pb-5">
                 <table class="table table-striped table-hover">
                 <thead class="table-light">
@@ -96,7 +106,6 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
-</div>
 <?php
 $js = <<< JS
 

@@ -8,6 +8,9 @@ $totalPurchase = $notify['purchase']['total'];
 $totalStock = $notify['stock']['total'];
 $totalDevelopment= $notify['development']['total'];
 $this->title = "รายการที่ต้องอนุมัติและตรวจสอบ";
+$this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
+$this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
@@ -16,6 +19,13 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
+
+
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
+<?php $this->endBlock(); ?>
+
 
 
 <?php

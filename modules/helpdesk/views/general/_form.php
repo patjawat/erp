@@ -30,6 +30,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+
 <?php $form = ActiveForm::begin([
         'id' => 'form-repair',
     ]); ?>

@@ -25,14 +25,26 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php  Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
 <?php // echo $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]);?>
+
+<div class="card">
+    <div class="card-body">
+        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
         <div class="d-flex flex-column">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
         </div>
     </div>
         <table class="table table-striped">

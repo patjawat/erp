@@ -1,11 +1,11 @@
 <?php
 
-use app\models\Categorise;
-use app\modules\am\models\AssetType;
-use kartik\grid\GridView;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use kartik\grid\GridView;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\modules\am\models\AssetType;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\AssetTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -22,6 +22,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock()?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'am-setting']) ?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php Pjax::end(); ?>
 <?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
 

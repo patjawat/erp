@@ -16,10 +16,11 @@ use app\modules\hr\models\Organization;
         'options' => [
             'data-pjax' => 1
         ],
+        'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
 <div class="d-flex gap-2">
-    <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label('คำค้นหา') ?>
+    <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุรายการค้นหา...','class' => 'form-control'])->label(false) ?>
     <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->listThaiYear(),
@@ -38,13 +39,9 @@ use app\modules\hr\models\Organization;
                             $('#leavesearch-date_end').val('');
                         }",
             ]
-        ])->label('ปี พ.ศ.');
+        ])->label(false);
         ?>
-
-
-    <div class="d-flex flex-row align-items-center gap-2 mt-3">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-light']) ?>
-    </div>
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
 </div>
 
     <?php ActiveForm::end(); ?>

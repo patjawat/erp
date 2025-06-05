@@ -28,7 +28,14 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-
+<div class="card">
+    <div class="card-body">
+ <div class="d-flex justify-content-between  align-top align-items-center">
+     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title,['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        </div>
+    </div>
+</div>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
@@ -38,10 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
             </h6>
         </div>
-        <div class="d-flex justify-content-between  align-top align-items-center">
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title,['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-        </div>
+       
 
         <?php
         echo $this->render('list', [

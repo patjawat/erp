@@ -13,7 +13,6 @@ use app\assets\BootstapIconAsset;
 
 AppAsset::register($this);
 BootstapIconAsset::register($this);
-$this->registerCssFile('@app/themes/v3/layouts/theme-h/css/custom.css', ['depends' => [\yii\web\YiiAsset::class]]);
 
 $site = Categorise::findOne(['name' => 'site']);
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
@@ -55,7 +54,7 @@ $moduleId = Yii::$app->controller->module->id;
               <!-- page header -->
 <?php echo $this->render('page_title'); ?>
             
-<div class="page-content-wrapper mt--45">
+<div class="page-content-wrapper mt--45"  data-aos="fade-left"  data-aos-delay="300">
     <div class="container-fluid">
         <?= $content ?>
     </div>

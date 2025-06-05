@@ -32,7 +32,7 @@ if($searchModel->date_between == 'pr_create_date'){
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-box-seam"></i> <?= $this->title; ?>
+<i class="fa-solid fa-list-ul me-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -51,6 +51,7 @@ if($searchModel->date_between == 'pr_create_date'){
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างคำขอซื้อ/ขอจ้าง ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+         <?=$this->render('_search', ['model' => $searchModel])?>
         </div>
     </div>
 </div>
@@ -58,13 +59,11 @@ if($searchModel->date_between == 'pr_create_date'){
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-            <div class="d-flex flex-column gap-3">
                 <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 <div>
                     มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
                 </div>
-            </div>
-            <?=$this->render('_search', ['model' => $searchModel])?>
+           
         </div>
         <div>
 

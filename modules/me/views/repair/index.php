@@ -13,7 +13,9 @@ use app\modules\sm\models\Order;
 /** @var app\modules\sm\models\OrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'ทะเบียนประวัติแจ้งซ่อม';
+$this->params['breadcrumbs'][] = ['label' => 'แจ้งซ่อม', 'url' => ['/me/repair']];
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -22,16 +24,28 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'repair']) ?>
+<?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
 
-
+<div class="card">
+    <div class="card-body">
+         <div class="d-flex justify-content-between">
+        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อมใหม่', ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+    </div>
+    </div>
+</div>
 
 <div class="card">
     <div class="card-body">
     <div class="d-flex justify-content-between">
     <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
 </div>
-<?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
         <table class="table table-striped">
             <thead>
                 <tr>

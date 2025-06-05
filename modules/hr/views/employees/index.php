@@ -23,9 +23,9 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php Pjax::begin(['id' => 'title-container', 'timeout' => 500000]); ?>
 <style>
-    #w1-cols-list{
-        padding:10px;
-    }
+#w1-cols-list {
+    padding: 10px;
+}
 </style>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-people-fill"></i> <?= $this->title; ?>
@@ -34,7 +34,8 @@ $this->params['breadcrumbs'][] = $this->title;
 จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
 
 </span>
-รายการ <?= $notStatus > 0 ? Html::a('| ' . AppHelper::MsgWarning('ไม่ระบุตำแหน่ง') . ' ' . $notStatus . ' คน', ['/hr/employees/', 'not-status' => true]) : '' ?>
+รายการ
+<?= $notStatus > 0 ? Html::a('| ' . AppHelper::MsgWarning('ไม่ระบุตำแหน่ง') . ' ' . $notStatus . ' คน', ['/hr/employees/', 'not-status' => true]) : '' ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
@@ -52,32 +53,18 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php // Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
 
 <div class="card">
-    <div
-        class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center align-items-center">
-        <div class="d-flex justify-content-start gap-2">
-            <?= app\components\AppHelper::Btn([
-                'url' => ['create'],
-                'modal' => true,
-                'size' => 'xl',
-            ]) ?>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center align-self-center">
+            <div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+              
+
+            </div>
+            <div>
+                <?= $this->render('_search', ['model' => $searchModel]); ?>
+              
+            </div>
         </div>
-        <div>
-
-
-        </div>
-        <div class="d-flex gap-2">
-
-            <?= $this->render('_search', ['model' => $searchModel]); ?>
-
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-<button id="download-button" class="btn btn-primary shadow"><i class="fa-solid fa-file-export"></i> ส่งออกข้อมูลบุคลากร</button>
-
-
-            
-
-        </div>
-
     </div>
 </div>
 

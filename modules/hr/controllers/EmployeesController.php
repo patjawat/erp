@@ -731,19 +731,31 @@ class EmployeesController extends Controller
             $sheet->setCellValue('D' . $numRow, $value->prefix);
             $sheet->setCellValue('E' . $numRow, $value->fname);
             $sheet->setCellValue('F' . $numRow, $value->lname);
-            $sheet->setCellValue('G' . $numRow, Yii::$app->thaiFormatter->asDate(AppHelper::DateToDb($value->birthday), 'php:d/m/Y'));
+            try {
+                $sheet->setCellValue('G' . $numRow, Yii::$app->thaiFormatter->asDate(AppHelper::DateToDb($value->birthday), 'php:d/m/Y'));
+            } catch (\Throwable $th) {
+                $sheet->setCellValue('G' . $numRow, AppHelper::DateToDb($value->birthday));
+            }
             $sheet->setCellValue('H' . $numRow, $value->age_y);
             $sheet->setCellValue('I' . $numRow, $value->email);
             $sheet->setCellValue('J' . $numRow, $value->address);
             $sheet->setCellValue('K' . $numRow, $value->zipcode);
-            $sheet->setCellValue('L' . $numRow, Yii::$app->thaiFormatter->asDate($value->joinDate(), 'php:d/m/Y'));
+            try {
+                $sheet->setCellValue('L' . $numRow, Yii::$app->thaiFormatter->asDate($value->joinDate(), 'php:d/m/Y'));
+            } catch (\Throwable $th) {
+                $sheet->setCellValue('L' . $numRow, $value->joinDate());
+            }
             $sheet->setCellValue('M' . $numRow, $value->workLife()['full']);
-            $sheet->setCellValue('N' . $numRow, Yii::$app->thaiFormatter->asDate($value->year60(), 'php:d/m/Y'));
+            try {
+                $sheet->setCellValue('N' . $numRow, Yii::$app->thaiFormatter->asDate($value->year60(), 'php:d/m/Y'));
+            } catch (\Throwable $th) {
+                $sheet->setCellValue('N' . $numRow,$value->year60());
+            }
             $sheet->setCellValue('O' . $numRow, $value->leftYear60());
             $sheet->setCellValue('P' . $numRow, $value->phone);
             $sheet->setCellValue('Q' . $numRow, $value->statusName());
             $sheet->setCellValue('R' . $numRow, $value->positionName(['icon' => false]));
-            $sheet->setCellValue('S' . $numRow, Yii::$app->thaiFormatter->asDate($value->nowPosition()['date_start'], 'php:d/m/Y'));
+            // $sheet->setCellValue('S' . $numRow, Yii::$app->thaiFormatter->asDate($value->nowPosition()['date_start'], 'php:d/m/Y'));
             $sheet->setCellValue('T' . $numRow, $value->nowPosition()['position_number']);
             $sheet->setCellValue('U' . $numRow, $value->positionTypeName());
             $sheet->setCellValue('V' . $numRow, $value->positionLevelName());

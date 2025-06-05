@@ -24,6 +24,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/hr/views/development/menu') ?>
 <?php $this->endBlock(); ?>
 
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/hr/views/development/menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
+
+
 <?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel,'vehicleType' => 'officail']) ?>
 
 <div class="card">

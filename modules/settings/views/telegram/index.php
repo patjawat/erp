@@ -22,15 +22,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?><?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu',['active' => 'telegram']) ?>
+<?php $this->endBlock(); ?>
 
 <div class="categorise-index">
-
     <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between">
-                <!-- <h5><i class="fa-brands fa-line" style="color:#0ec863"></i> ตั้งค่า Line Notify</h5> -->
-                <?= Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่', ['/settings/telegram/create', 'name' => 'telegram', 'title' => 'telegram สร้าง  Telegram Notify'], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-2"></i>สร้างใหม่', ['/settings/telegram/create', 'name' => 'telegram', 'title' => 'telegram สร้าง  Telegram Notify'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
 
             </div>
         </div>

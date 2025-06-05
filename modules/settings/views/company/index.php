@@ -76,6 +76,15 @@ $resultsJs = <<< JS
     }
 </style>
 
+<?php $this->beginBlock('page-title'); ?>
+<?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/settings/views/menu.php',['active' => 'company']) ?>
+<?php $this->endBlock(); ?>
+
+
 <!-- <h1 class="text-center"><i class="bi bi-building-fill-check fs-1"></i> ข้อมูลองค์กร</h1> -->
 
 <div class="card">
