@@ -224,9 +224,23 @@ class Vehicle extends \yii\db\ActiveRecord
         return BookingDetail::find()->where(['name' => 'driver_detail', 'booking_id' => $this->id])->all();
     }
 
-    public function sendMessage($msg)
+    public function sendMessage($msg = null)
     {
         $message = $msg . $this->reason . 'วันเวลา ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . ' เวลา' . $this->time_end . ' - ' . $this->time_end;
+        
+        //ส่ง telegram
+        try {
+
+        $response = Yii::$app->telegram->sendMessage('vehicle', $message, [
+                'parse_mode' => 'HTML',
+                'disable_web_page_preview' => true,
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        
+        try {
+
         $data = [];
         foreach ($this->listMembers as $item) {
             if (isset($item->employee->user->line_id)) {
@@ -234,7 +248,12 @@ class Vehicle extends \yii\db\ActiveRecord
                 LineMsg::sendMsg($lineId, $message);
             }
         }
-        return $data;
+        // return $data;
+                    //code...
+        } catch (\Throwable $th) {
+
+        }
+        
     }
 
     public function viewTime()
