@@ -1,14 +1,14 @@
 <?php
-use app\components\AppHelper;
 use yii\helpers\Html;
+use app\models\Categorise;
 // use yii\bootstrap5\ActiveForm;
 use kartik\form\ActiveForm;
-use yii\widgets\MaskedInput;
 use kartik\select2\Select2;
+use yii\widgets\MaskedInput;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Fsn $model */
 /** @var yii\widgets\ActiveForm $form */
-use app\models\Categorise;
+use app\components\AppHelper;
 use unclead\multipleinput\MultipleInput;
 ?>
 <?php
@@ -71,6 +71,7 @@ echo "</pre>";
                     'options' => ['placeholder' => 'ระบุ...'],
                     'pluginOptions' => [
                         'allowClear' => true,
+                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                         'dropdownParent' => '#main-modal',
                     ],
                 ])->label("หน่วยนับ")
@@ -187,26 +188,12 @@ $("button[id='summit']").on('click', function() {
     }
 })
 
-$('#form-fsn').on('beforeSubmit', function (e) {
-    var form = $(this);
-    $.ajax({
-        url: form.attr('action'),
-        type: 'post',
-        data: form.serialize(),
-        dataType: 'json',
-        success: async function (response) {
-            console.log(response);
-            form.yiiActiveForm('updateMessages', response, true);
-            if(response.status == 'success') {
-                closeModal()
-                success()
-                await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-            }
-        }
-    });
-    return false;
-});
+         // เรียกใช้ function handleFormSubmit
+        handleFormSubmit('#form-fsn', null, function(response) {
+          location.reload();
+        });
 
+    
 JS;
 $this->registerJs($js);
 ?>

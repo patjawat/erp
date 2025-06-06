@@ -2,18 +2,18 @@
 
 namespace app\modules\sm\controllers;
 
-use app\modules\sm\models\AssetItem;
-use app\modules\sm\models\AssetItemSearch;
-use app\components\SiteHelper;
-use nickdenry\grid\toggle\actions\ToggleAction;
 use Yii;
 use yii\helpers\Url;
-use yii\filters\VerbFilter;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use yii\helpers\ArrayHelper;
+use yii\web\Controller;
 use app\models\Categorise;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\SiteHelper;
+use yii\web\NotFoundHttpException;
+use app\modules\sm\models\AssetItem;
+use app\modules\sm\models\AssetItemSearch;
+use nickdenry\grid\toggle\actions\ToggleAction;
 
 
 /**
@@ -89,8 +89,10 @@ class AssetItemController extends Controller
             $dataProvider->query->andFilterWhere(['name' => 'asset_item','group_id' => 3,'active' => true]);
             
         }
+        
         $dataProviderGroup = $searchModel->search($this->request->queryParams);
         $dataProviderGroup->query->andFilterWhere(['name' => 'asset_item ','group_id' => 3,'active' => true]);
+        $dataProviderGroup->query->orderBy(['id' => SORT_DESC]);
 
 
         return $this->render('index', [
@@ -242,8 +244,8 @@ class AssetItemController extends Controller
         ]);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                return $model;
                 $model->save();
+                $this->UpdateUnit($model);
                 return [
                     'status' => 'success',
                     'container' => '#sm-container',
@@ -313,6 +315,23 @@ class AssetItemController extends Controller
        
     }
 
+        protected function UpdateUnit($model)
+    {
+        // try {
+        $title = $model->data_json['unit'];
+        $check = Categorise::find()->where(['name' => 'document_org', 'title' => $title])->one();
+        if (!$check) {
+            $newModel = new Categorise();
+            $newModel->name = 'unit';
+            $newModel->title = $title;
+            $newModel->save(false);
+            return $newModel->title;
+        }
+
+        // } catch (\Throwable $th) {
+        // }
+    }
+    
     /**
      * Updates an existing Assetitem model.
      * If update is successful, the browser will be redirected to the 'view' page.
