@@ -170,13 +170,13 @@ $group = Yii::$app->request->get('group');
                        
                         echo $form->field($model, 'data_json[asset_item_name]', [
                                     'addon' => [
-                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-items/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สินย์'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-items/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สินย์'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
                                     ]
                                ])->textInput([
                             'maxlength' => true, 
                             'placeholder' => 'ค้นหาชื่อครุภัณฑ์จากปุ่มการค้นหา',
                             'readonly' => true,  // Make field readonly
-                            'class' => 'form-control bg-primary text-white'  // Add background color
+                            'class' => 'form-control bg-secondary text-white'  // Add background color
                         ])->label('ชื่อครุภัณฑ์');
                         ?>
                             <?php
@@ -385,17 +385,17 @@ $group = Yii::$app->request->get('group');
                         </div>
 
                         <div class="col-md-6">
-                              <?=$form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
-                                'name' => 'department',
-                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                                'value' => 1,
-                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                                'fontAwesome' => true,
-                                'asDropdown' => true,
-                                'multiple' => false,
-                                'options' => ['disabled' => false],
-                            ])->label('หน่วยงานภายในตามโครงสร้าง');?>
+                            <label for="department" class="form-label">หน่วยงานที่รับผิดชอบ</label>
+                            <select class="form-select" id="department">
+                                <option value="" selected="" disabled="">เลือกหน่วยงาน</option>
+                                <option value="dept1">สำนักงานอธิการบดี</option>
+                                <option value="dept2">คณะวิทยาศาสตร์</option>
+                                <option value="dept3">คณะวิศวกรรมศาสตร์</option>
+                                <option value="dept4">คณะมนุษยศาสตร์</option>
+                                <option value="dept5">คณะศึกษาศาสตร์</option>
+                                <option value="dept6">สำนักคอมพิวเตอร์</option>
+                                <option value="dept7">สำนักหอสมุด</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -441,7 +441,21 @@ $group = Yii::$app->request->get('group');
                 <div class="form-section">
                     <h5 class="section-title">ข้อมูลสถานที่และวันที่</h5>
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
+                            <?=$form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
+                                'name' => 'department',
+                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
+                                'value' => 1,
+                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                'fontAwesome' => true,
+                                'asDropdown' => true,
+                                'multiple' => false,
+                                'options' => ['disabled' => false],
+                            ])->label('หน่วยงานภายในตามโครงสร้าง');?>
+                        </div>
+
+                        <div class="col-md-6">
                             <?=$form->field($model, 'data_json[location]')->textInput()->label('อาคาร/ห้อง');?>
                         </div>
                         <div class="col-6">

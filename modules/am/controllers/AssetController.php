@@ -239,19 +239,27 @@ class AssetController extends Controller
      */
     public function actionCreate()
     {
-        $group = $this->request->get('group');
         $model = new Asset([
-            'asset_group' => $group,
+            'asset_group' => 3,
             'asset_item' => 0,
             'asset_status' => 0,
             'price' => 0,
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
+        $old_data_json = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $model->receive_date = AppHelper::DateToDb($model->receive_date);
                 Yii::$app->response->format = Response::FORMAT_JSON;
+                $model->receive_date = AppHelper::DateToDb($model->receive_date);
+
+                $convert_date = [
+                    'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
+                    'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                ];
+
+                $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json,$convert_date);
+
                 if ($model->save()) {
                     return $this->redirect(['view', 'id' => $model->id]);
                 } else {
@@ -291,8 +299,17 @@ class AssetController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             $model->receive_date = AppHelper::DateToDb($model->receive_date);
-            $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json);
+
+
+                $convert_date = [
+                    'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
+                    'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                ];
+
+
+            $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json,$convert_date);
             if ($model->save()) {
+                $this->CheckUpdateData($model);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -338,6 +355,7 @@ class AssetController extends Controller
 
     private static function CheckUpdateData($model)
     {
+        try {
         // บึนทึกยี่ห้ออัตโนมัติ
         $brand = $model->data_json['brand'];
         $modelBrand = Categorise::findOne(['name' => 'brand', 'title' => $brand]);
@@ -346,6 +364,10 @@ class AssetController extends Controller
             $modelBrandNew->save();
         }
 
+        } catch (\Throwable $th) {
+    //throw $th;
+}
+        try {
         // บึนทึกรุ่นอัตโนมัติ
         $asset_model = $model->data_json['asset_model'];
         $assetModel = Categorise::findOne(['name' => 'asset_model', 'title' => $asset_model]);
@@ -353,7 +375,10 @@ class AssetController extends Controller
             $assetModel = new Categorise(['name' => 'asset_model', 'code' => $asset_model, 'title' => $asset_model]);
             $assetModel->save();
         }
-
+        } catch (\Throwable $th) {
+    //throw $th;
+}
+try {
         // บึนทึกรุ่นอัตโนมัติ
         $os = $model->data_json['os'];
         $osModel = Categorise::findOne(['name' => 'os', 'title' => $os]);
@@ -361,6 +386,11 @@ class AssetController extends Controller
             $osModel = new Categorise(['name' => 'os', 'code' => $os, 'title' => $os]);
             $osModel->save();
         }
+} catch (\Throwable $th) {
+    //throw $th;
+}
+
+try {
 
         // บึนทึก CPU
         $cpu = $model->data_json['cpu'];
@@ -369,6 +399,9 @@ class AssetController extends Controller
             $cpuModel = new Categorise(['name' => 'cpu', 'code' => $cpu, 'title' => $cpu]);
             $cpuModel->save();
         }
+} catch (\Throwable $th) {
+    //throw $th;
+}
     }
 
     public function actionQrcode()

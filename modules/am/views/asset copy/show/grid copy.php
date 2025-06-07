@@ -3,42 +3,33 @@ use yii\helpers\Html;
 ?>
 <style>
 .card-img-top {
-    max-height: 220px;
-    min-height: 220px;
+    max-height: 320px;
+    min-height: 320px;
 }
 
-.status-active {
-    background-color: #d1e7dd;
-    color: #0f5132;
-}
-
-.status-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-
-
+.card-img-top {}
 </style>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-4 mb-4">
+<div class="row row-cols-1 row-cols-xl-12 row-cols-lg-5 row-cols-md-4">
     <?php foreach($dataProvider->getModels() as $key => $model):?>
     <div class="col">
-                    <div class="card h-100">
-                        <div class="equipment-card-img">
-                             <?= Html::img($model->showImg(),['class' => 'card-img-top p-2'])?>
 
-                            <!-- <span class="status-badge status-active">ใช้งานอยู่</span> -->
-                             <?=$model->viewstatus()?>
-                        </rect></div>
-                        <div class="card-body">
-                          <div>
+        <div class="card text-black position-relative">
+            <!-- <i class="fab fa-apple fa-lg pt-3 pb-1 px-3"></i> -->
+            <!-- <img
+            src="https://mdbcdn.b-cdn.net/img/Photos/Horizontal/E-commerce/Products/3.webp"
+            class="card-img-top"
+            alt="Apple Computer"
+          /> -->
+
+            <div class="card-body">
+                <div class="text-center">
+                    <h5 class="card-title text-truncate">
+                        <?=Html::a($model->AssetitemName(), ['/am/asset/view','id' => $model->id],['class' => '', ])?></h5>
+                    <p class="text-muted mb-4"><?=$model->AssetTypeName();?></p>
+                </div>
+                <?= Html::a(Html::img($model->showImg(),['class' => 'card-img-top p-2 rounded border border-2 border-secondary-subtle']), ['/am/asset/view','id' => $model->id],['class' => '', ]) ?>
+                <div>
                     <ul class="list-inline">
                         <li>
                             <i class="bi bi-check2-circle text-primary fs-5"></i> <span
@@ -78,6 +69,9 @@ use yii\helpers\Html;
                                 class="text-white bg-primary badge rounded-pill fs-6 fw-semibold shadow"><?=isset($model->price) ? number_format($model->price,2) : ''?></span>
                                 บาท
                             </div>
+                            <div>
+                             <?=$model->viewstatus()?>
+                                </div>
                             </div>
                         </li>
 
@@ -85,26 +79,11 @@ use yii\helpers\Html;
                     </ul>
 
                 </div>
-                             <div class="d-flex justify-content-between total font-weight-bold mt-4 bg-secondary-subtle rounded p-2">
+                <div class="d-flex justify-content-between total font-weight-bold mt-4 bg-secondary-subtle rounded p-2">
                     <?=$model->getOwner()?>
                 </div>
-                        </div>
-                        <div class="card-footer">
-                            <div class="d-flex justify-content-between">
-                                <?=Html::a('<i class="bi bi-eye"></i> รายละเอียด', ['/am/asset/view','id' => $model->id],['class' => 'btn btn-sm btn-outline-primary view-btn']) ?>
-                                <div>
-                                       <?=Html::a(' <i class="bi bi-pencil"></i>', ['/am/asset/update','id' => $model->id],['class' => 'btn btn-sm btn-outline-warning edit-btn']) ?>
-                                    <!-- <button class="btn btn-sm btn-outline-warning edit-btn" data-id="1">
-                                        <i class="bi bi-pencil"></i>
-                                    </button> -->
-
-                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="1">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </div>
+    </div>
     <?php endforeach?>
 </div>

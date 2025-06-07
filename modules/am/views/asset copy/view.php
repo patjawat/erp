@@ -9,7 +9,7 @@ use app\components\ThaiDateHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Asset $model */
 
-$this->title = 'รายละเอียดครุภัณฑ์ ' . $model->code;
+$this->title = 'ครุภัณฑ์';
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนทรัพย์สิน', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
@@ -27,6 +27,17 @@ $group = Yii::$app->request->get('group');
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('../default/menu',['active' => 'asset'])?>
 <?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('action'); ?>
+<!-- Action Buttons -->
+<div class="row mb-4 no-print">
+    <div class="col-md-12">
+
+    </div>
+</div>
+<?php $this->endBlock(); ?>
+
 
 <style>
 .field-asset-q {
@@ -47,11 +58,9 @@ $group = Yii::$app->request->get('group');
                 <span class="badge text-bg-primary">สถานะ: ใช้งานได้</span>
             </div>
             <div class="card-body text-center">
-                <div class="position-relative p-2 d-flex">
-                    <img src="<?=$model->QrCode()?>" width="140" class="position-absolute start-0 top-0 m-2" alt="QR Code">
-                    <?= Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']) ?>
-                </div>
-                <?php if (isset($model->Retire()['progress'])): ?>
+                <?= Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']) ?>
+                
+                            <?php if (isset($model->Retire()['progress'])): ?>
                 <div class="container px-5">
 
                     <div class="progress progress-sm mt-3 w-100">
@@ -72,17 +81,35 @@ $group = Yii::$app->request->get('group');
                 </div>
                 <?php endif; ?>
                 
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-between align-items-center">
-                    <?= $model->getOwner() ?>
-                    <h6>ผู้รับผิดชอบ</h6>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-center">
+                        <div class="qr-code border p-2 bg-white">
+                            <svg width="100" height="100" viewBox="0 0 100 100">
+                                <rect x="0" y="0" width="100" height="100" fill="white"></rect>
+                                <path d="M10,10 h30 v30 h-30 z" fill="black"></path>
+                                <path d="M15,15 h20 v20 h-20 z" fill="white"></path>
+                                <path d="M20,20 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M60,10 h30 v30 h-30 z" fill="black"></path>
+                                <path d="M65,15 h20 v20 h-20 z" fill="white"></path>
+                                <path d="M70,20 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M10,60 h30 v30 h-30 z" fill="black"></path>
+                                <path d="M15,65 h20 v20 h-20 z" fill="white"></path>
+                                <path d="M20,70 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M50,50 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M70,50 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M50,70 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M70,70 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M60,80 h10 v10 h-10 z" fill="black"></path>
+                                <path d="M80,60 h10 v10 h-10 z" fill="black"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-muted mt-2">รหัสครุภัณฑ์: 7110-001-0001</p>
                 </div>
-        </div>
+            </div>
         </div>
     </div>
 
-  
     <div class="col-md-8">
         <div class="card mb-4">
             <div class="card-header">
@@ -172,14 +199,8 @@ $group = Yii::$app->request->get('group');
     </div>
 </div>
 
-
-<div class="asset-view">
-    <?php echo $this->render('./asset_detail',['model' => $model,'searchModel' => $searchModel,
-    'dataProvider' => $dataProvider])?>
-</div>
-
 <!-- Tabs for Additional Information -->
-<!-- <div class="card mb-4">
+<div class="card mb-4">
     <div class="card-header">
         <ul class="nav nav-tabs card-header-tabs mb-3" id="equipmentTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -203,11 +224,10 @@ $group = Yii::$app->request->get('group');
     <div class="card-body">
         <div class="tab-content" id="equipmentTabsContent">
             <!-- Technical Specifications Tab -->
-
-            <!-- <div class="tab-pane fade active show" id="specs" role="tabpanel" aria-labelledby="specs-tab">
+            <div class="tab-pane fade active show" id="specs" role="tabpanel" aria-labelledby="specs-tab">
                 <h5 class="card-title fw-bold">คุณลักษณะเฉพาะ</h5>
                 <?=$model->data_json['asset_options'] ?? '-'?>
-            </div> -->
+            </div>
 
             <!-- Maintenance History Tab -->
             <div class="tab-pane fade" id="maintenance" role="tabpanel" aria-labelledby="maintenance-tab">
@@ -260,7 +280,135 @@ $group = Yii::$app->request->get('group');
 
             <!-- Depreciation Tab -->
             <div class="tab-pane fade" id="depreciation" role="tabpanel" aria-labelledby="depreciation-tab">
-                <?=$this->render('depreciation',['model' => $model])?>
+                <h5 class="card-title">ข้อมูลค่าเสื่อมราคา</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-3 text-muted">ข้อมูลพื้นฐาน</h6>
+                                <div class="row mb-2">
+                                    <div class="col-md-6 fw-bold">ราคาทุน:</div>
+                                    <div class="col-md-6"><?=number_format($model->price)?> บาท</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6 fw-bold">อายุการใช้งาน:</div>
+                                    <div class="col-md-6"><?= isset($model->data_json['service_life']) ? $model->data_json['service_life'] : '' ?> ปี</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6 fw-bold">วิธีคำนวณค่าเสื่อม:</div>
+                                    <div class="col-md-6">วิธีเส้นตรง</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6 fw-bold">ค่าเสื่อมต่อปี:</div>
+                                    <div class="col-md-6">7,000.00 บาท</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6 fw-bold">มูลค่าปัจจุบัน:</div>
+                                    <div class="col-md-6">21,000.00 บาท</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-3 text-muted">กราฟแสดงค่าเสื่อมราคา</h6>
+                                <div style="height: 200px; position: relative;">
+                                    <svg viewBox="0 0 500 200" width="100%" height="100%" style="overflow: visible">
+                                        <!-- X and Y Axes -->
+                                        <line x1="50" y1="170" x2="450" y2="170" stroke="#dee2e6" stroke-width="2">
+                                        </line>
+                                        <line x1="50" y1="20" x2="50" y2="170" stroke="#dee2e6" stroke-width="2"></line>
+
+                                        <!-- Y-axis labels -->
+                                        <text x="45" y="170" text-anchor="end" font-size="12">0</text>
+                                        <text x="45" y="130" text-anchor="end" font-size="12">10,000</text>
+                                        <text x="45" y="90" text-anchor="end" font-size="12">20,000</text>
+                                        <text x="45" y="50" text-anchor="end" font-size="12">30,000</text>
+                                        <text x="45" y="20" text-anchor="end" font-size="12">40,000</text>
+
+                                        <!-- X-axis labels -->
+                                        <text x="50" y="185" text-anchor="middle" font-size="12">2565</text>
+                                        <text x="130" y="185" text-anchor="middle" font-size="12">2566</text>
+                                        <text x="210" y="185" text-anchor="middle" font-size="12">2567</text>
+                                        <text x="290" y="185" text-anchor="middle" font-size="12">2568</text>
+                                        <text x="370" y="185" text-anchor="middle" font-size="12">2569</text>
+                                        <text x="450" y="185" text-anchor="middle" font-size="12">2570</text>
+
+                                        <!-- Grid lines -->
+                                        <line x1="50" y1="130" x2="450" y2="130" stroke="#f5f5f5" stroke-width="1">
+                                        </line>
+                                        <line x1="50" y1="90" x2="450" y2="90" stroke="#f5f5f5" stroke-width="1"></line>
+                                        <line x1="50" y1="50" x2="450" y2="50" stroke="#f5f5f5" stroke-width="1"></line>
+
+                                        <!-- Value line -->
+                                        <polyline points="50,50 130,90 210,130 290,170 370,170 450,170" fill="none"
+                                            stroke="#0d6efd" stroke-width="3"></polyline>
+
+                                        <!-- Data points -->
+                                        <circle cx="50" cy="50" r="5" fill="#0d6efd"></circle>
+                                        <circle cx="130" cy="90" r="5" fill="#0d6efd"></circle>
+                                        <circle cx="210" cy="130" r="5" fill="#0d6efd"></circle>
+                                        <circle cx="290" cy="170" r="5" fill="#0d6efd"></circle>
+                                        <circle cx="370" cy="170" r="5" fill="#0d6efd"></circle>
+                                        <circle cx="450" cy="170" r="5" fill="#0d6efd"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ปีงบประมาณ</th>
+                                <th>มูลค่าต้นปี</th>
+                                <th>ค่าเสื่อมราคาประจำปี</th>
+                                <th>ค่าเสื่อมราคาสะสม</th>
+                                <th>มูลค่าปลายปี</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2565</td>
+                                <td>35,000.00</td>
+                                <td>7,000.00</td>
+                                <td>7,000.00</td>
+                                <td>28,000.00</td>
+                            </tr>
+                            <tr>
+                                <td>2566</td>
+                                <td>28,000.00</td>
+                                <td>7,000.00</td>
+                                <td>14,000.00</td>
+                                <td>21,000.00</td>
+                            </tr>
+                            <tr>
+                                <td>2567</td>
+                                <td>21,000.00</td>
+                                <td>7,000.00</td>
+                                <td>21,000.00</td>
+                                <td>14,000.00</td>
+                            </tr>
+                            <tr>
+                                <td>2568</td>
+                                <td>14,000.00</td>
+                                <td>7,000.00</td>
+                                <td>28,000.00</td>
+                                <td>7,000.00</td>
+                            </tr>
+                            <tr>
+                                <td>2569</td>
+                                <td>7,000.00</td>
+                                <td>7,000.00</td>
+                                <td>35,000.00</td>
+                                <td>0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Documents Tab -->
@@ -323,10 +471,63 @@ $group = Yii::$app->request->get('group');
             </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <!-- Transfer History -->
-<?php // $this->render('transfer_history')?>
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="bi bi-arrow-left-right"></i> ประวัติการโอนย้าย
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>วันที่</th>
+                        <th>จากหน่วยงาน</th>
+                        <th>ไปยังหน่วยงาน</th>
+                        <th>ผู้รับผิดชอบเดิม</th>
+                        <th>ผู้รับผิดชอบใหม่</th>
+                        <th>เหตุผล</th>
+                        <th>ผู้อนุมัติ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>01/04/2566</td>
+                        <td>ฝ่ายบัญชี</td>
+                        <td>ฝ่ายเทคโนโลยีสารสนเทศ</td>
+                        <td>นางสาวรักษ์ดี มีสุข</td>
+                        <td>นายสมชาย ใจดี</td>
+                        <td>ปรับโครงสร้างหน่วยงาน</td>
+                        <td>นายใหญ่ บริหารดี</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="asset-view">
+    <?php if($model->asset_group == 1):?>
+    <?=$this->render('@app/modules/am/views/asset/asset_detail_group_1',['model' => $model])?>
+    <?php endif?>
+
+    <?php if($model->asset_group == 2):?>
+    <?=$this->render('@app/modules/am/views/asset/asset_detail_group_2',['model' => $model])?>
+    <?php endif?>
+
+    <?php if($model->asset_group == 3):?>
+    <?=$this->render('@app/modules/am/views/asset/asset_detail_group_3',['model' => $model])?>
+
+    <?= $model->asset_group == 3 ? $this->render('./asset_detail',['model' => $model,'searchModel' => $searchModel,
+    'dataProvider' => $dataProvider]) :  ''?>
+
+    <?php endif?>
+</div>
 
 <?php
 $js = <<< JS

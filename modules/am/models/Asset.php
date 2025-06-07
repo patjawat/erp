@@ -3,6 +3,7 @@
 namespace app\modules\am\models;
 
 use Yii;
+use chillerlan\QRCode\QRCode;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\db\Expression;
@@ -282,11 +283,28 @@ class Asset extends \yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
 
+
+    public function budgetTypeName()
+    {
+       try {
+       return CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title;
+       } catch (\Throwable $th) {
+        return '-';
+       }
+
+    }
     // Relationships
     public function getAssetItem()
     {
         return $this->hasOne(Categorise::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
     }
+
+    // วิธีการได้มา
+    public function getPurchaseName()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'purchase'])->andOnCondition(['name' => 'purchase']);
+    }
+
 
     public function Upload($ref, $name)
     {
@@ -341,6 +359,16 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
+        public function vendorName()
+    {
+        $model = CategoriseHelper::CategoriseByCodeName($this->data_json['vendor_id'], 'vendor');
+        if ($model) {
+            return $model->title;
+        }
+    }
+    
+
+
     public function viewStatus()
     {
         $status = $this->asset_status;
@@ -367,9 +395,14 @@ class Asset extends \yii\db\ActiveRecord
                 break;
         }
 
-        return '<label class="badge rounded-pill text-primary-emphasis bg-' . $data['color'] . '-subtle p-2 fs-6 text-truncate fw-semibold">' . $data['icon'] . ' ' . $this->statusName() . '</label>';
+        return '<label class="status-badge text-white status-active bg-' . $data['color'] . ' text-truncate">' . $data['icon'] . ' ' . $this->statusName() . '</label>';
     }
 
+    public function QrCode()
+{
+        $qr = new QRCode();
+        return $qr->render($this->code);
+    }
     // หน่วยงาน
     public function ListDepartment()
     {
