@@ -9,7 +9,7 @@ use app\modules\dms\models\Documents;
 $this->title = 'ทะเบียนหนังสือ';
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
+<i class="fa-regular fa-file-lines fs-4"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -22,6 +22,26 @@ $this->title = 'ทะเบียนหนังสือ';
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-top align-items-center">
+
+        <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#home"><span
+                        class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderTags->getTotalCount()?></span>
+                        ถึง<?=UserHelper::GetEmployee()->fullname?></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span
+                        class="badge rounded-pill text-bg-danger"><?php echo $dataProviderDepartment->getTotalCount()?></span>
+                        ถึงหน่วยงาน</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#bookmark"><span
+                        class="badge rounded-pill text-bg-danger"><?php echo $dataProviderBookmark->getTotalCount()?></span>
+                        บันทึก</a>
+                    </li>
+                </ul>  
+                
             <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
               
 
@@ -45,24 +65,7 @@ $this->title = 'ทะเบียนหนังสือ';
             <?=Html::a('แสดงทั้งหมด',['/me/documents'],['class' => 'btn btn-sm btn-light rounded-pill','data' => ['pjax' => 0]])?>
             <?php endif;?>
 
-              <!-- Nav tabs -->
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#home"><span
-                        class="badge rounded-pill text-bg-danger"><?php  echo $dataProviderTags->getTotalCount()?></span>
-                        ถึง<?=UserHelper::GetEmployee()->fullname?></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#menu1"><span
-                        class="badge rounded-pill text-bg-danger"><?php echo $dataProviderDepartment->getTotalCount()?></span>
-                        ถึงหน่วยงาน</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#bookmark"><span
-                        class="badge rounded-pill text-bg-danger"><?php echo $dataProviderBookmark->getTotalCount()?></span>
-                        บันทึก</a>
-                    </li>
-                </ul>  
+              
         </div>
         <!-- Tab panes -->
         <div class="tab-content">

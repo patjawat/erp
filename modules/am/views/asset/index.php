@@ -16,8 +16,8 @@ use app\modules\am\models\Asset;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
-$this->title = 'ทะเบียน'.$title;
-$this->params['breadcrumbs'][] = ['label' => 'จัดการทรัพย์สิน', 'url' => ['/am']];
+$this->title = 'ทะเบียนครุภัณฑ์';
+$this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
@@ -36,10 +36,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('../default/menu',['active' => 'asset'])?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
- <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนทรัพย์สิน', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-<?php $this->endBlock(); ?>
-
 
 <?php Pjax::end(); ?>
 <?php // Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
@@ -55,24 +51,30 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php else:?>
 
 <?php endif;?>
+
+<div class="card">
+    <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <?php //  Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนคุภัณฑ์', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนคุภัณฑ์', ['/am/asset/create'], ['class' => 'btn btn-primary rounded-pill']) ?>
+                <?= $this->render('_search', ['model' => $searchModel]); ?>
+            </div>
+    </div>
+</div>
+
+        <?php if(SiteHelper::getDisplay() == 'list'):?>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-                <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
-             <div class="d-flex justify-content-between align-items-center">
-                <?= $this->render('_search', ['model' => $searchModel]); ?>
-               
-            </div>
+            <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
         </div>
-        <?php if(SiteHelper::getDisplay() == 'list'):?>
-
         <?=$this->render('show/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);?>
-
+    </div>
+</div>
         <?php else:?>
-        <hr>
         <?=$this->render('show/grid', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
@@ -93,8 +95,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <?php endif;?>
 
-    </div>
-</div>
+
 
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([

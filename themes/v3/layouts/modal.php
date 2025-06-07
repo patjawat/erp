@@ -11,6 +11,11 @@ use yii\bootstrap5\Modal;
     ],
             'title' => '',
             // 'size' => 'modal-sm',
+             'closeButton' => [
+                'label' => 'X',
+                'class' => 'btn-close text-white',
+                'style' => 'font-size: 20px;'
+            ],
             'footer' => '',
             'clientOptions' => ['backdrop' => 'static', 'keyboard' => false],
         ]);

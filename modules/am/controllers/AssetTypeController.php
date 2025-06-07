@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\sm\controllers;
+namespace app\modules\am\controllers;
 
 use app\modules\sm\models\AssetType;
 use app\modules\sm\models\AssetTypeSearch;

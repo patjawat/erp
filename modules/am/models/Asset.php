@@ -385,6 +385,24 @@ class Asset extends \yii\db\ActiveRecord
         });
     }
 
+    //หน่วยนับ
+    public function listUnit(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(),'title','title');
+    }
+
+        //ยี่ห้อ
+    public function listBand(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'band'])->all(),'title','title');
+    }
+    //ยี่ห้อ
+    public function listModel(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'model'])->all(),'title','title');
+    }
+    //สี
+    public function listColor(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'color'])->all(),'title','title');
+    }
+
     public function ListType()
     {
         return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');

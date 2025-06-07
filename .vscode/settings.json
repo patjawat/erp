@@ -2,6 +2,6 @@
   "php-cs-fixer.executablePath": "/full/path/of/php-cs-fixer.phar",
   "php-cs-fixer.formatHtml": true,
   "[php]": {
-    "editor.defaultFormatter": "kokororin.vscode-phpfmt"
+    "editor.defaultFormatter": "junstyle.php-cs-fixer"
   }
 }

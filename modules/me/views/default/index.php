@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gauge fs-1 text-primaryr"></i> <?php echo $this->title; ?>
+<i class="fa-solid fa-gauge fs-4 text-primaryr"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>

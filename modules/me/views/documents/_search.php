@@ -17,10 +17,11 @@ use kartik\widgets\ActiveForm;
     'options' => [
         'data-pjax' => 1
     ],
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
 <div class="d-flex justify-content-between align-top align-items-center gap-1">
-    <?= $form->field($model, 'q')->label('คำค้นหา...') ?>
+    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
     <?php
     echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
         'data' => $model->ListThaiYear(),
@@ -37,25 +38,10 @@ use kartik\widgets\ActiveForm;
                             $(this).submit()
                         }',
         ]
-    ])->label('ปี พ.ศ.');
+    ])->label(false);
     ?>
 
-    <!-- <div class="dropdown mt-2">
-        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i
-                class="fa-solid fa-filter"></i> เพิ่มเติม
-        </button>
-        <div class="dropdown-menu p-4 relative" style="width:500px">
-
-            <div class="d-flex flex-row gap-4">
-
-                <?= $form->field($model, 'show_reading')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('แสดงที่อ่านแล้ว'); ?>
-
-            </div>
-
-        </div>
-    </div> -->
-
-    <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary mt-3']) ?>
+    <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
 </div>
 
 <?php ActiveForm::end(); ?>

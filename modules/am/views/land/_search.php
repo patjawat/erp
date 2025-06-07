@@ -14,7 +14,10 @@ use app\modules\hr\models\Employees;
 /** @var yii\widgets\ActiveForm $form */
 $listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item'])->all(),'code','title');
 $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(),'code','title');
-
+$listAssetGroup= ArrayHelper::map(Categorise::find()
+->where(['name' => 'asset_group'])
+->andwhere(['IN','code' ,[1,2,3]])
+->all(),'code','title');
 ?>
 <style>
 .field-assetsearch-q {
@@ -38,7 +41,7 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
         'options' => [
             'data-pjax' => 0
         ],
-         'fieldConfig' => ['options' => ['class' => 'form-group mb-3 mr-2 me-2']] // spacing form field groups
+         'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
 <div class="d-flex gap-/">
@@ -69,7 +72,14 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <?= $form->field($model, 'asset_group')->hiddenInput()->label(false);
+        <?= $form->field($model, 'asset_group')->widget(Select2::classname(), [
+                                        'data' => $listAssetGroup,
+                                        'options' => ['placeholder' => 'เลือกกลุ่มทรัพย์สิน'],
+                                        'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'width' => '180px',
+                                        ],
+                                    ])->label('กลุ่ม');
                                     
                                     ?>
                                         <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
@@ -79,7 +89,7 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
                                         'allowClear' => true,
                                         'width' => '500px',
                                         ],
-                                    ])->label('ประเภททรัพย์สิน');
+                                    ])->label(false);
                                     
                                     ?>
     <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
@@ -89,7 +99,7 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
                                         'allowClear' => true,
                                         'width' => '350px',
                                         ],
-                                    ])->label('ชื่อทรัพย์สิน');
+                                    ])->label(false);
                                     
                                     ?>
 

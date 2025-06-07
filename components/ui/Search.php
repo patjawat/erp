@@ -55,7 +55,6 @@ use app\modules\hr\models\Organization;
                         ]
                         ])->label(false);
                         ?>
-
     </div>
     <div class="col-2">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
@@ -63,7 +62,7 @@ use app\modules\hr\models\Organization;
         <div class="col-2">
         <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
     </div>
-    <div class="col-2">
+    <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
             <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"

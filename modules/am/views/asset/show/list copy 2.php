@@ -35,9 +35,22 @@ use app\modules\am\models\Asset;
                            <?=$item->AssetitemName()?>
                             <?php // $this->render('item_list',['model' => $item])?>
                         </td>
-                        <td class="align-middle"></td>
-                        <td class="align-middle"><?=number_format($item->price,0)?></td>
-                        <td class="align-middle"><?=$item->receive_date?></td>
+                        <td class="align-middle">
+                            <ul class="list-inline">
+                                <?php if(isset($item->data_json['department_name']) && $item->data_json['department_name'] == ''):?>
+                                <?= isset($item->data_json['department_name_old']) ? $item->data_json['department_name_old'] : ''?>
+                                <?php else:?>
+                                <?= isset($item->data_json['department_name']) ?  $item->data_json['department_name'] : ''?>
+                                <?php endif;?>
+                                </li>
+                            </ul>
+                        </td>
+                        <td class="align-middle">
+                            <?=$item->method_get?>
+
+                        </td>
+
+                        <td class="align-middle"><?=$item->on_year?></td>
                         <td><?=$item->statusName()?></td>
                         <td class="fw-light">
                             <div class="btn-group">

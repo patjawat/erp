@@ -7,17 +7,13 @@ use yii\db\Expression;
 use app\models\Categorise;
 use app\modules\am\models\Asset;
 
-$this->title = 'Dashboard';
-$this->params['breadcrumbs'][] = ['label' => 'บริหารทรัพย์สิน', 'url' => ['/am']];
+$this->title = 'บริหารทรัพย์สิน | Dashboard';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
+<i class="fa-solid fa-gauge-high fs-3"></i> Dashboard
 <?php $this->endBlock();?>
 <?php $this->beginBlock('sub-title');?>
-<?php $this->endBlock();?><?php $this->beginBlock('sub-title');?>
-Dashboard
-<?php $this->endBlock();?>
 
 <?php $this->beginBlock('page-action');?>
 <?=$this->render('menu')?>

@@ -57,10 +57,9 @@ class AssetController extends Controller
      */
     public function actionIndex()
     {
-        $assetType = $this->request->get('asset_group');
-        $group = $this->request->get('group');
-        $x = $this->request->queryParams;
-        $searchModel = new AssetSearch();
+        $searchModel = new AssetSearch([
+             'asset_group' => 3
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
         $dataProvider->query->andWhere('deleted_at IS NULL');

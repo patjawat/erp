@@ -7,6 +7,8 @@ use yii\widgets\ActiveForm;
 
 
 $this->title = 'นำเข้าข้อมูล';
+$this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['/am']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?=$this->title;?>
@@ -16,6 +18,12 @@ $this->title = 'นำเข้าข้อมูล';
 <?php $this->beginBlock('page-action'); ?>
 <?=$this->render('../default/menu')?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?php $this->endBlock(); ?>
+
+
 <?php if($status == 'success'):?>
 <div class="row d-felx justify-content-center">
   <div class="col-6">

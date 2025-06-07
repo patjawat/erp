@@ -30,12 +30,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
+<?php // Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
 
 <div class="card">
     <div class="card-body">
          <div class="d-flex justify-content-between">
         <?=Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อมใหม่', ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อมใหม่ New',['/me/repair/create'],['class' => 'btn btn-primary rounded-pill shadow'])?>
         <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
     </div>
     </div>
@@ -105,7 +106,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?php Pjax::end(); ?>
+<?php // Pjax::end(); ?>
 <?php
 $js = <<< JS
 

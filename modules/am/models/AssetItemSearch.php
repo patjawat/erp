@@ -18,7 +18,7 @@ class AssetItemSearch extends AssetItem
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','fsn_auto'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','fsn_auto','q'], 'safe'],
         ];
     }
 
@@ -40,7 +40,7 @@ class AssetItemSearch extends AssetItem
      */
     public function search($params)
     {
-        $query = Assetitem::find();
+        $query = Assetitem::find()->where(['name' => 'asset_item']);
 
         // add conditions that should always apply here
 

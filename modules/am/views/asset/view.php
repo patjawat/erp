@@ -8,8 +8,8 @@ use yii\base\ErrorException;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Asset $model */
 
-$this->title = 'ทะเบียนทรัพย์สิน';
-$this->params['breadcrumbs'][] = ['label' => 'Assets', 'url' => ['index']];
+$this->title = 'ครุภัณฑ์';
+$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนทรัพย์สิน', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 $title = Yii::$app->request->get('title');

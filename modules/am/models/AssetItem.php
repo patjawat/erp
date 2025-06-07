@@ -3,10 +3,11 @@
 namespace app\modules\am\models;
 
 use Yii;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
-use app\models\Categorise;
 /**
  * This is the model class for table "categorise".
  *
@@ -27,6 +28,7 @@ class AssetItem extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $fsn_auto; //กำหนดการให้หมายเลขอัตโนมัติถ้า true;
+    public $q;
     public $schedule;
     public static function tableName()
     {
@@ -40,7 +42,7 @@ class AssetItem extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json','fsn_auto'], 'safe'],
+            [['data_json','fsn_auto','q'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -113,7 +115,27 @@ class AssetItem extends \yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
 
+        // หมายเลขถัดไปของทรัพย์สิน
+        // ใช้สำหรับการสร้างหมายเลขทรัพย์สินใหม่
+        public function nextCode()
+        {
+                $sql = "SELECT x.* FROM(SELECT 
+                CONCAT(:asset_item,'/', 
+                    SUBSTRING_INDEX(SUBSTRING_INDEX(code, '/', -1), '.', 1), 
+                    '.', 
+                    LPAD(MAX(CAST(SUBSTRING_INDEX(code, '.', -1) AS UNSIGNED)) + 1, 2, '0')
+                ) AS next_code
+                    FROM asset 
+                    WHERE code LIKE CONCAT(:asset_item, '/%')
+                    GROUP BY SUBSTRING_INDEX(SUBSTRING_INDEX(code, '/', -1), '.', 1)) as x
+                    order BY next_code DESC limit 1;";
+                    $query = Yii::$app->db->createCommand($sql)
+                    ->bindValue(':asset_item', $this->code)
+                    ->queryOne();
 
+            $newCode  = $this->code.'/'.substr(AppHelper::YearBudget(), -2).'01';
+            return $query['next_code'] ?? $newCode;
+    }
         //section Relationships
         public function getAssetType()
         {
@@ -121,26 +143,18 @@ class AssetItem extends \yii\db\ActiveRecord
         }
 
 
-    public function FsnTypeName()
-    {
-        // $model =  self::find()->where(['name' => 'asset_type','code' => $this->data_json['asset_type']])->one();
-        // if($model)
-        // {
-        //     return $model->title;
-        // }else{
-        //     return null;
-        // }
+//หน่วยนับ
+    public function listUnit(){
+        return ArrayHelper::map(self::find()->where(['name' => 'unit'])->all(),'title','title');
     }
-    public function FsnGroupName()
-    {
-        // $model =  self::find()->where(['name' => 'asset_group','code' => $this->category_id])->one();
-        // if($model)
-        // {
-        //     return $model->title;
-        // }else{
-        //     return null;
-        // }
+
+        public function listAssetType(){
+        return ArrayHelper::map(self::find()->where(['name' => 'asset_type'])->all(),'code','title');
     }
+    
+
+        
+
     public function listFsnName(){
         return ArrayHelper::map(self::find()->all(),'code','title');
     }
@@ -157,9 +171,15 @@ class AssetItem extends \yii\db\ActiveRecord
     public function ShowImg(){
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
             if($model){
-                return FileManagerHelper::getImg($model->id);
+                return [
+                    'image' => FileManagerHelper::getImg($model->id),
+                    'isFile' => true,
+                ];
             }else{
-                return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+                 return [
+                    'image' => Yii::getAlias('@web') . '/img/placeholder-img.jpg',
+                    'isFile' => false,
+                ];
             }
     }
 

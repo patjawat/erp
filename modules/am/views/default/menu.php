@@ -8,35 +8,44 @@ $listAssetGroups = Categorise::find()
 ->where(['name' => 'asset_group'])
 // ->andWhere(['NOT',['code'=>[1]]])
 ->all();
+$layout = app\components\SiteHelper::getInfo()['layout'];
 
-$menus = [
-    [
-    'title' => 'Dashboard',
-     'active' => 'index',
-    'url' => ['/am'],
-    'icon' => '<i class="fa-solid fa-gauge-high text-primary me-1"></i>'
-    ],
-        [
-        'title' => 'ทะเบียนทรัพย์สิน',
-        'active' => 'asset',
-        'url' => ['/am/asset'],
-        'icon' => '<i class="bi bi-ui-checks text-primary me-2"></i>'
-        ],
-        [
-        'title' => 'รายงานค่าเสื่อม',
-        'active' => 'report',
-        'url' => ['/am/report'],
-        'icon' => '<i class="fa-solid fa-chart-simple text-primary me-2"></i>'
-        ],
-
-];
 ?>
 <?php if($layout == 'horizontal'):?>
-<?php foreach($menus as $menu):?>
 <li class="nav-item">
-    <?=Html::a($menu['icon'].$menu['title'],$menu['url'],['class' => 'nav-link ' . (isset($active) && $active == $menu['active'] ? 'active' : '')])?>
+    <?=Html::a('<i class="fa-solid fa-gauge-high text-primary me-1"></i> Dashboard',['/am'],['class' => 'nav-link ' . (isset($active) && $active == 'index' ? 'active' : '')])?>
 </li>
-<?php endforeach;?>
+
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'asset' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        <i class="bi bi-ui-checks text-primary me-1"></i> ทะเบียนทรัพย์สิน
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> ครุภัณฑ์', ['/am/asset'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> ที่ดิน', ['/am/land'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> สิ่งปลูกสร้าง', ['/am'], ['class' => 'dropdown-item']) ?>
+    </div>
+</li>
+
+<li class="nav-item">
+    <?=Html::a('<i class="fa-solid fa-chart-pie me-1"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'nav-link ' . (isset($active) && $active == 'report' ? 'active' : '')])?>
+</li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        <i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดรหัสทรัพย์สินย์', ['/am/asset-items'], ['class' => 'dropdown-item']) ?>
+    </div>
+</li>
+
+
 
 <?php else:?>
 <div class="d-flex gap-2">

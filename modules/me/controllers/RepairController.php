@@ -58,9 +58,7 @@ class RepairController extends Controller
                     ]),
                 ];
             }
-
         } else {
-
             if ($this->request->isAJax) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
@@ -74,10 +72,39 @@ class RepairController extends Controller
                     'model' => $model,
                 ]);
             }
-        
-
         }
     }
+
+
+    // แจ้งซ่อมใหม่
+    public function actionCreate()
+    {
+        $model = new Helpdesk(['name' => 'repair']);
+          if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+
+                $model->save();
+
+               return $this->redirect(['/me/repair']);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('create', ['model' => $model]);
+        }
+    }
+    
 
     public function actionUpdate($id)
     {
