@@ -9,7 +9,7 @@ use yii\widgets\Pjax;
 // $orders = Order::find()->where(['name' => 'order', 'created_by' => Yii::$app->user->id])->all();
 ?>
 <?php Pjax::begin(['id' => 'me-container', 'timeout' => 5000]); ?>
-<table class="table table-primary">
+<table class="table">
     <thead>
         <tr>
             <th scope="col">ประเภท</th>

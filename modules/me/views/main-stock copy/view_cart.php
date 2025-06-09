@@ -18,7 +18,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 <?php $this->beginBlock('page-action'); ?>
 <?php $this->endBlock(); ?>
 
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>

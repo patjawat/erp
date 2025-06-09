@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มใหม่', ['/sm/product-unit/create', 'product_id' => $model->id, 'title' => '<i class="bi bi-box"></i> เพิ่มหน่วยบรรจุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                         </div>
-                        <table class="table table-primary">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>ขนาด</th>

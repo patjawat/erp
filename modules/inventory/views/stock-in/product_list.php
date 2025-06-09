@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="table-responsive">
-    <table class="table table-primary">
+    <table class="table">
         <thead>
             <tr>
                 <th scope="col"><i class="bi bi-ui-checks"></i> จำนวน <span class="badge rounded-pill text-bg-primary"> <?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</th>

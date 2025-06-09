@@ -41,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="table-responsive">
-    <table class="table table-primary">
+    <table class="table">
         <thead>
             <tr>
                 <th scope="col">รูปภาพ</th>

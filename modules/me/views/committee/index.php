@@ -16,7 +16,7 @@ use yii\helpers\Html;
         </div>
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
         <div class="table-responsive">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>

@@ -85,7 +85,7 @@ use yii\helpers\Html;
                         <div class="col-6">
                             <span class="fw-semibold">หน่วยนับ</span>
 
-                            <table class="table table-primary">
+                            <table class="table">
                                 <thead>
                                     <tr>
                                         <th scope="col">ขนาด</th>

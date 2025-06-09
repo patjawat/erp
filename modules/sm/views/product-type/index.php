@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
 
 
-                <table class="table table-primary">
+                <table class="table">
                     <thead>
                         <tr>
                             <th scope="col" style="width:100px">รหัส</th>

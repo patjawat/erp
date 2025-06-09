@@ -14,7 +14,7 @@ $listBoard = Order::find()
 <?php Pjax::begin(['id' => 'committee']); ?>
 
 
-<table class="table table-primary">
+<table class="table">
 <thead class="table-primary">
         <tr>
             <th scope="col"><i class="fa-solid fa-circle-info text-primary"></i> กรรมการตรวจรับ</th>

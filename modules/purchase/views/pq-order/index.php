@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="table-responsive" style="height:800px">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>

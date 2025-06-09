@@ -20,7 +20,7 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>

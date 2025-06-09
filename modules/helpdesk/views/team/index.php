@@ -14,7 +14,7 @@ $this->title = 'Helpdesks';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<table class="table table-primary">
+<table class="table">
     <thead class="table-primary">
         <tr>
             <th scope="col">ชื่อ-นามสกุล</th>

@@ -6,7 +6,7 @@ $cart = \Yii::$app->cartSub;
 $products = $cart->getItems();
 ?>
 
-<table class="table table-primary">
+<table class="table">
     <thead>
         <tr>
             <th scope="col">ชื่อรายการ</th>

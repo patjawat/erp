@@ -3,7 +3,7 @@
         <div class="card-title"><i class="fa-solid fa-user-group"></i> คณะกรรมการทีมประสาน (อยู่ระหว่างพัฒนา)</div>
 
         <div class="table-responsive">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>

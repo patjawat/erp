@@ -46,7 +46,7 @@ use app\components\UserHelper;
 
 
 <div class="table-responsive mt-3">
-    <table class="table table-primary">
+    <table class="table">
         <thead class="table-secondary">
             <tr>
                 <th scope="col">รายการที่ตรวจเช็ค</th>

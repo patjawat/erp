@@ -12,7 +12,7 @@ use yii\helpers\Html;
     <div class="card-body">
 <h6>ขอเบิกวัสดุ  <span class="badge rounded-pill text-bg-primary"><?= $cart->getCount()?></span> รายการ</h6>
         <div class="table-responsive">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>

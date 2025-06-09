@@ -171,7 +171,7 @@ ORDER BY on_year DESC LIMIT 10")->queryAll();
 $data = [];
 ?>
 <div class="table-responsive">
-    <table class="table table-primary">
+    <table class="table">
         <thead>
             <tr>
                 <td>รายการ</td>

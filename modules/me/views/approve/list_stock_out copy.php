@@ -18,7 +18,7 @@ use yii\helpers\Html;
                 </div>
 
             </div>
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>

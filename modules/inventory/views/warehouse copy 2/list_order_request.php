@@ -12,7 +12,7 @@ use yii\helpers\Html;
             <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
             <?php // Html::a('<i class="fa-solid fa-angles-right"></i> แสดงทั้งหมด',['/inventory/stock-out'],['class' => 'btn btn-light'])?>
             </div>
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>

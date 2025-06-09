@@ -11,7 +11,7 @@ use yii\helpers\Html;
             รายการ</h6>
         </div>
 
-        <table class="table table-primary">
+        <table class="table">
             <thead>
                 <tr>
                     <th class="fw-semibold" style="width:280px">ผู้ขอซื้อ</th>

@@ -115,7 +115,7 @@ $products = $cart->getItems();
             <div class="card-body p-0 pt-4">
                 <h5 class="text-center"><i class="fa-solid fa-basket-shopping"></i> ตะกร้าสินค้า</h5>
                 <div class="table-responsive">
-                    <table class="table table-primary">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th scope="col">รายการ</th>

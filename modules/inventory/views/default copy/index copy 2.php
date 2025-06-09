@@ -341,7 +341,7 @@ $this->title = 'ระบบคลังวัสดุ';
                                 <a class="btn btn-sm btn-light rounded-pill placeholder"
                                     href="/inventory/warehouse/list-order-request">แสดงท้ังหมด</a>
                             </div>
-                            <table class="table table-primary">
+                            <table class="table">
                                 <thead>
                                     <tr>
                                         <th scope="col">รายการ</th>
@@ -385,7 +385,7 @@ $this->title = 'ระบบคลังวัสดุ';
                             <div class="d-flex justify-content-between">
                                 <h6 class="placeholder col-6"></h6>
                             </div>
-                            <table class="table table-primary">
+                            <table class="table">
                                 <thead>
                                     <tr>
                                         <th scope="col">รายการ</th>

@@ -16,7 +16,7 @@ $title = '<i class="fa-solid fa-person-walking-luggage"></i> ทะเบีย�
        
 
         <div class="table-responsive pb-5">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>

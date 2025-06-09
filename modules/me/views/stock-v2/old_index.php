@@ -44,7 +44,7 @@ $this->title = "เบิกวัสดุ/อุปกรณ์";
 
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-primary">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>ชื่อรายการ</th>

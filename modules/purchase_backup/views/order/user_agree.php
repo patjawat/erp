@@ -6,7 +6,7 @@ use yii\helpers\Html;
     <?php // Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
 </div>
 
-<table class="table table-primary">
+<table class="table">
     <tbody>
         <tr class="">
             <td  class="text-end" style="width: 137px;">ผู้เห็นชอบ</td>

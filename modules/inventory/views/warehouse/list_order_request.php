@@ -13,7 +13,7 @@ use yii\helpers\Html;
             <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill']) ?>
             <?php // Html::a('<i class="fa-solid fa-angles-right"></i> แสดงทั้งหมด',['/inventory/stock-out'],['class' => 'btn btn-light'])?>
             </div>
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>

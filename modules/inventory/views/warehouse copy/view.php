@@ -124,7 +124,7 @@ $this->title = $model->warehouse_name;
                             <div class="d-flex justify-content-between">
                                 <h6 class="placeholder col-6"></h6>
                             </div>
-                            <table class="table table-primary">
+                            <table class="table">
                                 <thead>
                                     <tr>
                                         <th scope="col">รายการ</th>

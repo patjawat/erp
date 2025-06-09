@@ -20,7 +20,7 @@ $listBoard = Order::find()
     
 </div>
 
-<table class="table table-primary">
+<table class="table">
     <thead>
         <tr>
             <th scope="col">คณะกรรมการ</th>

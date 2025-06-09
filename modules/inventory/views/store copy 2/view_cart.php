@@ -26,7 +26,7 @@ use yii\web\View;
             <h6><i class="bi bi-ui-checks"></i> ขอเบิกวัสดุ <span class="badge rounded-pill text-bg-primary"><?=$cart->getCount()?> </span> รายการ</h6>
         </div>
         <div class="table-responsive">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>

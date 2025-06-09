@@ -75,7 +75,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
         
       </div>
       <div class="table-responsive-sm">
-        <table class="table table-primary">
+        <table class="table">
           <thead>
             <tr>
               <th scope="col">รหัส</th>

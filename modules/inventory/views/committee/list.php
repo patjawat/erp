@@ -14,7 +14,7 @@ use yii\helpers\Url;
 // $listcommittee = Order::findOne(['name' => 'committee'])
 ?>
 
-<table class="table table-primary">
+<table class="table">
     <thead class="table-primary">
         <tr>
             <th scope="col"><?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เลือกกรรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?></th>

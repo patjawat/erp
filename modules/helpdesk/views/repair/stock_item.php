@@ -16,7 +16,7 @@ $cart = \Yii::$app->cart;
         </div>
 
         <?php Pjax::begin(['id' => 'helpdesk-cart-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
-        <table class="table table-primary">
+        <table class="table">
             <thead>
                 <tr>
                     <th scope="col">ชื่อรายการ</th>

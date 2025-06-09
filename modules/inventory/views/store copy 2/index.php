@@ -46,7 +46,7 @@ $products = $cart->getItems();
                 <?=$this->render('_search', ['model' => $searchModel])?>
             </div>
             <div class="table-responsive">
-                <table class="table table-primary">
+                <table class="table">
                     <thead>
                         <tr>
                             <th scope="col">ชื่อรายการ</th>

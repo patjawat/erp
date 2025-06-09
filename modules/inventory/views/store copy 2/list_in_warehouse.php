@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6><i class="bi bi-ui-checks"></i> วัสดุในคลัง <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
         <div
             class="table-responsive">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>

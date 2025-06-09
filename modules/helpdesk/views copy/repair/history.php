@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="" style="background-color:eee;">
     <div class="card mb-0">
         <div class="card-body">
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">รายการ</th>

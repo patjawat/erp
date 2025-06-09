@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
 <?php if ($dataProvider->getTotalCount() > 0): ?>
 
-            <table class="table table-primary">
+            <table class="table">
                 <thead>
                 <tr>
                     <th scope="col">รายการ</th>
