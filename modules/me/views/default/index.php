@@ -68,14 +68,14 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
         </div>
     </div>
 
-    <div class="col-4">
+    <!-- <div class="col-4">
         <div class="card" style="height: 620px;">
             <div class="card-body">
                 <h6><i class="bi bi-app-indicator"></i> บริการ</h6>
-                <?php echo $this->render('app_indicator'); ?>
+                <?php // echo $this->render('app_indicator'); ?>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>
 <div class="row">
 
