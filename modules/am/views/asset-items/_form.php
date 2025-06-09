@@ -1,7 +1,8 @@
 <?php
 use yii\helpers\Html;
-use app\models\Categorise;
+use yii\helpers\Json;
 // use yii\bootstrap5\ActiveForm;
+use app\models\Categorise;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
 use yii\widgets\MaskedInput;
@@ -25,7 +26,7 @@ use unclead\multipleinput\MultipleInput;
     <div class="col-7">
         <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
                     'data' => $model->listAssetType(),
-                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สินย์...'],
+                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
                     'pluginOptions' => [
                         'allowClear' => true,
                         'dropdownParent' => '#main-modal',
@@ -53,9 +54,8 @@ use unclead\multipleinput\MultipleInput;
     <div class="col-5">
 
         <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
-
         <div class="mb-3">
-            <div class="file-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>">
+            <div class="file-single-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>" data-newfile="false">
                 <?= Html::img($model->showImg()['image'],['id' => 'editPreviewImg']) ?>
                 <div class="file-remove" id="editRemoveImage">
                     <i class="bi bi-x"></i>
@@ -71,6 +71,7 @@ use unclead\multipleinput\MultipleInput;
                 <input type="file" class="file-upload-input" id="my_file" accept="image/*">
             </div>
         </div>
+        
     </div>
 
 </div>
@@ -84,75 +85,12 @@ use unclead\multipleinput\MultipleInput;
 <?php ActiveForm::end(); ?>
 
 <?php
+$ref = Json::encode($model->ref); // ปลอดภัยแม้มีอักขระพิเศษ
 $js = <<< JS
 
 // เรียกใช้ฟังก์ชัน isFile() เพื่อกำหนดสถานะการแสดงผลของรูปภาพ
 isFile()
  
-function isFile(){
-    var isFile = $('#editImagePreview').data('isfile');
-    console.log(isFile);
-    
-    if(isFile == true){
-        $("#editImagePreview").show();
-        $("#editUploadBtn").hide();
-        $("#editRemoveImage").show();
-    }else{
-        $("#editImagePreview").hide();
-        $("#editUploadBtn").show();
-        $("#editRemoveImage").hide();
-    }
-}
-
-$(".file-upload-input").on("change", function() {
-
-    var fileInput = $(this)[0];
-    if (fileInput.files && fileInput.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-        $("#editPreviewImg").attr("src", e.target.result);
-        console.log(e.target.result)
-        $("#editImagePreview").show();
-        $("#editUploadBtn").hide();
-        $("#editRemoveImage").show();
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-});
-
-$('#editRemoveImage').click(function (e) { 
-    e.preventDefault();
-    $("#editPreviewImg").attr("src", '');
-    $("#editImagePreview").hide();
-    $("#editUploadBtn").show();
-    $("#editRemoveImage").hide();
-
-});
-
-async function uploadImage() {
-    formdata = new FormData();
-    if($("input[id='my_file']").prop('files').length > 0)
-    {
-		file = $("input[id='my_file']").prop('files')[0];
-        formdata.append("asset", file);
-        formdata.append("id", 1);
-        formdata.append("ref", '$model->ref');
-        formdata.append("name", 'asset');
-		await $.ajax({
-			url: '/filemanager/uploads/single',
-			type: "POST",
-			data: formdata,
-			processData: false,
-			contentType: false,
-			success: function (res) {
-                success('แก้ไขภาพสำเร็จ')
-                console.log(res)
-			}
-		});
-    }
-    }
-// #### จบการอัพโหลดรูปภาพ ####
-
 
 // ตั้งค่า localStorage สำหรับ fsn_auto
 if($("#assetitem-fsn_auto").val()){
@@ -188,7 +126,7 @@ $("#summit").on('click', async function() {
 
          // เรียกใช้ function handleFormSubmit
         handleFormSubmit('#form-fsn', null, async function(response) {
-            await uploadImage();
+            await uploadImage('asset_item',$ref);
             await location.reload();
         });
 

@@ -48,7 +48,7 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
               data: form.serialize(),
               dataType: 'json',
               success: async function (response) {
-                form.yiiActiveForm('updateMessages', response, true);
+                // form.yiiActiveForm('updateMessages', response, true);
                 if (response.status == 'success') {
                   Swal.fire({
                     icon: 'success',
@@ -73,6 +73,83 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
     return false;
   });
 }
+
+
+// #### การอัพโหลดรูปภาพ ####
+
+function isFile(){
+    var isFile = $('#editImagePreview').data('isfile');
+    console.log(isFile);
+    
+    if(isFile == true){
+        $("#editImagePreview").show();
+        $("#editUploadBtn").hide();
+        $("#editRemoveImage").show();
+    }else{
+        $("#editImagePreview").hide();
+        $("#editUploadBtn").show();
+        $("#editRemoveImage").hide();
+    }
+}
+
+$('body').on('change', '.file-upload-input', function(e) {
+
+$('#editImagePreview').data('newfile', true);
+
+   console.log('file upload input change');
+   
+   
+    var fileInput = $(this)[0];
+    if (fileInput.files && fileInput.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+        $("#editPreviewImg").attr("src", e.target.result);
+        $("#editImagePreview").show();
+        $("#editUploadBtn").hide();
+        $("#editRemoveImage").show();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+});
+
+$('body').on('click', '#editRemoveImage', function (e) {
+    e.preventDefault();
+    $("#editPreviewImg").attr("src", '');
+    $("#editImagePreview").hide();
+    $("#editUploadBtn").show();
+    $("#editRemoveImage").hide();
+    console.log('remove image');
+    
+
+});
+
+async function uploadImage(name,ref) {
+  console.log('uploadImage', name, ref);
+    var newFile = $('#editImagePreview').data('newfile');
+    if(newFile){
+    formdata = new FormData();
+    if($("input[id='my_file']").prop('files').length > 0)
+    {
+		file = $("input[id='my_file']").prop('files')[0];
+        formdata.append(name, file);
+        formdata.append("id", 1);
+        formdata.append("ref", ref);
+        formdata.append("name", name);
+        await $.ajax({
+          url: '/filemanager/uploads/single',
+          type: "POST",
+          data: formdata,
+          processData: false,
+          contentType: false,
+          success: function (res) {
+                    success('upload success')
+          }
+        });
+          }
+  }
+}
+// #### จบการอัพโหลดรูปภาพ ####
+
 
 
 // focus เวลาเปิก select2

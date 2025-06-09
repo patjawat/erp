@@ -12,11 +12,11 @@ use app\modules\am\models\AssetItem;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 
-$this->title = 'บริหารทรัพย์สิน | กำหนดรหัสทรัพย์สินย์';
+$this->title = 'บริหารทรัพย์สิน | กำหนดรหัสทรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> กำหนดรหัสทรัพย์สินย์
+<i class="bi bi-folder-check fs-1"></i> กำหนดรหัสทรัพย์สิน
 <?php $this->endBlock();?>
 
 

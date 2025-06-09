@@ -21,132 +21,7 @@ $group = Yii::$app->request->get('group');
 <?php $this->endBlock(); ?>
 
 <style>
-.modal-footer {
-    display: none !important;
-}
 
-
-.img-area {
-    position: relative;
-    width: 100%;
-    height: 240px;
-    background: var(--grey);
-    margin-bottom: 30px;
-    border-radius: 10px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.img-area .icon {
-    font-size: 100px;
-}
-
-.img-area h3 {
-    font-size: 20px;
-    font-weight: 500;
-    margin-bottom: 6px;
-}
-
-.img-area p {
-    color: #999;
-}
-
-.img-area p span {
-    font-weight: 600;
-}
-
-.img-area img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    z-index: 100;
-}
-
-.img-area::before {
-    content: attr(data-img);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .5);
-    color: #fff;
-    font-weight: 500;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: all .3s ease;
-    z-index: 200;
-}
-
-.img-area.active:hover::before {
-    opacity: 1;
-}
-
-
-
-/* new  */
-.image-preview {
-    width: 100%;
-    height: 200px;
-    border: 2px dashed #ddd;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    overflow: hidden;
-    position: relative;
-}
-
-.image-preview img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
-
-.preview-placeholder {
-    color: #6c757d;
-    text-align: center;
-}
-
-
-.form-container {
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    margin-bottom: 20px;
-}
-
-.form-section {
-    border-bottom: 1px solid #e9ecef;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-}
-
-.form-section:last-child {
-    border-bottom: none;
-}
-
-.section-title {
-    border-left: 4px solid var(--bs-primary);
-    padding: 10px;
-    margin-bottom: 20px;
-    color: #333;
-    font-weight: 400;
-    background-color: #d9e6f782
-}
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-asset',
@@ -170,7 +45,7 @@ $group = Yii::$app->request->get('group');
                        
                         echo $form->field($model, 'data_json[asset_item_name]', [
                                     'addon' => [
-                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-items/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สินย์'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-items/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
                                     ]
                                ])->textInput([
                             'maxlength' => true, 

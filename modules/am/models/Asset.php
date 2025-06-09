@@ -134,7 +134,7 @@ class Asset extends \yii\db\ActiveRecord
 //แสดงรูปภาพแบบวงกลม
     public function Avatar(){
         return '<div class="d-flex">
-        '.Html::img($this->ShowImg(),['class' => 'avatar border border-secondary']).'
+        '.Html::img($this->ShowImg()['image'],['class' => 'avatar border border-secondary']).'
                                 <div class="avatar-detail">
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->AssetitemName().'
@@ -145,19 +145,33 @@ class Asset extends \yii\db\ActiveRecord
     }
 
     // แสดงรูปภาพ
-    public function ShowImg()
-    {
-        try {
+        public function ShowImg(){
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
-            if ($model) {
-                return FileManagerHelper::getImg($model->id);
-            } else {
-                return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+            if($model){
+                return [
+                    'image' => FileManagerHelper::getImg($model->id),
+                    'isFile' => true,
+                ];
+            }else{
+                 return [
+                    'image' => Yii::getAlias('@web') . '/img/placeholder-img.jpg',
+                    'isFile' => false,
+                ];
             }
-        } catch (\Throwable $th) {
-            return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
-        }
     }
+    // public function ShowImg()
+    // {
+    //     try {
+    //         $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
+    //         if ($model) {
+    //             return FileManagerHelper::getImg($model->id);
+    //         } else {
+    //             return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+    //         }
+    //     } catch (\Throwable $th) {
+    //         return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+    //     }
+    // }
 
     //
     // ค่าเสื่อม

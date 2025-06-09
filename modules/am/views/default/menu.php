@@ -24,9 +24,11 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
+        <?= Html::a('<i class="fa-solid fa-map me-2"></i> ที่ดิน', ['/am/land'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-house me-2"></i> อาคาร', ['/am/building'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> สิ่งปลูกสร้าง', ['/am/construction'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> ครุภัณฑ์', ['/am/asset'], ['class' => 'dropdown-item']) ?>
-        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> ที่ดิน', ['/am/land'], ['class' => 'dropdown-item']) ?>
-        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> สิ่งปลูกสร้าง', ['/am'], ['class' => 'dropdown-item']) ?>
+
     </div>
 </li>
 
@@ -41,7 +43,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
-        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดรหัสทรัพย์สินย์', ['/am/asset-items'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดรหัสทรัพย์สิน', ['/am/asset-items'], ['class' => 'dropdown-item']) ?>
     </div>
 </li>
 

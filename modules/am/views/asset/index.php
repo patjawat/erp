@@ -56,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
                 <?php //  Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนคุภัณฑ์', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนคุภัณฑ์', ['/am/asset/create'], ['class' => 'btn btn-primary rounded-pill']) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-primary rounded-pill']) ?>
                 <?= $this->render('_search', ['model' => $searchModel]); ?>
             </div>
     </div>

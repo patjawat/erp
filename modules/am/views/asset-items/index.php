@@ -11,11 +11,11 @@ use app\modules\am\models\AssetItem;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 
-$this->title = 'บริหารทรัพย์สิน | กำหนดรหัสทรัพย์สินย์';
+$this->title = 'บริหารทรัพย์สิน | กำหนดรหัสทรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> กำหนดรหัสทรัพย์สินย์
+<i class="bi bi-folder-check fs-1"></i> กำหนดรหัสทรัพย์สิน
 <?php $this->endBlock();?>
 
 
@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> ทะเบียนรหัสทรัพย์สินย์ <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
+        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> ทะเบียนรหัสทรัพย์สิน <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
 
         <table class="table">
             <thead>
@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td><?=$item->assetType?->title ?? '-'?></td>
                     <td class="text-center">
                                 <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลทรัพย์สิน'],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-md']])?>
-                                <?=Html::a('<i class="bi bi-pencil"></i>',['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สินย์'],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-lg']])?>
+                                <?=Html::a('<i class="bi bi-pencil"></i>',['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-lg']])?>
                                 <?=Html::a('<i class="bi bi-trash"></i>',['delete','id' => $item->id],['class' => 'btn btn-sm btn-danger delete-item'])?>
 
                     </td>

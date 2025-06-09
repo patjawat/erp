@@ -29,7 +29,7 @@ use app\modules\am\models\Asset;
                     <?php foreach($dataProvider->getModels() as $key => $item):?>
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                     <td>  <?= Html::a(Html::img($item->showImg(),['class' => 'avatar avatar-sm bg-primary text-white lazyautosizes ls-is-cached lazyloaded']), ['view','id' => $item->id],['class' => '', ]) ?></td>
+                     <td>  <?= Html::a(Html::img($item->showImg()['image'],['class' => 'avatar avatar-sm bg-primary text-white lazyautosizes ls-is-cached lazyloaded']), ['view','id' => $item->id],['class' => '', ]) ?></td>
                      <td class="fw-semibold text-primary"><?=$item->code?></td>
                         <td class="align-middle">
                            <?=$item->AssetitemName()?>

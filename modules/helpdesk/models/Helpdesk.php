@@ -187,7 +187,7 @@ class Helpdesk extends Yii\db\ActiveRecord
 
     $imgSrc = '';
     if ($this->data_json['send_type'] === 'asset') {
-        $imgSrc = isset($this->asset) && method_exists($this->asset, 'showImg') ? $this->asset->showImg() : '';
+        $imgSrc = isset($this->asset) && method_exists($this->asset, 'showImg') ? $this->asset->showImg()['image'] : '';
     } else {
         $imgSrc = method_exists($this, 'showImg') ? $this->showImg() : '';
     }

@@ -9,11 +9,19 @@ use app\modules\inventory\models\StockEvent;
 $warehouse = Yii::$app->session->get('sub-warehouse');
 $this->title = 'คลัง'.$warehouse->warehouse_name;
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-shop fs-1"></i> <?php echo $this->title; ?>
+<i class="bi bi-shop fs-4 text-primaryr"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
+<?php $this->endBlock(); ?>
+
 
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>

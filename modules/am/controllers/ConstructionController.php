@@ -27,7 +27,7 @@ use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use ruskid\csvimporter\MultipleImportStrategy;
 
-class LandController extends \yii\web\Controller
+class ConstructionController extends \yii\web\Controller
 {
     public function actionIndex()
     {

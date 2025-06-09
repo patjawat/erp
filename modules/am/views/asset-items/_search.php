@@ -22,7 +22,7 @@ use yii\widgets\ActiveForm;
     <?php
                 echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                     'data' => $model->listAssetType(),
-                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สินย์...'],
+                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
                     'pluginOptions' => [
                         'allowClear' => true,
                         'width' => '500px',

@@ -6,7 +6,8 @@
 
 .nav-link.active {
   border-bottom: 3px solid #6ba0e5;
-   color: var(--bs-gray-800);
+   color: var(--bs-primary);
+   font-weight: 500;
    
 }
 
@@ -16,7 +17,7 @@
 }
 
 .navbar-nav .nav-link.active, .navbar-nav .nav-link.show {
-   color: var(--bs-gray-900);
+  color: var(--bs-primary);
 }
 </style>      
 <div class="horizontal-topnav shadow-sm">

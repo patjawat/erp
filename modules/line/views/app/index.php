@@ -17,7 +17,7 @@ use yii\web\View;
                 <div class="d-flex justify-content-between">
                         <div>
                             <h4 class="card-title">แจ้งซ่อม</h4>
-                            <p class="card-text">ระบบแจ้งซ่อมทั่วไปและทรัพย์สินย์</p>
+                            <p class="card-text">ระบบแจ้งซ่อมทั่วไปและทรัพย์สิน</p>
                         </div>
                         <div>
                             <?=Html::img('@web/img/customer-service.png',['class' => 'avatar'])?>

@@ -29,10 +29,72 @@ use yii\helpers\Html;
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-4 mb-4">
     <?php foreach($dataProvider->getModels() as $key => $model):?>
+<!-- <div class="col-md-6 col-lg-4">
+                        <div class="card property-card">
+                            <div class="position-relative">
+                                <?=$model->viewstatus()?>
+                                 <?= Html::img($model->showImg()['image'],['class' => 'card-img-top p-2','style' => 'height:180px'])?>
+                              
+                            </div>
+                            <div class="card-header">
+                                <h5 class="card-title mb-1"><?=$model->AssetitemName()?></h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge badge-danger">฿ 3,200,000</span>
+                                    <span class="badge badge-success">พื้นที่ 120 ตร.ม.</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="section-title">
+                                    <i class="bi bi-house-door me-2"></i><?=$model->code;?>
+                                </div>
+                                
+                                <div class="property-info">
+                                    <span class="info-label">ประเภท:</span>
+                                    <span class="info-value"><?=$model->AssetTypeName();?></span>
+                                </div>
+                                
+                                <div class="property-info">
+                                    <span class="info-label">วิธีได้มา:</span>
+                                    <span class="info-value"><?=$model->method_get?></span>
+                                </div>
+                                
+                                <div class="property-info">
+                                    <span class="info-label">ประเภทเงิน:</span>
+                                    <span class="info-value"><?=$model->budget_type?></span>
+                                </div>
+                                
+                                <div class="property-info">
+                                    <span class="info-label">ประจำหน่วยงาน:</span>
+                                    <span class="info-value">
+                                         <span class="fw-semibold">ประจำหน่วยงาน</span>
+                            <?php if(isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''):?>
+                            <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
+                            <?php else:?>
+                            <?= isset($model->data_json['department_name']) ? $model->data_json['department_name'] : ''?>
+                            <?php endif;?>
+                                    </span>
+                                </div>
+                                
+                                <div class="property-features">
+                                    <span class="feature-badge"><i class="bi bi-door-open"></i>1 ห้องนอน</span>
+                                    <span class="feature-badge"><i class="bi bi-droplet"></i>2 ห้องน้ำ</span>
+                                    <span class="feature-badge"><i class="bi bi-shop"></i>พื้นที่ค้าขาย</span>
+                                </div>
+                                
+                                <div class="property-info">
+                                    <span class="info-label">สถานะ:</span>
+                                    <span class="badge bg-warning text-dark">รอปรับปรุง</span>
+                                </div>
+                            </div>
+                                <div class="card-footer d-flex justify-content-between">
+            <a class="btn btn-outline-primary" href="/am/land/view?id=1"><i class="fa-solid fa-eye"></i> ดูรายละเอียด</a>            <a class="btn btn-primary" href="/am/land/update?id=1"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</a>        </div>
+                        </div>
+                    </div> -->
+
     <div class="col">
                     <div class="card h-100">
                         <div class="equipment-card-img">
-                             <?= Html::img($model->showImg(),['class' => 'card-img-top p-2'])?>
+                             <?= Html::img($model->showImg()['image'],['class' => 'card-img-top p-2'])?>
 
                             <!-- <span class="status-badge status-active">ใช้งานอยู่</span> -->
                              <?=$model->viewstatus()?>

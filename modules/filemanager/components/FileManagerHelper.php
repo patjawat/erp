@@ -31,6 +31,7 @@ class FileManagerHelper extends Component
             'name' => 'upload_ajax[]',
             'options' => ['multiple' => true, 'accept' => '*'],
             'pluginOptions' => [
+                 'showPreview' => true,
                 'overwriteInitial' => false,
                 'initialPreviewShowDelete' => true,
                 'initialPreviewAsData' => true,

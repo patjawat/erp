@@ -169,7 +169,7 @@ class AssetItem extends \yii\db\ActiveRecord
 
 
     public function ShowImg(){
-            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset_item'])->one();
             if($model){
                 return [
                     'image' => FileManagerHelper::getImg($model->id),

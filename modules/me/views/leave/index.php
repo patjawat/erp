@@ -18,6 +18,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="fa-solid fa-calendar"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'dashboard']) ?>
+<?php $this->endBlock(); ?>
+
+
+
 <?php Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>
 <?php  echo $this->render('card_summary', ['searchModel' => $searchModel]); ?>
 

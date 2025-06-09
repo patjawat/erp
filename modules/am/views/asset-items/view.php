@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="d-flex justify-content-center">
     <p>
-        <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สินย์'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'], ['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
                       
         <?= Html::a('<i class="fa-solid fa-trash"></i> ลบทิ้ง', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',

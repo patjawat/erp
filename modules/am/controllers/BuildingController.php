@@ -27,7 +27,7 @@ use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use ruskid\csvimporter\MultipleImportStrategy;
 
-class LandController extends \yii\web\Controller
+class BuildingController extends \yii\web\Controller
 {
     public function actionIndex()
     {
@@ -89,8 +89,6 @@ class LandController extends \yii\web\Controller
     {
         $model = new Asset([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'asset_group' => 1, // 1 = ที่ดิน
-            // 'asset_item' => 'land',
         ]);
 
         if ($this->request->isPost) {
@@ -139,19 +137,12 @@ class LandController extends \yii\web\Controller
                 ]),
             ];
         } else {
-            return $this->render('update', [
+            return $this->render('udpate', [
                 'model' => $model,
             ]);
         }
     }
 
-    protected function findModel($id)
-    {
-        if (($model = Asset::findOne(['id' => $id])) !== null) {
-            return $model;
-        }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
-    }
 
 }

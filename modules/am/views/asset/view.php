@@ -49,7 +49,7 @@ $group = Yii::$app->request->get('group');
             <div class="card-body text-center">
                 <div class="position-relative p-2 d-flex">
                     <img src="<?=$model->QrCode()?>" width="140" class="position-absolute start-0 top-0 m-2" alt="QR Code">
-                    <?= Html::img($model->showImg(), ['class' => 'avatar-profile object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']) ?>
+                    <?= Html::img($model->showImg()['image'], ['class' => 'avatar-profile object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']) ?>
                 </div>
                 <?php if (isset($model->Retire()['progress'])): ?>
                 <div class="container px-5">
