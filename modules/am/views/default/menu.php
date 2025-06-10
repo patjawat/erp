@@ -43,7 +43,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
-        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดรหัสทรัพย์สิน', ['/am/asset-items'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดเลข FSN', ['/am/asset-items'], ['class' => 'dropdown-item']) ?>
     </div>
 </li>
 
