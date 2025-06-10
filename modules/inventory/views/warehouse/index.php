@@ -133,43 +133,7 @@ $js = <<< JS
         
     });
 
-    const steps = [{
-            content: "เลือกรายการคลังที่ต้องการ",
-            title: "รายการคลัง 👋",
-            target: "#listWarehouse",
-            order: "",
-            group: "groupA",
-        },{
-            content: "เลือกคลังเพื่อจะสามารถเข้าไปใช้งาน",
-            title: "เลือกคลัง",
-            target: "#selectWarehouse1",
-            // dialogTarget: "#card1",
-            order: "",
-            group: "groupA"
-        },
-        {
-            content: "คลิ๊กที่นี่เพื่อสร้างคลัง",
-            title: "การสร้างคลังใหม่",
-            target: "#addWarehouse",
-            order: "",
-            group: "groupA",
-        
-        },
-    ]
-
-        const tg = new tourguide.TourGuideClient({
-            steps: steps,
-            group: "groupA",
-            completeOnFinish: true,
-            allowDialogOverlap: true,
-            backdropColor: string = "rgba(20,20,21,0.30)"
-        })
-
-        function openTour(){
-            tg.start()
-        }
-
-    JS;
+JS;
 $this->registerJS($js, View::POS_END);
 
 ?>
