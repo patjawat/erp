@@ -19,10 +19,6 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <li class="nav-item mt-1">
     <?php echo  Html::a('<i class="fa-regular fa-circle-check me-1 fs-5"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold ms-1"> '.$total.' </span>',['/approve'],['class' => 'nav-link ' . (isset($active) && $active == 'approve' ? 'active' : '')])?>
 </li>
-<!-- <li class="nav-item mt-1">
-    <?php // echo  Html::a('<i class="fa-regular fa-file-lines me-1 fs-5"></i> ทะเบียนหนังสือ ',['/me/documents'],['class' => 'nav-link ' . (isset($active) && $active == 'document' ? 'active' : '')])?>
-</li> -->
-
 <li class="nav-item">
     <?php echo  Html::a('<i class="bi bi-shop me-1 fs-5"></i> คลังหน่วยงาน ',['/me/store-v2/dashboard'],['class' => 'nav-link ' . (isset($active) && $active == 'store' ? 'active' : '')])?>
 </li>
