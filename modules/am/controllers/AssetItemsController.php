@@ -42,6 +42,7 @@ class AssetItemsController extends Controller
     {
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['group_id' => 3]);
         $dataProvider->query->andFilterWhere([
                 'or',
                 ['LIKE', 'code', $searchModel->q],

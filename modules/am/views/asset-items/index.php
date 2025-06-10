@@ -11,11 +11,11 @@ use app\modules\am\models\AssetItem;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 
-$this->title = 'บริหารทรัพย์สิน | กำหนดรหัสทรัพย์สิน';
+$this->title = 'กำหนดเลข FSN';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> กำหนดรหัสทรัพย์สิน
+<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
 <?php $this->endBlock();?>
 
 
@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> ทะเบียนรหัสทรัพย์สิน <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
+        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> ฐานข้อมูลพัสุครุภัณฑ์กระทรวงสาธารณสุข <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
 
         <table class="table">
             <thead>

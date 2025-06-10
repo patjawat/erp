@@ -21,7 +21,7 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
     <?php
                 echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-                    'data' => $model->listAssetType(),
+                    'data' => $model->listAssetType(3),
                     'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
                     'pluginOptions' => [
                         'allowClear' => true,

@@ -148,8 +148,8 @@ class AssetItem extends \yii\db\ActiveRecord
         return ArrayHelper::map(self::find()->where(['name' => 'unit'])->all(),'title','title');
     }
 
-        public function listAssetType(){
-        return ArrayHelper::map(self::find()->where(['name' => 'asset_type'])->all(),'code','title');
+        public function listAssetType($group=null){
+        return ArrayHelper::map(self::find()->where(['name' => 'asset_type','category_id' => $group])->all(),'code','title');
     }
     
 
