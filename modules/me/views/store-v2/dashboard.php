@@ -14,20 +14,28 @@ use app\modules\inventory\models\Stock;
 
 $warehouse = Yii::$app->session->get('sub-warehouse');
 $this->title = $warehouse->warehouse_name;
+$this->title = 'Dashboard';
 ?>
 
 
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-Dashboard
+<?php $this->beginBlock('page-title'); ?>
+<i class="bi bi-shop fs-4 text-primaryr"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
+<?php  echo $this->render('@app/modules/me/menu') ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
+<?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('action'); ?>
 <?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
+
 
 <?php  Pjax::begin(['id' => 'inventory-container']); ?>
 <div class="row">
