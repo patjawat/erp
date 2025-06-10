@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use app\components\UserHelper;
 $warehouse = Yii::$app->session->get('sub-warehouse');
 
-$this->title = 'คลัง'.$warehouse->warehouse_name;
+$this->title = 'คลัง'.$warehouse->warehouse_name.'/สต๊อก/เบิกใช้งาน';
 
 $cart = Yii::$app->cartSub;
 $products = $cart->getItems();
@@ -37,7 +37,7 @@ $products = $cart->getItems();
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h6><i class="bi bi-ui-checks"></i> ทะเบียนวัสดุ <span
+                        <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุคลังย่อย <span
                                 class="badge rounded-pill text-bg-primary">
                                 <?=$dataProvider->getTotalCount();?> </span> รายการ</h6>
 
@@ -137,7 +137,7 @@ $products = $cart->getItems();
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h6>ประวัติจ่ายวัสดุ</h6>
+                    <h6>ประวัติจ่ายวัสดุคลังย่อย</h6>
                     <?php echo Html::a('ทะเบียนทั้งหมด',['/me/stock-event/out'],['class' => 'btn btn-light rounded-pill'])?>
                 </div>
                 <div id="ShowStockOutHistory"></div>

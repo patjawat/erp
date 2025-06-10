@@ -5,8 +5,9 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
 use app\modules\inventory\models\Warehouse;
+
 $warehouse = Yii::$app->session->get('sub-warehouse');
-$this->title = $warehouse['warehouse_name'];
+$this->title = 'คลัง'.$warehouse->warehouse_name.'/เบิกวัสดุคลังหลัก';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>

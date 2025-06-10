@@ -13,8 +13,8 @@ use app\models\Categorise;
 use app\modules\inventory\models\Stock;
 
 $warehouse = Yii::$app->session->get('sub-warehouse');
-$this->title = $warehouse->warehouse_name;
-$this->title = 'Dashboard';
+$this->title = 'คลัง'.$warehouse->warehouse_name.'/Dashboard';
+
 ?>
 
 

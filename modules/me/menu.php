@@ -24,7 +24,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 </li>
 
 <li class="nav-item">
-    <?php echo  Html::a('<i class="bi bi-shop me-1 fs-5"></i> คลังหน่วยงาน ',['/me/store-v2/set-warehouse'],['class' => 'nav-link ' . (isset($active) && $active == 'store' ? 'active' : '')])?>
+    <?php echo  Html::a('<i class="bi bi-shop me-1 fs-5"></i> คลังหน่วยงาน ',['/me/store-v2/dashboard'],['class' => 'nav-link ' . (isset($active) && $active == 'store' ? 'active' : '')])?>
 </li>
 
 
