@@ -139,14 +139,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
                             </div>
                             <div class="col-6">
-                                <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
-                            </div>
-                            <div class="col-6">
-                                <?php
-                                        echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
-                                        ?>
-                            </div>
-                            <div class="col-6">
                                 <?php
                                     echo $form->field($model, 'doc_speed')->widget(Select2::classname(), [
                                         'data' => $model->DocSpeed(),
@@ -169,6 +161,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ?>
                             </div>
 
+
                             <div class="col-6">
                                 <div class="d-flex gap-2">
                                     <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกลงรับวันที่'])->label('ลงรับวันที่') ?>
@@ -183,6 +176,17 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="col-6">
                                 <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันหมดอายุ'])->label('วันหมดอายุ') ?>
                             </div>
+
+                            <div class="col-6">
+                                <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
+                            </div>
+                            <div class="col-6">
+                                <?php
+                                        echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
+                                        ?>
+                            </div>
+                            
+
 
 
 
@@ -208,9 +212,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                             <div class="col-12">
-                                <?= $form->field($model, 'topic')->textArea(['rows' => 4]) ?>
+                                <?= $form->field($model, 'topic')->textArea(['rows' => 2]) ?>
                             </div>
 
+                              <div class="col-12">
+                                <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
+                            </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="pills-send" role="tabpanel" aria-labelledby="pills-send-tab"

@@ -14,7 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-user-shield fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
+<?php $this->beginBlock('action'); ?>
 <?=$this->render('../default/navlink')?>
 <?php $this->endBlock(); ?>
 

@@ -79,13 +79,13 @@ class UpdateTableController extends Controller
             ['name' => 'leave', 'type' => 1, 'description' => 'ระบบลา'],
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
-            ['name' => 'driver', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
+            ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
             
 
             // ยานพาหนะ
-            ['name' => '/booking/driver/*', 'type' => 2,'description' =>''],
+            ['name' => '/booking/vehicle/*', 'type' => 2,'description' =>''],
             // ห้องประชุม
             ['name' => '/booking/meeting/*', 'type' => 2,'description' =>''],
 
@@ -213,11 +213,11 @@ class UpdateTableController extends Controller
             ['child' => 'leave', 'parent'  => 'admin'],
             ['child' => 'document', 'parent' => 'admin'],
             ['child' => 'asset', 'parent'  => 'admin'],
-            ['child' => 'driver', 'parent'  => 'admin'],
+            ['child' => 'vehicle', 'parent'  => 'admin'],
             ['child' => 'meeting', 'parent'  => 'admin'],
 
             // ยานพาหนะ
-            ['child' => '/booking/driver/*', 'parent' => 'driver'],
+            ['child' => '/booking/vehicle/*', 'parent' => 'vehicle'],
             // ระบบห้องประชุม
             ['child' => '/booking/meeting/*', 'parent' => 'meeting'],
             

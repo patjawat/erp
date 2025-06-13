@@ -200,11 +200,15 @@ class DocumentsController extends Controller
                 'file_name' => $this->request->get('file_name')
             ]
         ]);
-       
+        //set Default
+        $model->document_type = 'DT1';
+        $model->doc_speed = 'ปกติ';
+        $model->secret = 'ปกติ';
         $model->doc_transactions_date = AppHelper::convertToThai(date('Y-m-d'));
         $dateTime = new DateTime();
         $time = $dateTime->format('H:i');
         $model->doc_time = $time;
+        // End Set Default
         // $model->ref =  substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
 
         $model->doc_regis_number = $model->runNumber();
@@ -212,7 +216,7 @@ class DocumentsController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                try {
+                try { 
                     $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                     $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
                     if ($model->doc_expire !== '') {
@@ -230,7 +234,7 @@ class DocumentsController extends Controller
 
                 if ($model->save(false)) {
                     try {
-                        if($this->request->get('document_group')){
+                        if($this->request->get('doc_number')){
                             $this->moveFile($model);
                         }
                     } catch (\Throwable $th) {
@@ -241,7 +245,7 @@ class DocumentsController extends Controller
                     return $model->getErrors();
                 }
 
-                return $this->redirect(['view', 'id' => $model->id]);
+                   return $this->redirect(['index']);
             }
         } else {
             // $model->loadDefaultValues();

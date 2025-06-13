@@ -128,14 +128,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="col-3">
     <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
 </div>
-<div class="col-6">
-    <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
-</div>
-<div class="col-6">
-    <?php
-            echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
-            ?>
-</div>
+
 <div class="col-6">
     <?php
         echo $form->field($model, 'doc_speed')->widget(Select2::classname(), [
@@ -160,20 +153,25 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="col-6">
-    <div class="d-flex gap-2">
         <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกวันที่ส่ง'])->label('ส่งวันที่') ?>
+
+</div>
+<div class="col-6">
         <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
                         'mask' => '99:99',
                     ]) ?>
 
-    </div>
 </div>
 
 
 <div class="col-6">
-    <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันหมดอายุ'])->label('วันหมดอายุ') ?>
+    <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
 </div>
-
+<div class="col-6">
+    <?php
+            echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
+            ?>
+</div>
 
 
 <div class="col-12">
@@ -198,8 +196,12 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="col-12">
-    <?= $form->field($model, 'topic')->textArea(['rows' => 4]) ?>
+    <?= $form->field($model, 'topic')->textArea(['rows' => 2]) ?>
 </div>
+
+                              <div class="col-12">
+                                <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
+                            </div>
 
 </div>
                 <?= $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
