@@ -151,7 +151,7 @@ public function actionListTopicData()
             'doc_regis_number' => SORT_DESC,
             'thai_year' => SORT_DESC,
         ]]);
-        return $this->render('list_receive', [
+        return $this->render('list_receive_card', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
