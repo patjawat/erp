@@ -11,12 +11,27 @@ use app\modules\dms\models\Documents;
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-    $this->title = 'หนังสือส่ง';
+$this->title = 'หนังสือรับ';
 
 $this->params['breadcrumbs'][] = $this->title;
+
+$dataFile = Yii::getAlias('@app/doc_receive/data.json');
+$jsonCount = 0;
+if (file_exists($dataFile)) {
+    $jsonData = file_get_contents($dataFile);
+    $jsonArray = json_decode($jsonData, true);
+    if (is_array($jsonArray)) {
+        $jsonCount = count($jsonArray);
+    }
+}
 ?>
 <?php $this->beginBlock('page-title'); ?>
+<?php if($searchModel->document_group == 'receive'):?>
 <i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
+<?php endif; ?>
+<?php if($searchModel->document_group == 'send'):?>
+<i class="fa-solid fa-paper-plane text-danger"></i></i><?= $this->title; ?>
+<?php endif; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -26,20 +41,19 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'send']) ?>
+<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'receive']) ?>
 <?php $this->endBlock(); ?>
+
 
 
 <?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
-
 <div class="card">
     <div class="card-body d-flex justify-content-between align-top align-items-center">
-       <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
-       <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+        <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
     </div>
 </div>
-
 <div class="documents-index">
 
     <div class="card">
@@ -53,15 +67,20 @@ $this->params['breadcrumbs'][] = $this->title;
                     รายการ
                 </h6>
             </div>
+            <div class="d-flex justify-content-between align-top align-items-center">
+                <?= $jsonCount > 0 ? Html::a('<i class="fa-regular fa-hourglass-half"></i> หนังสือรอรับ <span class="badge rounded-pill badge-secondary text-primary fs-13 fw-semibold">'.$jsonCount.'</span>', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-warning shadow rounded-pill']) : '' ?>
+            </div>
 
             <div class="table-responsive">
                 <table class="table table-striped table-fixed">
                     <thead>
                         <tr>
                             <th class="text-center fw-semibold" style="width:50px;">ลำดับ</th>
-                            <th class="text-center fw-semibold" style="min-width:100px; width:100px;">เลขที่รับ</th>
+                            <th class="text-center fw-semibold" style="min-width:110px; width:120px;">เลขที่รับ</th>
                             <th class="fw-semibold" style="min-width:320px;">เรื่อง</th>
-                            <th class="fw-semibold" style="min-width:250px;">ผู้บันทึก</th>
+                            <th class="fw-semibold" style="min-width:160px; width:180px;">หน่วยงาน</th>
+                            <th class="fw-semibold" style="min-width:110px; width:120px;">ลงความเห็น</th>
+                            <th class="fw-semibold" style="min-width:150px; width:170px;">วันที่รับ</th>
                             <th class="fw-semibold" style="width:70px;">แก้ไข</th>
                         </tr>
                     </thead>
@@ -74,14 +93,11 @@ $this->params['breadcrumbs'][] = $this->title;
                            
                             </td> -->
                         <td class="fw-light align-middle">
-                           
+                            <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>"
+                                class="text-dark open-modal-fullscree-xn">
                                 <div>
                                     <p class="text-primary fw-semibold fs-13 mb-0">
-                                      
-                                      
-                                    </p>
-                                    <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
-                                          <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                        <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
                                         <span class="badge text-bg-danger fs-13">
                                             <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
                                         </span>
@@ -92,12 +108,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                             ลับที่สุด
                                         </span>
                                         <?php endif;?>
-                                         <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>">
-                                        เรื่อง : <?php echo $item->topic?>
-                                    </a>
+                                      
+                                    </p>
+                                    <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                        <?php echo $item->topic?>
                                         
                                         <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
                                 </div>
+                            </a>
                               <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                               <span class="text-danger">
                                   <?php echo $item->doc_number?>
@@ -105,11 +123,37 @@ $this->params['breadcrumbs'][] = $this->title;
                             <span class="text-primary fw-normal fs-13">
                                 |
                                 <i class="fa-solid fa-inbox"></i>
-                                <?php  echo $item->documentOrg->title ?? '-';?>
+                                
                                 <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
                                     <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                 </span>
                             </span>
+
+                            <?php if($item->countStackDocumentTags() >= 1):?>
+                            <?php
+                                                        echo Html::a('<i class="fa-solid fa-tags"></i> '.$item->countStackDocumentTags(),
+                                                            ['/dms/documents/list-comment', 'id' => $item->id,'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                                                            [
+                                                                'class' => 'open-modal badge rounded-pill badge-soft-primary text-primary fw-lighter fs-13',
+                                                                'data' => [
+                                                                    'size' => 'modal-md',
+                                                                    'bs-trigger' => 'hover focus',
+                                                                    'bs-toggle' => 'popover',
+                                                                    'bs-placement' => 'top',
+                                                                    'bs-title' => '<i class="fa-solid fa-tags"></i> ส่งต่อ',
+                                                                    'bs-html' => 'true',
+                                                                    'bs-content' => $item->StackDocumentTags('employee')
+                                                                ]
+                                                            ]
+                                                        );
+                                                        ?>
+
+                            <?php endif?>
+
+
+                        </td>
+                        <td><?php  echo $item->documentOrg->title ?? '-';?></td>
+                        <td>
                             <?php echo $item->StackDocumentTags('comment')?>
                         </td>
                         <td class="fw-light align-middle">

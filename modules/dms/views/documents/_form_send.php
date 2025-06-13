@@ -48,9 +48,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$model,'active' => 'send']) ?>
 <?php $this->endBlock(); ?>
 
+ <style>
+    .form-label {
+    font-weight: 600 !important;
+}
+ </style>
 
-
-</h1>
 <?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-document',
@@ -196,7 +199,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="col-12">
-    <?= $form->field($model, 'topic')->textArea(['rows' => 2]) ?>
+    <?= $form->field($model, 'topic')->textArea(['rows' => 5]) ?>
 </div>
 
                               <div class="col-12">

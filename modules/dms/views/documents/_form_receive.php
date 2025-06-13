@@ -14,6 +14,10 @@ use app\modules\dms\models\DocumentsDetail;
 // use iamsaint\datetimepicker\Datetimepicker;
 use app\modules\filemanager\components\FileManagerHelper;
 
+$this->registerCssFile('https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css');
+$this->registerJsFile('https://code.jquery.com/jquery-3.7.1.min.js', ['position' => \yii\web\View::POS_HEAD]);
+$this->registerJsFile('https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+
 if($model->document_group == 'receive'){
     $this->title = 'ออกเลขหนังสือรับ';
 }
@@ -37,7 +41,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php if($model->document_group == 'send'):?>
 <i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
 <?php endif; ?>
-
+<style>
+    .form-label {
+    font-weight: 600 !important;
+}
+</style>
 
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
@@ -182,15 +190,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
                             </div>
                             <div class="col-6">
-                                <?php
-                                        echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
+                                <?=$form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
                                         ?>
                             </div>
-                            
-
-
-
-
                             <div class="col-12">
                     
                                 <?php
@@ -213,7 +215,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                             <div class="col-12">
-                                <?= $form->field($model, 'topic')->textArea(['rows' => 2]) ?>
+                                <?= $form->field($model, 'topic')->textArea(['rows' => 5])->label(Html::a('<i class="fa-solid fa-magnifying-glass"></i> เรื่อง',['/dms/documents/list-topic'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']])) ?>
                             </div>
 
                               <div class="col-12">
