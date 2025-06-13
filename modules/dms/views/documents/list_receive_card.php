@@ -171,10 +171,10 @@ if (file_exists($dataFile)) {
             เรื่อง
         </div>
         <div class="col-md-3">
-            ผู้อ่าน
+            ผู้ดำเนินการ
         </div>
         <div class="col-md-2 text-end">
-            ดำเนินการ
+            
         </div>
     </div>
 </div>
@@ -208,33 +208,39 @@ if (file_exists($dataFile)) {
                 <span class="fw-bold text-success">
                     <?=$item->doc_number?> |
                 </span>
-                <?php echo $item->viewReceiveDate()?> |
-                <?php  echo $item->documentOrg->title ?? '-';?>
+                
             </div>
             <?php echo $item->StackDocumentTags('comment')?>
         </div>
         <div class="col-md-3">
             <div class="d-flex align-items-center">
-                <?php echo $item->StackDocumentTags('comment')?>
+                 <?php echo $item->viewCreate()['avatar'];?>
             </div>
         </div>
         <div class="col-md-2 text-end">
+            <div class="status-success mb-1">
+                ปกติ
+            </div>
+            <!-- <div class="amount-text amount-negative"> <?=$item->doc_number?></div> -->
+            <p class="mb-0 transaction-details">
+<?php echo $item->viewReceiveDate()?>
+</p>
+            <span class="transaction-details">
+                <?php  echo $item->documentOrg->title ?? '-';?>
+            </span>
+        </div>
 
-
-                <div class="dropdown float-end">
-                    <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+        <!-- <div class="col-md-2 text-end">
+            <div class="dropdown float-end">
+                <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                     aria-expanded="false">
                     <i class="fa-solid fa-ellipsis"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right">
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข',['update', 'id' => $item->id],['class' => 'dropdown-item'])?>
                 </div>
-                </div>
-
-
-
-
-        </div>
+            </div>
+        </div> -->
     </div>
 </div>
 <?php endforeach?>

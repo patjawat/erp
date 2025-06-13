@@ -158,9 +158,7 @@ if (file_exists($dataFile)) {
                         </td>
                         <td class="fw-light align-middle">
                             <div class=" d-flex flex-column">
-                                <?php
-                             echo $item->viewCreate()['avatar'];
-                            ?>
+                                <?php echo $item->viewCreate()['avatar'];?>
                                 <!-- <span class="fw-normal fs-6"><?php echo $item->viewReceiveDate()?></span>
                             <span class="fw-lighter fs-13"><?php echo isset($item->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->doc_time : ''?></span> -->
                             </div>
