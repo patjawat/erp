@@ -38,6 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
 <?php endif; ?>
 
+
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -358,6 +359,7 @@ $url = Url::to(['/dms/documents/get-items']);
 $showPdfUrl = Url::to(['/dms/documents/show','ref' => $model->ref,'file_name' => $file]);
 $js = <<< JS
     loadPdf()
+
 
     \$('#form-document').on('beforeSubmit', function (e) {
             var form = \$(this);

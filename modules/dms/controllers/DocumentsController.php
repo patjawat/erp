@@ -52,8 +52,12 @@ class DocumentsController extends Controller
      */
     public function actionReceive()
     {
+
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new DocumentSearch([
-            'thai_year' => (Date('Y') + 543),
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
             'document_group' => 'receive',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -63,7 +67,22 @@ class DocumentsController extends Controller
             ['like', 'topic', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
             ['like', 'doc_number', $searchModel->q],
+             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
+
+         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+        try {
+         
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dataProvider->query->andFilterWhere(['>=', 'doc_date', $dateStart])->andFilterWhere(['<=', 'doc_date', $dateEnd]);
+            } catch (\Throwable $th) {
+        //throw $th;
+    }
 
         $dataProvider->setSort(['defaultOrder' => [
             'doc_regis_number' => SORT_DESC,
@@ -245,7 +264,7 @@ class DocumentsController extends Controller
                     return $model->getErrors();
                 }
 
-                   return $this->redirect(['index']);
+                   return $this->redirect(['/dms/documents/'.$model->document_group]);
             }
         } else {
             // $model->loadDefaultValues();
@@ -674,6 +693,7 @@ class DocumentsController extends Controller
 
         return $this->redirect(['index']);
     }
+
 
     /**
      * Finds the Documents model based on its primary key value.

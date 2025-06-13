@@ -67,14 +67,9 @@ class Documents extends \yii\db\ActiveRecord
     public $show_reading;
     public $file;
 
-     public $dateFrom;
-    public $dateTo;
-    public $pdf_file;
-    public $document_number;
-    public $title;
-    public $department;
-    public $office;
-    public $phone;
+    public $date_start;
+    public $date_end;
+
 
     public function rules()
     {

@@ -191,7 +191,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                 }',
                 ]
-            ])->label('จากหน่วยงาน');
+            ])->label('ส่งถึงหน่วยงาน');
             ?>
 </div>
 
