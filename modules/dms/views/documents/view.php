@@ -15,7 +15,16 @@ $this->title = $model->topic;
 \yii\web\YiiAsset::register($this);
 ?>
 
-
+<style>
+ .section-title {
+    border-left: 4px solid var(--bs-primary);
+    padding: 10px;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: 300;
+    background-color: rgba(217, 230, 247, 0.5098039216);
+}
+</style>
 <?php $this->beginBlock('page-title'); ?>
 
 <div class="container-fluid">
@@ -67,7 +76,7 @@ $this->title = $model->topic;
             <div class="card-body">
 
                 <!-- Nav pills -->
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mb-4">
                     <?php echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/dms/documents/'.$model->document_group],['class' => 'btn btn-secondary me-2'])?>
                     <ul class="nav nav-pills" role="tablist">
                         <li class="nav-item">
@@ -79,6 +88,8 @@ $this->title = $model->topic;
 
                     </ul>
                 </div>
+
+                <h5 class="section-title"><?=$model->data_json['des'] ?? ''?></h5>
 
                 <!-- Tab panes -->
                 <div class="tab-content mt-3">
