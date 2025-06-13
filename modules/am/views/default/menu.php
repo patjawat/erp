@@ -35,18 +35,23 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <li class="nav-item">
     <?=Html::a('<i class="fa-solid fa-chart-pie me-1"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'nav-link ' . (isset($active) && $active == 'report' ? 'active' : '')])?>
 </li>
-
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown"
+<li class="nav-item">
+    </li>
+    
+    
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'asset' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown"
         aria-haspopup="true" aria-expanded="false">
-        <i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน
+       <i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
-        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> กำหนดเลข FSN', ['/am/asset-items'], ['class' => 'dropdown-item']) ?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> ครุุภัณฑ์',['/am/asset-item'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> วัสดุ',['/am/asset-item'],['class' => 'dropdown-item'])?>
+
+
     </div>
 </li>
-
 
 
 <?php else:?>

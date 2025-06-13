@@ -88,7 +88,9 @@
         "cgsmith/yii2-flatpickr-widget": "~1.1",
         "codenix-sv/yii2-flatpickr" : "~2.0",
         "linecorp/line-bot-sdk": "dev-master",
-        "philippfrenzel/yii2fullcalendar":"*"
+        "philippfrenzel/yii2fullcalendar":"*",
+        "setasign/fpdf": "dev-master",
+        "tecnickcom/tcpdf": "dev-main"
         
     },
     "require-dev": {

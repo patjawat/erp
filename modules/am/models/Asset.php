@@ -55,7 +55,7 @@ class Asset extends \yii\db\ActiveRecord
      */
     public $show;
 
-    public $asset_name;
+    // public $asset_name;
     public $budget_year;
     public $supvendor;
     public $method_get;
@@ -131,6 +131,21 @@ class Asset extends \yii\db\ActiveRecord
         ];
     }
 
+
+//ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
+    public function updateFsn()
+    {
+        $checkAssetFsn =AssetItem::find()
+                ->where(['id' => $this->asset_item])
+                ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
+                ->one();
+                if(!empty($checkAssetFsn)){
+                        $checkAssetFsn->fsn = $this->fsn_number;
+                        $checkAssetFsn->save();
+
+
+                }
+    }
 //แสดงรูปภาพแบบวงกลม
     public function Avatar(){
         return '<div class="d-flex">
@@ -175,13 +190,7 @@ class Asset extends \yii\db\ActiveRecord
 
     //
     // ค่าเสื่อม
-    public function xx()
-    {
-        $a = $this->price * 100;
-        return $a;
-    }
-    // รูปภาพ
-
+ 
     // อายุ
 
     public function behaviors()
@@ -210,7 +219,7 @@ class Asset extends \yii\db\ActiveRecord
             $this->method_get = isset($this->data_json['method_get_text']) ? $this->data_json['method_get_text'] : null;
             $this->budget_type = isset($this->data_json['budget_type_text']) ? $this->data_json['budget_type_text'] : null;
             $this->asset_option = isset($this->data_json['asset_option']) ? $this->data_json['asset_option'] : null;
-            $this->asset_name = isset($this->data_json['asset_name_text']) ? $this->data_json['asset_name_text'] : '';
+            // $this->asset_name = isset($this->data_json['asset_name_text']) ? $this->data_json['asset_name_text'] : '';
             $this->serial_number = isset($this->data_json['serial_number']) ? $this->data_json['serial_number'] : '';
             $this->type_name = isset($this->data_json['item']['data_json']['asset_type']['title']) ? $this->data_json['item']['data_json']['asset_type']['title'] : '';
             $this->vendor_name = isset($this->data_json['vendor']) ? $this->data_json['vendor']['title'] : '';
@@ -452,18 +461,18 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListType()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');
     }
 
     public function ListAssetitem()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_item','group_id' => 3])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item','group_id' => 3])->all(), 'code', 'title');
     }
 
     // แสดงรายการอาคารสิ่งก่อสร้าง
     public function ListBuildingItems()
     {
-        return ArrayHelper::map(AssetItem::find()
+        return ArrayHelper::map(Categorise::find()
             ->where(['name' => 'asset_item'])
             ->andWhere(['category_id' => 1])
             ->all(), 'code', 'title');
@@ -476,36 +485,36 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListMethodget()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'method_get'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'method_get'])->all(), 'code', 'title');
     }
 
     public function ListPurchase()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'purchase'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'purchase'])->all(), 'code', 'title');
     }
 
     // รายการยี่ห้อ
     public function ListBrand()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'brand'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'brand'])->all(), 'code', 'title');
     }
 
     // รายการรุ่น
     public function ListAssetModel()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_model'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_model'])->all(), 'code', 'title');
     }
 
     // รายการระบบปฏิบัติการ
     public function ListOs()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'os'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'os'])->all(), 'code', 'title');
     }
 
     // รายการ CPU
     public function ListCpu()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'cpu'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'cpu'])->all(), 'code', 'title');
     }
 
     public function ListOnYear()
@@ -518,27 +527,27 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListBudgetdetail()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'budget_type'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->all(), 'code', 'title');
     }
 
     public function ListAssetstatus()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_status'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_status'])->all(), 'code', 'title');
     }
 
     public function ListMaintainpm()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'maintain_pm'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'maintain_pm'])->all(), 'code', 'title');
     }
 
     public function ListTestcal()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'test_cal'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'test_cal'])->all(), 'code', 'title');
     }
 
     public function ListAssetrisk()
     {
-        return ArrayHelper::map(AssetItem::find()->where(['name' => 'asset_risk'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_risk'])->all(), 'code', 'title');
     }
 
     // ผู้รับผิดชอบ

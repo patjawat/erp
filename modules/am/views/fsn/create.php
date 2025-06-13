@@ -3,17 +3,15 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\am\models\Fsn $model */
+/** @var app\modules\am\models\AssetItem $model */
 
-$this->title = 'Create Fsn';
-$this->params['breadcrumbs'][] = ['label' => 'Fsns', 'url' => ['index']];
+$this->title = 'Create Asset Item';
+$this->params['breadcrumbs'][] = ['label' => 'Asset Items', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="fsn-create">
-
+<div class="asset-item-create">
     <?= $this->render('_form', [
         'model' => $model,
-        'ref' => $ref
     ]) ?>
 
 </div>

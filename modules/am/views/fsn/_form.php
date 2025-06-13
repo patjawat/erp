@@ -1,142 +1,136 @@
 <?php
-use app\components\AppHelper;
 use yii\helpers\Html;
+use yii\helpers\Json;
 // use yii\bootstrap5\ActiveForm;
+use app\models\Categorise;
 use kartik\form\ActiveForm;
-use yii\widgets\MaskedInput;
 use kartik\select2\Select2;
-/** @var yii\web\View $this */
-/** @var app\modules\am\models\Fsn $model */
-/** @var yii\widgets\ActiveForm $form */
-
+use yii\widgets\MaskedInput;
+use app\components\AppHelper;
+use unclead\multipleinput\MultipleInput;
 ?>
-<?php $this->beginBlock('page-action');?>
-<?=$this->render('../default/menu')?>
-<?php $this->endBlock();?>
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-fsn',
-    'enableAjaxValidation'=> true,//เปิดการใช้งาน AjaxValidation
-    'validationUrl' =>['/am/fsn/validator']
+    // 'enableAjaxValidation'=> true,//เปิดการใช้งาน AjaxValidation
+    // 'validationUrl' =>['/sm/asset-item/validator']
     ]); ?>
 
-<?= $form->field($model, 'data_json[title]')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'category_id')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'data_json[asset_type]')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'data_json[asset_type_text]')->hiddenInput()->label(false) ?>
 
-<input type="file" id="my_file" style="display: none;" />
+
+
+<?php $form->field($model, 'data_json[title]')->textInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput(['value'=>'asset_item','maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <div class="row">
-    <div class="<?=$model->name == 'asset_group' ? 'col-4' : 'col-5' ?>">
+    <div class="col-7">
+        <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                    'data' => [],
+                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                   
+                ])->label("ประเภททรัพย์สิน");
+                ?>
 
-        <a href="#" class="select-photo">
-            <?php if($model->showImg() != false):?>
-            <?= Html::img($model->showImg(),['class' => 'avatar-profile object-fit-cover rounded','style' =>'max-width:100%;']) ?>
-            <?php else:?>
-            <?=Html::img('@web/img/placeholder-img.jpg',['class' => 'avatar-profile object-fit-cover rounded','style' =>'max-width:100%;'])?>
-            <?php endif;?>
-        </a>
+        <?=$form->field($model, 'code')->textInput()->label("รหัส FSN")?>
+
+        <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อทรัพย์สิน...'])->label("ชื่อทรัพย์สิน") ?>
+
+        <?php
+                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                    'data' => $model->listUnit(),
+                    'options' => ['placeholder' => 'ระบุ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label("หน่วยนับ")
+                ?>
     </div>
-    <div class="<?=$model->name == 'asset_group' ? 'col-8' : 'col-7' ?>">
+    <div class="col-5">
 
-        <div class="row">
-        
-            <?php if($model->name == "asset_name"):?>
-                <div class="col-12">
-            <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'เครื่องกลสำนักงานและอุปกรณ์กรรมวิธีบันทึกและลงข้อมูล'])->label("ชื่อรายการ") ?>
-        </div>
-                <div class="col-12">
-                        <?=$form->field($model, 'code')->widget(MaskedInput::className(),['mask'=>'9999-999-9999'])->label("รหัสครุภัณฑ์")?>
-                        <?php else:?>
-                    </div>
-                    
-                    <?php endif;?>
-                    <?php if($model->name == "asset_group"):?>
-                        <div class="row">
-                            <div class="col-8">
-                                <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'เครื่องกลสำนักงานและอุปกรณ์กรรมวิธีบันทึกและลงข้อมูล'])->label("ชื่อรายการ") ?>
-                                <?= $form->field($model, 'data_json[depreciation]')->textInput(['placeholder' => "33.33"])->label("อัตราค่าเสื่อมราคาจ่อปี (ร้อยละ)") ?>
-                            </div>
-                            <div class="col-4">
-                <?=$form->field($model, 'code')->widget(MaskedInput::className(),['mask'=>'9999-999'])->label("รหัสครุภัณฑ์")?>
-                <?= $form->field($model, 'data_json[service_life]')->textInput(['placeholder' => "3"])->label("อายุการใช้งาน (ปี)") ?>
+        <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
+        <div class="mb-3">
+            <div class="file-single-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>" data-newfile="false">
+                <?= Html::img($model->showImg()['image'],['id' => 'editPreviewImg']) ?>
+                <div class="file-remove" id="editRemoveImage">
+                    <i class="bi bi-x"></i>
+                </div>
+            </div>
+            
+            <div class="file-upload">
+                <div class="file-upload-btn" id="editUploadBtn">
+                    <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
+                    <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
+                    <small class="d-block text-muted mt-2">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
+                </div>
+                <input type="file" class="file-upload-input" id="my_file" accept="image/*">
             </div>
         </div>
-        <?php endif;?>
-
+        
     </div>
+
 </div>
 
 
-<div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summit"]) ?>
+<div class="form-group mt-3 d-flex justify-content-center gap-2">
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summitxx"]) ?>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-circle-xmark"></i> ปิด</button>
 </div>
 
 <?php ActiveForm::end(); ?>
 
 <?php
-$js = <<<JS
+$ref = Json::encode($model->ref); // ปลอดภัยแม้มีอักขระพิเศษ
+$js = <<< JS
 
-// เลือก upload รูปภาพ
-$(".select-photo").click(function() {
-    $("input[id='my_file']").click();
-});
+// เรียกใช้ฟังก์ชัน isFile() เพื่อกำหนดสถานะการแสดงผลของรูปภาพ
+isFile()
+ 
 
-$("input[id='my_file']").on("change", function() {
-    var fileInput = $(this)[0];
-    if (fileInput.files && fileInput.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-        $(".avatar-profile").attr("src", e.target.result);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-});
-
-$("button[id='summit']").on('click', function() {
-    formdata = new FormData();
-    if($("input[id='my_file']").prop('files').length > 0)
+// ตั้งค่า localStorage สำหรับ fsn_auto
+if($("#assetitem-fsn_auto").val()){
+    $( "#assetitem-fsn_auto" ).prop( "checked", localStorage.getItem('fsn_auto') == 1 ? true : false );   
+    $('#assetitem-code').prop('disabled',localStorage.getItem('fsn_auto') == 1 ? true : false );
+    
+    if(localStorage.getItem('fsn_auto') == 1)
     {
-		file = $("input[id='my_file']").prop('files')[0];
-        formdata.append("asset", file);
-        formdata.append("id", 1);
-        formdata.append("ref", '$model->ref');
-        formdata.append("name", 'asset');
-		$.ajax({
-			url: '/filemanager/uploads/single',
-			type: "POST",
-			data: formdata,
-			processData: false,
-			contentType: false,
-			success: function (res) {
-                success('แก้ไขภาพสำเร็จ')
-                console.log(res)
-			}
-		});
+        $('#assetitem-code').val('อัตโนมัติ')
     }
-})
+}
 
-$('#form-fsn').on('beforeSubmit', function (e) {
-    var form = $(this);
-    $.ajax({
-        url: form.attr('action'),
-        type: 'post',
-        data: form.serialize(),
-        dataType: 'json',
-        success: async function (response) {
-            form.yiiActiveForm('updateMessages', response, true);
-            if(response.status == 'success') {
-                closeModal()
-                success()
-                await  $.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-            }
-        }
-    });
-    return false;
+$("#assetitem-fsn_auto").change(function() {
+    //ตั้งค่า Run FSN Auto
+    if(this.checked) {
+        localStorage.setItem('fsn_auto',1);
+        $('#assetitem-code').prop('disabled',this.checked);
+        $('#assetitem-code').val('อัตโนมัติ')
+    }else{
+        localStorage.setItem('fsn_auto',0);
+        var category_id = $('#assetitem-category_id').val();
+        $('#assetitem-code').prop('disabled',this.checked);
+
+        $('#assetitem-code').val('')
+    }
 });
 
+
+$("#summit").on('click', async function() {
+
+});
+
+
+         // เรียกใช้ function handleFormSubmit
+        handleFormSubmit('#form-fsn', null, async function(response) {
+            await uploadImage('asset_item',$ref);
+            await location.reload();
+        });
+
+    
 JS;
-$this->registerJS($js)
+$this->registerJs($js);
 ?>

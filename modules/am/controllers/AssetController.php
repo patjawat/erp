@@ -61,7 +61,7 @@ class AssetController extends Controller
              'asset_group' => 3
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
+        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.fsn_number');
         $dataProvider->query->andWhere('deleted_at IS NULL');
 
         if (!isset($this->request->queryParams['AssetSearch'])) {
@@ -240,7 +240,7 @@ class AssetController extends Controller
     public function actionCreate()
     {
         $model = new Asset([
-            'asset_group' => 3,
+            'asset_group' => 'EQUIP',
             'asset_item' => 0,
             'asset_status' => 0,
             'price' => 0,
@@ -309,6 +309,7 @@ class AssetController extends Controller
 
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json,$convert_date);
             if ($model->save()) {
+                $model->updateFsn();
                 $this->CheckUpdateData($model);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {

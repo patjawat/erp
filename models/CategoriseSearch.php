@@ -14,6 +14,8 @@ class CategoriseSearch extends Categorise
     /**
      * {@inheritdoc}
      */
+    public $q;
+    
     public function rules()
     {
         return [

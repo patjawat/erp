@@ -152,96 +152,65 @@ https://www.canva.com/ai/code/thread/ba6b2ae4-bc5b-443a-8ed2-7c92798ae56a
 
 
 
-### **Color Palette Control**
-```css
-Apply gradient color scheme:
-- Primary cards: Blue-purple (#667eea → #764ba2), Pink-red (#f093fb → #f5576c), Cyan-blue (#4facfe → #00f2fe), Green-mint (#43e97b → #38f9d7)
-- Background: Multi-layer blue gradients with pastel transitions
-- Shadows: Color-matched to card gradients with 0.3-0.4 opacity
-- Text: Dark charcoal (#212121) with gradient text effects on numbers
-```
-### **Typography & Spacing**
-```css
-Font system:
-- Primary: 'Noto Sans Thai', sans-serif for full Thai language support
-- Weights: 300 (light), 400 (regular), 500 (medium), 600 (semi-bold), 700 (bold)
-- Scale: 12px (caption) → 14px (body) → 16px (subtitle) → 20px (title) → 24px (heading) → 36px (display)
-- Spacing: 8px base unit system (8, 16, 24, 32, 48px)
-```
+## ขั้นตอนการ  update ระบบทรัพย์สินใหม่
+## Update sturgture
 
-## 🔄 Animation & Interaction Styles
-### **Hover & Focus Effects**
-```css
-Interaction patterns:
-- Cards: transform: translateY(-8px) scale(1.02) on hover
-- Buttons: Material ripple effect with 600ms linear animation
-- Icons: subtle rotation (5-10deg) or scale(1.1) transforms
-- Timing: cubic-bezier(0.4, 0, 0.2, 1) for Material motion
-- Duration: 200-300ms for micro-interactions, 600ms for significant changes
-```
-### **Transition Specifications**
-```css
-Animation system:
-- Page transitions: opacity + translateY(20px) transforms
-- Staggered loading: 100ms delay between elements
-- Smooth curves: cubic-bezier easing functions
-- Performance: transform and opacity only, avoid layout triggers
-```
-## 📐 Layout & Structure Styles
-### **Grid & Spacing System**
-```css
-Layout specifications:
-- Stats grid: repeat(auto-fit, minmax(280px, 1fr)) with 24px gaps
-- Card padding: 28px internal spacing
-- Border radius: 16px for modern appearance
-- Container margins: 24px on desktop, 16px on mobile
-```
-### **Component Sizing**
-```css
-Element dimensions:
-- Icons: 24px standard, 48px for stat card icons
-- Avatars: 32px (header), 44px (activity list)
-- Buttons: min-height 36px, padding 12px 24px
-- Input fields: 56px height for Material spec compliance
-```
-## 🎭 Visual Effects & Treatments
-### **Glassmorphism & Blur Effects**
-```css
-Modern glass effects:
-- backdrop-filter: blur(10px) on cards and overlays
-- background: rgba(255, 255, 255, 0.95) for semi-transparency
-- border: 1px solid rgba(255, 255, 255, 0.2) for subtle definition
-- Gradient overlays: linear-gradient with 0.03 opacity color tints
-```
-### **Gradient Treatments**
-```css
-Gradient applications:
-- Card backgrounds: Linear gradients with white base + colored tints
-- Icons: Solid gradients with matching shadow colors
-- Text effects: Background-clip text for premium number displays
-- Top borders: 4px height gradient strips on cards
-```
-## 📱 Responsive Behavior Styles
-### **Breakpoint Adaptations**
-```css
-Device-specific styles:
-- Mobile (<768px): Collapse sidebar to 72px, single column stats, reduced padding
-- Tablet (768-1024px): Maintain layout with adjusted spacing
-- Desktop (>1024px): Full layout with optimal spacing and hover states
-```
-### **Touch-Friendly Adjustments**
-```css
-Mobile optimizations:
-- Minimum touch targets: 44px x 44px
-- Increased padding on interactive elements
-- Simplified hover states for touch devices
-- Gesture-friendly navigation patterns
-```
-## 🎨 Brand & Theme Styling
-### **Color Psychology Application**
-```css
-Semantic color usage:
-- Success/Growth: Green gradients (#43e97b → #38f9d7)
-- Revenue/Money: Pink-red gradients (#f093fb → #f5576c)  
-- Users/People: Blue-purple gradients (#667eea → #764ba2)
-- Performance: Cyan-blue gradients (#4facfe → #00
+  ALTER TABLE `asset` ADD `asset_name` VARCHAR(255) NULL COMMENT 'ชื่อของครุภัณฑ์' AFTER `asset_group`;
+
+## Update เชื่อ
+UPDATE asset a
+LEFT JOIN categorise i ON i.code = a.asset_item
+SET a.asset_name = i.title
+WHERE i.name = 'asset_item';
+
+UPDATE `asset`  SET fsn_number = asset_item;
+
+## ลบ asset_group,asset_type เดิมออก
+DELETE FROM `categorise` WHERE name = 'asset_group'
+DELETE FROM `categorise` WHERE `category_id` ='3' AND `name`='asset_type'
+
+
+
+## เพิ่ม  asset_group ใหม่เข้าไป
+INSERT INTO categorise (name,title, code, data_json) VALUES
+('asset_group','ที่ดิน', 'LAND', JSON_OBJECT('description', 'ที่ดินและสิทธิในที่ดิน')),
+('asset_group','อาคาร', 'BLDG', JSON_OBJECT('description', 'อาคารและสิ่งปลูกสร้างขนาดใหญ่')),
+('asset_group','สิ่งปลูกสร้าง', 'CONST', JSON_OBJECT('description', 'โครงสร้างพื้นฐานและสาธารณูปโภค')),
+('asset_group','ครุภัณฑ์', 'EQUIP', JSON_OBJECT('description', 'อุปกรณ์และเครื่องมือต่างๆ')),
+('asset_group','ครุภัณฑ์ต่ำกว่าเกณฑ์', 'MINOR', JSON_OBJECT('description', 'ครุภัณฑ์มูลค่าต่ำ')),
+('asset_group','สินทรัพย์ไม่มีตัวตน', 'INTAN', JSON_OBJECT('description', 'ลิขสิทธิ์ สิทธิบัตร ซอฟต์แวร์')),
+('asset_group','วัสดุ', 'MATER', JSON_OBJECT('description', 'วัสดุสิ้นเปลืองและคงคลัง'))
+
+## เพิ่ม asset_type ใฟม่เข้าไป
+INSERT INTO categorise 
+(name,group_id, title, code, data_json) 
+VALUES
+('asset_type','EQUIP','ครุภัณฑ์การแพทย์', 'MED', JSON_OBJECT('title_en', 'Medical Equipment', 'description','อุปกรณ์ทางการแพทย์และเครื่องมือรักษาพยาบาล')),
+('asset_type','EQUIP','ครุภัณฑ์ไฟฟ้าและวิทยุ', 'ELE', JSON_OBJECT('title_en','Electrical and Radio Equipment', 'description', 'อุปกรณ์ไฟฟ้าและเครื่องมือวิทยุกสารสนเทศ')),
+('asset_type','EQUIP','ครุภัณฑ์โรงงาน', 'IND', JSON_OBJECT('title_en','Industrial Equipment', 'description', 'เครื่องจักรและอุปกรณ์ในงานโรงงาน การผลิต')),
+('asset_type','EQUIP','ครุภัณฑ์การเกษตร', 'AGR', JSON_OBJECT('title_en','Agricultural Equipment', 'description', 'เครื่องมือและอุปกรณ์ทางการเกษตร')),
+('asset_type','EQUIP','ครุภัณฑ์การศึกษา', 'EDU', JSON_OBJECT('title_en','Educational Equipment', 'description', 'อุปกรณ์การเรียนการสอนและวัสดุการศึกษา')),
+('asset_type','EQUIP','ครุภัณฑ์คอมพิวเตอร์', 'COM', JSON_OBJECT('title_en','Computer Equipment', 'description', 'เครื่องคอมพิวเตอร์และอุปกรณ์เทคโนโลยีสารสนเทศ')),
+('asset_type','EQUIP','ครุภัณฑ์โฆษณาและเผยแพร่', 'ADV', JSON_OBJECT('title_en','Advertising and Publishing Equipment', 'description', 'อุปกรณ์โฆษณา ประชาสัมพันธ์ และเผยแพร่ข้อมูล')),
+('asset_type','EQUIP','ครุภัณฑ์งานบ้านงานครัว', 'HOM', JSON_OBJECT('title_en','Household and Kitchen Equipment', 'description', 'อุปกรณ์ใช้ในบ้านและครัว สำหรับงานทั่วไป')),
+('asset_type','EQUIP','ครุภัณฑ์ยานพาหนะ', 'VEH', JSON_OBJECT('title_en','Vehicle Equipment', 'description', 'ยานพาหนะและอุปกรณ์การขนส่ง')),
+('asset_type','EQUIP','ครุภัณฑ์วิทยาศาสตร์', 'SCI', JSON_OBJECT('title_en','Scientific Equipment', 'description', 'เครื่องมือและอุปกรณ์ทางวิทยาศาสตร์และการวิจัย')),
+('asset_type','EQUIP','ครุภัณฑ์สำนักงาน', 'OFF', JSON_OBJECT('title_en','Office Equipment', 'description', 'อุปกรณ์สำนักงานและเครื่องใช้ในการบริหารงาน'))
+
+
+
+ย้าย asset_item มา category
+INSERT INTO categorise  (name,group_id,ref,code,category_id, title,data_json)
+SELECT 'asset_item','EQUIP',a.ref,a.id,a.asset_category_id,a.title,a.data_json
+from asset_items a
+
+
+query ดึง asset item 
+
+SELECT i.code as i_code,i.title,cat.code as cat_code,cat.title as cat_title,t.code as t_code,t.title as type_title,g.title as g_title FROM `categorise` i  
+LEFT JOIN categorise cat ON cat.code = i.category_id AND cat.name = 'asset_category'
+LEFT JOIN categorise t ON t.code = cat.category_id AND t.name = 'asset_type'
+LEFT JOIN categorise g ON g.code = t.category_id AND g.name = 'asset_group'
+WHERE i.`group_id` = 'EQUIP' 
+AND i.`name` ='asset_item' 
+LIMIT 2000;

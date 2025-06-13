@@ -71,26 +71,46 @@ class FsnController extends Controller
      */
     public function actionIndex()
     {
-        $code = $this->request->get('code');
-        $title = $this->request->get('title');
-        $name = $this->request->get('name');
+       
         $searchModel = new FsnSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        $dataProvider->query->andFilterWhere(['name' => 'asset_name', 'active' => true]);
-        $dataProvider->query->andFilterWhere(['category_id' => $code]);
-
-        $dataProviderGroup = $searchModel->search($this->request->queryParams);
-        $dataProviderGroup->query->where(['name' => 'asset_group', 'active' => true]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'dataProviderGroup' => $dataProviderGroup,
-            'title' => $title,
-            'code' => $code,
 
         ]);
+    }
+
+        public function actionListFsn()
+    {
+        $searchModel = new FsnSearch();
+         $dataProvider = $searchModel->search($this->request->queryParams);
+          $dataProvider->query->andFilterWhere([
+                'or',
+                ['LIKE', 'code', $searchModel->q],
+                ['LIKE', 'title', $searchModel->q],
+            ]);
+
+
+ if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'content' => $this->renderAjax('list_fsn', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]),
+            ];
+        } else {
+            return $this->render('list_fsn', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+
+        ]);
+        }
+       
     }
 
     /**

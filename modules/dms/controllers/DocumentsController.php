@@ -229,7 +229,13 @@ class DocumentsController extends Controller
                 }
 
                 if ($model->save(false)) {
-                    $this->moveFile($model);
+                    try {
+                        if($this->request->get('document_group')){
+                            $this->moveFile($model);
+                        }
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
                     $model->UpdateDocumentTags();
                 } else {
                     return $model->getErrors();
@@ -250,6 +256,7 @@ class DocumentsController extends Controller
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
     public function moveFile($model)
     {
+        
         $filename  = $model->data_json['file_name'];
         $newUpload = new Uploads();
         $newUpload->ref = $model->ref;

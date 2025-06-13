@@ -30,6 +30,7 @@ class AssetItem extends \yii\db\ActiveRecord
     public $fsn_auto; //กำหนดการให้หมายเลขอัตโนมัติถ้า true;
     public $q;
     public $schedule;
+    public $asset_type_id;
     public static function tableName()
     {
         return 'categorise';
@@ -42,7 +43,7 @@ class AssetItem extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json','fsn_auto','q'], 'safe'],
+            [['group_id','data_json','fsn_auto','q','asset_type_id'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -60,7 +61,7 @@ class AssetItem extends \yii\db\ActiveRecord
             'code' => 'Code',
             'emp_id' => 'Emp ID',
             'name' => 'Name',
-            'title' => 'Title',
+            'title' => 'ชื่อรายการ',
             'description' => 'Description',
             'data_json' => 'Data Json',
             'active' => 'Active',
@@ -71,66 +72,41 @@ class AssetItem extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
 
-        // $this->receive_date = AppHelper::DateToDb($this->receive_date);
-        if($this->name == 'asset_type'){
-            $group = self::find()->select(['name','title','code'])->where(['code' => $this->category_id,'name' => 'asset_group'])->one();
-            $array2 = [
-                'asset_group' => $group 
-            ];
-            $this->data_json = ArrayHelper::merge($this->data_json, $array2);
-
-            if($this->fsn_auto == "1")
-            {
-                $this->code = \mdm\autonumber\AutoNumber::generate('G'.$this->category_id.'AT'.'?');
-            }
-
-            
-
-            
-        }
-
-        if($this->name == 'asset_item'){
-            $type = self::find()->select(['name','title','code','category_id'])->where(['code' => $this->category_id,'name' => 'asset_type'])->one();
-            $groupType = self::find()->select(['name','title','code'])->where(['code' => $type->category_id,'name' => 'asset_group'])->one();
-            $arrayType = [
-                'asset_group' => $groupType,
-                'asset_type' => $type,
-            ];
-            $this->data_json = ArrayHelper::merge($this->data_json, $arrayType);
-
-            //ถ้าเป็นวัสดุ
-            if($this->fsn_auto == "1" && $type->category_id == 1)
-            {
-                $this->code = \mdm\autonumber\AutoNumber::generate('AI-'.'?');
-            }
-
-            // ถ้าเป็นครุภัณฑ์  
-            if($this->fsn_auto == "1" && $type->category_id == 2)
-            {
-                $this->code = \mdm\autonumber\AutoNumber::generate($this->category_id.'-'.'????');
-            }
-        }
-
-
         return parent::beforeSave($insert);
     }
+
+
+            public function NextId()
+                {
+                $prefix = $this->category_id;
+                
+                 $maxNumber = Yii::$app->db
+                 ->createCommand("SELECT CONCAT(:cat,'-', MAX(CAST(SUBSTRING(code, 4) AS UNSIGNED)) + 1) AS next_ht_code
+                    FROM categorise WHERE name = 'asset_item' AND category_id = :cat;")
+                    ->bindValue(':cat', $prefix)
+                    ->queryScalar();
+
+                    return $maxNumber;
+            }
+
+
 
         // หมายเลขถัดไปของทรัพย์สิน
         // ใช้สำหรับการสร้างหมายเลขทรัพย์สินใหม่
         public function nextCode()
         {
                 $sql = "SELECT x.* FROM(SELECT 
-                CONCAT(:asset_item,'/', 
+                CONCAT(:fsn,'/', 
                     SUBSTRING_INDEX(SUBSTRING_INDEX(code, '/', -1), '.', 1), 
                     '.', 
                     LPAD(MAX(CAST(SUBSTRING_INDEX(code, '.', -1) AS UNSIGNED)) + 1, 2, '0')
                 ) AS next_code
                     FROM asset 
-                    WHERE code LIKE CONCAT(:asset_item, '/%')
+                    WHERE code LIKE CONCAT(:fsn, '/%')
                     GROUP BY SUBSTRING_INDEX(SUBSTRING_INDEX(code, '/', -1), '.', 1)) as x
                     order BY next_code DESC limit 1;";
                     $query = Yii::$app->db->createCommand($sql)
-                    ->bindValue(':asset_item', $this->code)
+                    ->bindValue(':fsn', $this->code)
                     ->queryOne();
 
             $newCode  = $this->code.'/'.substr(AppHelper::YearBudget(), -2).'01';
@@ -148,10 +124,6 @@ class AssetItem extends \yii\db\ActiveRecord
         return ArrayHelper::map(self::find()->where(['name' => 'unit'])->all(),'title','title');
     }
 
-        public function listAssetType($group=null){
-        return ArrayHelper::map(self::find()->where(['name' => 'asset_type','category_id' => $group])->all(),'code','title');
-    }
-    
 
         
 
@@ -167,9 +139,40 @@ class AssetItem extends \yii\db\ActiveRecord
         return ArrayHelper::map(self::find()->where(['name' => 'asset_type'])->all(),'code','title');
     }
 
+        public function listAssetType(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','group_id' => 'EQUIP'])->all(),'code','title');
+    }
+    
+        public function listAssetCategory(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(),'code','title');
+    }
+
+
+
+    public function getCategory()
+{
+    return $this->hasOne(Categorise::class, ['code' => 'category_id'])
+        ->andOnCondition(['categorise.name' => 'asset_category']);
+}
+
+public function getType()
+{
+    return $this->hasOne(Categorise::class, ['code' => 'category_id'])
+        ->via('category')
+        ->andOnCondition(['categorise.name' => 'asset_type']);
+}
+
+public function getGroup()
+{
+    return $this->hasOne(Categorise::class, ['code' => 'category_id'])
+        ->via('type')
+        ->andOnCondition(['categorise.name' => 'asset_group']);
+}
+
+
 
     public function ShowImg(){
-            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset_item'])->one();
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'fsn'])->one();
             if($model){
                 return [
                     'image' => FileManagerHelper::getImg($model->id),
@@ -195,7 +198,7 @@ class AssetItem extends \yii\db\ActiveRecord
             $id = $this->code;
             $sql = "SELECT count(c.id) FROM categorise c
             LEFT JOIN categorise t ON t.code = c.category_id
-             WHERE c.name = 'asset_item'
+             WHERE c.name = 'fsn'
              AND t.category_id = :id";
              $query = Yii::$app->db->createCommand($sql)
              ->bindParam(':id', $id)

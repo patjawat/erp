@@ -41,7 +41,7 @@ class FsnSearch extends Fsn
      */
     public function search($params)
     {
-        $query = Fsn::find();
+         $query = Fsn::find()->where(['name' => 'fsn']);
 
         // add conditions that should always apply here
 

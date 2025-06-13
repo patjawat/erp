@@ -2,133 +2,171 @@
 
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use kartik\grid\GridView;
-use app\models\Categorise;
+use yii\grid\GridView;
 use yii\grid\ActionColumn;
-use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
-use app\modules\sm\models\AssetType;
+use app\modules\am\models\AssetItem;
+
 /** @var yii\web\View $this */
-/** @var app\modules\sm\models\AssetTypeSearch $searchModel */
+/** @var app\modules\am\models\AssetItemSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Asset Types';
+
+$this->title = 'ประเภทครุภัณฑ์';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php $this->beginBlock('page-title');?>
+<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
+<?php $this->endBlock();?>
+
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/sm/views/default/menu',['active' => 'setting'])?>
+<?=$this->render('@app/modules/am/views/default/menu',['active' => 'setting'])?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('@app/modules/am/views/default/_sub_menu',['active' => 'type'])?>
 <?php $this->endBlock(); ?>
 
 
-<div class="asset-type-index">
+
 <div class="card">
-    <div class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-    <h4>ตั้งค่ากลุ่ม </h4> 
-    <div class="d-flex gap-2">  
-                <?=Html::a('<i class="fa-solid fa-chevron-left me-1"></i> ย้อนกลับ',['/sm/asset-item'],['class' => 'btn btn-light'])?>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-item-center">
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+
         </div>
     </div>
-    </div>
 </div>
-<?php Pjax::begin(['id' => 'sm-container', 'enablePushState' => true, 'timeout' => 5000]); ?>
 
-        <div class="card mb-0">
-            <div class="card-body">
-            <?=app\components\AppHelper::Btn([
-                    'title' =>"<i class='fa-solid fa-circle-plus'></i> สร้างกลุ่มครุภัณฑ์หรือวัสดุ",
-                    'url' =>['/sm/asset-type/create','name' => 'asset_type'],
-                    'modal' => true, 'size' => 'lg' ])?>
-            </div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i><?=$this->title;?> <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="text-center" scope="col" style="width: 5%">#ลำดับ</th>
+                    <th scope="col" style="width: 15%">รหัส</th>
+                    <th scope="col" style="width: 70%">ชื่อรายการ</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider align-middle">
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
+                <tr>
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="fw-semibold text-primary"><?=$item->code?></td>
+                    <td><?=$item->title?></td>
+
+                </tr>
+                <?php endforeach;?>
+            </tbody>
+
+        </table>
+
+
+        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
         </div>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <?= GridView::widget([
-        'dataProvider' => $dataProviderGroup,
-        'filterModel' => $searchModel,
-        'hover' => true,
-        'layout' => '{items}',
-        'columns' => [
-            [
-                'class' => 'kartik\grid\SerialColumn',
-                'contentOptions' => ['class' => 'kartik-sheet-style'],
-                'width' => '36px',
-                'pageSummary' => 'Total',
-                'pageSummaryOptions' => ['colspan' => 6],
-                'header' => '',
-                'headerOptions' => ['class' => 'kartik-sheet-style'],
-            ],
-            [
-                'attribute' => 'title',
-                'format' => 'raw',
-                'header' => 'ชื่อ',
-                'value' => function($model){
-                        return $this->render('type_item',['model' => $model]);
-                }
-            ],
-            [
-                'attribute' => 'code',
-                'format' => 'raw',
-                'header' => 'รหัส',
-                'hAlign' => 'center',
-                'vAlign' => 'middle',
-                'value' => function($model){
-                        return $model->code;
-                }
-            ],
-            [
-                'attribute' => 'data_json[service_life]',
-                'format' => 'raw',
-                'header' => 'อายุการใช้งาน (ปี)',
-                'hAlign' => 'center',
-                'vAlign' => 'middle',
-                'width' => '150px',
-                'value' => function($model){
-                        return  isset($model->data_json["service_life"]) ? $model->data_json["service_life"] : '';
-                }
-            ],
-            [
-                'attribute' => 'data_json[depreciation]',
-                'format' => 'raw',
-                'header' => 'อัตราค่าเสื่อม',
-                'hAlign' => 'center',
-                'vAlign' => 'middle',
-                'width' => '150px',
-                'value' => function($model){
-                        return isset($model->data_json["depreciation"]) ? $model->data_json["depreciation"] : '';
-                }
-            ],
-            [
-                'attribute' => 'category_id',
-                'format' => 'raw',
-                'header' => 'ประเภท',
-                'hAlign' => 'center',
-                'vAlign' => 'middle',
-                'width' => '150px',
-                // 'filter' => Select2::widget([
-                //     'model' => $searchModel,
-                //     'attribute' => 'category_id',
-                //     'data' => ['3' => 'ครุภัณฑ์', '4' => 'วัสดุ'],
-                //     'options' => ['placeholder' => 'เลือกประเภท...'],
-                //     'pluginOptions' => [
-                //         'allowClear' => true,
-                //     ],
-                // ]),
-                'value' => function($model){
-                        return $model->id;
-                },
-                'filter' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->asArray()->all(), 'code', 'title'),
-                'filterType' => GridView::FILTER_SELECT2,
-                'filterWidgetOptions' => [
-                    'options' => ['prompt' => ''],
-                    'pluginOptions' => ['allowClear' => true],
-                ],
-                ],
-        ],
-    ]); ?>
-
-    <?php Pjax::end(); ?>
-
+    </div>
 </div>
+
+<?php
+$sql = "INSERT INTO categorise (name,title, code, data_json) VALUES
+('asset_group','ที่ดิน', 'LAND', JSON_OBJECT('description', 'ที่ดินและสิทธิในที่ดิน')),
+('asset_group','อาคาร', 'BLDG', JSON_OBJECT('description', 'อาคารและสิ่งปลูกสร้างขนาดใหญ่')),
+('asset_group','สิ่งปลูกสร้าง', 'CONST', JSON_OBJECT('description', 'โครงสร้างพื้นฐานและสาธารณูปโภค')),
+('asset_group','ครุภัณฑ์', 'EQUIP', JSON_OBJECT('description', 'อุปกรณ์และเครื่องมือต่างๆ')),
+('asset_group','ครุภัณฑ์ต่ำกว่าเกณฑ์', 'MINOR', JSON_OBJECT('description', 'ครุภัณฑ์มูลค่าต่ำ')),
+('asset_group','สินทรัพย์ไม่มีตัวตน', 'INTAN', JSON_OBJECT('description', 'ลิขสิทธิ์ สิทธิบัตร ซอฟต์แวร์')),
+('asset_group','วัสดุ', 'MATER', JSON_OBJECT('description', 'วัสดุสิ้นเปลืองและคงคลัง'));
+;";
+
+$sqlAssetType = "INSERT INTO categorise 
+(name,group_id, title, code, data_json) 
+VALUES
+('asset_type','EQUIP','ครุภัณฑ์การแพทย์', 'MED', JSON_OBJECT('title_en', 'Medical Equipment', 'description','อุปกรณ์ทางการแพทย์และเครื่องมือรักษาพยาบาล')),
+('asset_type','EQUIP','ครุภัณฑ์ไฟฟ้าและวิทยุ', 'ELE', JSON_OBJECT('title_en','Electrical and Radio Equipment', 'description', 'อุปกรณ์ไฟฟ้าและเครื่องมือวิทยุกสารสนเทศ')),
+('asset_type','EQUIP','ครุภัณฑ์โรงงาน', 'IND', JSON_OBJECT('title_en','Industrial Equipment', 'description', 'เครื่องจักรและอุปกรณ์ในงานโรงงาน การผลิต')),
+('asset_type','EQUIP','ครุภัณฑ์การเกษตร', 'AGR', JSON_OBJECT('title_en','Agricultural Equipment', 'description', 'เครื่องมือและอุปกรณ์ทางการเกษตร')),
+('asset_type','EQUIP','ครุภัณฑ์การศึกษา', 'EDU', JSON_OBJECT('title_en','Educational Equipment', 'description', 'อุปกรณ์การเรียนการสอนและวัสดุการศึกษา')),
+('asset_type','EQUIP','ครุภัณฑ์คอมพิวเตอร์', 'COM', JSON_OBJECT('title_en','Computer Equipment', 'description', 'เครื่องคอมพิวเตอร์และอุปกรณ์เทคโนโลยีสารสนเทศ')),
+('asset_type','EQUIP','ครุภัณฑ์โฆษณาและเผยแพร่', 'ADV', JSON_OBJECT('title_en','Advertising and Publishing Equipment', 'description', 'อุปกรณ์โฆษณา ประชาสัมพันธ์ และเผยแพร่ข้อมูล')),
+('asset_type','EQUIP','ครุภัณฑ์งานบ้านงานครัว', 'HOM', JSON_OBJECT('title_en','Household and Kitchen Equipment', 'description', 'อุปกรณ์ใช้ในบ้านและครัว สำหรับงานทั่วไป')),
+('asset_type','EQUIP','ครุภัณฑ์ยานพาหนะ', 'VEH', JSON_OBJECT('title_en','Vehicle Equipment', 'description', 'ยานพาหนะและอุปกรณ์การขนส่ง')),
+('asset_type','EQUIP','ครุภัณฑ์วิทยาศาสตร์', 'SCI', JSON_OBJECT('title_en','Scientific Equipment', 'description', 'เครื่องมือและอุปกรณ์ทางวิทยาศาสตร์และการวิจัย')),
+('asset_type','EQUIP','ครุภัณฑ์สำนักงาน', 'OFF', JSON_OBJECT('title_en','Office Equipment', 'description', 'อุปกรณ์สำนักงานและเครื่องใช้ในการบริหารงาน'));
+";
+
+$sqlAssetCategory = "INSERT INTO categorise (name, category_id, title, code, data_json) VALUES
+('asset_category','MED','กระตุกไฟฟ้าหัวใจ','DF',JSON_OBJECT('title_en', 'Defibrillation')),
+('asset_category','MED','กล้องจุลทรรศน์ในการผ่าตัด','MC',JSON_OBJECT('title_en', 'Microscopy')),
+('asset_category','MED','กล้องส่องตรวจวินิจฉัยและรักษา','ES',JSON_OBJECT('title_en', 'Endoscopic examination')),
+('asset_category','MED','กายภาพบำบัด','PT',JSON_OBJECT('title_en', 'Physical Therapy')),
+('asset_category','MED','คลังเลือด','BB',JSON_OBJECT('title_en', 'Blood Bank')),
+('asset_category','MED','ควบคุมการให้สารน้ำ','IP',JSON_OBJECT('title_en', 'Infusion pump')),
+('asset_category','MED','โคมไฟผ่าตัด','LO',JSON_OBJECT('title_en', 'Lamp operation')),
+('asset_category','MED','จักษุ','EM',JSON_OBJECT('title_en', 'Eye medical')),
+('asset_category','MED','จ่ายกลาง','CSSD',JSON_OBJECT('title_en', 'Central Sterile Supply Department')),
+('asset_category','MED','จี้ห้ามเลือดและตัดเนื้อเยื่อ','CE',JSON_OBJECT('title_en', 'Cauterization equipment')),
+('asset_category','MED','ช่วยหายใจ','RS',JSON_OBJECT('title_en', 'Respiration')),
+('asset_category','MED','ชันสูตร','LAB',JSON_OBJECT('title_en', 'Laboratory')),
+('asset_category','MED','ตรวจทารกในครรภ์','FT',JSON_OBJECT('title_en', 'Fetus')),
+('asset_category','MED','ตรวจรักษาหัวใจและปอด','HL',JSON_OBJECT('title_en', 'Heart Lung')),
+('asset_category','MED','ตรวจวินิจฉัยและรักษาสมอง','NE',JSON_OBJECT('title_en', 'Neuro equipment')),
+('asset_category','MED','ติดตามการทำงานของหัวใจและสัญญาณชีพ','ME',JSON_OBJECT('title_en', 'Monitor equipment')),
+('asset_category','MED','เตียงผ่าตัด-คลอด','OB',JSON_OBJECT('title_en', 'Operation Bed')),
+('asset_category','MED','เตียงผู้ป่วย','BP',JSON_OBJECT('title_en', 'Bed patient')),
+('asset_category','MED','ไตเทียม','CKD',JSON_OBJECT('title_en', 'Chronic Kidney Disease')),
+('asset_category','MED','ทันตกรรม','DE',JSON_OBJECT('title_en', 'Dental equipment')),
+('asset_category','MED','ทารกแรกคลอด','NB',JSON_OBJECT('title_en', 'New born')),
+('asset_category','MED','ผ่าตัด','OE',JSON_OBJECT('title_en', 'Operation equipment')),
+('asset_category','MED','เภสัชกรรม','PHR',JSON_OBJECT('title_en', 'Pharmacy')),
+('asset_category','MED','รังสีรักษา','RT',JSON_OBJECT('title_en', 'Radio therapy')),
+('asset_category','MED','วิสัญญี','AE',JSON_OBJECT('title_en', 'Anesthesia equipment')),
+('asset_category','MED','ศัลยกรรมออร์โธปิดิกส์','ORT',JSON_OBJECT('title_en', 'Orthopedic')),
+('asset_category','MED','ศัลยศาสตร์ทางเดินปัสสาวะ','URO',JSON_OBJECT('title_en', 'Urology')),
+('asset_category','MED','สนับสนุนการแพทย์','MP',JSON_OBJECT('title_en', 'Medical Support')),
+('asset_category','MED','หู คอ จมูก','ENT',JSON_OBJECT('title_en', 'Ear Nose Throat')),
+('asset_category','MED','อัลตราซาวด์','US',JSON_OBJECT('title_en', 'Ultrasound')),
+('asset_category','MED','เอกซเรย์','XR',JSON_OBJECT('title_en', 'Xray')),
+('asset_category','ELE','ไฟฟ้าและวิทยุ','EE',JSON_OBJECT('title_en', 'Electric equipment')),
+('asset_category','IND','ช่างซ่อมบำรุง','HT',JSON_OBJECT('title_en', 'Hand Tool')),
+('asset_category','AGR','การเกษตร','AC',JSON_OBJECT('title_en', 'Agriculture')),
+('asset_category','EDU','การศึกษา','ED',JSON_OBJECT('title_en', 'Education')),
+('asset_category','COM','กล้องโทรทัศน์วงจรปิด','CCTV',JSON_OBJECT('title_en', 'Close Circuit Television')),
+('asset_category','COM','คอมพิวเตอร์และอุปกรณ์','COM',JSON_OBJECT('title_en', 'Computer')),
+('asset_category','ADV','โฆษณาและเผยแพร่','AP',JSON_OBJECT('title_en', 'Advertise and publish')),
+('asset_category','HOM','งานบ้านงานครัว','HK',JSON_OBJECT('title_en', 'Housework kitchen work')),
+('asset_category','VEH','ยานพาหนะบริการทางการแพทย์','VM',JSON_OBJECT('title_en', 'Vehicle medical')),
+('asset_category','VEH','ยานพาหนะและขนส่ง','VT',JSON_OBJECT('title_en', 'Vehicle transport')),
+('asset_category','SCI','วิทยาศาสตร์','SC',JSON_OBJECT('title_en', 'Science')),
+('asset_category','OFF','สำนักงาน','OFF',JSON_OBJECT('title_en', 'Office')),
+('asset_category','OFF','เครื่องปรับอากาศและฟอกอากาศ','AIR',JSON_OBJECT('title_en', 'Air condition'));";
+?>
+
+<?php
+$sql = "SELECT 
+  t.code AS t_code,
+  t.title AS t_name,
+  cat.code AS cat_code,
+  cat.title AS cat_title,
+  i.category_id,
+  i.code,
+  i.title
+FROM `categorise` i
+LEFT JOIN categorise cat ON cat.code = i.category_id
+LEFT JOIN categorise t ON t.code = cat.category_id
+WHERE i.name = 'asset_item' 
+AND t.name = 'asset_type'
+AND cat.name = 'asset_category' LIMIT 10000;";
+?>

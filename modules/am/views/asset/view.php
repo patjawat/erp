@@ -103,7 +103,7 @@ $group = Yii::$app->request->get('group');
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">ชื่อครุภัณฑ์:</div>
-                    <div class="col-md-8"><?=$model->assetItem->title;?></div>
+                    <div class="col-md-8"><?=$model->assetItem?->title ?? '-';?></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">รหัสครุภัณฑ์:</div>
@@ -179,7 +179,7 @@ $group = Yii::$app->request->get('group');
 </div>
 
 <!-- Tabs for Additional Information -->
-<!-- <div class="card mb-4">
+<div class="card mb-4">
     <div class="card-header">
         <ul class="nav nav-tabs card-header-tabs mb-3" id="equipmentTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -207,7 +207,7 @@ $group = Yii::$app->request->get('group');
             <!-- <div class="tab-pane fade active show" id="specs" role="tabpanel" aria-labelledby="specs-tab">
                 <h5 class="card-title fw-bold">คุณลักษณะเฉพาะ</h5>
                 <?=$model->data_json['asset_options'] ?? '-'?>
-            </div> -->
+            </div>
 
             <!-- Maintenance History Tab -->
             <div class="tab-pane fade" id="maintenance" role="tabpanel" aria-labelledby="maintenance-tab">

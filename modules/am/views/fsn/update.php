@@ -3,16 +3,17 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\modules\am\models\Fsn $model */
+/** @var app\modules\am\models\AssetItem $model */
 
-$this->title = 'Update Fsn: ' . $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Fsns', 'url' => ['index']];
+$this->title = 'Update Asset Item: ' . $model->name;
+$this->params['breadcrumbs'][] = ['label' => 'Asset Items', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
-<div class="fsn-update">
+<div class="asset-item-update">
+
     <?= $this->render('_form', [
-        'model' => $model
+        'model' => $model,
     ]) ?>
 
 </div>

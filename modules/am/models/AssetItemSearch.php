@@ -3,6 +3,7 @@
 namespace app\modules\am\models;
 
 use yii\base\Model;
+use app\models\Categorise;
 use yii\data\ActiveDataProvider;
 use app\modules\am\models\AssetItem;
 
@@ -18,7 +19,7 @@ class AssetItemSearch extends AssetItem
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','fsn_auto','q'], 'safe'],
+            [['ref','group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','fsn_auto','q','asset_type_id'], 'safe'],
         ];
     }
 
@@ -40,12 +41,27 @@ class AssetItemSearch extends AssetItem
      */
     public function search($params)
     {
-        $query = Assetitem::find()->where(['name' => 'asset_item']);
+        // $query = Assetitem::find()->where(['name' => 'asset_item']);
 
-        // add conditions that should always apply here
+        // // add conditions that should always apply here
+
+        // $dataProvider = new ActiveDataProvider([
+        //     'query' => $query,
+        // ]);
+
+        $query = AssetItem::find()->alias('i');
+
+    $query
+        ->leftJoin(['cat' => 'categorise'], 'cat.code = i.category_id AND cat.name = "asset_category"')
+        ->leftJoin(['t' => 'categorise'], 't.code = cat.category_id AND t.name = "asset_type"')
+        ->leftJoin(['g' => 'categorise'], 'g.code = t.category_id AND g.name = "asset_group"')
+        ->where(['i.group_id' => 'EQUIP', 'i.name' => 'asset_item']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => 20,
+            ],
         ]);
 
         $this->load($params);
@@ -56,21 +72,53 @@ class AssetItemSearch extends AssetItem
             return $dataProvider;
         }
 
+      
+        
+
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
             'active' => $this->active,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'category_id', $this->category_id])
-            ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'emp_id', $this->emp_id])
-            ->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'data_json', $this->data_json]);
+         $query->andFilterWhere(['i.group_id' => $this->group_id]);
+        $query->andFilterWhere(['like', 'i.title', $this->title]);
+        $query->andFilterWhere(['t.code' => $this->asset_type_id]);
+        $query->andFilterWhere(['cat.code' => $this->category_id]);
+        // $query->andFilterWhere(['like', 'ref', $this->ref])
+        //     ->andFilterWhere(['like', 'category_id', $this->category_id])
+        //     ->andFilterWhere(['like', 'code', $this->code])
+        //     ->andFilterWhere(['like', 'emp_id', $this->emp_id])
+        //     ->andFilterWhere(['like', 'name', $this->name])
+        //     ->andFilterWhere(['like', 'title', $this->title])
+        //     ->andFilterWhere(['like', 'description', $this->description])
+        //     ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }
+
+      public function searchWithRelations($params)
+    {
+        $query = Categorise::find()
+            ->alias('i')
+            ->with(['assetCategory', 'assetType', 'assetGroup'])
+            ->where(['i.group_id' => 'EQUIP'])
+            ->andWhere(['i.name' => 'asset_item']);
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+                'pageSize' => 20,
+            ],
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            return $dataProvider;
+        }
+
+        return $dataProvider;
+    }
+
 }

@@ -44,7 +44,7 @@ class AssetTypeController extends Controller
     {
         $searchModel = new AssetTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'asset_type']);
+        $dataProvider->query->where(['name' => 'asset_type','group_id' =>'EQUIP']);
         $dataProviderGroup = $searchModel->search($this->request->queryParams);
         $dataProviderGroup->query->andFilterWhere(['name' => 'asset_type', 'active' => true]);
         return $this->render('index', [

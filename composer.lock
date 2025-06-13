@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59b78ff362cb71cf7971c943316ef44c",
+    "content-hash": "16bdff8d221386d944cee88a679444da",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -8441,6 +8441,53 @@
             "time": "2024-05-17T15:15:56+00:00"
         },
         {
+            "name": "setasign/fpdf",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Setasign/FPDF.git",
+                "reference": "0838e0ee4925716fcbbc50ad9e1799b5edfae0a0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Setasign/FPDF/zipball/0838e0ee4925716fcbbc50ad9e1799b5edfae0a0",
+                "reference": "0838e0ee4925716fcbbc50ad9e1799b5edfae0a0",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "ext-zlib": "*"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "fpdf.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Olivier Plathey",
+                    "email": "oliver@fpdf.org",
+                    "homepage": "http://fpdf.org/"
+                }
+            ],
+            "description": "FPDF is a PHP class which allows to generate PDF files with pure PHP. F from FPDF stands for Free: you may use it for any kind of usage and modify it to suit your needs.",
+            "homepage": "http://www.fpdf.org",
+            "keywords": [
+                "fpdf",
+                "pdf"
+            ],
+            "support": {
+                "source": "https://github.com/Setasign/FPDF/tree/1.8.6"
+            },
+            "time": "2023-06-26T14:44:25+00:00"
+        },
+        {
             "name": "setasign/fpdi",
             "version": "v2.6.3",
             "source": {
@@ -9604,6 +9651,78 @@
                 }
             ],
             "time": "2024-09-25T14:11:13+00:00"
+        },
+        {
+            "name": "tecnickcom/tcpdf",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tecnickcom/TCPDF.git",
+                "reference": "ca5b6de294512145db96bcbc94e61696599c391d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/ca5b6de294512145db96bcbc94e61696599c391d",
+                "reference": "ca5b6de294512145db96bcbc94e61696599c391d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=7.1.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "config",
+                    "include",
+                    "tcpdf.php",
+                    "tcpdf_barcodes_1d.php",
+                    "tcpdf_barcodes_2d.php",
+                    "include/tcpdf_colors.php",
+                    "include/tcpdf_filters.php",
+                    "include/tcpdf_font_data.php",
+                    "include/tcpdf_fonts.php",
+                    "include/tcpdf_images.php",
+                    "include/tcpdf_static.php",
+                    "include/barcodes/datamatrix.php",
+                    "include/barcodes/pdf417.php",
+                    "include/barcodes/qrcode.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Nicola Asuni",
+                    "email": "info@tecnick.com",
+                    "role": "lead"
+                }
+            ],
+            "description": "TCPDF is a PHP class for generating PDF documents and barcodes.",
+            "homepage": "http://www.tcpdf.org/",
+            "keywords": [
+                "PDFD32000-2008",
+                "TCPDF",
+                "barcodes",
+                "datamatrix",
+                "pdf",
+                "pdf417",
+                "qrcode"
+            ],
+            "support": {
+                "issues": "https://github.com/tecnickcom/TCPDF/issues",
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.10.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ",
+                    "type": "custom"
+                }
+            ],
+            "time": "2025-05-27T18:02:28+00:00"
         },
         {
             "name": "twbs/bootstrap",
@@ -14827,57 +14946,59 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "kartik-v/yii2-tabs-x": 20,
-        "kartik-v/yii2-datecontrol": 20,
-        "kartik-v/yii2-date-range": 20,
-        "dektrium/yii2-rbac": 20,
-        "kartik-v/yii2-widget-activeform": 20,
-        "kartik-v/yii2-krajee-base": 20,
-        "kartik-v/yii2-grid": 20,
-        "kartik-v/yii2-widget-select2": 20,
-        "kartik-v/yii2-widget-datepicker": 20,
-        "kartik-v/yii2-editors": 20,
-        "kartik-v/yii2-report": 20,
-        "kartik-v/yii2-icons": 20,
-        "kartik-v/yii2-widget-growl": 20,
-        "kartik-v/yii2-widget-alert": 20,
-        "kartik-v/yii2-bootstrap4-dropdown": 20,
-        "kartik-v/yii2-slider": 20,
-        "kartik-v/yii2-export": 20,
-        "miloschuman/yii2-highcharts-widget": 20,
-        "warrence/yii2-kartikgii": 20,
-        "kartik-v/yii2-bootstrap5-dropdown": 20,
-        "coderius/yii2-hit-counter": 20,
-        "kartik-v/yii2-ipinfo": 20,
-        "idk/yii2-google-apiclient": 20,
-        "google/apiclient": 20,
-        "sergmoro1/yii2-google-spreadsheet": 20,
-        "iamsaint/yii2-datetimepicker": 20,
-        "onmotion/yii2-widget-apexcharts": 20,
-        "kartik-v/yii2-tree-manager": 20,
-        "kartik-v/yii2-dialog": 20,
-        "creocoder/yii2-nested-sets": 20,
-        "muhsamsul/yii2-treeimage": 20,
-        "ruskid/yii2-csv-importer": 20,
-        "yiithings/yii2-dotenv": 20,
-        "kartik-v/yii2-validators": 20,
-        "unclead/yii2-multiple-input": 20,
-        "phpoffice/phpword": 20,
-        "yurkinx/yii2-image": 20,
-        "softark/yii2-dual-listbox": 20,
-        "chillerlan/php-qrcode": 20,
-        "kartik-v/php-date-formatter": 20,
-        "kartik-v/yii2-popover-x": 20,
         "asyou99/yii2-cart": 20,
+        "chillerlan/php-qrcode": 20,
+        "coderius/yii2-hit-counter": 20,
+        "creocoder/yii2-nested-sets": 20,
+        "dektrium/yii2-rbac": 20,
+        "google/apiclient": 20,
+        "iamsaint/yii2-datetimepicker": 20,
+        "idk/yii2-google-apiclient": 20,
+        "kartik-v/php-date-formatter": 20,
+        "kartik-v/yii2-bootstrap4-dropdown": 20,
+        "kartik-v/yii2-bootstrap5-dropdown": 20,
+        "kartik-v/yii2-date-range": 20,
+        "kartik-v/yii2-datecontrol": 20,
+        "kartik-v/yii2-dialog": 20,
+        "kartik-v/yii2-editors": 20,
+        "kartik-v/yii2-export": 20,
+        "kartik-v/yii2-grid": 20,
+        "kartik-v/yii2-icons": 20,
+        "kartik-v/yii2-ipinfo": 20,
+        "kartik-v/yii2-krajee-base": 20,
+        "kartik-v/yii2-popover-x": 20,
+        "kartik-v/yii2-report": 20,
+        "kartik-v/yii2-slider": 20,
         "kartik-v/yii2-sortable": 20,
+        "kartik-v/yii2-tabs-x": 20,
+        "kartik-v/yii2-tree-manager": 20,
+        "kartik-v/yii2-validators": 20,
+        "kartik-v/yii2-widget-activeform": 20,
+        "kartik-v/yii2-widget-alert": 20,
+        "kartik-v/yii2-widget-datepicker": 20,
+        "kartik-v/yii2-widget-growl": 20,
+        "kartik-v/yii2-widget-select2": 20,
+        "linecorp/line-bot-sdk": 20,
+        "miloschuman/yii2-highcharts-widget": 20,
+        "muhsamsul/yii2-treeimage": 20,
+        "onmotion/yii2-widget-apexcharts": 20,
         "phpoffice/phpspreadsheet": 20,
-        "linecorp/line-bot-sdk": 20
+        "phpoffice/phpword": 20,
+        "ruskid/yii2-csv-importer": 20,
+        "sergmoro1/yii2-google-spreadsheet": 20,
+        "setasign/fpdf": 20,
+        "softark/yii2-dual-listbox": 20,
+        "tecnickcom/tcpdf": 20,
+        "unclead/yii2-multiple-input": 20,
+        "warrence/yii2-kartikgii": 20,
+        "yiithings/yii2-dotenv": 20,
+        "yurkinx/yii2-image": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.4.0"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }

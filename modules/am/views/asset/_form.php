@@ -38,66 +38,48 @@ $group = Yii::$app->request->get('group');
 <?=$form->field($model, 'asset_item')->hiddenInput()->label(false);?>
 <div class="row">
     <div class="col-8">
-
         <div class="card">
             <div class="card-body">
                 <!-- ข้อมูลทั่วไป -->
                 <div class="form-section">
                     <h5 class="section-title">ข้อมูลทั่วไป</h5>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <?php
-                       
-                        echo $form->field($model, 'data_json[asset_item_name]', [
+                        <div class="col-md-12">
+                             <?php
+                        echo $form->field($model, 'asset_name', [
                                     'addon' => [
-                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-items/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-item/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
                                     ]
                                ])->textInput([
                             'maxlength' => true, 
-                            'placeholder' => 'ค้นหาชื่อครุภัณฑ์จากปุ่มการค้นหา',
-                            'readonly' => true,  // Make field readonly
-                            'class' => 'form-control bg-primary text-white'  // Add background color
+                            'placeholder' => 'ค้นหาชื่อครุภัณฑ์',
+                            'readonly' => false,  // Make field readonly
+                            'class' => 'form-control'  // Add background color
                         ])->label('ชื่อครุภัณฑ์');
                         ?>
-                            <?php
-                        // $form->field($model, 'asset_item')->widget(Select2::classname(), [
-                        //                 'data' => $model->ListAssetitem(),
-                        //                 'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
-                        //                 'pluginEvents' => [
-                        //                     "select2:unselect" => "function() { 
-                        //                         $('#asset-code').val('')
-                        //                     }",
-                        //                     "select2:select" => "function() {
-                        //                         // console.log($(this).val());
-                        //                         $.ajax({
-                        //                             type: 'get',
-                        //                             url: '".Url::to(['/depdrop/get-fsn'])."',
-                        //                             data: {
-                        //                                 asset_item: $(this).val(),
-                        //                                 name:'asset_item'
-                        //                             },
-                        //                             dataType: 'json',
-                        //                             success: function (res) {
-                        //                                 console.log(res.code)
-                        //                                 if(localStorage.getItem('fsn_auto') == 0){
-                        //                                     $('#asset-code').val(res.fsn)
-                        //                                     $('#asset-data_json-asset_name_text').val(res.title)
-                        //                                 }
-                        //                             }
-                        //                         });
-                        //                 }",],
-                        //                 'pluginOptions' => [
-                        //                 'allowClear' => true,
-                        //                 ],
-                        //             ])->label('ชื่อครุภัณฑ์');
-                                    
-                                    ?>
                         </div>
-
-
+                           <div class="col-md-6">
+                            <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขครุภัณฑ์') ?>
+                        </div>
                         <div class="col-md-6">
-                            <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขครุภัณฑ์ FSN (Federal Stock Number)') ?>
+                            <?php
+                       
+                        echo $form->field($model, 'fsn_number', [
+                                    'addon' => [
+                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/fsn/list-fsn','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                    ]
+                               ])->textInput([
+                            'maxlength' => true, 
+                            'placeholder' => 'ค้นหาเลข FSN',
+                            'readonly' => true,  // Make field readonly
+                            'class' => 'form-control bg-primary text-white'  // Add background color
+                        ])->label('FSN');
+                        ?>
+                        
                         </div>
+
+
+                     
 
                         <div class="col-md-6">
                             <?= $form->field($model, 'data_json[fsn_old]')->textInput(['maxlength' => true])->label('เลขครุภัณฑ์เดิม') ?>
@@ -401,7 +383,7 @@ $group = Yii::$app->request->get('group');
 
                 <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
                 <div class="mb-3">
-                    <div class="file-single-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>" data-newfile="false">
+                    <div class="file-file-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>" data-newfile="false">
                         <?= Html::img($model->showImg()['image'],['id' => 'editPreviewImg']) ?>
                         <div class="file-remove" id="editRemoveImage">
                             <i class="bi bi-x"></i>

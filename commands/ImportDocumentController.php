@@ -361,8 +361,14 @@ class ImportDocumentController extends Controller
                 $upload = Uploads::findOne(['ref' => $ref]);
                 $percentage = (($num++) / $total) * 100;
                 if ($upload) {
-                    $upload->delete();
-                    $docFile->delete();
+                     try {
+                         $upload->delete();
+                        } catch (\Throwable $th) {
+                        }
+                        try {
+                        $docFile->delete();
+                      } catch (\Throwable $th) {  
+                     }
                     $deleteDoc = Documents::findOne($docFile->id);
                     $deleteDoc->delete();
                     try {

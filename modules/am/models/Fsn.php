@@ -67,59 +67,10 @@ class Fsn extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
 
-        // $this->receive_date = AppHelper::DateToDb($this->receive_date);
-        if($this->name == 'asset_name'){
-            $group = self::find()->where(['code' => $this->category_id,'name' => 'asset_group'])->one();
-            $array2 = [
-                'asset_group_text' => isset($group) ? $group->title : '',
-            ];
-            $this->data_json = ArrayHelper::merge($this->data_json, $array2);
-        }
+       
 
         return parent::beforeSave($insert);
     }
 
 
-
-    public function FsnTypeName()
-    {
-        $model =  self::find()->where(['name' => 'asset_type','code' => $this->data_json['asset_type']])->one();
-        if($model)
-        {
-            return $model->title;
-        }else{
-            return null;
-        }
-    }
-    public function FsnGroupName()
-    {
-        $model =  self::find()->where(['name' => 'asset_group','code' => $this->category_id])->one();
-        if($model)
-        {
-            return $model->title;
-        }else{
-            return null;
-        }
-    }
-    public function listFsnName(){
-        return ArrayHelper::map(self::find()->all(),'code','title');
-    }
-
-    public function FsnGroup(){
-        return ArrayHelper::map(self::find()->where(['name' => 'asset_group'])->all(),'code','title');
-    }
-
-    public function FsnType(){
-        return ArrayHelper::map(self::find()->where(['name' => 'asset_type'])->all(),'code','title');
-    }
-
-
-    public function ShowImg(){
-            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
-            if($model){
-                return FileManagerHelper::getImg($model->id);
-            }else{
-                return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
-            }
-    }
 }

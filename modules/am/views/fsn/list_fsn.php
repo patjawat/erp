@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-item-center">
-            <?php echo $this->render('_search_list_item', ['model' => $searchModel]); ?>
+            <?php echo $this->render('_search_list_fsn', ['model' => $searchModel]); ?>
 
         </div>
     </div>
@@ -42,7 +42,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center" scope="col" style="width: 5%">#</th>
                     <th scope="col" style="width: 12%">รหัส FSN</th>
                     <th scope="col" style="width: 40%">ชื่อทรัพย์สิน</th>
-                     <th scope="col" style="width:5%">หน่วย</th>
                     <th scope="col" style="width: 20%">ประเภท</th>
                     <th class="text-center" scope="col" style="width: 8%">ดำเนินการ</th>
                 </tr>
@@ -53,13 +52,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td class="fw-semibold text-primary"><?=$item->code?></td>
                     <td><?=$item->title?></td>
-                    <td><?=$item->data_json['unit'] ?? '-'?></td>
-                    <td><?=$item->assetType?->title ?? '-'?></td>
+                    <td><?=$item->data_json['asset_type_name'] ?? '-'?></td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-info select-item" 
                         data-code="<?=$item->code?>" 
                         data-title="<?=$item->title?>"
-                        data-fsn-next="<?=$item->nextCode()?>"
+                        data-fsn-next="<?php // $item->nextCode()?>"
                         >เลือก</button>
                     </td>
                 </tr>
@@ -107,9 +105,9 @@ $("body").on("click", ".select-item", function (e) {
             // ดำเนินการหลังจากยืนยัน
             // ตัวอย่าง: ส่งค่าไปยัง parent หรือปิด modal
             // window.parent.postMessage({code: code, title: title}, '*');
-            $('#asset-asset_item').val(code)
+            $('#asset-fsn_number').val(code)
             $('#asset-code').val(fsnNext)
-            $('#asset-data_json-asset_item_name').val(title)
+            // $('#asset-asset_name').val(title)
              $("#main-modal").modal("toggle");
 
         }
