@@ -54,6 +54,7 @@ if (file_exists($dataFile)) {
         <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
     </div>
 </div>
+
 <div class="documents-index">
 
     <div class="card">
@@ -91,34 +92,38 @@ if (file_exists($dataFile)) {
                            
                             </td> -->
                         <td class="fw-light align-middle">
-                           
-                                <div>
-                                    <p class="text-primary fw-semibold fs-13 mb-0">
-                                      
-                                      
-                                    </p>
-                                    <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
-                                          <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
-                                        <span class="badge text-bg-danger fs-13">
-                                            <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
-                                        </span>
-                                        <?php endif;?>
 
-                                        <?php if($item->secret == 'ลับที่สุด'):?>
-                                        <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
-                                            ลับที่สุด
-                                        </span>
-                                        <?php endif;?>
-                                         <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>">
+                            <div>
+                                <p class="text-primary fw-semibold fs-13 mb-0">
+
+
+                                </p>
+                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                    <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
+                                    <span class="badge text-bg-danger fs-13">
+                                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                                    </span>
+                                    <?php endif;?>
+
+                                    <?php if($item->secret == 'ลับที่สุด'):?>
+                                    <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                        ลับที่สุด
+                                    </span>
+                                    <?php endif;?>
+                                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>">
                                         เรื่อง : <?php echo $item->topic?>
                                     </a>
-                                        
-                                        <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
-                                </div>
-                              <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
-                              <span class="text-danger">
-                                  <?php echo $item->doc_number?>
-                                </span>
+
+                                    <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
+                                </p>
+                            </div>
+                             <p class="fw-normal fs-13 mb-0">
+                                <?=$item->data_json['des'] ?? ''?>
+                                </p>
+                            <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
+                            <span class="text-danger">
+                                <?php echo $item->doc_number?>
+                            </span>
                             <span class="text-primary fw-normal fs-13">
                                 |
                                 <i class="fa-solid fa-inbox"></i>
@@ -127,6 +132,8 @@ if (file_exists($dataFile)) {
                                     <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                 </span>
                             </span>
+                           
+
                             <?php echo $item->StackDocumentTags('comment')?>
                         </td>
                         <td class="fw-light align-middle">
