@@ -41,6 +41,26 @@ use kartik\widgets\ActiveForm;
     ])->label(false);
     ?>
 
+
+    <?php
+                    echo $form->field($model, 'status')->widget(Select2::classname(), [
+                        'data' => $model->listStatus(),
+                        'options' => ['placeholder' => 'สถานะทั้งหมด'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'width' => '170px',
+                        ],
+                        'pluginEvents' => [
+                'select2:select' => 'function(result) { 
+                        $(this).submit()
+                        }',
+                'select2:unselecting' => 'function() {
+                            $(this).submit()
+                        }',
+            ]
+                    ])->label(false);
+                    ?>
+
     <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
 </div>
 

@@ -40,11 +40,15 @@ if (file_exists($dataFile)) {
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
 <?php $this->endBlock(); ?>
 
+<?php if($jsonCount > 0):?>
+<?php $this->beginBlock('action'); ?>
+<?= Html::a('<i class="fa-regular fa-circle-down"></i> หนังสือรอรับ <span class="badge text-bg-primary">'.$jsonCount.'</span>', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-warning shadow rounded-pill animate__animated animate__headShake animate__infinite']);?>
+<?php $this->endBlock(); ?>
+<?php endif;?>
+
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'receive']) ?>
 <?php $this->endBlock(); ?>
-
-
 
 <?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
@@ -68,9 +72,6 @@ if (file_exists($dataFile)) {
                     รายการ
                 </h6>
             </div>
-            <div class="d-flex justify-content-between align-top align-items-center">
-                <?= $jsonCount > 0 ? Html::a('<i class="fa-regular fa-hourglass-half"></i> หนังสือรอรับ <span class="badge rounded-pill badge-secondary text-primary fs-13 fw-semibold">'.$jsonCount.'</span>', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-warning shadow rounded-pill']) : '' ?>
-            </div>
 
             <div class="table-responsive">
                 <table class="table table-striped table-fixed">
@@ -86,20 +87,11 @@ if (file_exists($dataFile)) {
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
                         <?php foreach($dataProvider->getModels() as $key => $item):?>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
-                        </td>
-                        <td class="text-center fw-semibold"><?php echo $item->doc_regis_number?>
-                   
-                    </td>
-                        <!-- <td class="fw-semibold">
-                           
-                            </td> -->
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                        <td class="text-center fw-semibold"><?php echo $item->doc_regis_number?></td>
                         <td class="fw-light align-middle">
-
                             <div>
                                 <p class="text-primary fw-semibold fs-13 mb-0">
-
-
                                 </p>
                                 <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
                                     <?php if($item->doc_speed == 'ด่วนที่สุด'):?>

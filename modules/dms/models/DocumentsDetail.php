@@ -24,6 +24,7 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\Documents;
+use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -58,6 +59,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public $thai_year;
     public $show_reading;
     public $comment;
+    public $status;
     public static function tableName()
     {
         return 'documents_detail';
@@ -69,8 +71,8 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['created_at', 'updated_at', 'deleted_at','thai_year','q','show_reading','tags_employee','tags_department','data_json'], 'safe'],
-            [['created_by', 'updated_by', 'deleted_by','doc_read'], 'integer'],
+            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status'], 'safe'],
+            [['created_by', 'updated_by', 'deleted_by', 'doc_read'], 'integer'],
             [['ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type'], 'string', 'max' => 255],
         ];
     }
@@ -120,13 +122,16 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
-        // บุคลากร
-        public function getEmployee()
-        {
-                return $this->hasOne(Employees::class, ['id' => 'to_id']);
-        }
-
-        
+    // บุคลากร
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'to_id']);
+    }
+    //หน่วยงาน
+    public function getDepartment()
+    {
+        return $this->hasOne(Organization::class, ['id' => 'to_id']);
+    }
 
     public function afterFind()
     {
@@ -137,8 +142,8 @@ class DocumentsDetail extends \yii\db\ActiveRecord
 
         parent::afterFind();
     }
-    
-    
+
+
     public function ListThaiYear()
     {
         $model = Documents::find()
@@ -155,16 +160,27 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
+    // แสดงรายการสถานะ
+    public function ListStatus()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'document_status'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+
     // ดึงค่าไปแสดงตอนที่เรา update
     public function listEmployeeSelectTag()
     {
         try {
             // หาบุคคลที่เคย tag ไปแล้ว
             $tags = self::find()->select('to_id')
-            
-            ->where(['name' => 'employee', 'document_id' => $this->document_id])
-            ->andWhere(['<>', 'to_id',$this->created_by])
-            ->All();
+
+                ->where(['name' => 'employee', 'document_id' => $this->document_id])
+                ->andWhere(['<>', 'to_id', $this->created_by])
+                ->All();
             $allTag = ArrayHelper::getColumn($tags, 'to_id');
             // หาบุคคลที่ยังไม่ได้ tag ไป  และ ไม่ใช่ admin
             $employees = Employees::find()
@@ -183,68 +199,66 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         }
     }
 
-//ส่งline
+    //ส่งline
     public function sendMessage()
     {
         $models = self::find()->where(['name' => 'comment', 'document_id' => $this->document_id])->all();
-        foreach($models as $model){
+        foreach ($models as $model) {
             try {
                 $line_id = $model->employee->user->line_id;
                 $topic = $this->comment;
                 // ส่ง msg ให้ Approve
-                LineMsg::sendDocument($model,$line_id);
+                LineMsg::sendDocument($model, $line_id);
             } catch (\Throwable $th) {
-                
             }
         }
     }
-    
-    
-     // บันทึก tag ไปยัง document
-     public function UpdateDocumentsDetail()
-     {
-         $me = UserHelper::GetEmployee();
- 
-         try {
-            if($this->tags_employee){
+
+
+    // บันทึก tag ไปยัง document
+    public function UpdateDocumentsDetail()
+    {
+        $me = UserHelper::GetEmployee();
+
+        try {
+            if ($this->tags_employee) {
                 $clearDEmployeeTag = self::deleteAll([
                     'and',
                     ['not in', 'to_id', $this->tags_employee],
-                    ['document_id' => $this->document_id, 'name' => 'tags','created_by' => Yii::$app->user->id]
+                    ['document_id' => $this->document_id, 'name' => 'tags', 'created_by' => Yii::$app->user->id]
                 ]);
             }
-             // foreach ($this->data_json['employee_tag'] as $key => $value):
-             foreach ($this->tags_employee as $key => $value):
-                 $check = DocumentsDetail::find()->where(['name' => 'tags','document_id' => $this->document_id, 'to_id' => $value])->one();
-                 $model = $check ? $check : new DocumentsDetail();
-                 $model->name = 'tags';
-                 $model->document_id = $this->document_id;
-                 $model->to_id = $value;
-                 $model->save(false);
+            // foreach ($this->data_json['employee_tag'] as $key => $value):
+            foreach ($this->tags_employee as $key => $value):
+                $check = DocumentsDetail::find()->where(['name' => 'tags', 'document_id' => $this->document_id, 'to_id' => $value])->one();
+                $model = $check ? $check : new DocumentsDetail();
+                $model->name = 'tags';
+                $model->document_id = $this->document_id;
+                $model->to_id = $value;
+                $model->save(false);
 
-                 try {
+                try {
                     $line_id = $model->employee->user->line_id;
                     $topic = $this->comment;
                     // ส่ง msg ให้ Approve
-                    LineMsg::sendDocument($model,$line_id);
+                    LineMsg::sendDocument($model, $line_id);
                 } catch (\Throwable $th) {
-                    
                 }
-                
-                 // if($new->employee->isDicrector())
-                 // {
-                 //     $dicrector = 1;
-                 // }
-                 
-             endforeach;
-                         //code...
-         } catch (\Throwable $th) {
-         }
-             // return $dicrector;
-     }
 
-     public function updateTags()
-     {
+            // if($new->employee->isDicrector())
+            // {
+            //     $dicrector = 1;
+            // }
+
+            endforeach;
+            //code...
+        } catch (\Throwable $th) {
+        }
+        // return $dicrector;
+    }
+
+    public function updateTags()
+    {
         try {
             $dicrector = 0;
             $clearDEmployeeTag = DocumentsDetail::deleteAll([
@@ -263,22 +277,22 @@ class DocumentsDetail extends \yii\db\ActiveRecord
             endforeach;
         } catch (\Throwable $th) {
         }
-     }
-     
-     public function getAvatar($empid, $msg = '')
+    }
+
+    public function getAvatar($empid, $msg = '')
     {
         try {
-        $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-        $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
-        $msg = '<i class="fa-regular fa-comment"></i> ' . $this->data_json['comment'];
-        // $msg = $employee->departmentName();
-        return [
-            'avatar' => $employee->getAvatar(false, $msg),
-            'department' => $employee->departmentName(),
-            'fullname' => $employee->fullname,
-            'position_name' => $employee->positionName(),
-            // 'product_type_name' => $this->data_json['product_type_name']
-        ];
+            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+            $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
+            $msg = '<i class="fa-regular fa-comment"></i> ' . $this->data_json['comment'];
+            // $msg = $employee->departmentName();
+            return [
+                'avatar' => $employee->getAvatar(false, $msg),
+                'department' => $employee->departmentName(),
+                'fullname' => $employee->fullname,
+                'position_name' => $employee->positionName(),
+                // 'product_type_name' => $this->data_json['product_type_name']
+            ];
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
@@ -289,7 +303,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
             ];
         }
     }
-    
+
 
 
     // แสดงการcommentและส่งต่อรายบุคคล
@@ -307,25 +321,27 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                 $emp = Employees::findOne(['id' => $emp_id]);
                 if ($key <= 1) {
                     // $data .= Html::a(
-                         $data .=Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
-                            'data' => [
-                                'expand' => '-20',
-                                'sizes' => 'auto',
-                                'src' => $emp->showAvatar()
-                            ]]);
-                        // ['/dms/documents/list-comment', 'id' => $emp_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
-                        // [
-                        //     'class' => 'open-modal',
-                        //     'data' => [
-                        //         'size' => 'modal-md',
-                        //         'bs-trigger' => 'hover focus',
-                        //         'bs-toggle' => 'popover',
-                        //         'bs-placement' => 'top',
-                        //         'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
-                        //         'bs-html' => 'true',
-                        //         'bs-content' => $emp->fullname
-                        //     ]
-                        // ]
+                    $data .= Html::img('@web/img/placeholder-img.jpg', [
+                        'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                        'data' => [
+                            'expand' => '-20',
+                            'sizes' => 'auto',
+                            'src' => $emp->showAvatar()
+                        ]
+                    ]);
+                    // ['/dms/documents/list-comment', 'id' => $emp_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                    // [
+                    //     'class' => 'open-modal',
+                    //     'data' => [
+                    //         'size' => 'modal-md',
+                    //         'bs-trigger' => 'hover focus',
+                    //         'bs-toggle' => 'popover',
+                    //         'bs-placement' => 'top',
+                    //         'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
+                    //         'bs-html' => 'true',
+                    //         'bs-content' => $emp->fullname
+                    //     ]
+                    // ]
                     // );
                 } else {
                 }
@@ -337,16 +353,15 @@ class DocumentsDetail extends \yii\db\ActiveRecord
             // return 'เกิดข้อผิดพลาด';
         }
     }
-    
+
     //ปักหมุดเอกสาร
     public function bookmark()
     {
 
         $emp = UserHelper::GetEmployee();
-        $model = self::find()->where(['name' => 'bookmark','document_id' => $this->document_id,'to_id' => $emp->id ])->one();
-        if($model){
+        $model = self::find()->where(['name' => 'bookmark', 'document_id' => $this->document_id, 'to_id' => $emp->id])->one();
+        if ($model) {
             return $model->bookmark;
         }
     }
-
 }

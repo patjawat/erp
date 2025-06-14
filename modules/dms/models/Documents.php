@@ -20,6 +20,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
+use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -204,13 +205,13 @@ class Documents extends \yii\db\ActiveRecord
     // แสดงรูปแบบ format วันที่หนังสือ
     public function viewDocDate()
     {
-        return Yii::$app->thaiFormatter->asDate($this->doc_date, 'medium');
+        return ThaiDateHelper::formatThaiDate($this->doc_date);
     }
 
     // แสดงรูปแบบ format วันที่หนังสือ
     public function viewReceiveDate()
     {
-        return Yii::$app->thaiFormatter->asDate($this->doc_transactions_date, 'medium');
+        return ThaiDateHelper::formatThaiDate($this->doc_transactions_date);
     }
 
     public function UploadClipFile($name)
@@ -399,6 +400,21 @@ class Documents extends \yii\db\ActiveRecord
         // }
     }
 
+    // แสดงรายชื่อหนวยงานที่ Tags ไป
+    public function viewTagsDepartment()
+    {
+        $departments = DocumentsDetail::find()
+            ->where(['name' => 'department', 'document_id' => $this->id])
+            ->all();
+
+        $names = [];
+        foreach ($departments as $detail) {
+                    $names[] ='<span class="badge text-bg-success mb-1">'.$detail->department->name.'</span>';
+
+        }
+        return implode(',', $names);
+    }
+
     // รายการแสดงความเห็น
     public function listComment()
     {
@@ -471,7 +487,7 @@ class Documents extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-            $createDate = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium') . ' ' . $this->doc_time;
+            $createDate = ThaiDateHelper::formatThaiDate($this->created_at) . ' ' . $this->doc_time;
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $createDate),

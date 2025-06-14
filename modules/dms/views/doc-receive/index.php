@@ -13,17 +13,23 @@ $this->title = 'หนังสือสำนักงานสาธารณ�
 <?php $this->beginBlock('page-action'); ?>
 <?php  echo $this->render('@app/modules/dms/menu') ?>
 <?php $this->endBlock(); ?>
+
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/dms/menu',['active' => 'receive']) ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="card">
     <div class="card-body">
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h6 class="mb-0">รายการหนังสือรอรับ</h6>
-    <?= Html::a('รับทั้งหมด', ['/',], ['class' => 'btn btn-primary']) ?>
 </div>
 <div
     class="table-responsive"
 >
     <table
-        class="table table-primary"
+        class="table"
     >
         <thead>
             <tr>

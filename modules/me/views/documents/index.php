@@ -50,8 +50,6 @@ $this->title = 'ทะเบียนหนังสือ';
 </div>
 <?php endif;?>
 
-
-
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-top align-items-center">
@@ -70,7 +68,7 @@ $this->title = 'ทะเบียนหนังสือ';
         <!-- Tab panes -->
         <div class="tab-content">
             <div id="home" class="tab-pane active"><br>
-                <?= $this->render('list_document',[
+                <?= $this->render('list_document2',[
                             'searchModel' => $searchModel,
                             'dataProvider' => $dataProviderTags
                         ])
@@ -78,7 +76,7 @@ $this->title = 'ทะเบียนหนังสือ';
             </div>
             <div id="menu1" class="tab-pane fade"><br>
                 <?php 
-    echo $this->render('list_document',[
+    echo $this->render('list_document2',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProviderDepartment,
         ])
@@ -87,7 +85,7 @@ $this->title = 'ทะเบียนหนังสือ';
 
             <div id="bookmark" class="tab-pane fade"><br>
                 <?php 
-    echo $this->render('list_document',[
+    echo $this->render('list_document2',[
             'searchModel' => $searchModel,
             'dataProvider' => $dataProviderBookmark,
         ])
