@@ -90,7 +90,8 @@
         "linecorp/line-bot-sdk": "dev-master",
         "philippfrenzel/yii2fullcalendar":"*",
         "setasign/fpdf": "dev-master",
-        "tecnickcom/tcpdf": "dev-main"
+        "tecnickcom/tcpdf": "dev-main",
+        "mpdf/mpdf": "^8.2"
         
     },
     "require-dev": {

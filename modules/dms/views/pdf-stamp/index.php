@@ -1,236 +1,187 @@
+
 <?php
-
-use yii\helpers\Html;
-use yii\widgets\ActiveForm;
-use yii\bootstrap4\Alert;
-
-/* @var $this yii\web\View */
-/* @var $model app\models\PdfStampForm */
-
-$this->title = 'ระบบประทับตรา PDF';
-$this->params['breadcrumbs'][] = $this->title;
-
-$this->registerCss('
-.upload-area {
-    border: 2px dashed #007bff;
-    border-radius: 10px;
-    padding: 40px;
-    text-align: center;
-    background: #f8f9fa;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.upload-area:hover {
-    border-color: #0056b3;
-    background: #e3f2fd;
-}
-
-.upload-area.dragover {
-    border-color: #28a745;
-    background: #d4edda;
-}
-
-.upload-icon {
-    font-size: 48px;
-    color: #007bff;
-    margin-bottom: 15px;
-}
-
-.upload-text {
-    font-size: 18px;
-    color: #495057;
-    margin-bottom: 10px;
-}
-
-.upload-hint {
-    font-size: 14px;
-    color: #6c757d;
-}
-
-.features-list {
-    background: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 30px;
-}
-
-.feature-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.feature-icon {
-    color: #28a745;
-    margin-right: 10px;
-    font-size: 18px;
-}
-');
-
-$this->registerJs('
-// Drag and drop functionality
-$(document).ready(function() {
-    var uploadArea = $(".upload-area");
-    var fileInput = $("#pdfstampform-pdffile");
-    
-    uploadArea.on("click", function() {
-        fileInput.click();
-    });
-    
-    uploadArea.on("dragover", function(e) {
-        e.preventDefault();
-        $(this).addClass("dragover");
-    });
-    
-    uploadArea.on("dragleave", function(e) {
-        e.preventDefault();
-        $(this).removeClass("dragover");
-    });
-    
-    uploadArea.on("drop", function(e) {
-        e.preventDefault();
-        $(this).removeClass("dragover");
-        
-        var files = e.originalEvent.dataTransfer.files;
-        if (files.length > 0) {
-            var file = files[0];
-            if (file.type === "application/pdf") {
-                fileInput[0].files = files;
-                updateFileName(file.name);
-            } else {
-                alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
-            }
-        }
-    });
-    
-    fileInput.on("change", function() {
-        if (this.files && this.files[0]) {
-            updateFileName(this.files[0].name);
-        }
-    });
-    
-    function updateFileName(fileName) {
-        $(".upload-text").text("ไฟล์ที่เลือก: " + fileName);
-        $(".upload-hint").text("คลิกปุ่ม \"เริ่มต้น\" เพื่อดำเนินการต่อ");
-        $(".btn-upload").prop("disabled", false);
-    }
-});
-');
+$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', ['position' => \yii\web\View::POS_HEAD]);
+$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js', ['position' => \yii\web\View::POS_HEAD]);
 ?>
 
-<div class="pdf-stamp-index">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <!-- Header -->
-                <div class="text-center mb-4">
-                    <h1 class="display-4 text-primary">
-                        <i class="fas fa-stamp"></i>
-                        <?= Html::encode($this->title) ?>
-                    </h1>
-                    <p class="lead text-muted">
-                        สร้างและจัดการตราประทับบนเอกสาร PDF ได้อย่างง่ายดาย
-                    </p>
-                </div>
-
-                <!-- Upload Form -->
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <?php $form = ActiveForm::begin([
-                            'options' => ['enctype' => 'multipart/form-data'],
-                            'fieldConfig' => [
-                                'template' => '{input}{error}',
-                            ],
-                        ]); ?>
-
-                        <div class="upload-area">
-                            <div class="upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <div class="upload-text">
-                                คลิกหรือลากไฟล์ PDF มาวางที่นี่
-                            </div>
-                            <div class="upload-hint">
-                                รองรับไฟล์ PDF ขนาดไม่เกิน 10MB
-                            </div>
-                            
-                            <?= $form->field($model, 'pdfFile')->fileInput([
-                                'id' => 'pdfstampform-pdffile',
-                                'style' => 'display: none;',
-                                'accept' => '.pdf'
-                            ]) ?>
-                        </div>
-
-                        <div class="text-center mt-3">
-                            <?= Html::submitButton(
-                                '<i class="fas fa-play"></i> เริ่มต้น', 
-                                [
-                                    'class' => 'btn btn-primary btn-lg btn-upload',
-                                    'disabled' => true
-                                ]
-                            ) ?>
-                        </div>
-
-                        <?php ActiveForm::end(); ?>
-                    </div>
-                </div>
-
-                <!-- Features -->
-                <div class="features-list">
-                    <h4 class="text-center mb-3">
-                        <i class="fas fa-star text-warning"></i>
-                        คุณสมบัติเด่น
-                    </h4>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="feature-item">
-                                <i class="fas fa-edit feature-icon"></i>
-                                <span>แก้ไขข้อความได้อย่างอิสระ</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-palette feature-icon"></i>
-                                <span>ปรับสีและขนาดตัวอักษร</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-mouse-pointer feature-icon"></i>
-                                <span>ลากวางตำแหน่งได้ง่าย</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="feature-item">
-                                <i class="fas fa-redo-alt feature-icon"></i>
-                                <span>หมุนตราประทับได้</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-border-style feature-icon"></i>
-                                <span>เพิ่มกรอบและพื้นหลัง</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-download feature-icon"></i>
-                                <span>ดาวน์โหลด PDF ที่ประทับแล้ว</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Instructions -->
-                <div class="alert alert-info mt-4">
-                    <h5 class="alert-heading">
-                        <i class="fas fa-info-circle"></i>
-                        วิธีการใช้งาน
-                    </h5>
-                    <ol class="mb-0">
-                        <li>อัพโหลดไฟล์ PDF ที่ต้องการประทับตรา</li>
-                        <li>เลือกเทมเพลตตราประทับหรือสร้างใหม่</li>
-                        <li>ปรับแต่งข้อความ สี และรูปแบบตามต้องการ</li>
-                        <li>ลากวางตำแหน่งตราประทับ</li>
-                        <li>ดาวน์โหลดไฟล์ PDF ที่ประทับตราแล้ว</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="row">
+<div class="col-8">
+    <canvas id="pdfCanvas"></canvas>
 </div>
+<div class="col-4">
+<!-- <input type="text" id="stampText" placeholder="ใส่ข้อความตราประทับ">
+<button id="saveStamp">บันทึก</button> -->
+
+<input type="text" id="receiptNumber" placeholder="รับที่ : เช่น 1204/2567" />
+<input type="text" id="date" placeholder="วันที่ : เช่น 14 มิ.ย. 2567" />
+<input type="text" id="time" placeholder="เวลา : เช่น 09:45 น." />
+<button id="saveStamp">บันทึกตราประทับ</button>
+
+
+
+</div>
+</div>
+
+
+
+
+<?php
+$js = <<< JS
+const canvas = new fabric.Canvas('pdfCanvas');
+canvas.setHeight(800);
+canvas.setWidth(1000);
+canvas.setZoom(1);
+
+function loadPDF() {
+    const url = '/pdfs/document2.pdf';
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+        pdf.getPage(1).then(page => {
+            const viewport = page.getViewport({ scale: 1.5 });
+            const tempCanvas = document.createElement('canvas');
+            const context = tempCanvas.getContext('2d');
+            tempCanvas.height = viewport.height;
+            tempCanvas.width = viewport.width;
+
+            page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise.then(() => {
+                const img = new fabric.Image(tempCanvas, {
+                    selectable: false
+                });
+                canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+            });
+        });
+    });
+}
+
+let stampGroup = null;
+
+// ฟังก์ชันสร้างกลุ่มตราประทับแบบราชการ
+function addGovernmentStamp(receiptNumber, date, time) {
+    if(stampGroup) {
+        canvas.remove(stampGroup);
+    }
+
+        // สร้างกล่องพื้นหลัง (Rect) มี border, border-radius
+    const background = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: 280,
+        height: 110,
+        fill: 'white',
+        stroke: 'black',
+        strokeWidth: 2,
+        rx: 10,   // border-radius x
+        ry: 10    // border-radius y
+    });
+    
+    const texts = [
+        { text: 'โรงพยาบาลสมเด็จพระยุพราชด่านซ้าย', fontSize: 18, top: 0, fontWeight: 'bold' },
+        { text: 'รับที่ : ' + receiptNumber, fontSize: 16, top: 30 },
+        { text: 'วันที่ : ' + date, fontSize: 16, top: 55 },
+        { text: 'เวลา : ' + time, fontSize: 16, top: 80 },
+    ];
+
+    const objects = texts.map(t => new fabric.Text(t.text, {
+        left: 10,
+        top: t.top,
+        fontSize: t.fontSize,
+        fill: 'black',
+        fontWeight: t.fontWeight || 'normal',
+        fontFamily: 'TH Sarabun New'
+    }));
+
+    stampGroup = new fabric.Group([background, ...objects], {
+        left: 750,
+        top: 20,
+        hasControls: true,
+        lockScalingFlip: true,
+        borderColor: 'gray',
+        cornerColor: 'blue',
+        cornerSize: 8,
+    });
+
+        // รวม background + ข้อความ เป็นกลุ่มเดียวกัน
+    // stampGroup = new fabric.Group([background, ...textObjects], {
+    //     left: 750,
+    //     top: 20,
+    //     hasControls: true,
+    //     lockScalingFlip: true,
+    //     borderColor: 'gray',
+    //     cornerColor: 'blue',
+    //     cornerSize: 8,
+    // });
+    
+
+    canvas.add(stampGroup);
+    canvas.setActiveObject(stampGroup);
+    canvas.renderAll();
+}
+
+// โหลด PDF ตอนเริ่มต้น
+loadPDF();
+
+// ดักจับ event จาก input form
+$('#receiptNumber, #date, #time').on('input', function() {
+    const receiptNumber = $('#receiptNumber').val() || '1204/2567';
+    const date = $('#date').val() || '14 มิ.ย. 2567';
+    const time = $('#time').val() || '09:45 น.';
+    addGovernmentStamp(receiptNumber, date, time);
+});
+
+
+
+
+function saveStamp() {
+    if (!stampGroup) {
+        alert('กรุณาเพิ่มตราประทับก่อน');
+        return;
+    }
+
+    // เก็บข้อมูลข้อความทั้งหมดในกลุ่ม
+    const objects = stampGroup._objects;
+    // เราจะดึงข้อความทั้งหมดมาเป็น array
+    const texts = objects
+        .filter(obj => obj.type === 'text')
+        .map(obj => obj.text);
+
+    // ข้อมูลตำแหน่งกลุ่มตราประทับบน canvas
+    const data = {
+        texts: texts,
+        left: stampGroup.left,
+        top: stampGroup.top,
+        scaleX: stampGroup.scaleX,
+        scaleY: stampGroup.scaleY,
+        angle: stampGroup.angle
+    };
+    console.log(data);
+    
+
+    $.ajax({
+        url: '/dms/pdf-stamp/stamp-save',
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            alert('บันทึกตราประทับเรียบร้อยแล้ว');
+        },
+        error: function(err) {
+            alert('เกิดข้อผิดพลาดขณะบันทึก');
+            console.error(err);
+        }
+    });
+}
+
+
+$('#saveStamp').on('click', function() {
+
+    saveStamp();
+    
+ });
+
+JS;
+
+$this->registerJS($js);
+?>
+

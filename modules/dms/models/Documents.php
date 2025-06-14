@@ -69,6 +69,7 @@ class Documents extends \yii\db\ActiveRecord
 
     public $date_start;
     public $date_end;
+    
 
 
     public function rules()

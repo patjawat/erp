@@ -164,7 +164,7 @@ class DocumentsController extends \yii\web\Controller
              $me = UserHelper::GetEmployee();
              if($me->id == $director){
                     $docStatus =  $model->document;
-                    $docStatus->status = 'ผอ.ลงนาม';
+                    $docStatus->status = 'DS4';
                     $docStatus->save(false);
              }
 
@@ -193,27 +193,7 @@ class DocumentsController extends \yii\web\Controller
             ]);
         }
     }
-
-    // public function actionUpdateComment($id)
-    // {
-
-    //     $emp = UserHelper::GetEmployee();
-    //     // $model = DocumentsDetail::findOne($id);
-    //     $model = $this->findModel($id);
-        
-    //     $tags = DocumentsDetail::find()->where(['name' => 'comment','document_id' => $model->document_id])->all();
-
-    //     if ($this->request->isPost && $model->load($this->request->post())) {
-    //         Yii::$app->response->format = Response::FORMAT_JSON;
-    //         if($model->save()){
-    //             $model->UpdateDocumentsDetail();
-    //             return $this->redirect(['view', 'id' => $model->id]);
-    //             // return [
-    //             //     'status' => 'success',
-    //             //     'data' => $model,
-    //             // ];
-    //         }
-    //     }
+    
     public function actionUpdateComment($id)
     {
         $emp = UserHelper::GetEmployee();

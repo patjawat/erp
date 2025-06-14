@@ -51,7 +51,7 @@ if (file_exists($dataFile)) {
 <div class="card">
     <div class="card-body d-flex justify-content-between align-top align-items-center">
         <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
-        <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
+        <?= $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
@@ -146,7 +146,7 @@ if (file_exists($dataFile)) {
                             <span class="fw-lighter fs-13"><?php echo isset($item->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->doc_time : ''?></span> -->
                             </div>
                         </td>
-                        <td> <?=$item->status?></td>
+                        <td> <?=$item->documentStatus->title ?? '-'?></td>
                         <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
                         </td>
                         <!-- <td> -->

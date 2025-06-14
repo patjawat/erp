@@ -1,63 +1,51 @@
 <?php
 
-namespace app\modules\dms\controllers;
+namespace app\components;
 
 use Yii;
-use yii\web\Controller;
-use yii\web\UploadedFile;
-use yii\web\Response;
-use yii\filters\VerbFilter;
-use yii\filters\AccessControl;
+use TCPDF;
+use app\models\Uploads;
+use yii\base\Component;
+use chillerlan\QRCode\QRCode;
+use app\components\SiteHelper;
+use app\components\ThaiDateHelper;
 
-class PdfStampController extends Controller
+class PdfHelper extends Component{
+
+    public static function Stamp($model)
 {
-    public function behaviors()
-    {
-        return [
-            'access' => [
-                'class' => AccessControl::class,
-                'rules' => [
-                    [
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'delete' => ['POST'],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * แสดงหน้าหลักสำหรับอัพโลด PDF และจัดการ stamp
-     */
-    public function actionIndex()
-    {
-      return $this->render('index');
-    }
-
-
-    public function actionStampSave()
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-
     $textLines = [
-        'โรงพยาบาลสมเด็จพยุพราชด่านซ้าย ทดสอบระบบ',
-        'รับที่ : 1204/2567',
-        'วันที่ : 14 มิ.ย. 2567',
-        'เวลา : 09:45 น.',
+        SiteHelper::getInfo()['company_name'],
+        'รับที่ : '.$model->doc_regis_number,
+        'วันที่ : '.ThaiDateHelper::formatThaiDateRange($model->doc_transactions_date),
+        'เวลา : '.$model->doc_time.' น.',
     ];
 
     define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));  // ที่เก็บฟอนต์แปลงแล้ว
 
+        $ref = $model->ref;
+        $directory = Yii::getAlias('@app/modules/filemanager/fileupload/' . $ref . '/');
+        $checkFileUpload = Uploads::findOne(['ref' => $ref]);
+        // if ($checkFileUpload) {
+            $fileName = $checkFileUpload->real_filename;
+            $filePath = $directory . $fileName;
+
+            // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+            // if (file_exists($filePath) && is_file($filePath)) {
+            //     return true;
+            // } else {
+            //     return false;
+            // }
+        // } else {
+        //     return false;
+        // }
+
+
     $pdf = new \setasign\Fpdi\Fpdi();
-    $outputPath = Yii::getAlias('@webroot/uploads/stamped_output.pdf');
-    $pdfPath = Yii::getAlias('@webroot/uploads/document2.pdf');
+    // $pdfPath = Yii::getAlias('@webroot/uploads/document2.pdf');
+    // $outputPath = Yii::getAlias('@webroot/uploads/stamped_output.pdf');
+    $pdfPath = $filePath;
+    $outputPath = $filePath;
 
     $pdf->setSourceFile($pdfPath);
     $tplIdx = $pdf->importPage(1); // ใช้หน้าแรก
@@ -100,6 +88,5 @@ class PdfStampController extends Controller
         'message' => 'ประทับตราสำเร็จ',
     ];
 }
-
-
+    
 }

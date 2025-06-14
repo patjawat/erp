@@ -9,15 +9,13 @@ use app\models\Uploads;
 use yii\web\Controller;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
-use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\SiteHelper;
+use app\components\PdfHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\hr\models\Employees;
 use app\modules\dms\models\Documents;
-use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -318,9 +316,9 @@ public function actionListTopicData()
 
                 //กำหนดสถานะครั้งแรก
                 if($model->tags_department == ""){
-                    $model->status = 'ลงรับ';
+                    $model->status = 'DS1';
                 }else{
-                    $model->status =  "ส่งหน่วยงาน";
+                    $model->status =  "DS2";
                 }
 
                 try { 
@@ -340,6 +338,7 @@ public function actionListTopicData()
                 }
 
                 if ($model->save(false)) {
+                      PdfHelper::Stamp($model);
                     try {
                         if($this->request->get('doc_number')){
                             $this->moveFile($model);
@@ -472,6 +471,7 @@ public function actionListTopicData()
             }
 
             if ($model->save()) {
+                
                 $model->UpdateDocumentTags();
                 return $this->redirect([$model->document_group]);
             } else {
@@ -587,7 +587,7 @@ public function actionListTopicData()
             //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
             if (in_array($director, $model->tags_employee)) {
                     $docStatus =  $model->document;
-                    $docStatus->status = 'เสนอ ผอ.';
+                    $docStatus->status = 'DS3';
                     $docStatus->save(false);
             }
 
@@ -629,6 +629,8 @@ public function actionListTopicData()
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->save()) {
+
+              
                 $model->UpdateDocumentsDetail();
                 return [
                     'status' => 'success'

@@ -39,40 +39,38 @@ use yii\widgets\ActiveForm;
         ])->label(false);
         ?>
 
-            <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-    </div>
-        <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-    </div>
+    <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
 
-<?php
-            //         echo $form->field($model, 'status')->widget(Select2::classname(), [
-            //             'data' => $model->listStatus(),
-            //             'options' => ['placeholder' => 'สถานะทั้งหมด'],
-            //             'pluginOptions' => [
-            //                 'allowClear' => true,
-            //                 'width' => '170px',
-            //             ],
-            //             'pluginEvents' => [
-            //     'select2:select' => 'function(result) { 
-            //             $(this).submit()
-            //             }',
-            //     'select2:unselecting' => 'function() {
-            //                 $(this).submit()
-            //             }',
-            // ]
-            //         ])->label(false);
-                    ?>
-                    
-    <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
-        <?= Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
-    </div>
-
-    <?php ActiveForm::end(); ?>
+    <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
 
 
     <?php
+                    echo $form->field($model, 'status')->widget(Select2::classname(), [
+                        'data' => $model->listStatus(),
+                        'options' => ['placeholder' => 'สถานะทั้งหมด'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'width' => '170px',
+                        ],
+                        'pluginEvents' => [
+                'select2:select' => 'function(result) { 
+                        $(this).submit()
+                        }',
+                'select2:unselecting' => 'function() {
+                            $(this).submit()
+                        }',
+            ]
+                    ])->label(false);
+                    ?>
+
+    <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
+    <?= Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
+</div>
+
+<?php ActiveForm::end(); ?>
+
+
+<?php
 
 $js = <<< JS
 
