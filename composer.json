@@ -91,7 +91,8 @@
         "philippfrenzel/yii2fullcalendar":"*",
         "setasign/fpdf": "dev-master",
         "tecnickcom/tcpdf": "dev-main",
-        "mpdf/mpdf": "^8.2"
+        "mpdf/mpdf": "^8.2",
+        "setasign/fpdi": "^2.6"
         
     },
     "require-dev": {
