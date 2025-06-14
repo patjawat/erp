@@ -90,6 +90,7 @@ $js = <<<JS
             data: form.serialize(),
             dataType: 'json',
             success: function (res) {
+                console.log(res);
 
                     if (res.status === 'success') {
                        // รีเซ็ตฟอร์ม

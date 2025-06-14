@@ -11,8 +11,8 @@ use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 use app\components\AppHelper;
+use app\components\SiteHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
@@ -21,6 +21,7 @@ use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
+use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -315,6 +316,13 @@ public function actionListTopicData()
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
+                //กำหนดสถานะครั้งแรก
+                if($model->tags_department == ""){
+                    $model->status = 'ลงรับ';
+                }else{
+                    $model->status =  "ส่งหน่วยงาน";
+                }
+
                 try { 
                     $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                     $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
@@ -447,9 +455,6 @@ public function actionListTopicData()
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            // return $model->data_json['send_line'];
-
-            // $result = '[' . $model->data_json['tags_department'] . ']'; // เพิ่ม [ และ ] รอบสตริง
             try {
                 $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                 $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
@@ -575,9 +580,21 @@ public function actionListTopicData()
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+            
+            //## ตรวจสอบสถานะส่งเสนอ ผอ.
+            $director = SiteHelper::getInfo()['director']->id;
+           
+            //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
+            if (in_array($director, $model->tags_employee)) {
+                    $docStatus =  $model->document;
+                    $docStatus->status = 'เสนอ ผอ.';
+                    $docStatus->save(false);
+            }
 
             if ($model->save()) {
+                // บันทึก tag ไปยัง document
                 $model->UpdateDocumentsDetail();
+
                 return [
                     'status' => 'success'
                 ];

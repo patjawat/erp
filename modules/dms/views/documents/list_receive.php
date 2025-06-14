@@ -80,6 +80,7 @@ if (file_exists($dataFile)) {
                             <th class="text-center fw-semibold" style="min-width:100px; width:100px;">เลขที่รับ</th>
                             <th class="fw-semibold" style="min-width:320px;">เรื่อง</th>
                             <th class="fw-semibold" style="min-width:250px;">ผู้บันทึก</th>
+                            <th class="fw-semibold" style="min-width:100px;">สถานะ</th>
                             <th class="fw-semibold" style="width:70px;">แก้ไข</th>
                         </tr>
                     </thead>
@@ -87,7 +88,9 @@ if (file_exists($dataFile)) {
                         <?php foreach($dataProvider->getModels() as $key => $item):?>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
                         </td>
-                        <td class="text-center fw-semibold"><?php echo $item->doc_regis_number?></td>
+                        <td class="text-center fw-semibold"><?php echo $item->doc_regis_number?>
+                   
+                    </td>
                         <!-- <td class="fw-semibold">
                            
                             </td> -->
@@ -138,13 +141,12 @@ if (file_exists($dataFile)) {
                         </td>
                         <td class="fw-light align-middle">
                             <div class=" d-flex flex-column">
-                                <?php
-                             echo $item->viewCreate()['avatar'];
-                            ?>
+                                <?=$item->viewCreate()['avatar'];?>
                                 <!-- <span class="fw-normal fs-6"><?php echo $item->viewReceiveDate()?></span>
                             <span class="fw-lighter fs-13"><?php echo isset($item->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->doc_time : ''?></span> -->
                             </div>
                         </td>
+                        <td> <?=$item->status?></td>
                         <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
                         </td>
                         <!-- <td> -->

@@ -57,7 +57,7 @@ $me = UserHelper::GetEmployee();
                                                     <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                                             <?php echo $item->document->doc_number?> |
                                             <span class="fw-normal fs-6"><?php echo $item->document->viewDocDate()?></span>
-                                            ( <i class="bi bi-clock-history"></i> <span class="fw-lighter fs-13"><?php echo AppHelper::timeDifference($item->document->doc_date)?>)</span>
+                                            ( <i class="bi bi-clock-history"></i> <span class="fw-lighter fs-13"><?php // echo AppHelper::timeDifference($item->document->doc_date) ?? '-'?>)</span>
                                             
                                         </p>
                                         <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->document->topic?> <?php echo $item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>

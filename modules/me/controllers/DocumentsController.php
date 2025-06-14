@@ -7,6 +7,7 @@ use yii\web\Response;
 use yii\db\Expression;
 use app\models\Uploads;
 use yii\helpers\ArrayHelper;
+use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentsDetail;
@@ -41,11 +42,7 @@ class DocumentsController extends \yii\web\Controller
         if ($this->request->isAJax) {
             $dataProviderTags->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }
-        // if($searchModel->show_reading == 1){
-        //     $dataProviderTags->query->andWhere(['IS NOT', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        // }else{
-        //     $dataProviderTags->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        // }
+
         $dataProviderTags->setSort(['defaultOrder' => [
             // 'doc_regis_number' => SORT_DESC,
             // 'thai_year' => SORT_DESC,
@@ -76,7 +73,7 @@ class DocumentsController extends \yii\web\Controller
                 ];
             } else {
                 return $this->render('index', [
-                    'searchModel' => $searchModel,
+                'searchModel' => $searchModel,
                 'dataProviderDepartment' => $dataProviderDepartment,
                 'dataProviderTags' => $dataProviderTags,
                 'dataProviderBookmark' => $dataProviderBookmark
@@ -161,6 +158,16 @@ class DocumentsController extends \yii\web\Controller
         
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+
+            //## ตรวจสอบสถานะส่งเสนอ ผอ.
+            $director = SiteHelper::getInfo()['director']->id;
+             $me = UserHelper::GetEmployee();
+             if($me->id == $director){
+                    $docStatus =  $model->document;
+                    $docStatus->status = 'ผอ.ลงนาม';
+                    $docStatus->save(false);
+             }
+
 
             if($model->save()){
                 $model->UpdateDocumentsDetail();
