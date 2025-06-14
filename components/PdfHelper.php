@@ -12,81 +12,82 @@ use app\components\ThaiDateHelper;
 
 class PdfHelper extends Component{
 
-    public static function Stamp($model)
+   public static function Stamp($model)
 {
+    // เตรียมข้อความประทับตรา
     $textLines = [
         SiteHelper::getInfo()['company_name'],
-        'รับที่ : '.$model->doc_regis_number,
-        'วันที่ : '.ThaiDateHelper::formatThaiDateRange($model->doc_transactions_date),
-        'เวลา : '.$model->doc_time.' น.',
+        'รับที่ : ' . $model->doc_regis_number,
+        'วันที่ : ' . ThaiDateHelper::formatThaiDateRange($model->doc_transactions_date),
+        'เวลา : ' . $model->doc_time . ' น.',
     ];
 
-    define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));  // ที่เก็บฟอนต์แปลงแล้ว
+    // ระบุที่เก็บฟอนต์แปลงแล้ว
+    define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));
 
-        $ref = $model->ref;
-        $directory = Yii::getAlias('@app/modules/filemanager/fileupload/' . $ref . '/');
-        $checkFileUpload = Uploads::findOne(['ref' => $ref]);
-        // if ($checkFileUpload) {
-            $fileName = $checkFileUpload->real_filename;
-            $filePath = $directory . $fileName;
+    // หาพาธไฟล์ PDF ต้นฉบับ
+    $ref = $model->ref;
+    $directory = Yii::getAlias('@app/modules/filemanager/fileupload/' . $ref . '/');
+    $checkFileUpload = Uploads::findOne(['ref' => $ref]);
 
-            // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
-            // if (file_exists($filePath) && is_file($filePath)) {
-            //     return true;
-            // } else {
-            //     return false;
-            // }
-        // } else {
-        //     return false;
-        // }
+    if (!$checkFileUpload) {
+        return ['success' => false, 'message' => 'ไม่พบไฟล์'];
+    }
 
+    $fileName = $checkFileUpload->real_filename;
+    $filePath = $directory . $fileName;
+    $outputPath = $filePath; // จะเขียนทับไฟล์เดิม
 
+    // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
     $pdf = new \setasign\Fpdi\Fpdi();
-    // $pdfPath = Yii::getAlias('@webroot/uploads/document2.pdf');
-    // $outputPath = Yii::getAlias('@webroot/uploads/stamped_output.pdf');
-    $pdfPath = $filePath;
-    $outputPath = $filePath;
+    $pageCount = $pdf->setSourceFile($filePath);
 
-    $pdf->setSourceFile($pdfPath);
-    $tplIdx = $pdf->importPage(1); // ใช้หน้าแรก
-    $pdf->AddPage();
-    $pdf->useTemplate($tplIdx, 0, 0, 210);  // A4 กว้าง 210mm
-
-    // โหลดฟอนต์ไทย
+    // โหลดฟอนต์ THSarabun
     $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
     $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
-    $pdf->SetFont('THSarabunNew', '', 18);
 
-
-
-    $pageWidth = 210;
+    // คำนวณตำแหน่งกล่องข้อความ
+    $pageWidth = 210; // A4
     $marginTop = 5;
     $marginRight = 10;
     $textBoxWidth = 65;
-    $textBoxHeight = count($textLines) * 5; // 5 คือความสูงแต่ละบรรทัด
-
+    $textBoxHeight = count($textLines) * 5;
     $posX = $pageWidth - $textBoxWidth - $marginRight;
     $posY = $marginTop;
 
-    $pdf->SetDrawColor(0, 0, 0);
-    $pdf->SetLineWidth(0.8);
-    $pdf->SetFillColor(255, 255, 255);
+    // วนลูปทุกหน้า
+    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+        $tplIdx = $pdf->importPage($pageNo);
+        $pdf->AddPage();
+        $pdf->useTemplate($tplIdx, 0, 0, 210);
 
-    // วาดกรอบสี่เหลี่ยม
-    $pdf->Rect($posX, $posY, $textBoxWidth, $textBoxHeight, 'D');
-    $pdf->SetY($posY);
-    foreach ($textLines as $i => $line) {
-        $pdf->SetX($posX);
-            $pdf->SetFont('THSarabunNew', 'B', 12); // ตัวหนา
-        $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, 'L', true);
+        // ประทับตราเฉพาะหน้าแรก
+        if ($pageNo === 1) {
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->SetLineWidth(0.8);
+            $pdf->SetFillColor(255, 255, 255);
+
+            // วาดกรอบ
+            $pdf->Rect($posX, $posY, $textBoxWidth, $textBoxHeight, 'D');
+            $pdf->SetY($posY);
+
+            foreach ($textLines as $line) {
+                $pdf->SetX($posX);
+                $pdf->SetFont('THSarabunNew', 'B', 12);
+                $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, 'L', true);
+            }
+        }
     }
+
+    // บันทึกไฟล์ (เขียนทับหรือเปลี่ยนชื่อก็ได้)
     $pdf->Output($outputPath, 'F');
 
     return [
         'success' => true,
-        'file' => '/uploads/stamped_output.pdf',
-        'message' => 'ประทับตราสำเร็จ',
+        'file' => str_replace(Yii::getAlias('@webroot'), '', $outputPath),
+        'message' => 'ประทับตราเฉพาะหน้าแรกสำเร็จ',
     ];
 }
+
     
 }
