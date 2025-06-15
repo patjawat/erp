@@ -34,23 +34,21 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <?php if ($model->document_group == 'receive'): ?>
-<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
+    <i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
 <?php endif; ?>
 <?php if ($model->document_group == 'send'): ?>
-<i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
+    <i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
 <?php endif; ?>
 <style>
-.form-label {
-    font-weight: 600 !important;
-}
-
-.file-upload-btn {
-    height: 100% !important;
-}
-
-.file-upload {
-    height: 800px !important;
-}
+    .form-label {
+        font-weight: 600 !important;
+    }
+    .file-upload-btn{
+       height:100% !important;
+    }
+    .file-upload {
+        height: 800px !important;
+    }
 </style>
 
 <?php $this->endBlock(); ?>
@@ -81,7 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
             <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
 
-                    <div class="position-relative">
+           <div class="file-uploadxx">
                         <div class="file-upload-btnxx btn btn-sm btn-primary">
                             <i class="bi bi-cloud-arrow-up fs-5"></i>
                             <span>คลิกอัปโหลดไฟล์ที่นี่</span>
@@ -90,23 +88,22 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
 
 
-                <div class="card">
-                    <div class="card-body">
+            <div class="card">
+                <div class="card-body">
 
-                        <div class="mb-3">
-                            <div class="pdf-preview" id="editPdfPreview" data-isfile="" data-newfile="false"
-                                style="display: none;">
-                                <embed id="editPreviewPdf" src="" type="application/pdf" width="100%" height="800px" />
-                                <div class="file-remove" id="editRemovePdf" style="display: none;" data-id="">
-                                    <i class="bi bi-x"></i>
-                                </div>
-                            </div>
+                <div class="mb-3">
+                    <div class="pdf-preview" id="editPdfPreview" data-isfile="" data-newfile="false" style="display: none;">
+                        <embed id="editPreviewPdf" src="" type="application/pdf" width="100%" height="800px" />
+                        <div class="file-remove" id="editRemovePdf" style="display: none;" data-id="">
+                            <i class="bi bi-x"></i>
                         </div>
-
-
                     </div>
                 </div>
 
+
+                </div>
+            </div>
+            
 
                 <!-- <div class="d-flex justify-content-between align-item-middle mb-3">
                     <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
@@ -435,7 +432,6 @@ $js = <<< JS
             contentType: false,
             success: function (res) {
                    loadPdf()
-                    success()
                 // You can update the preview or reload the document list here
                 // For example: loadPdf();
             }
@@ -549,7 +545,6 @@ $js = <<< JS
                     $('#editPdfPreview').attr('data-isfile', '');
                     $('#editPdfPreview').attr('data-newfile', 'false');
                     $('#editRemovePdf').hide();
-                   
                 },
                 error: function() {
                     Swal.fire("ผิดพลาด!", "ไม่สามารถลบไฟล์ได้", "error");

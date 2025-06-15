@@ -10,84 +10,86 @@ use chillerlan\QRCode\QRCode;
 use app\components\SiteHelper;
 use app\components\ThaiDateHelper;
 
-class PdfHelper extends Component{
-
-   public static function Stamp($model)
+class PdfHelper extends Component
 {
-    // เตรียมข้อความประทับตรา
-    $textLines = [
-        SiteHelper::getInfo()['company_name'],
-        'รับที่ : ' . $model->doc_regis_number,
-        'วันที่ : ' . ThaiDateHelper::formatThaiDateRange($model->doc_transactions_date),
-        'เวลา : ' . $model->doc_time . ' น.',
-    ];
 
-    // ระบุที่เก็บฟอนต์แปลงแล้ว
-    define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));
 
-    // หาพาธไฟล์ PDF ต้นฉบับ
-    $ref = $model->ref;
-    $directory = Yii::getAlias('@app/modules/filemanager/fileupload/' . $ref . '/');
-    $checkFileUpload = Uploads::findOne(['ref' => $ref]);
+    public static function Stamp($model)
+    {
+        // เตรียมข้อความประทับตรา
+        $textLines = [
+            SiteHelper::getInfo()['company_name'],
+            'รับที่ : ' . $model->doc_regis_number,
+            'วันที่ : ' . ThaiDateHelper::formatThaiDateRange($model->doc_transactions_date),
+            'เวลา : ' . $model->doc_time . ' น.',
+        ];
 
-    if (!$checkFileUpload) {
-        return ['success' => false, 'message' => 'ไม่พบไฟล์'];
-    }
+        // ระบุที่เก็บฟอนต์แปลงแล้ว
+        define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));
 
-    $fileName = $checkFileUpload->real_filename;
-    $filePath = $directory . $fileName;
-    $outputPath = $filePath; // จะเขียนทับไฟล์เดิม
+        // หาพาธไฟล์ PDF ต้นฉบับ
+        $ref = $model->ref;
+        $directory = Yii::getAlias('@app/modules/filemanager/fileupload/' . $ref . '/');
+        $checkFileUpload = Uploads::findOne(['ref' => $ref]);
 
-    // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
-    $pdf = new \setasign\Fpdi\Fpdi();
-    $pageCount = $pdf->setSourceFile($filePath);
+        if (!$checkFileUpload) {
+            return ['success' => false, 'message' => 'ไม่พบไฟล์'];
+        }
 
-    // โหลดฟอนต์ THSarabun
-    $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-    $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+        $fileName = $checkFileUpload->real_filename;
+        $filePath = $directory . $fileName;
+        $outputPath = $filePath; // จะเขียนทับไฟล์เดิม
 
-    // คำนวณตำแหน่งกล่องข้อความ
-    $pageWidth = 210; // A4
-    $marginTop = 5;
-    $marginRight = 10;
-    $textBoxWidth = 65;
-    $textBoxHeight = count($textLines) * 5;
-    $posX = $pageWidth - $textBoxWidth - $marginRight;
-    $posY = $marginTop;
+        // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pageCount = $pdf->setSourceFile($filePath);
 
-    // วนลูปทุกหน้า
-    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-        $tplIdx = $pdf->importPage($pageNo);
-        $pdf->AddPage();
-        $pdf->useTemplate($tplIdx, 0, 0, 210);
+        // โหลดฟอนต์ THSarabun
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
 
-        // ประทับตราเฉพาะหน้าแรก
-        if ($pageNo === 1) {
-            $pdf->SetDrawColor(0, 0, 0);
-            $pdf->SetLineWidth(0.8);
-            $pdf->SetFillColor(255, 255, 255);
+        // คำนวณตำแหน่งกล่องข้อความ
+        $pageWidth = 210; // A4
+        $marginTop = 5;
+        $marginRight = 10;
+        $textBoxWidth = 65;
+        $textBoxHeight = count($textLines) * 5;
+        $posX = $pageWidth - $textBoxWidth - $marginRight;
+        $posY = $marginTop;
 
-            // วาดกรอบ
-            $pdf->Rect($posX, $posY, $textBoxWidth, $textBoxHeight, 'D');
-            $pdf->SetY($posY);
+        // วนลูปทุกหน้า
+        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            $tplIdx = $pdf->importPage($pageNo);
+            $pdf->AddPage();
+            $pdf->useTemplate($tplIdx, 0, 0, 210);
 
-            foreach ($textLines as $line) {
-                $pdf->SetX($posX);
-                $pdf->SetFont('THSarabunNew', 'B', 12);
-                $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, 'L', true);
+            // ประทับตราเฉพาะหน้าแรก
+            if ($pageNo === 1) {
+                $pdf->SetDrawColor(0, 0, 0);
+                $pdf->SetLineWidth(0.8);
+                $pdf->SetFillColor(255, 255, 255);
+
+                // วาดกรอบ
+                $pdf->Rect($posX, $posY, $textBoxWidth, $textBoxHeight, 'D');
+                $pdf->SetY($posY);
+
+                foreach ($textLines as $line) {
+                    $pdf->SetX($posX);
+                    $pdf->SetFont('THSarabunNew', 'B', 12);
+                    $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, 'L', true);
+                }
             }
         }
+
+        // บันทึกไฟล์ (เขียนทับหรือเปลี่ยนชื่อก็ได้)
+        $pdf->Output($outputPath, 'F');
+
+        return [
+            'success' => true,
+            'file' => str_replace(Yii::getAlias('@webroot'), '', $outputPath),
+            'message' => 'ประทับตราเฉพาะหน้าแรกสำเร็จ',
+        ];
     }
 
-    // บันทึกไฟล์ (เขียนทับหรือเปลี่ยนชื่อก็ได้)
-    $pdf->Output($outputPath, 'F');
 
-    return [
-        'success' => true,
-        'file' => str_replace(Yii::getAlias('@webroot'), '', $outputPath),
-        'message' => 'ประทับตราเฉพาะหน้าแรกสำเร็จ',
-    ];
-}
-
-    
 }

@@ -99,6 +99,13 @@ class UploadsController extends \yii\web\Controller
         return  FileManagerHelper::UploadsSingle();
     }
 
+    public function actionUploadPdf()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return  FileManagerHelper::UploadPdf();
+    }
+
+
     public function actionDeletefileAjax()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;

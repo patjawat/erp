@@ -337,8 +337,8 @@ public function actionListTopicData()
                     $model->document_org = $this->UpdateDocOrg($model);
                 }
 
+                PdfHelper::Stamp($model);
                 if ($model->save(false)) {
-                      PdfHelper::Stamp($model);
                     try {
                         if($this->request->get('doc_number')){
                             $this->moveFile($model);

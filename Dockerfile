@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     pkg-config \
     git \
+    ghostscript\
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,6 +34,7 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.
 # Step 2: กำหนด working directory ของโปรเจค
 WORKDIR /app
 RUN apt update && apt install -y nano default-mysql-client
+
 # Step 3: Copy ไฟล์ที่จำเป็นไปยัง image
 COPY ./ /app/
 

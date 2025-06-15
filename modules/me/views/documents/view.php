@@ -89,7 +89,7 @@ $this->title = $model->topic;
                     <div class="tab-content mt-3">
                         
                         <h5 class="section-title"><?=$model->data_json['des'] ?? ''?></h5>
-                        หนาวยงาน : <?=$model->viewTagsDepartment()?>
+                        ถึงหนาวยงาน : <?=$model->viewTagsDepartment()?>
                         <div id="home" class="container tab-pane active pb-4">
                             <div class="listComment"></div>
                             <div class="viewFormComment"></div>
