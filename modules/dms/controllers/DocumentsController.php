@@ -402,15 +402,18 @@ public function actionListTopicData()
                 // ลบ json object ที่ doc_number = $model->doc_number ในไฟล์ @app/doc_receive/data.json
                 $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
                 $doc_number = $model->doc_number;
-                if (file_exists($jsonFile)) {
+                if (file_exists($jsonFile) && is_writable($jsonFile)) {
                     $jsonData = file_get_contents($jsonFile);
                     $dataArr = json_decode($jsonData, true);
                     if (is_array($dataArr)) {
                         // ค้นหาและลบ object ที่ doc_number ตรงกับ $model->doc_number
                         $dataArr = array_values(array_filter($dataArr, function($item) use ($doc_number) {
-                            return isset($item['doc_number']) && $item['doc_number'] !== $doc_number;
+                            return !(isset($item['doc_number']) && $item['doc_number'] == $doc_number);
                         }));
-                        file_put_contents($jsonFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                        // เขียนไฟล์แบบ atomic เพื่อป้องกัน permission issue
+                        $tmpFile = $jsonFile . '.tmp';
+                        file_put_contents($tmpFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                        rename($tmpFile, $jsonFile);
                     }
                 }
             } else {
