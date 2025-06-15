@@ -337,7 +337,6 @@ public function actionListTopicData()
                     $model->document_org = $this->UpdateDocOrg($model);
                 }
 
-                PdfHelper::Stamp($model);
                 if ($model->save(false)) {
                     try {
                         if($this->request->get('doc_number')){
@@ -347,6 +346,7 @@ public function actionListTopicData()
                         //throw $th;
                     }
                     $model->UpdateDocumentTags();
+                    PdfHelper::Stamp($model);
                 } else {
                     return $model->getErrors();
                 }
@@ -366,7 +366,6 @@ public function actionListTopicData()
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
     public function moveFile($model)
     {
-        
         $filename  = $model->data_json['file_name'];
         $newUpload = new Uploads();
         $newUpload->ref = $model->ref;
@@ -389,28 +388,36 @@ public function actionListTopicData()
 
         // ย้ายไฟล์
         if (file_exists($sourcePath)) {
-            if (rename($sourcePath, $targetPath)) {
-            // ลบ json object ที่ topic = $model->topic ในไฟล์ @app/doc_receive/data.json
-            $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
-            $doc_number = $model->doc_number;
-            if (file_exists($jsonFile)) {
-                $jsonData = file_get_contents($jsonFile);
-                $dataArr = json_decode($jsonData, true);
-                if (is_array($dataArr)) {
-                // ค้นหาและลบ object ที่ topic ตรงกับ $model->topic
-                $dataArr = array_values(array_filter($dataArr, function($item) use ($doc_number) {
-                    return isset($item['doc_number']) && $item['doc_number'] !== $doc_number;
-                }));
-                file_put_contents($jsonFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-                }
-            }
-            } else {
-            // echo "Failed to move file.";
-            }
-        } else {
-            // echo "Source file does not exist.";
-        }
+            // แปลง PDF ด้วย Ghostscript ก่อนย้าย
+            $convertedPath = $targetDir . 'converted_' . $filename;
+            $gsCmd = "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dBATCH -sOutputFile=" . escapeshellarg($convertedPath) . " " . escapeshellarg($sourcePath);
+            exec($gsCmd, $output, $returnVar);
 
+            if ($returnVar === 0 && file_exists($convertedPath)) {
+                // ลบไฟล์ต้นฉบับหลังแปลงสำเร็จ
+                unlink($sourcePath);
+                // เปลี่ยนชื่อไฟล์ที่แปลงแล้วเป็นชื่อเดิม
+                rename($convertedPath, $targetPath);
+
+                // ลบ json object ที่ doc_number = $model->doc_number ในไฟล์ @app/doc_receive/data.json
+                $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
+                $doc_number = $model->doc_number;
+                if (file_exists($jsonFile)) {
+                    $jsonData = file_get_contents($jsonFile);
+                    $dataArr = json_decode($jsonData, true);
+                    if (is_array($dataArr)) {
+                        // ค้นหาและลบ object ที่ doc_number ตรงกับ $model->doc_number
+                        $dataArr = array_values(array_filter($dataArr, function($item) use ($doc_number) {
+                            return isset($item['doc_number']) && $item['doc_number'] !== $doc_number;
+                        }));
+                        file_put_contents($jsonFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                    }
+                }
+            } else {
+                // ถ้าแปลงไม่สำเร็จ ให้ย้ายไฟล์ต้นฉบับตามปกติ
+                rename($sourcePath, $targetPath);
+            }
+        }
     }
 
     public function actionTest()
