@@ -167,6 +167,14 @@ class DocumentsController extends \yii\web\Controller
                     $docStatus->status = 'DS4';
                     $docStatus->save(false);
              }
+           
+            //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
+            if (in_array($director, $model->tags_employee)) {
+                    $docStatus =  $model->document;
+                    $docStatus->status = 'DS3';
+                    $docStatus->save(false);
+            }
+
 
 
             if($model->save()){

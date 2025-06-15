@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Html;
+use app\components\ThaiDateHelper;
 $this->title = 'หนังสือสำนักงานสาธารณสุขจังหวัดเลย';
 ?>
 
@@ -33,6 +34,7 @@ $this->title = 'หนังสือสำนักงานสาธารณ�
     >
         <thead>
             <tr>
+                <th scope="col">วันที่ส่ง</th>
                 <th scope="col">เลขที่หนังสือ</th>
                 <th scope="col">ชื่อหนังสือ</th>
                 <th scope="col">จาก</th>
@@ -43,6 +45,7 @@ $this->title = 'หนังสือสำนักงานสาธารณ�
         <tbody>
 <?php foreach($documentTemps as $item):?>
         <tr class="">
+                <td scope="row"><?=ThaiDateHelper::formatThaiDate($item['send_date']);?></td>
                 <td scope="row"><?=$item['doc_number']?></td>
                 <td><?=$item['topic']?></td>
                 <td><?=$item['doc_from']?></td>
