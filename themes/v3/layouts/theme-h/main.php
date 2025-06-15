@@ -30,67 +30,74 @@ $moduleId = Yii::$app->controller->module->id;
 
     <title><?= Html::encode($this->title) ?></title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <?php $this->head() ?>
 </head>
 
-  <?php echo $this->render('../modal'); ?>
-    <?php echo $this->render('../sub_modal'); ?>
-    <?php echo $this->render('../modal-fullscreen'); ?>
-    
+<?php echo $this->render('../modal'); ?>
+<?php echo $this->render('../sub_modal'); ?>
+<?php echo $this->render('../modal-fullscreen'); ?>
+
 <body class="horizontal-navbar">
-   <!-- Begin Page -->
-   <div class="page-wrapper">
-      <!-- Begin Header -->
-      <?=$this->render('header')?>
-      <!-- Header End -->
-      <?=$this->render('navbar_menu')?>
-      
-      <!-- Begin main content -->
-      <div class="main-content">
-         <!-- content -->
-         <div class="page-content">
-        
-              <!-- page header -->
-<?php echo $this->render('page_title'); ?>
-            
-<div class="page-content-wrapper mt--45"  data-aos="fade-left"  data-aos-delay="300">
-    <div class="container-fluid">
-        <?= $content ?>
+    <!-- Begin Page -->
+    <div class="page-wrapper">
+        <!-- Begin Header -->
+        <?=$this->render('header')?>
+        <!-- Header End -->
+        <?=$this->render('navbar_menu')?>
+
+        <!-- Begin main content -->
+        <div class="main-content">
+            <!-- content -->
+            <div class="page-content">
+
+                <!-- page header -->
+                <?php echo $this->render('page_title'); ?>
+
+                <div class="page-content-wrapper mt--45" data-aos="fade-left" data-aos-delay="300">
+                    <div class="container-fluid">
+                       <div  id="page-content">
+                            <?=$content;?>
+                        </div>
+						<div id="loader">
+							<?php echo $this->render('loader'); ?>
+						</div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <!-- main content End -->
+        <!-- footer -->
+        <!-- footer -->
+        <div class="preloader">
+            <div class="status">
+                <div class="spinner-border avatar-sm text-primary m-2" role="status"></div>
+            </div>
+        </div>
+        <footer class="footer">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-5 mb-1 mb-md-0">
+                        <span><span id="date">2025</span> &copy; ERP Hospital.</span>
+                    </div>
+
+                    <div class="col-md-5 text-md-end">
+                        <span>ผู้ให้การสนับสนุน<span class="text-primary font-weight-500">มูลนิธิรามาธิบดี</span></span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+
+
     </div>
 
-</div>
-            
-      </div>
-      </div>
-      <!-- main content End -->
-      <!-- footer -->
-      <!-- footer -->
-      <div class="preloader">
-      	<div class="status">
-      		<div class="spinner-border avatar-sm text-primary m-2" role="status"></div>
-      	</div>
-      </div>
-      <footer class="footer">
-      	<div class="container-fluid">
-      		<div class="row align-items-center">
-      			<div class="col-md-5 mb-1 mb-md-0">
-      				<span><span id="date">2025</span> &copy; ERP Hospital.</span>
-      			</div>
-      			
-      			<div class="col-md-5 text-md-end">
-      				<span>ผู้ให้การสนับสนุน<span class="text-primary font-weight-500">มูลนิธิรามาธิบดี</span></span>
-      			</div>
-      		</div>
-      	</div>
-      </footer>
 
-
-
-   </div>
-
-
-<?php
+    <?php
 $js = <<< JS
 
   AOS.init({});
@@ -134,7 +141,7 @@ JS;
 $this->registerJS($js, View::POS_END);
 ?>
 
-<?php $this->endBody() ?>
+    <?php $this->endBody() ?>
 </body>
 
 </html>
