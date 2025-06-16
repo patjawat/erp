@@ -425,10 +425,10 @@ class EmployeesController extends Controller
                     } else {
                         array_push($error, '[ ' . $x . ' ]' . ' วันเกิด ' . $data_check_error[5] . ' ไม่ถูกต้อง (1980-01-01)');
                     }
-                    if (strlen($data_check_error[6]) == 9 and $data_check_error[6][0] != 0) {
-                    } elseif (strlen($data_check_error[6]) != 10) {
-                        array_push($error, '[ ' . $x . ' ]' . ' เบอร์โทรศัพท์ ' . $data_check_error[6] . ' ไม่ถูกต้อง (ต้องมี 10 หลัก)');
-                    }
+                    // if (strlen($data_check_error[6]) == 9 and $data_check_error[6][0] != 0) {
+                    // } elseif (strlen($data_check_error[6]) != 10) {
+                    //     array_push($error, '[ ' . $x . ' ]' . ' เบอร์โทรศัพท์ ' . $data_check_error[6] . ' ไม่ถูกต้อง (ต้องมี 10 หลัก)');
+                    // }
                 }
             }
             if (empty($error)) {
