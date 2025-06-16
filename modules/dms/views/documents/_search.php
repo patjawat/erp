@@ -9,6 +9,8 @@ use app\components\DateFilterHelper;
 /** @var app\modules\dms\models\DocumentSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+<div style="width: 67%;">
+
 
 <?php $form = ActiveForm::begin([
     'action' => [$model->document_group],
@@ -89,7 +91,7 @@ use app\components\DateFilterHelper;
 
 <?php ActiveForm::end(); ?>
 
-
+</div>
 <?php
 
 $js = <<< JS
