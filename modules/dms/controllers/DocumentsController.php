@@ -441,8 +441,6 @@ public function actionListTopicData()
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        // $model->doc_date = AppHelper::convertToThai($model->doc_date);
-        // $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
         $old_json = $model->data_json;
         try {
             $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
@@ -472,7 +470,6 @@ public function actionListTopicData()
             }
 
             if ($model->save()) {
-                
                 $model->UpdateDocumentTags();
                 return $this->redirect([$model->document_group]);
             } else {

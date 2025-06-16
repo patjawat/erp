@@ -380,20 +380,20 @@ $js = <<< JS
                     dataType: 'json',
                     success: async function (response) {
                         form.yiiActiveForm('updateMessages', response, true);
-                        if (response.hasOwnProperty('error') && response.error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'เกิดข้อผิดพลาด',
-                                text: response.error,
-                            });
-                        }
+                        // if (response.hasOwnProperty('error') && response.error) {
+                        //     Swal.fire({
+                        //         icon: 'error',
+                        //         title: 'เกิดข้อผิดพลาด',
+                        //         text: response.error,
+                        //     });
+                        // }
                     },
                     error: function(xhr, status, error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'เกิดข้อผิดพลาด',
-                            text: xhr.responseText || error,
-                        });
+                        // Swal.fire({
+                        //     icon: 'error',
+                        //     title: 'เกิดข้อผิดพลาด',
+                        //     text: xhr.responseText || error,
+                        // });
                     }
                 });
             }

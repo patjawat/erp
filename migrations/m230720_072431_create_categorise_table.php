@@ -21,7 +21,7 @@ class m230720_072431_create_categorise_table extends Migration
             'code' => $this->string()->comment('รหัส'),
             'emp_id' => $this->string()->comment('พนักงาน'),
             'name' => $this->string()->notNull()->comment('ชนิดข้อมูล'),
-            'title' => $this->string()->comment('ชื่อ'),
+            'title' => $this->text()->comment('ชื่อ'),
             'qty' => $this->integer()->comment('จำนวน'),
             'min_stock' => $this->integer()->comment('กำหนดจำนวนต่ำสุด'),
             'max_stock' => $this->integer()->defaultValue(0)->comment('กำหนดจำนวนสูงสุด'),

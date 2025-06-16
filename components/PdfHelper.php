@@ -17,8 +17,9 @@ class PdfHelper extends Component
     public static function Stamp($model)
     {
         // เตรียมข้อความประทับตรา
+        $companyName = SiteHelper::getInfo()['company_name'];
         $textLines = [
-            SiteHelper::getInfo()['company_name'],
+            $companyName,
             'รับที่ : ' . $model->doc_regis_number,
             'วันที่ : ' . ThaiDateHelper::formatThaiDateRange($model->doc_transactions_date),
             'เวลา : ' . $model->doc_time . ' น.',
@@ -48,12 +49,18 @@ class PdfHelper extends Component
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
         $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
 
-        // คำนวณตำแหน่งกล่องข้อความ
+        // ใช้ขนาดมาตรฐานตราประทับหนังสือราชการ (วงกลม เส้นผ่านศูนย์กลาง 3.5 ซม.)
+        // แต่กล่องข้อความจะใช้ขนาดใกล้เคียงเพื่อให้ข้อความอยู่ในกรอบ
         $pageWidth = 210; // A4
-        $marginTop = 5;
-        $marginRight = 10;
-        $textBoxWidth = 65;
-        $textBoxHeight = count($textLines) * 5;
+        $marginTop = 5; // ขอบบน
+        $marginRight = 10; // ขอบขวา
+
+        // คำนวณความกว้างของกล่องตามความยาวชื่อบริษัท
+        $pdf->SetFont('THSarabunNew', 'B', 13);
+        $companyNameWidth = $pdf->GetStringWidth(iconv('UTF-8', 'cp874', $companyName)) + 10; // padding ซ้ายขวา 5mm
+        $minBoxWidth = 50; // ขั้นต่ำ 50mm
+        $textBoxWidth = max($companyNameWidth, $minBoxWidth);
+        $textBoxHeight = 25; // 25 มม.
         $posX = $pageWidth - $textBoxWidth - $marginRight;
         $posY = $marginTop;
 
@@ -65,19 +72,28 @@ class PdfHelper extends Component
 
             // ประทับตราเฉพาะหน้าแรก
             if ($pageNo === 1) {
-                $pdf->SetDrawColor(0, 0, 0);
+                // กำหนดสีเส้นกรอบเป็นสีน้ำเงิน
+                $pdf->SetDrawColor(54, 52, 141, 61);
                 $pdf->SetLineWidth(0.8);
-                $pdf->SetFillColor(255, 255, 255);
+
+                // กำหนดสีตัวหนังสือ (54, 52, 141, 61)
+                $pdf->SetTextColor(54, 52, 141, 61);
 
                 // วาดกรอบ
                 $pdf->Rect($posX, $posY, $textBoxWidth, $textBoxHeight, 'D');
                 $pdf->SetY($posY);
 
-                foreach ($textLines as $line) {
+                foreach ($textLines as $i => $line) {
                     $pdf->SetX($posX);
-                    $pdf->SetFont('THSarabunNew', 'B', 12);
-                    $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, 'L', true);
+                    $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
+
+                    // จัดกึ่งกลางเฉพาะบรรทัดแรก (ชื่อบริษัท)
+                    $align = ($i === 0) ? 'C' : 'L';
+                    $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, $align, false);
                 }
+
+                // รีเซ็ตสีตัวหนังสือกลับเป็นสีดำ (ถ้าต้องการ)
+                $pdf->SetTextColor(0, 0, 0);
             }
         }
 
