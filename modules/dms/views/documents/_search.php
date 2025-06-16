@@ -12,7 +12,7 @@ use app\components\DateFilterHelper;
 <div style="width: 67%;">
 
 
-<?php $form = ActiveForm::begin([
+    <?php $form = ActiveForm::begin([
     'action' => [$model->document_group],
     'method' => 'get',
     'options' => [
@@ -20,10 +20,10 @@ use app\components\DateFilterHelper;
     ],
 ]); ?>
 
-<div class="d-flex justify-content-between align-top align-items-center gap-2">
-    <?= $form->field($model, 'q')->textInput(['placeholder' =>'คำค้นหา...'])->label(false) ?>
+    <div class="d-flex justify-content-between align-top align-items-center gap-2">
+        <?= $form->field($model, 'q')->textInput(['placeholder' =>'คำค้นหา...'])->label(false) ?>
 
-<?php
+        <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
             'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
@@ -42,7 +42,7 @@ use app\components\DateFilterHelper;
         ])->label(false);
         ?>
 
-    <?php
+        <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
             'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
@@ -61,12 +61,12 @@ use app\components\DateFilterHelper;
         ])->label(false);
         ?>
 
-    <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
 
-    <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
 
 
-    <?php
+        <?php
                     echo $form->field($model, 'status')->widget(Select2::classname(), [
                         'data' => $model->listStatus(),
                         'options' => ['placeholder' => 'สถานะทั้งหมด'],
@@ -85,11 +85,11 @@ use app\components\DateFilterHelper;
                     ])->label(false);
                     ?>
 
-    <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
-    <?php echo Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
-</div>
+        <?= $form->field($model, 'document_group')->hiddenInput()->label(false) ?>
+        <?php echo Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
+    </div>
 
-<?php ActiveForm::end(); ?>
+    <?php ActiveForm::end(); ?>
 
 </div>
 <?php
