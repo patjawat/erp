@@ -33,7 +33,18 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body  align-top align-items-center">
+          <div class="d-flex justify-content-between align-top align-items-center">
         <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่ม'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group,'document_type' => $searchModel->document_type, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+        <?php  echo $this->render('_search_appointment', ['model' => $searchModel]); ?>
+                 <?= Html::a(
+            '<i class="fa-solid fa-file-excel ne-1"></i> ส่งออก',
+            ['/dms/documents/receive'],
+            [
+                'class' => 'btn btn-success shadow rounded-pill',
+                'onclick' => 'return alert("ช้าก่อนกำลังเขียน code ยังไม่เสร็จ");'
+            ]
+        ) ?>
+    </div>
     </div>
 </div>
 
@@ -49,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                     รายการ
                 </h6>
-                <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
+                
             </div>
 
             <div class="table-responsive">
