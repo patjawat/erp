@@ -147,11 +147,7 @@ if (file_exists($dataFile)) {
                             </div>
                         </td>
                         <td> <?=$item->documentStatus->title ?? '-'?></td>
-                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
-                        </td>
-                        <!-- <td> -->
-                        <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
-                        <!-- </td> -->
+                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?></td>
                         </tr>
                         <?php endforeach;?>
 

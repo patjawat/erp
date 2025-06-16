@@ -144,14 +144,14 @@ public function actionListTopicData()
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
         
-        try {
+    //     try {
          
-        // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        // $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        // $dataProvider->query->andFilterWhere(['>=', 'doc_date', $dateStart])->andFilterWhere(['<=', 'doc_date', $dateEnd]);
-            } catch (\Throwable $th) {
-        //throw $th;
-    }
+    //     $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+    //     $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+    //     $dataProvider->query->andFilterWhere(['between', 'doc_transactions_date', $dateStart,$dateEnd]);
+    //         } catch (\Throwable $th) {
+    //     //throw $th;
+    // }
 
         $dataProvider->setSort(['defaultOrder' => [
             'doc_regis_number' => SORT_DESC,

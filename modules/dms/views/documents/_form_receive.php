@@ -290,7 +290,11 @@ $url = Url::to(['/dms/documents/get-items']);
 $showPdfUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref, 'file_name' => $file]);
 $js = <<< JS
 
+
     loadPdf()
+
+
+
         function loadPdf() {
             // Call AJAX to check if PDF file exists and get its URL
             $.ajax({
@@ -306,23 +310,98 @@ $js = <<< JS
                 $('#editPdfPreview').attr('data-isfile', '1');
                 $('#editPdfPreview').attr('data-newfile', 'true');
                 } else {
-                // $('#editPdfPreview').hide();
-                // $('#editPreviewPdf').attr('src', '');
-                // $('#editPdfPreview').attr('data-isfile', '');
-                // $('#editPdfPreview').attr('data-newfile', 'false');
-                // $('#editRemovePdf').hide();
+
                 }
             },
             error: function () {
-                // $('#editPdfPreview').hide();
-                // $('#editPreviewPdf').attr('src', '');
-                // $('#editPdfPreview').attr('data-isfile', '');
-                // $('#editPdfPreview').attr('data-newfile', 'false');
-                // $('#editRemovePdf').hide();
+
             }
             });
         }
 
+    $('#my_file').on('change', function (e) {
+        const file = this.files[0];
+        if (!file) return;
+
+        // Check file type (PDF only)
+        if (file.type !== 'application/pdf') {
+            alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
+            $(this).val('');
+            return;
+        }
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert("ขนาดไฟล์ต้องไม่เกิน 5MB");
+            $(this).val('');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("document", file);
+        formData.append("id", 1);
+        formData.append("ref", '$ref');
+        formData.append("name", 'document');
+
+        $.ajax({
+            url: '$urlUpload',
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                   loadPdf()
+                // You can update the preview or reload the document list here
+                // For example: loadPdf();
+            }
+        });
+    });
+
+
+
+    $('#form-document').on('beforeSubmit', function (e) {
+        var form = $(this);
+        console.log('Submit');
+        Swal.fire({
+            title: "ยืนยัน?",
+            text: "บันทึกหนังสือ!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            cancelButtonText: "ยกเลิก!",
+            confirmButtonText: "ใช่, ยืนยัน!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'post',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: async function (response) {
+                        form.yiiActiveForm('updateMessages', response, true);
+                        if (response.hasOwnProperty('error') && response.error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: response.error,
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: xhr.responseText || error,
+                        });
+                    }
+                });
+            }
+        });
+        return false;
+    });
+        
+    
 
         $('#editRemovePdf').click(function (e) { 
             e.preventDefault();

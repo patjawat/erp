@@ -62,9 +62,9 @@ class DocumentSearch extends Documents
         if ($this->date_filter) {
             $range = DateFilterHelper::getRange($this->date_filter);
             if ($range) {
-                $query->andWhere(['between', 'doc_transactions_date', $range[0], $range[1]]);
-                // $this->date_start = AppHelper::convertToThai($range[0]);
-                // $this->date_end = AppHelper::convertToThai($range[1]);
+                $date_start = date('Y-m-d', strtotime($range[0]));
+                $date_end = date('Y-m-d', strtotime($range[1]));
+                $query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
             }
         }
 
