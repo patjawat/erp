@@ -56,6 +56,14 @@ if (file_exists($dataFile)) {
     <div class="card-body d-flex justify-content-between align-top align-items-center">
         <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
         <?= $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
+        <?= Html::a(
+            '<i class="fa-solid fa-file-excel ne-1"></i> ส่งออก',
+            ['/dms/documents/receive'],
+            [
+                'class' => 'btn btn-success shadow rounded-pill',
+                'onclick' => 'return alert("ช้าก่อนกำลังเขียน code ยังไม่เสร็จ");'
+            ]
+        ) ?>
     </div>
 </div>
 

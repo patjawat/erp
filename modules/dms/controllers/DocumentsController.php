@@ -11,10 +11,11 @@ use yii\bootstrap5\Html;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
-use app\components\SiteHelper;
 use app\components\PdfHelper;
+use app\components\SiteHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
@@ -117,9 +118,10 @@ public function actionListTopicData()
 
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
             'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
+            // 'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            // 'date_end' => AppHelper::convertToThai($lastDay),
             'document_group' => 'receive',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -131,17 +133,22 @@ public function actionListTopicData()
             ['like', 'doc_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
+        if($searchModel->date_filter){
+                 $range = DateFilterHelper::getRange($searchModel->date_filter);
+                $searchModel->date_start = AppHelper::convertToThai($range[0]);
+                $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
 
-         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+         if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
         
         try {
          
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['>=', 'doc_date', $dateStart])->andFilterWhere(['<=', 'doc_date', $dateEnd]);
+        // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        // $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        // $dataProvider->query->andFilterWhere(['>=', 'doc_date', $dateStart])->andFilterWhere(['<=', 'doc_date', $dateEnd]);
             } catch (\Throwable $th) {
         //throw $th;
     }
@@ -819,4 +826,10 @@ public function actionListTopicData()
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+    public function actionTags()
+    {
+        return $this->render('tags');
+    }
+
 }

@@ -3,7 +3,9 @@
 namespace app\modules\dms\models;
 
 use yii\base\Model;
+use app\components\AppHelper;
 use yii\data\ActiveDataProvider;
+use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
 
 /**
@@ -18,7 +20,7 @@ class DocumentSearch extends Documents
     {
         return [
             [['id'], 'integer'],
-            [['q','show_reading','document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time', 'data_json','document_group','status','ref'], 'safe'],
+            [['date_filter', 'q', 'show_reading', 'document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time', 'data_json', 'document_group', 'status', 'ref'], 'safe'],
         ];
     }
 
@@ -54,6 +56,16 @@ class DocumentSearch extends Documents
             // uncomment the following line if you do not want to return any records when validation fails
             // $query->where('0=1');
             return $dataProvider;
+        }
+
+
+        if ($this->date_filter) {
+            $range = DateFilterHelper::getRange($this->date_filter);
+            if ($range) {
+                $query->andWhere(['between', 'doc_transactions_date', $range[0], $range[1]]);
+                // $this->date_start = AppHelper::convertToThai($range[0]);
+                // $this->date_end = AppHelper::convertToThai($range[1]);
+            }
         }
 
         // grid filtering conditions

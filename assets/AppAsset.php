@@ -36,7 +36,8 @@ class AppAsset extends AssetBundle
         'https://unpkg.com/nprogress@0.2.0/nprogress.css',
         'css/tour.min.css',
         'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css',
-        'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css'
+        'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.3.4/jquery.textcomplete.css'
         // 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'
     ];
 
@@ -59,6 +60,7 @@ class AppAsset extends AssetBundle
         'https://unpkg.com/nprogress@0.2.0/nprogress.js',
         // 'js/tour.js'
         // 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
+            'https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.3.4/jquery.textcomplete.min.js'
     ];
 
     public $depends = [
