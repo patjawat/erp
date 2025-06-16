@@ -81,13 +81,19 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
             <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
 
+                <div class="d-flex justify-content-between align-item-middle mb-3">
+                    <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
                     <div class="position-relative">
-                        <div class="file-upload-btnxx btn btn-sm btn-primary">
-                            <i class="bi bi-cloud-arrow-up fs-5"></i>
+                        <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
+                            <i class="fa-solid fa-upload"></i>
                             <span>คลิกอัปโหลดไฟล์ที่นี่</span>
                         </div>
                         <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
                     </div>
+
+                </div>
+
+
 
 
                 <div class="card">

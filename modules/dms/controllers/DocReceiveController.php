@@ -80,16 +80,17 @@ class DocReceiveController extends \yii\web\Controller
     public function actionDelete($id)
     {
         $data = $this->readData();
-        $newData = array_filter($data, fn($item) => $item['id'] != $id);
+        $newData = array_filter($data, fn($item) => $item['no'] != $id);
 
         if (count($newData) == count($data)) {
             return ['success' => false, 'error' => 'Item not found'];
         }
 
         $this->writeData(array_values($newData)); // reset index
+        return $this->redirect(['/dms/doc-receive']);
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return ['success' => true];
+        // Yii::$app->response->format = Response::FORMAT_JSON;
+        // return ['success' => 'success'];
     }
 
 }

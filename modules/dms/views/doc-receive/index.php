@@ -50,7 +50,8 @@ $this->title = 'หนังสือสำนักงานสาธารณ�
                 <td><?=$item['topic']?></td>
                 <td><?=$item['doc_from']?></td>
                 <td><?=$item['doc_to']?></td>
-                <td><?=Html::a('รับเข้า',['/dms/documents/create',
+                <td>
+                    <?=Html::a('รับเข้า',['/dms/documents/create',
                 'document_type' => 'DT1',
                 'document_group' => 'receive',
                 'doc_number' => $item['doc_number'],
@@ -59,7 +60,10 @@ $this->title = 'หนังสือสำนักงานสาธารณ�
                 'document_org' => $item['org_name'],
                 'file_name' => $item['downloaded_file'],
                 'topic' => $item['topic']
-                ])?></td>
+],['class' => 'btn btn-sm btn-primary'])?>
+            | 
+        <?=Html::a('ลบ',['/dms/doc-receive/delete','id' => $item['no']],['class' => 'btn btn-sm btn-danger delete-item'])?>
+        </td>
             </tr>
 <?php endforeach;?>
         </tbody>
