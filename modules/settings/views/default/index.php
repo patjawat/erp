@@ -21,7 +21,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-solid fa-house-medical-flag fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">ข้อมูลองค์กร</h6>
+                        <h6 class="text-center text-primary">ข้อมูลองค์กร</h6>
                     </div>
                 </div>
             </a>
@@ -33,7 +33,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fas fa-palette fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">ตั้งค่าสี</h6>
+                        <h6 class="text-center text-primary">ตั้งค่าสี</h6>
                     </div>
                 </div>
             </a>
@@ -45,7 +45,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-solid fa-user-gear fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">ผู้ใช้งาน</h6>
+                        <h6 class="text-center text-primary">ผู้ใช้งาน</h6>
                     </div>
                 </div>
 
@@ -58,7 +58,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-brands fa-line fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">LineMsg</h6>
+                        <h6 class="text-center text-primary">LineMsg</h6>
                     </div>
                 </div>
             </a>
@@ -70,7 +70,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-brands fa-telegram fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">Telegram</h6>
+                        <h6 class="text-center text-primary">Telegram</h6>
                     </div>
                 </div>
             </a>
@@ -83,7 +83,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-brands fa-line fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center">LineOfficial</h6>
+                        <h6 class="text-center text-primary">LineOfficial</h6>
                     </div>
                 </div>
             </a>
@@ -96,7 +96,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="fa-solid fa-clipboard-user fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center"> บุคลากร</h6>
+                        <h6 class="text-center text-primary"> บุคลากร</h6>
                     </div>
                 </div>
             </a>
@@ -109,7 +109,7 @@ $this->title = "การตั้งค่าระบบ";
                         <i class="bi bi-folder-check fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center"> ทรัพย์สิน</h6>
+                        <h6 class="text-center text-primary"> ทรัพย์สิน</h6>
                     </div>
                 </div>
             </a>
