@@ -331,11 +331,11 @@ $js = <<< JS
         }
 
         // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert("ขนาดไฟล์ต้องไม่เกิน 5MB");
-            $(this).val('');
-            return;
-        }
+        // if (file.size > 5 * 1024 * 1024) {
+        //     alert("ขนาดไฟล์ต้องไม่เกิน 5MB");
+        //     $(this).val('');
+        //     return;
+        // }
 
         const formData = new FormData();
         formData.append("document", file);
