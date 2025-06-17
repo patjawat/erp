@@ -141,7 +141,7 @@ $items = [
                                 </div>
                                 <div class="card-body">
 
-                                    <p class="text-center fw-semibold mb-0"><?php echo $item['title'] ?></p>
+                                    <p class="text-center fw-bolder mb-0"><?php echo $item['title'] ?></p>
                                 </div>
                             </div>
                         </a>

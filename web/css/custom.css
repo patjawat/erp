@@ -11861,10 +11861,9 @@ textarea.form-control-lg {
   }
 }
 :root {
-  --bg-primary:var(--bg-primary)
-  --bs-gray-100: #f6f6f7;
+  --bg-primary: var(--bg-primary) --bs-gray-100: #f6f6f7;
   --bs-secondary-color:
-  --bs-gray-200: #f3f7f9;
+    --bs-gray-200: #f3f7f9;
   --bs-gray-300: #e2e7f1;
   --bs-gray-300-rgb: 226, 231, 241;
   --bs-gray-400: #ced4da;
@@ -12194,6 +12193,7 @@ body {
   color: var(--bs-gray-900);
   display: flex;
   align-items: center;
+  font-weight: 600;
 }
 
 .horizontal-topnav .navbar-nav .nav-link[aria-expanded=true] {
@@ -12301,7 +12301,8 @@ body {
 
 .modal-fullscreen .modal-body {
   overflow-y: auto;
-  height: calc(100% - 56px); /* Adjust for header/footer height if needed */
+  height: calc(100% - 56px);
+  /* Adjust for header/footer height if needed */
 }
 
 .loading-overlay .loading-text {
@@ -13034,7 +13035,7 @@ a:hover {
 .card-body {
   flex: 1 1 auto;
   padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
-  color: var(--bs-gray-800);
+  color: var(--bs-gray-900);
 }
 
 .hover-card {
@@ -13406,7 +13407,7 @@ h4,
 h5,
 h6 {
   color: #4b4b5a;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .text-muted {
