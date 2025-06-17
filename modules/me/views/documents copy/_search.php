@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
 use app\components\DateFilterHelper;
 
@@ -24,7 +23,7 @@ use app\components\DateFilterHelper;
 
 <div class="d-flex justify-content-between align-top align-items-center gap-1">
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
-    <?php
+     <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
             'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
@@ -43,7 +42,7 @@ use app\components\DateFilterHelper;
         ])->label(false);
         ?>
 
-    <?php
+        <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
             'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
@@ -62,12 +61,11 @@ use app\components\DateFilterHelper;
         ])->label(false);
         ?>
 
-    <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-    <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
     <?php
-    $status = ArrayHelper::merge( $model->listStatus(), ['Y' => 'บันทึกไว้']);
-                    echo $form->field($model, 'q_status')->widget(Select2::classname(), [
-                        'data' =>$status,
+                    echo $form->field($model, 'status')->widget(Select2::classname(), [
+                        'data' => $model->listStatus(),
                         'options' => ['placeholder' => 'สถานะทั้งหมด'],
                         'pluginOptions' => [
                             'allowClear' => true,

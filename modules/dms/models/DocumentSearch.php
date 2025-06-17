@@ -20,7 +20,7 @@ class DocumentSearch extends Documents
     {
         return [
             [['id'], 'integer'],
-            [['date_filter', 'q', 'show_reading', 'document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time', 'data_json', 'document_group', 'status', 'ref'], 'safe'],
+            [['q_status','date_filter', 'q', 'show_reading', 'document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time', 'data_json', 'document_group', 'status', 'ref'], 'safe'],
         ];
     }
 

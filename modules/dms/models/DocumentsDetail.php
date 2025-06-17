@@ -57,9 +57,12 @@ class DocumentsDetail extends \yii\db\ActiveRecord
      */
     public $q;
     public $thai_year;
+    public $date_start;
+    public $date_end;
     public $show_reading;
     public $comment;
     public $status;
+    public $date_filter;
     public static function tableName()
     {
         return 'documents_detail';
@@ -71,7 +74,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status'], 'safe'],
+            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status','date_filter','date_start','date_end'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by', 'doc_read'], 'integer'],
             [['ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type'], 'string', 'max' => 255],
         ];
@@ -355,13 +358,15 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     }
 
     //ปักหมุดเอกสาร
-    public function bookmark()
+    public function bookmark($size = '')
     {
 
         $emp = UserHelper::GetEmployee();
-        $model = self::find()->where(['name' => 'bookmark', 'document_id' => $this->document_id, 'to_id' => $emp->id])->one();
-        if ($model) {
-            return $model->bookmark;
-        }
+      
+            return [
+                'status' => $this->bookmark,
+                'view' => $this->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning '.$size.'"></i>' : '<i class="fa-regular fa-star '.$size.'"></i>'
+            ];
+       
     }
 }

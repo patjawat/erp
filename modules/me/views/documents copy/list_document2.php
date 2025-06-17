@@ -1,27 +1,8 @@
  <?php
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
-use app\modules\dms\models;
-use app\components\AppHelper;
-use app\components\UserHelper;
-use app\modules\dms\models\Documents;
-$this->title = 'ทะเบียนหนังสือ';
+
 ?>
-
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-regular fa-file-lines fs-4"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('action'); ?>
-<?php  echo $this->render('@app/modules/me/views/documents/menu',['action' => $action]) ?>
-<?php $this->endBlock(); ?>
-
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu',['active' => 'document']) ?>
-<?php $this->endBlock(); ?>
  <table class="table table-striped table-fixed">
                     <thead>
                         <tr>

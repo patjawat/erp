@@ -57,7 +57,7 @@ $this->title = $model->topic;
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-end mb-2">
-                        <?php echo Html::a(($detail->bookmark('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark'])?>
+                        <?php echo Html::a(($detail->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning fs-2"></i>' : '<i class="fa-regular fa-star fs-2"></i>'),['/me/documents/bookmark', 'id' => $model->id],['class' => 'bookmark'])?>
                     </div>
                     <iframe id="myIframe"
                         src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]); ?>&embedded=true"

@@ -115,7 +115,7 @@ $urlRepair = Url::to(['/me/repair']);
 $ApproveStockUrl = Url::to(['/me/approve/stock-out']);
 $ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
 $ownerAssetUrl = Url::to(['/me/owner']);
-$documentUrl = Url::to(['/me/documents']);
+$documentUrl = Url::to(['/me/documents/show-home']);
 // $urlRepair = Url::to(['/me/repair-me']);
 $js = <<< JS
 

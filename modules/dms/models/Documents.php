@@ -3,28 +3,16 @@
 namespace app\modules\dms\models;
 
 use Yii;
-use Exception;
-use yii\helpers\Url;
-use yii\helpers\Json;
-use Imagine\Image\Box;
 use yii\db\Expression;
-use yii\imagine\Image;
-use yii\base\Component;
 use yii\bootstrap5\Html;
-use yii\web\UploadedFile;
 use app\models\Categorise;
-use kartik\file\FileInput;
-use yii\httpclient\Client;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\UserHelper;
-use yii\helpers\BaseFileHelper;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\usermanager\models\User;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -61,6 +49,7 @@ class Documents extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $q;
+    public $q_status;
     public $date_filter;
 
 
@@ -80,7 +69,7 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year', 'topic', 'doc_number', 'secret', 'doc_speed', 'document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_time'], 'required'],
             [['topic'], 'string'],
-            [['date_filter','file','reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref'], 'safe'],
+            [['date_filter','file','reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref','q_status'], 'safe'],
             [['doc_number', 'document_type','thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -144,6 +133,21 @@ class Documents extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'document_status']);
     }
 
+    public function getDocumentDetail()
+    {
+        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id']);
+    }
+        public function getDocumentTags()
+    {
+        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id'])->andOnCondition(['name' => 'tags']);
+    }
+
+    public function getBookmark()
+    {
+        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id'])->andOnCondition(['name' => 'bookmark']);
+    }
+
+
     // section Relationships
     public function getDocumentOrg()
     {
@@ -157,10 +161,10 @@ class Documents extends \yii\db\ActiveRecord
     }
 
     // การ tags หนังสือ
-    public function getDocumentTags()
-    {
-        return $this->hasMany(DocumentTags::class, ['document_id' => 'id']);
-    }
+    // public function getDocumentTags()
+    // {
+    //     return $this->hasMany(DocumentTags::class, ['document_id' => 'id'])
+    // }
 
     public function getCommittee()
     {
