@@ -330,13 +330,6 @@ $js = <<< JS
             return;
         }
 
-        // Check file size (max 5MB)
-        // if (file.size > 5 * 1024 * 1024) {
-        //     alert("ขนาดไฟล์ต้องไม่เกิน 5MB");
-        //     $(this).val('');
-        //     return;
-        // }
-
         const formData = new FormData();
         formData.append("document", file);
         formData.append("id", 1);
@@ -361,7 +354,7 @@ $js = <<< JS
 
     $('#form-document').on('beforeSubmit', function (e) {
         var form = $(this);
-        console.log('Submit');
+      
         Swal.fire({
             title: "ยืนยัน?",
             text: "บันทึกหนังสือ!",
@@ -401,47 +394,6 @@ $js = <<< JS
         return false;
     });
         
-    
-
-        $('#editRemovePdf').click(function (e) { 
-            e.preventDefault();
-            Swal.fire({
-            title: "ยืนยันการลบ?",
-            text: "คุณต้องการลบไฟล์เอกสารฉบับนี้หรือไม่?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "ยกเลิก",
-            confirmButtonText: "ใช่, ลบไฟล์!"
-            }).then((result) => {
-            if (result.isConfirmed) {
-                // TODO: เพิ่ม AJAX สำหรับลบไฟล์ที่ backend
-                // ตัวอย่าง:
-                $.ajax({
-                url: '/filemanager/uploads/delete-pdf', // เปลี่ยน URL ตาม backend
-                type: 'POST',
-                data: {
-                    ref: '$ref',
-                    name: 'document'
-                },
-                success: function(res) {
-                    Swal.fire("ลบแล้ว!", "ไฟล์ถูกลบเรียบร้อย", "success");
-                    $('#editPdfPreview').hide();
-                    $('#editPreviewPdf').attr('src', '');
-                    $('#editPdfPreview').attr('data-isfile', '');
-                    $('#editPdfPreview').attr('data-newfile', 'false');
-                    $('#editRemovePdf').hide();
-                   
-                },
-                error: function() {
-                    Swal.fire("ผิดพลาด!", "ไม่สามารถลบไฟล์ได้", "error");
-                }
-                });
-            }
-            });
-        });
-
         thaiDatepicker('#documents-doc_transactions_date,#documents-doc_expire,#documents-doc_date');
            
             

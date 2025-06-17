@@ -304,14 +304,14 @@ public function actionListTopicData()
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-
+                
                 //กำหนดสถานะครั้งแรก
                 if($model->tags_department == ""){
                     $model->status = 'DS1';
                 }else{
                     $model->status =  "DS2";
                 }
-
+                
                 try { 
                     $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                     $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
@@ -323,11 +323,11 @@ public function actionListTopicData()
                 } catch (\Throwable $th) {
                     // throw $th;
                 }
-
+                
                 if (!is_numeric($model->document_org)) {
                     $model->document_org = $this->UpdateDocOrg($model);
                 }
-
+                
                 if ($model->save(false)) {
                     try {
                         if($this->request->get('doc_number')){
@@ -336,12 +336,17 @@ public function actionListTopicData()
                     } catch (\Throwable $th) {
                         //throw $th;
                     }
+                    
                     $model->UpdateDocumentTags();
-                    PdfHelper::Stamp($model);
+                    
+                    //ถ้าเป็นหนังสือรับต้องประทับตรา
+                    if($model->document_group == "receive"){
+                        PdfHelper::Stamp($model);
+                    }
+                    
                 } else {
                     return $model->getErrors();
                 }
-
                    return $this->redirect(['/dms/documents/'.$model->document_group]);
             }
         } else {
@@ -354,6 +359,75 @@ public function actionListTopicData()
             'model' => $model
         ]);
     }
+
+      /**
+     * Updates an existing Documents model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id ID
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id);
+        $old_json = $model->data_json;
+        try {
+            $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
+            $model->doc_date = AppHelper::convertToThai($model->doc_date);
+            $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
+        } catch (\Throwable $th) {
+            // throw $th;
+        }
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            try {
+                $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
+                $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
+                if ($model->doc_expire !== '') {
+                    $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
+                } else {
+                    $model->doc_expire = '';
+                }
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
+
+            if (!is_numeric($model->document_org)) {
+                $model->document_org = $this->UpdateDocOrg($model);
+            }
+
+            //ถ้ามีการแก้ไขส่งต่อหน่วยงาน
+             if ($model->status !== "DS3" && $model->status !== "DS4" && $model->tags_department !== "" ) {
+                 $model->status =  "DS2";
+                }
+
+                $model->data_json = ArrayHelper::merge($old_json, $model->data_json);
+            if ($model->save()) {
+                $model->UpdateDocumentTags();
+                return $this->redirect([$model->document_group]);
+            } else {
+                return $model->getErrors();
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        return $this->render('update', [
+            'model' => $model,
+        ]);
+        // $old = $model->data_json;
+
+        // if ($this->request->isPost && $model->load($this->request->post())) {
+        //     Yii::$app->response->format = Response::FORMAT_JSON;
+        //     $model->data_json = ArrayHelper::merge($old, $model->data_json);
+        //     // return $model;
+        //     $model->save();
+        //     return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
     public function moveFile($model)
     {
@@ -431,66 +505,7 @@ public function actionListTopicData()
             }
           
     }
-    /**
-     * Updates an existing Documents model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-        $old_json = $model->data_json;
-        try {
-            $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
-            $model->doc_date = AppHelper::convertToThai($model->doc_date);
-            $model->doc_transactions_date = AppHelper::convertToThai($model->doc_transactions_date);
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
-
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            try {
-                $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
-                $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
-                if ($model->doc_expire !== '') {
-                    $model->doc_expire = AppHelper::convertToGregorian($model->doc_expire);
-                } else {
-                    $model->doc_expire = '';
-                }
-            } catch (\Throwable $th) {
-                // throw $th;
-            }
-
-            if (!is_numeric($model->document_org)) {
-                $model->document_org = $this->UpdateDocOrg($model);
-            }
-
-            if ($model->save()) {
-                $model->UpdateDocumentTags();
-                return $this->redirect([$model->document_group]);
-            } else {
-                return $model->getErrors();
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
-        // $old = $model->data_json;
-
-        // if ($this->request->isPost && $model->load($this->request->post())) {
-        //     Yii::$app->response->format = Response::FORMAT_JSON;
-        //     $model->data_json = ArrayHelper::merge($old, $model->data_json);
-        //     // return $model;
-        //     $model->save();
-        //     return $this->redirect(['view', 'id' => $model->id]);
-    }
+  
 
     // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
     protected function UpdateDocOrg($model)

@@ -43,6 +43,7 @@ class PdfHelper extends Component
 
         // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
         $pdf = new \setasign\Fpdi\Fpdi();
+        
         $pageCount = $pdf->setSourceFile($filePath);
 
         // โหลดฟอนต์ THSarabun
@@ -74,22 +75,38 @@ class PdfHelper extends Component
             if ($pageNo === 1) {
                 // กำหนดสีเส้นกรอบเป็นสีน้ำเงิน
                 $pdf->SetDrawColor(54, 52, 141, 61);
-                $pdf->SetLineWidth(0.8);
+                $pdf->SetLineWidth(0.3);
 
                 // กำหนดสีตัวหนังสือ (54, 52, 141, 61)
                 $pdf->SetTextColor(54, 52, 141, 61);
 
                 // วาดกรอบ
                 $pdf->Rect($posX, $posY, $textBoxWidth, $textBoxHeight, 'D');
-                $pdf->SetY($posY);
+
+                // ระยะห่างจากขอบซ้ายและขอบบน
+                $paddingLeft = 3;
+                $paddingTop = 2;
+
+                // กำหนดระยะห่างระหว่างบรรทัด (line height)
+                $lineHeight = 5;
+
+                // ตำแหน่ง Y เริ่มต้นสำหรับข้อความ
+                $currentY = $posY + $paddingTop;
 
                 foreach ($textLines as $i => $line) {
-                    $pdf->SetX($posX);
+                    $pdf->SetXY($posX + $paddingLeft, $currentY);
                     $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
 
                     // จัดกึ่งกลางเฉพาะบรรทัดแรก (ชื่อบริษัท)
                     $align = ($i === 0) ? 'C' : 'L';
-                    $pdf->Cell($textBoxWidth, 5, iconv('UTF-8', 'cp874', $line), 0, 2, $align, false);
+
+                    // ความกว้างของ cell ต้องลด padding ซ้ายขวา
+                    $cellWidth = $textBoxWidth - ($paddingLeft * 2);
+
+                    $pdf->Cell($cellWidth, $lineHeight, iconv('UTF-8', 'cp874', $line), 0, 2, $align, false);
+
+                    // ขยับ Y ลงตาม line height สำหรับบรรทัดถัดไป
+                    $currentY += $lineHeight;
                 }
 
                 // รีเซ็ตสีตัวหนังสือกลับเป็นสีดำ (ถ้าต้องการ)

@@ -95,13 +95,12 @@ if (file_exists($dataFile)) {
                     </thead>
                     <tbody class="align-middle  table-group-divider table-hover">
                         <?php foreach($dataProvider->getModels() as $key => $item):?>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+                        </td>
                         <td class="text-center fw-semibold"><?php echo $item->doc_regis_number?></td>
                         <td class="fw-light align-middle">
                             <div>
-                                <p class="text-primary fw-semibold fs-13 mb-0">
-                                </p>
-                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                <h6 style="width:600px" class="text-truncate fw-semibold mb-0">
                                     <?php if($item->doc_speed == 'ด่วนที่สุด'):?>
                                     <span class="badge text-bg-danger fs-13">
                                         <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
@@ -118,11 +117,11 @@ if (file_exists($dataFile)) {
                                     </a>
 
                                     <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
-                                </p>
+                                </h6>
                             </div>
-                             <p class="fw-normal fs-13 mb-0">
+                            <p class="fw-normal fs-13 mb-0">
                                 <?=$item->data_json['des'] ?? ''?>
-                                </p>
+                            </p>
                             <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                             <span class="text-danger">
                                 <?php echo $item->doc_number?>
@@ -135,7 +134,7 @@ if (file_exists($dataFile)) {
                                     <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount()?>
                                 </span>
                             </span>
-                           
+
 
                             <?php echo $item->StackDocumentTags('comment')?>
                         </td>
@@ -147,7 +146,8 @@ if (file_exists($dataFile)) {
                             </div>
                         </td>
                         <td> <?=$item->documentStatus->title ?? '-'?></td>
-                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?></td>
+                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
+                        </td>
                         </tr>
                         <?php endforeach;?>
 

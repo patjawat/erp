@@ -69,17 +69,27 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
                 <div class="d-flex justify-content-between align-item-middle mb-3">
                     <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
-                    <button type="button" class="btn btn-primary shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                    <i class="fa-solid fa-upload"></i> อัพโหลดไฟล์
-</button>
-
-                    <?php // echo Html::a('<i class="fa-solid fa-upload"></i> อัพโหลดไฟล์', ['/dms/documents/upload-file','ref' => $model->ref], ['class' => 'btn btn-primary shadow rounded-pill open-modal']) ?>
+                    <div class="position-relative">
+                        <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
+                            <i class="fa-solid fa-upload"></i>
+                            <span>คลิกอัปโหลดไฟล์ที่นี่</span>
+                        </div>
+                        <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
+                    </div>
                 </div>
-                <?php Pjax::begin(['id' => 'showDocument']); ?>
-                <!-- <iframe src="<?php //  Url::to(['/dms/documents/show', 'ref' => $model->ref]); ?>&embedded=true" width='100%'
-                    height='1000px' frameborder="0"></iframe> -->
-                    <iframe id="myIframe" width="100%" height="1000px" frameborder="0"></iframe>
-                <?php Pjax::end(); ?>
+               <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="pdf-preview" id="editPdfPreview" data-isfile="" data-newfile="false"
+                                style="display: none;">
+                                <embed id="editPreviewPdf" src="" type="application/pdf" width="100%" height="800px" />
+                                <div class="file-remove" id="editRemovePdf" style="display: none;" data-id="">
+                                    <i class="bi bi-x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-xl-5 col-lg-5 col-md-6 col-sm-12 px-5 pt-3">
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
@@ -306,7 +316,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php ActiveForm::end(); ?>
 
 <?php
-$url = Url::to(['/dms/documents/get-items']);
+$ref = $model->ref;
+$urlUpload = Url::to('/filemanager/uploads/upload-pdf');
 $showPdfUrl = Url::to(['/dms/documents/show?ref='.$model->ref]);
 $js = <<< JS
     loadPdf()
@@ -349,20 +360,62 @@ $js = <<< JS
         });
         
 
-        function loadPdf()
-        {
-            $('#myIframe').attr('src', '$showPdfUrl');
-            // $.ajax({
-            //     type: "get",
-            //     url: "$showPdfUrl",
-            //     dataType: "json",
-            //     success: function (res) {
-            //     }
-            // });
-            // $.pjax.reload({ container:"#showDocument", history:false,replace: false,timeout: false}); 
-           
-             
+         function loadPdf() {
+            // Call AJAX to check if PDF file exists and get its URL
+            $.ajax({
+            url: '$showPdfUrl',
+            type: 'GET',
+            success: function (data) {
+                // Assume if data is not empty, PDF exists
+                console.log(data);
+                
+                if (data) {
+                $('#editPreviewPdf').attr('src', '$showPdfUrl');
+                $('#editPdfPreview').show();
+                $('#editPdfPreview').attr('data-isfile', '1');
+                $('#editPdfPreview').attr('data-newfile', 'true');
+                } else {
+
+                }
+            },
+            error: function () {
+
+            }
+            });
         }
+
+        $('#my_file').on('change', function (e) {
+        const file = this.files[0];
+        if (!file) return;
+
+        // Check file type (PDF only)
+        if (file.type !== 'application/pdf') {
+            alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
+            $(this).val('');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("document", file);
+        formData.append("id", 1);
+        formData.append("ref", '$ref');
+        formData.append("name", 'document');
+
+        $.ajax({
+            url: '$urlUpload',
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                   loadPdf()
+                // You can update the preview or reload the document list here
+                // For example: loadPdf();
+            }
+        });
+    });
+
+
     
     JS;
 $this->registerJS($js,View::POS_END);
