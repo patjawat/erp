@@ -77,7 +77,7 @@ $items = [
                        <?=$item['icon']?>
                     </div>
                     <div class="card-body">
-                        <h6 class="text-center"><?=$item['label']?></h6>
+                        <h6 class="text-center text-primary"><?=$item['label']?></h6>
                     </div>
                 </div>
             </a>
