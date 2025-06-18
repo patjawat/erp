@@ -72,7 +72,7 @@ $items = [
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <p class="text-center fw-semibold mb-0"><i class="fa-solid fa-plus"></i> <?php echo $item['title']?></p>
+                                    <h6 class="text-center fw-semibold mb-0"><i class="fa-solid fa-plus"></i> <?php echo $item['title']?></p>
                                 </div>
                             </div>
                         </a>

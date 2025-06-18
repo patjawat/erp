@@ -20,6 +20,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
+use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -74,7 +75,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status','date_filter','date_start','date_end'], 'safe'],
+            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status','date_filter','date_start','date_start'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by', 'doc_read'], 'integer'],
             [['ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type'], 'string', 'max' => 255],
         ];
@@ -358,15 +359,23 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     }
 
     //ปักหมุดเอกสาร
-    public function bookmark($size = '')
+    public function docRead()
     {
 
         $emp = UserHelper::GetEmployee();
-      
+        $model = self::find()->where(['name' => 'read', 'document_id' => $this->document_id, 'to_id' => $emp->id])->one();
+        if ($model && $model->bookmark == 'Y') {
             return [
-                'status' => $this->bookmark,
-                'view' => $this->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning '.$size.'"></i>' : '<i class="fa-regular fa-star '.$size.'"></i>'
+                'status' => $model->bookmark,
+                'view' => $model->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning"></i>' : '<i class="fa-regular fa-star"></i>',
+                'read_date' => $model->doc_read ? (ThaiDateHelper::formatThaiDate($model->doc_read) . ' ' . (explode(' ',$model->doc_read)[1]) ?? '') : ''
             ];
-       
+        }else{
+            return [
+                'status' => 'N',
+                'view' => '<i class="fa-regular fa-star"></i>',
+                'read_date' => ''
+            ];
+        }
     }
 }

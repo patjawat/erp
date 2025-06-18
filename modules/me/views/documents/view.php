@@ -57,7 +57,7 @@ $this->title = $model->topic;
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-end mb-2">
-                        <?php echo Html::a(($detail->bookmark('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark'])?>
+                        <?php echo Html::a(($detail->docRead('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark'])?>
                     </div>
                     <iframe id="myIframe"
                         src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]); ?>&embedded=true"

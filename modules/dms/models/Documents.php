@@ -60,7 +60,7 @@ class Documents extends \yii\db\ActiveRecord
 
     public $date_start;
     public $date_end;
-    
+
 
 
     public function rules()
@@ -69,8 +69,8 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year', 'topic', 'doc_number', 'secret', 'doc_speed', 'document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_time'], 'required'],
             [['topic'], 'string'],
-            [['date_filter','file','reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref','q_status'], 'safe'],
-            [['doc_number', 'document_type','thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
+            [['date_filter', 'file', 'reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref', 'q_status'], 'safe'],
+            [['doc_number', 'document_type', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
 
@@ -137,16 +137,24 @@ class Documents extends \yii\db\ActiveRecord
     {
         return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id']);
     }
-        public function getDocumentTags()
+
+    public function getDocumentDepartment()
     {
-        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id'])->andOnCondition(['name' => 'tags']);
+        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id'])
+            ->andOnCondition(['d_department.name' => 'department']);
     }
 
-    public function getBookmark()
+    public function getDocumentTags()
     {
-        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id'])->andOnCondition(['name' => 'bookmark']);
+        return $this->hasOne(DocumentsDetail::class, ['document_id' => 'id'])
+            ->andOnCondition(['d_tags.name' => 'tags']);
     }
 
+    public function getDocRead()
+    {
+        return $this->hasMany(DocumentsDetail::class, ['document_id' => 'id'])
+            ->andOnCondition(['d_read.name' => 'read']);
+    }
 
     // section Relationships
     public function getDocumentOrg()
@@ -170,20 +178,20 @@ class Documents extends \yii\db\ActiveRecord
     {
         return $this->hasMany(DocumentsDetail::class, ['document_id' => 'id']);
     }
-    
+
 
     // คำนวนเลขรับเข้า
     public function runNumber()
     {
         $model = self::find()
-                ->select(['CAST(`doc_regis_number` AS UNSIGNED) AS doc_regis_number'])
-                ->where([
-                    'document_group' =>  $this->document_group,
-                    'thai_year' => date('Y') + 543,
-                ])
-                ->orderBy(['CAST(`doc_regis_number` AS UNSIGNED)' => SORT_DESC])
-                ->limit(1)
-                ->one();
+            ->select(['CAST(`doc_regis_number` AS UNSIGNED) AS doc_regis_number'])
+            ->where([
+                'document_group' =>  $this->document_group,
+                'thai_year' => date('Y') + 543,
+            ])
+            ->orderBy(['CAST(`doc_regis_number` AS UNSIGNED)' => SORT_DESC])
+            ->limit(1)
+            ->one();
         if ($model) {
             return $model->doc_regis_number + 1;
         } else {
@@ -194,15 +202,15 @@ class Documents extends \yii\db\ActiveRecord
     public function sendMessage()
     {
         $models = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $this->id])->all();
-        foreach($models as $model){
-   
+        foreach ($models as $model) {
+
             // try {
-                $line_id = $model->employee->user->line_id;
-                $topic = $this->topic;
-                // ส่ง msg ให้ Approve
-                LineMsg::sendDocument($model,$line_id);
+            $line_id = $model->employee->user->line_id;
+            $topic = $this->topic;
+            // ส่ง msg ให้ Approve
+            LineMsg::sendDocument($model, $line_id);
             // } catch (\Throwable $th) {
-                
+
             // }
         }
     }
@@ -236,9 +244,9 @@ class Documents extends \yii\db\ActiveRecord
     public function viewHistory()
     {
         return  DocumentsDetail::find()
-        ->where(['document_id' => $this->id,'name' => 'tags'])
-        ->andWhere(['IS NOT', 'doc_read', null])
-        ->all();
+            ->where(['document_id' => $this->id, 'name' => 'read'])
+            ->andWhere(['IS NOT', 'doc_read', null])
+            ->all();
     }
     // แสดงปีงบประมานทั้งหมด
 
@@ -364,25 +372,24 @@ class Documents extends \yii\db\ActiveRecord
     public function UpdateDocumentTags()
     {
         try {
-            if($this->tags_department){
+            if ($this->tags_department) {
 
-            $arrayDepartment = explode(',', $this->tags_department);
-            $clearDepartmentTag = DocumentsDetail::deleteAll([
-                'and',
-                ['not in', 'to_id', $arrayDepartment],
-                ['document_id' => $this->id, 'name' => 'department']
-            ]);
-            foreach ($arrayDepartment as $key => $value):
-                $check = DocumentsDetail::find()->where(['name' => 'department', 'document_id' => $this->id, 'to_id' => $value])->one();
-                $new = $check ? $check : new DocumentsDetail();
-                $new->name = 'department';
-              
-                $new->document_id = $this->id;
-                $new->to_id = $value;
-                $new->save(false);
-            endforeach;
-                            
-        }
+                $arrayDepartment = explode(',', $this->tags_department);
+                $clearDepartmentTag = DocumentsDetail::deleteAll([
+                    'and',
+                    ['not in', 'to_id', $arrayDepartment],
+                    ['document_id' => $this->id, 'name' => 'department']
+                ]);
+                foreach ($arrayDepartment as $key => $value):
+                    $check = DocumentsDetail::find()->where(['name' => 'department', 'document_id' => $this->id, 'to_id' => $value])->one();
+                    $new = $check ? $check : new DocumentsDetail();
+                    $new->name = 'department';
+
+                    $new->document_id = $this->id;
+                    $new->to_id = $value;
+                    $new->save(false);
+                endforeach;
+            }
             // code...
         } catch (\Throwable $th) {
         }
@@ -417,8 +424,7 @@ class Documents extends \yii\db\ActiveRecord
 
         $names = [];
         foreach ($departments as $detail) {
-                    $names[] ='<span class="badge text-bg-success mb-1">'.$detail->department->name.'</span>';
-
+            $names[] = '<span class="badge text-bg-success mb-1">' . $detail->department->name . '</span>';
         }
         return implode(',', $names);
     }
@@ -458,12 +464,14 @@ class Documents extends \yii\db\ActiveRecord
                 $emp = Employees::findOne(['id' => $item->to_id]);
                 if ($key <= 1) {
                     $data .= Html::a(
-                        Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                        Html::img('@web/img/placeholder-img.jpg', [
+                            'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
                             'data' => [
                                 'expand' => '-20',
                                 'sizes' => 'auto',
                                 'src' => $emp->showAvatar()
-                            ]]),
+                            ]
+                        ]),
                         ['/dms/documents/list-comment', 'id' => $item->document_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
                         [
                             'class' => 'open-modal',
@@ -531,7 +539,7 @@ class Documents extends \yii\db\ActiveRecord
         return self::find()->where(['thai_year' => $this->thai_year, 'document_group' => $group])->count();
     }
 
-        
+
 
     // รายงานแยกตามเดือน
     public function getChartSummary($name)
@@ -627,5 +635,4 @@ class Documents extends \yii\db\ActiveRecord
             ->asArray()
             ->all();
     }
-
 }

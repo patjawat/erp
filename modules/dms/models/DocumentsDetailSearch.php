@@ -69,7 +69,6 @@ class DocumentsDetailSearch extends DocumentsDetail
         ]);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'document_id', $this->document_id])
             ->andFilterWhere(['like', 'to_id', $this->to_id])
             ->andFilterWhere(['like', 'to_name', $this->to_name])

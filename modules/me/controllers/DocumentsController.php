@@ -24,41 +24,49 @@ class DocumentsController extends \yii\web\Controller
     {
         $emp = UserHelper::GetEmployee();
         $searchModel = new DocumentSearch([
-            'thai_year' => (date('Y') + 543)
+            'thai_year' => (date('Y') + 543),
+            'date_filter' => 'today'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith([
-            'documentDetail' => function($query) {
-            $query->andOnCondition(['documents_detail.name' => 'tags']);
+            'documentTags' => function ($query) {
+                $query->alias('d_tags')
+                    ->andOnCondition(['d_tags.name' => 'tags']);
             }
         ]);
-         $dataProvider->query->andFilterWhere([
+        $dataProvider->query->joinWith([
+            'docRead' => function ($query) {
+                $query->alias('d_read')
+                    ->andOnCondition(['d_read.name' => 'read']);
+            }
+        ]);
+
+        $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
             ['like', 'doc_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
         ]);
-        if($searchModel->q_status == 'Y'){
-            $dataProvider->query->andFilterWhere(['bookmark' => 'Y']);
-        }else{
+        if ($searchModel->q_status == 'Y') {
+            $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
+        } else {
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
-        $dataProvider->query->andFilterWhere(['to_id' => $emp->id]);
-        $dataProvider->query->andFilterWhere(['name' => 'tags']);
+        $dataProvider->query->andFilterWhere(['d_tags.to_id' => $emp->id]);
 
-         if($searchModel->date_filter){
-                 $range = DateFilterHelper::getRange($searchModel->date_filter);
-                $searchModel->date_start = AppHelper::convertToThai($range[0]);
-                $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-         if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        
+
         if ($this->request->isAJax) {
             $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }
@@ -68,17 +76,17 @@ class DocumentsController extends \yii\web\Controller
             // 'thai_year' => SORT_DESC,
         ]]);
 
-            return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                'action' => 'index'
-            ]);
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'action' => 'index'
+        ]);
     }
 
     //ถึงหน่วยงาน
     public function actionDepartment()
     {
-         $emp = UserHelper::GetEmployee();
+        $emp = UserHelper::GetEmployee();
         $department = $emp->department;
 
         $searchModel = new DocumentSearch([
@@ -86,39 +94,67 @@ class DocumentsController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('documentDetail');
-         $dataProvider->query->andFilterWhere([
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith([
+            'documentDepartment' => function ($query) {
+                $query->alias('d_department')
+                    ->andOnCondition(['d_department.name' => 'department']);
+            }
+        ]);
+          $dataProvider->query->joinWith([
+            'docRead' => function ($query) {
+                $query->alias('d_read')
+                    ->andOnCondition(['d_read.name' => 'read']);
+            }
+        ]);
+        $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
             ['like', 'doc_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
         ]);
-        $dataProvider->query->andWhere(['to_id' => $emp->department]);
-        $dataProvider->query->andFilterWhere(['name' => 'department']);
+          if ($searchModel->q_status == 'Y') {
+            $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
+        } else {
+            $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
+        }
+
+        $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
+
+         if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+
         if ($this->request->isAJax) {
-            $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+            // $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
         }
 
         return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                 'action' => 'department'
-            ]);
-
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'action' => 'department'
+        ]);
     }
 
     //แสดงหน้า Mydashboard
-       public function actionShowHome()
+    public function actionShowHome()
     {
-        
-         $searchModel = new DocumentSearch([
+
+        $searchModel = new DocumentSearch([
             'thai_year' => (date('Y') + 543)
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('documentDetail');
-         $dataProvider->query->andFilterWhere([
+        $dataProvider->query->joinWith([
+            'docRead' => function ($query) {
+                $query->alias('d_read')
+                    ->andOnCondition(['d_read.name' => 'read']);
+            }
+        ]);
+        $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
@@ -126,25 +162,23 @@ class DocumentsController extends \yii\web\Controller
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
         ]);
         // $dataProvider->query->andWhere(['to_id' => $emp->department]);
-        $dataProvider->query->andFilterWhere(['IN','name',['department','tags']]);
-        $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
+        $dataProvider->query->andFilterWhere(['IN', 'name', ['department', 'tags']]);
+        $dataProvider->query->andWhere(['IS', 'd_read.doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
 
-          Yii::$app->response->format = Response::FORMAT_JSON;
+        Yii::$app->response->format = Response::FORMAT_JSON;
         // return $this->render('show_home', [
         //             'list' => true,
         //             'searchModel' => $searchModel,
         //             'dataProvider' => $dataProvider,
         // ]);
-         return [
-                'title' => $this->request->get('tilte'),
-                'content' => $this->renderAjax('show_home', [
-                    'list' => true,
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ])
-            ];
-
-
+        return [
+            'title' => $this->request->get('tilte'),
+            'content' => $this->renderAjax('show_home', [
+                'list' => true,
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ])
+        ];
     }
 
     public function actionView($id)
@@ -153,11 +187,11 @@ class DocumentsController extends \yii\web\Controller
 
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
-        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id,'name' => 'read','to_id' => $emp->id])->one();
+        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id, 'name' => 'read', 'to_id' => $emp->id])->one();
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
-        
-     
+
+
         if (!$checkReading) {
             $reading = new DocumentsDetail;
             $reading->document_id = $detail->document_id;
@@ -165,6 +199,12 @@ class DocumentsController extends \yii\web\Controller
             $reading->to_id = $emp->id;
             $reading->doc_read = date('Y-m-d H:i:s');
             $reading->save(false);
+        }else{
+            if($checkReading->doc_read == null){
+                $checkReading->doc_read = date('Y-m-d H:i:s');
+                $checkReading->save(false);
+
+            }
         }
 
         if ($this->request->isAJax) {
@@ -192,20 +232,27 @@ class DocumentsController extends \yii\web\Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $emp = UserHelper::GetEmployee();
-        // $document = DocumentsDetail::findOne($id);
+        $document = DocumentsDetail::findOne($id);
         // return $document;
-        // $bookmark = DocumentsDetail::findOne(['name' => 'bookmark', 'document_id' => $document->document_id, 'to_id' => $emp->id]);
-        $bookmark = DocumentsDetail::findOne($id);
+        $checkBookmark = DocumentsDetail::findOne(['name' => 'read', 'document_id' => $document->document_id, 'to_id' => $emp->id]);
+        // $bookmark = DocumentsDetail::findOne($id);
 
-        if ($bookmark) {
-            $bookmark->bookmark = ($bookmark->bookmark == 'Y') ? 'N' : 'Y';
-            $bookmark->save(false);
-            return [
-                'action' => 'update',
-                'status' => 'success',
-                'data' => $bookmark
-            ];
+        if ($checkBookmark) {
+            $bookmark = $checkBookmark;
+        } else {
+            $bookmark = new DocumentsDetail;
+            $bookmark->name = 'read';
+            $bookmark->document_id = $document->document_id;
+            $bookmark->to_id = $emp->id;
         }
+
+        $bookmark->bookmark = ($bookmark->bookmark == 'Y') ? 'N' : 'Y';
+        $bookmark->save(false);
+        return [
+            'action' => 'update',
+            'status' => 'success',
+            'data' => $bookmark
+        ];
     }
 
     // แสดง File และแสดงความเห็น

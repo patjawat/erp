@@ -11874,7 +11874,7 @@ textarea.form-control-lg {
   --bs-gray-900: #000000;
   --bs-sarabun-font-family: "Sarabun", sans-serif;
   --bs-body-font-family: "IBM Plex Sans Thai", sans-serif;
-  --bs-header-font-family: "IBM Plex Sans Thai", sans-serif;
+  --bs-header-font-family: "Prompt", sans-serif;
   --bs-body-font-size: 15px;
 }
 
@@ -11882,9 +11882,13 @@ textarea.form-control-lg {
 body {
   background-color: #eff6ff;
   color: var(--bs-gray-900);
-  font-family: var(--bs-body-font-family);
+  font-family: var(--bs-sarabun-font-family);
   font-weight: 400;
   font-style: normal;
+}
+
+.btn {
+  font-family: var(--bs-header-font-family);
 }
 
 .ibm-plex-sans-thai-thin {
@@ -12187,13 +12191,13 @@ body {
   z-index: 1;
 }
 
-.horizontal-topnav .navbar-nav .nav-link {
+.navbar-nav .nav-link {
   font-family: var(--bs-header-font-family);
   padding-top: 15px;
   color: var(--bs-gray-900);
   display: flex;
   align-items: center;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .horizontal-topnav .navbar-nav .nav-link[aria-expanded=true] {
@@ -13406,8 +13410,9 @@ h3,
 h4,
 h5,
 h6 {
-  color: #4b4b5a;
-  font-weight: 500;
+  font-family: var(--bs-header-font-family);
+  color: var(--bs-gray-800);
+  font-weight: 400;
 }
 
 .text-muted {
