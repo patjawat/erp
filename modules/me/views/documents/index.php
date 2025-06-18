@@ -126,15 +126,21 @@ $this->title = 'ทะเบียนหนังสือ';
                         <?php if (isset($item->documentTags)): ?>
                             <?php echo Html::a(($item->documentTags->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentTags->id], ['class' => 'bookmark', 'id' => $item->documentTags->id]) ?>
                             <?php echo $item->documentStatus->title ?? '-' ?>
-                        <?php endif; ?>
-
-                        <?php if (isset($item->documentDepartment)): ?>
-                            <?php echo Html::a(($item->documentDepartment->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentDepartment->id], ['class' => 'bookmark', 'id' => $item->documentDepartment->id]) ?>
-                            <?php echo $item->documentDepartment->title ?? '-' ?>
-                        <?php endif; ?>
-
-                    </td>
-                    <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->id]) ?>
+                            <?php endif; ?>
+                            
+                            <?php if (isset($item->documentDepartment)): ?>
+                                <?php echo Html::a(($item->documentDepartment->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentDepartment->id], ['class' => 'bookmark', 'id' => $item->documentDepartment->id]) ?>
+                                <?php echo $item->documentDepartment->title ?? '-' ?>
+                                <?php endif; ?>
+                                
+                            </td>
+                            <td>
+                                <?php if (isset($item->documentTags)): ?>
+                                    <?php endif; ?>
+                                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id]) ?>
+                                    <?php if (isset($item->documentDepartment)): ?>
+                                        <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id]) ?>
+                                        <?php endif; ?>
                     </td>
                     </tr>
                 <?php endforeach; ?>
