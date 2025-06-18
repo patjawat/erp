@@ -16,7 +16,6 @@ use app\components\ThaiDateHelper;
             <?php foreach($model->viewHistory() ?? [] as $item):?>
             <tr class="">
                 <td>
-                <?=$item->id.' '.$item->name?>    
                 <?php echo $item->employee->fullname ?? '-';?><td>
                 <div class=" d-flex flex-column">
                             <span class="fw-normal fs-6"><?php   echo ThaiDateHelper::formatThaiDate($item->doc_read);?></span>
