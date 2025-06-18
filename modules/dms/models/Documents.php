@@ -235,7 +235,10 @@ class Documents extends \yii\db\ActiveRecord
 
     public function viewHistory()
     {
-        return  DocumentsDetail::find()->where(['document_id' => $this->id,'name' => 'tags'])->all();
+        return  DocumentsDetail::find()
+        ->where(['document_id' => $this->id,'name' => 'tags'])
+        ->andWhere(['IS NOT', 'doc_read', null])
+        ->all();
     }
     // แสดงปีงบประมานทั้งหมด
 

@@ -136,6 +136,9 @@ $js = <<< JS
                 list:true,
                 callback:'me'
             },
+            beforeSend: function(){
+                $('#viewDocument').html('<p>กำลังโหลดหนังสือ</p>');
+            },
             success: function (res) {
                     $('#viewDocument').html(res.content);
             }

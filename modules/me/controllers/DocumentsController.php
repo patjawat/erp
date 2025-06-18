@@ -71,7 +71,7 @@ class DocumentsController extends \yii\web\Controller
             return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'action' => 'me'
+                'action' => 'index'
             ]);
     }
 
@@ -127,11 +127,14 @@ class DocumentsController extends \yii\web\Controller
         ]);
         // $dataProvider->query->andWhere(['to_id' => $emp->department]);
         $dataProvider->query->andFilterWhere(['IN','name',['department','tags']]);
-        if ($this->request->isAJax) {
-            $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        }
+        $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
 
           Yii::$app->response->format = Response::FORMAT_JSON;
+        // return $this->render('show_home', [
+        //             'list' => true,
+        //             'searchModel' => $searchModel,
+        //             'dataProvider' => $dataProvider,
+        // ]);
          return [
                 'title' => $this->request->get('tilte'),
                 'content' => $this->renderAjax('show_home', [
@@ -146,16 +149,22 @@ class DocumentsController extends \yii\web\Controller
 
     public function actionView($id)
     {
-        // Yii::$app->response->format = Response::FORMAT_JSON;
         $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
+
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
+        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id,'name' => 'read','to_id' => $emp->id])->one();
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
-
-        if ($detail->doc_read == null) {
-            $detail->doc_read = date('Y-m-d H:i:s');
-            $detail->save(false);
+        
+     
+        if (!$checkReading) {
+            $reading = new DocumentsDetail;
+            $reading->document_id = $detail->document_id;
+            $reading->name = 'read';
+            $reading->to_id = $emp->id;
+            $reading->doc_read = date('Y-m-d H:i:s');
+            $reading->save(false);
         }
 
         if ($this->request->isAJax) {

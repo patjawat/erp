@@ -13,7 +13,7 @@ use app\components\DateFilterHelper;
 
 
 <?php $form = ActiveForm::begin([
-    'action' => ['index'],
+    'action' => [$action],
     'id' => 'document-search',
     'method' => 'get',
     'options' => [
