@@ -23,15 +23,15 @@ $this->title = 'ทะเบียนหนังสือ';
 <?php $this->endBlock(); ?>
 
 <?php if (!isset($list)): ?>
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-center align-top align-items-center">
-                <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-center align-top align-items-center">
+            <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
 
 
-            </div>
         </div>
     </div>
+</div>
 <?php endif; ?>
 
 <div class="card">
@@ -44,7 +44,7 @@ $this->title = 'ทะเบียนหนังสือ';
                 รายการ
             </h6>
             <?php if (isset($list)): ?>
-                <?= Html::a('แสดงทั้งหมด', ['/me/documents'], ['class' => 'btn btn-sm btn-light rounded-pill', 'data' => ['pjax' => 0]]) ?>
+            <?= Html::a('แสดงทั้งหมด', ['/me/documents'], ['class' => 'btn btn-sm btn-light rounded-pill', 'data' => ['pjax' => 0]]) ?>
             <?php endif; ?>
         </div>
 
@@ -61,88 +61,89 @@ $this->title = 'ทะเบียนหนังสือ';
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                    <td class="text-center fw-semibold">
-                        <?php echo $item->doc_regis_number ?>
-                    </td>
-                    <td class="fw-light align-middle">
-                        <div>
-                            <p class="text-primary fw-semibold fs-13 mb-0">
-                            </p>
-                            <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
-                                <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
-                                    <span class="badge text-bg-danger fs-13">
-                                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
-                                    </span>
-                                <?php endif; ?>
-
-                                <?php if ($item->secret == 'ลับที่สุด'): ?>
-                                    <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
-                                        ลับที่สุด
-                                    </span>
-                                <?php endif; ?>
-                                <?php if (isset($item->documentTags)): ?>
-                                    <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentTags->id]) ?>">
-                                        เรื่อง : <?php echo $item->topic ?>
-                                    </a>
-                                <?php endif; ?>
-
-                                <?php if (isset($item->documentDepartment)): ?>
-                                    <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentDepartment->id]) ?>">
-                                        เรื่อง : <?php echo $item->topic ?>
-                                    </a>
-                                <?php endif; ?>
-
-                                <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : '' ?>
-                            </p>
-                        </div>
-                        <p class="fw-normal fs-13 mb-0">
-                            <?= $item->data_json['des'] ?? '' ?>
+                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                <td class="text-center fw-semibold">
+                    <?php echo $item->doc_regis_number ?>
+                </td>
+                <td class="fw-light align-middle">
+                    <div>
+                        <p class="text-primary fw-semibold fs-13 mb-0">
                         </p>
-                        <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);
-                        ?>
-                        <span class="text-danger">
-                            <?php echo $item->doc_number ?>
-                        </span>
-                        <span class="text-primary fw-normal fs-13">
-                            |
-                            <i class="fa-solid fa-inbox"></i>
-                            <?php echo $item->documentOrg->title ?? '-'; ?>
-                            <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
-                                <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
+                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                            <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
+                            <span class="badge text-bg-danger fs-13">
+                                <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
                             </span>
-                        </span>
-
-
-                        <?php echo $item->StackDocumentTags('comment') ?>
-                    </td>
-                    <td class="fw-light align-middle">
-                        <div class=" d-flex flex-column">
-                            <?= $item->viewCreate()['avatar']; ?>
-                        </div>
-                    </td>
-                    <td>
-
-                        <?php if (isset($item->documentTags)): ?>
-                            <?php echo Html::a(($item->documentTags->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentTags->id], ['class' => 'bookmark', 'id' => $item->documentTags->id]) ?>
-                            <?php echo $item->documentStatus->title ?? '-' ?>
                             <?php endif; ?>
-                            
+
+                            <?php if ($item->secret == 'ลับที่สุด'): ?>
+                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                ลับที่สุด
+                            </span>
+                            <?php endif; ?>
+                            <?php if (isset($item->documentTags)): ?>
+                            <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentTags->id]) ?>">
+                                เรื่อง : <?php echo $item->topic ?>
+                            </a>
+                            <?php endif; ?>
+
                             <?php if (isset($item->documentDepartment)): ?>
-                                <?php echo Html::a(($item->documentDepartment->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentDepartment->id], ['class' => 'bookmark', 'id' => $item->documentDepartment->id]) ?>
-                                <?php echo $item->documentDepartment->title ?? '-' ?>
-                                <?php endif; ?>
-                                
-                            </td>
-                            <td>
-                                <?php if (isset($item->documentTags)): ?>
-                                    <?php endif; ?>
-                                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id]) ?>
-                                    <?php if (isset($item->documentDepartment)): ?>
-                                        <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id]) ?>
-                                        <?php endif; ?>
-                    </td>
-                    </tr>
+                            <a
+                                href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentDepartment->id]) ?>">
+                                เรื่อง : <?php echo $item->topic ?>
+                            </a>
+                            <?php endif; ?>
+
+                            <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : '' ?>
+                        </p>
+                    </div>
+                    <p class="fw-normal fs-13 mb-0">
+                        <?= $item->data_json['des'] ?? '' ?>
+                    </p>
+                    <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);
+                        ?>
+                    <span class="text-danger">
+                        <?php echo $item->doc_number ?>
+                    </span>
+                    <span class="text-primary fw-normal fs-13">
+                        |
+                        <i class="fa-solid fa-inbox"></i>
+                        <?php echo $item->documentOrg->title ?? '-'; ?>
+                        <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                            <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
+                        </span>
+                    </span>
+
+
+                    <?php echo $item->StackDocumentTags('comment') ?>
+                </td>
+                <td class="fw-light align-middle">
+                    <div class=" d-flex flex-column">
+                        <?= $item->viewCreate()['avatar']; ?>
+                    </div>
+                </td>
+                <td>
+
+                    <?php if (isset($item->documentTags)): ?>
+                    <?php echo Html::a(($item->documentTags->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentTags->id], ['class' => 'bookmark', 'id' => $item->documentTags->id]) ?>
+                    <?php echo $item->documentStatus->title ?? '-' ?>
+                    <?php endif; ?>
+
+                    <?php if (isset($item->documentDepartment)): ?>
+                    <?php echo Html::a(($item->documentDepartment->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentDepartment->id], ['class' => 'bookmark', 'id' => $item->documentDepartment->id]) ?>
+                    <?php echo $item->documentDepartment->title ?? '-' ?>
+                    <?php endif; ?>
+
+                </td>
+                <td>
+                    <?php if (isset($item->documentTags)): ?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id]) ?>
+                    <?php endif; ?>
+                    <?php if (isset($item->documentDepartment)): ?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id]) ?>
+                    <?php endif; ?>
+                </td>
+                </tr>
                 <?php endforeach; ?>
 
             </tbody>
