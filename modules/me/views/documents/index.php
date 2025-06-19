@@ -67,9 +67,7 @@ $this->title = 'ทะเบียนหนังสือ';
                 </td>
                 <td class="fw-light align-middle">
                     <div>
-                        <p class="text-primary fw-semibold fs-13 mb-0">
-                        </p>
-                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                        <h6 style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
                             <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
                             <span class="badge text-bg-danger fs-13">
                                 <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
@@ -95,7 +93,7 @@ $this->title = 'ทะเบียนหนังสือ';
                             <?php endif; ?>
 
                             <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : '' ?>
-                        </p>
+                            </h6>
                     </div>
                     <p class="fw-normal fs-13 mb-0">
                         <?= $item->data_json['des'] ?? '' ?>

@@ -67,11 +67,6 @@ class DocumentsController extends \yii\web\Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-
-        if ($this->request->isAJax) {
-            $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        }
-
         $dataProvider->setSort(['defaultOrder' => [
             // 'doc_regis_number' => SORT_DESC,
             // 'thai_year' => SORT_DESC,
@@ -124,15 +119,17 @@ class DocumentsController extends \yii\web\Controller
 
         $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
 
+       if($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
         if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-
-        if ($this->request->isAJax) {
-            // $dataProvider->query->andWhere(['IS', 'doc_read', null]); // เพิ่มเงื่อนไขว่า doc_read ต้องเป็น NULL
-        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,

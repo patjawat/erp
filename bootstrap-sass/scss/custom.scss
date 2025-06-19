@@ -1316,6 +1316,7 @@ thead,
 tfoot,
 th {
   font-weight: 500;
+  font-family: var(--bs-header-font-family);
 }
 
 .header-item {
@@ -1715,7 +1716,7 @@ h5,
 h6 {
   font-family: var(--bs-header-font-family);
   color: var(--bs-gray-600);
-  font-weight: 300;
+  font-weight: 400;
 }
 
 
