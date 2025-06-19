@@ -1,7 +1,7 @@
 <!-- Begin Left Navigation -->
 <style>
    .horizontal-topnav .navbar-nav .nav-link {
-    color: var(--bs-gray-800);
+    color: var(--bs-gray-600);
 }
 
 .nav-link.active {
