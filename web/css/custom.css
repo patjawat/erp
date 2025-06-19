@@ -12080,6 +12080,66 @@ body {
   line-height: 20px !important;
 }
 
+.textarea-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+textarea:focus {
+  border-color: #4CAF50;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  min-width: 200px;
+}
+
+.autocomplete-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background-color: #f0f8ff;
+}
+
+.autocomplete-item.selected {
+  background-color: rgba(233, 215, 58, 0.3411764706);
+  color: #535353;
+}
+
+.autocomplete-item .item-title {
+  font-family: var(--bs-sarabun-font-family);
+  color: #333;
+}
+
+.autocomplete-item .item-desc {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.autocomplete-item.selected .item-title,
+.autocomplete-item.selected .item-desc {
+  color: var(--bg-gray-600);
+}
+
 .horizontal-navbar .logo-dark {
   display: none;
 }

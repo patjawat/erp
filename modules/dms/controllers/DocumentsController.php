@@ -338,7 +338,7 @@ public function actionListTopicData()
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-                
+
                     try {
                         if($this->request->get('doc_number')){
                             $this->moveFile($model);
@@ -461,6 +461,37 @@ public function actionListTopicData()
             }
         }
     }
+
+    //ดึงข้อมูล keyword
+        public function actionGetKeyword()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $query = Yii::$app->request->get('query', '');
+        $trigger = Yii::$app->request->get('trigger', '');
+
+        $keywords = Categorise::find()
+            ->where(['name' => 'document_keyword'])
+            ->andWhere(['like', 'title', $query])
+            ->limit(10)
+            ->all();
+
+        $result = [];
+        foreach ($keywords as $item) {
+            $result[] = [
+                'value' => $item->title,
+                // 'label' => $item->title . ' (@' . $item->title . ')',
+                // 'description' => $item->title
+            ];
+        }
+
+        return [
+            'success' => true,
+            'data' => $result
+        ];
+
+        return $this->render('index');
+    }
+
 
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
     public function moveFile($model)

@@ -22,86 +22,24 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <?php if ($model->document_group == 'receive'): ?>
-    <i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
+<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
 <?php endif; ?>
 <?php if ($model->document_group == 'send'): ?>
-    <i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
+<i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
 <?php endif; ?>
 <style>
-    .form-label {
-        font-weight: 600 !important;
-    }
+.form-label {
+    font-weight: 600 !important;
+}
 
-    .file-upload-btn {
-        height: 100% !important;
-    }
+.file-upload-btn {
+    height: 100% !important;
+}
 
-    .file-upload {
-        height: 800px !important;
-    }
+.file-upload {
+    height: 800px !important;
+}
 
-            .textarea-wrapper {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-          
-        textarea:focus {
-            border-color: #4CAF50;
-        }
-        
-        .autocomplete-dropdown {
-            position: absolute;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            min-width: 200px;
-        }
-        
-        .autocomplete-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-            transition: background-color 0.2s;
-        }
-        
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-        
-        .autocomplete-item:hover,
-        .autocomplete-item.selected {
-            background-color: #f0f8ff;
-        }
-        
-        .autocomplete-item.selected {
-            background-color: #2560ad40;
-           color: #535353;
-        }
-        
-        .autocomplete-item .item-title {
-           font-family: var(--bs-sarabun-font-family);
-            color: #333;
-        }
-        
-        .autocomplete-item .item-desc {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-        }
-        
-        .autocomplete-item.selected .item-title,
-        .autocomplete-item.selected .item-desc {
-            color: var(--bg-gray-600);
-        }
-        
-
-     
 </style>
 
 <?php $this->endBlock(); ?>
@@ -283,12 +221,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="autocomplete-dropdown" id="documents-topic-dropdown"></div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-12">
                                 <div class="textarea-wrapper">
-                                <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
-                                   <div class="autocomplete-dropdown" id="documents-res-dropdown"></div>
-                            </div>
+                                    <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
+                                    <div class="autocomplete-dropdown" id="documents-res-dropdown"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -473,21 +411,21 @@ $js = <<< JS
             new FloatType('#documents-topic', '#documents-topic-dropdown', {
                 triggers: {
                     '': { 
-                       url: '/dms/tag-demo/get-data',  // This would be your real endpoint
+                       url: '/dms/documents/get-keyword',  // This would be your real endpoint
                         method: 'GET'
                     }
                 },
-                debounceTime: 500
+                debounceTime: 5
             });
             
             new FloatType('#documents-data_json-des', '#documents-res-dropdown', {
                 triggers: {
                     '': { 
-                       url: '/dms/tag-demo/get-data',  // This would be your real endpoint
+                        url: '/dms/documents/get-keyword',  // This would be your real endpoint
                         method: 'GET'
                     }
                 },
-                debounceTime: 500
+                debounceTime: 5
             });
             
         });

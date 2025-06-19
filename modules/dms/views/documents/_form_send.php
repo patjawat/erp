@@ -12,6 +12,7 @@ use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
+$this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if($model->document_group == 'receive'){
     $this->title = 'ออกเลขหนังสือรับ';
@@ -48,13 +49,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$model,'active' => 'send']) ?>
 <?php $this->endBlock(); ?>
 
- <style>
-    .form-label {
+<?php $this->endBlock(); ?>
+<style>
+.form-label {
     font-weight: 600 !important;
 }
- </style>
 
-<?php $this->endBlock(); ?>
+
+</style>
+
 <?php $form = ActiveForm::begin([
     'id' => 'form-document',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -77,7 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
                     </div>
                 </div>
-               <div class="card">
+                <div class="card">
                     <div class="card-body">
                         <div class="mb-3">
                             <div class="pdf-preview" id="editPdfPreview" data-isfile="" data-newfile="false"
@@ -96,26 +99,28 @@ $this->params['breadcrumbs'][] = $this->title;
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="pills-general-tab" data-bs-toggle="pill"
                             data-bs-target="#pills-general" type="button" role="tab" aria-controls="pills-general"
-                            aria-selected="true"><i class="fa-solid fa-circle-info"></i> ข้อมูลรายละเอียดของหนังสือ</button>
-                            
+                            aria-selected="true"><i class="fa-solid fa-circle-info"></i>
+                            ข้อมูลรายละเอียดของหนังสือ</button>
+
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pills-clip-tab" data-bs-toggle="pill"
-                            data-bs-target="#pills-clip" type="button" role="tab" aria-controls="pills-clip"
-                            aria-selected="false"><i class="fas fa-paperclip"></i> ไฟล์แนบ</button>
+                        <button class="nav-link" id="pills-clip-tab" data-bs-toggle="pill" data-bs-target="#pills-clip"
+                            type="button" role="tab" aria-controls="pills-clip" aria-selected="false"><i
+                                class="fas fa-paperclip"></i> ไฟล์แนบ</button>
                     </li>
-                   
+
                 </ul>
                 <div class="tab-content" id="pills-tabContent">
-                    <div class="tab-pane fade show active" id="pills-general" role="tabpanel" aria-labelledby="pills-general-tab" tabindex="0">
-                   
+                    <div class="tab-pane fade show active" id="pills-general" role="tabpanel"
+                        aria-labelledby="pills-general-tab" tabindex="0">
 
-                    <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
-                    <div class="row">
 
-<div class="col-6">
+                        <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
+                        <div class="row">
 
-    <?php
+                            <div class="col-6">
+
+                                <?php
             echo $form->field($model, 'document_type')->widget(Select2::classname(), [
                 'data' => $model->ListDocumentType(),
                 'options' => ['placeholder' => 'ประเภทหนังสือ'],
@@ -133,17 +138,17 @@ $this->params['breadcrumbs'][] = $this->title;
             ])->label('ประเภทหนังสือ');
             ?>
 
-</div>
-<div class="col-3">
+                            </div>
+                            <div class="col-3">
 
-    <?= $form->field($model, 'doc_regis_number')->textInput(['maxlength' => true])->label('เลขส่ง') ?>
-</div>
-<div class="col-3">
-    <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
-</div>
+                                <?= $form->field($model, 'doc_regis_number')->textInput(['maxlength' => true])->label('เลขส่ง') ?>
+                            </div>
+                            <div class="col-3">
+                                <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
+                            </div>
 
-<div class="col-6">
-    <?php
+                            <div class="col-6">
+                                <?php
         echo $form->field($model, 'doc_speed')->widget(Select2::classname(), [
             'data' => $model->DocSpeed(),
             'options' => ['placeholder' => 'เลือกชั้นความลับ'],
@@ -152,9 +157,9 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ])->label('ชั้นเร็ว');
         ?>
-</div>
-<div class="col-6">
-    <?php
+                            </div>
+                            <div class="col-6">
+                                <?php
             echo $form->field($model, 'secret')->widget(Select2::classname(), [
                 'data' => $model->DocSecret(),
                 'options' => ['placeholder' => 'เลือกชั้นความลับ'],
@@ -163,32 +168,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
             ])->label('ชั้นความลับ');
             ?>
-</div>
+                            </div>
 
-<div class="col-6">
-        <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกวันที่ส่ง'])->label('ส่งวันที่') ?>
+                            <div class="col-6">
+                                <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกวันที่ส่ง'])->label('ส่งวันที่') ?>
 
-</div>
-<div class="col-6">
-        <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
                         'mask' => '99:99',
                     ]) ?>
 
-</div>
+                            </div>
 
 
-<div class="col-6">
-    <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
-</div>
-<div class="col-6">
-    <?php
+                            <div class="col-6">
+                                <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
+                            </div>
+                            <div class="col-6">
+                                <?php
             echo $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
             ?>
-</div>
+                            </div>
 
 
-<div class="col-12">
-    <?php
+                            <div class="col-12">
+                                <?php
             echo $form->field($model, 'document_org')->widget(Select2::classname(), [
                 'data' => $model->ListDocumentOrg(),
                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
@@ -206,36 +211,42 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]
             ])->label('ส่งถึงหน่วยงาน');
             ?>
-</div>
-
-<div class="col-12">
-    <?= $form->field($model, 'topic')->textArea(['rows' => 5]) ?>
-</div>
-
-                              <div class="col-12">
-                                <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
                             </div>
 
-</div>
-                <?= $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
-                <div class="d-flex justify-content-center align-top align-items-center mt-5">
-                    <div class="form-group mt-3 d-flex justify-content-center gap-2">
-                        <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [
+                     <div class="col-12">
+                                <div class="textarea-wrapper">
+                                    <?= $form->field($model, 'topic')->textArea(['rows' => 5])->label('เรื่อง') ?>
+                                    <div class="autocomplete-dropdown" id="documents-topic-dropdown"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="textarea-wrapper">
+                                    <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
+                                    <div class="autocomplete-dropdown" id="documents-res-dropdown"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <?= $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
+                        <div class="d-flex justify-content-center align-top align-items-center mt-5">
+                            <div class="form-group mt-3 d-flex justify-content-center gap-2">
+                                <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [
                             'class' => 'btn btn-secondary rounded-pill shadow me-2',
                             'onclick' => 'window.history.back()',
                         ]); ?>
-                        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-                        <?= Html::a('<i class="fa-solid fa-trash"></i> ลบทั้ง', ['delete', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill shadow delete-item']) ?>
+                                <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+                                <?= Html::a('<i class="fa-solid fa-trash"></i> ลบทั้ง', ['delete', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill shadow delete-item']) ?>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
-                
-                    </div>
-                   
+
                     <div class="tab-pane fade" id="pills-clip" role="tabpanel" aria-labelledby="pills-clip-tab"
                         tabindex="0">
                         <?php echo $model->UploadClipFile('document_clip')?>
                     </div>
-                    
+
                 </div>
 
 
@@ -244,7 +255,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <!-- <h6><i class="fa-solid fa-circle-info text-primary fs-3"></i> ข้อมูลรายละเอียดของหนังสือ</h6> -->
 
 
-                
+
             </div>
         </div>
     </div>
@@ -252,15 +263,16 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-      <h1 class="modal-title fs-5" id="staticBackdropLabel">ไฟล์เอกสาร</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-      <?php 
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">ไฟล์เอกสาร</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <?php 
                 $name  = 'document';
                 list($initialPreview, $initialPreviewConfig) = FileManagerHelper::getInitialPreview($model->ref,$name);
                 echo  FileInput::widget([
@@ -308,9 +320,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]);
                 ?>
 
-      </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <?php ActiveForm::end(); ?>
@@ -321,6 +333,9 @@ $urlUpload = Url::to('/filemanager/uploads/upload-pdf');
 $showPdfUrl = Url::to(['/dms/documents/show?ref='.$model->ref]);
 $js = <<< JS
     loadPdf()
+
+
+
     thaiDatepicker('#documents-doc_transactions_date,#documents-doc_date,#leave-date_end,#documents-doc_expire,#documents-data_json-event_date')
     \$('#form-document').on('beforeSubmit', function (e) {
             var form = \$(this);
@@ -416,6 +431,30 @@ $js = <<< JS
     });
 
 
+                // Initialize FloatType instances
+        $(document).ready(function() {
+            // Demo 4: AJAX simulation
+            new FloatType('#documents-topic', '#documents-topic-dropdown', {
+                triggers: {
+                    '': { 
+                       url: '/dms/documents/get-keyword',  // This would be your real endpoint
+                        method: 'GET'
+                    }
+                },
+                debounceTime: 500
+            });
+            
+            new FloatType('#documents-data_json-des', '#documents-res-dropdown', {
+                triggers: {
+                    '': { 
+                        url: '/dms/documents/get-keyword',  // This would be your real endpoint
+                        method: 'GET'
+                    }
+                },
+                debounceTime: 500
+            });
+            
+        });
     
     JS;
 $this->registerJS($js,View::POS_END);

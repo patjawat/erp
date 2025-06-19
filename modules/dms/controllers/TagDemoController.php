@@ -16,31 +16,31 @@ class TagDemoController extends \yii\web\Controller
         return $this->render('index');
     }
 
-        public function actionGetData()
+    public function actionGetData()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-    $query = Yii::$app->request->get('query', '');
-    $trigger = Yii::$app->request->get('trigger', '');
-    
-    $keywords = Categorise::find()
-        ->where(['name' => 'document_keyword'])
-        ->andWhere(['like', 'title', $query])
-        ->limit(10)
-        ->all();
-    
-    $result = [];
-    foreach ($keywords as $item) {
-        $result[] = [
-            'value' => $item->title,
-            // 'label' => $item->title . ' (@' . $item->title . ')',
-            // 'description' => $item->title
+        $query = Yii::$app->request->get('query', '');
+        $trigger = Yii::$app->request->get('trigger', '');
+
+        $keywords = Categorise::find()
+            ->where(['name' => 'document_keyword'])
+            ->andWhere(['like', 'title', $query])
+            ->limit(10)
+            ->all();
+
+        $result = [];
+        foreach ($keywords as $item) {
+            $result[] = [
+                'value' => $item->title,
+                // 'label' => $item->title . ' (@' . $item->title . ')',
+                // 'description' => $item->title
+            ];
+        }
+
+        return [
+            'success' => true,
+            'data' => $result
         ];
-    }
-    
-    return [
-        'success' => true,
-        'data' => $result
-    ];
 
         return $this->render('index');
     }
