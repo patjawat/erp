@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
+$this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if ($model->document_group == 'receive') {
     $this->title = 'ออกเลขหนังสือรับ';
@@ -38,6 +39,69 @@ $this->params['breadcrumbs'][] = $this->title;
     .file-upload {
         height: 800px !important;
     }
+
+            .textarea-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+          
+        textarea:focus {
+            border-color: #4CAF50;
+        }
+        
+        .autocomplete-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            min-width: 200px;
+        }
+        
+        .autocomplete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background-color: #f0f8ff;
+        }
+        
+        .autocomplete-item.selected {
+            background-color: #2560ad40;
+           color: #535353;
+        }
+        
+        .autocomplete-item .item-title {
+           font-family: var(--bs-sarabun-font-family);
+            color: #333;
+        }
+        
+        .autocomplete-item .item-desc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .autocomplete-item.selected .item-title,
+        .autocomplete-item.selected .item-desc {
+            color: var(--bg-gray-600);
+        }
+        
+
+     
 </style>
 
 <?php $this->endBlock(); ?>
@@ -214,11 +278,17 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                             <div class="col-12">
-                                <?= $form->field($model, 'topic')->textArea(['rows' => 5])->label('เรื่อง') ?>
+                                <div class="textarea-wrapper">
+                                    <?= $form->field($model, 'topic')->textArea(['rows' => 5])->label('เรื่อง') ?>
+                                    <div class="autocomplete-dropdown" id="documents-topic-dropdown"></div>
+                                </div>
                             </div>
-
+                            
                             <div class="col-12">
+                                <div class="textarea-wrapper">
                                 <?= $form->field($model, 'data_json[des]')->textArea(['rows' => 5])->label('รายละเอียด') ?>
+                                   <div class="autocomplete-dropdown" id="documents-res-dropdown"></div>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -396,7 +466,57 @@ $js = <<< JS
         
         thaiDatepicker('#documents-doc_transactions_date,#documents-doc_expire,#documents-doc_date');
            
+        
+        // Initialize FloatType instances
+        $(document).ready(function() {
+            // Demo 4: AJAX simulation
+            new FloatType('#documents-topic', '#documents-topic-dropdown', {
+                triggers: {
+                    '': { 
+                       url: '/dms/tag-demo/get-data',  // This would be your real endpoint
+                        method: 'GET'
+                    }
+                },
+                debounceTime: 500
+            });
             
+            new FloatType('#documents-data_json-des', '#documents-res-dropdown', {
+                triggers: {
+                    '': { 
+                       url: '/dms/tag-demo/get-data',  // This would be your real endpoint
+                        method: 'GET'
+                    }
+                },
+                debounceTime: 500
+            });
+            
+        });
+        
+        // Include mockjax for demo purposes
+        (function() {
+            var mockjaxCallbacks = [];
+            $.mockjax = function(options) {
+                mockjaxCallbacks.push(options);
+            };
+            
+            var originalAjax = $.ajax;
+            $.ajax = function(settings) {
+                for (var i = 0; i < mockjaxCallbacks.length; i++) {
+                    var mock = mockjaxCallbacks[i];
+                    if (settings.url === mock.url) {
+                        setTimeout(function() {
+                            mock.response.call(mock, settings);
+                            if (settings.success) {
+                                settings.success(mock.responseText);
+                            }
+                        }, mock.responseTime || 0);
+                        return { abort: function() {} };
+                    }
+                }
+                return originalAjax.call(this, settings);
+            };
+        })();
+
     JS;
 $this->registerJS($js, View::POS_END);
 ?>

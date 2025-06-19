@@ -329,6 +329,16 @@ public function actionListTopicData()
                 }
                 
                 if ($model->save(false)) {
+
+                     //เก็บคำที่ใช้ประจำ
+                $this->UpdateKeyWord($model->topic);
+                try {
+                    //เก็บคำที่ใช้ประจำ
+                    $this->UpdateKeyWord($model->data_json['des']);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+                
                     try {
                         if($this->request->get('doc_number')){
                             $this->moveFile($model);
@@ -405,6 +415,15 @@ public function actionListTopicData()
 
                 $model->data_json = ArrayHelper::merge($old_json, $model->data_json);
             if ($model->save()) {
+                //เก็บคำที่ใช้ประจำ
+                $this->UpdateKeyWord($model->topic);
+                try {
+                    //เก็บคำที่ใช้ประจำ
+                    $this->UpdateKeyWord($model->data_json['des']);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+
                 $model->UpdateDocumentTags();
                 return $this->redirect([$model->document_group]);
             } else {
@@ -427,6 +446,21 @@ public function actionListTopicData()
         //     return $this->redirect(['view', 'id' => $model->id]);
     }
 
+    //เก็บคำที่ใช้ประจำ
+    public function UpdateKeyWord($keyword)
+    {
+        $variable =  explode(' ',$keyword);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        foreach ($variable as $key => $value) {
+            $check = Categorise::find()->where(['title' => $value])->one();
+            if(!$check && $value !==""){
+            $newKeyword = new Categorise;
+            $newKeyword->title = $value;
+            $newKeyword->name = 'document_keyword';
+            $newKeyword->save();
+            }
+        }
+    }
 
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
     public function moveFile($model)
