@@ -2,7 +2,10 @@
 
 namespace app\modules\dms\models;
 
+use yii\db\Query;
 use yii\base\Model;
+use app\components\UserHelper;
+use yii\data\ArrayDataProvider;
 use yii\data\ActiveDataProvider;
 use app\modules\dms\models\DocumentsDetail;
 
@@ -18,7 +21,7 @@ class DocumentsDetailSearch extends DocumentsDetail
     {
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['doc_read','show_reading','ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type', 'created_at', 'updated_at', 'deleted_at','q','thai_year','tags_department','tags_employee'], 'safe'],
+            [['doc_read', 'show_reading', 'ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type', 'created_at', 'updated_at', 'deleted_at', 'q', 'thai_year', 'tags_department', 'tags_employee'], 'safe'],
         ];
     }
 
@@ -79,4 +82,55 @@ class DocumentsDetailSearch extends DocumentsDetail
 
         return $dataProvider;
     }
+
+public function searchMe($params)
+{
+    $emp = UserHelper::GetEmployee();
+    $department = $emp->department;
+
+    // Query แรก
+    // Query แรก
+    $query1 = DocumentsDetail::find()
+        ->where(['name' => 'department', 'to_id' => 2])
+        ->asArray();
+
+    // Query ที่สอง
+    $query2 = DocumentsDetail::find()
+        ->where(['name' => 'tags', 'to_id' => 8])
+        ->asArray();
+
+    // UNION ทั้งสอง query
+    $unionQuery = (new \yii\db\Query())
+        ->from(['sub' => $query1])
+        ->union($query2);
+
+    // ดึงข้อมูลทั้งหมดเป็น array
+    $data = $unionQuery->all();
+
+    // สร้าง ArrayDataProvider
+    $dataProvider = new ArrayDataProvider([
+        'allModels' => $data,
+        'pagination' => [
+            'pageSize' => 20,
+        ],
+        'sort' => [
+            'attributes' => ['id', 'name', 'to_id'], // กำหนดคอลัมน์ที่ต้องการให้ sort ได้
+        ],
+    ]);
+
+    // โหลด params และ validate (ส่วนนี้อาจต้องปรับแก้ถ้าต้องการ filter)
+    $this->load($params);
+
+    if (!$this->validate()) {
+        // ถ้า validation ไม่ผ่าน ให้ลบข้อมูล
+        $dataProvider->allModels = [];
+        return $dataProvider;
+    }
+
+    // *** ถ้าต้องการ filter แบบ custom ต้องเขียน filter ในนี้ด้วย (เช่น array_filter)
+
+    return $dataProvider;
+}
+
+
 }
