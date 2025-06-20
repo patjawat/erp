@@ -12,7 +12,7 @@ use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
-$this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+// $this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if($model->document_group == 'receive'){
     $this->title = 'ออกเลขหนังสือรับ';
