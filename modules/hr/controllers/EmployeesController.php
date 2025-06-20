@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
+use app\models\Categorise;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -335,6 +336,44 @@ class EmployeesController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionGetPositionName()
+    {
+          {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+            $out = [];
+            if (isset($_POST['depdrop_parents'])) {
+                $parents = $_POST['depdrop_parents'];
+                if ($parents != null) {
+                    $type_id = $parents[0];
+                    // $out = Categorise::find()
+                    //     ->where(['category_id' => $type_id,'name' => 'position_name'])
+                    //     ->select(['code as id', 'title as name'])
+                    //     ->asArray()
+                    //     ->all();
+                   $out = (new \yii\db\ActiveQuery(\app\models\Categorise::class))
+                   ->alias('n')
+                   ->leftJoin(['g' => 'categorise'], 'g.code = n.category_id AND g.name = :groupName', [':groupName' => 'position_group'])
+                   ->where(['n.name' => 'position_name', 'g.category_id' => $type_id])
+                   ->select(['n.code AS id', 'n.title AS name'])
+                //    ->select([
+                //                 'g.category_id AS g_category_id',
+                //                 'g.code AS g_code',
+                //                 'g.title AS g_title',
+                //                 'n.code AS n_code',
+                //                 'n.category_id AS n_category_id',
+                //                 'n.title AS n_title',
+                //             ])
+                            ->asArray()
+                            ->all();
+
+                    return ['output' => $out, 'selected' => ''];
+                }
+            }
+            return ['output' => '', 'selected' => ''];
+        }
     }
 
     /**

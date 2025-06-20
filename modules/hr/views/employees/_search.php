@@ -2,6 +2,8 @@
 
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\helpers\Url;
+use kartik\depdrop\DepDrop;
 use kartik\form\ActiveForm;
 use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
@@ -45,28 +47,53 @@ use app\modules\hr\models\Organization;
 
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
 
-    <?= $form->field($model, 'position_name')->widget(Select2::classname(), [
-        'data' => $model->ListPositionName(),
-        'options' => ['placeholder' => 'ตำแหน่งทั้งหมด ...',
-        ],
-        'pluginOptions' => [
-            'allowClear' => true
-        ],
-          'pluginEvents' => [
+    <div style="width:200px">
+      <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
+                    'data' => $model->ListPositionType(),
+                    'options' => ['placeholder' => 'ประเภททั้งหมด ...'],
+                    'pluginOptions' => [
+                         'width' => '100%',
+                        // 'dropdownParent' => '#offcanvasExample',
+                        'allowClear' => true
+                    ],
+                      'pluginEvents' => [
         'select2:select' => 'function() { $(this).closest("form").submit(); }',
         'select2:clear' => 'function() { $(this).closest("form").submit(); }'
     ]
-        ])->label(false) ?>
- 
+                ])->label(false) ?>
+
+</div>
+    <?php
+echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
+    'options' => [
+        'placeholder' => 'ตำแหน่งทั้งหมด ...',
+    ],
+    'type' => DepDrop::TYPE_SELECT2,
+    'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+    'pluginOptions' => [
+        'width' => '100%', // หรือใช้ค่าอื่น เช่น '300px', '50%'
+        'depends' => ['employeessearch-position_type'],
+        'url' => Url::to(['/hr/employees/get-position-name']),
+        'loadingText' => 'กำลังโหลด ...',
+        'params' => ['depdrop_all_params' => 'employeessearch-position_type'],
+        'initDepends' => ['employeessearch-position_type'],
+        'initialize' => true,
+    ],
+                      'pluginEvents' => [
+        'select2:select' => 'function() { $(this).closest("form").submit(); }',
+        'select2:clear' => 'function() { $(this).closest("form").submit(); }'
+    ]
+        
+        ])->label(false);?>
+
+
 
 
     <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
         <i class="fa-solid fa-filter"></i>
     </button>
 
-      <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
-                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-                   <button id="download-button" class="btn btn-success shadow"><i class="fa-solid fa-file-export me-1"></i>ส่งออกข้อมูลบุคลากร</button>
+   
 </div>
     
         
@@ -92,15 +119,7 @@ use app\modules\hr\models\Organization;
             ])->label('เพศ') ?>
 
           
-            <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
-                    'data' => $model->ListPositionType(),
-                    'options' => ['placeholder' => 'เลือก ...'],
-                    'pluginOptions' => [
-                        'dropdownParent' => '#offcanvasExample',
-                        'allowClear' => true
-                    ],
-                ])->label('ประเภท') ?>
-
+          
 
             <?php $form->field($model, 'department')->widget(Select2::classname(), [
                     'data' => $model->ListDepartment(),

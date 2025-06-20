@@ -48,6 +48,7 @@ use yii\widgets\ActiveForm;
                     ],
 ])->label(false);
 ?>
+
 <?php
 echo $form->field($model, 'category_id')->widget(DepDrop::classname(), [
     'options' => [

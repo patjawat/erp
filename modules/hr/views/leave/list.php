@@ -14,6 +14,7 @@ $me = UserHelper::GetEmployee();
         <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
             <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
             <th class="fw-semibold">การลา</th>
+            <th class="fw-semibold">ระหว่างวันที่</th>
             <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
             <!-- <th class="fw-semibold" scope="col">มอบหมาย</th> -->
             <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
@@ -36,10 +37,10 @@ $me = UserHelper::GetEmployee();
             <td>
                 <div class="d-flex flex-column justofy-content-start align-items-start">
                     <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType?->title ?? '-' ?> <code><?php echo $item->total_days?> </code> วัน</span>
-                    <div>
-                       <?=$item->showLeaveDate()?>
                     </div>
-                </div>
+                </td>
+                <td>
+                    <?=$item->showLeaveDate()?>
             </td>
             <!-- <td class="text-center fw-semibold"><?php echo $item->total_days?></td> -->
             <!-- <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
@@ -68,8 +69,8 @@ $me = UserHelper::GetEmployee();
     <?php if($item->status == 'Approve'):?>
         <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
         <?php else:?>
-            <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-lg']]) : ''?>
-    <?php endif?>
+            <?php endif?>
+            <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
     <?php if($item->status == 'Approve'):?>
 
         <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 

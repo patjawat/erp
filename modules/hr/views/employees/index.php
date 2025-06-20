@@ -28,11 +28,10 @@ $this->params['breadcrumbs'][] = $this->title;
 }
 </style>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<i class="bi bi-people-fill"></i> <?= $this->title; ?> <?= $dataProvider->getTotalCount() ?> รายการ
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
-
 </span>
 รายการ
 <?= $notStatus > 0 ? Html::a('| ' . AppHelper::MsgWarning('ไม่ระบุตำแหน่ง') . ' ' . $notStatus . ' คน', ['/hr/employees/', 'not-status' => true]) : '' ?>
@@ -60,9 +59,11 @@ $this->params['breadcrumbs'][] = $this->title;
               
 
             </div>
+            <?= $this->render('_search', ['model' => $searchModel]); ?>
             <div>
-                <?= $this->render('_search', ['model' => $searchModel]); ?>
-              
+                 <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
+                   <button id="download-button" class="btn btn-success shadow"><i class="fa-solid fa-file-export me-1"></i>ส่งออกข้อมูลบุคลากร</button>
             </div>
         </div>
     </div>
@@ -123,10 +124,12 @@ $js = <<< JS
                     responseType: 'blob' // Important for handling binary data
                 },
                 beforeSend: function(){
-                    beforLoadModal();
+                    // beforLoadModal();
                 },
                 success: function(data) {
-                    \$("#main-modal").modal("toggle");
+                  const modal = bootstrap.Modal.getInstance(document.getElementById('main-modal'));
+                    // \$("#main-modal").modal("toggle"); // Removed to prevent modal toggle issues
+                    // $("#main-modal").modal("hide");
                     var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
                     var filename = 'ข้อมูลบุคลากร'+'.xlsx';
                     const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -134,7 +137,6 @@ $js = <<< JS
                     link.href = window.URL.createObjectURL(blob);
                     link.download = filename;
                     link.click();
-                    $("#main-modal").modal("hide");
                 },
                 error: function() {
                     alert('File could not be downloaded.');

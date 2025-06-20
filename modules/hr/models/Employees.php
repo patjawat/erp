@@ -6,12 +6,14 @@ use Yii;
 use yii\db\Expression;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\components\EmployeeHelper;
 use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\usermanager\models\User;
+use app\modules\hr\models\EmployeeDetail;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -701,7 +703,9 @@ class Employees extends Yii\db\ActiveRecord
     // ชื่อตำแหน่ง
     public function ListPositionName()
     {
-        return CategoriseHelper::PositionName();
+        $array = Categorise::find()->where(['name' => 'position_name'])->groupBy('category_id')->all();
+        return  ArrayHelper::map($array, 'code', 'title');
+
     }
 
     // ชื่อตำแหน่ง Ajax Template
