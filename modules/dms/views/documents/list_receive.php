@@ -66,7 +66,6 @@ if (file_exists($dataFile)) {
         ) ?>
     </div>
 </div>
-
 <div class="documents-index">
 
     <div class="card">

@@ -56,7 +56,7 @@ class DocumentsController extends Controller
             'or',
             ['like', 'topic', $searchModel->q],
         ]);
-         if ($this->request->isAJax) {
+        if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="fa-solid fa-magnifying-glass"></i> ค้นหาชื่อเรื่อง',
@@ -64,49 +64,49 @@ class DocumentsController extends Controller
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),
-            ];         
-    }
-}
-
-
-public function actionListTopicData()
-{
-    \Yii::$app->response->format = Response::FORMAT_JSON;
-
-    $request = Yii::$app->request;
-    $draw = $request->get('draw');
-    $start = $request->get('start');
-    $length = $request->get('length');
-    $searchValue = $request->get('search')['value'];
-
-    $query = Documents::find();
-
-    if (!empty($searchValue)) {
-        $query->andFilterWhere(['like', 'topic', $searchValue]);
+            ];
+        }
     }
 
-    $totalCount = $query->count();
 
-    $data = $query
-        ->offset($start)
-        ->limit($length)
-        ->all();
+    public function actionListTopicData()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
 
-    $result = [];
-    foreach ($data as $item) {
-        $result[] = [
-            'id' => $item->id,
-            'topic' => $item->topic,
+        $request = Yii::$app->request;
+        $draw = $request->get('draw');
+        $start = $request->get('start');
+        $length = $request->get('length');
+        $searchValue = $request->get('search')['value'];
+
+        $query = Documents::find();
+
+        if (!empty($searchValue)) {
+            $query->andFilterWhere(['like', 'topic', $searchValue]);
+        }
+
+        $totalCount = $query->count();
+
+        $data = $query
+            ->offset($start)
+            ->limit($length)
+            ->all();
+
+        $result = [];
+        foreach ($data as $item) {
+            $result[] = [
+                'id' => $item->id,
+                'topic' => $item->topic,
+            ];
+        }
+
+        return [
+            'draw' => intval($draw),
+            'recordsTotal' => $totalCount,
+            'recordsFiltered' => $totalCount,
+            'data' => $result,
         ];
     }
-
-    return [
-        'draw' => intval($draw),
-        'recordsTotal' => $totalCount,
-        'recordsFiltered' => $totalCount,
-        'data' => $result,
-    ];
-}
 
     /**
      * Lists all Documents models.
@@ -130,15 +130,21 @@ public function actionListTopicData()
             ['like', 'doc_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
-        if($searchModel->date_filter){
-                 $range = DateFilterHelper::getRange($searchModel->date_filter);
-                $searchModel->date_start = AppHelper::convertToThai($range[0]);
-                $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-         if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        if(!$searchModel->date_filter && !$searchModel->thai_year){
+            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
+            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
+             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
         }
 
         $dataProvider->setSort(['defaultOrder' => [
@@ -153,7 +159,7 @@ public function actionListTopicData()
 
     public function actionSend()
     {
-       $searchModel = new DocumentSearch([
+        $searchModel = new DocumentSearch([
             'date_filter' => 'today',
             'thai_year' => AppHelper::YearBudget(),
             'document_group' => 'send',
@@ -165,18 +171,24 @@ public function actionListTopicData()
             'or',
             ['like', 'topic', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-          ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
 
-         if($searchModel->date_filter){
-                 $range = DateFilterHelper::getRange($searchModel->date_filter);
-                $searchModel->date_start = AppHelper::convertToThai($range[0]);
-                $searchModel->date_end = AppHelper::convertToThai($range[1]);
+          if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-         if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
+        if(!$searchModel->date_filter && !$searchModel->thai_year){
+            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
+            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
+             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
         }
 
         $dataProvider->setSort(['defaultOrder' => [
@@ -304,15 +316,15 @@ public function actionListTopicData()
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-                
+
                 //กำหนดสถานะครั้งแรก
-                if($model->tags_department == ""){
+                if ($model->tags_department == "") {
                     $model->status = 'DS1';
-                }else{
+                } else {
                     $model->status =  "DS2";
                 }
-                
-                try { 
+
+                try {
                     $model->doc_date = AppHelper::convertToGregorian($model->doc_date);
                     $model->doc_transactions_date = AppHelper::convertToGregorian($model->doc_transactions_date);
                     if ($model->doc_expire !== '') {
@@ -323,41 +335,40 @@ public function actionListTopicData()
                 } catch (\Throwable $th) {
                     // throw $th;
                 }
-                
+
                 if (!is_numeric($model->document_org)) {
                     $model->document_org = $this->UpdateDocOrg($model);
                 }
-                
+
                 if ($model->save(false)) {
 
-                     //เก็บคำที่ใช้ประจำ
-                $this->UpdateKeyWord($model->topic);
-                try {
                     //เก็บคำที่ใช้ประจำ
-                    $this->UpdateKeyWord($model->data_json['des']);
-                } catch (\Throwable $th) {
-                    //throw $th;
-                }
+                    $this->UpdateKeyWord($model->topic);
+                    try {
+                        //เก็บคำที่ใช้ประจำ
+                        $this->UpdateKeyWord($model->data_json['des']);
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
 
                     try {
-                        if($this->request->get('doc_number')){
+                        if ($this->request->get('doc_number')) {
                             $this->moveFile($model);
                         }
                     } catch (\Throwable $th) {
                         //throw $th;
                     }
-                    
+
                     $model->UpdateDocumentTags();
-                    
+
                     //ถ้าเป็นหนังสือรับต้องประทับตรา
-                    if($model->document_group == "receive"){
+                    if ($model->document_group == "receive") {
                         PdfHelper::Stamp($model);
                     }
-                    
                 } else {
                     return $model->getErrors();
                 }
-                   return $this->redirect(['/dms/documents/'.$model->document_group]);
+                return $this->redirect(['/dms/documents/' . $model->document_group]);
             }
         } else {
             // $model->loadDefaultValues();
@@ -370,7 +381,7 @@ public function actionListTopicData()
         ]);
     }
 
-      /**
+    /**
      * Updates an existing Documents model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
@@ -409,11 +420,11 @@ public function actionListTopicData()
             }
 
             //ถ้ามีการแก้ไขส่งต่อหน่วยงาน
-             if ($model->status !== "DS3" && $model->status !== "DS4" && $model->tags_department !== "" ) {
-                 $model->status =  "DS2";
-                }
+            if ($model->status !== "DS3" && $model->status !== "DS4" && $model->tags_department !== "") {
+                $model->status =  "DS2";
+            }
 
-                $model->data_json = ArrayHelper::merge($old_json, $model->data_json);
+            $model->data_json = ArrayHelper::merge($old_json, $model->data_json);
             if ($model->save()) {
                 //เก็บคำที่ใช้ประจำ
                 $this->UpdateKeyWord($model->topic);
@@ -449,21 +460,21 @@ public function actionListTopicData()
     //เก็บคำที่ใช้ประจำ
     public function UpdateKeyWord($keyword)
     {
-        $variable =  explode(' ',$keyword);
+        $variable =  explode(' ', $keyword);
         \Yii::$app->response->format = Response::FORMAT_JSON;
         foreach ($variable as $key => $value) {
             $check = Categorise::find()->where(['title' => $value])->one();
-            if(!$check && $value !==""){
-            $newKeyword = new Categorise;
-            $newKeyword->title = $value;
-            $newKeyword->name = 'document_keyword';
-            $newKeyword->save();
+            if (!$check && $value !== "") {
+                $newKeyword = new Categorise;
+                $newKeyword->title = $value;
+                $newKeyword->name = 'document_keyword';
+                $newKeyword->save();
             }
         }
     }
 
     //ดึงข้อมูล keyword
-        public function actionGetKeyword()
+    public function actionGetKeyword()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $query = Yii::$app->request->get('query', '');
@@ -507,8 +518,8 @@ public function actionListTopicData()
         $newUpload->save(false);
         FileManagerHelper::CreateDir($model->ref);
 
-        $sourcePath = Yii::getAlias('@app/doc_receive/'.$filename);
-        $targetDir = Yii::getAlias('@app/modules/filemanager/fileupload/'.$model->ref.'/');
+        $sourcePath = Yii::getAlias('@app/doc_receive/' . $filename);
+        $targetDir = Yii::getAlias('@app/modules/filemanager/fileupload/' . $model->ref . '/');
         $targetPath = $targetDir . $filename;
 
         // ตรวจสอบว่าปลายทางมีไดเรกทอรีหรือยัง ถ้ายังไม่มีให้สร้าง
@@ -537,7 +548,7 @@ public function actionListTopicData()
                     $dataArr = json_decode($jsonData, true);
                     if (is_array($dataArr)) {
                         // ค้นหาและลบ object ที่ doc_number ตรงกับ $model->doc_number
-                        $dataArr = array_values(array_filter($dataArr, function($item) use ($doc_number) {
+                        $dataArr = array_values(array_filter($dataArr, function ($item) use ($doc_number) {
                             return !(isset($item['doc_number']) && $item['doc_number'] == $doc_number);
                         }));
                         // เขียนไฟล์แบบ atomic เพื่อป้องกัน permission issue
@@ -556,21 +567,20 @@ public function actionListTopicData()
     public function actionTest()
     {
         $name = 'ให้ข้าราชการปฏิบัติราชการ';
-            $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
-            if (file_exists($jsonFile)) {
-                $jsonData = file_get_contents($jsonFile);
-                $dataArr = json_decode($jsonData, true);
-                if (is_array($dataArr)) {
+        $jsonFile = Yii::getAlias('@app/doc_receive/data.json');
+        if (file_exists($jsonFile)) {
+            $jsonData = file_get_contents($jsonFile);
+            $dataArr = json_decode($jsonData, true);
+            if (is_array($dataArr)) {
                 // ค้นหาและลบ object ที่ topic ตรงกับ $model->topic
-                $dataArr = array_values(array_filter($dataArr, function($item) use ($name) {
+                $dataArr = array_values(array_filter($dataArr, function ($item) use ($name) {
                     return isset($item['topic']) && $item['topic'] !== $name;
                 }));
                 file_put_contents($jsonFile, json_encode($dataArr, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-                }
             }
-          
+        }
     }
-  
+
 
     // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
     protected function UpdateDocOrg($model)
@@ -658,15 +668,15 @@ public function actionListTopicData()
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            
+
             //## ตรวจสอบสถานะส่งเสนอ ผอ.
             $director = SiteHelper::getInfo()['director']->id;
-           
+
             //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
             if (in_array($director, $model->tags_employee)) {
-                    $docStatus =  $model->document;
-                    $docStatus->status = 'DS3';
-                    $docStatus->save(false);
+                $docStatus =  $model->document;
+                $docStatus->status = 'DS3';
+                $docStatus->save(false);
             }
 
             if ($model->save()) {
@@ -708,7 +718,7 @@ public function actionListTopicData()
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->save()) {
 
-              
+
                 $model->UpdateDocumentsDetail();
                 return [
                     'status' => 'success'
@@ -802,17 +812,17 @@ public function actionListTopicData()
             $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
 
-            if($file_name){
-                 $filepath = Yii::getAlias('@app') . '/doc_receive/'.$file_name;
-            }else if (!$fileUpload) {
+            if ($file_name) {
+                $filepath = Yii::getAlias('@app') . '/doc_receive/' . $file_name;
+            } else if (!$fileUpload) {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-             }else if (!$fileUpload && !file_exists($filepath)) {
+            } else if (!$fileUpload && !file_exists($filepath)) {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             } else {
                 $filename = $fileUpload->real_filename;
                 $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
             }
-            
+
 
             $this->setHttpHeaders($type);
             \Yii::$app->response->data = file_get_contents($filepath);
@@ -868,7 +878,7 @@ public function actionListTopicData()
             FileManagerHelper::removeUploadDir($ref);
         }
 
-         return $this->redirect([$model->document_group]);
+        return $this->redirect([$model->document_group]);
     }
 
 
@@ -892,5 +902,4 @@ public function actionListTopicData()
     {
         return $this->render('tags');
     }
-
 }
