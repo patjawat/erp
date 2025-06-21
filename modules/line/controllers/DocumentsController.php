@@ -116,13 +116,30 @@ class DocumentsController extends Controller
     }
 
     
-    public function actionShow($ref)
+    public function actionShow($id)
 {
     // if (Yii::$app->user->isGuest) {
     //     return $this->redirect(['/line/profile']);
     // }
+    $detail = DocumentsDetail::findOne($id);
+    $emp = UserHelper::GetEmployee();
+        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id, 'name' => 'read', 'to_id' => $emp->id, 'from_id' => $id])->one();
+        if (!$checkReading) {
+            $reading = new DocumentsDetail;
+            $reading->document_id = $detail->document_id;
+            $reading->name = 'read';
+            $reading->to_id = $emp->id;
+            $reading->from_id = $id;
+            $reading->doc_read = date('Y-m-d H:i:s');
+            $reading->save(false);
+        } else {
+            if ($checkReading->doc_read == null) {
+                $checkReading->doc_read = date('Y-m-d H:i:s');
+                $checkReading->save(false);
+            }
+        }
 
-    $fileUpload = Uploads::findOne(['ref' => $ref]);
+    $fileUpload = Uploads::findOne(['ref' => $detail->document->ref]);
 
     if (!$fileUpload) {
         $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';

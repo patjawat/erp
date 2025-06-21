@@ -62,10 +62,6 @@ $this->title = $model->document->topic;
 <div class="card">
     <div class="card-body">
 
-    <?php 
-    print_r($model->document_id);
-    ?>
-    8888
 <h4 class="text-center"><i class="fa-regular fa-comments"></i> การลงความเห็น</h4>
 <?php $form = ActiveForm::begin([
     'id' => 'form-comment',

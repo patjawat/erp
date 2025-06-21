@@ -93,78 +93,91 @@ input::placeholder {
 
     </div>
 </section>
-
 <?php
-
-
-$liffLogin = SiteHelper::getInfo()['line_liff_login'];
+$info = SiteHelper::getInfo();
+$liffLogin = $info['line_liff_login'];
+$liffProfileUrl = 'https://liff.line.me/' . $info['line_liff_profile'];
+$liffRegisterUrl = 'https://liff.line.me/' . $info['line_liff_register'];
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
-$liffProfile = SiteHelper::getInfo()['line_liff_profile'];
-$liffProfileUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_profile'];
-$liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
 
-$urlCheckProfile = Url::to(['/line/auth/check-profile']);
-$js = <<< JS
+$js = <<<JS
+(function() {
+    var vConsole = new VConsole();
 
-$('#blank-form').on('beforeSubmit', function (e) {
-e.preventDefault
-    var yiiform = $(this);
-    $('#btnAwait').show();
-    $('#btn-login').hide();
+    $('#blank-form').on('beforeSubmit', function (e) {
+        e.preventDefault();
 
-    $.ajax({
-        type: yiiform.attr('method'),
+        var yiiform = $(this);
+        $('#btnAwait').show();
+        $('#btn-login').hide();
+
+        $.ajax({
+            type: yiiform.attr('method'),
             url: yiiform.attr('action'),
             data: yiiform.serializeArray(),
-        dataType: "json",
-        success: function (data) {
-            if(data.success) {
-                // data is saved
-                $('#success-container').html(data.content);
-                $('#signup-container').hide();
-                success()
-                location.replace("$liffProfileUrl");
-                
-            } else if (data.validation) {
-                // server validation failed
-                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
+            dataType: "json",
+            success: function (data) {
+                if (data.success) {
+                    $('#success-container').html(data.content);
+                    $('#signup-container').hide();
+                    success();
+                    window.location.href = "$liffProfileUrl";
+                } else if (data.validation) {
+                    yiiform.yiiActiveForm('updateMessages', data.validation, true);
+                    $('#btnAwait').hide();
+                    $('#btn-login').show();
+                } else {
+                    alert('Server response invalid.');
+                    $('#btnAwait').hide();
+                    $('#btn-login').show();
+                }
+            },
+            error: function (xhr, status, error) {
+                 console.log(error);
+                alert('เกิดข้อผิดพลาด: ' + error);
                 $('#btnAwait').hide();
                 $('#btn-login').show();
-            
+            }
+        });
+
+        return false;
+    });
+
+    function logout() {
+        if (liff.isLoggedIn()) {
+            liff.logout();
+        }
+    }
+
+    async function main() {
+        try {
+            await liff.init({ liffId: "$liffLogin", withLoginOnExternalBrowser: true });
+            if (liff.isLoggedIn()) {
+                const profile = await liff.getProfile();
+                console.log('LIFF Profile:', profile); // log profile for debugging
+                $('#loginform-line_id').val(profile.userId);
+                $('#pictureUrl').attr('src', profile.pictureUrl);
+                $('#content').show();
+                $('#loading').hide();
+        
             } else {
-                // incorrect server response
+                liff.login();
+            }
+        } catch (err) {
+            console.error('LIFF init failed', err);
+            alert('ไม่สามารถโหลด LIFF ได้');
+            // log error details for debugging
+            if (err && err.stack) {
+                console.log('LIFF Error Stack:', err.stack);
+            }
+            if (err && err.message) {
+                console.log('LIFF Error Message:', err.message);
             }
         }
-    });
-        return false;
-})
+    }
 
-
-
-
-function logout(){
-    if (liff.isLoggedIn()) {
-  liff.logout();
-//   $("#main-modal").modal("toggle");
-}
-}
-
-async function main(){
-  await liff.init({ liffId: "$liffLogin",withLoginOnExternalBrowser:true});
-  if (liff.isLoggedIn()) {
-            const profile = await liff.getProfile();
-            $('#loginform-line_id').val(profile.userId)
-            document.getElementById("pictureUrl").src = profile.pictureUrl;
-            $('#content').show()
-            $('#loading').hide()
-        
-        //   await checkProfile()
-        } else {
-          liff.login();
-        }
-  }
-  main();
-  
+    main();
 JS;
+
 $this->registerJs($js);
 ?>
