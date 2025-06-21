@@ -83,6 +83,23 @@ class DocumentsController extends Controller
     public function actionView($id)
     {
         $model = $this->findModel($id);
+        $emp = UserHelper::GetEmployee();
+        $checkReading = DocumentsDetail::find()->where(['document_id' => $model->document_id, 'name' => 'read', 'to_id' => $emp->id, 'from_id' => $id])->one();
+        if (!$checkReading) {
+            $reading = new DocumentsDetail;
+            $reading->document_id = $model->document_id;
+            $reading->name = 'read';
+            $reading->to_id = $emp->id;
+            $reading->from_id = $id;
+            $reading->doc_read = date('Y-m-d H:i:s');
+            $reading->save(false);
+        } else {
+            if ($checkReading->doc_read == null) {
+                $checkReading->doc_read = date('Y-m-d H:i:s');
+                $checkReading->save(false);
+            }
+        }
+
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [

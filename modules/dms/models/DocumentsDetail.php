@@ -26,7 +26,7 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\Documents;
 use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentsDetail;
+
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 

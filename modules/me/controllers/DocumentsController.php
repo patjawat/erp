@@ -191,10 +191,10 @@ class DocumentsController extends \yii\web\Controller
 
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
-        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id, 'name' => 'read', 'to_id' => $emp->id, 'from_id' => $id])->one();
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
-
+        
+        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id, 'name' => 'read', 'to_id' => $emp->id, 'from_id' => $id])->one();
         if (!$checkReading) {
             $reading = new DocumentsDetail;
             $reading->document_id = $detail->document_id;

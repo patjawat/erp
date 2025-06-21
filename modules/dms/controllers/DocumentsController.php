@@ -868,7 +868,7 @@ public function actionListTopicData()
             FileManagerHelper::removeUploadDir($ref);
         }
 
-        return $this->redirect(['index']);
+         return $this->redirect([$model->document_group]);
     }
 
 

@@ -124,6 +124,23 @@ class Documents extends \yii\db\ActiveRecord
         parent::afterFind();
     }
 
+     public function beforeDelete()
+    {
+        if (!parent::beforeDelete()) {
+            return false; // ยกเลิกการลบ
+        }
+
+        // ตัวอย่าง: ลบไฟล์ที่แนบ
+        // if (file_exists($this->file_path)) {
+        //     unlink($this->file_path);
+        // }
+
+        // ตัวอย่าง: ลบข้อมูลลูก
+        DocumentsDetail::deleteAll(['document_id' => $this->id]);
+
+        return true; // ดำเนินการลบต่อ
+    }
+
 
 
 

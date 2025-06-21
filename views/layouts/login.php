@@ -37,7 +37,6 @@ $style = 2;
 <body>
 <style>
     body {
-      /* background: linear-gradient(153deg, #858585 0%, #0d47a1 100%) !important; */
       background: #265fac;
     }
     .text-gradient{
