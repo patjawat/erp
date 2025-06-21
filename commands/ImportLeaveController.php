@@ -9,7 +9,9 @@
 namespace app\commands;
 
 use Yii;
+use DateTime;
 use yii\db\Expression;
+use app\models\Calendar;
 use yii\console\ExitCode;
 use app\models\Categorise;
 use yii\console\Controller;
@@ -43,12 +45,14 @@ class ImportLeaveController extends Controller
         foreach ($querys as $item) {
             $this->Leave($item['LEAVE_YEAR_ID']);
         }
+        // $this->Leave(2568);
     }
 
     public function Leave($year)
     {
         $querys = Yii::$app->db2->createCommand('SELECT 
                     gleave_register.ID,
+                    WORK_DO,
                     LEAVE_YEAR_ID,
                     LEAVE_TYPE_CODE,
                     LEAVE_TYPE_ID,
@@ -74,6 +78,9 @@ class ImportLeaveController extends Controller
                     USER_CONFIRM_CHECK_ID,
                     STATUS_CODE,
                     STATUS_NAME,
+                    LEAVE_SUM_HOLIDAY,
+                    LEAVE_SUM_ALL,
+                    LEAVE_SUM_SETSUN,
                     gleave_location.LOCATION_ID,
                     gleave_location.LOCATION_NAME
                     FROM gleave_register
@@ -82,13 +89,13 @@ class ImportLeaveController extends Controller
                     LEFT JOIN gleave_location ON gleave_register.LOCATION_ID = gleave_location.LOCATION_ID
                     LEFT JOIN gleave_day_type ON gleave_day_type.DAY_TYPE_ID = gleave_register.DAY_TYPE_ID
                     WHERE LEAVE_YEAR_ID = :year_id 
-                    -- AND `LEAVE_TYPE_ID` = "04"
                     -- AND `STATUS_CODE` = "Allow"
                     ORDER BY gleave_register.ID DESC;')
                     ->bindValue('year_id',$year)
                     ->queryAll();
         $num = 1;
         $total = count($querys);
+
         foreach ($querys as $key => $item) {
             $emp = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
 
@@ -99,6 +106,7 @@ class ImportLeaveController extends Controller
             $leave_work_send_id = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
 
             $checkLeave = Leave::find()->where([
+                'emp_id' =>  $emp->id,
                 'thai_year' => $item['LEAVE_YEAR_ID'],
                 'date_start' => $item['LEAVE_DATE_BEGIN'],
                 'date_end' => $item['LEAVE_DATE_END'],
@@ -107,6 +115,7 @@ class ImportLeaveController extends Controller
             $leaveType = Categorise::findOne(['name' => 'leave_type', 'title' => $item['LEAVE_TYPE_NAME']]);
 
             $leave = $checkLeave ?? new Leave();
+
 
             $leave->leave_type_id = $leaveType ? $leaveType->code : '';
             $leave->emp_id = $emp ? $emp->id : 0;
@@ -118,19 +127,25 @@ class ImportLeaveController extends Controller
             if($item['DAY_TYPE_ID'] == 2){
                 $leave->date_start_type = 0.5;
                 $leave->date_end_type = 0;
-                $leave->total_days = $item['LEAVE_DATE_SUM'] - 0.5;
+
             }elseif($item['DAY_TYPE_ID'] == 3){
-                $leave->total_days = $item['LEAVE_DATE_SUM'] - 0.5;
+
                 $leave->date_start_type = 0;
                 $leave->date_end_type = 0.5;
             }else{
                 $leave->date_start_type = 0;
                 $leave->date_end_type = 0;
-                $leave->total_days = $item['LEAVE_DATE_SUM'];
             }
             
+            $leave->total_days = $item['WORK_DO'];
             
             $leave->data_json = [
+                // 'sat_sun_days' => $checkDays['sat_sun_days'],
+                'sat_sun_days' => $item['LEAVE_SUM_HOLIDAY'],// วันหยุดเสาร์-อาทิตย์
+                'holidays' => $item['LEAVE_SUM_SETSUN'],//วันหยุดนคัตฤก
+                'sum_all_days' => $item['LEAVE_SUM_ALL'],//รวมจำนวนวันทั้งหมด
+                // 'off_days' => $checkDays['dayOff'],
+                // 'total_days' => $checkDays['sat_sun_days'],
                 'id' => $item['ID'],
                 'cid' => $item['LEAVE_PERSON_CODE'],
                 'fullname' => $item['LEAVE_PERSON_FULLNAME'],
@@ -175,7 +190,7 @@ class ImportLeaveController extends Controller
         {
             // อัปเดตสถานะ leave จาก 'Allow' เป็น 'Approve' เฉพาะที่มี thai_year
             $count = Yii::$app->db->createCommand("UPDATE `leave` SET status = 'Approve' WHERE `thai_year` IS NOT NULL AND status = 'Allow'")->execute();
-            echo "อัปเดตข้อมูลจำนวน $count รายการ\n";
+            echo "อัปเดตข้อมูลจำนวน $count รายการ \n";
             return ExitCode::OK;
         }
 
@@ -236,5 +251,35 @@ class ImportLeaveController extends Controller
             return $emp;
         }
     }
+
+        public function SyncDate($year)
+    {
+        // https://www.myhora.com/calendar/ical/holiday.aspx?2567.json
+        $url = "https://www.myhora.com/calendar/ical/holiday.aspx?".$year.".json";
+            // ดึงข้อมูล JSON จาก URL
+            $json = file_get_contents($url);
+            // แปลง JSON เป็น array
+            $data = json_decode($json, true);
+            foreach ($data['VCALENDAR'][0]['VEVENT'] as $Calendar) {
+                $dateString =  $Calendar['DTSTART;VALUE=DATE'];
+                $date = DateTime::createFromFormat('Ymd', $dateString);
+                // แปลงเป็นรูปแบบ Y-m-d
+                $CalendarDate = $date->format('Y-m-d');
+
+                $checkDay = Calendar::find()
+                ->where(['name' => 'holiday','date_start' => $CalendarDate])
+                ->one();
+                if(!$checkDay){
+                    $model =  new Calendar;
+                    $model->title = $Calendar['SUMMARY'];
+                    $model->name = 'holiday';
+                    $model->thai_year = AppHelper::YearBudget($CalendarDate);
+                    $model->date_start = $CalendarDate;
+                   
+                    $model->save();
+                }
+            }
+    }
+
 }
 

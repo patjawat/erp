@@ -170,12 +170,10 @@ $resultsJs = <<< JS
 
                 <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
 
-                <div
-                    class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
+                <div class="d-flex justify-content-between  align-middle align-items-center bg-primary bg-opacity-10  pt-2 px-3 rounded mb-3">
                     <?php echo $model->total_days ?></span></h6>
                     <div>
-                        <h6>สรุปวันลา : <span
-                                class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6>
+                        <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6>
 
                         <!-- <ul>
         <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>

@@ -77,7 +77,7 @@ class AppHelper extends Component
     public static function CalDay($dateStart, $dateEnd)
     {
         $me = UserHelper::GetEmployee();
-        // นับวันหยุดไม่รวมเสาร์-อาทิตย์
+        // นับสาร์-อาทิตย์
         $sqlsatsunDays = "WITH RECURSIVE date_range AS (
                         SELECT :date_start AS date
                         UNION ALL

@@ -27,6 +27,18 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>
 <?php  echo $this->render('card_summary', ['searchModel' => $searchModel]); ?>
 
+<div class="card">
+    <div class="card-body">
+
+ <div class="d-flex justify-content-between  align-top align-items-center">
+     <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ขอลา', ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+             <?php echo Html::a('<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน',['/me/holidays','title' => '<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน'],['id' => 'calendar-me','class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-xl']])?>
+        </div>
+
+    </div>
+</div>
+
 <div class="card text-start">
     <div class="card-body">
         <div class="d-flex justify-content-between">
@@ -34,11 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(),0)?></span>
                 รายการ</h6>
         </div>
-        <div class="d-flex justify-content-between  align-top align-items-center">
-            <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ขอลา', ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-        </div>
-
+       
 
         <?php echo  $this->render('@app/modules/hr/views/leave/list', [
                     'searchModel' => $searchModel,

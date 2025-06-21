@@ -69,9 +69,12 @@ $me = UserHelper::GetEmployee();
     <?php if($item->status == 'Approve'):?>
         <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
         <?php else:?>
-            <?php endif?>
             <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
-    <?php if($item->status == 'Approve'):?>
+            <?php endif?>
+            <!-- xx -->
+            <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+    <!-- xx -->
+            <?php if($item->status == 'Approve'):?>
 
         <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
                             [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 

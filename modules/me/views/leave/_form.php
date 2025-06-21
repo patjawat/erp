@@ -101,7 +101,7 @@ $resultsJs = <<<JS
                     </div>
                     <div class="w-50">
                         <?php
-                        echo $form->field($model, 'data_json[date_start_type]')->widget(Select2::classname(), [
+                        echo $form->field($model, 'date_start_type')->widget(Select2::classname(), [
                             'data' => [
                                 '0' => 'เต็มวัน',
                                 '0.5' => 'ครึงวัน',
@@ -124,7 +124,7 @@ $resultsJs = <<<JS
                         ?>
 
                         <?php
-                        echo $form->field($model, 'data_json[date_end_type]')->widget(Select2::classname(), [
+                        echo $form->field($model, 'date_end_type')->widget(Select2::classname(), [
                             'data' => [
                                 '0' => 'เต็มวัน',
                                 '0.5' => 'ครึงวัน',
