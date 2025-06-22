@@ -190,11 +190,11 @@ class ImportLeaveController extends Controller
                 echo 'ข้อมูลการลา ปี ' . $leave->thai_year . ' =>  ดำเนินการแล้ว : ' . number_format($percentage, 2) . "%\n";
                 // $this->CreateApprove($item);
             }
-        }
             //code...
-} catch (\Throwable $th) {
-    //throw $th;
-}
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
         $this->UpdateStatus();
         return ExitCode::OK;
     }
