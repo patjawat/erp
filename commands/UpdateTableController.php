@@ -463,9 +463,8 @@ class UpdateTableController extends Controller
                                 COUNT(CASE WHEN MONTH(l.date_start) = 11 THEN 1 END) AS m11,
                                 COUNT(CASE WHEN MONTH(l.date_start) = 12 THEN 1 END) AS m12
                                 FROM categorise lt
-                                LEFT OUTER JOIN `leave` l 
-                                    ON l.leave_type_id = lt.code 
-                                WHERE lt.name = 'leave_type'
+                                LEFT OUTER JOIN `leave` l ON l.leave_type_id = lt.code 
+                                WHERE lt.name = 'leave_type' AND l.status ='Approve'
                                 GROUP BY lt.code, l.thai_year")->execute();
 
         $createLeaveSummaryYear = Yii::$app->db->createCommand("CREATE VIEW leave_summary_year AS SELECT l.thai_year,COUNT(l.id) as total FROM categorise lt

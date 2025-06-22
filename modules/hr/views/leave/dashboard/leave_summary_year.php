@@ -15,18 +15,18 @@ use yii\helpers\Url;
 use yii\helpers\Json;
 
 $querys = Yii::$app->db->createCommand("SELECT thai_year,
-COUNT(CASE WHEN leave_type_id = 'LT1' AND status = 'Allow' THEN 1 END) as LT1,
-COUNT(CASE WHEN leave_type_id = 'LT2' AND status = 'Allow' THEN 1 END) as LT2,
-COUNT(CASE WHEN leave_type_id = 'LT3' AND status = 'Allow' THEN 1 END) as LT3,
-COUNT(CASE WHEN leave_type_id = 'LT4' AND status = 'Allow' THEN 1 END) as LT4,
-COUNT(CASE WHEN leave_type_id = 'LT5' AND status = 'Allow' THEN 1 END) as LT5,
-COUNT(CASE WHEN leave_type_id = 'LT6' AND status = 'Allow' THEN 1 END) as LT6,
-COUNT(CASE WHEN leave_type_id = 'LT7' AND status = 'Allow' THEN 1 END) as LT7,
-COUNT(CASE WHEN leave_type_id = 'LT8' AND status = 'Allow' THEN 1 END) as LT8,
-COUNT(CASE WHEN leave_type_id = 'LT9' AND status = 'Allow' THEN 1 END) as LT9,
-COUNT(CASE WHEN leave_type_id = 'LT10' AND status = 'Allow' THEN 1 END) as LT10,
-COUNT(CASE WHEN leave_type_id = 'LT11' AND status = 'Allow' THEN 1 END) as LT11,
-COUNT(CASE WHEN leave_type_id = 'LT12' AND status = 'Allow' THEN 1 END) as LT12
+COUNT(CASE WHEN leave_type_id = 'LT1' AND status = 'Approve' THEN 1 END) as LT1,
+COUNT(CASE WHEN leave_type_id = 'LT2' AND status = 'Approve' THEN 1 END) as LT2,
+COUNT(CASE WHEN leave_type_id = 'LT3' AND status = 'Approve' THEN 1 END) as LT3,
+COUNT(CASE WHEN leave_type_id = 'LT4' AND status = 'Approve' THEN 1 END) as LT4,
+COUNT(CASE WHEN leave_type_id = 'LT5' AND status = 'Approve' THEN 1 END) as LT5,
+COUNT(CASE WHEN leave_type_id = 'LT6' AND status = 'Approve' THEN 1 END) as LT6,
+COUNT(CASE WHEN leave_type_id = 'LT7' AND status = 'Approve' THEN 1 END) as LT7,
+COUNT(CASE WHEN leave_type_id = 'LT8' AND status = 'Approve' THEN 1 END) as LT8,
+COUNT(CASE WHEN leave_type_id = 'LT9' AND status = 'Approve' THEN 1 END) as LT9,
+COUNT(CASE WHEN leave_type_id = 'LT10' AND status = 'Approve' THEN 1 END) as LT10,
+COUNT(CASE WHEN leave_type_id = 'LT11' AND status = 'Approve' THEN 1 END) as LT11,
+COUNT(CASE WHEN leave_type_id = 'LT12' AND status = 'Approve' THEN 1 END) as LT12
 FROM `leave` GROUP BY thai_year;")->queryAll();
 
 $year = [];

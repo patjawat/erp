@@ -131,6 +131,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <!--End  BoxStatus -->
 
 <div class="card">
+    <div class="card-body d-flex justify-content-center">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+
+    </div>
+</div>
+
+<div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6>
@@ -138,7 +145,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 <span
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
             </h6>
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
         </div>
 
 
