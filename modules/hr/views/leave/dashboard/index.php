@@ -12,7 +12,7 @@ $this->title = 'Dashboard';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'dashboard'])?>
 <?php $this->endBlock(); ?>
 
 

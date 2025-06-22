@@ -89,6 +89,7 @@ class ImportLeaveController extends Controller
                     LEFT JOIN gleave_location ON gleave_register.LOCATION_ID = gleave_location.LOCATION_ID
                     LEFT JOIN gleave_day_type ON gleave_day_type.DAY_TYPE_ID = gleave_register.DAY_TYPE_ID
                     WHERE LEAVE_YEAR_ID = :year_id 
+                     AND LEAVE_PERSON_ID = 323
                     -- AND `STATUS_CODE` = "Allow"
                     ORDER BY gleave_register.ID DESC;')
                     ->bindValue('year_id',$year)

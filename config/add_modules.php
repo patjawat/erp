@@ -74,5 +74,6 @@ $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
+$modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
 
 return $modules;

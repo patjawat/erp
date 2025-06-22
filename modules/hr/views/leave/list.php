@@ -7,11 +7,11 @@ $me = UserHelper::GetEmployee();
 ?>
 
 
-    <table class="table table-striped table-hover">
-        <thead>
+<table class="table table-striped table-hover">
+    <thead>
         <tr>
-        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-        <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
+            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
             <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
             <th class="fw-semibold">การลา</th>
             <th class="fw-semibold">ระหว่างวันที่</th>
@@ -25,22 +25,25 @@ $me = UserHelper::GetEmployee();
     </thead>
     <tbody class="align-middle table-group-divider">
         <?php foreach($dataProvider->getModels() as $key => $item):?>
-            <tr>
-                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+        <tr>
+            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
             </td>
             <td class="text-center fw-semibold "><?php echo $item->thai_year?></td>
             <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>" class="open-modal" data-size="modal-xl">
-                <?=$item->getAvatar(false)['avatar']?>
+                <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
+                    class="open-modal" data-size="modal-xl">
+                    <?=$item->getAvatar(false)['avatar']?>
                 </a>
             </td>
             <td>
                 <div class="d-flex flex-column justofy-content-start align-items-start">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType?->title ?? '-' ?> <code><?php echo $item->total_days?> </code> วัน</span>
-                    </div>
-                </td>
-                <td>
-                    <?=$item->showLeaveDate()?>
+                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
+                            class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType?->title ?? '-' ?>
+                        <code><?php echo $item->total_days?> </code> วัน</span>
+                </div>
+            </td>
+            <td>
+                <?=$item->showLeaveDate()?>
             </td>
             <!-- <td class="text-center fw-semibold"><?php echo $item->total_days?></td> -->
             <!-- <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
@@ -60,33 +63,30 @@ $me = UserHelper::GetEmployee();
                         }
                         ?>
             </td>
-
             <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center">
+                    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                    <?php if($item->status == 'Approve'):?>
+                    <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
+                    <?php else:?>
+                    <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                    <?php endif?>
+                    <!-- xx -->
+                    <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                    <!-- xx -->
+                    <?php if($item->status == 'Approve'):?>
 
-            <div class="d-flex gap-2 justify-content-center">
-
-    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-    <?php if($item->status == 'Approve'):?>
-        <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
-        <?php else:?>
-            <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
-            <?php endif?>
-            <!-- xx -->
-            <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
-    <!-- xx -->
-            <?php if($item->status == 'Approve'):?>
-
-        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
                             [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'open-modal','data' => [
                                 'size' => 'modal-xl',
                                 'filename' => $item->leaveType?->title ?? '-'.'-'.$item->employee->fullname
                             ]]) ?>
-                        
-                            <?php else:?>
-                                <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
-                            <?php endif;?>
-</div>
+
+                    <?php else:?>
+                    <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
+                    <?php endif;?>
+                </div>
 
 
             </td>
