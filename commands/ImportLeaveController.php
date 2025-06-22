@@ -102,15 +102,13 @@ class ImportLeaveController extends Controller
         $total = count($querys);
 
         foreach ($querys as $key => $item) {
+            try {
             $emp = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
-
             $sendwork = $this->Person($item['LEAVE_WORK_SEND_ID']);
             $leaderLevel1 = $this->Person($item['LEADER_PERSON_ID']);
             $leaderLevel2 = $this->Person($item['LEADER_DEP_PERSON_ID']);
             $userCheckId = $this->Person($item['USER_CONFIRM_CHECK_ID']);
             $ApproveDirector = $this->Person($item['TOP_LEADER_AC_ID']);
-
-            $leave_work_send_id = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
 
             $checkLeave = Leave::find()->where([
                 'emp_id' =>  $emp->id,
@@ -193,6 +191,10 @@ class ImportLeaveController extends Controller
                 // $this->CreateApprove($item);
             }
         }
+            //code...
+} catch (\Throwable $th) {
+    //throw $th;
+}
         $this->UpdateStatus();
         return ExitCode::OK;
     }
