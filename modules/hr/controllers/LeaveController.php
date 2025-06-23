@@ -607,7 +607,7 @@ class LeaveController extends Controller
                 $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
             }
 
-            $model->data_json['date_start_type'] == '' ? $model->addError('data_json[date_start_type]', $requiredName) : null;
+            $model->date_start_type == '' ? $model->addError('date_start_type', $requiredName) : null;
             // $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
             $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;
             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
