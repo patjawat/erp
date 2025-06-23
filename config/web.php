@@ -252,7 +252,7 @@ $config = [
     'as access' => [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
-            'telegrambot/*',
+            // 'telegrambot/*',
             // '*',
             'line/*',
             // 'me/*',

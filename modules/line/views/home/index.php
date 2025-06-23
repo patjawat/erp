@@ -57,12 +57,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
     <div class="page-title-box-line mb-5">
         <div class="d-flex justify-content-between align-items-center">
             <div class="page-title-line">
-
-                
-              
             </div>
-         
-
         </div>
     </div>
 

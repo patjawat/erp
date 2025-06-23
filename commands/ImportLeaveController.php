@@ -395,3 +395,100 @@ class ImportLeaveController extends Controller
         }
     }
 }
+
+// update user ผู้อำนวยการ    
+//  $sql = "UPDATE approve a
+// JOIN `leave` l ON a.from_id = l.id AND a.name = 'leave'
+// SET 
+//     a.status = CASE
+//         WHEN l.date_start < '2023-10-01' THEN 75
+//         ELSE 147
+//     END
+// WHERE  a.level = 4";
+
+// //แก้ไขสถานะ Approve
+// $sql2 = "UPDATE approve a
+// JOIN `leave` l ON a.from_id = l.id AND a.name = 'leave'
+// SET 
+//     l.status = 'Checking',
+//     a.status = CASE
+//         WHEN a.level = 3 THEN 'Pending'
+//         WHEN a.level = 4 THEN 'None'
+//         ELSE a.status
+//     END
+// WHERE l.status = 'Pending'
+//   AND a.level IN (3, 4)
+//   AND l.thai_year = 2568;";
+
+// //update ผู้อำนวยการ
+//   $sql3 = "UPDATE approve a
+// JOIN `leave` l ON a.from_id = l.id AND a.name = 'leave'
+// SET 
+//     a.emp_id = CASE
+//         WHEN l.date_start < '2023-10-01' THEN 75
+//         ELSE 147
+//     END
+// WHERE  a.level = 4";
+
+// // update lebel
+// $sql4 ="UPDATE approve
+// SET data_json = JSON_SET(
+//     IFNULL(data_json, JSON_OBJECT()),
+//     '$.label',
+//     CASE level
+//         WHEN 1 THEN 'เห็นชอบ'
+//         WHEN 2 THEN 'เห็นชอบ'
+//         WHEN 3 THEN 'ตรวจสอบ'
+//         WHEN 4 THEN 'อนุมัติ'
+//         ELSE NULL
+//     END
+// )
+// WHERE name = 'leave' AND level IN (1, 2, 3, 4);";
+
+
+// UPDATE approve a
+// JOIN `leave` l ON a.from_id = l.id AND a.name = 'leave'
+// SET 
+//     a.status = CASE
+//         WHEN l.date_start < '2023-10-01' THEN 75
+//         ELSE 147
+//     END
+// WHERE  a.level = 4
+
+// UPDATE approve a
+// JOIN `leave` l ON a.from_id = l.id AND a.name = 'leave'
+// SET 
+//     l.status = 'Checking',
+//     a.status = CASE
+//         WHEN a.level = 3 THEN 'Pending'
+//         WHEN a.level = 4 THEN 'None'
+//         ELSE a.status
+//     END
+// WHERE l.status = 'Pending'
+//   AND a.level IN (3, 4)
+//   AND l.thai_year = 2568
+
+//   UPDATE approve a
+// JOIN `leave` l ON a.from_id = l.id AND a.name = 'leave'
+// SET 
+//     a.emp_id = CASE
+//         WHEN l.date_start < '2023-10-01' THEN 75
+//         ELSE 147
+//     END
+// WHERE  a.level = 4
+
+// UPDATE approve
+// SET data_json = JSON_SET(
+//     IFNULL(data_json, JSON_OBJECT()),
+//     '$.label',
+//     CASE level
+//         WHEN 1 THEN 'เห็นชอบ'
+//         WHEN 2 THEN 'เห็นชอบ'
+//         WHEN 3 THEN 'ตรวจสอบ'
+//         WHEN 4 THEN 'อนุมัติ'
+//         ELSE NULL
+//     END
+// )
+// WHERE name = 'leave' AND level IN (1, 2, 3, 4);
+
+// UPDATE `leave` set created_at = data_json->'$.leave_datetime_regis';
