@@ -37,6 +37,26 @@ class DefaultController extends Controller
 
     }
 
+public function actionV2()
+{
+     $model = UserHelper::GetEmployee();
+
+        $searchModel = new LeaveSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'emp_id' => $model->id
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        
+        return $this->render('me_v2', [
+            'model' => $model ? $model : new Employees(),
+            'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+        ]);
+}
+
+
+
     public function actionTeam()
     {
         return $this->render('team_work', [

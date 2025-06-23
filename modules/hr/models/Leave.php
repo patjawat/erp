@@ -835,7 +835,8 @@ class Leave extends \yii\db\ActiveRecord
 
         return [
             'total' => $total,
-            'sum' => $leaveDays
+            'sum' => $leaveDays,
+            'use_days' => $this->sumLeaveType('LT4')
         ];
     }
 

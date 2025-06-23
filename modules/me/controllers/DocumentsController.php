@@ -185,6 +185,52 @@ class DocumentsController extends \yii\web\Controller
         }
     }
 
+     public function actionShowHomeV2()
+    {
+
+        $emp = UserHelper::GetEmployee();
+        $department = $emp->department;
+
+        $sql = "SELECT d.id
+                FROM documents_detail d
+                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
+                WHERE d.name = 'department' AND d.to_id = :department AND r.doc_read IS NULL
+
+                UNION
+
+                SELECT d.id
+                FROM documents_detail d
+                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
+                WHERE d.name = 'tags' AND d.to_id = :emp_id AND r.doc_read IS NULL;";
+
+        $ids = Yii::$app->db->createCommand($sql, [
+            ':department' => $department,
+            ':emp_id' => $emp->id
+        ])->queryColumn();
+
+          $searchModel = new DocumentsDetailSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['IN','id', $ids]);
+
+        
+
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('tilte'),
+                'content' => $this->renderAjax('show_home_v2', [
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('show_home_v2', [
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
     public function actionView($id)
     {
         // $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';

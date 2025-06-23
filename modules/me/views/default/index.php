@@ -212,11 +212,6 @@ $js = <<< JS
             }
         });
     }
-
-
-
-
-
     JS;
 $this->registerJS($js, yii\web\View::POS_END);
 ?>

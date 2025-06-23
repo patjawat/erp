@@ -51,7 +51,7 @@ $me = UserHelper::GetEmployee();
                                     ลับที่สุด
                                 </span>
                                 <?php endif;?>
-                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => '/me'])?>">
+                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => '/me'])?>" class="open-modal" data-size="modal-xxl">
                                     เรื่อง : <?php echo $item->document ? $item->document->topic : ''?>
                                 </a>
                                 <?php echo  $item->document ? ($item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : '') : ''?>
@@ -85,7 +85,7 @@ $me = UserHelper::GetEmployee();
                         </div>
                     </td>
                     <td> <?=$item->document->documentStatus->title ?? '-'?></td>
-                    <td><?php echo  $item->document ?  Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['view', 'id' => $item->id,'callback' => '/me']) : ''?></td>
+                    <td><?php echo  $item->document ?  Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['view', 'id' => $item->id,'callback' => '/me'],['class' => 'open-modal','data' => ['size' => 'modal-xxl']]) : ''?></td>
                 </tr>
                 <?php endforeach;?>
 
