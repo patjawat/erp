@@ -6,7 +6,7 @@ use yii\helpers\Html;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
-// $this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if ($model->document_group == 'receive') {
     $this->title = 'ออกเลขหนังสือรับ';

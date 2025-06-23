@@ -87,7 +87,7 @@ $this->title = 'ทะเบียนหนังสือ';
 
                             <?php if (isset($item->documentDepartment)): ?>
                             <a
-                                href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentDepartment->id]) ?>">
+                                href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentDepartment->id]) ?>" class="open-modal" data-size="modal-xxl">
                                 เรื่อง : <?php echo $item->topic ?>
                             </a>
                             <?php endif; ?>
@@ -135,7 +135,7 @@ $this->title = 'ทะเบียนหนังสือ';
                 </td>
                 <td>
                     <?php if (isset($item->documentTags)): ?>
-                    <?php echo Html::a('xxxx<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id],['class' => 'open-modal','data' => ['size' => 'modal-fullscreen']]) ?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id],['class' => 'open-modal','data' => ['size' => 'modal-xxl']]) ?>
                     <?php endif; ?>
                     <?php if (isset($item->documentDepartment)): ?>
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id]) ?>
