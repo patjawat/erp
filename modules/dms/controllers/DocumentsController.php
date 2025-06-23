@@ -368,7 +368,11 @@ class DocumentsController extends Controller
                 } else {
                     return $model->getErrors();
                 }
-                return $this->redirect(['/dms/documents/' . $model->document_group]);
+                // return $this->redirect(['/dms/documents/' . $model->document_group]);
+                 Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success'
+                ];
             }
         } else {
             // $model->loadDefaultValues();
