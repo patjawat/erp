@@ -80,7 +80,7 @@ $this->title = 'ทะเบียนหนังสือ';
                             </span>
                             <?php endif; ?>
                             <?php if (isset($item->documentTags)): ?>
-                            <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentTags->id]) ?>">
+                            <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentTags->id]) ?>" class="open-modal" data-size="modal-xxl">
                                 เรื่อง : <?php echo $item->topic ?>
                             </a>
                             <?php endif; ?>
