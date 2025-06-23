@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 
                 <?php // echo $this->render('document'); ?>
                 <div id="viewDocument"></div>
-                <?php echo $this->render('list_committee'); ?>
+                <?php // echo $this->render('list_committee'); ?>
 
             </div>
         </div>

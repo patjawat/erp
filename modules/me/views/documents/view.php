@@ -121,7 +121,6 @@ $this->title = $model->topic;
 $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
 $listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
 $js = <<<JS
-
             getComment();
             listComment()
 
@@ -130,13 +129,6 @@ $js = <<<JS
               const screenHeight = window.innerHeight;
                 iframe.style.height = screenHeight - 100 + "px";
 
-
-            // iframe.onload = () => {
-            // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-            // if (iframeDocument) {
-            //     iframeDocument.body.style.zoom = "150%";
-            // }
-            // };
 
             async function getComment()
             {
@@ -232,4 +224,3 @@ $js = <<<JS
 JS;
 $this->registerJS($js,View::POS_END);
 ?>
-    <?php // Pjax::end(); ?>

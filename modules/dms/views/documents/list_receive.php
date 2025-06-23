@@ -50,7 +50,7 @@ if (file_exists($dataFile)) {
 <?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'receive']) ?>
 <?php $this->endBlock(); ?>
 
-<?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
+<?php  Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
 <div class="card">
     <div class="card-body d-flex justify-content-between align-top align-items-center">
@@ -111,7 +111,7 @@ if (file_exists($dataFile)) {
                                         ลับที่สุด
                                     </span>
                                     <?php endif;?>
-                                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>">
+                                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>" class="open-modal" data-size="modal-xxl">
                                         เรื่อง : <?php echo $item->topic?>
                                     </a>
 
@@ -145,7 +145,7 @@ if (file_exists($dataFile)) {
                             </div>
                         </td>
                         <td> <?=$item->documentStatus->title ?? '-'?></td>
-                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
+                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' =>['size' => 'modal-xxl']])?>
                         </td>
                         </tr>
                         <?php endforeach;?>
@@ -172,7 +172,6 @@ if (file_exists($dataFile)) {
 </div>
 
 
-<?php // Pjax::end(); ?>
 
 <?php
 $js = <<< JS
@@ -180,9 +179,8 @@ const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]
 const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
 $('[data-toggle="popover"]').popover({container: 'body' });
 
-
-
 JS;
 $this->registerJS($js);
 
 ?>
+<?php  Pjax::end(); ?>

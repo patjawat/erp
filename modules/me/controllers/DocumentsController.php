@@ -187,7 +187,7 @@ class DocumentsController extends \yii\web\Controller
 
     public function actionView($id)
     {
-        $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
+        // $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
 
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);

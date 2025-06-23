@@ -94,8 +94,8 @@ $js = <<<JS
                        // รีเซ็ตฟอร์ม
                        form[0].reset();
                        success('ลงความเห็นสำเร็จ')
-                       listComment()
-                       getComment();
+                    //    listComment()
+                    //    getComment();
                         // Handle success, such as closing modal or reloading data
                     }
                 },

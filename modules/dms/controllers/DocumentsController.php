@@ -436,7 +436,11 @@ class DocumentsController extends Controller
                 }
 
                 $model->UpdateDocumentTags();
-                return $this->redirect([$model->document_group]);
+                // return $this->redirect([$model->document_group]);
+                 Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success'
+                ];
             } else {
                 return $model->getErrors();
             }
@@ -444,17 +448,20 @@ class DocumentsController extends Controller
             $model->loadDefaultValues();
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
-        // $old = $model->data_json;
+          if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
 
-        // if ($this->request->isPost && $model->load($this->request->post())) {
-        //     Yii::$app->response->format = Response::FORMAT_JSON;
-        //     $model->data_json = ArrayHelper::merge($old, $model->data_json);
-        //     // return $model;
-        //     $model->save();
-        //     return $this->redirect(['view', 'id' => $model->id]);
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     //เก็บคำที่ใช้ประจำ
@@ -672,11 +679,17 @@ class DocumentsController extends Controller
             //## ตรวจสอบสถานะส่งเสนอ ผอ.
             $director = SiteHelper::getInfo()['director']->id;
 
+            try {
+
             //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
             if (in_array($director, $model->tags_employee)) {
                 $docStatus =  $model->document;
                 $docStatus->status = 'DS3';
                 $docStatus->save(false);
+            }
+                
+            } catch (\Throwable $th) {
+                //throw $th;
             }
 
             if ($model->save()) {

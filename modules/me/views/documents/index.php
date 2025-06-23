@@ -135,7 +135,7 @@ $this->title = 'ทะเบียนหนังสือ';
                 </td>
                 <td>
                     <?php if (isset($item->documentTags)): ?>
-                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id]) ?>
+                    <?php echo Html::a('xxxx<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id],['class' => 'open-modal','data' => ['size' => 'modal-fullscreen']]) ?>
                     <?php endif; ?>
                     <?php if (isset($item->documentDepartment)): ?>
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id]) ?>

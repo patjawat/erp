@@ -299,11 +299,7 @@ $url = Url::to(['/dms/documents/get-items']);
 $showPdfUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref, 'file_name' => $file]);
 $js = <<< JS
 
-
-
     loadPdf()
-
-
 
         function loadPdf() {
             // Call AJAX to check if PDF file exists and get its URL
@@ -359,50 +355,52 @@ $js = <<< JS
             }
         });
     });
-
-
-
-    $('#form-document').on('beforeSubmit', function (e) {
-        var form = $(this);
-      
-        Swal.fire({
-            title: "ยืนยัน?",
-            text: "บันทึกหนังสือ!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "ยกเลิก!",
-            confirmButtonText: "ใช่, ยืนยัน!"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'post',
-                    data: form.serialize(),
-                    dataType: 'json',
-                    success: async function (response) {
-                        form.yiiActiveForm('updateMessages', response, true);
-                        // if (response.hasOwnProperty('error') && response.error) {
-                        //     Swal.fire({
-                        //         icon: 'error',
-                        //         title: 'เกิดข้อผิดพลาด',
-                        //         text: response.error,
-                        //     });
-                        // }
-                    },
-                    error: function(xhr, status, error) {
-                        // Swal.fire({
-                        //     icon: 'error',
-                        //     title: 'เกิดข้อผิดพลาด',
-                        //     text: xhr.responseText || error,
-                        // });
-                    }
-                });
-            }
-        });
-        return false;
+    handleFormSubmit('#form-document', null, async function(response) {
+        await location.reload();
     });
+
+
+    // $('#form-document').on('beforeSubmit', function (e) {
+    //     var form = $(this);
+      
+    //     Swal.fire({
+    //         title: "ยืนยัน?",
+    //         text: "บันทึกหนังสือ!",
+    //         icon: "warning",
+    //         showCancelButton: true,
+    //         confirmButtonColor: "#3085d6",
+    //         cancelButtonColor: "#d33",
+    //         cancelButtonText: "ยกเลิก!",
+    //         confirmButtonText: "ใช่, ยืนยัน!"
+    //     }).then((result) => {
+    //         if (result.isConfirmed) {
+    //             $.ajax({
+    //                 url: form.attr('action'),
+    //                 type: 'post',
+    //                 data: form.serialize(),
+    //                 dataType: 'json',
+    //                 success: async function (response) {
+    //                     form.yiiActiveForm('updateMessages', response, true);
+    //                     // if (response.hasOwnProperty('error') && response.error) {
+    //                     //     Swal.fire({
+    //                     //         icon: 'error',
+    //                     //         title: 'เกิดข้อผิดพลาด',
+    //                     //         text: response.error,
+    //                     //     });
+    //                     // }
+    //                 },
+    //                 error: function(xhr, status, error) {
+    //                     // Swal.fire({
+    //                     //     icon: 'error',
+    //                     //     title: 'เกิดข้อผิดพลาด',
+    //                     //     text: xhr.responseText || error,
+    //                     // });
+    //                 }
+    //             });
+    //         }
+    //     });
+    //     return false;
+    // });
         
         thaiDatepicker('#documents-doc_transactions_date,#documents-doc_expire,#documents-doc_date');
            

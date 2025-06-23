@@ -20,6 +20,15 @@ class HomeController extends Controller
     {
         return $this->render('index');
     }
+    public function actionSendMsg()
+    {
+ 
+
+        // $clientId = '8177437409';
+        $clientId = '7501172744';
+        $bot = new TelegramBot(); // จะใช้ token จาก DB
+        $bot->sendMessage($clientId, 'ข้อความทดสอบจาก Yii2 ดึง token จาก database');
+    }
 
     public function actionSetMenu()
     {

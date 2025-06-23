@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php echo $model->listClipFile()?>
                 <?php // echo Html::a('<i class="bi bi-clock-history"></i> ดูไฟล์แนบ', ['/hr/leave/view-history','emp_id' => $model->emp_id,'title' =>'ประวัติการลา'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']]) ?>
             </td>
-                <td>วันลาพักผ่อนสม : </td>
+                <td>วันลาพักผ่อนสะสม : </td>
                 <td><?php echo $model->sumLeavePermission()['sum']?></td>
                 </tr>
                     

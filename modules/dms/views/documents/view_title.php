@@ -7,12 +7,12 @@ use yii\widgets\DetailView;
 ?>
 <div class="d-flex align-items-center">
             <div class="flex-shrink-0">
-                <i class="bi bi-journal-text fs-2"></i>
+                <i class="bi bi-journal-text fs-1"></i>
             </div>
             <div class="flex-grow-1 ms-3">
                 <div class="d-flex flex-column">
                     <div>
-                        <span class="h5">
+                        <span class="h5 text-white">
                             <?= Html::encode($model->topic) ?>
                         </span>
                         <span class="fw-semibold fs-6">
@@ -26,7 +26,7 @@ use yii\widgets\DetailView;
                             
 
                     </div>
-                    <span class="text-primary">
+                    <span class="text-white">
                         <?php  echo $model->documentOrg->title ?? '-';?>
                     </span>
                 </div>

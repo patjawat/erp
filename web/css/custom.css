@@ -12344,6 +12344,14 @@ textarea:focus {
   font-weight: 500 !important;
 }
 
+.modal-title .avatar-detail h6, .modal-title .avatar-detail .h6 {
+  color: #fff !important;
+}
+
+.modal-title .avatar-detail p {
+  color: #fff !important;
+}
+
 .modal-fullscreen .modal-dialog {
   max-width: 100%;
   width: 100%;
@@ -12367,6 +12375,10 @@ textarea:focus {
   overflow-y: auto;
   height: calc(100% - 56px);
   /* Adjust for header/footer height if needed */
+}
+
+.modal-xxl {
+  max-width: 90vw;
 }
 
 .loading-overlay .loading-text {
