@@ -90,6 +90,7 @@ $this->title = $model->topic;
                 </div>
 
                 <h5 class="section-title"><?=$model->data_json['des'] ?? ''?></h5>
+                  ถึงหน่วยงาน : <?=$model->viewTagsDepartment()?>
 
                 <!-- Tab panes -->
                 <div class="tab-content mt-3">

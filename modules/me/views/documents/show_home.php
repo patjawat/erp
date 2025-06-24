@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use yii\web\View;
 use yii\db\Expression;
 use yii\bootstrap5\Html;
 use app\modules\dms\models;
@@ -34,7 +35,7 @@ $me = UserHelper::GetEmployee();
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
-                <tr>
+                <tr id="<?=$item->id?>">
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td class="text-center fw-semibold"><?= isset($item->document) ? $item->document->doc_regis_number : ''?></td>
                     <td class="fw-light align-middle">
@@ -51,7 +52,7 @@ $me = UserHelper::GetEmployee();
                                     ลับที่สุด
                                 </span>
                                 <?php endif;?>
-                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => '/me'])?>" class="open-modal" data-size="modal-xxl">
+                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => '/me'])?>" class="open-modal view-document" data-size="modal-xxl" data-tr-id="<?=$item->id?>">
                                     เรื่อง : <?php echo $item->document ? $item->document->topic : ''?>
                                 </a>
                                 <?php echo  $item->document ? ($item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : '') : ''?>
@@ -85,10 +86,21 @@ $me = UserHelper::GetEmployee();
                         </div>
                     </td>
                     <td> <?=$item->document->documentStatus->title ?? '-'?></td>
-                    <td><?php echo  $item->document ?  Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['view', 'id' => $item->id,'callback' => '/me'],['class' => 'open-modal','data' => ['size' => 'modal-xxl']]) : ''?></td>
+                    <td><?php echo  $item->document ?  Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['view', 'id' => $item->id,'callback' => '/me'],['class' => 'open-modal view-document','data' => ['size' => 'modal-xxl']]) : ''?></td>
                 </tr>
                 <?php endforeach;?>
 
             </tbody>
     </div>
 </div>
+<?php
+$js = <<< JS
+
+$('body').on('click', '.view-document', function (e) {
+    let trId = $(this).data('tr-id');
+     $('#'+trId).remove();
+
+})
+JS;
+$this->registerJS($js,View::POS_END);
+?>

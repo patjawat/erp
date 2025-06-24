@@ -267,7 +267,7 @@ class DocumentsController extends \yii\web\Controller
                 ])
             ];
         } else {
-            return $this->render('view', [
+            return $this->render('@app/modules/dms/views/documents/view', [
                 'model' => $model,
                 'detail' => $detail,
                 'callback' => $callback
