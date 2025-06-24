@@ -261,13 +261,13 @@ class DocumentsController extends \yii\web\Controller
 
             return [
                 'title' => $this->renderAjax('@app/modules/dms/views/documents/view_title', ['model' => $model]),
-                'content' => $this->renderAjax('@app/modules/dms/views/documents/view', [
+                'content' => $this->renderAjax('view', [
                     'model' => $model,
                     'detail' => $detail
                 ])
             ];
         } else {
-            return $this->render('@app/modules/dms/views/documents/view', [
+            return $this->render('view', [
                 'model' => $model,
                 'detail' => $detail,
                 'callback' => $callback
