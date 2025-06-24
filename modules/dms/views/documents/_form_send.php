@@ -337,42 +337,9 @@ $js = <<< JS
 
 
     thaiDatepicker('#documents-doc_transactions_date,#documents-doc_date,#leave-date_end,#documents-doc_expire,#documents-data_json-event_date')
-    \$('#form-document').on('beforeSubmit', function (e) {
-            var form = \$(this);
-            console.log('Submit');
-            Swal.fire({
-            title: "ยืนยัน?",
-            text: "บันทึกหนังสือ!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "ยกเลิก!",
-            confirmButtonText: "ใช่, ยืนยัน!"
-            }).then((result) => {
-            if (result.isConfirmed) {
-                
-                \$.ajax({
-                    url: form.attr('action'),
-                    type: 'post',
-                    data: form.serialize(),
-                    dataType: 'json',
-                    success: async function (response) {
-                        form.yiiActiveForm('updateMessages', response, true);
-                        if(response.status == 'success') {
-                            closeModal()
-                            // success()
-                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                        }
-                    }
-                });
-
-            }else{
-
-            }
-            });
-            return false;
-        });
+        handleFormSubmit('#form-document', null, async function(response) {
+        await location.reload();
+    });
         
 
          function loadPdf() {

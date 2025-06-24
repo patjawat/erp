@@ -76,8 +76,7 @@ $this->title = $model->topic;
             <div class="card-body">
 
                 <!-- Nav pills -->
-                <div class="d-flex justify-content-between mb-4">
-                    <?php // echo Html::a('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ',['/dms/documents/'.$model->document_group],['class' => 'btn btn-secondary me-2'])?>
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <ul class="nav nav-pills" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" data-bs-toggle="pill" href="#home">ลงความเห็น</a>
@@ -85,8 +84,9 @@ $this->title = $model->topic;
                         <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="pill" href="#menu1">ประวัติการอ่าน</a>
                         </li>
-
+                        
                     </ul>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['/dms/documents/update','id' => $model->id],['class' => 'btn btn-warning open-modal rounded-pill shadow','data' => ['size' => 'modal-xxl']])?>
                 </div>
 
                 <h5 class="section-title"><?=$model->data_json['des'] ?? ''?></h5>

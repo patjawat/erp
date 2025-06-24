@@ -380,9 +380,21 @@ class DocumentsController extends Controller
             $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         }
 
-        return $this->render('create', [
-            'model' => $model
-        ]);
+
+          if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

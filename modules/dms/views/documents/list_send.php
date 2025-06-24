@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body d-flex justify-content-between align-top align-items-center">
-       <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill', 'data' => ['size' => 'modal-lg']]) ?>
+       <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ออกเลข'.$this->title, ['/dms/documents/create','document_group' => $searchModel->document_group, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-xxl']]) ?>
        <?php  echo $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
        <?= Html::a(
             '<i class="fa-solid fa-file-excel ne-1"></i> ส่งออก',
@@ -101,7 +101,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ลับที่สุด
                                     </span>
                                     <?php endif;?>
-                                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>">
+                                    <a href="<?php echo Url::to(['/dms/documents/view','id' => $item->id])?>" class="open-modal" data-size="modal-xxl">
                                         เรื่อง : <?php echo $item->topic?>
                                     </a>
 
@@ -136,7 +136,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <span class="fw-lighter fs-13"><?php echo isset($item->doc_time) ? '<i class="fa-solid fa-clock"></i> '.$item->doc_time : ''?></span> -->
                             </div>
                         </td>
-                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id])?>
+                        <td><?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update', 'id' => $item->id],['class' => 'open-modal','data' =>['size' => 'modal-xxl']])?>
                         </td>
                         <!-- <td> -->
                         <?php // echo Html::a(' <i class="fas fa-share fa-2x text-secondary"></i>',['/dms/documents/comment','id' => $item->id,'title' => '<i class="fas fa-share"></i>ส่งต่อ'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
