@@ -100,8 +100,7 @@ $resultsJs = <<<JS
                         <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
                     </div>
                     <div class="w-50">
-                        <?php
-                        echo $form->field($model, 'date_start_type')->widget(Select2::classname(), [
+                        <?= $form->field($model, 'date_start_type')->widget(Select2::classname(), [
                             'data' => [
                                 '0' => 'เต็มวัน',
                                 '0.5' => 'ครึงวัน',
@@ -116,15 +115,14 @@ $resultsJs = <<<JS
                                 'select2:unselect' => 'function() {
                                     calDays();
                                     }',
-                                'select2:select' => 'function() {
+                                    'select2:select' => 'function() {
                                         calDays();
-                                    }',
-                            ],
-                        ])->label('ประเภท');
-                        ?>
+                                        }',
+                                    ],
+                                    ])->label('ประเภท');
+                                    ?>
 
-                        <?php
-                        echo $form->field($model, 'date_end_type')->widget(Select2::classname(), [
+<?=$form->field($model, 'date_end_type')->widget(Select2::classname(), [
                             'data' => [
                                 '0' => 'เต็มวัน',
                                 '0.5' => 'ครึงวัน',

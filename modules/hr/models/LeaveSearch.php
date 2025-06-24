@@ -19,7 +19,7 @@ class LeaveSearch extends Leave
     {
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_filter', 'on_holidays', 'leave_type_id', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'thai_year', 'status', 'q', 'q_department'], 'safe'],
+            [['date_start_type','date_end_type','date_filter', 'on_holidays', 'leave_type_id', 'data_json', 'date_start', 'date_end', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'thai_year', 'status', 'q', 'q_department'], 'safe'],
             [['leave_time_type'], 'number'],
         ];
     }

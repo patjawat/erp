@@ -801,6 +801,7 @@ class LeaveController extends Controller
 
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
+
             $model->save();
             return [
                 'status' => 'success',
