@@ -4,6 +4,7 @@ namespace app\modules\me\controllers;
 
 use Yii;
 use DateTime;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
@@ -198,6 +199,57 @@ class LeaveController extends Controller
             return $this->render('calendar', []);
         }
     }
+
+//ทะเบียนแสดงบนปฏิทินการลา
+    public function actionEvents()
+	{
+        $start = $this->request->get('start');
+        $end = $this->request->get('end');
+        
+		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $bookings = Leave::find()
+                ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+                $data = [];
+
+                foreach($bookings as $item)
+                {
+
+                    // $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
+                    // $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+                    $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' 00:00'), "php:Y-m-d\TH:i");
+                    $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' 00:00'), "php:Y-m-d\TH:i");
+                    $data[] = [
+                        'id'               => $item->id,
+                        'title'            => $item->reason,
+                        'start'            => $dateStart,
+                        'end'            => $dateEnd,
+                        // 'display' => 'auto',
+                        'allDay' => false,
+                        'source' => 'vehicle',
+                        'extendedProps' => [
+                            'title' => $item->reason,
+                            'avatar' => $this->renderAjax('@app/modules/hr/views/leave/calendar/leave-item', ['item' => $item]),
+                            // 'fullname' => $item->employee?->fullname,
+                            // 'dateTime' => 'ttttt',
+                            // 'dateTime' => $item->viewTime(),
+                            // 'status' => $item->viewStatus()['view'],
+                            // 'view' => $this->renderAjax('@app/modules/hr/views/leave/calendar/view', ['model' => $item,'action' => false]),
+                            // 'description' => 'คำอธิบาย',
+                        ],
+                        //  'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
+                        'description' => 'description for All Day Event',
+                        'textColor' => 'black',
+                        'backgroundColor' => '#eee',
+                        'url' => Url::to(['/event/view', 'id' => $item->id]),
+                    ];
+                }
+
+            return  $data;
+       
+	}
+
 
     public function actionHoliday()
     {

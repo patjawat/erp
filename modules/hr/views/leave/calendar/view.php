@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' => $model]) ?>
 </div>
 <div class="col-4">
-    <?= $this->render('view_summary', ['model' => $model]) ?>
+    <?= $this->render('@app/modules/hr/views/leave/view_summary', ['model' => $model]) ?>
     <div class="d-flex justify-content-center">
 
         <button class="btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
@@ -43,10 +43,10 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <div class="collapse" id="collapseExample">
         <!-- <div id="viewHistory"></div> -->
-        <?php echo $this->render('history', ['model' => $model]) ?>
+        <?php echo $this->render('@app/modules/hr/views/leave/history', ['model' => $model]) ?>
 </div>
 
-<?php  echo $this->render('timeline_approve', ['model' => $model]) ?>
+<?php  echo $this->render('@app/modules/hr/views/leave/timeline_approve', ['model' => $model]) ?>
 
 <div class="d-flex justify-content-center gap-3">
     <?php echo ($model->status == 'ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>

@@ -22,6 +22,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/me/menu',['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('@app/modules/me/views/leave/_sub_menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
+
+
 
 
 <?php Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>

@@ -41,7 +41,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 </td>
                 <td class="">
                     <div class="d-flex">
-                        <?=$detail->car ? Html::img($detail->car?->ShowImg(),['class' => 'avatar rounded border-secondary']) : ''?>
+                        <?php
+                        try {
+                            echo $detail->car ? Html::img($detail->car?->ShowImg(),['class' => 'avatar rounded border-secondary']) : '';
+                        } catch (\Throwable $th) {
+                            //throw $th;
+                        }
+                        ?>
                         <div class="avatar-detail">
                             <div class="d-flex flex-column">
                                 <p class="mb-0"><?=$detail->car?->data_json['brand'];?></p>

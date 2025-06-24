@@ -51,7 +51,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td>สถานะ : </td>
                     <td><?php echo $model->viewStatus() ?></td>
                     <td>ผู้ดำเนินการยกเลิก : </td>
-                    <td><?php echo ($model->data_json['cancel_fullname'] ?? '-') . (' วันเวลา ' . Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'], 'medium') ?? '') ?></td>
+                    <td>
+                        <?php
+                            echo ($model->data_json['cancel_fullname'] ?? '-') .
+                                (
+                                    isset($model->data_json['cancel_date'])
+                                    ? ' วันเวลา ' . (Yii::$app->thaiFormatter->asDateTime($model->data_json['cancel_date'], 'medium') ?? '')
+                                    : ''
+                                );
+                        ?>
+                    </td>
                     <?php else: ?>
                         <td>สถานะ : </td>
                         <td  colspan="4"><?php echo $model->viewStatus() ?></td>

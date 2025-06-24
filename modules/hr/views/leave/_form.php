@@ -346,7 +346,7 @@ $resultsJs = <<<JS
 
 <?php ActiveForm::end(); ?>
 <?php
-$calDaysUrl = Url::to(['/hr/leave/cal-days']);
+$calDaysUrl = Url::to(['/hr/leave/cal-days','emp_id' => $model->emp_id]);
 $js = <<<JS
 
 

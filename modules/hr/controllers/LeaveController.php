@@ -25,6 +25,7 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use app\modules\hr\components\LeaveHelper;
 use app\modules\hr\models\LeavePermission;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\inventory\models\Warehouse;
@@ -737,6 +738,8 @@ class LeaveController extends Controller
 
     public function actionCalDays()
     {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $emp_id = (Float) ($this->request->get('emp_id'));
         $date_start_type = (Float) ($this->request->get('date_start_type'));
         $date_end_type = (Float) ($this->request->get('date_end_type'));
         $on_holidays = $this->request->get('on_holidays');
@@ -746,20 +749,15 @@ class LeaveController extends Controller
 
         $dateStart = $date_start == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_start'));
         $dateEnd = $date_end == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_end'));
-        // return $dateStart.' '.$dateEnd;
-        $model = AppHelper::CalDay($dateStart, $dateEnd);
-        
-        
-        
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        // return $auto;
-        $holidaysMe = Calendar::find()->where(['name' => 'off'])->andWhere(['between', 'date_start', $dateStart, $dateEnd])->count();
-        
+        $model = LeaveHelper::CalDay($dateStart, $dateEnd,$emp_id);
+        //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
         if($model['dayOff'] == 0){
             $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
         }else{
-            // $total = ($model['allDays']-($date_start_type+$date_end_type) -$holidaysMe);
+            //จำเป็นต้องนับวัน off หรือไม่
+            // $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['dayOff']);
             $total = ($model['allDays']-($date_start_type+$date_end_type));
+            
            
         }
 

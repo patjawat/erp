@@ -106,7 +106,7 @@ $this->title = "การตั้งค่าระบบ";
             <a href="<?php echo Url::to(['/am/setting'])?>">
                 <div class="card border-0 shadow-sm hover-card">
                     <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
-                        <i class="bi bi-folder-check fs-1 text-white"></i>
+                        <i class="fa-brands fa-google-drive fs-1 text-white"></i>
                     </div>
                     <div class="card-body">
                         <h6 class="text-center text-primary"> ทรัพย์สิน</h6>
@@ -114,6 +114,20 @@ $this->title = "การตั้งค่าระบบ";
                 </div>
             </a>
         </div>
+
+        <div class="col">
+            <a href="<?php echo Url::to(['/gdoc/setting'])?>">
+                <div class="card border-0 shadow-sm hover-card">
+                    <div class="d-flex justify-content-center align-item-center bg-secondary p-4 rounded-top">
+                        <i class="fab fa-google-drive fs-1 text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-center text-primary"> จัดการแบบฟอร์</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
+
        
     </div>
 
