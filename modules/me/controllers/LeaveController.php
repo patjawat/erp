@@ -15,8 +15,10 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\approve\models\Approve;
+use app\modules\hr\models\Organization;
 use app\modules\hr\models\LeavePermission;
 
 /**
@@ -44,12 +46,90 @@ class LeaveController extends Controller
      *
      * @return string
      */
-    public function actionIndex()
+
+      public function actionIndex()
+    {
+        $me = UserHelper::GetEmployee();
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new LeaveSearch([
+            'emp_id' => $me->id,
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            // 'status' =>   $status ? [$status] : ['Pending']
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+
+        $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+          
+            ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
+        ]);
+
+         if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        if(!$searchModel->date_filter && !$searchModel->thai_year){
+              $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+             $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+        }
+        
+      
+    
+        if (!empty($searchModel->leave_type_id)) {
+            $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
+        // if (!empty($searchModel->status)) {
+        //     $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
+        // }
+        if($status)
+        {
+            $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
+
+        }
+    
+       
+        
+        // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+
+          $dataProvider->setSort(['defaultOrder' => [
+            // 'total_days' => SORT_DESC,
+            'created_at' => SORT_DESC,
+        ]]);
+
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            // 'dateStart' => $dateStart,
+            // 'dateEnd' => $dateEnd,
+        ]);
+    }
+
+
+    
+    public function actionIndexOld()
     {
         $me = UserHelper::GetEmployee();
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new LeaveSearch([
-            'emp_id' => $me->id,
+            // 'emp_id' => $me->id,
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
@@ -83,6 +163,7 @@ class LeaveController extends Controller
         if (!empty($searchModel->status)) {
             $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
         }
+        
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
