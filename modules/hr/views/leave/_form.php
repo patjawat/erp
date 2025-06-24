@@ -452,14 +452,14 @@ $js = <<<JS
                 data:{
                     date_start:\$('#leave-date_start').val(),
                     date_end:\$('#leave-date_end').val(),
-                    date_start_type:\$('#leave-data_json-date_start_type').val(),
-                    date_end_type:\$('#leave-data_json-date_end_type').val(),
+                    date_start_type:\$('#leave-date_start_type').val(),
+                    date_end_type:\$('#leave-date_end_type').val(),
                     on_holidays:\$('#leave-on_holidays').val()
                     
                 },
                 dataType: "json",
                 success: function (res) {
-                    console.log(\$('#leave-data_json-date_start_type').val());
+                    console.log(\$('#leave-date_start_type').val());
                     console.log(res.satsunDays);
                     
                     \$('#satsunDays').html(res.satsunDays)
