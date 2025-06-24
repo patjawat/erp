@@ -15,9 +15,9 @@ $me = UserHelper::GetEmployee();
 <?php if($me->id == $model->emp_id):?>
     <div class="leave-update">
         
-        <?php echo $this->render('_form', [
-            'model' => $model,
-            ]); ?>
+ <?= $this->render('@app/modules/hr/views/leave/_form', [
+        'model' => $model,
+    ]) ?>
 
 </div>
 <?php else:?>

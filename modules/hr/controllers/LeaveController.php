@@ -16,6 +16,7 @@ use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Calendar;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\approve\models\Approve;
@@ -77,21 +78,25 @@ class LeaveController extends Controller
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
         ]);
-      
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+
+         if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
+
+        if(!$searchModel->date_filter && !$searchModel->thai_year){
+            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
+            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
+             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
+        }
         
-        try {
-         
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-           
-    } catch (\Throwable $th) {
-        //throw $th;
-    }
+      
     
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
@@ -134,6 +139,12 @@ class LeaveController extends Controller
        
         
         // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+
+          $dataProvider->setSort(['defaultOrder' => [
+            // 'total_days' => SORT_DESC,
+            'created_at' => SORT_DESC,
+        ]]);
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -239,6 +250,104 @@ class LeaveController extends Controller
             }
             // $dataProvider->query->andWhere(['status' => Leave::STATUS_APPROVED]);
         }
+
+         public function actionReport2()
+    {
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new LeaveSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending']
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'cid', $searchModel->q],
+            ['like', 'email', $searchModel->q],
+          
+            ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
+        ]);
+
+         if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        if(!$searchModel->date_filter && !$searchModel->thai_year){
+            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
+            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
+             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
+        }
+        
+      
+    
+        if (!empty($searchModel->leave_type_id)) {
+            $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
+        // if (!empty($searchModel->status)) {
+        //     $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
+        // }
+        if($status)
+        {
+            $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
+
+        }
+        
+        // search employee department
+         // ค้นหาคามกลุ่มโครงสร้าง
+         $org1 = Organization::findOne($searchModel->q_department);
+         // ถ้ามีกลุ่มย่อย
+         if (isset($org1) && $org1->lvl == 1) {
+             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+             FROM tree t1
+             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+             WHERE t2.name = :name;';
+             $querys = Yii::$app
+                 ->db
+                 ->createCommand($sql)
+                 ->bindValue(':name', $org1->name)
+                 ->queryAll();
+             $arrDepartment = [];
+             foreach ($querys as $tree) {
+                 $arrDepartment[] = $tree['id'];
+             }
+             if (count($arrDepartment) > 0) {
+                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+             } else {
+                 $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+             }
+         } else {
+             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+         }
+       
+        
+        // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+
+          $dataProvider->setSort(['defaultOrder' => [
+            // 'total_days' => SORT_DESC,
+            'created_at' => SORT_DESC,
+        ]]);
+
+
+        return $this->render('report/index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            // 'dateStart' => $dateStart,
+            // 'dateEnd' => $dateEnd,
+        ]);
+    }
+
 
         protected function ExportLeave($dataProvider,$searchModel)
         {
@@ -686,21 +795,17 @@ class LeaveController extends Controller
         $model = $this->findModel($id);
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
-        $old_json = $model->data_json;
+
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
-            $model->data_json = ArrayHelper::merge($model->data_json, $old_json);
-            if($model->save()){
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
-
-            // return [
-            //     'status' => 'success',
-            //     'container' => '#leave'
-            // ];
+            $model->save();
+            return [
+                'status' => 'success',
+                'container' => '#leave'
+            ];
         }
 
         if ($this->request->isAJax) {

@@ -41,7 +41,11 @@ $this->title = 'รายงานระบบลา';
             </h6>
             
         </div>
-
+<?php
+echo "<pre>";
+print_r($dataProvider->getModels());
+echo "</pre>";
+?>
         <table class="table table-bordered table-striped table-hover">
             <thead class="">
                 <tr>

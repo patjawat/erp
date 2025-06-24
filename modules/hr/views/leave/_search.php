@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
@@ -29,6 +30,26 @@ use app\modules\hr\models\Organization;
 <div class="d-flex justify-content-between align-items-center gap-2">
 
     <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
+            <?php
+        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+            'data' =>  DateFilterHelper::getDropdownItems(),
+            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'width' => '130px',
+            ],
+            'pluginEvents' => [
+                'select2:select' => 'function(result) { 
+                        $(this).submit()
+                        }',
+                'select2:unselecting' => 'function() {
+                            $(this).submit()
+                        }',
+            ]
+        ])->label(false);
+        ?>
+
+
 
     <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),

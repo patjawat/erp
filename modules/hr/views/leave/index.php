@@ -23,11 +23,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
-<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
 <?php $this->endBlock(); ?>
+<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
 
 
@@ -174,4 +174,4 @@ $js = <<< JS
     JS;
 $this->registerJs($js);
 ?>
-<?php //  Pjax::end(); ?>
+<?php // Pjax::end(); ?>
