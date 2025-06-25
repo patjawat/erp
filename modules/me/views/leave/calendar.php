@@ -42,241 +42,241 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <style>
-.fc-theme-standard .fc-scrollgrid {
-    border-radius: 5px;
-}
-
-.fc .fc-toolbar-title {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: var(--dark-color);
-}
-
-.fc .fc-button-primary {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
-    font-weight: 500;
-    border-radius: 8px;
-    padding: 8px 16px;
-    transition: all 0.3s ease;
-}
-
-.fc .fc-button-primary:hover {
-    background-color: var(--bs-secondary);
-    border-color: var(--bs-secondary);
-}
-
-.fc-day-today {
-    background-color: rgba(67, 97, 238, 0.1) !important;
-
-}
-
-.fc-event {
-    border-radius: 6px;
-    padding: 3px;
-    margin-bottom: 2px;
-    border: none;
-}
-
-.leave-item {
-    display: flex;
-    align-items: center;
-    padding: 2px 4px;
-    border-radius: 4px;
-    margin-bottom: 2px;
-    font-size: 0.8rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.leave-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    margin-right: 5px;
-    object-fit: cover;
-    border: 1px solid #fff;
-    flex-shrink: 0;
-}
-
-
-
-
-.detail-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.detail-info {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    margin-top: 15px;
-}
-
-.leave-count-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 0.7rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    z-index: 5;
-}
-
-.day-leave-list {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-
-
-@media (max-width: 768px) {
-    .fc .fc-toolbar {
-        flex-direction: column;
-        gap: 10px;
+    .fc-theme-standard .fc-scrollgrid {
+        border-radius: 5px;
     }
 
-    .fc-header-toolbar {
-        margin-bottom: 1.5em !important;
+    .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: var(--dark-color);
+    }
+
+    .fc .fc-button-primary {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        font-weight: 500;
+        border-radius: 8px;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+    }
+
+    .fc .fc-button-primary:hover {
+        background-color: var(--bs-secondary);
+        border-color: var(--bs-secondary);
+    }
+
+    .fc-day-today {
+        background-color: rgba(67, 97, 238, 0.1) !important;
+
+    }
+
+    .fc-event {
+        border-radius: 6px;
+        padding: 3px;
+        margin-bottom: 2px;
+        border: none;
     }
 
     .leave-item {
-        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-bottom: 2px;
+        font-size: 0.8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .leave-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 5px;
+        object-fit: cover;
+        border: 1px solid #fff;
+        flex-shrink: 0;
+    }
+
+
+
+
+    .detail-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .detail-info {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-top: 15px;
+    }
+
+    .leave-count-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
         width: 20px;
         height: 20px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        z-index: 5;
     }
-}
 
-.leave-badge {
-    font-size: 0.7rem;
-    padding: 2px 5px;
-    border-radius: 4px;
-    color: white;
-    margin-right: 4px;
-    white-space: nowrap;
-}
-
-.sick-leave {
-    background-color: var(--bs-primary);
-}
-
-.vacation-leave {
-    background-color: var(--bs-secondary);
-}
-
-.personal-leave {
-    background-color: var(--bs-info);
-}
-
-.training-leave {
-    background-color: var(--leave-training);
-}
-
-.maternity-leave {
-    background-color: var(--leave-maternity);
-}
-
-.other-leave {
-    background-color: var(--leave-other);
-}
-
-.status-pending {
-    border-left: 4px solid #f59e0b !important;
-}
-
-.status-approved {
-    border-left: 4px solid #10b981 !important;
-}
-
-.status-rejected {
-    border-left: 4px solid #ef4444 !important;
-}
+    .day-leave-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
 
 
-.leave-detail-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-size: cover;
-    background-position: center;
-    border: 2px solid white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
 
-.leave-type-indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 6px;
-}
+    @media (max-width: 768px) {
+        .fc .fc-toolbar {
+            flex-direction: column;
+            gap: 10px;
+        }
 
-.status-badge {
-    font-size: 0.75rem;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-weight: 500;
-}
+        .fc-header-toolbar {
+            margin-bottom: 1.5em !important;
+        }
 
-.status-badge-pending {
-    background-color: #fef3c7;
-    color: #92400e;
-}
+        .leave-item {
+            font-size: 0.7rem;
+        }
 
-.status-badge-approved {
-    background-color: #d1fae5;
-    color: #065f46;
-}
+        .leave-avatar {
+            width: 20px;
+            height: 20px;
+        }
+    }
 
-.status-badge-rejected {
-    background-color: #fee2e2;
-    color: #b91c1c;
-}
+    .leave-badge {
+        font-size: 0.7rem;
+        padding: 2px 5px;
+        border-radius: 4px;
+        color: white;
+        margin-right: 4px;
+        white-space: nowrap;
+    }
 
-.leave-request-form label {
-    font-weight: 500;
-    margin-bottom: 4px;
-}
+    .sick-leave {
+        background-color: var(--bs-primary);
+    }
 
-.tooltip-inner {
-    max-width: 300px;
-}
+    .vacation-leave {
+        background-color: var(--bs-secondary);
+    }
 
-/* #calendar.fullscreen { */
-#fullscreen-container.fullscreen {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    z-index: 1050 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background-color: white !important;
-    padding: 20px !important;
-    overflow: auto !important;
-}
+    .personal-leave {
+        background-color: var(--bs-info);
+    }
+
+    .training-leave {
+        background-color: var(--leave-training);
+    }
+
+    .maternity-leave {
+        background-color: var(--leave-maternity);
+    }
+
+    .other-leave {
+        background-color: var(--leave-other);
+    }
+
+    .status-pending {
+        border-left: 4px solid #f59e0b !important;
+    }
+
+    .status-approved {
+        border-left: 4px solid #10b981 !important;
+    }
+
+    .status-rejected {
+        border-left: 4px solid #ef4444 !important;
+    }
+
+
+    .leave-detail-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        border: 2px solid white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .leave-type-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge-rejected {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .leave-request-form label {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .tooltip-inner {
+        max-width: 300px;
+    }
+
+    /* #calendar.fullscreen { */
+    #fullscreen-container.fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 1050 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: white !important;
+        padding: 20px !important;
+        overflow: auto !important;
+    }
 </style>
 
 <div class="row">
     <div class="col-9" id="calender-container">
         <div class="card" id="fullscreen-container">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>ปฏิทินการลาของบุคลากร ประจำปี <?=$thaiYear?></span>
+                <span>ปฏิทินการลาของบุคลากร ประจำปี <?= $thaiYear ?></span>
                 <div class="d-flex align-items-center gap-2">
                     <div class="">
                         <label for="eventLimitSelector" class="form-label">แารแสดงผล:</label>
@@ -291,25 +291,25 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div style="width: 400px;">
 
                         <?php
-                         $me = UserHelper::GetEmployee();
-                            echo \kartik\tree\TreeViewInput::widget([
-                                'query' => Organization::find()->addOrderBy('root, lft'),
-                                'value' => $me->department,
-                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                                'fontAwesome' => true,
-                                'multiple' => false,
-                                'name' => 'department',
-                                'options' => [
-                                    'disabled' => false,
-                                    'class' => 'close',
-                                    'id' => 'departmentFilter',
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true
-                                ],
-                            ]);
-                            ?>
+                        $me = UserHelper::GetEmployee();
+                        echo \kartik\tree\TreeViewInput::widget([
+                            'query' => Organization::find()->addOrderBy('root, lft'),
+                            'value' => $me->department,
+                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                            'fontAwesome' => true,
+                            'multiple' => false,
+                            'name' => 'department',
+                            'options' => [
+                                'disabled' => false,
+                                'class' => 'close',
+                                'id' => 'departmentFilter',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]);
+                        ?>
                     </div>
 
 
@@ -352,16 +352,16 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex flex-column gap-2 mb-3">
                     <?php foreach ($listLeaveType as $leaveType): ?>
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <span class="leave-type-indicator <?= $leaveType->code ?>" style="background-color:<?= $leaveType->data_json['color'] ?? 'var(--bs-primary)' ?>"></span><?= $leaveType->title ?>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <span class="leave-type-indicator <?= $leaveType->code ?>" style="background-color:<?= $leaveType->data_json['color'] ?? 'var(--bs-primary)' ?>"></span><?= $leaveType->title ?>
+                            </div>
+                            <div>
+                                <!-- <span class="badge text-bg-light">0</span> -->
+                            </div>
+
+
                         </div>
-                        <div>
-                            <!-- <span class="badge text-bg-light">0</span> -->
-                        </div>
-                    
-                    
-                    </div>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -377,10 +377,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <div class="d-flex flex-column gap-2">
                     <?php foreach ($listLeaveStatus as $leaveStatus): ?>
-                    <div class="d-flex align-items-center">
-                        <div class="<?= $leaveType->code ?>" style="width:4px; height:16px; background-color:<?= $leaveStatus->data_json['color'] ?? 'var(--bs-primary)' ?>; margin-right:8px;"></div>
-                        <?=$leaveStatus->title?>
-                    </div>
+                        <div class="d-flex align-items-center">
+                            <div class="<?= $leaveType->code ?>" style="width:4px; height:16px; background-color:<?= $leaveStatus->data_json['color'] ?? 'var(--bs-primary)' ?>; margin-right:8px;"></div>
+                            <?= $leaveStatus->title ?>
+                        </div>
                     <?php endforeach; ?>
                 </div>
 
@@ -479,7 +479,7 @@ $js = <<<JS
                 },
                 customButtons: {
                     fullscreenToggle: {
-                        text: 'ขยาย',
+                        text: 'ขยาย/ย่อ',
                         click: function () {
                         $('#fullscreen-container').toggleClass('fullscreen');
                         calendar.updateSize();
