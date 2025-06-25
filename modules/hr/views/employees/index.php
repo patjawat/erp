@@ -94,16 +94,12 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <span id="totalCount" class="d-none"><?= $dataProvider->getTotalCount(); ?></span>
 
-
 <?php
 $url = Url::to(['/hr/employees/export-excel']);
 $js = <<< JS
 
         $('#hr-container').on('pjax:success', function() {
              $('body').find('#total-count').text(\$('#totalCount').text());
-
-            
-
         });
 
         \$("body").on("click", "#download-button", function (e) {
@@ -122,8 +118,6 @@ $js = <<< JS
                 },
                 success: function(data) {
                   const modal = bootstrap.Modal.getInstance(document.getElementById('main-modal'));
-                    // \$("#main-modal").modal("toggle"); // Removed to prevent modal toggle issues
-                    // $("#main-modal").modal("hide");
                     var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
                     var filename = 'ข้อมูลบุคลากร'+'.xlsx';
                     const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
