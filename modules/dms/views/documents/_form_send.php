@@ -154,6 +154,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'options' => ['placeholder' => 'เลือกชั้นความลับ'],
             'pluginOptions' => [
                 'allowClear' => true,
+                  'dropdownParent' => '#main-modal',
             ],
         ])->label('ชั้นเร็ว');
         ?>
@@ -165,6 +166,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'options' => ['placeholder' => 'เลือกชั้นความลับ'],
                 'pluginOptions' => [
                     'allowClear' => true,
+                      'dropdownParent' => '#main-modal',
                 ],
             ])->label('ชั้นความลับ');
             ?>
@@ -199,6 +201,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                 'pluginOptions' => [
                     'allowClear' => true,
+                      'dropdownParent' => '#main-modal',
                     'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                     // 'width' => '370px',
                 ],
