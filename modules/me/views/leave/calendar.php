@@ -609,22 +609,27 @@ $js = <<<JS
                     info.jsEvent.preventDefault();
                     let viewHtml = info.event.extendedProps.view;
                     let avatar = info.event.extendedProps.avatar;
+                    let source = info.event.extendedProps.source;
                     var url = '$url/'+'view?id=' + info.event.id;
-                    beforLoadModal()
-                    $.ajax({
-                        type: "get",
-                        url: "$url"+"/view?id="+ info.event.id,
-                        dataType: "json",
-                        boforeSubmit: function(){},
-                        success: function (response) {
-                            $('#main-modal').modal('show')
-                            $("#main-modal-label").html(response.title);
-                            $(".modal-body").html(response.content);
-                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                            $(".modal-dialog").addClass("modal-xl");
-                        }
-                    });             
-                },
+                    console.log(source);
+                    
+                    if(source !== 'holiday'){
+                        beforLoadModal()
+                        $.ajax({
+                            type: "get",
+                            url: "$url"+"/view?id="+ info.event.id,
+                            dataType: "json",
+                            boforeSubmit: function(){},
+                            success: function (response) {
+                                $('#main-modal').modal('show')
+                                $("#main-modal-label").html(response.title);
+                                $(".modal-body").html(response.content);
+                                $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                $(".modal-dialog").addClass("modal-xl");
+                            }
+                        });             
+                    }
+                    },
                 loading: function(isLoading) {
                     if(isLoading) {
                         $('#calendar-loading').show();

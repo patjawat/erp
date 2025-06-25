@@ -17,6 +17,7 @@ use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
+use app\models\Calendar;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
@@ -258,7 +259,7 @@ class LeaveController extends Controller
                     'title' => isset($item->data_json['reason']) ? $item->data_json['reason'] : '',
                     'avatar' => $this->renderAjax('@app/modules/hr/views/leave/calendar/leave-item', ['item' => $item]),
                     'department' => $item->employee->department ?? null,
-                    'color' => '#009688' ,
+                    'color' => '#009688',
                     // 'color' => (isset($item->data_json['color']) ?$item->data_json['color'] : '') ,
                 ],
                 'description' => 'description for All Day Event',
@@ -269,6 +270,33 @@ class LeaveController extends Controller
             ];
         }
 
+        $holidayData = [];
+        $holidays = Calendar::find()->where(['name' => 'holiday'])
+            ->andWhere(['between', 'date_start', $start, $end])->all();
+        foreach ($holidays as $holiday) {
+             $dateStart = Yii::$app->formatter->asDatetime(($holiday->date_start . ' 00:00'), "php:Y-m-d\TH:i");
+            // เพิ่ม 1 วันให้ date_end
+            $dateEndRaw = date('Y-m-d', strtotime($holiday->date_start . ' +1 day'));
+            $dateEnd = Yii::$app->formatter->asDatetime(($dateEndRaw . ' 00:00'), "php:Y-m-d\TH:i");
+
+            $data[] = [
+                'id' => $holiday->id,
+                'title' => $holiday->title,
+                'start' => $dateStart,
+                'end' => $dateEnd,
+                'allDay' => false,
+                 'source' => 'holiday',
+                  'backgroundColor' => '#ff9800',
+                'extendedProps' => [
+                    'title' => 'ttt',
+                    'avatar' => '<span class=""><i class="fa-regular fa-bell"></i>'.$holiday->title.'</span>',
+                    'department' => '',
+                    'color' => '',
+                    // 'color' => (isset($item->data_json['color']) ?$item->data_json['color'] : '') ,
+                ],
+
+            ];
+        }
         return $data;
     }
 
