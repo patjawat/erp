@@ -171,7 +171,7 @@ if (file_exists($dataFile)) {
     ]); ?>
 </div>
 
-
+<?php  Pjax::end(); ?>
 
 <?php
 $js = <<< JS
@@ -183,4 +183,3 @@ JS;
 $this->registerJS($js);
 
 ?>
-<?php  Pjax::end(); ?>

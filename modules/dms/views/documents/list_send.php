@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
+<?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 
 
 <div class="card">
@@ -165,7 +165,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
-<?php // Pjax::end(); ?>
+<?php  Pjax::end(); ?>
 
 <?php
 $js = <<< JS

@@ -8,13 +8,13 @@ window.onbeforeunload = function () {
 };
 
 jQuery(document).on("pjax:start", function () {
-  // NProgress.start();
+  NProgress.start();
 
 
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
-  // NProgress.done();
+  NProgress.done();
  
 });
 
