@@ -8,8 +8,8 @@ $items = [
     [
         'title' => 'ขอลา',
         'icon' => 'fa-solid fa-calendar-day fs-1',
-        'url' => ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'],
-        'modal' => true,
+        'url' => ['/me/leave/calendar','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'],
+        'modal' => false,
         'size' => 'modal-lg'
     ],
     [

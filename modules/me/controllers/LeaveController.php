@@ -270,7 +270,6 @@ class LeaveController extends Controller
             ];
         }
 
-        $holidayData = [];
         $holidays = Calendar::find()->where(['name' => 'holiday'])
             ->andWhere(['between', 'date_start', $start, $end])->all();
         foreach ($holidays as $holiday) {
