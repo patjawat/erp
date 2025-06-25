@@ -358,44 +358,22 @@ class FileManagerHelper extends Component
 
     public static function getImg($id = null)
     {
-        // $url = Url::to(['/filemanager/uploads/show', 'id' => $id]);
         $model = Uploads::findOne($id);
         if ($model) {
             $filename = $model->real_filename;
-            try {
-                //code...
-                $filepath = FileManagerHelper::getUploadPath() . $model->ref . '/thumbnail/' . $filename;
-                $type = pathinfo($filepath, PATHINFO_EXTENSION);
-                $data = file_get_contents($filepath);
-            } catch (\Throwable $th) {
-                try {
-                $filepath = FileManagerHelper::getUploadPath() . $model->ref . '/' . $filename;
-                $type = pathinfo($filepath, PATHINFO_EXTENSION);
-                $data = file_get_contents($filepath);
-            } catch (\Throwable $th) {
-                $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
-                $type = pathinfo($filepath, PATHINFO_EXTENSION);
-                $data = file_get_contents($filepath);
-                return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-            }
-            }
-
-            if ($data) {
-                return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-
+            $filepath = FileManagerHelper::getUploadPath() . $model->ref . '/thumbnail/' . $filename;
+            if (file_exists($filepath)) {
+                return Url::to(['/filemanager/uploads/show', 'id' => $model->id], true);
             } else {
-                $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
-                $type = pathinfo($filepath, PATHINFO_EXTENSION);
-                $data = file_get_contents($filepath);
-                return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                // return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+                $filepath = FileManagerHelper::getUploadPath() . $model->ref . '/' . $filename;
+                if (file_exists($filepath)) {
+                    return Url::to(['/filemanager/uploads/show', 'id' => $model->id], true);
+                } else {
+                    return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+                }
             }
         } else {
-            $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
-            $type = pathinfo($filepath, PATHINFO_EXTENSION);
-            $data = file_get_contents($filepath);
-            return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-            // return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+            return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
         }
     }
 

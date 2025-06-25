@@ -41,6 +41,7 @@ body {
   font-style: normal;
 }
 
+
 .btn {
   font-family: var(--bs-header-font-family);
 }
@@ -996,6 +997,10 @@ textarea:focus {
   --bs-primary: #6e81d9;
   --bs-blue: #6e81d9;
 
+  .bg-primary-gradient {
+    background: linear-gradient(153deg, #6e81d9 0%, #9173ec 100%) !important;
+  }
+
   .text-primary {
     color: #6e81d9 !important;
   }
@@ -1033,7 +1038,9 @@ textarea:focus {
 [data-bs-theme="cyan"] {
   --bs-primary: #078da9;
   --bs-blue: #078da9;
-
+  .bg-primary-gradient {
+    background: linear-gradient(153deg, #078da9 0%, #0e6e7e 100%) !important;
+  }
 
   .navbar-brand-box .logo {
     color: #078da9;
@@ -1060,7 +1067,9 @@ textarea:focus {
   --bs-primary: #255fad;
   --bs-blue: #0866ad;
 
-
+    .bg-primary-gradient{
+      background: linear-gradient(153deg, #5089de 0%, #0d47a1 100%) !important;
+    }
   .btn-primary {
     color: #fff;
   }
@@ -1097,6 +1106,9 @@ textarea:focus {
   --bs-primary-rgb: 176, 87, 141;
   --bs-btn-hover-bg: #B0578D;
 
+  .bg-primary-gradient {
+    background: linear-gradient(153deg, #B0578D 0%, #7D3C6F 100%) !important;
+  }
   .navbar-brand-box .logo {
     color: #B0578D;
   }

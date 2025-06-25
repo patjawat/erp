@@ -253,7 +253,7 @@ $resultsJs = <<<JS
                                         'ต่างจังหวัด' => 'ต่างจังหวัด',
                                         'ต่างประเทศ' => 'ต่างประเทศ',
                                     ],
-                                    'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
+                                    // 'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
                                     'pluginOptions' => [
                                         'allowClear' => true,
                                         'dropdownParent' => '#main-modal',

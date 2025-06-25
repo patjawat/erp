@@ -92,9 +92,9 @@ class LeaveController extends Controller
         }
 
         if(!$searchModel->date_filter && !$searchModel->thai_year){
-            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
-            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
-             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
+            $dateStart= AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+              $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
         }
         
       

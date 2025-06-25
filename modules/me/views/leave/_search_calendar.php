@@ -29,35 +29,7 @@ use app\modules\hr\models\Organization;
 ]); ?>
 
 <div class="d-flex justify-content-between align-items-center gap-2">
-
-    <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
-            <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '130px',
-            ],
-        ])->label(false);
-        ?>
-
-
-
-    <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '120px',
-            ],
-])->label(false);?>
-
-    <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-
-    <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-
-
+    
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
                 'data' => $model->listStatus(),
                     'options' => ['placeholder' => 'สถานะทั้งหทด'],
@@ -96,8 +68,7 @@ use app\modules\hr\models\Organization;
     </div>
     <div class="offcanvas-body">
        
-                <?php
-                echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::class, [
+                 <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
                     'query' => Organization::find()->addOrderBy('root, lft'),
@@ -107,32 +78,11 @@ use app\modules\hr\models\Organization;
                     'fontAwesome' => true,
                     'asDropdown' => true,
                     'multiple' => false,
-                    'options' => [
-                        'disabled' => false,
-                        'class' => 'close',
-                        'id' => 'treeview-q-department',
-                    ],
+                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
                     'pluginOptions' => [
                         'allowClear' => true
                     ],
-                ])->label('หน่วยงานตามโครงสร้าง');
-                ?>
-                <?php
-                // Auto close offcanvas when department is selected
-                $js = <<<JS
-                $('#treeview-q-department').on('change', function() {
-                    var val = $(this).val();
-                    if(val) {
-                        $('body').find('.kv-tree-input').removeClass('show')
-                        $('body').find('.kv-tree-dropdown').removeClass('show')
-                        // var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
-                        // offcanvas.hide();
-                    }
-                });
-                JS;
-                $this->registerJs($js, \yii\web\View::POS_READY);
-                ?>
-
+                ])->label('หน่วยงานตามโครงสร้าง'); ?>
         <div class="offcanvas-footer">
             <?php echo Html::submitButton(
                         '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
@@ -149,23 +99,3 @@ use app\modules\hr\models\Organization;
 </div>
 
 <?php ActiveForm::end(); ?>
-
-
-<?php
-
-$js = <<< JS
-
-    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
-    $("#leavesearch-date_start").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-
-JS;
-$this->registerJS($js, View::POS_END);
-
-?>

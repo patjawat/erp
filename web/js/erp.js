@@ -9,12 +9,17 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
-
-
+   var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
+      offcanvas.hide();
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
+  // ตัวอย่าง: รีโหลด Offcanvas
+    var offcanvasElList = [].slice.call(document.querySelectorAll('.offcanvas'))
+    var offcanvasList = offcanvasElList.map(function (offcanvasEl) {
+        return new bootstrap.Offcanvas(offcanvasEl)
+    })
  
 });
 

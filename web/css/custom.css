@@ -12797,6 +12797,9 @@ textarea:focus {
   --bs-primary: #6e81d9;
   --bs-blue: #6e81d9;
 }
+[data-bs-theme=purple] .bg-primary-gradient {
+  background: linear-gradient(153deg, #6e81d9 0%, #9173ec 100%) !important;
+}
 [data-bs-theme=purple] .text-primary {
   color: #6e81d9 !important;
 }
@@ -12825,6 +12828,9 @@ textarea:focus {
   --bs-primary: #078da9;
   --bs-blue: #078da9;
 }
+[data-bs-theme=cyan] .bg-primary-gradient {
+  background: linear-gradient(153deg, #078da9 0%, #0e6e7e 100%) !important;
+}
 [data-bs-theme=cyan] .navbar-brand-box .logo {
   color: #078da9;
 }
@@ -12844,6 +12850,9 @@ textarea:focus {
 [data-bs-theme=blue] {
   --bs-primary: #255fad;
   --bs-blue: #0866ad;
+}
+[data-bs-theme=blue] .bg-primary-gradient {
+  background: linear-gradient(153deg, #5089de 0%, #0d47a1 100%) !important;
 }
 [data-bs-theme=blue] .btn-primary {
   color: #fff;
@@ -12873,6 +12882,9 @@ textarea:focus {
   --bs-primary-bg-subtle: #f2e7ed;
   --bs-primary-rgb: 176, 87, 141;
   --bs-btn-hover-bg: #B0578D;
+}
+[data-bs-theme=pink] .bg-primary-gradient {
+  background: linear-gradient(153deg, #B0578D 0%, #7D3C6F 100%) !important;
 }
 [data-bs-theme=pink] .navbar-brand-box .logo {
   color: #B0578D;

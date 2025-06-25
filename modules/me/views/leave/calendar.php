@@ -2,8 +2,9 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\models\Categorise;
 
-
+$listLeaveType = Categorise::find()->where(['name' => 'leave_type'])->all();
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
@@ -59,6 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 .fc-day-today {
     background-color: rgba(67, 97, 238, 0.1) !important;
+
 }
 
 .fc-event {
@@ -90,75 +92,8 @@ $this->params['breadcrumbs'][] = $this->title;
     flex-shrink: 0;
 }
 
-.leave-sick {
-    background-color: rgba(76, 201, 240, 0.9);
-    color: #fff;
-}
 
-.leave-vacation {
-    background-color: rgba(67, 97, 238, 0.9);
-    color: #fff;
-}
 
-.leave-personal {
-    background-color: rgba(114, 9, 183, 0.9);
-    color: #fff;
-}
-
-.leave-maternity {
-    background-color: rgba(247, 37, 133, 0.9);
-    color: #fff;
-}
-
-.leave-training {
-    background-color: rgba(72, 149, 239, 0.9);
-    color: #fff;
-}
-
-.legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-    padding: 15px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    margin-right: 15px;
-    font-size: 0.9rem;
-}
-
-.legend-color {
-    width: 15px;
-    height: 15px;
-    border-radius: 3px;
-    margin-right: 5px;
-}
-
-.modal-content {
-    border-radius: 15px;
-    border: none;
-}
-
-.modal-header {
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: 15px 15px 0 0;
-    border-bottom: none;
-}
-
-.modal-footer {
-    border-top: none;
-}
-
-.btn-close {
-    filter: brightness(0) invert(1);
-}
 
 .detail-avatar {
     width: 60px;
@@ -198,78 +133,7 @@ $this->params['breadcrumbs'][] = $this->title;
     overflow-y: auto;
 }
 
-.day-leave-item {
-    border-left: 4px solid;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    background-color: #f8f9fa;
-}
 
-.day-leave-item.sick {
-    border-left-color: #4cc9f0;
-}
-
-.day-leave-item.vacation {
-    border-left-color: #4361ee;
-}
-
-.day-leave-item.personal {
-    border-left-color: #7209b7;
-}
-
-.day-leave-item.maternity {
-    border-left-color: #f72585;
-}
-
-.day-leave-item.training {
-    border-left-color: #4895ef;
-}
-
-.leave-summary {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.leave-summary-title {
-    font-weight: 500;
-    margin-bottom: 10px;
-    color: var(--dark-color);
-}
-
-.leave-summary-count {
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.leave-summary-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 8px;
-}
-
-.more-leaves-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(67, 97, 238, 0.9);
-    color: white;
-    border-radius: 4px;
-    padding: 2px 4px;
-    margin-top: 2px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.more-leaves-btn:hover {
-    background-color: var(--secondary-color);
-}
 
 @media (max-width: 768px) {
     .fc .fc-toolbar {
@@ -290,68 +154,164 @@ $this->params['breadcrumbs'][] = $this->title;
         height: 20px;
     }
 }
+
+.leave-badge {
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: white;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+.sick-leave {
+    background-color: var(--bs-primary);
+}
+
+.vacation-leave {
+    background-color: var(--bs-secondary);
+}
+
+.personal-leave {
+    background-color: var(--bs-info);
+}
+
+.training-leave {
+    background-color: var(--leave-training);
+}
+
+.maternity-leave {
+    background-color: var(--leave-maternity);
+}
+
+.other-leave {
+    background-color: var(--leave-other);
+}
+
+.status-pending {
+    border-left: 4px solid #f59e0b !important;
+}
+
+.status-approved {
+    border-left: 4px solid #10b981 !important;
+}
+
+.status-rejected {
+    border-left: 4px solid #ef4444 !important;
+}
+
+
+.leave-detail-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.leave-type-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.status-badge-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge-approved {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge-rejected {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.leave-request-form label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.tooltip-inner {
+    max-width: 300px;
+}
+
 </style>
 
-<!-- <div class="card">
-    <div class="card-body">
-        <h4 class="card-title">Title</h4>
-    </div>
-</div> -->
-
-<!-- <div class="card">
-    <div class="card-body">
-        <div id="calendar"></div>
-    </div>
-</div> -->
 <div class="row">
-    <div class="col-9">
+    <div class="col-9" id="calender-container">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>ปฏิทินการลาของบุคลากร ประจำปี 2025</span>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="">
+                        <label for="eventLimitSelector" class="form-label">จำนวนรายการที่แสดงต่อวัน:</label>
+                        <select id="eventLimitSelector" class="form-select" style="width: auto; display: inline-block;">
+                            <option value="2">2 รายการ</option>
+                            <option value="3" selected>3 รายการ</option>
+                            <option value="5">5 รายการ</option>
+                            <option value="all">แสดงทั้งหมด</option>
+                        </select>
+                    </div>
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span>ปฏิทินการลาของบุคลากร ประจำปี 2025</span>
-        <div>
-            <button class="btn btn-sm btn-light" id="filterBtn">
-                <i class="fas fa-filter"></i> กรองข้อมูล
-            </button>
+                    <button class="btn btn-sm btn-light" id="filterBtn">
+                        <i class="fas fa-filter"></i> กรองข้อมูล
+                    </button>
+                    <button class="btn btn-sm btn-light" id="leave-manual"><i class="fa-solid fa-book"></i>
+                        แสดงคู่มือ</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="calendar"></div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color leave-sick"></div>
+                        <span>ลาป่วย</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color leave-vacation"></div>
+                        <span>ลาพักผ่อน</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color leave-personal"></div>
+                        <span>ลากิจ</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color leave-maternity"></div>
+                        <span>ลาคลอด</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color leave-training"></div>
+                        <span>ลาฝึกอบรม</span>
+                    </div>
+                </div>
+
+                <div class="leave-summary">
+                    <h5 class="leave-summary-title">สรุปการลาวันนี้</h5>
+                    <div id="todayLeaveCount"></div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card-body">
-        <div id="calendar"></div>
-
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color leave-sick"></div>
-                <span>ลาป่วย</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color leave-vacation"></div>
-                <span>ลาพักผ่อน</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color leave-personal"></div>
-                <span>ลากิจ</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color leave-maternity"></div>
-                <span>ลาคลอด</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color leave-training"></div>
-                <span>ลาฝึกอบรม</span>
-            </div>
-        </div>
-
-        <div class="leave-summary">
-            <h5 class="leave-summary-title">สรุปการลาวันนี้</h5>
-            <div id="todayLeaveCount"></div>
-        </div>
-    </div>
-</div>
-    </div>
-    <div class="col-3">
+    <div class="col-3" id="manual-container">
         <div class="card shadow-sm mb-4 guide-card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">คู่มือการใช้งาน</h5>
+            <div class="card-header bg-primary-gradient">
+                <h5 class="mb-0 text-white"><i class="fa-solid fa-book"></i> คู่มือการใช้งาน</h5>
             </div>
             <div class="card-body">
                 <h6 class="fw-bold">วิธีการใช้งานปฏิทินการลา</h6>
@@ -362,17 +322,31 @@ $this->params['breadcrumbs'][] = $this->title;
                     <li class="mb-2">คลิกที่รายการลาในปฏิทินเพื่อดูรายละเอียด</li>
                 </ol>
 
-                <h6 class="fw-bold mt-4">ประเภทการลา</h6>
-                <div class="d-flex flex-column gap-2 mb-3">
-                    <div><span class="leave-type-indicator sick-leave"></span>ลาป่วย</div>
-                    <div><span class="leave-type-indicator vacation-leave"></span>ลาพักร้อน</div>
-                    <div><span class="leave-type-indicator personal-leave"></span>ลากิจ</div>
-                    <div><span class="leave-type-indicator training-leave"></span>ลาฝึกอบรม</div>
-                    <div><span class="leave-type-indicator maternity-leave"></span>ลาคลอด</div>
-                    <div><span class="leave-type-indicator other-leave"></span>ลาประเภทอื่นๆ</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header  bg-primary-gradient">
+                <div class="d-flex justify-content-between align-items-center align-self-center">
+                    <h5 class="mb-0 text-white"><i class="fa-solid fa-book"></i> ประเภทการลา</h5>
+                    <?=html::a('<i class="fa-solid fa-gear"></i>',['/hr/leave-type/index'],['class'=> 'btn btn-sm btn-light open-modal','data' => ['size' => 'modal-lg']])?>
                 </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-2 mb-3">
+                    <?php foreach($listLeaveType as $leaveType):?>
+                    <div><span class="leave-type-indicator <?=$leaveType->code?>"
+                            style="background-color:<?=$leaveType->data_json['color'] ?? 'var(--bs-primary)'?>"></span><?=$leaveType->title?>
+                    </div>
+                    <?php endforeach;?>
+                </div>
+            </div>
+        </div>
 
-                <h6 class="fw-bold mt-3">สถานะการลา</h6>
+        <div class="card text-start">
+            <div class="card-header bg-primary-gradient">
+                <h5 class="mb-0 text-white"><i class="fa-solid fa-book"></i> สถานะการลา</h5>
+            </div>
+            <div class="card-body">
                 <div class="d-flex flex-column gap-2">
                     <div class="d-flex align-items-center">
                         <div style="width:4px; height:16px; background-color:#f59e0b; margin-right:8px;"></div>
@@ -387,8 +361,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         ไม่อนุมัติ
                     </div>
                 </div>
+
             </div>
         </div>
+
     </div>
 </div>
 
@@ -401,44 +377,85 @@ $js = <<<JS
 
 
 
-        \$(document).ready(function() {
-            var calendarEl = \$('#calendar')[0];
-            var containerEl = \$('#external-events')[0];
-            var checkbox = \$('#drop-remove')[0];
+        $(document).ready(function() {
+            // อ่านสถานะ manualVisible จาก localStorage ถ้ามี
+            let manualVisible = localStorage.getItem('leaveManualVisible') !== 'false';
+            if (!manualVisible) {
+                $('#manual-container').hide();
+                $('#calender-container').removeClass('col-9').addClass('col-12');
+            }
 
+            $('#leave-manual').click(function (e) { 
+                e.preventDefault();
+                manualVisible = !manualVisible;
+                localStorage.setItem('leaveManualVisible', manualVisible);
+                if (manualVisible) {
+                    $('#manual-container').fadeIn(200, function() {
+                        $('#calender-container').removeClass('col-12').addClass('col-9');
+                        calendar.updateSize();
+                    });
+                } else {
+                    $('#manual-container').fadeOut(200, function() {
+                        $('#calender-container').removeClass('col-9').addClass('col-12');
+                        calendar.updateSize();
+                    });
+                }
+            });
+
+            $('#eventLimitSelector').on('change', function() {
+                const value = $(this).val();
+                if (value === 'all') {
+                    calendar.setOption('dayMaxEvents', false); // แสดงทั้งหมด
+                } else {
+                    calendar.setOption('dayMaxEvents', parseInt(value));
+                }
+            });
+
+            var calendarEl = $('#calendar')[0];
+            var containerEl = $('#external-events')[0];
+            var checkbox = $('#drop-remove')[0];
+            
+            // สร้างตัวแปรสำหรับ loading indicator
+            var \$loadingIndicator = $('<div id="calendar-loading" style="position:absolute;top:50%;left:40%;transform:translate(-50%,-50%);z-index:9999;display:none;"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-primary">กำลังโหลด...</div></div>');
+            $('body').append(\$loadingIndicator);
+            
             // initialize the external events
-            // -----------------------------------------------------------------
-
             if (containerEl) {
                 new FullCalendar.Draggable(containerEl, {
                     itemSelector: '.fc-event',
                     eventData: function(eventEl) {
                         return {
-                            title: \$(eventEl).text()
+                            title: $(eventEl).text()
                         };
                     }
                 });
             }
-
+            
+            let initialDayMaxEvents = 3;
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'th',
                 initialView: 'dayGridMonth',
-                themeSystem: 'bootstrap5',  // เลือกธีมของ Bootstrap5 หรือใช้ตัวอื่น ๆ
+                themeSystem: 'bootstrap5',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 buttonText: {
-                    today: 'วันนี้',           // ปุ่ม "วันนี้"
-                    month: 'เดือน',            // ปุ่ม "เดือน"
-                    week: 'สัปดาห์',           // ปุ่ม "สัปดาห์"
-                    day: 'วัน'                 // ปุ่ม "วัน"
+                    today: 'วันนี้',
+                    month: 'เดือน',
+                    week: 'สัปดาห์',
+                    day: 'วัน'
                 },
                 editable: true,
                 selectable: true,
                 droppable: true,
+               dayMaxEvents: initialDayMaxEvents,
+                moreLinkText: function(n) {
+                    return `+อีก \${n} รายการ`;
+                },
                 events: async function(fetchInfo, successCallback, failureCallback) {
+                    $('#calendar-loading').show();
                     await $.ajax({
                         url: '$url/events',
                         type: 'GET',
@@ -448,22 +465,18 @@ $js = <<<JS
                             end: fetchInfo.endStr
                         },
                         success: function(data) {
+                            $('#calendar-loading').hide();
                             successCallback(data);
                         },
                         error: function() {
+                            $('#calendar-loading').hide();
                             failureCallback();
                         }
                     });
                 },
-                // eventDidMount: function(info) {
-                //             info.el.style.borderLeft = '5px solid red';
-                //         },
                 eventDidMount: function(info) {
                     // Add tooltip
                     const title = getStaffById(info.event.extendedProps.title);
-                    // const leaveType = info.event.extendedProps.type;
-                    // const status = info.event.extendedProps.status;
-                    
                     $(info.el).attr('data-bs-toggle', 'tooltip');
                     $(info.el).attr('data-bs-title', `
                         \${title} - \${leaveTypeTranslations[leaveType]}
@@ -472,74 +485,66 @@ $js = <<<JS
                     `);
                 },
                 eventContent: function(arg) {
-                        // ดึงข้อมูลจาก extendedProps
-                        const title = arg.event.extendedProps.title || '';
-                        const avatar = arg.event.extendedProps.avatar || '';
-                        const dateTime = arg.event.extendedProps.dateTime || '';
-                        const status = arg.event.extendedProps.status || '';
-                        const viewGoType = arg.event.extendedProps.viewGoType || '';
-                        const showDateRange = arg.event.extendedProps.showDateRange || '';
+                    const title = arg.event.extendedProps.title || '';
+                    const avatar = arg.event.extendedProps.avatar || '';
+                    const dateTime = arg.event.extendedProps.dateTime || '';
+                    const status = arg.event.extendedProps.status || '';
+                    const viewGoType = arg.event.extendedProps.viewGoType || '';
+                    const showDateRange = arg.event.extendedProps.showDateRange || '';
 
-                        // สร้าง custom DOM element
-                        const container = document.createElement('div');
-                        container.style.textAlign = 'left';
-                        // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${avatar}</div>`;
+                    const container = document.createElement('div');
+                    container.style.textAlign = 'left';
+                    container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${avatar}</div>`;
 
-
-                        return { domNodes: [container] };
-                    },
-                    eventDidMount: function(info) {
-                        info.el.addEventListener('dblclick', function() {
+                    return { domNodes: [container] };
+                },
+                eventDidMount: function(info) {
+                    info.el.addEventListener('dblclick', function() {
                         document.getElementById('modalEventContent').innerHTML =
                             `<strong>Title:</strong> \${info.event.title}<br>
                             <strong>Description:</strong> \${info.event.extendedProps.description}`;
-                                $('#main-modal').modal('show');
-                                $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                                $(".modal-dialog").addClass('modal-lg');
-                                });
+                        $('#main-modal').modal('show');
+                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                        $(".modal-dialog").addClass('modal-lg');
+                    });
                 },
                 select: function(info) {
-
-                        const dateStart = info.startStr;
-                        // แปลง dateEnd เป็น Date แล้วลบ 1 วัน
-                            const endDateObj = new Date(info.endStr);
-                            endDateObj.setDate(endDateObj.getDate() - 1);
-                            
-                            // แปลงกลับเป็นรูปแบบ YYYY-MM-DD
-                            const dateEnd = endDateObj.toISOString().split('T')[0];
-                            beforLoadModal();
-                                $.ajax({
-                                    type: "get",
-                                    url: '$url'+'/create',
-                                    data: {
-                                        date_start: dateStart,
-                                        date_end: dateEnd,
-                                        title:'ขอใช้รถยนต์',
-                                    },
-                                    dataType: "json",
-                                    success: function (res) {
-                                        $("#main-modal").modal("show");
-                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                                        $(".modal-dialog").addClass("modal-xl");
-                                            $("#main-modal-label").html(res.title);
-                                            $(".modal-body").html(res.content);
-                                            $(".modal-footer").html(res.footer);
-                                    }
-                                });
-                    },
+                    const dateStart = info.startStr;
+                    const endDateObj = new Date(info.endStr);
+                    endDateObj.setDate(endDateObj.getDate() - 1);
+                    const dateEnd = endDateObj.toISOString().split('T')[0];
+                    beforLoadModal();
+                    $.ajax({
+                        type: "get",
+                        url: '$url'+'/create',
+                        data: {
+                            date_start: dateStart,
+                            date_end: dateEnd,
+                            title:'<i class="fa-regular fa-file-lines"></i> แบบฟอร์มบันทึกการลา',
+                        },
+                        dataType: "json",
+                        success: function (res) {
+                            $("#main-modal").modal("show");
+                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                            $(".modal-dialog").addClass("modal-xl");
+                            $("#main-modal-label").html(res.title);
+                            $(".modal-body").html(res.content);
+                            $(".modal-footer").html(res.footer);
+                        }
+                    });
+                },
                 drop: function(info) {
                     console.log('drop: ' + info.dateStr);
-                    if (\$(checkbox).is(':checked')) {
-                        \$(info.draggedEl).remove();
+                    if ($(checkbox).is(':checked')) {
+                        $(info.draggedEl).remove();
                     }
                 },
                 eventDrop: function(info) {
                     if (info.event.title != 'วัน OFF') {
                         var dateStart = formatDateThai(info.event.start);
                         var dateEnd = formatDateThai(info.event.end);
-                        \$('#leave-date_start').val(dateStart);
-                        \$('#leave-date_end').val(dateEnd);
+                        $('#leave-date_start').val(dateStart);
+                        $('#leave-date_end').val(dateEnd);
                         console.log(dateStart, ' ถึง ' + dateEnd);
                     }
                 },
@@ -547,34 +552,34 @@ $js = <<<JS
                     console.log('New Start: ' + formatDate(info.event.start));
                     console.log('New End: ' + formatDate(info.event.end));
                 },
-                  
                 eventClick: function(info) {
-                        info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
-                        let viewHtml = info.event.extendedProps.view;
-                        // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
-                        var url = '$url/'+'view?id=' + info.event.id;
-                        // โหลดเนื้อหามาแสดงใน Modal
-                        beforLoadModal()
-                         
-                            $.ajax({
-                                type: "get",
-                                url: "$url"+"/view?id="+ info.event.id,
-                                dataType: "json",
-                                 boforeSubmit: function(){
-                                },
-                                success: function (response) {
-                                       \$('#main-modal').modal('show')
-                                        \$("#main-modal-label").html('รายละเอียดการจอง');
-                                        \$(".modal-body").html(response.content);
-                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                                        $(".modal-dialog").addClass("modal-xl");
-                                }
-                            });
-                            
-                    },
+                    info.jsEvent.preventDefault();
+                    let viewHtml = info.event.extendedProps.view;
+                    let avatar = info.event.extendedProps.avatar;
+                    var url = '$url/'+'view?id=' + info.event.id;
+                    beforLoadModal()
+                    $.ajax({
+                        type: "get",
+                        url: "$url"+"/view?id="+ info.event.id,
+                        dataType: "json",
+                        boforeSubmit: function(){},
+                        success: function (response) {
+                            $('#main-modal').modal('show')
+                            $("#main-modal-label").html(response.title);
+                            $(".modal-body").html(response.content);
+                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                            $(".modal-dialog").addClass("modal-xl");
+                        }
+                    });             
+                },
+                loading: function(isLoading) {
+                    if(isLoading) {
+                        $('#calendar-loading').show();
+                    } else {
+                        $('#calendar-loading').hide();
+                    }
+                }
             });
-            // render the calendar});
-
             calendar.render();
         });
 

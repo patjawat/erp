@@ -4,6 +4,9 @@ namespace app\modules\hr\models;
 
 use Yii;
 use yii\db\Expression;
+use app\models\Amphure;
+use app\models\District;
+use app\models\Province;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;

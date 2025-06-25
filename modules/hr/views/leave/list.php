@@ -30,7 +30,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <th class="fw-semibold text-center">ดำเนินการ</th>
         </tr>
     </thead>
-    <tbody class="align-middle table-group-divider">
+    <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
         <?php foreach($dataProvider->getModels() as $key => $item):?>
         <tr>
             <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>

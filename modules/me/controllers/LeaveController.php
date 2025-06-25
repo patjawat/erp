@@ -310,9 +310,13 @@ class LeaveController extends Controller
     {
         $me = UserHelper::GetEmployee();
         $leaveTypeId = $this->request->get('leave_type_id');
+        $dateStart = AppHelper::convertToThai($this->request->get('date_start')) ?? '';
+        $dateEnd = AppHelper::convertToThai($this->request->get('date_end')) ?? '';
         $model = new Leave([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
+            'date_start' => $dateStart,
+            'date_end' => $dateEnd,
             'thai_year' => AppHelper::YearBudget(),
             'on_holidays' => 0,
             'total_days' => 0

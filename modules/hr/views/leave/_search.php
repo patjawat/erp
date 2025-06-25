@@ -21,6 +21,7 @@ use app\modules\hr\models\Organization;
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
     'method' => 'get',
+    'id' => 'search-leave',
     'options' => [
         'data-pjax' => 1
     ],
@@ -38,14 +39,6 @@ use app\modules\hr\models\Organization;
                 'allowClear' => true,
                 'width' => '130px',
             ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                        $(this).submit()
-                        }',
-                'select2:unselecting' => 'function() {
-                            $(this).submit()
-                        }',
-            ]
         ])->label(false);
         ?>
 
@@ -123,7 +116,7 @@ use app\modules\hr\models\Organization;
                         '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
                         [
                             'class' => 'btn btn-light',
-                            'data-bs-backdrop' => 'static',
+                            // 'data-bs-backdrop' => 'static',
                             'tabindex' => '-1',
                             'id' => 'offcanvasExample',
                             'aria-labelledby' => 'offcanvasExampleLabel',
@@ -150,8 +143,7 @@ $js = <<< JS
             // $(this).submit();
     });
 
-
-    JS;
+JS;
 $this->registerJS($js, View::POS_END);
 
 ?>

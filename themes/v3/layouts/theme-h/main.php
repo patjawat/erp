@@ -15,7 +15,7 @@ AppAsset::register($this);
 BootstapIconAsset::register($this);
 
 $site = Categorise::findOne(['name' => 'site']);
-$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
+$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : 'blue';
 $moduleId = Yii::$app->controller->module->id;
 
 ?>
@@ -35,7 +35,12 @@ $moduleId = Yii::$app->controller->module->id;
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <?php $this->head() ?>
 </head>
-
+<style>
+    #nprogress .bar {
+        background: linear-gradient(90deg, #fce9af 0%, #f7c873 100%) !important;
+    }
+</style>
+</style>
 <?php echo $this->render('../modal'); ?>
 <?php echo $this->render('../sub_modal'); ?>
 <?php echo $this->render('../modal-fullscreen'); ?>
