@@ -48,7 +48,7 @@ class LeaveController extends Controller
      * @return string
      */
 
-      public function actionIndex()
+    public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
@@ -68,13 +68,13 @@ class LeaveController extends Controller
             'or',
             ['like', 'cid', $searchModel->q],
             ['like', 'email', $searchModel->q],
-          
+
             ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
         ]);
 
-         if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -85,31 +85,29 @@ class LeaveController extends Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        if(!$searchModel->date_filter && !$searchModel->thai_year){
-              $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        if (!$searchModel->date_filter && !$searchModel->thai_year) {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-             $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
         }
-        
-      
-    
+
+
+
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
         // if (!empty($searchModel->status)) {
         //     $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
         // }
-        if($status)
-        {
+        if ($status) {
             $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
-
         }
-    
-       
-        
+
+
+
         // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
 
-          $dataProvider->setSort(['defaultOrder' => [
+        $dataProvider->setSort(['defaultOrder' => [
             // 'total_days' => SORT_DESC,
             'created_at' => SORT_DESC,
         ]]);
@@ -164,7 +162,7 @@ class LeaveController extends Controller
         if (!empty($searchModel->status)) {
             $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
         }
-        
+
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
@@ -173,82 +171,106 @@ class LeaveController extends Controller
         ]);
     }
 
-//ขอยกเลิกวันลา
+    //ขอยกเลิกวันลา
     public function actionReqCancel($id)
     {
         $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
-        if ($this->request->isPost && $me->user_id == $model->created_by){
+        if ($this->request->isPost && $me->user_id == $model->created_by) {
             $model->status = "ReqCancel";
-            $model->save();            
+            $model->save();
             return $this->redirect(['/me/leave']);
         }
     }
 
-    
+
     public function actionCalendar()
     {
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('calendar', []),
-            ];
-        } else {
-            return $this->render('calendar', []);
-        }
+        return $this->render('calendar');
     }
 
-//ทะเบียนแสดงบนปฏิทินการลา
+    //ทะเบียนแสดงบนปฏิทินการลา
     public function actionEvents()
-	{
+    {
         $start = $this->request->get('start');
         $end = $this->request->get('end');
-        
-		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            $bookings = Leave::find()
-                ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
-                ->orderBy(['id' => SORT_DESC])
-                ->all();
-                $data = [];
+        $department = $this->request->get('department');
 
-                foreach($bookings as $item)
-                {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $leaves = Leave::find();
+        $leaves->joinWith('employee');
+        $leaves->andWhere(['>=', 'date_start', $start])->andWhere(['<=', 'date_end', $end]);
+        $leaves->orderBy(['id' => SORT_DESC]);
 
-                    // $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
-                    // $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
-                    $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' 00:00'), "php:Y-m-d\TH:i");
-                    $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' 00:00'), "php:Y-m-d\TH:i");
-                    $data[] = [
-                        'id'               => $item->id,
-                        'title'            => $item->reason,
-                        'start'            => $dateStart,
-                        'end'            => $dateEnd,
-                        // 'display' => 'auto',
-                        'allDay' => false,
-                        'source' => 'vehicle',
-                        'extendedProps' => [
-                            'title' => $item->reason,
-                            'avatar' => $this->renderAjax('@app/modules/hr/views/leave/calendar/leave-item', ['item' => $item]),
-                            // 'fullname' => $item->employee?->fullname,
-                            // 'dateTime' => 'ttttt',
-                            // 'dateTime' => $item->viewTime(),
-                            // 'status' => $item->viewStatus()['view'],
-                            // 'view' => $this->renderAjax('@app/modules/hr/views/leave/calendar/view', ['model' => $item,'action' => false]),
-                            // 'description' => 'คำอธิบาย',
-                        ],
-                        //  'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
-                        'description' => 'description for All Day Event',
-                        'textColor' => 'black',
-                        'backgroundColor' => '#eee',
-                        'url' => Url::to(['/event/view', 'id' => $item->id]),
-                    ];
+        if ($department) {
+            $org1 = Organization::findOne($department);
+            // ถ้ามีกลุ่มย่อย
+            if (isset($org1) && $org1->lvl == 1) {
+                $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+                    FROM tree t1
+                    JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+                    WHERE t2.name = :name;';
+                $querys = Yii::$app
+                    ->db
+                    ->createCommand($sql)
+                    ->bindValue(':name', $org1->name)
+                    ->queryAll();
+                $arrDepartment = [];
+                foreach ($querys as $tree) {
+                    $arrDepartment[] = $tree['id'];
                 }
 
-            return  $data;
-       
-	}
+                if (count($arrDepartment) > 0) {
+                    $leaves->andWhere(['in', 'department', $arrDepartment]);
+                } else {
+                    $leaves->andWhere(['department' => $department]);
+                }
+            } else {
+                $leaves->andWhere(['department' => $department]);
+            }
+        }
+
+        $events = $leaves->all();
+
+        $data = [];
+
+        foreach ($events as $item) {
+            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' 00:00'), "php:Y-m-d\TH:i");
+
+            // เพิ่ม 1 วันให้ date_end
+            $dateEndRaw = date('Y-m-d', strtotime($item->date_end . ' +1 day'));
+            $dateEnd = Yii::$app->formatter->asDatetime(($dateEndRaw . ' 00:00'), "php:Y-m-d\TH:i");
+
+            $color = '';
+            if (isset($item->leaveType) && isset($item->leaveType->data_json['color'])) {
+                $color = $item->leaveType->data_json['color'];
+            }
+
+            $data[] = [
+                'id' => $item->id,
+                'title' => isset($item->data_json['reason']) ? $item->data_json['reason'] : '',
+                'start' => $dateStart,
+                'end' => $dateEnd,
+                'allDay' => false,
+                'source' => 'leave',
+                'extendedProps' => [
+                    'title' => isset($item->data_json['reason']) ? $item->data_json['reason'] : '',
+                    'avatar' => $this->renderAjax('@app/modules/hr/views/leave/calendar/leave-item', ['item' => $item]),
+                    'department' => $item->employee->department ?? null,
+                    'color' => '#009688' ,
+                    // 'color' => (isset($item->data_json['color']) ?$item->data_json['color'] : '') ,
+                ],
+                'description' => 'description for All Day Event',
+                'textColor' => 'black',
+                'backgroundColor' => $color,
+                'url' => Url::to(['/me/leave/view', 'id' => $item->id]),
+
+            ];
+        }
+
+        return $data;
+    }
 
 
     public function actionHoliday()
@@ -432,15 +454,15 @@ class LeaveController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-            $model->data_json = ArrayHelper::merge($old_json,$model->data_json, $approveDate);
+            $model->data_json = ArrayHelper::merge($old_json, $model->data_json, $approveDate);
             if ($model->level == 3) {
                 $model->emp_id = $me->id;
             }
 
             if ($model->save()) {
 
-                
-                
+
+
                 $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
                 if ($nextApprove && $model->status == 'Approve') {
                     $nextApprove->status = 'Pending';
@@ -448,25 +470,23 @@ class LeaveController extends Controller
                 }
 
                 $lineId = $model->leave->employee->user->line_id;
-                
+
                 // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
                 if ($model->level == 4 &&  $leave->status = 'Allow') {
                     $leave->status = 'Allow';
                     $leave->save();
-                    $message = 'อนุมัติให้'.($model->leave->leaveType->title ?? '-').' วันที่ '.Yii::$app->thaiFormatter->asDate($leave->date_start, 'long').' ถึง '.Yii::$app->thaiFormatter->asDate($leave->date_end, 'long');
+                    $message = 'อนุมัติให้' . ($model->leave->leaveType->title ?? '-') . ' วันที่ ' . Yii::$app->thaiFormatter->asDate($leave->date_start, 'long') . ' ถึง ' . Yii::$app->thaiFormatter->asDate($leave->date_end, 'long');
                     LineMsg::sendMsg($lineId, $message);
-                    
                 }
 
                 if ($model->status == 'Reject') {
                     $leave->status = 'Reject';
                     $leave->save();
-                    
-                    $message = 'ไม่'.$model->data_json['topic'].'ให้ลาเนื่องจาก'.$model->data_json['note'];
+
+                    $message = 'ไม่' . $model->data_json['topic'] . 'ให้ลาเนื่องจาก' . $model->data_json['note'];
                     LineMsg::sendMsg($lineId, $message);
-                    
-                } 
-                
+                }
+
                 // else {
                 //     $leave->status = 'Checking';
                 //     $leave->save();
@@ -478,7 +498,7 @@ class LeaveController extends Controller
                 ];
             }
         }
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -492,12 +512,9 @@ class LeaveController extends Controller
                 'model' => $model,
             ]);
         }
-
-              
-        
     }
 
-   
+
     // ตรวจสอบความถูกต้อง
     public function actionApproveValidator()
     {

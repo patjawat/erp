@@ -13,7 +13,7 @@ use yii\web\NotFoundHttpException;
 /**
  * LeaveTypeController implements the CRUD actions for Categorise model.
  */
-class LeaveTypeController extends Controller
+class LeaveStatusController extends Controller
 {
     /**
      * @inheritDoc
@@ -42,11 +42,11 @@ class LeaveTypeController extends Controller
     {
         $searchModel = new CategoriseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'leave_type']);
+        $dataProvider->query->andFilterWhere(['name' => 'leave_status']);
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'ประเภทการลา',
+                'title' => 'สถานะการลา',
                 'content' => $this->renderAjax('index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
@@ -68,7 +68,7 @@ class LeaveTypeController extends Controller
         if ($this->request->isPost) {
             $color = $this->request->post();
             $model->data_json = ArrayHelper::merge($oldJson, $color);
-            $model->save(false);
+            $model->save();
             return [
                 'status' => 'success',
                 'data' => $model

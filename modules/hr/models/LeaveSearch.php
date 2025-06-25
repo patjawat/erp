@@ -52,9 +52,6 @@ class LeaveSearch extends Leave
                 'attributes' => [
                 'total_days', // สมมุติว่า field ชื่อ days คือจำนวนวันลา
         ],
-                'defaultOrder' => [
-                    'id' => SORT_DESC, // เรียงลำดับ id จากมากไปน้อย
-                ],
             ],
         ]);
 
@@ -79,7 +76,6 @@ class LeaveSearch extends Leave
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
             'leave.emp_id' => $this->emp_id,
             'on_holidays' => $this->on_holidays,
             'thai_year' => $this->thai_year,
