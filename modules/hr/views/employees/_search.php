@@ -47,7 +47,7 @@ use app\modules\hr\models\Organization;
 
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
 
-    <div style="width:200px">
+    <div style="width:180px">
       <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
                     'data' => $model->ListPositionType(),
                     'options' => ['placeholder' => 'ประเภททั้งหมด ...'],
@@ -56,10 +56,10 @@ use app\modules\hr\models\Organization;
                         // 'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
-                      'pluginEvents' => [
-        'select2:select' => 'function() { $(this).closest("form").submit(); }',
-        'select2:clear' => 'function() { $(this).closest("form").submit(); }'
-    ]
+    //                   'pluginEvents' => [
+    //     'select2:select' => 'function() { $(this).closest("form").submit(); }',
+    //     'select2:clear' => 'function() { $(this).closest("form").submit(); }'
+    // ]
                 ])->label(false) ?>
 
 </div>
@@ -79,21 +79,39 @@ echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
         'initDepends' => ['employeessearch-position_type'],
         'initialize' => true,
     ],
-                      'pluginEvents' => [
-        'select2:select' => 'function() { $(this).closest("form").submit(); }',
-        'select2:clear' => 'function() { $(this).closest("form").submit(); }'
-    ]
+    //                   'pluginEvents' => [
+    //     'select2:select' => 'function() { $(this).closest("form").submit(); }',
+    //     'select2:clear' => 'function() { $(this).closest("form").submit(); }'
+    // ]
         
         ])->label(false);?>
+ <div style="width: 300px;">
+<?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+    'name' => 'department',
+    'id' => 'treeID',
+    'query' => Organization::find()->addOrderBy('root, lft'),
+    'value' => null,  // ไม่ตั้งค่าเริ่มต้น
+    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+    'fontAwesome' => true,
+    'asDropdown' => true,
+    'multiple' => false,
+    'options' => [
+        'class' => 'close',
+        'allowClear' => true,
+    ],
+    'pluginOptions' => [
+        'allowClear' => true,
+        'placeholder' => 'เลือกหน่วยงาน...',
+    ],
+])->label(false); ?>
 
-
-
-
+                </div>
+                  <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
     <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
         <i class="fa-solid fa-filter"></i>
     </button>
 
-   
 </div>
     
         
@@ -118,8 +136,6 @@ echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
                     ],
             ])->label('เพศ') ?>
 
-          
-          
 
             <?php $form->field($model, 'department')->widget(Select2::classname(), [
                     'data' => $model->ListDepartment(),
@@ -129,25 +145,6 @@ echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
                         'allowClear' => true
                     ],
                 ])->label('หน่วยงาน') ?>
-
-
-            <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                    'name' => 'department',
-                    'id' => 'treeID',
-                    'query' => Organization::find()->addOrderBy('root, lft'),
-                    'value' => 1,
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
-                    'options' => ['disabled' => false, 'allowClear' => true,'class' => 'close'],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ])->label('หน่วยงานภายในตามโครงสร้าง');?>
-
-
 
             <?= $form->field($model, 'status')->widget(Select2::classname(), [
                 'data' => $model->ListStatus(),
@@ -193,71 +190,24 @@ echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
 $js = <<< JS
 
 
-$('#offcanvasExample').on('shown.bs.offcanvas', function () {
-    $('#model-position_name').select2({
-        dropdownParent: $('#offcanvasExample') // ให้ dropdown อยู่ภายใน offcanvas
-    });
-});
+
+// $('#offcanvasExample').on('shown.bs.offcanvas', function () {
+//     $('#model-position_name').select2({
+//         dropdownParent: $('#offcanvasExample') // ให้ dropdown อยู่ภายใน offcanvas
+//     });
+// });
 
 // $("#w0-tree-input").treeview("expandAll");
 // $("#treeID").treeview("collapseAll");
-$("#w0-tree-input").treeview("uncheckAll");
-$("#w0-tree").treeview("uncheckAll");
-$("#w0-tree-input-menu").treeview("uncheckAll");
+// $("#w0-tree-input").treeview("uncheckAll");
+// $("#w0-tree").treeview("uncheckAll");
+// $("#w0-tree-input-menu").treeview("uncheckAll");
 
  
-$("#treeID").on('treeview:selected', function(event, key, data, textStatus, jqXHR) {
-    console.log('treeview:selected');
-});
-
-
-$("#treeID").on('treeview:beforeselect', function(event, key, jqXHR, settings) {
-    console.log('treeview:beforeselect');
-});
-
-$("#treeID").on('treeview:selecterror', function(event, key, data, textStatus, jqXHR) {
-    console.log('treeview:selecterror');
-});
-
-$("#treeID").on('treeview:selectajaxerror', function(event, key, jqXHR, textStatus, errorThrown) {
-    console.log('treeview:selectajaxerror');
-});
-
-$("#treeID").on('treeview:selectcomplete', function(event, jqXHR) {
-    console.log('treeview:selectcomplete');
-});
-
-$("#treeID").on('treeview:expand', function(event, nodeKey) {
-    console.log('treeview:expand');
-});
-
-$("#treeID").on('treeview:collapse', function(event, key) {
-    console.log('treeview:collapse');
-});
-
-$("#treeID").on('treeview:expandall', function(event) {
-    console.log('treeview:expandall');
-});
-
-$("#treeID").on('treeview:collapseall', function(event) {
-    console.log('treeview:collapseall');
-});
-
-$("#treeID").on('treeview:search', function(event) {
-    console.log('treeview:search');
-});
-
-$("#treeID").on('treeview:checked', function(event, key) {
-    console.log('treeview:checked');
-    $("#treeID").treeview("uncheckAll");
-});
-
-$("#treeID").on('treeview:unchecked', function(event, key) {
-    console.log('treeview:unchecked');
-});
-
 $("#treeID").on('treeview:change', function(event, key, name) {
-    console.log('treeview:change');
+                        $('body').find('.kv-tree-input').removeClass('show')
+                        $('body').find('.kv-tree-dropdown').removeClass('show')
+
 });
 
 
