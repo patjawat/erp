@@ -96,6 +96,7 @@ class ImportVehicleController extends Controller
             $model->thai_year = AppHelper::YearBudget($item['RESERVE_BEGIN_DATE']);
             $model->reason = $item['RESERVE_NAME'];
             $model->vehicle_type_id = 'official';
+            $model->refer_type = 'normal';
             $model->go_type = 1;
             $model->urgent = $item['PRIORITY_NAME'];
             $model->location = $this->checkLocation($item['LOCATION_ORG_NAME']);
