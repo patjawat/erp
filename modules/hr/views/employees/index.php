@@ -17,8 +17,6 @@ use app\modules\hr\models\Employees;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'ทะเบียนบุคลากร';
 $this->params['breadcrumbs'][] = $this->title;
-// $user0 = Employees::find()->where(['user_id' => 0])->andWhere(['!=','id',1])->count('id');
-// $user1 = Employees::find()->where(['>','user_id',0])->andWhere(['!=','id',1])->count('id');
 
 ?>
 
