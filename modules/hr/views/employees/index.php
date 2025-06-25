@@ -21,14 +21,16 @@ $this->params['breadcrumbs'][] = $this->title;
 // $user1 = Employees::find()->where(['>','user_id',0])->andWhere(['!=','id',1])->count('id');
 
 ?>
-<?php Pjax::begin(['id' => 'title-container', 'timeout' => 500000]); ?>
+
+<?php Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
+
 <style>
 #w1-cols-list {
     padding: 10px;
 }
 </style>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?> <?= $dataProvider->getTotalCount() ?> รายการ
+<i class="bi bi-people-fill"></i> <?= $this->title; ?> <span id="total-count"><?= $dataProvider->getTotalCount() ?></span> รายการ
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
@@ -44,12 +46,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
 <?php $this->endBlock(); ?>
-
-
-
-<?php Pjax::end(); ?>
-
-<?php // Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
 
 <div class="card">
     <div class="card-body">
@@ -106,10 +102,10 @@ $url = Url::to(['/hr/employees/export-excel']);
 $js = <<< JS
 
         $('#hr-container').on('pjax:success', function() {
-            // Your code goes here ...
-            console.log('success',\$('#totalCount').text());
-            \$('#showTotalCount').text(\$('#totalCount').text())
-            // \$.pjax.reload({ container:'#title-container', history:false,replace: false});         
+             $('body').find('#total-count').text(\$('#totalCount').text());
+
+            
+
         });
 
         \$("body").on("click", "#download-button", function (e) {
@@ -150,4 +146,4 @@ $js = <<< JS
     $this->registerJS($js,View::POS_END)
 
 ?>
-<?php // Pjax::end(); ?>
+<?php Pjax::end(); ?>
