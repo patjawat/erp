@@ -1,0 +1,175 @@
+<?php
+use yii\helpers\Url;
+use yii\helpers\Html;
+use app\models\Categorise;
+use kartik\widgets\ActiveForm;
+$service = Categorise::find()->where(['name' => 'google_service'])->one();
+$this->title = "Google API Configuration";
+?>
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-calendar"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('_sub_menu',['active' => 'index'])?>
+<?php $this->endBlock(); ?>
+
+<style>
+
+</style>
+<div class="container">
+    <!-- Credentials Upload Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card settings-card">
+                <div class="card-header bg-primary">
+                    <h5 class=" text-white">
+                        <i class="bi bi-key me-2"></i>อัปโหลดไฟล์ Credentials
+                        </h5>
+                        
+                </div>
+                <div class="card-body">
+                    <?php if(!$service):?>  
+                    <div class="alert alert-info" role="alert">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-info-circle me-2"></i>
+                                อัปโหลดไฟล์ credentials.json ที่ได้จาก Google Cloud Console เพื่อเชื่อมต่อกับ Google API
+                            </div>
+                            <?=Html::a('<i class="fa-solid fa-terminal"></i> ไปที่ Google Console','https://console.cloud.google.com/',['class' =>'btn btn-outline-primary','target' => '_blank'])?>
+                        </div>
+                        </div>
+                <?php endif;?>
+                    <div class="mt-3">
+                        <?php if($service):?>   
+                            <div class="alert alert-success d-flex align-items-center" role="alert">
+                                <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                                <div>
+                                    ไฟล์ credentials.json ถูกอัปโหลดแล้ว
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">รายละเอียดไฟล์ Credentials</label>
+                                <div class="bg-light rounded p-3 border">
+                                    <?php
+                                        $data = $service->data_json;
+                                        if (isset($data['private_key'])) {
+                                            $data['private_key'] = '*** (hidden) ***';
+                                        }
+                                        echo '<pre class="mb-0 text-break" style="white-space: pre-wrap; word-break: break-all;">';
+                                        echo htmlspecialchars(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+                                        echo '</pre>';
+                                    ?>
+                                </div>
+                            </div>
+                        <?php else:?>
+                        <div class="file-upload">
+                            <div class="file-upload-btn" id="editUploadBtn">
+                                <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
+                                <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
+                                <small class="d-block text-muted mt-2">รองรับไฟล์ JSON</small>
+                            </div>
+                            <?php
+                                    $form = ActiveForm::begin([
+                                        'id' => 'credentials-upload-form',
+                                        'action' => Url::to(['/gdoc/setting/upload-credentials']),
+                                        'options' => ['enctype' => 'multipart/form-data'],
+                                    ]);
+                                ?>
+                            <input type="file" name="credentialsFile" id="my_file" class="file-upload-input"
+                                accept=".json" style="display:none;">
+                            <?php ActiveForm::end();?>
+
+                        </div>
+
+                        <div id="fileInfo" class="mt-2" style="display:none;">
+                            <div class="alert alert-secondary py-2 px-3 mb-2">
+                                <strong>ไฟล์ที่เลือก:</strong> <span id="selectedFileName"></span>
+                                <span class="ms-3"><strong>ขนาด:</strong> <span id="selectedFileSize"></span> KB</span>
+                            </div>
+                            <pre id="jsonPreview" class="bg-light p-2 small"
+                                style="max-height:150px;overflow:auto;"></pre>
+                        </div>
+
+                        <?php endif;?>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                <span class="fw-bold">สถานะ: </span>
+                                <?php if($service):?>
+                                <span class="badge bg-success text-white" id="credentialsStatus">พร้อมใช้งาน</span>
+                                <?php else:?>
+                                <span class="badge bg-danger text-white" id="credentialsStatus">ไม่ใช้งาน</span>
+                                <?php endif;?>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary" id="uploadCredentialsBtn">
+                                    <i class="bi bi-upload me-1"></i>อัปโหลด
+                                </button>
+                                <?= $service ? Html::a(' <i class="bi bi-trash me-1"></i>ลบ',['/gdoc/setting/delete-credentials','id' => $service->id],['class' => 'delete-item btn btn-outline-danger']) : ''?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php
+                    $js = <<<JS
+                    // Show file dialog when clicking upload area
+                    $('#editUploadBtn').on('click', function() {
+                        $('#my_file').click();
+                    });
+
+                    // Show file info and preview when file selected
+                    $('#my_file').on('change', function(e) {
+                        var file = this.files[0];
+                        if (!file) return;
+                        $('#selectedFileName').text(file.name);
+                        $('#selectedFileSize').text((file.size/1024).toFixed(2));
+                        $('#fileInfo').show();
+                        // Preview JSON content (first 2KB)
+                        var reader = new FileReader();
+                        reader.onload = function(evt) {
+                            var text = evt.target.result;
+                            
+                        };
+                        reader.readAsText(file.slice(0, 2048));
+                    });
+                    // Handle file upload via AJAX
+                    $('#uploadCredentialsBtn').on('click', function(e) {
+                        e.preventDefault();
+                        var fileInput = $('#my_file')[0];
+                        var file = fileInput.files[0];
+                        if (!file) {
+                            alert('กรุณาเลือกไฟล์ credentials.json ก่อน');
+                            return;
+                        }
+                        var formData = new FormData();
+                        formData.append('credentialsFile', file);
+
+                        $.ajax({
+                            url: $('#credentials-upload-form').attr('action'),
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            beforeSend: function() {
+                                $('#uploadCredentialsBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> กำลังอัปโหลด...');
+                            },
+                            success: function(response) {
+                                $('#credentialsStatus').removeClass('bg-danger').addClass('bg-success').text('อัปโหลดสำเร็จ');
+                                // Optionally show a toast or alert
+                            },
+                            complete: function() {
+                                $('#uploadCredentialsBtn').prop('disabled', false).html('<i class="bi bi-upload me-1"></i>อัปโหลด');
+                            }
+                        });
+                        return false;
+                    });
+                    JS;
+                    $this->registerJs($js);
+                    ?>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

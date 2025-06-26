@@ -540,7 +540,7 @@ class Leave extends \yii\db\ActiveRecord
     // ผู้ตรวจสอบการลา
     public function checkerName($level)
     {
-        $check = Approve::find()->where(['from_id' => $this->id, 'level' => $level])->andWhere(['IS NOT', 'emp_id', null])->one();
+        $check = Approve::find()->where(['name' => 'leave','from_id' => $this->id, 'level' => $level])->andWhere(['IS NOT', 'emp_id', null])->one();
         if ($check) {
             return [
                 'employee' => $check->employee,
@@ -607,8 +607,8 @@ class Leave extends \yii\db\ActiveRecord
 
     public function statusProcess()
     {
-        $total = Approve::find()->where(['from_id' => $this->id])->count();
-        $accept = Approve::find()->where(['from_id' => $this->id, 'status' => 'Pass'])->count();
+        $total = Approve::find()->where(['name' => 'leave','from_id' => $this->id])->count();
+        $accept = Approve::find()->where(['name' => 'leave','from_id' => $this->id, 'status' => 'Pass'])->count();
         if ($total > 0) {
             $percentageCompleted = ($accept / $total) * 100;
         } else {
