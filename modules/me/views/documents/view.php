@@ -57,7 +57,7 @@ $this->title = $model->topic;
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-end mb-2">
-                        <?php echo Html::a(($detail->docRead('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark-view bookmark-star-'. $detail->id,'id' => $detail->id])?>
+                        <?php echo Html::a(($detail->docRead('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark bookmark-star-'. $detail->id,'id' => $detail->id])?>
                     </div>
                     <iframe id="myIframe"
                         src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
@@ -137,33 +137,6 @@ $js = <<<JS
     });
 })();
 
-  \$("body").on("click", ".bookmark-view", function (e) {
-                // var data = $('body').find('.bookmark-star-912').html('<h1>1</h1>')
-                // console.log(data);
-                
-                e.preventDefault();
-                var title = \$(this).data('title')
-                var id = $(this).attr('id');
-                console.log('update commetn',id);
-                 \$.ajax({
-                    type: "get",
-                    url: \$(this).attr('href'),
-                    dataType: "json",
-                    success: async function (res) { 
-                        // var bookmark = $(this).find('i').attr('class', 'fa-solid fa-star text-warning fs-4');
-                            var data = $('body').find('.bookmark-star-'+id).html('<h1>1</h1>')
-                            console.log(id)
-                        if(res.data.bookmark == 'Y'){
-                            $('.bookmark-star-' + id).html('<i class="fa-solid fa-star text-warning"></i>');
-                            success('ติดดาว');
-                        } else if(res.data.bookmark == 'N'){
-                            $('.bookmark-star-' + id).html('<i class="fa-regular fa-star"></i>');
-                            success('ยกเลิกติดดาว');
-                        }
-                        // location.reload();
-                    }
-                });
-            });
 
 
             async function getComment()

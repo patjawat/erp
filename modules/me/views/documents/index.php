@@ -167,33 +167,6 @@ $this->title = 'ทะเบียนหนังสือ';
 $js = <<< JS
 
      
-            \$("body").on("click", ".bookmark", function (e) {
-                // var data = $('body').find('.bookmark-star-912').html('<h1>1</h1>')
-                // console.log(data);
-                
-                e.preventDefault();
-                var title = \$(this).data('title')
-                var id = $(this).attr('id');
-                console.log('update commetn',id);
-                 \$.ajax({
-                    type: "get",
-                    url: \$(this).attr('href'),
-                    dataType: "json",
-                    success: async function (res) { 
-                        // var bookmark = $(this).find('i').attr('class', 'fa-solid fa-star text-warning fs-4');
-                            var data = $('body').find('.bookmark-star-'+id).html('<h1>1</h1>')
-                            console.log(id)
-                        if(res.data.bookmark == 'Y'){
-                            $('.bookmark-star-' + id).html('<i class="fa-solid fa-star text-warning"></i>');
-                            success('ติดดาว');
-                        } else if(res.data.bookmark == 'N'){
-                            $('.bookmark-star-' + id).html('<i class="fa-regular fa-star"></i>');
-                            success('ยกเลิกติดดาว');
-                        }
-                        // location.reload();
-                    }
-                });
-            });
 
 JS;
 $this->registerJS($js);

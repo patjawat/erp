@@ -11,8 +11,8 @@ jQuery(document).on("pjax:start", function () {
   NProgress.start();
   //  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
   //     offcanvas.hide();
-      const el = document.getElementById('offcanvasRight');
-      if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
+  const el = document.getElementById('offcanvasRight');
+  if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
@@ -24,7 +24,7 @@ jQuery(document).on("pjax:end", function () {
       return new bootstrap.Offcanvas(offcanvasEl);
     });
   }
- 
+
 });
 
 
@@ -86,75 +86,102 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
 
 // #### การอัพโหลดรูปภาพ ####
 
-function isFile(){
-    var isFile = $('#editImagePreview').data('isfile');
-    console.log(isFile);
-    
-    if(isFile == true){
-        $("#editImagePreview").show();
-        $("#editUploadBtn").hide();
-        $("#editRemoveImage").show();
-    }else{
-        $("#editImagePreview").hide();
-        $("#editUploadBtn").show();
-        $("#editRemoveImage").hide();
-    }
-}
+function isFile() {
+  var isFile = $('#editImagePreview').data('isfile');
+  console.log(isFile);
 
-$('body').on('change', '.file-upload-input', function(e) {
-
-$('#editImagePreview').data('newfile', true);
-
-   console.log('file upload input change');
-   
-   
-    var fileInput = $(this)[0];
-    if (fileInput.files && fileInput.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-        $("#editPreviewImg").attr("src", e.target.result);
-        $("#editImagePreview").show();
-        $("#editUploadBtn").hide();
-        $("#editRemoveImage").show();
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-});
-
-$('body').on('click', '#editRemoveImage', function (e) {
-    e.preventDefault();
-    $("#editPreviewImg").attr("src", '');
+  if (isFile == true) {
+    $("#editImagePreview").show();
+    $("#editUploadBtn").hide();
+    $("#editRemoveImage").show();
+  } else {
     $("#editImagePreview").hide();
     $("#editUploadBtn").show();
     $("#editRemoveImage").hide();
-    console.log('remove image');
-    
+  }
+}
+
+
+// ติดดาวหนังสือ 
+$("body").on("click", ".bookmark", function (e) {
+  e.preventDefault();
+  var title = $(this).data('title')
+  var id = $(this).attr('id');
+  console.log('update commetn', id);
+  $.ajax({
+    type: "get",
+    url: $(this).attr('href'),
+    dataType: "json",
+    success: async function (res) {
+      // var bookmark = $(this).find('i').attr('class', 'fa-solid fa-star text-warning fs-4');
+      var data = $('body').find('.bookmark-star-' + id).html('<h1>1</h1>')
+      console.log(id)
+      if (res.data.bookmark == 'Y') {
+        $('body').find('.bookmark-star-' + id).html('<i class="fa-solid fa-star text-warning"></i>');
+        success('ติดดาว');
+      } else if (res.data.bookmark == 'N') {
+        $('body').find('.bookmark-star-' + id).html('<i class="fa-regular fa-star"></i>');
+        success('ยกเลิกติดดาว');
+      }
+      // location.reload();
+    }
+  });
+});
+
+
+$('body').on('change', '.file-upload-input', function (e) {
+
+  $('#editImagePreview').data('newfile', true);
+
+  console.log('file upload input change');
+
+
+  var fileInput = $(this)[0];
+  if (fileInput.files && fileInput.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      $("#editPreviewImg").attr("src", e.target.result);
+      $("#editImagePreview").show();
+      $("#editUploadBtn").hide();
+      $("#editRemoveImage").show();
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  }
+});
+
+$('body').on('click', '#editRemoveImage', function (e) {
+  e.preventDefault();
+  $("#editPreviewImg").attr("src", '');
+  $("#editImagePreview").hide();
+  $("#editUploadBtn").show();
+  $("#editRemoveImage").hide();
+  console.log('remove image');
+
 
 });
 
-async function uploadImage(name,ref) {
+async function uploadImage(name, ref) {
   console.log('uploadImage', name, ref);
-    var newFile = $('#editImagePreview').data('newfile');
-    if(newFile){
+  var newFile = $('#editImagePreview').data('newfile');
+  if (newFile) {
     formdata = new FormData();
-    if($("input[id='my_file']").prop('files').length > 0)
-    {
-		file = $("input[id='my_file']").prop('files')[0];
-        formdata.append(name, file);
-        formdata.append("id", 1);
-        formdata.append("ref", ref);
-        formdata.append("name", name);
-        await $.ajax({
-          url: '/filemanager/uploads/single',
-          type: "POST",
-          data: formdata,
-          processData: false,
-          contentType: false,
-          success: function (res) {
-                    success('upload success')
-          }
-        });
-          }
+    if ($("input[id='my_file']").prop('files').length > 0) {
+      file = $("input[id='my_file']").prop('files')[0];
+      formdata.append(name, file);
+      formdata.append("id", 1);
+      formdata.append("ref", ref);
+      formdata.append("name", name);
+      await $.ajax({
+        url: '/filemanager/uploads/single',
+        type: "POST",
+        data: formdata,
+        processData: false,
+        contentType: false,
+        success: function (res) {
+          success('upload success')
+        }
+      });
+    }
   }
 }
 // #### จบการอัพโหลดรูปภาพ ####
@@ -432,13 +459,13 @@ $("body").on("click", ".delete-item", async function (e) {
         dataType: "json",
         success: function (response) {
           if (response.status == "success") {
-              $.pjax.reload({
-                container: response.container,
-                history: false,
-                url: response.url,
-              });
+            $.pjax.reload({
+              container: response.container,
+              history: false,
+              url: response.url,
+            });
 
-              success("ดำเนินการลบสำเร็จ!.");
+            success("ดำเนินการลบสำเร็จ!.");
             if (response.close) {
               $("#main-modal").modal("hide");
             }
@@ -504,45 +531,45 @@ $("body").on("click", ".select-employee", function (e) {
   });
 });
 
-$(document).on('click', '.cancel-order', function(e) {
+$(document).on('click', '.cancel-order', function (e) {
   e.preventDefault();
   let url = $(this).attr('href');
   Swal.fire({
-      title: 'คุณแน่ใจหรือไม่?',
-      text: "คุณต้องการยกเลิกคำขอนี้หรือไม่?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'ใช่, ยกเลิก!',
-      cancelButtonText: 'ยกเลิก'
+    title: 'คุณแน่ใจหรือไม่?',
+    text: "คุณต้องการยกเลิกคำขอนี้หรือไม่?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'ใช่, ยกเลิก!',
+    cancelButtonText: 'ยกเลิก'
   }).then((result) => {
-      if (result.isConfirmed) {
-          $.ajax({
-              url: url,
-              type: 'POST',
-              success: function(response) {
-                  Swal.fire(
-                      'ยกเลิกสำเร็จ!',
-                      'คำขอของคุณถูกยกเลิกแล้ว.',
-                      'success'
-                  ).then(() => {
-                      location.reload(); // Reload the page to reflect changes
-                  });
-              },
-/*************  ✨ Windsurf Command ⭐  *************/
+    if (result.isConfirmed) {
+      $.ajax({
+        url: url,
+        type: 'POST',
+        success: function (response) {
+          Swal.fire(
+            'ยกเลิกสำเร็จ!',
+            'คำขอของคุณถูกยกเลิกแล้ว.',
+            'success'
+          ).then(() => {
+            location.reload(); // Reload the page to reflect changes
+          });
+        },
+        /*************  ✨ Windsurf Command ⭐  *************/
         /**
          * If the request fails, show an error message in a modal.
 /*******  eff9be3f-c24a-493d-816a-4f934d6757f2  *******/
-              error: function() {
-                  Swal.fire(
-                      'เกิดข้อผิดพลาด!',
-                      'ไม่สามารถยกเลิกคำขอได้.',
-                      'error'
-                  );
-              }
-          });
-      }
+        error: function () {
+          Swal.fire(
+            'เกิดข้อผิดพลาด!',
+            'ไม่สามารถยกเลิกคำขอได้.',
+            'error'
+          );
+        }
+      });
+    }
   });
 });
 
