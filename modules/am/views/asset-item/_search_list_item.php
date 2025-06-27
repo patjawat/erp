@@ -37,7 +37,7 @@ use yii\widgets\ActiveForm;
                     ?>
 
                      <?php
-                echo $form->field($model, 'asset_category_id')->widget(Select2::classname(), [
+                echo $form->field($model, 'category_id')->widget(Select2::classname(), [
                     'data' => $model->listAssetCategory(),
                     'options' => ['placeholder' => 'ระบุหมวดหมู่...'],
                     'pluginOptions' => [

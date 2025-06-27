@@ -20,7 +20,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock();?>
 
 
-<?php Pjax::begin(['enablePushState' => false]);?>
+<?php // Pjax::begin(['enablePushState' => false]);?>
+<?php Pjax::begin();?>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-item-center">

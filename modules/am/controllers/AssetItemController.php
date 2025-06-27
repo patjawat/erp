@@ -60,6 +60,8 @@ class AssetItemController extends Controller
                 ['LIKE', 'code', $searchModel->q],
                 ['LIKE', 'title', $searchModel->q],
             ]);
+        if($this->request->isAjax){
+
         Yii::$app->response->format = Response::FORMAT_JSON;
         return [
             'title' => $this->request->get('title'),
@@ -68,6 +70,13 @@ class AssetItemController extends Controller
                 'dataProvider' => $dataProvider,
             ]),
         ];
+
+        }else{
+            return $this->render('list_item', [
+                            'searchModel' => $searchModel,
+                            'dataProvider' => $dataProvider,
+            ]);
+        }
     }
     
 
@@ -152,8 +161,8 @@ class AssetItemController extends Controller
     {
 
         $model = $this->findModel($id);
-        $model->asset_type_id = $model->type->code;
-        $model->category_id = $model->category->code;
+        //$model->asset_type_id = $model->type->code;
+        //$model->category_id = $model->category->code;
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;

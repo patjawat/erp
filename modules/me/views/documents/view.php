@@ -57,7 +57,7 @@ $this->title = $model->topic;
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-end mb-2">
-                        <?php echo Html::a(($detail->docRead('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark'])?>
+                        <?php echo Html::a(($detail->docRead('fs-3')['view']),['/me/documents/bookmark', 'id' => $detail->id],['class' => 'bookmark bookmark-star-'. $detail->id,'id' => $detail->id])?>
                     </div>
                     <iframe id="myIframe"
                         src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
@@ -163,30 +163,6 @@ $js = <<<JS
             }
             
 
-                    
-            \$("body").on("click", ".bookmark", function (e) {
-                e.preventDefault();
-                var title = \$(this).data('title')
-                console.log('update commetn');
-                 \$.ajax({
-                    type: "get",
-                    url: \$(this).attr('href'),
-                    dataType: "json",
-                    success: async function (res) { 
-                        console.log(res.data);
-                        if(res.data.bookmark == 'Y'){
-                            $('.bookmark').html('<i class="fa-solid fa-star text-warning fs-2"></i>')
-                            success('ติดดาว')  
-                        }
-                        
-                        if(res.data.bookmark == 'N'){
-                            $('.bookmark').html('<i class="fa-regular fa-star fs-2"></i>')
-                            success('ยกเลิกติดดาว')  
-                        }
-                        // location.reload();
-                    }
-                });
-            });
             
             \$("body").on("click", ".update-comment", function (e) {
                 e.preventDefault();

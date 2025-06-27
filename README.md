@@ -153,10 +153,10 @@ https://www.canva.com/ai/code/thread/ba6b2ae4-bc5b-443a-8ed2-7c92798ae56a
 
 
 ## ขั้นตอนการ  update ระบบทรัพย์สินใหม่
-<!-- ## Update sturgture -->
+-- Update sturgture 
   ALTER TABLE `asset` ADD `asset_name` VARCHAR(255) NULL COMMENT 'ชื่อของครุภัณฑ์' AFTER `asset_group`;
   ALTER TABLE `categorise` CHANGE `title` `title` TEXT CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'ชื่อ';
-<!-- ## Update เชื่อ -->
+-- Update ชื่อ
 UPDATE asset a
 LEFT JOIN categorise i ON i.code = a.asset_item
 SET a.asset_name = i.title
@@ -164,11 +164,11 @@ WHERE i.name = 'asset_item';
 
 UPDATE `asset`  SET fsn_number = asset_item;
 
-<!-- ## ลบ asset_group,asset_type เดิมออก -->
-DELETE FROM `categorise` WHERE name = 'asset_group'
-DELETE FROM `categorise` WHERE `category_id` ='3' AND `name`='asset_type'
+-- ลบ asset_group,asset_type เดิมออก 
+DELETE FROM `categorise` WHERE name = 'asset_group';
+DELETE FROM `categorise` WHERE `category_id` ='3' AND `name`='asset_type';
 
-<!-- ## เพิ่ม  asset_group ใหม่เข้าไป -->
+-- เพิ่ม  asset_group ใหม่เข้าไป
 INSERT INTO categorise (name,title, code, data_json) VALUES
 ('asset_group','ที่ดิน', 'LAND', JSON_OBJECT('description', 'ที่ดินและสิทธิในที่ดิน')),
 ('asset_group','อาคาร', 'BLDG', JSON_OBJECT('description', 'อาคารและสิ่งปลูกสร้างขนาดใหญ่')),
@@ -176,9 +176,9 @@ INSERT INTO categorise (name,title, code, data_json) VALUES
 ('asset_group','ครุภัณฑ์', 'EQUIP', JSON_OBJECT('description', 'อุปกรณ์และเครื่องมือต่างๆ')),
 ('asset_group','ครุภัณฑ์ต่ำกว่าเกณฑ์', 'MINOR', JSON_OBJECT('description', 'ครุภัณฑ์มูลค่าต่ำ')),
 ('asset_group','สินทรัพย์ไม่มีตัวตน', 'INTAN', JSON_OBJECT('description', 'ลิขสิทธิ์ สิทธิบัตร ซอฟต์แวร์')),
-('asset_group','วัสดุ', 'MATER', JSON_OBJECT('description', 'วัสดุสิ้นเปลืองและคงคลัง'))
+('asset_group','วัสดุ', 'MATER', JSON_OBJECT('description', 'วัสดุสิ้นเปลืองและคงคลัง'));
 
-<!-- ## เพิ่ม asset_type ใฟม่เข้าไป -->
+-- ## เพิ่ม asset_type ใฟม่เข้าไป
 INSERT INTO categorise 
 (name,group_id, title, code, data_json) 
 VALUES
@@ -192,14 +192,14 @@ VALUES
 ('asset_type','EQUIP','ครุภัณฑ์งานบ้านงานครัว', 'HOM', JSON_OBJECT('title_en','Household and Kitchen Equipment', 'description', 'อุปกรณ์ใช้ในบ้านและครัว สำหรับงานทั่วไป')),
 ('asset_type','EQUIP','ครุภัณฑ์ยานพาหนะ', 'VEH', JSON_OBJECT('title_en','Vehicle Equipment', 'description', 'ยานพาหนะและอุปกรณ์การขนส่ง')),
 ('asset_type','EQUIP','ครุภัณฑ์วิทยาศาสตร์', 'SCI', JSON_OBJECT('title_en','Scientific Equipment', 'description', 'เครื่องมือและอุปกรณ์ทางวิทยาศาสตร์และการวิจัย')),
-('asset_type','EQUIP','ครุภัณฑ์สำนักงาน', 'OFF', JSON_OBJECT('title_en','Office Equipment', 'description', 'อุปกรณ์สำนักงานและเครื่องใช้ในการบริหารงาน'))
+('asset_type','EQUIP','ครุภัณฑ์สำนักงาน', 'OFF', JSON_OBJECT('title_en','Office Equipment', 'description', 'อุปกรณ์สำนักงานและเครื่องใช้ในการบริหารงาน'));
 
 
 
-<!-- ย้าย asset_item มา category -->
+-- ย้าย asset_item มา category
 INSERT INTO categorise  (name,group_id,ref,code,category_id, title,data_json)
 SELECT 'asset_item','EQUIP',a.ref,a.id,a.asset_category_id,a.title,a.data_json
-from asset_items a
+from asset_items a;
 
 
 query ดึง asset item 

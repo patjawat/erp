@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use iamsaint\datetimepicker\Datetimepicker;
@@ -25,50 +26,58 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 
 <div class="d-flex gap-2 align-items-center">
-    <?php echo $form->field($model, 'data_json[export]')->hiddenInput()->label(false) ?>
+    <div class="d-flex justify-content-between align-items-center gap-2">
+        <?php echo $form->field($model, 'data_json[export]')->hiddenInput()->label(false) ?>
 
-    <?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 
-    <!-- <button class="btn btn-light mt-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
-        aria-controls="offcanvasExample"><i class="fa-solid fa-filter"></i></button> -->
-</div>
-
-<!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="offcanvasExample"
-    aria-labelledby="offcanvasExampleLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasExampleLabel">กรองเพิ่มเติม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body position-relative">
-        <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                    'name' => 'department',
-                    'id' => 'treeID',
-                    'query' => Organization::find()->addOrderBy('root, lft'),
-                    'value' => 1,
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
-                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
+        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
+        <?php
+        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+            'data' =>  DateFilterHelper::getDropdownItems(),
+            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'width' => '130px',
+            ],
+        ])->label(false);
+        ?>
+        <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
+                    'data' => $model->ListThaiYear(),
+                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' => true,
+                        'width' => '120px',
                     ],
-                ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+        ])->label(false);?>
 
-        <div class="offcanvas-footer">
-            <?php echo Html::submitButton(
-                        '<i class="fa-solid fa-magnifying-glass"></i>',
-                        [
-                            'class' => 'btn btn-primary',
-                            'data-bs-backdrop' => 'static',
-                            'tabindex' => '-1',
-                            'id' => 'offcanvasExample',
-                            'aria-labelledby' => 'offcanvasExampleLabel',
-                        ]
-                    ); ?>
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+
+        <div style="width:300px">
+            <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+        'name' => 'department',
+        'id' => 'treeID',
+        'query' => Organization::find()->addOrderBy('root, lft'),
+        'value' => 1,
+        'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+        'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+        'fontAwesome' => true,
+        'asDropdown' => true,
+        'multiple' => false,
+        'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
+        'pluginOptions' => [
+            'allowClear' => true
+        ],
+        ])->label(false); ?>
         </div>
+
+
+
+        <div class="d-flex flex-row align-items-center gap-2 mb-3">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+        </div>
+
     </div>
 </div>
 

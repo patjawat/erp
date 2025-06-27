@@ -9,17 +9,21 @@ window.onbeforeunload = function () {
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
-   var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
-      offcanvas.hide();
+  //  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
+  //     offcanvas.hide();
+      const el = document.getElementById('offcanvasRight');
+      if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
   console.log("pjax start");
 });
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
   // ตัวอย่าง: รีโหลด Offcanvas
-    var offcanvasElList = [].slice.call(document.querySelectorAll('.offcanvas'))
+  var offcanvasElList = [].slice.call(document.querySelectorAll('.offcanvas'));
+  if (offcanvasElList.length > 0) {
     var offcanvasList = offcanvasElList.map(function (offcanvasEl) {
-        return new bootstrap.Offcanvas(offcanvasEl)
-    })
+      return new bootstrap.Offcanvas(offcanvasEl);
+    });
+  }
  
 });
 

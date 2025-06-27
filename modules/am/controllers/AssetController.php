@@ -309,7 +309,7 @@ class AssetController extends Controller
 
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json,$convert_date);
             if ($model->save()) {
-                $model->updateFsn();
+                // $model->updateFsn();
                 $this->CheckUpdateData($model);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {

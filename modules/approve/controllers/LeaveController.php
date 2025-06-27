@@ -176,7 +176,7 @@ class LeaveController extends \yii\web\Controller
             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
             $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
             if ($model->save()) {
-                $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'level' => ($model->level + 1)]);
+                $nextApprove = Approve::findOne(['name' => 'leave','from_id' => $model->from_id, 'level' => ($model->level + 1)]);
                 if ($nextApprove && $model->status !== 'Reject') {
                     // เงื่อนไขระบบลา
                     if ($model->name == 'leave') {

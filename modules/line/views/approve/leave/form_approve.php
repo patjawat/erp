@@ -30,7 +30,7 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 </div>
 <?php // if($model->status == 'Pending'): ?>
 <div class="d-flex justify-content-center gap-3 mt-4" id="btn-warp">
-    <button type="button" class="btn btn-lg btn-primary rounded-pill shadow btn-approve" data-value="Approve"
+    <button type="button" class="btn btn-lg btn-primary rounded-pill shadow btn-approve" data-value="Pass"
         data-text='<i class="fa-regular fa-circle-check"></i> เห็นชอบให้ลาได้'><i
             class="fa-regular fa-circle-check"></i> เห็นชอบ</button>
     <button type="button" class="btn btn-lg btn-danger rounded-pill shadow btn-approve" data-value="Reject"

@@ -44,14 +44,14 @@ use app\modules\hr\models\Organization;
 
 
 
-    <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '120px',
-            ],
-])->label(false);?>
+            <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
+                    'data' => $model->ListThaiYear(),
+                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'width' => '120px',
+                    ],
+        ])->label(false);?>
 
     <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
 

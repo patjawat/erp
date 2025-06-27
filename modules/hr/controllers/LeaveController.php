@@ -14,6 +14,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
+use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Calendar;
 use app\components\DateFilterHelper;
@@ -76,8 +77,8 @@ class LeaveController extends Controller
             ['like', 'email', $searchModel->q],
           
             ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.reason'))"), $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
         ]);
 
          if ($searchModel->date_filter) {
@@ -90,21 +91,13 @@ class LeaveController extends Controller
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
-
-        if(!$searchModel->date_filter && !$searchModel->thai_year){
-            $dateStart= AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-              $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        }
         
-      
-    
+        
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
-        // if (!empty($searchModel->status)) {
-        //     $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
-        // }
+
         if($status)
         {
             $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
@@ -175,24 +168,43 @@ class LeaveController extends Controller
         public function actionReport()
         {
 
-            $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
             $searchModel = new LeaveSearch([
                 'thai_year' => AppHelper::YearBudget(),
-                'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-                'date_end' => AppHelper::convertToThai($lastDay)
             ]);
 
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->joinWith('employee e');
             $dataProvider->query->select([
-                'emp_id',
+                'leave.*',
                 'IFNULL(SUM(CASE WHEN leave_type_id = "LT1" THEN total_days ELSE 0 END), 0) AS sum_lt1',
                 'IFNULL(SUM(CASE WHEN leave_type_id = "LT2" THEN total_days ELSE 0 END), 0) AS sum_lt2',
                 'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
                 'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
             ]);
             $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
-            // search employee department
+
+          if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        if (!empty($searchModel->leave_type_id)) {
+            $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
+
+        if (!empty($searchModel->leave_type_id)) {
+            $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
+
+        
+        // search employee department
          // ค้นหาคามกลุ่มโครงสร้าง
          $org1 = Organization::findOne($searchModel->q_department);
          // ถ้ามีกลุ่มย่อย
@@ -218,24 +230,11 @@ class LeaveController extends Controller
          } else {
              $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
          }
-
-         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-        
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-            
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+       
         
         
             $dataProvider->query->groupBy('emp_id');
-            $dataProvider->sort->defaultOrder = ['emp_id' => SORT_DESC];
+            // $dataProvider->sort->defaultOrder = ['leave.emp_id' => SORT_DESC];
 
             if(isset($searchModel->data_json['export']) && $searchModel->data_json['export'] == 'true'){
                 $dataProvider->pagination->pageSize = 1000000000000;
@@ -365,7 +364,21 @@ class LeaveController extends Controller
 
             
             $rowTitle = 'A1';
-            $sheet->setCellValue($rowTitle, 'รายงานวันลาประจำปีงบประมาณ '.$searchModel->thai_year);
+            // ถ้ามีการเลืือกแผนกฝ่าย
+            if($searchModel->q_department){
+             $org = Organization::findOne($searchModel->q_department);
+             $departmentName = '('.$org->name.')';
+            }else{
+            $departmentName = '(ทุกหน่วยงาน)';
+            }
+
+            //วันที่ข้อมูลรายงาน
+            $dateStart= AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart,$dateEnd, 'long', 'short');
+
+
+            $sheet->setCellValue($rowTitle, 'รายงานวันลาประจำปีงบประมาณ '.$searchModel->thai_year .' วันที่ '.$dateReport.' '.$departmentName);
             $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);

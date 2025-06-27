@@ -26,11 +26,11 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="row mb-2">
             <div class="col-md-4 fw-semibold">หมวดหมู่:</div>
-            <div class="col-md-8 fw-semibold" id="viewAssetFSN"><?=$model->assetCategory->title?></div>
+            <div class="col-md-8 fw-semibold" id="viewAssetFSN"><?=$model->category?->title ?? '-'?></div>
         </div>
          <div class="row mb-2">
             <div class="col-md-4 fw-semibold">FSN:</div>
-            <div class="col-md-8 fw-semibold"><?=$model->fsn?></div>
+            <div class="col-md-8 fw-semibold"><?=$model->code?></div>
         </div>
     </div>
 </div>

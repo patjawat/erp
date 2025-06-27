@@ -75,6 +75,7 @@ $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree 
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
+$modules['formtemplate'] = ['class' => 'app\modules\formtemplate\Module'];  // module ออกแบบ โนพท pdf
 $modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 
 return $modules;

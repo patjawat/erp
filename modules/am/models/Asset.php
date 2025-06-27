@@ -133,19 +133,19 @@ class Asset extends \yii\db\ActiveRecord
 
 
 //ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
-    public function updateFsn()
-    {
-        $checkAssetFsn =AssetItem::find()
-                ->where(['id' => $this->asset_item])
-                ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
-                ->one();
-                if(!empty($checkAssetFsn)){
-                        $checkAssetFsn->fsn = $this->fsn_number;
-                        $checkAssetFsn->save();
+    // public function updateFsn()
+    // {
+    //     $checkAssetFsn =AssetItem::find()
+    //             ->where(['id' => $this->asset_item])
+    //             ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
+    //             ->one();
+    //             if(!empty($checkAssetFsn)){
+    //                     $checkAssetFsn->fsn = $this->fsn_number;
+    //                     $checkAssetFsn->save();
 
 
-                }
-    }
+    //             }
+    // }
 //แสดงรูปภาพแบบวงกลม
     public function Avatar(){
         return '<div class="d-flex">

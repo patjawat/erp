@@ -323,7 +323,7 @@ $group = Yii::$app->request->get('group');
             </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <!-- Transfer History -->
 <?php // $this->render('transfer_history')?>

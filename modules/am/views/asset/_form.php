@@ -46,40 +46,34 @@ $group = Yii::$app->request->get('group');
                     <div class="row g-3">
                         <div class="col-md-12">
                              <?php
-                        echo $form->field($model, 'asset_name', [
-                                    'addon' => [
-                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-item/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
-                                    ]
-                               ])->textInput([
-                            'maxlength' => true, 
-                            'placeholder' => 'ค้นหาชื่อครุภัณฑ์',
-                            'readonly' => false,  // Make field readonly
-                            'class' => 'form-control'  // Add background color
-                        ])->label('ชื่อครุภัณฑ์');
-                        ?>
+                                echo $form->field($model, 'asset_name', [
+                                            'addon' => [
+                                                'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-item/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                            ]
+                                    ])->textInput([
+                                    'maxlength' => true, 
+                                    'placeholder' => 'ค้นหาชื่อครุภัณฑ์',
+                                    'readonly' => false,  // Make field readonly
+                                    'class' => 'form-control'  // Add background color
+                                ])->label('ชื่อครุภัณฑ์');
+                                ?>
                         </div>
                            <div class="col-md-6">
                             <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขครุภัณฑ์') ?>
                         </div>
                         <div class="col-md-6">
                             <?php
-                       
-                        echo $form->field($model, 'fsn_number', [
-                                    'addon' => [
-                                        'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/fsn/list-fsn','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
-                                    ]
-                               ])->textInput([
-                            'maxlength' => true, 
-                            'placeholder' => 'ค้นหาเลข FSN',
-                            'readonly' => true,  // Make field readonly
-                            'class' => 'form-control bg-primary text-white'  // Add background color
-                        ])->label('FSN');
-                        ?>
-                        
+                                echo $form->field($model, 'fsn_number', [
+                                        'addon' => [
+                                            'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/fsn/list-fsn','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                        ]
+                                ])->textInput([
+                                'maxlength' => true, 
+                                'placeholder' => 'ค้นหาเลข FSN',
+                                'readonly' => true,  // Make field readonly
+                                'class' => 'form-control bg-primary text-white'  // Add background color
+                            ])->label('FSN');?>                        
                         </div>
-
-
-                     
 
                         <div class="col-md-6">
                             <?= $form->field($model, 'data_json[fsn_old]')->textInput(['maxlength' => true])->label('เลขครุภัณฑ์เดิม') ?>
@@ -87,62 +81,60 @@ $group = Yii::$app->request->get('group');
 
                         <div class="col-md-6">
                             <?php
-                echo $form->field($model, 'data_json[brand]')->widget(Select2::classname(), [
-                    'data' => $model->listBand(),
-                    'options' => ['placeholder' => 'เลือกยี่ห้อ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                echo $form->field($model, 'data_json[brand]')->widget(Select2::classname(), [
+                                    'data' => $model->listBand(),
+                                    'options' => ['placeholder' => 'เลือกยี่ห้อ...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
 
-                    ],
-                ])->label("ยี่ห้อ")
-                ?>
+                                    ],
+                                ])->label("ยี่ห้อ")
+                                ?>
                         </div>
 
                         <div class="col-md-6">
                             <?php
-                echo $form->field($model, 'data_json[asset_model]')->widget(Select2::classname(), [
-                    'data' => $model->listModel(),
-                    'options' => ['placeholder' => 'เลือกรุ่น/โมเดล...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                            echo $form->field($model, 'data_json[asset_model]')->widget(Select2::classname(), [
+                                'data' => $model->listModel(),
+                                'options' => ['placeholder' => 'เลือกรุ่น/โมเดล...'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
 
-                    ],
-                ])->label("รุ่น/โมเดล")
-                ?>
-
-                        </div>
-
-                        <div class="col-md-3">
-                            <?php
-                echo $form->field($model, 'data_json[color_name]')->widget(Select2::classname(), [
-                    'data' => $model->listColor(),
-                    'options' => ['placeholder' => 'เลือกสี...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                    ],
-                ])->label("สี")
-                ?>
+                                ],
+                            ])->label("รุ่น/โมเดล")
+                            ?>
 
                         </div>
 
                         <div class="col-md-3">
                             <?php
-                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-                    'data' => $model->listUnit(),
-                    'options' => ['placeholder' => 'ระบุ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                    ],
-                ])->label("หน่วยนับ")
-                ?>
+                                echo $form->field($model, 'data_json[color_name]')->widget(Select2::classname(), [
+                                    'data' => $model->listColor(),
+                                    'options' => ['placeholder' => 'เลือกสี...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                    ],
+                                ])->label("สี")
+                                ?>
+                        </div>
+
+                        <div class="col-md-3">
+                            <?php
+                                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                                    'data' => $model->listUnit(),
+                                    'options' => ['placeholder' => 'ระบุ...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                    ],
+                                ])->label("หน่วยนับ")
+                                ?>
                         </div>
                     </div>
                 </div>
-
 
                 <!-- ข้อมูลการได้มา -->
                 <div class="form-section">
@@ -266,15 +258,67 @@ $group = Yii::$app->request->get('group');
                 <div class="form-section">
                     <h5 class="section-title">ข้อมูลเฉพาะ</h5>
                     <div class="row g-3">
+                        <div class="col-md-12">
+                            <?=$form->field($model, 'data_json[asset_options]')->widget(Summernote::class, ['useKrajeePresets' => true])->label('คุณลักษณะเฉพาะ');?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ปุ่มดำเนินการ -->
+                <div class="row mt-4">
+                    <div class="col-12 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                            <i class="bi bi-x-circle me-2"></i>ล้างข้อมูล
+                        </button>
+                        <div>
+                            <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view','id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
+                            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body">
+                <!-- รูปภาพ -->
+                <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
+                <div class="mb-3">
+                    <div class="file-file-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>" data-newfile="false">
+                        <?= Html::img($model->showImg()['image'],['id' => 'editPreviewImg']) ?>
+                        <div class="file-remove" id="editRemoveImage">
+                            <i class="bi bi-x"></i>
+                        </div>
+                    </div>
+                    <div class="file-upload">
+                        <div class="file-upload-btn" id="editUploadBtn">
+                            <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
+                            <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
+                            <small class="d-block text-muted mt-2">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
+                        </div>
+                        <input type="file" class="file-upload-input" id="my_file" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <!-- ข้อมูลเฉพาะ -->
+                <div class="form-section">
+                    <h5 class="section-title">ข้อมูลเฉพาะ</h5>
+                    <div class="row g-3">
                         <div class="col-6">
                             <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
                         </div>
                         <div class="col-6">
                             <?= $form->field($model, 'data_json[license_plate]')->textInput()->label('เลขทะเบียน (รถยนต์)') ?>
                         </div>
-
-
-
                         <div class="col-md-6">
                             <?php
                                 echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
@@ -289,17 +333,12 @@ $group = Yii::$app->request->get('group');
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
                                     ]
-                                ])->label('สถานะ');
-                        ?>
-                        </div>
-
-                        <div class="col-md-12">
-                            <?=$form->field($model, 'data_json[asset_options]')->widget(Summernote::class, ['useKrajeePresets' => true])->label('คุณลักษณะเฉพาะ');?>
+                                ])->label('สถานะ');?>
                         </div>
                     </div>
                 </div>
 
-                <!-- ข้อมูลสถานที่และวันที่ -->
+                 <!-- ข้อมูลสถานที่และวันที่ -->
                 <div class="form-section">
                     <h5 class="section-title">ข้อมูลสถานที่และวันที่</h5>
                     <div class="row g-3">
@@ -351,57 +390,9 @@ $group = Yii::$app->request->get('group');
                     </div>
                 </div>
 
-                <!-- รูปภาพ -->
-
-
-                <!-- หมายเหตุ -->
-
-
-                <!-- ปุ่มดำเนินการ -->
-                <div class="row mt-4">
-                    <div class="col-12 d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
-                            <i class="bi bi-x-circle me-2"></i>ล้างข้อมูล
-                        </button>
-                        <div>
-                            <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view','id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
-                            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
-
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
-
-
-    </div>
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body">
-                <!-- รูปภาพ -->
-
-                <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
-                <div class="mb-3">
-                    <div class="file-file-preview" id="editImagePreview" data-isfile="<?=$model->showImg()['isFile']?>" data-newfile="false">
-                        <?= Html::img($model->showImg()['image'],['id' => 'editPreviewImg']) ?>
-                        <div class="file-remove" id="editRemoveImage">
-                            <i class="bi bi-x"></i>
-                        </div>
-                    </div>
-
-                    <div class="file-upload">
-                        <div class="file-upload-btn" id="editUploadBtn">
-                            <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
-                            <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
-                            <small class="d-block text-muted mt-2">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
-                        </div>
-                        <input type="file" class="file-upload-input" id="my_file" accept="image/*">
-                    </div>
-                </div>
-
-            </div>
-        </div>
+        
     </div>
 </div>
 

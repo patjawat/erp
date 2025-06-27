@@ -57,20 +57,20 @@ $this->title = 'รายงานระบบลา';
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-                <?php // foreach($dataProvider->getModels() as $key => $item):?>
+                <?php  foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
-                    <td class="text-center fw-semibold"><?php // echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td><?php //echo $item->employee->fullname?></td>
-                    <td><?php //echo $item->employee->positionName()?></td>
-                    <td><?php //echo $item->employee->departmentName()?></td>
-                    <td class="text-center fw-bolder"><?php // echo $item->sum_lt1?></td>
-                    <td class="text-center fw-bolder"><?php // echo $item->sum_lt3?></td>
-                    <td class="text-center fw-bolder"><?php // echo $item->sum_lt2?></td>
-                    <td class="text-center fw-bolder"><?php // echo $item->sum_lt4?></td>
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td><?php echo $item->employee->fullname ?? '-'?></td>
+                    <td><?php echo $item->employee->positionName()?></td>
+                    <td><?php echo $item->employee->departmentName()?></td>
+                    <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
+                    <td class="text-center fw-bolder"><?php  echo $item->sum_lt3?></td>
+                    <td class="text-center fw-bolder"><?php  echo $item->sum_lt2?></td>
+                    <td class="text-center fw-bolder"><?php  echo $item->sum_lt4?></td>
                     <td class="text-center fw-bolder">
-                        <?php // echo ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4)?></td>
+                        <?php echo ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4)?></td>
                 </tr>
-                <?php // endforeach;?>
+                <?php  endforeach;?>
             </tbody>
         </table>
         <div class="d-flex justify-content-center mt-4">
