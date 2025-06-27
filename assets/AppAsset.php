@@ -53,7 +53,7 @@ class AppAsset extends AssetBundle
         'aos/aos.js',
         'apexcharts/apexcharts.min.js',
         'chart-assets/echart/echarts.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js', // lazyload รูปภาพ
         // 'https://code.highcharts.com/highcharts.js',
         // 'https://code.highcharts.com/modules/exporting.js',
         'https://unpkg.com/nprogress@0.2.0/nprogress.js',

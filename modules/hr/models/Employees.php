@@ -280,7 +280,7 @@ class Employees extends Yii\db\ActiveRecord
 
     public function getAvatar($showAge = true, $msg = '')
     {
-        $img = Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar avatar-sm bg-primary text-white lazyload',
+        $img = Html::img('@web/img/loading.gif', ['class' => 'avatar avatar-sm bg-primary text-white lazyload',
             'data' => [
                 'expand' => '-20',
                 'sizes' => 'auto',
