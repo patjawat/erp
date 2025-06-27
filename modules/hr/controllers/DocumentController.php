@@ -104,19 +104,20 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('hr_position', 'ตำแหน่ง' . $hr['position']);
         $templateProcessor->setValue('hr_date', $hr['approve_date']);
         try {
-            $templateProcessor->setImg('hr_sign', ['src' => $model->checkerName(1)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
+            $templateProcessor->setImg('hr_sign', ['src' => $hr['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
         } catch (\Throwable $th) {
             $templateProcessor->setValue('hr_sign', '');
         }
 
         // ผู้อำนวยการตรวจสอบ อนุมัติให้ลา/ไม่ให้ลา
+        $director = $model->checkerName(4);
         $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทน' ? 'รักษาการแทน' : '');
-        $templateProcessor->setValue('direc_fullname', $model->checkerName(4)['fullname']);
-        $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position'].$dicrectorType);
+        $templateProcessor->setValue('direc_fullname', $director['fullname']);
+        $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $director['position'].$dicrectorType);
         // $templateProcessor->setValue('direc_position', 'ตำแหน่ง' . $model->checkerName(4)['position']).$dicrectorType;
-        $templateProcessor->setValue('direc_date', $model->checkerName(3)['approve_date']);
+        $templateProcessor->setValue('direc_date', $director['approve_date']);
         try {
-            $templateProcessor->setImg('direc_sign', ['src' => $model->checkerName(4)['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
+            $templateProcessor->setImg('direc_sign', ['src' => $director['employee']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
             // $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150,60]]); //ลายมือผู้อำนวยการ
         } catch (\Throwable $th) {
             $templateProcessor->setValue('direc_sign', '');
