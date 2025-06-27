@@ -22,15 +22,16 @@ use kartik\widgets\ActiveForm;
 
 
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'group_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?php // echo $form->field($model, 'group_id')->textInput(['maxlength' => true])->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
 
   <?php
-  echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+  echo $form->field($model, 'group_id')->widget(Select2::classname(), [
     'data' => $model->listAssetType(),
         'options' => [
         'placeholder' => 'เลือกประเภท...',
+        'id' => 'group_id'
     ],
         'pluginOptions' => [
         'allowClear' => true,
@@ -41,11 +42,11 @@ use kartik\widgets\ActiveForm;
 <?php
 echo $form->field($model, 'category_id')->widget(DepDrop::classname(), [
     'options' => ['placeholder' => 'เลือกหมวดรัพย์สิน ...'],
-    //  'data' => $model->listAssetCategory(),
+     'data' => $model->listAssetCategory(),
     'type' => DepDrop::TYPE_SELECT2,
     'select2Options' => ['pluginOptions' => ['allowClear' => true]],
     'pluginOptions' => [
-        'depends' => ['assetitem-asset_type_id'],
+        'depends' => ['group_id'],
         'url' => Url::to(['/am/asset-item/get-asset-category']),
         'loadingText' => 'กำลังโหลด ...',
         'params' => ['depdrop_all_params' => 'assetitem-asset_type_id'],

@@ -1,20 +1,20 @@
-$("#page-content").show();
-$("#loader").hide();
 
 window.onbeforeunload = function () {
-  $("#page-content").hide();
-  $("#loader").show();
+
+  showTableLoading()
   // NProgress.start();
 };
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
+  showTableLoading()
   //  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
   //     offcanvas.hide();
   const el = document.getElementById('offcanvasRight');
   if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
   console.log("pjax start");
 });
+
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
   // ตัวอย่าง: รีโหลด Offcanvas

@@ -15,98 +15,110 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
 ?>
 
 
-<table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-            <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
-            <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
-            <th class="fw-semibold"><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
-            <th class="fw-semibold">ระหว่างวันที่</th>
-            <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
-            <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-            <th class="fw-semibold text-start">ความคืบหน้า</th>
-            <th class="fw-semibold text-start">สถานะ</th>
-            <th class="fw-semibold text-center">ดำเนินการ</th>
-        </tr>
-    </thead>
-    <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
-        <?php foreach($dataProvider->getModels() as $key => $item):?>
-        <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
-            </td>
-            <td class="text-center fw-semibold "><?php echo $item->thai_year?></td>
-            <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
-                    class="open-modal" data-size="modal-xl">
-                    <?=$item->getAvatar(false)['avatar']?>
-                </a>
-            </td>
-            <td>
-                <?=$item->data_json['reason']?>
-                <div class="d-flex flex-column justofy-content-start align-items-start">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
-                            class="bi bi-exclamation-circle-fill"></i> <?php echo $item->leaveType?->title ?? '-' ?>
-                        <code><?php echo $item->total_days?> </code> วัน</span>
-                </div>
-            </td>
-            <td>
-                <?=$item->showLeaveDate()?>
-            </td>
-            <td class="text-start text-truncate" style="max-width:150px;"><?=$item->getAvatar(false)['department']?>
-            </td>
-            <td><?php echo $item->stackChecker()?></td>
-            <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?></td>
-            <td class="fw-center align-middle text-start">
 
-                <?php
+<!-- Example 1: Full Table Loading -->
+
+
+
+
+
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
+                <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
+                <th class="fw-semibold"><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
+                <th class="fw-semibold">ระหว่างวันที่</th>
+                <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
+                <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
+                <th class="fw-semibold text-start">ความคืบหน้า</th>
+                <th class="fw-semibold text-start">สถานะ</th>
+                <th class="fw-semibold text-center">ดำเนินการ</th>
+            </tr>
+        </thead>
+        <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
+            <?php foreach($dataProvider->getModels() as $key => $item):?>
+            <tr>
+                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+                </td>
+                <td class="text-center fw-semibold "><?php echo $item->thai_year?></td>
+                <td class="text-truncate" style="max-width: 230px;">
+                    <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
+                        class="open-modal" data-size="modal-xl">
+                        <?=$item->getAvatar(false)['avatar']?>
+                    </a>
+                </td>
+                <td>
+                    <?=$item->data_json['reason']?>
+                    <div class="d-flex flex-column justofy-content-start align-items-start">
+                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
+                                class="bi bi-exclamation-circle-fill"></i>
+                            <?php echo $item->leaveType?->title ?? '-' ?>
+                            <code><?php echo $item->total_days?> </code> วัน</span>
+                    </div>
+                </td>
+                <td>
+                    <?=$item->showLeaveDate()?>
+                </td>
+                <td class="text-start text-truncate" style="max-width:150px;">
+                    <?=$item->getAvatar(false)['department']?>
+                </td>
+                <td><?php echo $item->stackChecker()?></td>
+                <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?>
+                </td>
+                <td class="fw-center align-middle text-start">
+
+                    <?php
                         try {
                             echo $item->viewStatus();
                         } catch (\Throwable $th) {
                             //throw $th;
                         }
                         ?>
-            </td>
-            <td class="text-center">
-                <div class="d-flex gap-2 justify-content-center">
-                    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                    <!-- ถ้า ผอ. อนุมัติแล้ว ไม่สามารถแก้ไขได้-->
-                    <?php if($item->status == 'Approve'):?>
-                        
+                </td>
+                <td class="text-center">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                        <!-- ถ้า ผอ. อนุมัติแล้ว ไม่สามารถแก้ไขได้-->
+                        <?php if($item->status == 'Approve'):?>
+
                         <!-- แต่เป็น admin แก้ไขได้ -->
                         <?php if(Yii::$app->user->can('admin')):?>
-                            <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/hr/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                            <?php else:?>
-                            <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
+                        <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/hr/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                        <?php else:?>
+                        <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
                         <?php endif;?>
 
-                    <?php else:?>
-                    <!-- ถ้าเป็นเจ้าของวันลา -->
-                    <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
-                    <?php endif?>
+                        <?php else:?>
+                        <!-- ถ้าเป็นเจ้าของวันลา -->
+                        <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                        <?php endif?>
 
-                    <!-- การพิมพ์ใบลา ถ้า ผอ.อนุมัติแล้ว ให้พิมได้ -->
-                    <?php if($item->status == 'Approve'):?>
+                        <!-- การพิมพ์ใบลา ถ้า ผอ.อนุมัติแล้ว ให้พิมได้ -->
+                        <?php if($item->status == 'Approve'):?>
 
-                    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                        <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
                             [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
                             ['class' => 'open-modal','data' => [
                                 'size' => 'modal-xl',
                                 'filename' => $item->leaveType?->title ?? '-'.'-'.$item->employee->fullname
                             ]]) ?>
 
-                    <?php else:?>
+                        <?php else:?>
 
-                    <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
-                    <?php endif;?>
-                </div>
+                        <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
+                        <?php endif;?>
+                    </div>
 
 
-            </td>
-        </tr>
-        <?php endforeach;?>
-    </tbody>
-</table>
+                </td>
+            </tr>
+            <?php endforeach;?>
+        </tbody>
+    </table>
+
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([
                 'pagination' => $dataProvider->pagination,

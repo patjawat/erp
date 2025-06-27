@@ -169,4 +169,22 @@ LEFT JOIN categorise t ON t.code = cat.category_id
 WHERE i.name = 'asset_item' 
 AND t.name = 'asset_type'
 AND cat.name = 'asset_category' LIMIT 10000;";
+
+// ตัวอย่างการ  query asset_item
+$sql2 ="SELECT 
+i.code,
+i.name,
+i.title,
+asset_category.code as category_code,
+asset_category.name as category_name,
+asset_category.title as category_title,
+asset_category.code as type_code,
+asset_category.name as type_name,
+asset_category.title as type_title 
+FROM `categorise` i
+LEFT JOIN categorise asset_category ON asset_category.code = i.category_id AND asset_category.name = 'asset_category'
+LEFT JOIN categorise asset_type ON asset_type.code = asset_category.category_id AND asset_type.name = 'asset_type'
+WHERE i.`id` = 13865;";
+
 ?>
+

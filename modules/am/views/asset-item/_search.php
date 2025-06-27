@@ -43,7 +43,7 @@ use yii\widgets\ActiveForm;
     ],
                   'pluginEvents' => [
                         "select2:select" => "function() { 
-                            $(this).submit(); 
+                            // $(this).submit(); 
                         }",
                     ],
 ])->label(false);
@@ -67,7 +67,7 @@ echo $form->field($model, 'category_id')->widget(DepDrop::classname(), [
     ],
                   'pluginEvents' => [
                         "select2:select" => "function() { 
-                            $(this).submit(); 
+                            // $(this).submit(); 
                         }",
                     ],
 
