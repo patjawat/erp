@@ -33,10 +33,10 @@ use app\components\DateFilterHelper;
             ],
             'pluginEvents' => [
                 'select2:select' => 'function(result) { 
-                        $(this).submit()
+                        // $(this).submit()
                         }',
                 'select2:unselecting' => 'function() {
-                            $(this).submit()
+                            // $(this).submit()
                         }',
             ]
         ])->label(false);
@@ -52,10 +52,10 @@ use app\components\DateFilterHelper;
             ],
             'pluginEvents' => [
                 'select2:select' => 'function(result) { 
-                        $(this).submit()
+                        // $(this).submit()
                         }',
                 'select2:unselecting' => 'function() {
-                            $(this).submit()
+                            // $(this).submit()
                         }',
             ]
         ])->label(false);
@@ -99,10 +99,12 @@ $js = <<< JS
     thaiDatepicker('#documentsearch-date_start,#documentsearch-date_end')
     $("#documentsearch-date_start").on('change', function() {
             $('#documentsearch-thai_year').val(null).trigger('change');
+            $('#documentsearch-date_filter').val(null).trigger('change');
             // $(this).submit();
-    });
-    $("#documentsearch-date_end").on('change', function() {
+        });
+        $("#documentsearch-date_end").on('change', function() {
             $('#documentsearch-thai_year').val(null).trigger('change');
+            $('#documentsearch-date_filter').val(null).trigger('change');
             // $(this).submit();
     });
 

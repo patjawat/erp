@@ -520,7 +520,7 @@ class Documents extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-            $createDate = ThaiDateHelper::formatThaiDate($this->created_at) . ' ' . $this->doc_time;
+            $createDate = ThaiDateHelper::formatThaiDate($this->doc_transactions_date) . ' ' . $this->doc_time;
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $createDate),

@@ -14,9 +14,16 @@ use app\components\AppHelper;
 use app\components\PdfHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
+use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
+use PhpOffice\PhpSpreadsheet\Style\Font;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -115,21 +122,275 @@ class DocumentsController extends Controller
      */
     public function actionReceive()
     {
-
         $searchModel = new DocumentSearch([
             'date_filter' => 'today',
             'thai_year' => AppHelper::YearBudget(),
             'document_group' => 'receive',
         ]);
+
+        $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'receive');
+
+        return $this->render('receive', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'action' => 'receive',
+            'title' => 'หนังสือรับ'
+        ]);
+    }
+
+    public function actionExport()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $searchModel = new DocumentSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['document_group' => 'receive']);
+        // ไม่ต้องใส่ pagination
+        $dataProvider->pagination = false;
+
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-            ['like', 'doc_number', $searchModel->q],
+            ['like', 'doc_regis_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
+
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        $dataProvider->query->andFilterWhere([
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
+        ]);
+
+        $dataProvider->setSort(['defaultOrder' => [
+            'doc_regis_number' => SORT_DESC,
+            'thai_year' => SORT_DESC,
+        ]]);
+
+        switch ($searchModel->document_group) {
+            case 'receive':
+                $title = 'หนังสือรับ';
+                break;
+            case 'send':
+                $title = 'หนังสือส่ง';
+                break;
+            case 'appointment':
+                $title = 'หนังสือคำสั่ง';
+                break;
+            case 'announce':
+                $title = 'หนังประกาศ/นโยบาย';
+                break;
+            default:
+               $title = '';
+                break;
+        }
+
+        $this->ExportExcel($dataProvider, $searchModel,$title);
+    }
+    protected function ExportExcel($dataProvider, $searchModel,$title)
+    {
+        // ดึงข้อมูลทั้งหมดจาก dataProvider
+        $models = $dataProvider->getModels();
+          //วันที่ข้อมูลรายงาน
+            $dateStart= AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart,$dateEnd, 'long', 'short');
+
+        // ถ้าไม่มีข้อมูล
+        if (empty($models)) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลสำหรับส่งออก');
+            return $this->redirect([$searchModel->document_group]);
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->mergeCells('A1:I1');
+
+        $rowTitle = 'A1';
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
+
+        $sheet->setCellValue($rowTitle, 'ทะเบียน'.$title.' ปีงบประมาณ '.$searchModel->thai_year .' วันที่ '.$dateReport);
+        $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(6);
+
+        $rowA1 = 'A2';
+        $sheet->setCellValue($rowA1, 'ลำดับ');
+        $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(6);
+
+        $rowB1 = 'B2';
+        $sheet->setCellValue($rowB1, 'สถานะ');
+        $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('B')->setWidth(20);
+
+        $rowC1 = 'C2';
+        $sheet->setCellValue($rowC1, 'เลขรับ');
+        $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('C')->setWidth(20);
+
+        $rowD2 = 'D2';
+        $sheet->setCellValue($rowD2, 'เลขหนังสือ');
+        $sheet->getStyle($rowD2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowD2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowD2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('D')->setWidth(20);
+
+        $rowE2 = 'E2';
+        $sheet->setCellValue($rowE2, 'ชื่อเรื่อง');
+        $sheet->getStyle($rowE2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowE2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowE2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('E')->setWidth(100);
+
+        $rowF1 = 'F2';
+        $sheet->setCellValue($rowF1, 'วันที่รับ');
+        $sheet->getStyle($rowF1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowF1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowF1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('F')->setWidth(20);
+
+        $sheet->setTitle('ทะเบียนหนังสือรับ');
+
+        $StartRowSheet = 3;
+        foreach ($models as $key => $item) {
+            $numRow = $StartRowSheet++;
+            $sheet->setCellValue('A' . $numRow, ($key + 1));
+            $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('A' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('B' . $numRow, $item->documentStatus->title ?? '-');
+            $sheet->getStyle('B' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('B' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('C' . $numRow, $item->doc_regis_number);
+            $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('C' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('D' . $numRow, $item->doc_number);
+            $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle('D' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('D' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('E' . $numRow, $item->topic);
+            $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle('E' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('E' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+
+            $sheet->setCellValue('F' . $numRow,  ThaiDateHelper::formatThaiDate($item->doc_transactions_date));
+            $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('F' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('F' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/report-document.xlsx';
+        $writer->save($filePath);
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+    }
+
+
+    public function actionSend()
+    {
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+            'thai_year' => AppHelper::YearBudget(),
+            'document_group' => 'send',
+        ]);
+
+        $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'send');
+        return $this->render('send', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionAppointment()
+    {
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+            'thai_year' => AppHelper::YearBudget(),
+            'document_group' => 'appointment',
+            'document_type' => 'DT9',
+        ]);
+
+        $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'appointment');
+        return $this->render('appointment', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionAnnounce()
+    {
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+            'thai_year' => AppHelper::YearBudget(),
+            'document_group' => 'announce',
+            'document_type' => 'DT5',
+        ]);
+        $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'announce');
+        return $this->render('announce', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * กำหนดการค้นหาและเรียงลำดับข้อมูลเอกสาร
+     * @param \yii\data\ActiveDataProvider $dataProvider
+     * @param DocumentSearch $searchModel
+     * @param string|null $group
+     * @return \yii\data\ActiveDataProvider
+     */
+    private function listDocument($dataProvider, $searchModel, $group = null)
+    {
+        if ($group) {
+            $dataProvider->query->andFilterWhere(['document_group' => $group]);
+        }
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+            ['like', 'doc_regis_number', $searchModel->q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
+        ]);
+
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
@@ -141,117 +402,25 @@ class DocumentsController extends Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        if(!$searchModel->date_filter && !$searchModel->thai_year){
-            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
-            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
-             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
-        }
-
-        $dataProvider->setSort(['defaultOrder' => [
-            'doc_regis_number' => SORT_DESC,
-            'thai_year' => SORT_DESC,
-        ]]);
-        return $this->render('list_receive', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    public function actionSend()
-    {
-        $searchModel = new DocumentSearch([
-            'date_filter' => 'today',
-            'thai_year' => AppHelper::YearBudget(),
-            'document_group' => 'send',
-        ]);
-
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['document_group' => 'send']);
         $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'topic', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
-        ]);
-
-          if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-        
-        if(!$searchModel->date_filter && !$searchModel->thai_year){
-            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
-            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
-             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
-        }
-
-        $dataProvider->setSort(['defaultOrder' => [
-            'doc_regis_number' => SORT_DESC,
-            'thai_year' => SORT_DESC,
-        ]]);
-        return $this->render('list_send', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    public function actionAppointment()
-    {
-        $searchModel = new DocumentSearch([
-            'thai_year' => (Date('Y') + 543),
-            'document_group' => 'appointment',
-            'document_type' => 'DT9',
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['document_group' => 'appointment']);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'topic', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-            ['like', 'doc_number', $searchModel->q],
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
         ]);
 
         $dataProvider->setSort(['defaultOrder' => [
             'doc_regis_number' => SORT_DESC,
             'thai_year' => SORT_DESC,
         ]]);
-        return $this->render('list_appointment', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+
+
+
+        return $dataProvider;
     }
 
-    public function actionAnnounce()
-    {
-        $searchModel = new DocumentSearch([
-            'thai_year' => (Date('Y') + 543),
-            'document_group' => 'announce',
-            'document_type' => 'DT5',
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['document_group' => 'announce']);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'topic', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-            ['like', 'doc_number', $searchModel->q],
-        ]);
 
-        $dataProvider->setSort(['defaultOrder' => [
-            'doc_regis_number' => SORT_DESC,
-            'thai_year' => SORT_DESC,
-        ]]);
-        return $this->render('list_announce', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
+
 
     /**
      * Displays a single Documents model.
@@ -288,10 +457,11 @@ class DocumentsController extends Controller
     public function actionCreate()
     {
         // ถ้าเป็นหนังสทือราชการถ้ปีปัจจบัน
+        $document_type =  $this->request->get('document_type');
         $model = new Documents([
             'thai_year' => (Date('Y') + 543),
             'document_group' => $this->request->get('document_group'),
-            'document_type' => $this->request->get('document_type'),
+            'document_type' => $document_type,
             'doc_number' => $this->request->get('doc_number'),
             'doc_speed' => $this->request->get('doc_speed'),
             'secret' => $this->request->get('secret'),
@@ -302,7 +472,7 @@ class DocumentsController extends Controller
             ]
         ]);
         //set Default
-        $model->document_type = 'DT1';
+        $model->document_type = $document_type ? $document_type : 'DT1';
         $model->doc_speed = 'ปกติ';
         $model->secret = 'ปกติ';
         $model->doc_transactions_date = AppHelper::convertToThai(date('Y-m-d'));
@@ -369,7 +539,7 @@ class DocumentsController extends Controller
                     return $model->getErrors();
                 }
                 // return $this->redirect(['/dms/documents/' . $model->document_group]);
-                 Yii::$app->response->format = Response::FORMAT_JSON;
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'status' => 'success'
                 ];
@@ -381,7 +551,7 @@ class DocumentsController extends Controller
         }
 
 
-          if ($this->request->isAJax) {
+        if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -453,9 +623,10 @@ class DocumentsController extends Controller
 
                 $model->UpdateDocumentTags();
                 // return $this->redirect([$model->document_group]);
-                 Yii::$app->response->format = Response::FORMAT_JSON;
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
-                    'status' => 'success'
+                    'status' => 'success',
+                    'container' => '#document', // <-- แก้ให้ถูกต้อง
                 ];
             } else {
                 return $model->getErrors();
@@ -464,7 +635,7 @@ class DocumentsController extends Controller
             $model->loadDefaultValues();
         }
 
-          if ($this->request->isAJax) {
+        if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -697,13 +868,12 @@ class DocumentsController extends Controller
 
             try {
 
-            //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
-            if (in_array($director, $model->tags_employee)) {
-                $docStatus =  $model->document;
-                $docStatus->status = 'DS3';
-                $docStatus->save(false);
-            }
-                
+                //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
+                if (in_array($director, $model->tags_employee)) {
+                    $docStatus =  $model->document;
+                    $docStatus->status = 'DS3';
+                    $docStatus->save(false);
+                }
             } catch (\Throwable $th) {
                 //throw $th;
             }

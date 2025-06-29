@@ -273,7 +273,7 @@ $js = <<< JS
 
                         if (progress === 100) {
                             clearInterval(interval);
-                            setTimeout(hideTableLoading, 500);
+                            // setTimeout(hideTableLoading, 300);
                         }
                     }, 300);
                 }

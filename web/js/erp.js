@@ -17,6 +17,7 @@ jQuery(document).on("pjax:start", function () {
 
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
+  tableLoading1.style.display = 'none';
   // ตัวอย่าง: รีโหลด Offcanvas
   var offcanvasElList = [].slice.call(document.querySelectorAll('.offcanvas'));
   if (offcanvasElList.length > 0) {
@@ -28,10 +29,16 @@ jQuery(document).on("pjax:end", function () {
 });
 
 
-
+/**
+ * Handle AJAX form submission with confirmation and success feedback.
+ * @param {string} formSelector - jQuery selector for the form.
+ * @param {string} [actionUrl] - Optional URL to submit the form to.
+ * @param {function} [successCallback] - Optional callback on success.
+ */
 function handleFormSubmit(formSelector, actionUrl, successCallback) {
-  $(formSelector).on('beforeSubmit', function (e) {
-    var form = $(this);
+  $(document).on('beforeSubmit', formSelector, function (e) {
+    e.preventDefault();
+    const form = $(this);
     Swal.fire({
       title: "ยืนยัน?",
       text: "บันทึกข้อมูล!",
@@ -43,37 +50,52 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
       confirmButtonText: "ใช่, ยืนยัน!"
     }).then((result) => {
       if (result.isConfirmed) {
+        // ซ่อน modal ก่อน submit
+        $("#main-modal").modal("hide");
+        // แสดง loading
         Swal.fire({
           title: 'กำลังบันทึก...',
           text: 'กรุณารอสักครู่',
           allowOutsideClick: false,
           didOpen: () => {
-            $('#main-modal').hide();
             Swal.showLoading();
+          }
+        });
+        $.ajax({
+          url: actionUrl || form.attr('action'),
+          type: 'POST',
+          data: form.serialize(),
+          dataType: 'json',
+          success: function (response) {
             Swal.close();
-            $.ajax({
-              url: actionUrl || form.attr('action'),
-              type: 'post',
-              data: form.serialize(),
-              dataType: 'json',
-              success: async function (response) {
-                // form.yiiActiveForm('updateMessages', response, true);
-                if (response.status == 'success') {
-                  Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ!',
-                    text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-                    timer: 1000,
-                    showConfirmButton: false
-                  }).then(() => {
-                    if (typeof successCallback === 'function') {
-                      successCallback(response);
-                    } else {
-                      location.reload();
-                    }
-                  });
+            if (response.status === 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ!',
+                text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                timer: 1000,
+                showConfirmButton: false
+              }).then(() => {
+                if (typeof successCallback === 'function') {
+                  successCallback(response);
+                } else {
+                  location.reload();
                 }
-              }
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: response.message || 'ไม่สามารถบันทึกข้อมูลได้'
+              });
+            }
+          },
+          error: function () {
+            Swal.close();
+            Swal.fire({
+              icon: 'error',
+              title: 'เกิดข้อผิดพลาด',
+              text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
             });
           }
         });
@@ -214,7 +236,7 @@ function beforLoadModal() {
   $("#main-modal").modal("show");
   // $('#modal-dialog').modal('show');
   $("#main-modal-label").html("กำลังโหลด");
-  $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+  $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
   $(".modal-dialog").addClass("modal-sm");
   $("#modal-dialog").removeClass("fade");
   $(".modal-body").html(
@@ -312,7 +334,7 @@ $("body").on("click", ".open-modal", function (e) {
       $("#main-modal-label").html(response.title);
       $(".modal-body").html(response.content);
       $(".modal-footer").html(response.footer);
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
       $(".modal-dialog").addClass(size);
       $(".modal-content").addClass("card-outline card-primary");
     },
@@ -321,7 +343,7 @@ $("body").on("click", ".open-modal", function (e) {
       $(".modal-body").html(
         '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
       );
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
       $(".modal-dialog").addClass("modal-md");
       console.log(xhr);
 

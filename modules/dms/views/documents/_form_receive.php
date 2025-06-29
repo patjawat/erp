@@ -310,9 +310,6 @@ $js = <<< JS
             url: '$showPdfUrl',
             type: 'GET',
             success: function (data) {
-                // Assume if data is not empty, PDF exists
-                console.log(data);
-                
                 if (data) {
                 $('#editPreviewPdf').attr('src', '$showPdfUrl');
                 $('#editPdfPreview').show();
@@ -327,83 +324,78 @@ $js = <<< JS
             }
             });
         }
+        $('#my_file').on('change', function (e) {
+            const file = this.files[0];
+            if (!file) return;
 
-    $('#my_file').on('change', function (e) {
-        const file = this.files[0];
-        if (!file) return;
-
-        // Check file type (PDF only)
-        if (file.type !== 'application/pdf') {
-            alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
-            $(this).val('');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("document", file);
-        formData.append("id", 1);
-        formData.append("ref", '$ref');
-        formData.append("name", 'document');
-
-        $.ajax({
-            url: '$urlUpload',
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (res) {
-                   loadPdf()
-                // You can update the preview or reload the document list here
-                // For example: loadPdf();
+            // Check file type (PDF only)
+            if (file.type !== 'application/pdf') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ผิดพลาด',
+                    text: 'กรุณาเลือกไฟล์ PDF เท่านั้น'
+                });
+                $(this).val('');
+                return;
             }
+
+            Swal.fire({
+                title: 'ยืนยันการอัปโหลด?',
+                text: 'คุณต้องการอัปโหลดไฟล์ PDF นี้หรือไม่',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, อัปโหลด',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append("document", file);
+                    formData.append("id", 1);
+                    formData.append("ref", '$ref');
+                    formData.append("name", 'document');
+
+                    $.ajax({
+                        url: '$urlUpload',
+                        type: "POST",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            loadPdf();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'อัปโหลดสำเร็จ',
+                                showConfirmButton: false,
+                                timer: 1200
+                            });
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: 'ไม่สามารถอัปโหลดไฟล์ได้'
+                            });
+                        }
+                    });
+                } else {
+                    $('#my_file').val('');
+                }
+            });
         });
-    });
+
     handleFormSubmit('#form-document', null, async function(response) {
-        await location.reload();
+        if(response.container){
+            await $.pjax.reload({
+                container: response.container,
+                history: false,
+                timeout: false
+            });
+        }else{
+             await location.reload();
+        }
     });
 
 
-    // $('#form-document').on('beforeSubmit', function (e) {
-    //     var form = $(this);
-      
-    //     Swal.fire({
-    //         title: "ยืนยัน?",
-    //         text: "บันทึกหนังสือ!",
-    //         icon: "warning",
-    //         showCancelButton: true,
-    //         confirmButtonColor: "#3085d6",
-    //         cancelButtonColor: "#d33",
-    //         cancelButtonText: "ยกเลิก!",
-    //         confirmButtonText: "ใช่, ยืนยัน!"
-    //     }).then((result) => {
-    //         if (result.isConfirmed) {
-    //             $.ajax({
-    //                 url: form.attr('action'),
-    //                 type: 'post',
-    //                 data: form.serialize(),
-    //                 dataType: 'json',
-    //                 success: async function (response) {
-    //                     form.yiiActiveForm('updateMessages', response, true);
-    //                     // if (response.hasOwnProperty('error') && response.error) {
-    //                     //     Swal.fire({
-    //                     //         icon: 'error',
-    //                     //         title: 'เกิดข้อผิดพลาด',
-    //                     //         text: response.error,
-    //                     //     });
-    //                     // }
-    //                 },
-    //                 error: function(xhr, status, error) {
-    //                     // Swal.fire({
-    //                     //     icon: 'error',
-    //                     //     title: 'เกิดข้อผิดพลาด',
-    //                     //     text: xhr.responseText || error,
-    //                     // });
-    //                 }
-    //             });
-    //         }
-    //     });
-    //     return false;
-    // });
         
         thaiDatepicker('#documents-doc_transactions_date,#documents-doc_expire,#documents-doc_date');
            

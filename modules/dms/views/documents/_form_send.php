@@ -179,7 +179,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="col-6">
                                 <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
                         'mask' => '99:99',
-                    ]) ?>
+                    ])->label('เวลาส่ง') ?>
 
                             </div>
 
@@ -231,7 +231,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                         </div>
-                        <?= $form->field($model, 'data_json[send_line]')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->req_approve == 1 ? true : false])->label('ส่งการแจ้งเตือนผ่าน Line'); ?>
                         <div class="d-flex justify-content-center align-top align-items-center mt-5">
                             <div class="form-group mt-3 d-flex justify-content-center gap-2">
                                 <?php echo Html::button('<i class="fa-solid fa-chevron-left"></i> ย้อนกลับ', [
@@ -368,38 +367,76 @@ $js = <<< JS
             }
             });
         }
+    $('#my_file').on('change', function (e) {
+            const file = this.files[0];
+            if (!file) return;
 
-        $('#my_file').on('change', function (e) {
-        const file = this.files[0];
-        if (!file) return;
-
-        // Check file type (PDF only)
-        if (file.type !== 'application/pdf') {
-            alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
-            $(this).val('');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("document", file);
-        formData.append("id", 1);
-        formData.append("ref", '$ref');
-        formData.append("name", 'document');
-
-        $.ajax({
-            url: '$urlUpload',
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (res) {
-                   loadPdf()
-                // You can update the preview or reload the document list here
-                // For example: loadPdf();
+            // Check file type (PDF only)
+            if (file.type !== 'application/pdf') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ผิดพลาด',
+                    text: 'กรุณาเลือกไฟล์ PDF เท่านั้น'
+                });
+                $(this).val('');
+                return;
             }
-        });
-    });
 
+            Swal.fire({
+                title: 'ยืนยันการอัปโหลด?',
+                text: 'คุณต้องการอัปโหลดไฟล์ PDF นี้หรือไม่',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, อัปโหลด',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append("document", file);
+                    formData.append("id", 1);
+                    formData.append("ref", '$ref');
+                    formData.append("name", 'document');
+
+                    $.ajax({
+                        url: '$urlUpload',
+                        type: "POST",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            loadPdf();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'อัปโหลดสำเร็จ',
+                                showConfirmButton: false,
+                                timer: 1200
+                            });
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: 'ไม่สามารถอัปโหลดไฟล์ได้'
+                            });
+                        }
+                    });
+                } else {
+                    $('#my_file').val('');
+                }
+            });
+        });
+
+    handleFormSubmit('#form-document', null, async function(response) {
+        if(response.container){
+            await $.pjax.reload({
+                container: response.container,
+                history: false,
+                timeout: false
+            });
+        }else{
+             await location.reload();
+        }
+    });
 
                 // Initialize FloatType instances
         $(document).ready(function() {

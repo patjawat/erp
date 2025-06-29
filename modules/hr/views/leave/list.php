@@ -14,15 +14,6 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
 
 ?>
 
-
-
-<!-- Example 1: Full Table Loading -->
-
-
-
-
-
-
     <table class="table table-striped table-hover">
         <thead>
             <tr>
