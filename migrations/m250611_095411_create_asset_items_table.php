@@ -36,12 +36,17 @@ class m250611_095411_create_asset_items_table extends Migration
         $this->addPrimaryKey('pk-asset_items-id', '{{%asset_items}}', 'id');
 
         // backup table categorise
-        $date = date('Y_m_d'); // ใช้ underscore (_) แทน dash (-)
+        $date = date('Y_m_d_H:i:s'); // ใช้ underscore (_) แทน dash (-)
         $tableName = "categorise_{$date}";
-
+        
         // สร้าง SQL เพื่อคัดลอกโครงสร้างและข้อมูล
         $this->execute("CREATE TABLE `{$tableName}` LIKE `categorise`");
         $this->execute("INSERT INTO `{$tableName}` SELECT * FROM `categorise`");
+        
+        $tableAsset = "asset_{$date}";
+         $this->execute("CREATE TABLE `{$tableAsset}` LIKE `asset`");
+        $this->execute("INSERT INTO `{$tableAsset}` SELECT * FROM `asset`");
+
 
 // ตรวจสอบก่อนการทำงานป้องกัน error
         $countAssetGroup = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_group'])->count();
