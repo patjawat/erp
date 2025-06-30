@@ -42,14 +42,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> ฐานข้อมูลพัสดุครุภัณฑ์กระทรวงสาธารณสุข <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
+        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> หมายเลขพัสดุตามระบบ FSN <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
 
         <table class="table">
             <thead>
                 <tr>
                     <th class="text-center" scope="col" style="width: 5%">#</th>
                     <th scope="col" style="width: 15%">รหัส FSN</th>
-                    <th scope="col" style="width: 30%">ชื่อทรัพย์สิน</th>
+                    <th scope="col" style="width: 30%">ชื่อรายการ</th>
                     <th scope="col" style="width: 10%">หน่วย</th>
                     <th class="text-center" scope="col" style="width: 10%">จัดการ</th>
                 </tr>

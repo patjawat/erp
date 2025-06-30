@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td class="fw-semibold text-primary"><?=$item->fsn?></td>
+                    <td class="fw-semibold text-primary"><?=$item->code?></td>
                     <td><?=$item->title?></td>
                       <td><?=$item->assetType->title ?? '-'?></td>
                     <td><?=$item->assetCategory->title ?? '-'?></td>
@@ -55,7 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center">
                         <button class="btn btn-sm btn-info select-item" 
                         data-code="<?=$item->id?>" 
-                        data-fsn="<?=$item->fsn?>" 
+                        data-fsn="<?=$item->code?>" 
                         data-title="<?=$item->title?>"
                         data-fsn-next="<?php // $item->nextCode()?>"
                         >เลือก</button>

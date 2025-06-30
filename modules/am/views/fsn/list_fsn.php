@@ -25,17 +25,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-item-center">
+            <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> จำนวน <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
             <?php echo $this->render('_search_list_fsn', ['model' => $searchModel]); ?>
-
+            
         </div>
-    </div>
-</div>
-
-
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> จำนวน <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
-
         <table class="table">
             <thead>
                 <tr>
@@ -54,6 +47,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td><?=$item->title?></td>
                     <td><?=$item->data_json['asset_type_name'] ?? '-'?></td>
                     <td class="text-center">
+
+
                         <button class="btn btn-sm btn-info select-item" 
                         data-code="<?=$item->code?>" 
                         data-title="<?=$item->title?>"

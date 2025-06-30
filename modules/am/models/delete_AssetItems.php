@@ -3,8 +3,6 @@
 namespace app\modules\am\models;
 
 use Yii;
-use app\models\Categorise;
-use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "asset_items".
@@ -29,15 +27,13 @@ use yii\helpers\ArrayHelper;
  * @property string|null $deleted_at วันที่ลบ
  * @property int|null $deleted_by ผู้ลบ
  */
-class AssetItem extends \yii\db\ActiveRecord
+class AssetItems extends \yii\db\ActiveRecord
 {
 
 
     /**
      * {@inheritdoc}
      */
-
-     public $q;
     public static function tableName()
     {
         return 'asset_items';
@@ -57,7 +53,7 @@ class AssetItem extends \yii\db\ActiveRecord
             [['title', 'description'], 'string'],
             [['price', 'depreciation'], 'number'],
             [['service_life', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['q','data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['id', 'ref', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'fsn'], 'string', 'max' => 255],
             [['status'], 'string', 'max' => 50],
             [['id'], 'unique'],
@@ -91,31 +87,5 @@ class AssetItem extends \yii\db\ActiveRecord
             'deleted_by' => 'ผู้ลบ',
         ];
     }
-
-    public function listAssetType()
-    {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
-    }
-
-    public function listAssetCategory()
-    {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(), 'code', 'title');
-    }
-
-    public function getCategory()
-    {
-        return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])
-            ->andOnCondition(['categorise.name' => 'asset_category']);
-    }
-    public function getAssetType()
-{
-    return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
-        // ->via('category')
-}
-
-public function getGroup()
-{
-    return $this->hasOne(Categorise::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
-}
 
 }

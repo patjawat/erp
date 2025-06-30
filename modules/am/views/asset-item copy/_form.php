@@ -23,10 +23,11 @@ use kartik\widgets\ActiveForm;
 
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
     <?php // echo $form->field($model, 'group_id')->textInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
 
   <?php
-  echo $form->field($model, 'asset_group_id')->widget(Select2::classname(), [
+  echo $form->field($model, 'group_id')->widget(Select2::classname(), [
     'data' => $model->listAssetType(),
         'options' => [
         'placeholder' => 'เลือกประเภท...',
@@ -39,7 +40,7 @@ use kartik\widgets\ActiveForm;
 ])->label('ประเภท');
 ?>
 <?php
-echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
+echo $form->field($model, 'category_id')->widget(DepDrop::classname(), [
     'options' => ['placeholder' => 'เลือกหมวดรัพย์สิน ...'],
      'data' => $model->listAssetCategory(),
     'type' => DepDrop::TYPE_SELECT2,
@@ -61,7 +62,7 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
     <?= $form->field($model, 'description')->textarea(['rows' => 3])->label('คำอธิบายเพิ่มเติม') ?>
     <div class="row">
         <div class="col-6">
-            <?= $form->field($model, 'fsn')->textInput(['maxlength' => true])->label('FSN') ?>
+            <?= $form->field($model, 'data_json[fsn]')->textInput(['maxlength' => true])->label('FSN') ?>
             <?= $form->field($model, 'data_json[price]')->textInput(['maxlength' => true])->label('ราคา') ?>
 
         </div>

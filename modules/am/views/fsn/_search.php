@@ -18,21 +18,21 @@ use yii\widgets\ActiveForm;
     
 <div class="d-flex justify-content-between align-items-center gap-2">
 
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
+    <?= $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
     <?php
-                echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-                    'data' =>[],
-                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'width' => '500px',
-                    ],
-                     'pluginEvents' => [
-                        "select2:select" => "function() { 
-                            $(this).submit(); 
-                        }",
-                    ],
-                    ])->label(false);
+                // echo $form->field($model, 'category_id')->widget(Select2::classname(), [
+                //     'data' =>[],
+                //     'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
+                //     'pluginOptions' => [
+                //         'allowClear' => true,
+                //         'width' => '500px',
+                //     ],
+                //      'pluginEvents' => [
+                //         "select2:select" => "function() { 
+                //             $(this).submit(); 
+                //         }",
+                //     ],
+                //     ])->label(false);
                     ?>
 
 <div class="form-group">

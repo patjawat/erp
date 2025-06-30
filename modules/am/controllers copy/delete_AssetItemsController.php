@@ -5,16 +5,15 @@ namespace app\modules\am\controllers;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
-use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetItem;
 use app\modules\am\models\AssetItemSearch;
 
 /**
- * AssetItemController implements the CRUD actions for AssetItem model.
+ * AssetItemsController implements the CRUD actions for AssetItem model.
  */
-class AssetItemController extends Controller
+class AssetItemsController extends Controller
 {
     /**
      * @inheritDoc
@@ -43,6 +42,13 @@ class AssetItemController extends Controller
     {
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        // $dataProvider->query->andFilterWhere(['group_id' => 3]);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
+        $dataProvider->query->andFilterWhere([
+                'or',
+                ['LIKE', 'code', $searchModel->q],
+                ['LIKE', 'title', $searchModel->q],
+            ]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -50,17 +56,47 @@ class AssetItemController extends Controller
         ]);
     }
 
+    public function actionListItem()
+    {
+        $searchModel = new AssetItemSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere([
+                'or',
+                ['LIKE', 'code', $searchModel->q],
+                ['LIKE', 'title', $searchModel->q],
+            ]);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('list_item', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]),
+        ];
+    }
+
     /**
      * Displays a single AssetItem model.
-     * @param string $id รหัสทรัพย์สิน
+     * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+          $model = $this->findModel($id);
+       if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -68,31 +104,25 @@ class AssetItemController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-     public function actionCreate()
+    public function actionCreate()
     {
         $model = new AssetItem([
-            'asset_group_id' => 'EQUIP',
-            'asset_type_id' => $this->request->get('asset_type_id'),
-            'asset_category_id' => $this->request->get('asset_category_id'),
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
-        
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) ) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->code = $model->NextId();
-                $model->save();
-                return [
-                    'status' => 'success',
-                    'container' => '#am-container',
-                ];
+            if ($model->load($this->request->post()) && $model->save()) {
+                $this->UpdatCategorise('band',$model->data_json['baned'] ?? 'ไม่ระบุ');
+                $this->UpdatCategorise('model',$model->data_json['model'] ?? 'ไม่ระบุ');
+                $this->UpdatCategorise('color',$model->data_json['color'] ?? 'ไม่ระบุ');
+
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
-          
         }
 
-         if ($this->request->isAjax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -110,28 +140,24 @@ class AssetItemController extends Controller
     /**
      * Updates an existing AssetItem model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id รหัสทรัพย์สิน
+     * @param int $id ID
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
-
         $model = $this->findModel($id);
-        //$model->asset_type_id = $model->type->code;
-        //$model->category_id = $model->category->code;
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'status' => 'success',
-                    'container' => '#sm-container',
-                ];
-            }
-        } else {
-            $model->loadDefaultValues();
+        if (!$model->ref) {
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         }
-        
+
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'success',
+            ];
+        }
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -147,32 +173,26 @@ class AssetItemController extends Controller
         }
     }
 
-    public function actionGetAssetCategory()
-        {
-            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-            $out = [];
-            if (isset($_POST['depdrop_parents'])) {
-                $parents = $_POST['depdrop_parents'];
-                if ($parents != null) {
-                    $type_id = $parents[0];
-                    $out = Categorise::find()
-                        ->where(['category_id' => $type_id,'name' => 'asset_category'])
-                        ->select(['code as id', 'title as name'])
-                        ->asArray()
-                        ->all();
-                    return ['output' => $out, 'selected' => ''];
-                }
-            }
-            return ['output' => '', 'selected' => ''];
+        // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
+    protected function UpdatCategorise($name,$title)
+    {
+        // try {
+        $check = Categorise::find()->where(['name' => $name, 'title' => $title])->one();
+        if (!$check) {
+            $model = new Categorise();
+            $model->name = $name;
+            $model->title = $title;
+            $model->save(false);
         }
 
-
+        // } catch (\Throwable $th) {
+        // }
+    }
 
     /**
      * Deletes an existing AssetItem model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id รหัสทรัพย์สิน
+     * @param int $id ID
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
@@ -183,40 +203,10 @@ class AssetItemController extends Controller
         return $this->redirect(['index']);
     }
 
-       public function actionListItem()
-    {
-        $searchModel = new AssetItemSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere([
-                'or',
-                ['LIKE', 'code', $searchModel->q],
-                ['LIKE', 'title', $searchModel->q],
-            ]);
-        if($this->request->isAjax){
-
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_item', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]),
-        ];
-
-        }else{
-            return $this->render('list_item', [
-                            'searchModel' => $searchModel,
-                            'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
-    
-    
-
     /**
      * Finds the AssetItem model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param string $id รหัสทรัพย์สิน
+     * @param int $id ID
      * @return AssetItem the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */

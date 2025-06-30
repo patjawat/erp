@@ -1,7 +1,6 @@
 <?php
 
 namespace app\modules\am\controllers;
-
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
@@ -43,12 +42,43 @@ class AssetItemController extends Controller
     {
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->orderBy(new \yii\db\Expression('CAST(SUBSTRING(i.code, 4) AS UNSIGNED)'));
+        
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
+
+        public function actionListItem()
+    {
+        $searchModel = new AssetItemSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere([
+                'or',
+                ['LIKE', 'code', $searchModel->q],
+                ['LIKE', 'title', $searchModel->q],
+            ]);
+        if($this->request->isAjax){
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'title' => $this->request->get('title'),
+            'content' => $this->renderAjax('list_item', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]),
+        ];
+
+        }else{
+            return $this->render('list_item', [
+                            'searchModel' => $searchModel,
+                            'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+    
 
     /**
      * Displays a single AssetItem model.
@@ -58,9 +88,21 @@ class AssetItemController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+       $model = $this->findModel($id);
+       if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+
+            ]);
+        }
     }
 
     /**
@@ -68,12 +110,13 @@ class AssetItemController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-     public function actionCreate()
+    public function actionCreate()
     {
         $model = new AssetItem([
-            'asset_group_id' => 'EQUIP',
+            'group_id' => 'EQUIP',
+            'name' => 'asset_item',
             'asset_type_id' => $this->request->get('asset_type_id'),
-            'asset_category_id' => $this->request->get('asset_category_id'),
+            'category_id' => $this->request->get('category_id'),
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
         ]);
         
@@ -84,7 +127,7 @@ class AssetItemController extends Controller
                 $model->save();
                 return [
                     'status' => 'success',
-                    'container' => '#am-container',
+                    'container' => '#sm-container',
                 ];
             }
         } else {
@@ -168,7 +211,6 @@ class AssetItemController extends Controller
         }
 
 
-
     /**
      * Deletes an existing AssetItem model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -183,35 +225,27 @@ class AssetItemController extends Controller
         return $this->redirect(['index']);
     }
 
-       public function actionListItem()
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
     {
-        $searchModel = new AssetItemSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere([
-                'or',
-                ['LIKE', 'code', $searchModel->q],
-                ['LIKE', 'title', $searchModel->q],
-            ]);
-        if($this->request->isAjax){
-
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_item', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]),
-        ];
+        $model = new AssetItem();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
 
-        }else{
-            return $this->render('list_item', [
-                            'searchModel' => $searchModel,
-                            'dataProvider' => $dataProvider,
-            ]);
+            $model->title == '' ? $model->addError('title', $requiredName) : null;
+            $model->category_id == '' ? $model->addError('category_id', $requiredName) : null;
+            $model->asset_type_id == '' ? $model->addError('asset_type_id', $requiredName) : null;
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
         }
     }
-    
-    
 
     /**
      * Finds the AssetItem model based on its primary key value.

@@ -11,7 +11,7 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-    .field-assetitemsearch-asset_asset_category_id{
+    .field-assetitemsearch-asset_category_id{
         width: 300px;
     }
 </style>
@@ -35,6 +35,7 @@ use yii\widgets\ActiveForm;
     'data' => $model->listAssetType(),
         'options' => [
         'placeholder' => 'เลือกประเภท...',
+        
     ],
         'pluginOptions' => [
         'allowClear' => true,
@@ -49,7 +50,7 @@ use yii\widgets\ActiveForm;
 ?>
 
 <?php
-echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
+echo $form->field($model, 'category_id')->widget(DepDrop::classname(), [
     'options' => [
         'placeholder' => 'เลือกหมวดรัพย์สิน ...',
      ],
@@ -89,7 +90,7 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                     ?>
 
                      <?php
-                // echo $form->field($model, 'asset_asset_category_id')->widget(Select2::classname(), [
+                // echo $form->field($model, 'asset_category_id')->widget(Select2::classname(), [
                 //     'data' => $model->listAssetCategory(),
                 //     'options' => ['placeholder' => 'ระบุหมวดหมู่...'],
                 //     'pluginOptions' => [

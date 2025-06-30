@@ -36,8 +36,7 @@ class AssetItem extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-
-     public $q;
+    public $q;
     public static function tableName()
     {
         return 'asset_items';
@@ -57,10 +56,11 @@ class AssetItem extends \yii\db\ActiveRecord
             [['title', 'description'], 'string'],
             [['price', 'depreciation'], 'number'],
             [['service_life', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['q','data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['id', 'ref', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'fsn'], 'string', 'max' => 255],
             [['status'], 'string', 'max' => 50],
             [['id'], 'unique'],
+             [['q'], 'safe'],
         ];
     }
 
@@ -92,30 +92,40 @@ class AssetItem extends \yii\db\ActiveRecord
         ];
     }
 
-    public function listAssetType()
+        // section Relationships
+        public function getAssetType()  
+        {
+            return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
+        }
+    public function getAssetCategory()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
+        return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);
     }
 
-    public function listAssetCategory()
+    public function NextId()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(), 'code', 'title');
-    }
+    $prefix = $this->asset_category_id;
 
-    public function getCategory()
-    {
-        return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])
-            ->andOnCondition(['categorise.name' => 'asset_category']);
-    }
-    public function getAssetType()
-{
-    return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
-        // ->via('category')
+        $maxNumber = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING(id, :len_plus) AS UNSIGNED))
+            FROM asset_items
+            WHERE asset_category_id = :cat
+        ")
+        ->bindValue(':len_plus', strlen($prefix) + 2) // ตำแหน่งตัวเลขหลัง 'NET-'
+        ->bindValue(':cat', $prefix)
+        ->queryScalar();
+
+        return $prefix . '-' . ((int)$maxNumber + 1);
 }
 
-public function getGroup()
-{
-    return $this->hasOne(Categorise::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
-}
+
+    public function listAssetType(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','group_id' => 'EQUIP'])->all(),'code','title');
+    }
+    
+        public function listAssetCategory(){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(),'code','title');
+    }
+
 
 }

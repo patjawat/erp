@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex justify-content-between align-item-center">
             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', 
             ['create','asset_type_id' => $searchModel->asset_type_id,
-            'category_id' => $searchModel->asset_category_id,
+            'category_id' => $searchModel->category_id,
             'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
@@ -64,14 +64,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td><?= $item->id?></td>
-                    <td class="fw-semibold text-primary"><?=$item->fsn?></td>
+                    <td><?=$item->code?></td>
+                    <td class="fw-semibold text-primary"><?=$item->data_json['fsn'] ?? '-'?></td>
                     <td><?=$item->title?></td>
                     <td><?=$item->data_json['unit'] ?? '-'?></td>
-                    <td><?php
-                    // echo $item->asset_type_id;
-                    echo $item->assetType->title ?? '-';
-                    ?></td>
+                    <td><?=$item->type->title ?? '-'?></td>
                     <td><?=$item->category->title ?? '-'?></td>
                     <td class="text-center">
                           <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-md']])?>
