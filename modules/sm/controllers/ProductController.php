@@ -32,6 +32,7 @@ class ProductController extends Controller
         );
     }
 
+
     /**
      * Lists all Product models.
      *

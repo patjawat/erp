@@ -52,15 +52,25 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php endif;?>
 
+
 <div class="card">
     <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
-                <?php //  Html::a('<i class="fa-solid fa-circle-plus"></i> ลงทะเบียนคุภัณฑ์', ['select-type','group' => $group,'title' => $title], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-primary rounded-pill']) ?>
                 <?= $this->render('_search', ['model' => $searchModel]); ?>
+                <div>
+                      <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
+            'data' => [
+                'bs-placement' => 'top',
+                'bs-toggle' => 'tooltip',
+                ]])?>
+                </div>
             </div>
     </div>
 </div>
+
 
         <?php if(SiteHelper::getDisplay() == 'list'):?>
 <div class="card">
@@ -68,6 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
         </div>
+    
         <?=$this->render('show/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,

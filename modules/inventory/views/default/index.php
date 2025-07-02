@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('menu_dashbroad',['active' => 'index'])?>
 <?php $this->endBlock(); ?>
-
+<!-- https://www.canva.com/ai/code/thread/f82e0038-8164-4102-82d3-085d4d193cd0 -->
 
 <div class="row row-cols-1 row-cols-sm-3 row-cols-md-4 g-3 justify-content-center">
 

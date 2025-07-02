@@ -104,8 +104,7 @@ class AssetItem extends \yii\db\ActiveRecord
 
     public function getCategory()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])
-            ->andOnCondition(['categorise.name' => 'asset_category']);
+        return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);
     }
     public function getAssetType()
 {

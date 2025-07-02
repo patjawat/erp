@@ -83,7 +83,7 @@ class m250611_095411_create_asset_items_table extends Migration
 
         }
 
- $countAssetCategory = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_category'])->count();
+        $countAssetCategory = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_category'])->count();
         if ($countAssetCategory == 0) {
          Yii::$app->db->createCommand("
         INSERT INTO categorise (name, category_id, title, code, data_json) VALUES

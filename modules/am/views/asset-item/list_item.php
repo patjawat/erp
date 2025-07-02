@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col" style="width: 40%">ชื่อทรัพย์สิน</th>
                       <th scope="col">ประเภท</th>
                     <th scope="col">หมวดหมู่</th>
-                    <th scope="col" style="width:5%">ราคากลาง</th>
+                    <th scope="col" style="width:5%" class="text-end">ราคากลาง</th>
                     <th class="text-center" scope="col" style="width: 8%">ดำเนินการ</th>
                 </tr>
             </thead>
@@ -50,10 +50,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="fw-semibold text-primary"><?=$item->fsn?></td>
                     <td><?=$item->title?></td>
                       <td><?=$item->assetType->title ?? '-'?></td>
-                    <td><?=$item->assetCategory->title ?? '-'?></td>
-                    <td><?php // $item->price?></td>
+                    <td><?=$item->category->title ?? '-'?></td>
+                    <td class="fw-semibold text-end"><?= $item->price?></td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-info select-item" 
+                        <button class="btn btn-sm btn-primary select-item" 
                         data-code="<?=$item->id?>" 
                         data-fsn="<?=$item->fsn?>" 
                         data-title="<?=$item->title?>"

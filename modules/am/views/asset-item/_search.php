@@ -56,7 +56,7 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
     'type' => DepDrop::TYPE_SELECT2,
     'select2Options' => ['pluginOptions' => ['allowClear' => true]],
     'pluginOptions' => [
-        'width' => '100%', // หรือใช้ค่าอื่น เช่น '300px', '50%'
+        'width' => '300px', // หรือใช้ค่าอื่น เช่น '300px', '50%'
         'depends' => ['assetitemsearch-asset_type_id'],
         'url' => Url::to(['/am/asset-item/get-asset-category']),
         'loadingText' => 'กำลังโหลด ...',

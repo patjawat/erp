@@ -1,13 +1,17 @@
 <?php
 
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\JsExpression;
 use app\models\Categorise;
+use kartik\depdrop\DepDrop;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use kartik\tree\TreeViewInput;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetSearch $model */
@@ -33,30 +37,96 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
 </style>
 
 <?php $form = ActiveForm::begin([
-        'action' => ['/am/asset'],
+        // 'action' => ['/am/asset'],
+        // 'action' => 'index',
         'method' => 'get',
         'options' => [
             'data-pjax' => 0
         ],
-         'fieldConfig' => ['options' => ['class' => 'form-group mb-3 mr-2 me-2']] // spacing form field groups
+         'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
 <div class="d-flex gap-/">
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...','width' => '100'])->label(false)->label(false) ?>
 
 
+  <?php
+
+  echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+    'data' => $model->listAssetType(),
+        'options' => [
+        'placeholder' => 'ทุกประเภท',
+        'id' => 'asset_type_id'
+    ],
+        'pluginOptions' => [
+        'allowClear' => true,
+         'width' => '300px',
+    ],
+                  'pluginEvents' => [
+                        "select2:select" => "function() { 
+                            // $(this).submit(); 
+                        }",
+                    ],
+])->label(false);
+?>
+
+<?php
+echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
+    'options' => [
+        'placeholder' => 'ทุกหมวดหมู่',
+     ],
+    'type' => DepDrop::TYPE_SELECT2,
+    'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+    'pluginOptions' => [
+        'width' => '100%', // หรือใช้ค่าอื่น เช่น '300px', '50%'
+        'depends' => ['asset_type_id'],
+        'url' => Url::to(['/am/asset-item/get-asset-category']),
+        'loadingText' => 'กำลังโหลด ...',
+        'params' => ['depdrop_all_params' => 'assetitemsearch-asset_type_id'],
+        'initDepends' => ['asset_type_id'],
+        'initialize' => true,
+    ],
+                  'pluginEvents' => [
+                        "select2:select" => "function() { 
+                            // $(this).submit(); 
+                        }",
+                    ],
+
+])->label(false);?>
+
+
+<div style="width:300px">
+<?php
+ echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+    'name' => 'department',
+    'id' => 'treeID',
+    'query' => Organization::find()->addOrderBy('root, lft'),
+    'value' => null,  // ไม่ตั้งค่าเริ่มต้น
+    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+    'fontAwesome' => true,
+    'asDropdown' => true,
+    'multiple' => false,
+    'options' => [
+        'class' => 'close',
+        'allowClear' => true,
+    ],
+    'pluginOptions' => [
+        'allowClear' => true,
+        'placeholder' => 'เลือกหน่วยงาน...',
+    ],
+])->label(false);
+?>
+
+            </div>
+
+
     <div class="d-flex flex-row align-items-center gap-2">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btm-sm btn-primary']) ?>
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
         <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
             aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
                 class="fa-solid fa-filter"></i></button>
-        <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
-                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-                <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
-            'data' => [
-                'bs-placement' => 'top',
-                'bs-toggle' => 'tooltip',
-                ]])?>
+      
     </div>
 
 </div>
@@ -72,16 +142,18 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
         <?= $form->field($model, 'asset_group')->hiddenInput()->label(false);
                                     
                                     ?>
-                                        <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
+                                  
+                                   <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
                                         'data' => $listAssetType,
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
                                         'width' => '500px',
                                         ],
-                                    ])->label('ประเภททรัพย์สิน');
+                                    ])->label(false);
                                     
                                     ?>
+
     <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
                                         'data' => $listAssetitem,
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
@@ -95,26 +167,6 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
 
 
 
-
-        <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-    'name' => 'department',
-    'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-    'value' => 1,
-    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-    'fontAwesome' => true,
-    'asDropdown' => true,
-    'multiple' => false,
-    'options' => ['disabled' => false],
-'dropdownConfig' => [
-        'input' => [
-            'placeholder' => 'หน่วยงา...',
-        ],
-        'options' => [
-            // 'style' => 'width:300px;' // ✅ กำหนดความกว้างของ dropdown
-        ]
-    ],
-])->label('หน่วยงานภายในตามโครงสร้าง');?>
         <div class="row">
             <div class="col-6">
                 <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
@@ -227,7 +279,7 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
 
 
 
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light mt-3']);?>
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light']);?>
         <?=app\components\AppHelper::Btn([
                     'title' => '<i class="fa-solid fa-circle-exclamation"></i> รายการไม่สมบูรณ์',
                     'url' => ['/am/asset/omit'],

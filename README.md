@@ -157,6 +157,8 @@ https://www.canva.com/ai/code/thread/ba6b2ae4-bc5b-443a-8ed2-7c92798ae56a
   ALTER TABLE `asset` ADD `asset_name` VARCHAR(255) NULL COMMENT 'ชื่อของครุภัณฑ์' AFTER `asset_group`;
   ALTER TABLE `categorise` CHANGE `title` `title` TEXT CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'ชื่อ';
 -- Update ชื่อ
+
+-- สิ่งที่ต้องทำ
 UPDATE asset a
 LEFT JOIN categorise i ON i.code = a.asset_item
 SET a.asset_name = i.title

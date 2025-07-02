@@ -63,8 +63,10 @@ class AssetController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.fsn_number');
         $dataProvider->query->andWhere('deleted_at IS NULL');
+        //   Yii::$app->response->format = Response::FORMAT_JSON;
+        // return $this->request->queryParams;
 
-        if (!isset($this->request->queryParams['AssetSearch'])) {
+        if (!isset($this->request->get['AssetSearch'])) {
             // หายังไม่มีการค้นหาใดๆ ให้ แสดงเฉพาะทรัพย์สินที่ตัวเองรับผิดชอบ
             $user = UserHelper::GetEmployee();
             $dataProvider->query->andFilterWhere(['owner' => $user->cid]);
@@ -108,11 +110,11 @@ class AssetController extends Controller
 
             // ค้นหาตามอายุ
             if ($searchModel->price1 && !$searchModel->price2) {
-                $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
+                $dataProvider->query->andFilterWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
             }
             // ค้นหาระหว่างช่วงอายุ
             if ($searchModel->price1 && $searchModel->price2) {
-                $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
+                $dataProvider->query->andFilterWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
             }
 
             $dataProvider->setSort([
@@ -127,6 +129,7 @@ class AssetController extends Controller
                 SiteHelper::setDisplay($this->request->get('view'));
             }
         }
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -309,7 +312,7 @@ class AssetController extends Controller
 
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json,$convert_date);
             if ($model->save()) {
-                $model->updateFsn();
+                // $model->updateFsn();
                 $this->CheckUpdateData($model);
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {

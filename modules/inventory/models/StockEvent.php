@@ -143,6 +143,18 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
+
+     public function afterDelete()
+    {
+        parent::afterDelete();
+
+        // เขียนโค้ดที่ต้องการทำหลังจากลบ เช่น ลบไฟล์ที่เกี่ยวข้อง
+        \Yii::info("Product ID {$this->id} was deleted", __METHOD__);
+
+        // หรือ ลบข้อมูลในตารางที่สัมพันธ์ เช่น product_items
+        self::deleteAll(['category_id' => $this->id]);
+    }
+
     // เชื่อมกับรายการ ทรัพสินและวัสดุ
     public function getProduct()
     {
