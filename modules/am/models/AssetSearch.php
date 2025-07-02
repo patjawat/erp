@@ -77,6 +77,7 @@ class AssetSearch extends Asset
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
+            //  'asset.deleted_at' => $this->deleted_at,
         ]);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])

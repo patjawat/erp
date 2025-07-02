@@ -17,7 +17,7 @@ class AssetItemSearch extends AssetItem
     public function rules()
     {
         return [
-            [['id', 'ref', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'title', 'fsn', 'description', 'status', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['id', 'ref', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'title', 'fsn', 'description', 'status', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
             [['price', 'depreciation'], 'number'],
             [['service_life', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
         ];
@@ -67,7 +67,7 @@ class AssetItemSearch extends AssetItem
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
-            'deleted_at' => $this->deleted_at,
+            // 'asset_item.deleted_at' => $this->deleted_at,
             'deleted_by' => $this->deleted_by,
         ]);
 
