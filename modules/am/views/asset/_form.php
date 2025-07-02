@@ -407,7 +407,7 @@ $group = Yii::$app->request->get('group');
 <?php //  $this->render('_form_detail3',['model' => $model, 'form' => $form]) ?>
 
 <!-- ถ้าเป็นรถยนต์ -->
-<?php if($model->assetItem?->category_id == 4):?>
+<?php if($model->assetItem?->asset_category_id == 4):?>
 <?= $this->render('asset_item',['model' => $model, 'form' => $form]) ?>
 <?php endif;?>
 
